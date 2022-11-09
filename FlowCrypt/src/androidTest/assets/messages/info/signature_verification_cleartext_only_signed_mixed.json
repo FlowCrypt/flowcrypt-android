@@ -47,12 +47,12 @@
   },
   "text": "It\u0026#39;s a cleartext signed with the first key\nIt\u0026#39;s a cleartext signed with the second key",
   "verificationResult": {
-    "hasBadSignatures": false,
     "hasEncryptedParts": false,
-    "hasMixedSignatures": true,
     "hasSignedParts": true,
-    "hasUnverifiedSignatures": false,
+    "hasMixedSignatures": true,
     "isPartialSigned": false,
-    "keyIdOfSigningKeys": []
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

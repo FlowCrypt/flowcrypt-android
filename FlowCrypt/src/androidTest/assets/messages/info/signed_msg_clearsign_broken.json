@@ -53,11 +53,12 @@
   },
   "text": "",
   "verificationResult": {
-    "hasBadSignatures": false,
     "hasEncryptedParts": false,
-    "hasMixedSignatures": false,
     "hasSignedParts": false,
-    "hasUnverifiedSignatures": false,
-    "isPartialSigned": false
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

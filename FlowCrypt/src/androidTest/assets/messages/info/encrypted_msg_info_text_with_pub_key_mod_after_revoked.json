@@ -1566,12 +1566,12 @@
   },
   "text": "This message contains a pub key that has latModified \u003e than a revoked key. It can be used to test updating revoked keys from the message details screen.",
   "verificationResult": {
-    "hasBadSignatures": false,
     "hasEncryptedParts": true,
-    "hasMixedSignatures": false,
     "hasSignedParts": true,
-    "hasUnverifiedSignatures": false,
+    "hasMixedSignatures": false,
     "isPartialSigned": true,
-    "keyIdOfSigningKeys": []
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

@@ -42,12 +42,13 @@
     "uidAsHEX": "12"
   },
   "verificationResult": {
-    "isEncrypted": true,
-    "isSigned": false,
+    "hasEncryptedParts": true,
+    "hasSignedParts": false,
     "hasMixedSignatures": false,
     "isPartialSigned": false,
-    "hasUnverifiedSignatures": false,
-    "hasBadSignatures": false
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   },
   "text": "It\u0027s an encrypted text"
 }

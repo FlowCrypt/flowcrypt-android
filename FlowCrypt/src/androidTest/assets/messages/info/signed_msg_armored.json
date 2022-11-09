@@ -43,12 +43,13 @@
     "uidAsHEX": "1a"
   },
   "verificationResult": {
-    "isEncrypted": false,
-    "isSigned": true,
+    "hasEncryptedParts": false,
+    "hasSignedParts": true,
     "hasMixedSignatures": false,
     "isPartialSigned": false,
-    "hasUnverifiedSignatures": false,
-    "hasBadSignatures": false
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   },
   "text": "Signed text for default@flowcrypt.test"
 }

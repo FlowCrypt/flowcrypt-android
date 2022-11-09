@@ -44,12 +44,13 @@
     "uid": 17
   },
   "verificationResult": {
-    "isEncrypted": false,
-    "isSigned": false,
+    "hasEncryptedParts": false,
+    "hasSignedParts": false,
     "hasMixedSignatures": false,
     "isPartialSigned": false,
-    "hasUnverifiedSignatures": false,
-    "hasBadSignatures": false
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   },
   "origMsgHeaders": "Return-Path: \u003cdenbond7@flowcrypt.test\u003e\r\nDelivered-To: default@flowcrypt.test\r\nReceived: from mail.flowcrypt.test\r\n\tby mail.flowcrypt.test with LMTP\r\n\tid 3yVQLfBPe1+6QAAAZlazJA\r\n\t(envelope-from \u003cdenbond7@flowcrypt.test\u003e)\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon, 05 Oct 2020 16:55:12 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.flowcrypt.test (Postfix) with ESMTP id B623BB20B92\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon,  5 Oct 2020 16:55:12 +0000 (UTC)\r\nTo: default@flowcrypt.test\r\nFrom: Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e\r\nSubject: 8bit encoded utf broken\r\nAutocrypt: addr\u003ddenbond7@flowcrypt.test; keydata\u003d\r\n mQENBFyM4vkBCACr8FvuG4MAZsz90hrZ2B+oEznArD46QUbAGrPT8JU6zz27SfLmTTbTA86q\r\n +DVAZC94CZ2lqJaG7KY7eqHFqJObetA8mcUk0Oo3EshphpK0MnNv+bHFpKf/srJgKSDmpCF+\r\n JSHeZs2WAPtrdfoTO1KPy5IZexMWdnhYZy8d0xUr4rPZ7i2UyrkdV3k2O9x4aG5tD1Zo/Wkm\r\n lTv8z2BtAwAziqUQFxABQLu1fzcRkMHTMcGVXrB+73GITl03GbfeJHvFuThhofqP09o/p3Y1\r\n 8Zm+zVWL/T4zsA5P+Cp6kwnwUnQkL3Tc49a0qIJShlP4LbSbPBqFGWTHxceCkFBkMVoJABEB\r\n AAG0LWRlbmJvbmQ3QGRlbmJvbmQ3LmNvbSA8ZGVuYm9uZDdAZGVuYm9uZDcuY29tPokBPwQQ\r\n AQgAKQUCXIzjAQYLCQcIAwIJEGoVBlPxgAh0BBUICgIDFgIBAhkBAhsDAh4BAAoJEGoVBlPx\r\n gAh0L2EIAJRM22lnSHhgQ+waiCf0p739L3XKs2eDZUkxAX+4an654wnn1OjxWrG7lls2GgN1\r\n ziKHHdGgxU4PQ8PmQrgyc6F05vmYihRFaVFDQ97xF16+IvO4xiuYMuJk7ovsr5mrlI43CWE4\r\n f7GPtmJ7QYTlxeYW3s7KLqr0TKxqGG8f6qRjy/Q1ky3qnseR5Fp1GjIwijVI2rncfH0lOkNm\r\n BHj4aYugN60HNlUJbosb2vjJkz5dsqe+nY3XVKI6Iqq07I+Jvankn6jyvlMP8jNLxQMUsqrt\r\n Bki/C6ett3z+JeP2+2Nh+mp1vDW/kO7gSgRHUEPJ9w/VVIpWIOTEv+Bsz3l28h65AQ0EXIzj\r\n AAEIAJKbKexaP/2HqUAj/DxOebhKqw2ddK5HsYacv12pHVTEVjOnLQELyroZ1ikO21UK8Z/z\r\n ng9+8DlCz72SMql+/uZYpoEdgqMy9PU3zPDzGcAeOr07R56G08l+hUO/i3FMW4v2ZT6gLCIn\r\n AJ417wSvF4wg6dJzfrBFkj7o2lyTOwfD87CehQozyGza1cb+yS3ZPC8oc99a1jwSqFYecDI2\r\n 7Cgy7KWSbhSfoPcJG4KPTLDrvVn2Y+U2jxx6OiYXRai8wwlheAmIohmZNpHLaCQiTZTWRYPK\r\n vP0kb6aoN9O4fGhgMh3QAbc2BVwh299rToBieI/zow+I9OcrScejwQNI2VUAEQEAAYkBKQQY\r\n AQgAEwUCXIzjAgkQahUGU/GACHQCGwwACgkQahUGU/GACHSfcQf/euBJSXopDZxAVniN9HDQ\r\n Dga+ccwJYWZvyiDOaGSoSxW3QDhTOWbCH66GkZiOp9KLObHs54KzoOGaOJbQmhWGR4rwNdGS\r\n np8oWimyyXVEHHhir2BmT8MZrMC3WpMPmUlY2v9CMFD7hF2OfmXd1M9fuFT41aZQVDgGSdYc\r\n IQchOmUv3NQUiBJyOlp1bF1RT7Yf3UjAQANyENz19fYHKd2yh9Ltv3CYVjwRB4crQmuESxM8\r\n 7IEXDVNnYOBP0F5WaSQEesFAhjk+cVjxTUfcmM04YEFhedBStsV8kWF50ojYgF9te4yRM/zo\r\n NRi6SjWLSeEw/zIfvkggDvn1UfA2bGFk8Q\u003d\u003d\r\nMessage-ID: \u003c6e66bc34-0e1f-bb13-ccdc-8e61bdf63f6a@flowcrypt.test\u003e\r\nDate: Mon, 5 Oct 2020 19:55:12 +0300\r\nMime-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary\u003d\"------------FD1FA5F98C2FD885200F7353\"\r\nContent-Language: en-US",
   "text": "Text: Ваше оголошення"
