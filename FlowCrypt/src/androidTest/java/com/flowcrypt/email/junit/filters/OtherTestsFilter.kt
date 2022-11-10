@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.junit.filters
 
-import androidx.test.internal.runner.filters.ParentFilter
+import androidx.test.filters.AbstractFilter
 import org.junit.runner.Description
 
 /**
@@ -14,7 +14,7 @@ import org.junit.runner.Description
  *         Time: 10:42 AM
  *         E-mail: DenBond7@gmail.com
  */
-class OtherTestsFilter : ParentFilter() {
+class OtherTestsFilter : AbstractFilter() {
   private val dependsOnMailServerFilter = DependsOnMailServerFilter()
   private val doesNotNeedMailServerFilter = DoesNotNeedMailServerFilter()
 
