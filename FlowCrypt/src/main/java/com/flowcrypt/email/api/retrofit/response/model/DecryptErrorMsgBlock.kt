@@ -6,10 +6,12 @@
 package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -17,6 +19,7 @@ import com.google.gson.annotations.SerializedName
  * Time: 3:02 PM
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class DecryptErrorMsgBlock(
   @Expose override val content: String?,
   @SerializedName("decryptErr") @Expose val decryptErr: DecryptError?,
@@ -24,6 +27,7 @@ data class DecryptErrorMsgBlock(
   @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
 
+  @IgnoredOnParcel
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.DECRYPT_ERROR
 
@@ -34,24 +38,18 @@ data class DecryptErrorMsgBlock(
     1 == source.readInt()
   )
 
-  override fun describeContents(): Int {
-    return 0
-  }
+  companion object : Parceler<DecryptErrorMsgBlock> {
+    override fun DecryptErrorMsgBlock.write(parcel: Parcel, flags: Int) {
+      parcel.writeParcelable(type, flags)
+      parcel.writeString(content)
+      parcel.writeParcelable(decryptErr, flags)
+      parcel.writeParcelable(error, flags)
+      parcel.writeInt(if (isOpenPGPMimeSigned) 1 else 0)
+    }
 
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeParcelable(type, flags)
-    parcel.writeString(content)
-    parcel.writeParcelable(decryptErr, flags)
-    parcel.writeParcelable(error, flags)
-    parcel.writeInt(if (isOpenPGPMimeSigned) 1 else 0)
-  }
-
-  companion object CREATOR : Parcelable.Creator<DecryptErrorMsgBlock> {
-    override fun createFromParcel(parcel: Parcel): DecryptErrorMsgBlock {
+    override fun create(parcel: Parcel): DecryptErrorMsgBlock {
       parcel.readParcelableViaExt(MsgBlock.Type::class.java)
       return DecryptErrorMsgBlock(parcel)
     }
-
-    override fun newArray(size: Int): Array<DecryptErrorMsgBlock?> = arrayOfNulls(size)
   }
 }

@@ -17,6 +17,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: "androidx.navigation.safeargs.kotlin"
 apply plugin: "com.starter.easylauncher"
+apply plugin: "kotlin-parcelize"
 
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")

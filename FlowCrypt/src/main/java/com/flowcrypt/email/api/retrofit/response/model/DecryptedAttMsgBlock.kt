@@ -7,10 +7,12 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.net.Uri
 import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -18,6 +20,7 @@ import com.google.gson.annotations.SerializedName
  *         Time: 10:12 AM
  *         E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class DecryptedAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val attMeta: AttMeta,
@@ -28,6 +31,7 @@ data class DecryptedAttMsgBlock(
 
   var fileUri: Uri? = null
 
+  @IgnoredOnParcel
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.DECRYPTED_ATT
 
@@ -41,12 +45,9 @@ data class DecryptedAttMsgBlock(
     fileUri = source.readParcelableViaExt(Uri::class.java)
   }
 
-  override fun describeContents(): Int {
-    return 0
-  }
+  companion object : Parceler<DecryptedAttMsgBlock> {
 
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
+    override fun DecryptedAttMsgBlock.write(parcel: Parcel, flags: Int) = with(parcel) {
       writeParcelable(type, flags)
       writeString(content)
       writeParcelable(attMeta, flags)
@@ -56,12 +57,9 @@ data class DecryptedAttMsgBlock(
       writeParcelable(fileUri, flags)
     }
 
-  companion object CREATOR : Parcelable.Creator<DecryptedAttMsgBlock> {
-    override fun createFromParcel(parcel: Parcel): DecryptedAttMsgBlock {
+    override fun create(parcel: Parcel): DecryptedAttMsgBlock {
       parcel.readParcelableViaExt(MsgBlock.Type::class.java)
       return DecryptedAttMsgBlock(parcel)
     }
-
-    override fun newArray(size: Int): Array<DecryptedAttMsgBlock?> = arrayOfNulls(size)
   }
 }

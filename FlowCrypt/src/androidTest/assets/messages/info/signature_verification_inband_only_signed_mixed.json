@@ -45,11 +45,12 @@
   },
   "text": "Signed with a primary key\nSigned with the second key",
   "verificationResult": {
-    "hasBadSignatures": false,
+    "hasEncryptedParts": false,
+    "hasSignedParts": true,
     "hasMixedSignatures": true,
-    "hasUnverifiedSignatures": true,
-    "isEncrypted": false,
     "isPartialSigned": false,
-    "isSigned": true
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": true
   }
 }

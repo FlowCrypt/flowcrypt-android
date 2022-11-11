@@ -5,14 +5,13 @@
 
 package com.flowcrypt.email.api.email.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
-import com.flowcrypt.email.extensions.android.os.readSerializableViaExt
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import jakarta.mail.internet.InternetAddress
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 
 /**
  * Simple POJO class which describe an outgoing message model.
@@ -22,6 +21,7 @@ import jakarta.mail.internet.InternetAddress
  * Time: 11:20
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class OutgoingMessageInfo constructor(
   val account: String? = null,
   val subject: String? = null,
@@ -39,6 +39,7 @@ data class OutgoingMessageInfo constructor(
   val password: CharArray? = null
 ) : Parcelable {
 
+  @IgnoredOnParcel
   val isPasswordProtected = password?.isNotEmpty()
 
   /**
@@ -52,47 +53,6 @@ data class OutgoingMessageInfo constructor(
     ccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
     bccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
     return allRecipients
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  constructor(parcel: Parcel) : this(
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-    parcel.readValue(InternetAddress::class.java.classLoader) as List<InternetAddress>?,
-    parcel.readSerializableViaExt(InternetAddress::class.java),
-    parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
-    parcel.readValue(AttachmentInfo::class.java.classLoader) as List<AttachmentInfo>?,
-    parcel.readParcelableViaExt(MessageEncryptionType::class.java)!!,
-    parcel.readInt(),
-    parcel.readParcelableViaExt(MessageEntity::class.java),
-    parcel.readLong(),
-    parcel.createCharArray()
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    with(dest) {
-      writeString(account)
-      writeString(subject)
-      writeString(msg)
-      writeValue(toRecipients)
-      writeValue(ccRecipients)
-      writeValue(bccRecipients)
-      writeSerializable(from)
-      writeValue(atts)
-      writeValue(forwardedAtts)
-      writeParcelable(encryptionType, flags)
-      writeInt(messageType)
-      writeParcelable(replyToMsgEntity, flags)
-      writeLong(uid)
-      writeCharArray(password)
-    }
   }
 
   override fun equals(other: Any?): Boolean {
@@ -140,10 +100,5 @@ data class OutgoingMessageInfo constructor(
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + (isPasswordProtected?.hashCode() ?: 0)
     return result
-  }
-
-  companion object CREATOR : Parcelable.Creator<OutgoingMessageInfo> {
-    override fun createFromParcel(parcel: Parcel) = OutgoingMessageInfo(parcel)
-    override fun newArray(size: Int): Array<OutgoingMessageInfo?> = arrayOfNulls(size)
   }
 }

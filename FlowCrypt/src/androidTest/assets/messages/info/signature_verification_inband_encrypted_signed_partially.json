@@ -44,11 +44,12 @@
   },
   "text": "Some encrypted and signed text\nIt\u0027s encrypted only message",
   "verificationResult": {
-    "hasBadSignatures": false,
+    "hasEncryptedParts": true,
+    "hasSignedParts": true,
     "hasMixedSignatures": false,
-    "hasUnverifiedSignatures": false,
-    "isEncrypted": true,
     "isPartialSigned": true,
-    "isSigned": true
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

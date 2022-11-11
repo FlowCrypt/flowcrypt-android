@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.database
 
-import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 /**
  * This class describes the message states.
@@ -18,6 +18,7 @@ import android.os.Parcelable
  */
 //todo-denbond7 Modify [com.flowcrypt.email.database.dao.MessageDao.getFailedOutgoingMsgsCount]
 // if you add new states
+@Parcelize
 enum class MessageState constructor(val value: Int) : Parcelable {
   NONE(-1),
   NEW(1),
@@ -47,21 +48,9 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   PENDING_UPLOADING_DRAFT(25),
   PENDING_DELETING_DRAFT(26);
 
-  override fun describeContents(): Int {
-    return 0
-  }
 
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    dest.writeInt(ordinal)
-  }
 
   companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<MessageState> = object : Parcelable.Creator<MessageState> {
-      override fun createFromParcel(source: Parcel): MessageState = values()[source.readInt()]
-      override fun newArray(size: Int): Array<MessageState?> = arrayOfNulls(size)
-    }
-
     @JvmStatic
     fun generate(code: Int): MessageState {
       for (messageState in values()) {

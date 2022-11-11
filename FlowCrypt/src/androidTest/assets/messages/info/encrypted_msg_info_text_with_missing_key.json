@@ -68,12 +68,13 @@
     "uid": 16
   },
   "verificationResult": {
-    "isEncrypted": false,
-    "isSigned": false,
+    "hasEncryptedParts": false,
+    "hasSignedParts": false,
     "hasMixedSignatures": false,
     "isPartialSigned": false,
-    "hasUnverifiedSignatures": false,
-    "hasBadSignatures": false
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   },
   "text": ""
 }

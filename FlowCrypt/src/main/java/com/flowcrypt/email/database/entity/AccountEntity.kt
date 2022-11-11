@@ -6,7 +6,6 @@
 package com.flowcrypt.email.database.entity
 
 import android.accounts.Account
-import android.os.Parcel
 import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
@@ -19,9 +18,10 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -35,6 +35,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
     Index(name = "email_account_type_in_accounts", value = ["email", "account_type"], unique = true)
   ]
 )
+@Parcelize
 data class AccountEntity constructor(
   @PrimaryKey(autoGenerate = true)
   @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
@@ -77,12 +78,14 @@ data class AccountEntity constructor(
   @ColumnInfo(name = "use_fes", defaultValue = "0") val useFES: Boolean = false
 ) : Parcelable {
 
+  @IgnoredOnParcel
   @Ignore
   val account: Account = Account(
     this.email, accountType
       ?: this.email.substring(this.email.indexOf('@') + 1).lowercase()
   )
 
+  @IgnoredOnParcel
   @Ignore
   val isGoogleSignInAccount: Boolean = ACCOUNT_TYPE_GOOGLE.equals(accountType, ignoreCase = true)
 
@@ -193,38 +196,6 @@ data class AccountEntity constructor(
         useAPI = false
       )
 
-  constructor(source: Parcel) : this(
-    source.readValue(Long::class.java.classLoader) as Long?,
-    source.readString()!!,
-    source.readString(),
-    source.readString(),
-    source.readString(),
-    source.readString(),
-    source.readString(),
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readString()!!,
-    source.readString()!!,
-    source.readString()!!,
-    source.readValue(Int::class.java.classLoader) as Int,
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readString(),
-    source.readString()!!,
-    source.readValue(Int::class.java.classLoader) as Int,
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readString(),
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readString(),
-    source.readString(),
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readValue(Boolean::class.java.classLoader) as Boolean?,
-    source.readParcelableViaExt(OrgRules::class.java),
-    source.readValue(Boolean::class.java.classLoader) as Boolean,
-    source.readValue(Boolean::class.java.classLoader) as Boolean
-  )
-
   fun imapOpt(): SecurityType.Option {
     return when {
       imapUseSslTls == true -> {
@@ -257,48 +228,8 @@ data class AccountEntity constructor(
     return clientConfiguration?.hasRule(domainRule) ?: false
   }
 
-  override fun describeContents() = 0
-
-  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeValue(id)
-    writeString(email)
-    writeString(accountType)
-    writeString(displayName)
-    writeString(givenName)
-    writeString(familyName)
-    writeString(photoUrl)
-    writeValue(isEnabled)
-    writeValue(isActive)
-    writeString(username)
-    writeString(password)
-    writeString(imapServer)
-    writeValue(imapPort)
-    writeValue(imapUseSslTls)
-    writeValue(imapUseStarttls)
-    writeString(imapAuthMechanisms)
-    writeString(smtpServer)
-    writeValue(smtpPort)
-    writeValue(smtpUseSslTls)
-    writeValue(smtpUseStarttls)
-    writeString(smtpAuthMechanisms)
-    writeValue(smtpUseCustomSign)
-    writeString(smtpUsername)
-    writeString(smtpPassword)
-    writeValue(contactsLoaded)
-    writeValue(showOnlyEncrypted)
-    writeParcelable(clientConfiguration, flags)
-    writeValue(useAPI)
-    writeValue(useFES)
-  }
-
   companion object {
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
-
-    @JvmField
-    val CREATOR: Parcelable.Creator<AccountEntity> = object : Parcelable.Creator<AccountEntity> {
-      override fun createFromParcel(source: Parcel): AccountEntity = AccountEntity(source)
-      override fun newArray(size: Int): Array<AccountEntity?> = arrayOfNulls(size)
-    }
   }
 }

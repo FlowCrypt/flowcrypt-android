@@ -7,9 +7,10 @@
 package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
-import android.os.Parcelable
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
 
 /**
  * Generic message block represents any message block without a dedicated support.
@@ -21,6 +22,7 @@ import com.google.gson.annotations.Expose
  *
  * @author Ivan Pizhenko
  */
+@Parcelize
 data class GenericMsgBlock(
   @Expose override val type: MsgBlock.Type = MsgBlock.Type.UNKNOWN,
   @Expose override val content: String?,
@@ -35,21 +37,18 @@ data class GenericMsgBlock(
     1 == source.readInt()
   )
 
-  override fun describeContents() = 0
+  companion object : Parceler<GenericMsgBlock> {
 
-  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeParcelable(type, flags)
-    writeString(content)
-    writeParcelable(error, flags)
-    writeInt(if (isOpenPGPMimeSigned) 1 else 0)
-  }
-
-  companion object CREATOR : Parcelable.Creator<MsgBlock> {
-    override fun createFromParcel(parcel: Parcel): MsgBlock {
-      val partType = parcel.readParcelableViaExt(MsgBlock.Type::class.java)!!
-      return MsgBlockFactory.fromParcel(partType, parcel)
+    override fun GenericMsgBlock.write(parcel: Parcel, flags: Int) = with(parcel) {
+      writeParcelable(type, flags)
+      writeString(content)
+      writeParcelable(error, flags)
+      writeInt(if (isOpenPGPMimeSigned) 1 else 0)
     }
 
-    override fun newArray(size: Int): Array<MsgBlock?> = arrayOfNulls(size)
+    override fun create(parcel: Parcel): GenericMsgBlock {
+      val partType = parcel.readParcelableViaExt(MsgBlock.Type::class.java)!!
+      return GenericMsgBlock(partType, parcel)
+    }
   }
 }

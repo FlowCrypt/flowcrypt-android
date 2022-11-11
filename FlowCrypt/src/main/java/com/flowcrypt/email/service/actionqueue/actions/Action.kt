@@ -6,8 +6,8 @@
 package com.flowcrypt.email.service.actionqueue.actions
 
 import android.content.Context
-import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 /**
  * Must be run in non-UI thread. This class describes an action which will be run on a queue.
@@ -28,27 +28,14 @@ interface Action : Parcelable {
   /**
    * This class contains information about all action types.
    */
+  @Parcelize
   enum class Type constructor(val value: String) : Parcelable {
     NONE("none"),
     BACKUP_PRIVATE_KEY_TO_INBOX("backup_private_key_to_inbox"),
     ENCRYPT_PRIVATE_KEYS("encrypt_private_keys"),
     LOAD_GMAIL_ALIASES("load_gmail_aliases");
 
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
-
     companion object {
-      @JvmField
-      val CREATOR: Parcelable.Creator<Type> = object : Parcelable.Creator<Type> {
-        override fun createFromParcel(source: Parcel): Type = values()[source.readInt()]
-        override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
-      }
-
       @JvmStatic
       fun generate(code: String): Type? {
         for (messageState in values()) {
@@ -66,23 +53,13 @@ interface Action : Parcelable {
     const val TAG_NAME_ACTION_TYPE = "actionType"
   }
 
-  data class None(override var id: Long = 0) : Action {
-    override val email: String? = null
-    override val version: Int = 0
+  @Parcelize
+  data class None(
+    override var id: Long = 0,
+    override val email: String? = null,
+    override val version: Int = 0,
     override val type: Type = Type.NONE
-
-    constructor(parcel: Parcel) : this(parcel.readLong())
-
+  ) : Action {
     override suspend fun run(context: Context) {}
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-      parcel.writeLong(id)
-    }
-
-    override fun describeContents(): Int = 0
-
-    companion object CREATOR : Parcelable.Creator<None> {
-      override fun createFromParcel(parcel: Parcel): None = None(parcel)
-      override fun newArray(size: Int): Array<None?> = arrayOfNulls(size)
-    }
   }
 }

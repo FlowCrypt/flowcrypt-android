@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.database.entity
 
-import android.os.Parcel
 import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
@@ -14,6 +13,7 @@ import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 import org.pgpainless.util.Passphrase
 
 /**
@@ -115,22 +115,12 @@ data class KeyEntity(
     return result
   }
 
+  @Parcelize
   enum class PassphraseType(val id: Int) : Parcelable {
     DATABASE(0),
     RAM(1);
 
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
-
-    companion object CREATOR : Parcelable.Creator<PassphraseType> {
-      override fun createFromParcel(source: Parcel): PassphraseType = values()[source.readInt()]
-      override fun newArray(size: Int): Array<PassphraseType?> = arrayOfNulls(size)
-
+    companion object {
       fun findValueById(id: Int): PassphraseType {
         return values().firstOrNull { it.id == id }
           ?: throw IllegalArgumentException("Unsupported key type")

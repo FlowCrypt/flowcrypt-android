@@ -827,11 +827,12 @@
   },
   "text": "NOT encrypted + signed(detached) + public key",
   "verificationResult": {
-    "hasBadSignatures": false,
     "hasEncryptedParts": false,
-    "hasMixedSignatures": false,
     "hasSignedParts": true,
-    "hasUnverifiedSignatures": false,
-    "isPartialSigned": false
+    "hasMixedSignatures": false,
+    "isPartialSigned": false,
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

@@ -5,12 +5,10 @@
 
 package com.flowcrypt.email.api.email.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.extensions.android.os.readListViaExt
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import jakarta.mail.internet.InternetAddress
+import kotlinx.parcelize.Parcelize
 
 /**
  * Simple POJO class which describe a general message details.
@@ -20,7 +18,7 @@ import jakarta.mail.internet.InternetAddress
  * Time: 11:51
  * E-mail: DenBond7@gmail.com
  */
-
+@Parcelize
 data class GeneralMessageDetails constructor(
   val email: String,
   val label: String,
@@ -69,70 +67,4 @@ data class GeneralMessageDetails constructor(
 
       return emails
     }
-
-  constructor(source: Parcel) : this(
-    source.readString()!!,
-    source.readString()!!,
-    source.readInt(),
-    source.readInt(),
-    source.readLong(),
-    source.readLong(),
-    mutableListOf<InternetAddress>().apply {
-      source.readListViaExt(this, InternetAddress::class.java)
-    },
-    mutableListOf<InternetAddress>().apply {
-      source.readListViaExt(this, InternetAddress::class.java)
-    },
-    mutableListOf<InternetAddress>().apply {
-      source.readListViaExt(this, InternetAddress::class.java)
-    },
-    mutableListOf<InternetAddress>().apply {
-      source.readListViaExt(this, InternetAddress::class.java)
-    },
-    source.readString(),
-    source.createStringArrayList()!!,
-    1 == source.readInt(),
-    1 == source.readInt(),
-    1 == source.readInt(),
-    source.readParcelableViaExt(MessageState::class.java)!!,
-    source.readString(),
-    source.readString()
-  )
-
-  override fun describeContents() = 0
-
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    with(dest) {
-      writeString(email)
-      writeString(label)
-      writeInt(uid)
-      writeInt(id)
-      writeLong(receivedDate)
-      writeLong(sentDate)
-      writeList(from)
-      writeList(replyTo)
-      writeList(to)
-      writeList(cc)
-      writeString(subject)
-      writeStringList(msgFlags)
-      writeInt((if (isRawMsgAvailable) 1 else 0))
-      writeInt((if (hasAtts) 1 else 0))
-      writeInt((if (isEncrypted) 1 else 0))
-      writeParcelable(msgState, flags)
-      writeString(attsDir)
-      writeString(errorMsg)
-    }
-  }
-
-  companion object {
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<GeneralMessageDetails> =
-      object : Parcelable.Creator<GeneralMessageDetails> {
-        override fun createFromParcel(source: Parcel): GeneralMessageDetails =
-          GeneralMessageDetails(source)
-
-        override fun newArray(size: Int): Array<GeneralMessageDetails?> = arrayOfNulls(size)
-      }
-  }
 }

@@ -43,11 +43,12 @@
   },
   "text": "Some plain text\nOnly signed message",
   "verificationResult": {
-    "hasBadSignatures": false,
+    "hasEncryptedParts": false,
+    "hasSignedParts": true,
     "hasMixedSignatures": false,
-    "hasUnverifiedSignatures": false,
-    "isEncrypted": false,
     "isPartialSigned": true,
-    "isSigned": true
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

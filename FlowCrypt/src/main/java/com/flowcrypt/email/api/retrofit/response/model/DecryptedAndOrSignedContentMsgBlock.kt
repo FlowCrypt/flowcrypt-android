@@ -5,10 +5,9 @@
 
 package com.flowcrypt.email.api.retrofit.response.model
 
-import android.os.Parcel
-import android.os.Parcelable
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 
 /**
@@ -17,38 +16,20 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata
  *         Time: 6:55 PM
  *         E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class DecryptedAndOrSignedContentMsgBlock(
   @Expose override val error: MsgBlockError? = null,
   @Expose val blocks: List<MsgBlock> = listOf(),
   @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
+  @IgnoredOnParcel
   @Expose
   override val content: String? = null
 
+  @IgnoredOnParcel
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.DECRYPTED_AND_OR_SIGNED_CONTENT
 
+  @IgnoredOnParcel
   var openPgpMetadata: OpenPgpMetadata? = null
-
-  constructor(parcel: Parcel) : this(
-    parcel.readParcelableViaExt(MsgBlockError::class.java),
-    mutableListOf<MsgBlock>().apply { parcel.readTypedList(this, GenericMsgBlock.CREATOR) },
-    1 == parcel.readInt()
-  )
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeParcelable(error, flags)
-    parcel.writeList(blocks)
-    parcel.writeInt(if (isOpenPGPMimeSigned) 1 else 0)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  companion object CREATOR : Parcelable.Creator<DecryptedAndOrSignedContentMsgBlock> {
-    override fun createFromParcel(parcel: Parcel) = DecryptedAndOrSignedContentMsgBlock(parcel)
-    override fun newArray(size: Int): Array<DecryptedAndOrSignedContentMsgBlock?> =
-      arrayOfNulls(size)
-  }
 }

@@ -7,7 +7,6 @@ package com.flowcrypt.email.database.entity
 
 import android.content.ContentValues
 import android.content.Context
-import android.os.Parcel
 import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.preference.PreferenceManager
@@ -37,6 +36,8 @@ import jakarta.mail.MessagingException
 import jakarta.mail.Session
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 import java.util.Properties
 
 /**
@@ -53,6 +54,7 @@ import java.util.Properties
     Index(name = "email_uid_folder_in_messages", value = ["email", "uid", "folder"], unique = true)
   ]
 )
+@Parcelize
 data class MessageEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
@@ -85,33 +87,43 @@ data class MessageEntity(
   @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null
 ) : Parcelable {
 
+  @IgnoredOnParcel
   @Ignore
   val from: List<InternetAddress> = EmailUtil.parseAddresses(fromAddress)
 
+  @IgnoredOnParcel
   @Ignore
   val replyToAddress: List<InternetAddress> = EmailUtil.parseAddresses(replyTo)
 
+  @IgnoredOnParcel
   @Ignore
   val to: List<InternetAddress> = EmailUtil.parseAddresses(toAddress)
 
+  @IgnoredOnParcel
   @Ignore
   val cc: List<InternetAddress> = EmailUtil.parseAddresses(ccAddress)
 
+  @IgnoredOnParcel
   @Ignore
   val msgState: MessageState = MessageState.generate(state ?: MessageState.NONE.value)
 
+  @IgnoredOnParcel
   @Ignore
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
 
+  @IgnoredOnParcel
   @Ignore
   val isDraft: Boolean = flags?.contains(MessageFlag.DRAFT.value) ?: false
 
+  @IgnoredOnParcel
   @Ignore
   val isOutboxMsg: Boolean = JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
 
+  @IgnoredOnParcel
   @Ignore
   val uidAsHEX: String = uid.toHex()
 
+  @IgnoredOnParcel
   @Ignore
   val isPasswordProtected = password?.isNotEmpty() ?: false
 
@@ -134,58 +146,6 @@ data class MessageEntity(
 
       return emails
     }
-
-  constructor(parcel: Parcel) : this(
-    parcel.readValue(Long::class.java.classLoader) as? Long,
-    parcel.readString() ?: "",
-    parcel.readString() ?: "",
-    parcel.readLong(),
-    parcel.readValue(Long::class.java.classLoader) as? Long,
-    parcel.readValue(Long::class.java.classLoader) as? Long,
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-    parcel.readValue(Int::class.java.classLoader) as? Int,
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.readString(),
-    parcel.createByteArray(),
-    parcel.readString()
-  )
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeValue(id)
-    parcel.writeString(email)
-    parcel.writeString(folder)
-    parcel.writeLong(uid)
-    parcel.writeValue(receivedDate)
-    parcel.writeValue(sentDate)
-    parcel.writeString(fromAddress)
-    parcel.writeString(toAddress)
-    parcel.writeString(ccAddress)
-    parcel.writeString(subject)
-    parcel.writeString(this.flags)
-    parcel.writeString(rawMessageWithoutAttachments)
-    parcel.writeValue(hasAttachments)
-    parcel.writeValue(isEncrypted)
-    parcel.writeValue(isNew)
-    parcel.writeValue(state)
-    parcel.writeString(attachmentsDirectory)
-    parcel.writeString(errorMsg)
-    parcel.writeString(replyTo)
-    parcel.writeString(threadId)
-    parcel.writeString(historyId)
-    parcel.writeByteArray(password)
-    parcel.writeString(draftId)
-  }
 
   override fun describeContents(): Int {
     return 0
@@ -274,16 +234,8 @@ data class MessageEntity(
     return result
   }
 
-  companion object CREATOR : Parcelable.Creator<MessageEntity> {
+  companion object {
     const val TABLE_NAME = "messages"
-
-    override fun createFromParcel(parcel: Parcel): MessageEntity {
-      return MessageEntity(parcel)
-    }
-
-    override fun newArray(size: Int): Array<MessageEntity?> {
-      return arrayOfNulls(size)
-    }
 
     fun genMessageEntities(
       context: Context, email: String, label: String, folder: IMAPFolder,

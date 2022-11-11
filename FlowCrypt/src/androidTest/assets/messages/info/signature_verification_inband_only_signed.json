@@ -43,11 +43,12 @@
   },
   "text": "It's signed (Inband) only message.",
   "verificationResult": {
-    "hasBadSignatures": false,
+    "hasEncryptedParts": false,
+    "hasSignedParts": true,
     "hasMixedSignatures": false,
-    "hasUnverifiedSignatures": false,
-    "isEncrypted": false,
     "isPartialSigned": false,
-    "isSigned": true
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

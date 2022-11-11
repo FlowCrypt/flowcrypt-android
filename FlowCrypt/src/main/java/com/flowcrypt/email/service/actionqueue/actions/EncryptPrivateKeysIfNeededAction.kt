@@ -8,8 +8,6 @@
 package com.flowcrypt.email.service.actionqueue.actions
 
 import android.content.Context
-import android.os.Parcel
-import android.os.Parcelable
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -24,6 +22,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 
 /**
  * This [Action] checks all available private keys are they encrypted. If not we will try to encrypt a key and
@@ -34,11 +34,13 @@ import com.google.gson.annotations.SerializedName
  * Time: 4:03 PM
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
   override var id: Long = 0,
   override var email: String? = null,
   override val version: Int = 0
 ) : Action {
+  @IgnoredOnParcel
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.ENCRYPT_PRIVATE_KEYS
 
@@ -103,34 +105,5 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
       PreferenceManager
         .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, false
     )
-  }
-
-  constructor(source: Parcel) : this(
-    source.readLong(),
-    source.readString(),
-    source.readInt()
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeLong(id)
-      writeString(email)
-      writeInt(version)
-    }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<EncryptPrivateKeysIfNeededAction> =
-      object : Parcelable.Creator<EncryptPrivateKeysIfNeededAction> {
-        override fun createFromParcel(source: Parcel): EncryptPrivateKeysIfNeededAction =
-          EncryptPrivateKeysIfNeededAction(source)
-
-        override fun newArray(size: Int): Array<EncryptPrivateKeysIfNeededAction?> =
-          arrayOfNulls(size)
-      }
   }
 }

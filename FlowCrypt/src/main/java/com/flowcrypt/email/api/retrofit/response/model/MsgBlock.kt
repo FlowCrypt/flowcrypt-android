@@ -5,9 +5,9 @@
 
 package com.flowcrypt.email.api.retrofit.response.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
 interface MsgBlock : Parcelable {
   val type: Type
@@ -15,6 +15,7 @@ interface MsgBlock : Parcelable {
   val error: MsgBlockError?
   val isOpenPGPMimeSigned: Boolean
 
+  @Parcelize
   enum class Type : Parcelable {
     UNKNOWN,
 
@@ -75,23 +76,9 @@ interface MsgBlock : Parcelable {
     @SerializedName("decryptedAndOrSignedContent")
     DECRYPTED_AND_OR_SIGNED_CONTENT;
 
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
-
     fun isContentBlockType(): Boolean = CONTENT_BLOCK_TYPES.contains(this)
 
     companion object {
-      @JvmField
-      val CREATOR: Parcelable.Creator<Type> = object : Parcelable.Creator<Type> {
-        override fun createFromParcel(source: Parcel): Type = values()[source.readInt()]
-        override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
-      }
-
       val KEY_BLOCK_TYPES = setOf(PUBLIC_KEY, PRIVATE_KEY)
 
       val WELL_KNOWN_BLOCK_TYPES = setOf(

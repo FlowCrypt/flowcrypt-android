@@ -5,9 +5,9 @@
 
 package com.flowcrypt.email.api.retrofit.response.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.Expose
+import kotlinx.parcelize.Parcelize
 import org.json.JSONObject
 
 /**
@@ -16,6 +16,7 @@ import org.json.JSONObject
  *         Time: 10:16 AM
  *         E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class AttMeta(
   @Expose val name: String?,
   @Expose var data: ByteArray?,
@@ -33,26 +34,6 @@ data class AttMeta(
     contentId = if (source.has("contentId")) source.getString("contentId") else null,
     url = if (source.has("url")) source.getString("url") else null
   )
-
-  constructor(source: Parcel) : this(
-    name = source.readString(),
-    data = source.createByteArray(),
-    length = source.readLong(),
-    type = source.readString(),
-    contentId = source.readString(),
-    url = source.readString()
-  )
-
-  override fun describeContents() = 0
-
-  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeString(name)
-    writeByteArray(data)
-    writeLong(length)
-    writeString(type)
-    writeString(contentId)
-    writeString(url)
-  }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -81,13 +62,5 @@ data class AttMeta(
     result = 31 * result + (contentId?.hashCode() ?: 0)
     result = 31 * result + (url?.hashCode() ?: 0)
     return result
-  }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<AttMeta> = object : Parcelable.Creator<AttMeta> {
-      override fun createFromParcel(source: Parcel): AttMeta = AttMeta(source)
-      override fun newArray(size: Int): Array<AttMeta?> = arrayOfNulls(size)
-    }
   }
 }

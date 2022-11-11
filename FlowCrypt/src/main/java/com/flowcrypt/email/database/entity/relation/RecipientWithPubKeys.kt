@@ -5,13 +5,12 @@
 
 package com.flowcrypt.email.database.entity.relation
 
-import android.os.Parcel
 import android.os.Parcelable
 import androidx.room.Embedded
 import androidx.room.Relation
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -19,6 +18,7 @@ import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
  *         Time: 11:29 AM
  *         E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class RecipientWithPubKeys(
   @Embedded val recipient: RecipientEntity,
   @Relation(
@@ -28,20 +28,6 @@ data class RecipientWithPubKeys(
   )
   val publicKeys: List<PublicKeyEntity>
 ) : Parcelable {
-  constructor(parcel: Parcel) : this(
-    requireNotNull(parcel.readParcelableViaExt(RecipientEntity::class.java)),
-    requireNotNull(parcel.createTypedArrayList(PublicKeyEntity))
-  )
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeParcelable(recipient, flags)
-    parcel.writeTypedList(publicKeys)
-  }
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
   fun hasAtLeastOnePubKey(): Boolean {
     return publicKeys.isNotEmpty()
   }
@@ -56,10 +42,5 @@ data class RecipientWithPubKeys(
 
   fun hasUsablePubKey(): Boolean {
     return publicKeys.any { (it.isNotUsable ?: false).not() }
-  }
-
-  companion object CREATOR : Parcelable.Creator<RecipientWithPubKeys> {
-    override fun createFromParcel(parcel: Parcel) = RecipientWithPubKeys(parcel)
-    override fun newArray(size: Int): Array<RecipientWithPubKeys?> = arrayOfNulls(size)
   }
 }

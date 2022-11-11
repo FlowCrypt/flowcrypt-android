@@ -16,6 +16,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -51,6 +53,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
     )
   ]
 )
+@Parcelize
 data class PublicKeyEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   @ColumnInfo(name = "recipient") val recipient: String,
@@ -72,19 +75,6 @@ data class PublicKeyEntity(
   ) {
     pgpKeyDetails = parcel.readParcelableViaExt(PgpKeyDetails::class.java)
     isNotUsable = parcel.readValue(Boolean::class.java.classLoader) as? Boolean
-  }
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeValue(id)
-    parcel.writeString(recipient)
-    parcel.writeString(fingerprint)
-    parcel.writeByteArray(publicKey)
-    parcel.writeParcelable(pgpKeyDetails, flags)
-    parcel.writeValue(isNotUsable)
-  }
-
-  override fun describeContents(): Int {
-    return 0
   }
 
   override fun equals(other: Any?): Boolean {
@@ -113,8 +103,16 @@ data class PublicKeyEntity(
     return result
   }
 
-  companion object CREATOR : Parcelable.Creator<PublicKeyEntity> {
-    override fun createFromParcel(parcel: Parcel): PublicKeyEntity = PublicKeyEntity(parcel)
-    override fun newArray(size: Int): Array<PublicKeyEntity?> = arrayOfNulls(size)
+  companion object : Parceler<PublicKeyEntity> {
+    override fun PublicKeyEntity.write(parcel: Parcel, flags: Int) {
+      parcel.writeValue(id)
+      parcel.writeString(recipient)
+      parcel.writeString(fingerprint)
+      parcel.writeByteArray(publicKey)
+      parcel.writeParcelable(pgpKeyDetails, flags)
+      parcel.writeValue(isNotUsable)
+    }
+
+    override fun create(parcel: Parcel): PublicKeyEntity = PublicKeyEntity(parcel)
   }
 }

@@ -5,14 +5,11 @@
 
 package com.flowcrypt.email.api.retrofit.response.api
 
-import android.os.Parcel
-import android.os.Parcelable
-
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
 /**
  * The simple POJO object, which contains information about a post feedback result.
@@ -35,35 +32,9 @@ import com.google.gson.annotations.SerializedName
  * Time: 12:34
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class PostHelpFeedbackResponse constructor(
   @SerializedName("error") @Expose override val apiError: ApiError? = null,
   @SerializedName("sent") @Expose val isSent: Boolean? = null,
   @Expose val text: String? = null
-) : ApiResponse {
-  constructor(parcel: Parcel) : this(
-    parcel.readParcelableViaExt(ApiError::class.java),
-    parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
-    parcel.readString()
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(parcel: Parcel, flags: Int) {
-    parcel.writeParcelable(apiError, flags)
-    parcel.writeValue(isSent)
-    parcel.writeString(text)
-  }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<PostHelpFeedbackResponse> =
-      object : Parcelable.Creator<PostHelpFeedbackResponse> {
-        override fun createFromParcel(source: Parcel): PostHelpFeedbackResponse =
-          PostHelpFeedbackResponse(source)
-
-        override fun newArray(size: Int): Array<PostHelpFeedbackResponse?> = arrayOfNulls(size)
-      }
-  }
-}
+) : ApiResponse

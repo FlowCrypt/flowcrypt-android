@@ -10,6 +10,7 @@ import android.os.Parcelable
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.model.PrivateKeySourceType
+import kotlinx.parcelize.Parcelize
 
 /**
  * This class describes a details about the key. The key can be one of three
@@ -25,6 +26,7 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  * Time: 12:56
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class KeyImportDetails constructor(
   val keyName: String? = null,
   val value: String,
@@ -56,40 +58,12 @@ data class KeyImportDetails constructor(
     recipientWithPubKeys = null
   )
 
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeString(keyName)
-      writeString(value)
-      writeParcelable(sourceType, flags)
-      writeInt((if (isPrivateKey) 1 else 0))
-      writeParcelable(recipientWithPubKeys, flags)
-    }
-
   /**
    * The key available types.
    */
+  @Parcelize
   enum class SourceType : Parcelable {
     EMAIL, FILE, CLIPBOARD, NEW, MANUAL_ENTERING, EKM;
-
-    companion object {
-      @JvmField
-      val CREATOR: Parcelable.Creator<SourceType> = object : Parcelable.Creator<SourceType> {
-        override fun createFromParcel(source: Parcel): SourceType = values()[source.readInt()]
-        override fun newArray(size: Int): Array<SourceType?> = arrayOfNulls(size)
-      }
-    }
-
-    override fun describeContents(): Int {
-      return 0
-    }
-
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-      dest.writeInt(ordinal)
-    }
 
     fun toPrivateKeySourceTypeString(): String {
       return when (this) {
@@ -98,10 +72,5 @@ data class KeyImportDetails constructor(
         NEW -> PrivateKeySourceType.NEW
       }.toString()
     }
-  }
-
-  companion object CREATOR : Parcelable.Creator<KeyImportDetails> {
-    override fun createFromParcel(parcel: Parcel): KeyImportDetails = KeyImportDetails(parcel)
-    override fun newArray(size: Int): Array<KeyImportDetails?> = arrayOfNulls(size)
   }
 }

@@ -5,10 +5,9 @@
 
 package com.flowcrypt.email.security.model
 
-import android.os.Parcel
 import android.os.Parcelable
-
 import com.google.gson.annotations.Expose
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denis Bondarenko
@@ -16,36 +15,10 @@ import com.google.gson.annotations.Expose
  * Time: 1:42 PM
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class Algo constructor(
   @Expose val algorithm: String?,
   @Expose val algorithmId: Int,
   @Expose val bits: Int,
   @Expose val curve: String?
-) : Parcelable {
-  constructor(source: Parcel) : this(
-    source.readString(),
-    source.readInt(),
-    source.readInt(),
-    source.readString()
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-    with(dest) {
-      writeString(algorithm)
-      writeInt(algorithmId)
-      writeInt(bits)
-      writeString(curve)
-    }
-
-  companion object {
-    @JvmField
-    val CREATOR: Parcelable.Creator<Algo> = object : Parcelable.Creator<Algo> {
-      override fun createFromParcel(source: Parcel): Algo = Algo(source)
-      override fun newArray(size: Int): Array<Algo?> = arrayOfNulls(size)
-    }
-  }
-}
+) : Parcelable

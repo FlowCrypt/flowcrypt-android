@@ -107,12 +107,13 @@
     "uidAsHEX": "1d"
   },
   "verificationResult": {
-    "isEncrypted": false,
-    "isSigned": false,
+    "hasEncryptedParts": false,
+    "hasSignedParts": false,
     "hasMixedSignatures": false,
     "isPartialSigned": false,
-    "hasUnverifiedSignatures": false,
-    "hasBadSignatures": false
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   },
   "text": "This message has an attached pub key that has no suitable encryption subkeys"
 }

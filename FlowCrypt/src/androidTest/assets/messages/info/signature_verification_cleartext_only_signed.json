@@ -47,12 +47,12 @@
   },
   "text": "It\u0026#39;s a cleartext signed message",
   "verificationResult": {
-    "hasBadSignatures": false,
     "hasEncryptedParts": false,
-    "hasMixedSignatures": false,
     "hasSignedParts": true,
-    "hasUnverifiedSignatures": false,
+    "hasMixedSignatures": false,
     "isPartialSigned": false,
-    "keyIdOfSigningKeys": []
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }

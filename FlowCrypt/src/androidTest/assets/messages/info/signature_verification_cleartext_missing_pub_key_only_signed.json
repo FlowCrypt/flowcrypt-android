@@ -49,14 +49,14 @@
   },
   "text": "It\u0026#39;s a cleartext signed message. It was signed with a wrong private key.Sender and signer are different.",
   "verificationResult": {
-    "hasBadSignatures": false,
     "hasEncryptedParts": false,
-    "hasMixedSignatures": false,
     "hasSignedParts": true,
-    "hasUnverifiedSignatures": true,
+    "hasMixedSignatures": false,
     "isPartialSigned": false,
     "keyIdOfSigningKeys": [
       -5209761791998677675
-    ]
+    ],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": true
   }
 }

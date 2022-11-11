@@ -44,11 +44,12 @@
   },
   "text": "It\u0027s an encrypted message that was signed with a wrong private key. Sender and signer are different.",
   "verificationResult": {
-    "hasBadSignatures": false,
+    "hasEncryptedParts": true,
+    "hasSignedParts": true,
     "hasMixedSignatures": false,
-    "hasUnverifiedSignatures": true,
-    "isEncrypted": true,
     "isPartialSigned": false,
-    "isSigned": true
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": true
   }
 }

@@ -5,11 +5,10 @@
 
 package com.flowcrypt.email.api.email.model
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
+import kotlinx.parcelize.Parcelize
 
 /**
  * This class describes a details information about auth settings for some IMAP and SMTP servers.
@@ -19,6 +18,7 @@ import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
  * Time: 15:11.
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class AuthCredentials constructor(
   val email: String,
   val username: String,
@@ -37,47 +37,6 @@ data class AuthCredentials constructor(
   val displayName: String? = null,
   val authTokenInfo: AuthTokenInfo? = null
 ) : Parcelable {
-  constructor(source: Parcel) : this(
-    source.readString()!!,
-    source.readString()!!,
-    source.readString()!!,
-    source.readString()!!,
-    source.readInt(),
-    source.readParcelableViaExt(SecurityType.Option::class.java)!!,
-    source.readString()!!,
-    source.readInt(),
-    source.readParcelableViaExt(SecurityType.Option::class.java)!!,
-    source.readByte() != 0.toByte(),
-    source.readString(),
-    source.readString(),
-    source.readString(),
-    source.readByte() != 0.toByte(),
-    source.readString(),
-    source.readParcelableViaExt(AuthTokenInfo::class.java)
-  )
-
-  override fun describeContents() = 0
-
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    with(dest) {
-      writeString(email)
-      writeString(username)
-      writeString(password)
-      writeString(imapServer)
-      writeInt(imapPort)
-      writeParcelable(imapOpt, flags)
-      writeString(smtpServer)
-      writeInt(smtpPort)
-      writeParcelable(smtpOpt, flags)
-      writeInt((if (hasCustomSignInForSmtp) 1 else 0))
-      writeString(smtpSigInUsername)
-      writeString(smtpSignInPassword)
-      writeString(faqUrl)
-      writeInt((if (useOAuth2) 1 else 0))
-      writeString(displayName)
-      writeParcelable(authTokenInfo, flags)
-    }
-  }
 
   fun peekPassword(): String {
     return if (useOAuth2) authTokenInfo?.accessToken ?: password else password
@@ -88,14 +47,6 @@ data class AuthCredentials constructor(
   }
 
   companion object {
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<AuthCredentials> =
-      object : Parcelable.Creator<AuthCredentials> {
-        override fun createFromParcel(source: Parcel): AuthCredentials = AuthCredentials(source)
-        override fun newArray(size: Int): Array<AuthCredentials?> = arrayOfNulls(size)
-      }
-
     fun from(accountEntity: AccountEntity): AuthCredentials {
       with(accountEntity) {
         var imapOpt: SecurityType.Option = SecurityType.Option.NONE

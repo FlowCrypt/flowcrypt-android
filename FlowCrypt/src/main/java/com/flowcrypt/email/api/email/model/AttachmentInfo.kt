@@ -6,12 +6,11 @@
 package com.flowcrypt.email.api.email.model
 
 import android.net.Uri
-import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
-import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
 import com.flowcrypt.email.security.SecurityUtils
+import kotlinx.parcelize.Parcelize
 
 /**
  * Simple POJO which defines information about email attachments.
@@ -21,6 +20,7 @@ import com.flowcrypt.email.security.SecurityUtils
  * Time: 18:38
  * E-mail: DenBond7@gmail.com
  */
+@Parcelize
 data class AttachmentInfo constructor(
   var rawData: ByteArray? = null,
   var email: String? = null,
@@ -53,54 +53,6 @@ data class AttachmentInfo constructor(
       fwdUid = this.uid,
       orderNumber = 0
     )
-  }
-
-  constructor(source: Parcel) : this(
-    source.createByteArray(),
-    source.readString(),
-    source.readString(),
-    source.readLong(),
-    source.readString(),
-    source.readLong(),
-    source.readString(),
-    source.readLong(),
-    source.readString()!!,
-    source.readString(),
-    source.readString()!!,
-    source.readParcelableViaExt(Uri::class.java),
-    source.readByte() != 0.toByte(),
-    source.readByte() != 0.toByte(),
-    source.readByte() != 0.toByte(),
-    source.readByte() != 0.toByte(),
-    source.readInt(),
-    source.readByte() != 0.toByte(),
-  )
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    with(dest) {
-      writeByteArray(rawData)
-      writeString(email)
-      writeString(folder)
-      writeLong(uid)
-      writeString(fwdFolder)
-      writeLong(fwdUid)
-      writeString(name)
-      writeLong(encodedSize)
-      writeString(type)
-      writeString(id)
-      writeString(path)
-      writeParcelable(uri, flags)
-      writeByte(if (isProtected) 1.toByte() else 0.toByte())
-      writeByte(if (isForwarded) 1.toByte() else 0.toByte())
-      writeByte(if (isDecrypted) 1.toByte() else 0.toByte())
-      writeByte(if (isEncryptionAllowed) 1.toByte() else 0.toByte())
-      writeInt(orderNumber)
-      writeByte(if (decryptWhenForward) 1.toByte() else 0.toByte())
-    }
   }
 
   override fun equals(other: Any?): Boolean {
@@ -168,12 +120,5 @@ data class AttachmentInfo constructor(
   companion object {
     const val DEPTH_SEPARATOR = "/"
     const val INNER_ATTACHMENT_PREFIX = "inner_"
-
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<AttachmentInfo> = object : Parcelable.Creator<AttachmentInfo> {
-      override fun createFromParcel(source: Parcel): AttachmentInfo = AttachmentInfo(source)
-      override fun newArray(size: Int): Array<AttachmentInfo?> = arrayOfNulls(size)
-    }
   }
 }

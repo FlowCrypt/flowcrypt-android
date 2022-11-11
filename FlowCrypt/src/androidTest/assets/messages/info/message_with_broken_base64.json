@@ -42,11 +42,12 @@
   },
   "text": "We have an activity which has a NavHostFragment. The activity receives certain values in its intent. I want to pass this data to the first fragment i.e startDestination of the navigat",
   "verificationResult": {
-    "hasBadSignatures": false,
+    "hasEncryptedParts": false,
+    "hasSignedParts": false,
     "hasMixedSignatures": false,
-    "hasUnverifiedSignatures": false,
-    "isEncrypted": false,
     "isPartialSigned": false,
-    "isSigned": false
+    "keyIdOfSigningKeys": [],
+    "hasBadSignatures": false,
+    "hasUnverifiedSignatures": false
   }
 }
