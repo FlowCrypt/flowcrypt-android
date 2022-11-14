@@ -7,6 +7,7 @@ package com.flowcrypt.email.extensions.android.webkit
 
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.webkit.WebView
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
@@ -18,15 +19,31 @@ import androidx.webkit.WebViewFeature
  *         E-mail: DenBond7@gmail.com
  */
 fun WebView.setupDayNight() {
-  if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-    setBackgroundColor(Color.TRANSPARENT)
-    when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-      Configuration.UI_MODE_NIGHT_YES -> {
-        WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_ON)
+  setBackgroundColor(Color.TRANSPARENT)
+  if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true)
+    }
+  } else {
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+      when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+        Configuration.UI_MODE_NIGHT_YES -> {
+          @Suppress("DEPRECATION")
+          WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_ON)
+        }
+        Configuration.UI_MODE_NIGHT_NO, Configuration.UI_MODE_NIGHT_UNDEFINED -> {
+          @Suppress("DEPRECATION")
+          WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_OFF)
+        }
       }
-      Configuration.UI_MODE_NIGHT_NO, Configuration.UI_MODE_NIGHT_UNDEFINED -> {
-        WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_OFF)
-      }
+    }
+
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
+      @Suppress("DEPRECATION")
+      WebSettingsCompat.setForceDarkStrategy(
+        settings,
+        WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
+      )
     }
   }
 }
