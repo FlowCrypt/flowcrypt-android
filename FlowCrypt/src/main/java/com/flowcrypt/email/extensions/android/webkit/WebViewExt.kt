@@ -21,7 +21,7 @@ import androidx.webkit.WebViewFeature
 fun WebView.setupDayNight() {
   setBackgroundColor(Color.TRANSPARENT)
   if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true)
     }
   } else {
