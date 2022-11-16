@@ -39,6 +39,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
@@ -46,11 +47,15 @@ import com.flowcrypt.email.ui.base.BaseMessageDetailsFlowTest
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
+import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertNotNull
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
+import org.junit.Assert.assertArrayEquals
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -398,6 +403,47 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(scrollTo(), click())
     onView(withId(R.id.buttonKeyAction))
       .check(matches(not(isDisplayed())))
+  }
+
+  @Test
+  fun testSavingPubKeyFromMessagePart() {
+    val msgInfo = getMsgInfo(
+      "messages/info/standard_msg_with_pub_key.json",
+      "messages/mime/standard_msg_with_pub_key.txt"
+    )
+
+    baseCheck(msgInfo)
+
+    val pgpKeyDetails =
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+    val primaryAddress =
+      requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address.lowercase()
+    val recipientBeforeSaving = runBlocking {
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(primaryAddress)
+    }
+    assertArrayEquals(
+      emptyArray(),
+      recipientBeforeSaving?.publicKeys?.toTypedArray() ?: emptyArray()
+    )
+
+    onView(withId(R.id.buttonKeyAction))
+      .check(matches(isDisplayed()))
+      .perform(scrollTo(), click())
+    onView(withId(R.id.buttonKeyAction))
+      .check(matches(not(isDisplayed())))
+
+    //need to wait database sync
+    Thread.sleep(1000)
+
+    val recipientAfterSaving = runBlocking {
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(primaryAddress)
+    }
+    assertNotNull(recipientAfterSaving)
+    val publicKeyByteArray =
+      requireNotNull(recipientAfterSaving?.publicKeys?.firstOrNull()?.publicKey)
+    val pgpKeyDetailsOfDatabaseEntity =
+      PgpKey.parseKeys(publicKeyByteArray).pgpKeyDetailsList.firstOrNull()
+    assertEquals(pgpKeyDetails.fingerprint, pgpKeyDetailsOfDatabaseEntity?.fingerprint)
   }
 
   @Test
