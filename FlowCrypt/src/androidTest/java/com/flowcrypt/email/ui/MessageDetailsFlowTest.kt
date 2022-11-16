@@ -428,6 +428,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
     onView(withId(R.id.buttonKeyAction))
       .check(matches(isDisplayed()))
+      .check(matches(withText(R.string.import_pub_key)))
       .perform(scrollTo(), click())
     onView(withId(R.id.buttonKeyAction))
       .check(matches(not(isDisplayed())))
