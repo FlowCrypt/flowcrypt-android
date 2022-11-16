@@ -1,0 +1,47 @@
+2 M1e C63749dba
+N          0000000000000601
+Date: Wed, 16 Nov 2022 08:22:15 +0000 (GMT)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <80349022.2.1668586937378@localhost>
+Subject: Standard message + pub key
+MIME-Version: 1.0
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_0_135230709.1668586935169"
+User-Agent: FlowCrypt_Android_1.3.8_devTest_138__2022_11_15
+
+------=_Part_0_135230709.1668586935169
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+Some text
+------=_Part_0_135230709.1668586935169
+Content-Type: application/pgp-keys; 
+	name=0xC16428D601CB393789CF61D4C32089CD6AF8D6CE.asc
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; 
+	filename=0xC16428D601CB393789CF61D4C32089CD6AF8D6CE.asc
+Content-ID: <d97eed9c-aae8-43a1-9f21-dc46eec111ec@flowcrypt>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: FlowCrypt 1.3.8_devTest_138__2022_11_15 Gmail Encryption
+Comment: Seamlessly send and receive encrypted email
+
+mDMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZ
+ceAWUq+0F2RlbmJvbmQ3QGZsb3djcnlwdC50ZXN0iHgEExYKACAFAmCLnFgCGwMF
+FgIDAQAECwkIBwUVCgkICwIeAQIZAQAKCRDDIInNavjWzm3JAQCgFgCEyD58iEa/
+Rw/DYNoQNoZC1lhw1bxBiOcIbtkdBgEAsDFZu3TBavOMKI7KW+vfMBHtRVbkMNpv
+unaAldoabgO4OARgi5xYEgorBgEEAZdVAQUBAQdAB1/Mrq5JGYim4KqGTSK4OESQ
+UwPgK56q0yrkiU9WgyYDAQgHiHUEGBYKAB0FAmCLnFgCGwwFFgIDAQAECwkIBwUV
+CgkICwIeAQAKCRDDIInNavjWzjMgAQCU+R1fItqdY6lt9jXUqipmXuqVaEFPwNA8
+YJ1rIwDwVQEAyUc8162KWzA2iQB5akwLwNr/pLDDtOWwhLUkrBb3mAc=
+=pXF6
+-----END PGP PUBLIC KEY BLOCK-----
+
+------=_Part_0_135230709.1668586935169--
+
+
+R63749db7
+V628
+G903e3303ba9d74632807000073f46975
+
