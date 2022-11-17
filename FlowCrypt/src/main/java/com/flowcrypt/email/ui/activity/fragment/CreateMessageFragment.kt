@@ -819,11 +819,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupAutoCompleteResultRecyclerViewAdapter(
-    recyclerViewAutocompleteTo: RecyclerView?,
+    recyclerView: RecyclerView?,
     toAutoCompleteResultRecyclerViewAdapter: AutoCompleteResultRecyclerViewAdapter
   ) {
-    recyclerViewAutocompleteTo?.layoutManager = LinearLayoutManager(context)
-    recyclerViewAutocompleteTo?.adapter = toAutoCompleteResultRecyclerViewAdapter
+    recyclerView?.layoutManager = LinearLayoutManager(context)
+    recyclerView?.adapter = toAutoCompleteResultRecyclerViewAdapter
   }
 
   private fun setupChipsRecyclerView(

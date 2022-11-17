@@ -5,10 +5,8 @@
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
-import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -18,6 +16,8 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -28,7 +28,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import org.hamcrest.Matchers.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -88,10 +87,15 @@ class CreateMessageFragmentRecipientsDuringReplyAllInIsolationTest : BaseCompose
       ).toBundle()
     )
 
-    onView(withId(R.id.recyclerViewAutocompleteTo))
-      .perform(scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(toRecipient))))
-    onView(withId(R.id.recyclerViewAutocompleteCc))
-      .perform(scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(ccRecipient))))
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(withRecyclerViewItemCount(2)))//two items: CHIP + ADD
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(hasItem(withText(toRecipient))))
+
+    onView(withId(R.id.recyclerViewChipsCc))
+      .check(matches(withRecyclerViewItemCount(2)))//two items: CHIP + ADD
+    onView(withId(R.id.recyclerViewChipsCc))
+      .check(matches(hasItem(withText(ccRecipient))))
   }
 
   companion object {
