@@ -1,0 +1,49 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id NpCsOv4hdWOCBAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Wed, 16 Nov 2022 17:46:38 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id EC7F22405D3
+	for <default@flowcrypt.test>; Wed, 16 Nov 2022 17:46:38 +0000 (UTC)
+Date: Wed, 16 Nov 2022 17:46:35 +0000 (GMT)
+From: denbond7@flowcrypt.test
+To: default@flowcrypt.test
+Message-ID: <251465147.2.1668620797362@localhost>
+Subject: Standard message + updated pub key
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_0_82494402.1668620795165"
+
+------=_Part_0_82494402.1668620795165
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+Some text
+------=_Part_0_82494402.1668620795165
+Content-Type: application/pgp-keys;
+	name=0xC16428D601CB393789CF61D4C32089CD6AF8D6CE.asc
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=0xC16428D601CB393789CF61D4C32089CD6AF8D6CE.asc
+Content-ID: <3022185a-a1e1-4bb2-b739-7a5725af463a@flowcrypt>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: FlowCrypt 1.3.8_dev_138__2022_11_16 Gmail Encryption
+Comment: Seamlessly send and receive encrypted email
+
+mDMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZ
+ceAWUq+0IkRlbkJvbmQ3IDxkZW5ib25kN0BmbG93Y3J5cHQudGVzdD6IkAQTFggA
+OBYhBMFkKNYByzk3ic9h1MMgic1q+NbOBQJjdRaQAhsDBQsJCAcCBhUKCQgLAgQW
+AgMBAh4BAheAAAoJEMMgic1q+NbOHHsBAK+js/NGtBwvVvlKy/CcCZ8BaFk7jt+H
+pYNqzULWXnUdAP9VpaYisLKQHWptlyouzPloAom0XzjZwLbtIJU/fsgJC7g4BGCL
+nFgSCisGAQQBl1UBBQEBB0AHX8yurkkZiKbgqoZNIrg4RJBTA+ArnqrTKuSJT1aD
+JgMBCAeIdQQYFgoAHQUCYIucWAIbDAUWAgMBAAQLCQgHBRUKCQgLAh4BAAoJEMMg
+ic1q+NbOMyABAJT5HV8i2p1jqW32NdSqKmZe6pVoQU/A0DxgnWsjAPBVAQDJRzzX
+rYpbMDaJAHlqTAvA2v+ksMO05bCEtSSsFveYBw==
+=LfzX
+-----END PGP PUBLIC KEY BLOCK-----
+
+------=_Part_0_82494402.1668620795165--
