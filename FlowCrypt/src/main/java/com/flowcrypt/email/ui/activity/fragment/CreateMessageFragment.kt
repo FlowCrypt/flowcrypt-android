@@ -533,7 +533,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun initExtras(intent: Intent?) {
     if (intent != null) {
-      if (intent.action?.startsWith("android.intent.action") == true) {
+      if (intent.action in listOf(
+          Intent.ACTION_VIEW,
+          Intent.ACTION_SENDTO,
+          Intent.ACTION_SEND,
+          Intent.ACTION_SEND_MULTIPLE,
+        )
+      ) {
         this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(requireContext(), intent)
         addAtts()
       } else {
