@@ -3,8 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.fragment.isolation.incontainer
+package com.flowcrypt.email.ui
 
+import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -25,7 +26,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import org.junit.Rule
@@ -42,7 +43,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class CreateMessageFragmentRecipientsDuringReplyAllInIsolationTest : BaseComposeScreenTest() {
+class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   @get:Rule
@@ -52,6 +53,7 @@ class CreateMessageFragmentRecipientsDuringReplyAllInIsolationTest : BaseCompose
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
+    .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
   @Test
@@ -80,12 +82,15 @@ class CreateMessageFragmentRecipientsDuringReplyAllInIsolationTest : BaseCompose
       verificationResult = VERIFICATION_RESULT
     )
 
-    launchFragmentInContainer<CreateMessageFragment>(
-      fragmentArgs = CreateMessageFragmentArgs(
-        messageType = MessageType.REPLY_ALL,
-        incomingMessageInfo = incomingMessageInfo
-      ).toBundle()
-    )
+    activeActivityRule?.launch(Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
+      putExtras(
+        CreateMessageFragmentArgs(
+          messageType = MessageType.REPLY_ALL,
+          incomingMessageInfo = incomingMessageInfo
+        ).toBundle()
+      )
+    })
+    registerAllIdlingResources()
 
     onView(withId(R.id.recyclerViewChipsTo))
       .check(matches(withRecyclerViewItemCount(2)))//two items: CHIP + ADD
