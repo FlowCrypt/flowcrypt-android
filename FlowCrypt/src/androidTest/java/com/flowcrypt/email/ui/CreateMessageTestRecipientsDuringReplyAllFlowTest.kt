@@ -198,6 +198,49 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
       .check(matches(not(hasItem(withText(ALIAS)))))
   }
 
+  @Test
+  fun testReplyAllForToCcRecipientsWithAliases() {
+    val replyToRecipient = "replyto@flowcrypt.test"
+    val to1Recipient = addAccountToDatabaseRule.account.email
+    val to2Recipient = "to@flowcrypt.test"
+
+    val incomingMessageInfo = IncomingMessageInfo(
+      localFolder = INBOX,
+      msgEntity = MessageEntity(
+        email = addAccountToDatabaseRule.account.email,
+        folder = INBOX.fullName,
+        uid = 123,
+        replyTo = replyToRecipient,
+        toAddress = listOf(to1Recipient, to2Recipient).joinToString(),
+        ccAddress = listOf(ALIAS).joinToString()
+      ),
+      encryptionType = MessageEncryptionType.STANDARD,
+      verificationResult = VERIFICATION_RESULT
+    )
+
+    activeActivityRule?.launch(getIntent(incomingMessageInfo))
+    registerAllIdlingResources()
+    Thread.sleep(1000)
+
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(withRecyclerViewItemCount(2)))//two items: CHIP + ADD
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(hasItem(withText(replyToRecipient))))
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(not(hasItem(withText(to1Recipient)))))
+    onView(withId(R.id.recyclerViewChipsTo))
+      .check(matches(not(hasItem(withText(ALIAS)))))
+
+    onView(withId(R.id.recyclerViewChipsCc))
+      .check(matches(withRecyclerViewItemCount(2)))//two items: CHIP + ADD
+    onView(withId(R.id.recyclerViewChipsCc))
+      .check(matches(hasItem(withText(to2Recipient))))
+    onView(withId(R.id.recyclerViewChipsCc))
+      .check(matches(not(hasItem(withText(to1Recipient)))))
+    onView(withId(R.id.recyclerViewChipsCc))
+      .check(matches(not(hasItem(withText(ALIAS)))))
+  }
+
   private fun getIntent(incomingMessageInfo: IncomingMessageInfo): Intent =
     Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
       putExtras(
