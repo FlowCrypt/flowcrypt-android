@@ -52,9 +52,6 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.CHECKED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.SKIP_REMAINING_KEYS
-import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_CREATED_KEY
-import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_RESOLVED_KEYS
-import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.USE_ANOTHER_ACCOUNT
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -440,11 +437,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       )
 
       when (result) {
-        HANDLE_RESOLVED_KEYS -> {
+        CreateOrImportPrivateKeyDuringSetupFragment.Result.HANDLE_RESOLVED_KEYS -> {
           handleUnlockedKeys(account, keys)
         }
 
-        HANDLE_CREATED_KEY -> {
+        CreateOrImportPrivateKeyDuringSetupFragment.Result.HANDLE_CREATED_KEY -> {
           val pgpKeyDetails = keys.firstOrNull() ?: return@setFragmentResultListener
           account ?: return@setFragmentResultListener
           privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
@@ -454,7 +451,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           )
         }
 
-        USE_ANOTHER_ACCOUNT -> {
+        CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {
           this.googleSignInAccount = null
           showContent()
         }
@@ -760,7 +757,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun handleUnlockedKeys(accountEntity: AccountEntity?, keys: List<PgpKeyDetails>) {
-    if (keys.isNullOrEmpty()) {
+    if (keys.isEmpty()) {
       showContent()
       showInfoSnackbar(msgText = getString(R.string.error_no_keys))
     } else {
