@@ -128,27 +128,19 @@ data class IncomingMessageInfo constructor(
             toAddresses.addAll(toRecipients.map { it.address.lowercase() })
 
             val ccSet = LinkedHashSet<InternetAddress>()
-
-            if (getTo().isNotEmpty()) {
-              ccSet.addAll(getTo().filter { !accountEmail.equals(it.address, ignoreCase = true) })
-
-              for (alias in aliases) {
-                val iterator = ccSet.iterator()
-                while (iterator.hasNext()) {
-                  if (iterator.next().address.equals(alias, ignoreCase = true)) {
-                    iterator.remove()
-                  }
-                }
-              }
-            }
-
-            ccSet.removeAll(toRecipients.toSet())
+            //add all addresses from To that are not equal accountEmail
+            ccSet.addAll(getTo().filter { !accountEmail.equals(it.address, ignoreCase = true) })
+            //add all addresses from Cc that are not equal accountEmail
             ccSet.addAll(getCc().filter { !accountEmail.equals(it.address, ignoreCase = true) })
-
-            //here we remove the owner address
+            //remove all addresses that To has
+            ccSet.removeAll(toRecipients.toSet())
+            //remove aliases as Gmail does and the owner address
             val fromAddress = msgEntity.email
-            val finalCcList = ccSet.filter { !fromAddress.equals(it.address, true) }
-            ccAddresses.addAll(finalCcList.map { it.address.lowercase() })
+            ccSet.removeAll { internetAddress ->
+              aliases.any { alias -> internetAddress.address.equals(alias, ignoreCase = true) }
+                  || fromAddress.equals(internetAddress.address, true)
+            }
+            ccAddresses.addAll(ccSet.map { it.address.lowercase() })
           }
         }
       }
