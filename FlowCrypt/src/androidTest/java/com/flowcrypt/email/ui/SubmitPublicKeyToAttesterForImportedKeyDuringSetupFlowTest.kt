@@ -29,6 +29,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -39,6 +40,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.base.BaseSignTest
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.util.exception.ApiException
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.ListMessagesResponse
 import okhttp3.mockwebserver.Dispatcher
@@ -155,11 +157,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
   private fun checkAttesterErrorIsDisplayed() {
     isDialogWithTextDisplayed(
       decorView = decorView,
-      message = getResString(
-        R.string.combination_of_org_rules_is_not_supported,
-        OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name +
-            " + " + OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
-      )
+      message = requireNotNull(ApiException(ApiError(code = 404, msg = "")).message)
     )
   }
 

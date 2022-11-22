@@ -165,6 +165,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     handleUnlockedKeys(accountEntity, listOf(pgpKeyDetails))
   }
 
+  override fun onAdditionalActionsAfterPrivateKeyImportingCompleted(
+    accountEntity: AccountEntity,
+    keys: List<PgpKeyDetails>
+  ) {
+    handleUnlockedKeys(accountEntity, keys)
+  }
+
   private fun initViews(view: View) {
     view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
       importCandidates.clear()
@@ -438,17 +445,21 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       when (result) {
         CreateOrImportPrivateKeyDuringSetupFragment.Result.HANDLE_RESOLVED_KEYS -> {
-          handleUnlockedKeys(account, keys)
+          if (account != null && keys.isNotEmpty()) {
+            privateKeysViewModel.doAdditionalActionsAfterPrivateKeysImporting(
+              accountEntity = account,
+              keys = keys
+            )
+          }
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.HANDLE_CREATED_KEY -> {
-          val pgpKeyDetails = keys.firstOrNull() ?: return@setFragmentResultListener
-          account ?: return@setFragmentResultListener
-          privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
-            account,
-            pgpKeyDetails,
-            googleSignInAccount?.idToken
-          )
+          if (account != null && keys.isNotEmpty()) {
+            privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
+              accountEntity = account,
+              keys = keys
+            )
+          }
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {

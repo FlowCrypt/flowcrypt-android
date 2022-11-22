@@ -179,6 +179,13 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     handleUnlockedKeys(listOf(pgpKeyDetails))
   }
 
+  override fun onAdditionalActionsAfterPrivateKeyImportingCompleted(
+    accountEntity: AccountEntity,
+    keys: List<PgpKeyDetails>
+  ) {
+    handleUnlockedKeys(keys)
+  }
+
   override fun switchAccount(accountEntity: AccountEntity) {
     if (authCreds?.useOAuth2 == true) {
       storeAccountInfoToAccountManager()
@@ -464,15 +471,19 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
       when (result) {
         CreateOrImportPrivateKeyDuringSetupFragment.Result.HANDLE_RESOLVED_KEYS -> {
-          handleUnlockedKeys(keys)
+          if (keys.isNotEmpty()) {
+            privateKeysViewModel.doAdditionalActionsAfterPrivateKeysImporting(
+              getTempAccount(),
+              keys
+            )
+          }
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.HANDLE_CREATED_KEY -> {
-          val pgpKeyDetails = keys.firstOrNull()
-          pgpKeyDetails?.let {
+          if (keys.isNotEmpty()) {
             privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
               getTempAccount(),
-              pgpKeyDetails
+              keys
             )
           }
         }
@@ -844,9 +855,5 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   companion object {
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
     private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
-
-    fun newInstance(): AddOtherAccountFragment {
-      return AddOtherAccountFragment()
-    }
   }
 }
