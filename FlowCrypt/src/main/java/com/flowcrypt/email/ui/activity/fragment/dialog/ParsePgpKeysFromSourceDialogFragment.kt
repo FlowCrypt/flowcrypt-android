@@ -148,11 +148,6 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   private fun handleWrongSourceIssue() {
-    val fileAsString = String(
-      args.uri?.let { context?.contentResolver?.openInputStream(it) }?.readBytes()
-        ?: "empty".toByteArray()
-    )
-
     val msg = getString(
       R.string.file_has_wrong_pgp_structure,
       when (args.filterType) {
@@ -160,7 +155,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
         PUBLIC_ONLY -> getString(R.string.public_)
         else -> ""
       }
-    ) + "\n\nContent\n\n$fileAsString"
+    )
     showStatusMsgWithRetryButton(msg)
   }
 

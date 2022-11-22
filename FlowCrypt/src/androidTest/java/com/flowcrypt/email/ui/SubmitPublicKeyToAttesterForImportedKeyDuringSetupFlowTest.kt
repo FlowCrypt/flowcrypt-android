@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.ui
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -15,10 +12,6 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
@@ -46,8 +39,6 @@ import com.google.api.services.gmail.model.ListMessagesResponse
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.allOf
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
@@ -107,7 +98,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
     )
 
     addTextToClipboard("private key", privateKey)
-    doNavigationAndCheckPrivateKey()
+    doNavigationAndCheckPrivateKey(R.id.buttonLoadFromClipboard)
     checkAttesterErrorIsDisplayed()
   }
 
@@ -120,28 +111,17 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
     )
 
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPrivateKey)
-    intending(
-      allOf(
-        hasAction(Intent.ACTION_CHOOSER),
-        hasExtra(
-          `is`(Intent.EXTRA_INTENT),
-          allOf(
-            hasAction(Intent.ACTION_GET_CONTENT),
-            hasType("*/*")
-          )
-        )
-      )
-    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+    intendingActivityResultContractsGetContent(resultData = resultData)
 
-    doNavigationAndCheckPrivateKey()
+    doNavigationAndCheckPrivateKey(R.id.buttonLoadFromFile)
     checkAttesterErrorIsDisplayed()
   }
 
-  private fun doNavigationAndCheckPrivateKey() {
+  private fun doNavigationAndCheckPrivateKey(buttonId: Int) {
     onView(withId(R.id.buttonImportMyKey))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(R.id.buttonLoadFromClipboard))
+    onView(withId(buttonId))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withId(R.id.editTextKeyPassword))
