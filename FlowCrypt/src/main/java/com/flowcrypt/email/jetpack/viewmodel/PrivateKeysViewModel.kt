@@ -68,7 +68,9 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   val savePrivateKeysLiveData = MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>()
   val parseKeysLiveData = MutableLiveData<Result<PgpKey.ParseKeyResult?>>()
   val additionalActionsAfterPrivateKeyCreationLiveData =
-    MutableLiveData<Result<Pair<AccountEntity, PgpKeyDetails>>?>()
+    MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>()
+  val additionalActionsAfterPrivateKeysImportingLiveData =
+    MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>()
   val deleteKeysLiveData = MutableLiveData<Result<Boolean>>()
   val protectPrivateKeysLiveData = MutableLiveData<Result<List<PgpKeyDetails>>>(Result.none())
 
@@ -335,25 +337,54 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
   fun doAdditionalActionsAfterPrivateKeyCreation(
     accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails,
+    keys: List<PgpKeyDetails>,
     idToken: String? = null,
   ) {
+    processPrivateKeysInternally(
+      accountEntity = accountEntity,
+      keys = keys,
+      idToken = idToken,
+      mutableLiveData = additionalActionsAfterPrivateKeyCreationLiveData
+    )
+  }
+
+  fun doAdditionalActionsAfterPrivateKeysImporting(
+    accountEntity: AccountEntity,
+    keys: List<PgpKeyDetails>,
+    idToken: String? = null,
+  ) {
+    processPrivateKeysInternally(
+      accountEntity = accountEntity,
+      keys = keys,
+      idToken = idToken,
+      mutableLiveData = additionalActionsAfterPrivateKeysImportingLiveData
+    )
+  }
+
+  private fun processPrivateKeysInternally(
+    accountEntity: AccountEntity,
+    keys: List<PgpKeyDetails>,
+    idToken: String?,
+    mutableLiveData: MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>
+  ) {
     viewModelScope.launch {
-      additionalActionsAfterPrivateKeyCreationLiveData.value = Result.loading()
+      mutableLiveData.value = Result.loading()
       try {
-        doAdditionalOperationsAfterKeyCreation(
+        val pgpKeyDetails = keys.firstOrNull() ?: throw java.lang.IllegalStateException("No keys")
+        doAdditionalOperationsForPrivateKey(
           accountEntity = accountEntity,
           pgpKeyDetails = pgpKeyDetails,
           idToken = idToken,
         )
-        additionalActionsAfterPrivateKeyCreationLiveData.value =
-          Result.success(Pair(accountEntity, pgpKeyDetails))
+        mutableLiveData.value = Result.success(Pair(accountEntity, keys))
       } catch (e: Exception) {
         e.printStackTrace()
-        pgpKeyDetails.fingerprint.let {
-          roomDatabase.keysDao().deleteByAccountAndFingerprintSuspend(accountEntity.email, it)
+        for (pgpKeyDetails in keys) {
+          pgpKeyDetails.fingerprint.let {
+            roomDatabase.keysDao().deleteByAccountAndFingerprintSuspend(accountEntity.email, it)
+          }
         }
-        additionalActionsAfterPrivateKeyCreationLiveData.value = Result.exception(e)
+        mutableLiveData.value = Result.exception(e)
         ExceptionUtil.handleError(e)
       }
     }
@@ -411,7 +442,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
   }
 
-  private suspend fun doAdditionalOperationsAfterKeyCreation(
+  private suspend fun doAdditionalOperationsForPrivateKey(
     accountEntity: AccountEntity,
     pgpKeyDetails: PgpKeyDetails,
     idToken: String? = null,

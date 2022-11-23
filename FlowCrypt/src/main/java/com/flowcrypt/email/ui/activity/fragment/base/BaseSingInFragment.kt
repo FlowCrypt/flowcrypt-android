@@ -18,6 +18,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -45,6 +46,11 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
     pgpKeyDetails: PgpKeyDetails
   )
 
+  abstract fun onAdditionalActionsAfterPrivateKeyImportingCompleted(
+    accountEntity: AccountEntity,
+    keys: List<PgpKeyDetails>
+  )
+
   override val isToolbarVisible: Boolean = false
 
   protected fun onSetupCompleted(accountEntity: AccountEntity) {
@@ -56,6 +62,108 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
   }
 
   protected fun initPrivateKeysViewModel() {
+    observeSavingPrivateKeys()
+    observeCreatingPrivateKey()
+    observeImportingPrivateKeys()
+  }
+
+  protected fun initAddNewAccountLiveData() {
+    accountViewModel.addNewAccountLiveData.observe(viewLifecycleOwner) {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(getString(R.string.processing))
+        }
+
+        Result.Status.SUCCESS -> {
+          if (it.data != null) {
+            //clear LiveData value to prevent duplicate running
+            accountViewModel.addNewAccountLiveData.value = Result.none()
+            context?.let { context ->
+              WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
+            }
+
+            onAccountAdded(it.data)
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          val msg = StringBuilder()
+            .append(getString(R.string.could_not_add_new_account))
+            .append("/n/n")
+            .append(it.exception?.message)
+            .append(it.exception?.javaClass?.simpleName)
+            .toString()
+
+          showInfoDialog(dialogMsg = msg)
+        }
+        else -> {}
+      }
+    }
+  }
+
+  private fun observeCreatingPrivateKey() {
+    privateKeysViewModel.additionalActionsAfterPrivateKeyCreationLiveData.observe(viewLifecycleOwner) {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource?.incrementSafely()
+            showProgress(getString(R.string.processing))
+          }
+
+          Result.Status.SUCCESS -> {
+            it.data?.let { pair ->
+              onAdditionalActionsAfterPrivateKeyCreationCompleted(
+                pair.first,
+                pair.second.first()
+              )
+            }
+            countingIdlingResource?.decrementSafely()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            showContent()
+            showInfoDialogWithExceptionDetails(it.exception)
+            countingIdlingResource?.decrementSafely()
+          }
+          else -> {}
+        }
+      }
+    }
+  }
+
+  private fun observeImportingPrivateKeys() {
+    privateKeysViewModel.additionalActionsAfterPrivateKeysImportingLiveData.observe(
+      viewLifecycleOwner
+    ) {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            countingIdlingResource?.incrementSafely()
+            showProgress(getString(R.string.processing))
+          }
+
+          Result.Status.SUCCESS -> {
+            it.data?.let { pair ->
+              onAdditionalActionsAfterPrivateKeyImportingCompleted(
+                pair.first,
+                pair.second
+              )
+            }
+            countingIdlingResource?.decrementSafely()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            showContent()
+            showInfoDialogWithExceptionDetails(it.exception)
+            countingIdlingResource?.decrementSafely()
+          }
+          else -> {}
+        }
+      }
+    }
+  }
+
+  private fun observeSavingPrivateKeys() {
     privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner) {
       it?.let {
         when (it.status) {
@@ -96,71 +204,6 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
           }
           else -> {}
         }
-      }
-    }
-    privateKeysViewModel.additionalActionsAfterPrivateKeyCreationLiveData.observe(viewLifecycleOwner) {
-      it?.let {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
-            showProgress(getString(R.string.processing))
-          }
-
-          Result.Status.SUCCESS -> {
-            it.data?.let { pair ->
-              onAdditionalActionsAfterPrivateKeyCreationCompleted(
-                pair.first,
-                pair.second
-              )
-            }
-            countingIdlingResource?.decrementSafely()
-          }
-
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-            val e = it.exception
-            showInfoSnackbar(
-              msgText = e?.message ?: e?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error)
-            )
-            countingIdlingResource?.decrementSafely()
-          }
-          else -> {}
-        }
-      }
-    }
-  }
-
-  protected fun initAddNewAccountLiveData() {
-    accountViewModel.addNewAccountLiveData.observe(viewLifecycleOwner) {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          showProgress(getString(R.string.processing))
-        }
-
-        Result.Status.SUCCESS -> {
-          if (it.data != null) {
-            //clear LiveData value to prevent duplicate running
-            accountViewModel.addNewAccountLiveData.value = Result.none()
-            context?.let { context ->
-              WorkManager.getInstance(context).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
-            }
-
-            onAccountAdded(it.data)
-          }
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          val msg = StringBuilder()
-            .append(getString(R.string.could_not_add_new_account))
-            .append("/n/n")
-            .append(it.exception?.message)
-            .append(it.exception?.javaClass?.simpleName)
-            .toString()
-
-          showInfoDialog(dialogMsg = msg)
-        }
-        else -> {}
       }
     }
   }
