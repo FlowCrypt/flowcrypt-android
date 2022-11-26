@@ -364,13 +364,13 @@ class FoldersManager constructor(val account: String) {
      */
     fun generateFolder(account: String, label: Label): LocalFolder {
       return LocalFolder(
-        account,
-        label.id,
-        label.name,
-        emptyList(),
-        label.type == GmailApiHelper.FOLDER_TYPE_USER,
-        0,
-        ""
+        account = account,
+        fullName = label.id,
+        folderAlias = label.name,
+        attributes = emptyList(),
+        isCustom = label.type == GmailApiHelper.FOLDER_TYPE_USER,
+        msgCount = 0,
+        searchQuery = ""
       )
     }
 

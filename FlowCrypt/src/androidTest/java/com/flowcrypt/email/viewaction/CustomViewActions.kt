@@ -49,4 +49,8 @@ object CustomViewActions {
   fun clickOnChipCloseIcon(): ViewAction {
     return ChipCloseIconClickViewAction()
   }
+
+  fun clickOnFolderWithName(folderName: String): ViewAction {
+    return ClickOnFolderViewAction(folderName)
+  }
 }
