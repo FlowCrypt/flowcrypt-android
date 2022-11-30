@@ -204,15 +204,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
   }
 
   companion object {
-    const val DRAFT_ID_FIRST = "r5555555555555555551"
-    const val MESSAGE_ID_FIRST = "5555555555555551"
-    const val THREAD_ID_FIRST = "1111111111111111"
-    const val MESSAGE_SUBJECT_FIRST = "first"
     const val MESSAGE_SUBJECT_FIRST_EDITED = "first edited"
-
-    const val DRAFT_ID_SECOND = "r5555555555555555552"
-    const val MESSAGE_ID_SECOND = "5555555555555552"
-    const val THREAD_ID_SECOND = "11111111111111112"
-    const val MESSAGE_SUBJECT_SECOND = "second"
   }
 }

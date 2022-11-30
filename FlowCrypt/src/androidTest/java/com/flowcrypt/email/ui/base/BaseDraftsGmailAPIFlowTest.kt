@@ -45,12 +45,23 @@ import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
 import com.google.api.services.gmail.model.Message
+import jakarta.activation.DataSource
 import jakarta.mail.Session
+import jakarta.mail.internet.InternetHeaders
+import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
+import okhttp3.Headers
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.pgpainless.util.Passphrase
+import rawhttp.core.RawHttp
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.OutputStream
 import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.util.Properties
@@ -258,7 +269,109 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
         )
       }
 
-      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      request.method == "POST" && request.path == "/batch" -> {
+        val mimeMultipart = MimeMultipart(object : DataSource {
+          override fun getInputStream(): InputStream = request.body.inputStream()
+
+          override fun getOutputStream(): OutputStream {
+            throw java.lang.UnsupportedOperationException()
+          }
+
+          override fun getContentType(): String {
+            return request.getHeader("Content-Type") ?: throw IllegalArgumentException()
+          }
+
+          override fun getName(): String = ""
+        })
+
+        val count = mimeMultipart.count
+        val rawHttp = RawHttp()
+        val responseMimeMultipart = MimeMultipart()
+        for (i in 0 until count) {
+          try {
+            val bodyPart = mimeMultipart.getBodyPart(i)
+            val rawHttpRequest = rawHttp.parseRequest(bodyPart.inputStream)
+            val requestBody = if (rawHttpRequest.body.isPresent) {
+              rawHttpRequest.body.get().asRawBytes().toRequestBody(
+                contentType = bodyPart.contentType.toMediaTypeOrNull()
+              )
+            } else null
+
+            val okhttp3Request = okhttp3.Request.Builder()
+              .method(
+                method = rawHttpRequest.method,
+                body = requestBody
+              )
+              .url(rawHttpRequest.uri.toURL())
+              .headers(Headers.Builder().build())
+              .build()
+
+            val response = ApiHelper.getInstance(getTargetContext())
+              .retrofit.callFactory().newCall(okhttp3Request).execute()
+
+            val stringBuilder = StringBuilder().apply {
+              append(response.protocol.toString().uppercase())
+              append(" ")
+              append(response.code)
+              append(" ")
+              append(response.message)
+              append("\n")
+
+              response.headers.forEach {
+                append(it.first + ": " + it.second + "\n")
+              }
+              append("\n")
+              append(response.body?.string())
+            }
+
+            responseMimeMultipart.addBodyPart(
+              MimeBodyPart(
+                InternetHeaders(byteArrayOf().inputStream()).apply {
+                  setHeader("Content-Type", "application/http")
+                  setHeader("Content-ID", "response-${i + 1}")
+                },
+                stringBuilder.toString().toByteArray()
+              )
+            )
+          } catch (e: Exception) {
+            e.printStackTrace()
+          }
+        }
+
+        val outputStream = ByteArrayOutputStream()
+        responseMimeMultipart.writeTo(outputStream)
+        val content = String(outputStream.toByteArray())
+        content.length
+
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+
+      else -> {
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
     }
+  }
+
+  protected fun genRawMimeWithSubject(msgSubject: String) = String(
+    ByteArrayOutputStream().apply {
+      this.use {
+        MimeMessage(Session.getInstance(Properties())).apply {
+          subject = msgSubject
+          setContent(MimeMultipart().apply { addBodyPart(MimeBodyPart().apply { setText("") }) })
+        }.writeTo(it)
+      }
+    }.toByteArray()
+  )
+
+  companion object {
+    const val DRAFT_ID_FIRST = "r5555555555555555551"
+    const val MESSAGE_ID_FIRST = "5555555555555551"
+    const val THREAD_ID_FIRST = "1111111111111111"
+    const val MESSAGE_SUBJECT_FIRST = "first"
+
+    const val DRAFT_ID_SECOND = "r5555555555555555552"
+    const val MESSAGE_ID_SECOND = "5555555555555552"
+    const val THREAD_ID_SECOND = "11111111111111112"
+    const val MESSAGE_SUBJECT_SECOND = "second"
   }
 }
