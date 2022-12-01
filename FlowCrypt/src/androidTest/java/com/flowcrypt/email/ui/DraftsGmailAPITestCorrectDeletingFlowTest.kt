@@ -57,60 +57,19 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
 
             MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setHeader("Content-Type", "application/json; charset=UTF-8")
-              .setBody(Message().apply {
-                factory = GsonFactory.getDefaultInstance()
-                id = MESSAGE_ID_FIRST
-                threadId = THREAD_ID_FIRST
-                labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
-                snippet = MESSAGE_SUBJECT_FIRST
-                historyId = BigInteger.valueOf(Random.nextLong())
-                payload = MessagePart().apply {
-                  partId = ""
-                  mimeType = "multipart/alternative"
-                  filename = ""
-                  headers = listOf(
-                    MessagePartHeader().apply {
-                      name = "MIME-Version"
-                      value = "1.0"
-                    },
-                    MessagePartHeader().apply {
-                      name = "Date"
-                      value = "Tue, 29 Nov 2022 14:30:15 +0200"
-                    },
-                    MessagePartHeader().apply {
-                      name = "Message-ID"
-                      value = EmailUtil.generateContentId()
-                    },
-                    MessagePartHeader().apply {
-                      name = "Subject"
-                      value = MESSAGE_SUBJECT_FIRST
-                    },
-                    MessagePartHeader().apply {
-                      name = "From"
-                      value = AccountDaoManager.getDefaultAccountDao().email
-                    },
-                    MessagePartHeader().apply {
-                      name = "Content-Type"
-                      value = "text/plain"
-                    },
-                  )
-                  body = MessagePartBody().apply {
-                    setSize(0)
-                  }
-                  parts = listOf(
-                    MessagePart().apply {
-                      partId = "0"
-                      mimeType = "text/plain"
-                      filename = ""
-                      headers = listOf(MessagePartHeader().apply {
-                        name = "Content-Type"
-                        value = "text/plain"
-                      })
-                      body = MessagePartBody().apply { setSize(130) }
-                    }
-                  )
-                }
-              }.toString())
+              .setBody(genMessage(MESSAGE_ID_FIRST, THREAD_ID_FIRST, MESSAGE_SUBJECT_FIRST))
+          }
+
+          request.method == "GET" && request.path ==
+              "/gmail/v1/users/me/messages/$MESSAGE_ID_SECOND?" +
+              "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
+              "payload/partId,payload/mimeType,payload/filename,payload/headers," +
+              "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
+              "&format=full" -> {
+
+            MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setHeader("Content-Type", "application/json; charset=UTF-8")
+              .setBody(genMessage(MESSAGE_ID_SECOND, THREAD_ID_SECOND, MESSAGE_SUBJECT_SECOND))
           }
 
           else -> handleCommonAPICalls(request)
@@ -154,4 +113,62 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
     moveToDraftFolder()
     Thread.sleep(5000)
   }
+
+  private fun genMessage(messageId: String, messageThreadId: String, subject: String) =
+    Message().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = messageId
+      threadId = messageThreadId
+      labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      snippet = subject
+      historyId = BigInteger.valueOf(Random.nextLong())
+      payload = MessagePart().apply {
+        partId = ""
+        mimeType = "multipart/alternative"
+        filename = ""
+        headers = prepareMessageHeaders(subject)
+        body = MessagePartBody().apply {
+          setSize(0)
+        }
+        parts = listOf(
+          MessagePart().apply {
+            partId = "0"
+            mimeType = "text/plain"
+            filename = ""
+            headers = listOf(MessagePartHeader().apply {
+              name = "Content-Type"
+              value = "text/plain"
+            })
+            body = MessagePartBody().apply { setSize(130) }
+          }
+        )
+      }
+    }.toString()
+
+  private fun prepareMessageHeaders(subject: String) = listOf(
+    MessagePartHeader().apply {
+      name = "MIME-Version"
+      value = "1.0"
+    },
+    MessagePartHeader().apply {
+      name = "Date"
+      value = "Tue, 29 Nov 2022 14:30:15 +0200"
+    },
+    MessagePartHeader().apply {
+      name = "Message-ID"
+      value = EmailUtil.generateContentId()
+    },
+    MessagePartHeader().apply {
+      name = "Subject"
+      value = subject
+    },
+    MessagePartHeader().apply {
+      name = "From"
+      value = AccountDaoManager.getDefaultAccountDao().email
+    },
+    MessagePartHeader().apply {
+      name = "Content-Type"
+      value = "text/plain"
+    },
+  )
 }

@@ -47,6 +47,7 @@ import com.google.api.services.gmail.model.ListSendAsResponse
 import com.google.api.services.gmail.model.Message
 import jakarta.activation.DataSource
 import jakarta.mail.Session
+import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.InternetHeaders
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
@@ -341,9 +342,11 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
         val outputStream = ByteArrayOutputStream()
         responseMimeMultipart.writeTo(outputStream)
         val content = String(outputStream.toByteArray())
-        content.length
+        val boundary = (ContentType(responseMimeMultipart.contentType)).getParameter("boundary")
 
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setHeader("Content-Type", "multipart/mixed; boundary=$boundary")
+          .setBody(content)
       }
 
       else -> {
