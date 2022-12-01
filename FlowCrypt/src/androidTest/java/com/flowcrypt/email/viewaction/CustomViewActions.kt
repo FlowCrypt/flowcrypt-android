@@ -5,9 +5,12 @@
 
 package com.flowcrypt.email.viewaction
 
+import android.view.View
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import com.google.android.material.navigation.NavigationView
+import org.hamcrest.Matcher
 
 /**
  * View actions for interacting with [NavigationView]
@@ -52,5 +55,21 @@ object CustomViewActions {
 
   fun clickOnFolderWithName(folderName: String): ViewAction {
     return ClickOnFolderViewAction(folderName)
+  }
+
+  fun swipeToRefresh(action: ViewAction, constraints: Matcher<View>): ViewAction {
+    return object : ViewAction {
+      override fun getConstraints(): Matcher<View> {
+        return constraints
+      }
+
+      override fun getDescription(): String {
+        return action.description
+      }
+
+      override fun perform(uiController: UiController?, view: View?) {
+        action.perform(uiController, view)
+      }
+    }
   }
 }

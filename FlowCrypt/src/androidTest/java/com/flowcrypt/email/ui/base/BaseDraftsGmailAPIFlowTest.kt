@@ -195,8 +195,6 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
   }
 
   protected fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
-    println("request.method == + ${request.method} PATH:" + request.path)
-
     when {
       request.path == "/v1/keys/private" -> {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
