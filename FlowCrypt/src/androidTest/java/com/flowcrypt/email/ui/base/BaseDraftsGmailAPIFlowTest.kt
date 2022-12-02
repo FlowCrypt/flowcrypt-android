@@ -364,6 +364,15 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
     }.toByteArray()
   )
 
+  protected fun getMimeMessageFromCache(msgPosition: Int): MimeMessage {
+    val rawMimeMessageAsByteArrayOfSecondMsg = Base64.decode(
+      draftsCache[msgPosition].message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+    )
+    return MimeMessage(
+      Session.getInstance(Properties()), rawMimeMessageAsByteArrayOfSecondMsg.inputStream()
+    )
+  }
+
   companion object {
     const val DRAFT_ID_FIRST = "r5555555555555555551"
     const val MESSAGE_ID_FIRST = "5555555555555551"

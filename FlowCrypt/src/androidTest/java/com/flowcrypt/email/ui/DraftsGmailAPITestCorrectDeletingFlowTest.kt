@@ -66,7 +66,7 @@ import java.net.HttpURLConnection
 
 
 /**
- *https://github.com/FlowCrypt/flowcrypt-android/issues/2050
+ * https://github.com/FlowCrypt/flowcrypt-android/issues/2050
  *
  * @author Denis Bondarenko
  *         Date: 11/28/22

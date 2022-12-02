@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui
 
-import android.util.Base64
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
@@ -31,8 +30,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.google.api.services.gmail.model.Message
-import jakarta.mail.Session
-import jakarta.mail.internet.MimeMessage
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -43,8 +40,10 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
-import java.util.Properties
 
+/**
+ * https://github.com/FlowCrypt/flowcrypt-android/issues/2050
+ */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIFlowTest() {
@@ -192,15 +191,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
       .check(matches(isDisplayed()))
     val mimeMessageSecondAfterEditingFirst = getMimeMessageFromCache(1)
     assertEquals(MESSAGE_SUBJECT_SECOND, mimeMessageSecondAfterEditingFirst.subject)
-  }
-
-  private fun getMimeMessageFromCache(msgPosition: Int): MimeMessage {
-    val rawMimeMessageAsByteArrayOfSecondMsg = Base64.decode(
-      draftsCache[msgPosition].message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
-    )
-    return MimeMessage(
-      Session.getInstance(Properties()), rawMimeMessageAsByteArrayOfSecondMsg.inputStream()
-    )
   }
 
   companion object {
