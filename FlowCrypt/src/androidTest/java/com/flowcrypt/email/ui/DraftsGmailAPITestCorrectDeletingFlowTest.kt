@@ -118,16 +118,6 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
               )
           }
 
-          request.method == "DELETE" && request.path == "/gmail/v1/users/me/drafts/$DRAFT_ID_FIRST" -> {
-            draftsCache.removeAt(0)
-            MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
-          }
-
-          request.method == "DELETE" && request.path == "/gmail/v1/users/me/drafts/$DRAFT_ID_SECOND" -> {
-            draftsCache.removeAt(1)
-            MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
-          }
-
           request.method == "GET" && request.path == "/gmail/v1/users/me/history?" +
               "labelId=${JavaEmailConstants.FOLDER_DRAFT}" +
               "&startHistoryId=$HISTORY_ID_FIRST" -> {

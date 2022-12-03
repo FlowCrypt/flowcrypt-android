@@ -143,11 +143,6 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
               }.toString())
           }
 
-          request.method == "DELETE" && request.path == "/gmail/v1/users/me/drafts/$DRAFT_ID_FIRST" -> {
-            draftsCache.removeAt(0)
-            MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
-          }
-
           else -> handleCommonAPICalls(request)
         }
       }
