@@ -167,6 +167,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
 
   @Test
   fun testCorrectDraftsSending() {
+    sentCache.clear()
     moveToDraftFolder()
 
     //create a new draft
@@ -217,7 +218,8 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    Thread.sleep(5000)
+    //need to wait while a message will be sent
+    Thread.sleep(10000)
 
     //check that we have a new sent message in the cache
     assertEquals(1, sentCache.size)
