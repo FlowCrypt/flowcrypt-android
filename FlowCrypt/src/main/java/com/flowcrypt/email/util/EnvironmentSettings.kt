@@ -18,7 +18,7 @@ import java.util.Properties
 interface EnvironmentSettings {
   fun sslTrustedDomains(): List<String> = emptyList()
   fun getFlavorPropertiesForSession(): Properties = Properties()
-  fun isGMailAPIEnabled(): Boolean = true
+  fun isGMailAPIEnabled(): Boolean = false
   fun configure(context: Context)
   fun getCountingIdlingResource(): CountingIdlingResource? = null
   fun getGoogleIdToken(): String? = null
