@@ -40,6 +40,7 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -160,9 +161,13 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
+  @Before
+  fun clearSentCache() {
+    sentCache.clear()
+  }
+
   @Test
   fun testCorrectDraftsSending() {
-    sentCache.clear()
     moveToDraftFolder()
 
     //create a new draft

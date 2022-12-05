@@ -252,11 +252,11 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
     assertEquals(0, (responseAfterDeletingFirstDraft as ListDraftsResponse).drafts.size)
   }
 
-  private fun selectDraft() {
+  private fun selectDraft(position: Int = 0) {
     onView(withId(R.id.recyclerViewMsgs))
       .perform(
         actionOnItemAtPosition<RecyclerView.ViewHolder>(
-          0,
+          position,
           ViewActions.actionWithAssertions(
             GeneralClickAction(
               Tap.LONG,

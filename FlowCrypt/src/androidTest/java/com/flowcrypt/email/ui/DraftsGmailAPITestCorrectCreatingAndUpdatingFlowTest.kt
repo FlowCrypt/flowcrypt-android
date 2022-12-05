@@ -134,7 +134,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
 
   @Test
   fun testCorrectCreatingAndUpdating() {
-    draftsCache.clear()
     moveToDraftFolder()
 
     onView(withId(R.id.recyclerViewMsgs))

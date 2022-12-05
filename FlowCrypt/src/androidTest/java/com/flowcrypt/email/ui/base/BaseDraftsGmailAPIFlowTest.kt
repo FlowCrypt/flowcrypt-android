@@ -36,6 +36,8 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.viewaction.CustomViewActions.clickOnFolderWithName
+import com.google.api.client.googleapis.json.GoogleJsonError
+import com.google.api.client.googleapis.json.GoogleJsonErrorContainer
 import com.google.api.client.json.JsonObjectParser
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.Draft
@@ -57,6 +59,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Before
 import org.pgpainless.util.Passphrase
 import rawhttp.core.RawHttp
 import java.io.ByteArrayOutputStream
@@ -120,6 +123,11 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
     requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey),
     Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
   )
+
+  @Before
+  fun clearCache() {
+    draftsCache.clear()
+  }
 
   protected fun getDraftAndMimeMessageFromRequest(request: RecordedRequest): Pair<Draft, MimeMessage> {
     val gzipInputStream = GZIPInputStream(request.body.inputStream())
@@ -235,16 +243,22 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
         )
       }
 
-      request.method == "GET" && request.path == "/gmail/v1/users/me/drafts?maxResults=45" -> {
+      request.method == "GET" && request.path?.matches("/gmail/v1/users/me/drafts\\S*".toRegex()) == true -> {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
           ListDraftsResponse().apply {
             factory = GsonFactory.getDefaultInstance()
+            val requestUrl = requireNotNull(request.requestUrl)
+            val queryParameterField = requestUrl.queryParameter("fields")
+            val isThreadIdAllowed = queryParameterField == null ||
+                queryParameterField.contains("drafts/message/threadId")
             drafts = draftsCache.map { draft ->
               Draft().apply {
                 id = draft.id
                 message = Message().apply {
                   id = draft.message.id
-                  threadId = draft.message.threadId
+                  if (isThreadIdAllowed) {
+                    threadId = draft.message.threadId
+                  }
                 }
               }
             }
@@ -252,30 +266,27 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
         )
       }
 
-      request.method == "GET" && request.path == "/gmail/v1/users/me/drafts?fields=drafts/id,drafts/message/id&maxResults=500" -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListDraftsResponse().apply {
-            factory = GsonFactory.getDefaultInstance()
-            drafts = draftsCache.map { draft ->
-              Draft().apply {
-                id = draft.id
-                message = Message().apply {
-                  id = draft.message.id
-                }
+      request.method == "DELETE" && request.path?.matches("/gmail/v1/users/me/drafts/\\S*".toRegex()) == true -> {
+        val draftId = request.requestUrl?.encodedPathSegments?.last()
+        val cachedDraft = draftsCache.firstOrNull { it.id == draftId }
+        if (cachedDraft != null) {
+          draftsCache.remove(cachedDraft)
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
+        } else {
+          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+            .setBody(GoogleJsonErrorContainer().apply {
+              factory = GsonFactory.getDefaultInstance()
+              error = GoogleJsonError().apply {
+                code = HttpURLConnection.HTTP_NOT_FOUND
+                message = "Requested entity was not found."
+                errors = listOf(GoogleJsonError.ErrorInfo().apply {
+                  message = "Requested entity was not found."
+                  domain = "local"
+                  reason = "notFound"
+                })
               }
-            }
-          }.toString()
-        )
-      }
-
-      request.method == "DELETE" && request.path == "/gmail/v1/users/me/drafts/$DRAFT_ID_FIRST" -> {
-        draftsCache.removeAt(0)
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
-      }
-
-      request.method == "DELETE" && request.path == "/gmail/v1/users/me/drafts/$DRAFT_ID_SECOND" -> {
-        draftsCache.removeAt(1)
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
+            }.toString())
+        }
       }
 
       request.method == "POST" && request.path == "/batch" -> {
