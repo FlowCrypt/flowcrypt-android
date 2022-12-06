@@ -17,8 +17,7 @@ import com.flowcrypt.email.database.entity.LabelEntity
  * E-mail: DenBond7@gmail.com
  */
 class AddLabelsToDatabaseRule(
-  private val account: AccountEntity,
-  private val folders: List<LocalFolder>
+  val account: AccountEntity, val folders: List<LocalFolder>
 ) : BaseRule() {
   override fun execute() {
     saveLabelsToDatabase()

@@ -837,6 +837,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       handleMsgsFromHistory(accountEntity, localFolder, historyList)
     } catch (e: Exception) {
+      e.printStackTrace()
       when (e) {
         is GoogleJsonResponseException -> {
           if (localFolder.getFolderType() == FoldersManager.FolderType.INBOX
