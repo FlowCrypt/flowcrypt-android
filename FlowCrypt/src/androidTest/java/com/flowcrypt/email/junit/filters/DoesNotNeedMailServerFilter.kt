@@ -17,9 +17,9 @@ import org.junit.runner.Description
 class DoesNotNeedMailServerFilter : ReadyForCIFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = DependsOnMailServer::class.java
-    val hasClassAnnotation = description?.testClass?.isAnnotationPresent(annotationClass) == true
-    if (hasClassAnnotation) return false
-    return super.evaluateTest(description) && description?.getAnnotation(annotationClass) == null
+    return isAnnotationNotPresentAtClassOrMethod(description, annotationClass) {
+      super.evaluateTest(description)
+    }
   }
 
   override fun describe() = "Filter tests that don't need an email server"

@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.junit.filters
 
-import androidx.test.filters.AbstractFilter
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import org.junit.runner.Description
 
@@ -15,12 +14,10 @@ import org.junit.runner.Description
  *         Time: 5:24 PM
  *         E-mail: DenBond7@gmail.com
  */
-open class ReadyForCIFilter : AbstractFilter() {
+open class ReadyForCIFilter : NonFlakyTestsFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = NotReadyForCI::class.java
-    return (description?.testClass?.isAnnotationPresent(annotationClass) == false && description.getAnnotation(
-      annotationClass
-    ) == null)
+    return isAnnotationPresentAtClassOrMethod(description, annotationClass)
   }
 
   override fun describe() = "Filter tests that are ready to be run on a CI server"
