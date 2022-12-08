@@ -19,6 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -43,7 +44,6 @@ import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.startsWith
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -273,7 +273,7 @@ class AddOtherAccountFragmentInIsolationTest : BaseTest() {
 
   @Test
   @NotReadyForCI
-  @Ignore("failed on CI")
+  @FlakyTest
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()
     val creds = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")

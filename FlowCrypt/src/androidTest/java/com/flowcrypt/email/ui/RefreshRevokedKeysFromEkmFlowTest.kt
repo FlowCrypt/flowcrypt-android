@@ -10,6 +10,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -31,7 +32,6 @@ import okhttp3.mockwebserver.MockResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -114,7 +114,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testDisallowDeleteRevokedKeys() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(

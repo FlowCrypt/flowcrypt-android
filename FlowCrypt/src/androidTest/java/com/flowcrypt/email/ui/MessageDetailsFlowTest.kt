@@ -22,6 +22,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -248,7 +249,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testDecryptionError_NO_MDC() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_error_no_mdc.json",
@@ -303,7 +304,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_with_missing_key.json",

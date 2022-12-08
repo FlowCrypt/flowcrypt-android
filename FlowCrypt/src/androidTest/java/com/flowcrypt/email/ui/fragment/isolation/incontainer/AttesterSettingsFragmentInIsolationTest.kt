@@ -15,6 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -37,7 +38,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -62,7 +62,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testKeysExistOnAttester() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(defaultAccount)
     PrivateKeysManager.saveKeyToDatabase(
@@ -93,7 +93,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testDifferentKeysOnAttester() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
       .addAccount(defaultAccount)
@@ -130,7 +130,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testAccountWithNoKeysOnAttester() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
       .addAccount(userWithoutPubKeyOnAttester)

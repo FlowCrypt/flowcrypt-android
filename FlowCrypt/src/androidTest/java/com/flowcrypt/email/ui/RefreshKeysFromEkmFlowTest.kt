@@ -13,6 +13,7 @@ import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -36,7 +37,6 @@ import com.google.gson.Gson
 import okhttp3.mockwebserver.MockResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -88,7 +88,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testUpdatePrvKeyFromEkmSuccessSilent() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(

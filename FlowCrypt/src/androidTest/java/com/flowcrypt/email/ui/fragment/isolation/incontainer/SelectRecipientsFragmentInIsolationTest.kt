@@ -11,6 +11,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -28,7 +29,6 @@ import com.flowcrypt.email.ui.activity.fragment.SelectRecipientsFragment
 import com.flowcrypt.email.ui.activity.fragment.SelectRecipientsFragmentArgs
 import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -57,7 +57,7 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testShowEmptyView() {
     launchFragmentInContainer<SelectRecipientsFragment>(
       fragmentArgs = SelectRecipientsFragmentArgs().toBundle()
@@ -68,7 +68,7 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testShowNonEmptyList() {
     AddRecipientsToDatabaseRule(
       listOf(

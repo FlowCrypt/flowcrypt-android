@@ -27,7 +27,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment
 import org.hamcrest.Matchers.allOf
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -65,7 +64,6 @@ class LegalSettingsFragmentInIsolationTest : BaseTest() {
 
   @Test
   @FlakyTest
-  @Ignore("failed sometimes on CI")
   fun testClickToTitleViewPager() {
     for (titleName in titleNames) {
       onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
@@ -77,7 +75,7 @@ class LegalSettingsFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
+  @FlakyTest
   fun testSwipeInViewPager() {
     onView(
       allOf(

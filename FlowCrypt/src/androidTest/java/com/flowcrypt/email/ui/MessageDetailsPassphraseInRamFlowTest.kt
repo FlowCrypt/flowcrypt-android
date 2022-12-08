@@ -37,7 +37,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -223,7 +222,6 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
-  @Ignore("failed sometimes on CI")
   fun testNeedPassphraseMultiplyFingerprintsSecondKey() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_for_2_keys_text.json",

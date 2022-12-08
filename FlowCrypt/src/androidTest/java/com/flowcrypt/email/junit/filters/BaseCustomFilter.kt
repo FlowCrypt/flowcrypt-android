@@ -15,7 +15,7 @@ import org.junit.runner.Description
  *         E-mail: DenBond7@gmail.com
  */
 abstract class BaseCustomFilter : AbstractFilter() {
-  protected fun isAnnotationPresentAtClassOrMethod(
+  protected fun isAnnotationNotPresentAtClassNorMethod(
     description: Description?,
     annotationClass: Class<out Annotation?>
   ): Boolean {
