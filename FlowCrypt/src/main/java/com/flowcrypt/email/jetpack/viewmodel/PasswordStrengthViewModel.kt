@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
 
 /**
  * This [ViewModel] implementation can be used to check the passphrase strength
@@ -44,14 +43,13 @@ class PasswordStrengthViewModel(application: Application) : BaseAndroidViewModel
   fun check(passphrase: CharSequence) {
     viewModelScope.launch {
       val context: Context = getApplication()
+      pwdStrengthResultMutableStateFlow.value = Result.loading()
       if (passphrase.isEmpty()) {
         pwdStrengthResultMutableStateFlow.value = Result.exception(
           IllegalTextForStrengthMeasuringException(context.getString(R.string.type_text_to_start_measuring))
         )
         return@launch
       }
-
-      pwdStrengthResultMutableStateFlow.value = Result.loading()
 
       pwdStrengthResultMutableStateFlow.value = controlledRunnerForZxcvbn.cancelPreviousThenRun {
         val measure = withContext(Dispatchers.IO) {

@@ -7,6 +7,7 @@ package com.flowcrypt.email.extensions
 
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.IdlingCountListener
 import com.flowcrypt.email.util.LogsUtil
 
 /**
@@ -15,17 +16,19 @@ import com.flowcrypt.email.util.LogsUtil
  *         Time: 7:26 PM
  *         E-mail: DenBond7@gmail.com
  */
-fun CountingIdlingResource?.incrementSafely(msg: String = "") {
+fun CountingIdlingResource?.incrementSafely(any: Any, msg: String = "") {
   if (GeneralUtil.isDebugBuild()) {
-    LogsUtil.d("CountingIdlingResource", "$this:incrementSafely: $msg")
+    LogsUtil.d("CountingIdlingResource", "$this:incrementSafely from ${any.javaClass.name}: $msg")
     this?.increment()
+    (any as? IdlingCountListener)?.incrementIdlingCount()
   }
 }
 
-fun CountingIdlingResource?.decrementSafely(msg: String = "") {
+fun CountingIdlingResource?.decrementSafely(any: Any, msg: String = "") {
   if (GeneralUtil.isDebugBuild() && this?.isIdleNow == false) {
-    LogsUtil.d("CountingIdlingResource", "$this:decrementSafely: $msg")
+    LogsUtil.d("CountingIdlingResource", "$this:decrementSafely from ${any.javaClass.name}: $msg")
     decrement()
+    (any as? IdlingCountListener)?.decrementIdlingCount()
   }
 }
 

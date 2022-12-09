@@ -137,7 +137,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
     recipientsViewModel.contactsWithPgpSearchLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely("searchPattern = $searchPattern")
+          countingIdlingResource?.incrementSafely(this@SelectRecipientsFragment)
           showProgress()
         }
 
@@ -148,7 +148,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
             recipientsRecyclerViewAdapter.submitList(it.data)
             showContent()
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@SelectRecipientsFragment)
         }
 
         else -> {}

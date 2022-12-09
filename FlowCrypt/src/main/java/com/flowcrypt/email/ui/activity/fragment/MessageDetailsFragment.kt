@@ -958,12 +958,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     binding?.emailWebView?.setOnPageLoadingListener(object : EmailWebView.OnPageLoadingListener {
       override fun onPageLoading(newProgress: Int) {
         when (newProgress) {
-          0 -> countingIdlingResource?.incrementSafely()
+          0 -> countingIdlingResource?.incrementSafely(this@MessageDetailsFragment)
 
           100 -> {
             setActionProgress(100, null)
             updateReplyButtons()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
           }
         }
       }
@@ -1372,7 +1372,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     recipientsViewModel.recipientsFromLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@MessageDetailsFragment)
         }
 
         Result.Status.SUCCESS -> {
@@ -1396,12 +1396,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           } else {
             updatePgpBadges()
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
         }
 
         Result.Status.EXCEPTION -> {
           updatePgpBadges()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
         }
 
         else -> {
@@ -1432,7 +1432,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           val value = it.progress?.toInt() ?: 0
 
           if (value == 0) {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@MessageDetailsFragment)
           }
 
           when (it.resultCode) {
@@ -1450,7 +1450,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           it.data?.let { incomingMsgInfo ->
             showIncomingMsgInfo(incomingMsgInfo)
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
         }
 
         Result.Status.EXCEPTION -> {
@@ -1488,12 +1488,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               )
             }
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
         }
 
         else -> {
           setActionProgress(100)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
         }
       }
     }
@@ -1554,7 +1554,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       msgDetailsViewModel.reVerifySignaturesStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@MessageDetailsFragment)
           }
 
           Result.Status.SUCCESS -> {
@@ -1563,12 +1563,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               msgInfo = msgInfo?.copy(verificationResult = verificationResult)
             }
             updatePgpBadges()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
             updatePgpBadges()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
           }
 
           else -> {

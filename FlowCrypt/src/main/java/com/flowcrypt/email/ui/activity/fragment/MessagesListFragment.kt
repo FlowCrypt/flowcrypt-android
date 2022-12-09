@@ -917,7 +917,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       when (it.status) {
         Result.Status.LOADING -> {
           if (it.progress == null) {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@MessagesListFragment)
           }
 
           if (binding?.recyclerViewMsgs?.adapter?.itemCount == 0) {
@@ -973,7 +973,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           } else {
             showContent()
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessagesListFragment)
         }
 
         Result.Status.EXCEPTION -> {
@@ -994,11 +994,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 ?: getString(R.string.can_not_connect_to_the_server)
             )
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessagesListFragment)
         }
 
         else -> {
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessagesListFragment)
         }
       }
     }
@@ -1028,7 +1028,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner) { result ->
       when (result.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@MessagesListFragment)
           binding?.swipeRefreshLayout?.isRefreshing = true
         }
 
@@ -1059,7 +1059,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             }
           }
 
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessagesListFragment)
         }
       }
     }
@@ -1083,13 +1083,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     labelsViewModel.loadLabelsFromRemoteServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@MessagesListFragment)
           setActionProgress(0, getString(R.string.loading_labels))
         }
 
         Result.Status.SUCCESS -> {
           setActionProgress(100)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessagesListFragment)
         }
 
         Result.Status.EXCEPTION -> {
@@ -1100,11 +1100,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           } else {
             showStatus(msg = it.exception?.message)
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessagesListFragment)
         }
 
         else -> {
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MessagesListFragment)
         }
       }
     }

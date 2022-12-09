@@ -79,7 +79,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
       downloadAttachmentViewModel.downloadAttachmentStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@DownloadAttachmentDialogFragment)
             binding?.progressBar?.visible()
             if (it.progress != null) {
               binding?.progressBar?.isIndeterminate = false
@@ -105,7 +105,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
                 )
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@DownloadAttachmentDialogFragment)
           }
 
           Result.Status.EXCEPTION -> {
@@ -116,7 +116,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
             } else exception.message
             binding?.textViewStatus?.text =
               context?.getString(R.string.error_occurred_during_downloading_att, errorMsg)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@DownloadAttachmentDialogFragment)
           }
 
           else -> {

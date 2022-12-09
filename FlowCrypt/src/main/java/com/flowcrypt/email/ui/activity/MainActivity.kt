@@ -364,7 +364,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       activeAccount?.let { accountEntity ->
         if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
 
-        FlavorSettings.getCountingIdlingResource().incrementSafely()
+        FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
 
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
@@ -382,7 +382,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           navController.navigate(NavGraphDirections.actionGlobalToMainSignInFragment())
         }
 
-        FlavorSettings.getCountingIdlingResource().decrementSafely()
+        FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
       }
     }
   }
@@ -435,8 +435,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     lifecycleScope.launchWhenStarted {
       refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
         when (it.status) {
-          Result.Status.LOADING -> FlavorSettings.getCountingIdlingResource().incrementSafely()
-          Result.Status.SUCCESS -> FlavorSettings.getCountingIdlingResource().decrementSafely()
+          Result.Status.LOADING -> {
+            FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
+          }
+          Result.Status.SUCCESS -> {
+            FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
+          }
           Result.Status.EXCEPTION -> {
             it.exception?.let { exception ->
               when (exception) {
@@ -461,7 +465,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 }
               }
             }
-            FlavorSettings.getCountingIdlingResource().decrementSafely()
+            FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
           }
           else -> {}
         }

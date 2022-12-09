@@ -112,7 +112,7 @@ class ImportMissingPublicKeyFragment :
       recipientsViewModel.addPublicKeyToRecipientStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@ImportMissingPublicKeyFragment)
           }
 
           Result.Status.SUCCESS -> {
@@ -123,7 +123,7 @@ class ImportMissingPublicKeyFragment :
                 bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -133,7 +133,7 @@ class ImportMissingPublicKeyFragment :
             } else exception.message
 
             showInfoSnackbar(msgText = errorMsg)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
           }
           else -> {
           }

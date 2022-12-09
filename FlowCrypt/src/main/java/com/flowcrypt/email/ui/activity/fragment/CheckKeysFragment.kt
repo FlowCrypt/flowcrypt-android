@@ -177,7 +177,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@CheckKeysFragment)
           binding?.progressBar?.visibility = View.VISIBLE
         }
 
@@ -239,7 +239,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
             else -> {
             }
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@CheckKeysFragment)
         }
       }
     }

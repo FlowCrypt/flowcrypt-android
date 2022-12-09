@@ -83,7 +83,7 @@ class AttesterSettingsFragment : BaseFragment<FragmentAttesterSettingsBinding>()
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@AttesterSettingsFragment)
             if (binding?.sRL?.isRefreshing != true || attesterKeyAdapter.itemCount == 0) {
               binding?.sRL?.isRefreshing = false
               showProgress()
@@ -100,12 +100,12 @@ class AttesterSettingsFragment : BaseFragment<FragmentAttesterSettingsBinding>()
                 showEmptyView()
               }
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@AttesterSettingsFragment)
           }
 
           Result.Status.ERROR -> {
             binding?.sRL?.isRefreshing = false
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@AttesterSettingsFragment)
           }
 
           Result.Status.EXCEPTION -> {
@@ -124,7 +124,7 @@ class AttesterSettingsFragment : BaseFragment<FragmentAttesterSettingsBinding>()
               accountPublicKeyServersViewModel.refreshData()
             }
 
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@AttesterSettingsFragment)
           }
           else -> {}
         }

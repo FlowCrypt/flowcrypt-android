@@ -152,7 +152,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
       recipientsViewModel.updateRecipientPublicKeyStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
           }
 
           Result.Status.SUCCESS -> {
@@ -163,7 +163,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_UPDATE_RECIPIENT_PUBLIC_KEY to isUpdated)
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -173,7 +173,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
             } else exception.message
 
             toast(errorMsg)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
           }
           else -> {
           }

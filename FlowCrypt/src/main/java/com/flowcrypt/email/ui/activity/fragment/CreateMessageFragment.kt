@@ -1236,7 +1236,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
         if (recipients.any { it.value.isUpdating } && !updatingRecipientsMarker) {
           updatingRecipientsMarker = true
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@CreateMessageFragment)
         }
 
         if (isPasswordProtectedFunctionalityEnabled()) {
@@ -1254,7 +1254,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
         if (recipients.none { it.value.isUpdating }) {
           updatingRecipientsMarker = false
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
         }
       }
     }
@@ -1382,16 +1382,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       draftViewModel.savingDraftStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@CreateMessageFragment)
           }
 
           Result.Status.SUCCESS, Result.Status.ERROR -> {
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
           }
 
           Result.Status.EXCEPTION -> {
             showInfoDialog(dialogMsg = getString(R.string.could_not_save_draft, it.exceptionMsg))
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
           }
 
           else -> {
@@ -1675,7 +1675,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@CreateMessageFragment)
           }
 
           Result.Status.SUCCESS -> {
@@ -1731,7 +1731,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               )
             }
             adapter.submitList(finalList)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
           }
           else -> {}
         }
