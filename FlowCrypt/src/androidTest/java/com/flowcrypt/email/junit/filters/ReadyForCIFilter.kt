@@ -17,7 +17,8 @@ import org.junit.runner.Description
 open class ReadyForCIFilter : NonFlakyTestsFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = NotReadyForCI::class.java
-    return isAnnotationNotPresentAtClassNorMethod(description, annotationClass)
+    return super.evaluateTest(description)
+        && isAnnotationNotPresentAtClassNorMethod(description, annotationClass)
   }
 
   override fun describe() = "Filter tests that are ready to be run on a CI server"

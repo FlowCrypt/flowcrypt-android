@@ -17,7 +17,7 @@ import org.junit.runner.Description
 open class NotReadyForCIFilter : BaseCustomFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = NotReadyForCI::class.java
-    return isAnnotationNotPresentAtClassNorMethod(description, annotationClass)
+    return isAnnotationPresentAtClassOrMethod(description, annotationClass)
   }
 
   override fun describe() = "Filter tests that can't be run on CI yet"
