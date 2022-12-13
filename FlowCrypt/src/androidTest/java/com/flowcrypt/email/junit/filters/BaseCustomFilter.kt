@@ -23,6 +23,14 @@ abstract class BaseCustomFilter : AbstractFilter() {
         && description.getAnnotation(annotationClass) == null
   }
 
+  protected fun isAnnotationPresentAtClassOrMethod(
+    description: Description?,
+    annotationClass: Class<out Annotation?>
+  ): Boolean {
+    return description?.testClass?.isAnnotationPresent(annotationClass) == true
+        || description?.getAnnotation(annotationClass) != null
+  }
+
   protected fun isAnnotationNotPresentAtClassOrMethod(
     description: Description?,
     annotationClass: Class<out Annotation?>,

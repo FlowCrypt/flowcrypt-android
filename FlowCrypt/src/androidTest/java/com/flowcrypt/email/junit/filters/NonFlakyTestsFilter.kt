@@ -17,7 +17,7 @@ import org.junit.runner.Description
 open class NonFlakyTestsFilter : BaseCustomFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = FlakyTest::class.java
-    return isAnnotationNotPresentAtClassOrMethod(description, annotationClass) { true }
+    return isAnnotationNotPresentAtClassNorMethod(description, annotationClass)
   }
 
   override fun describe() = "Filter tests that are not flaky"
