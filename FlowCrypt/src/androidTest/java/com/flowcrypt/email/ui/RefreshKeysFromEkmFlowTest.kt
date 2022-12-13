@@ -13,7 +13,6 @@ import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -44,6 +43,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -75,7 +75,12 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
 
   override fun handleEkmAPI(gson: Gson): MockResponse {
     return when (testNameRule.methodName) {
-      "testUpdatePrvKeyFromEkmSuccessSilent", "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
+      "testUpdatePrvKeyFromEkmSuccessSilent" ->
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBodyDelay(DELAY_TO_TEST_SUCCESS_CASE, TimeUnit.MILLISECONDS)
+          .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
+
+      "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
 
@@ -88,7 +93,6 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   @Test
-  @FlakyTest
   fun testUpdatePrvKeyFromEkmSuccessSilent() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
@@ -100,10 +104,11 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     val existingPgpKeyDetailsBeforeUpdating = checkExistingKeyBeforeUpdating(keysStorage)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(DELAY_TO_TEST_SUCCESS_CASE)
 
     //check existing key after updating
     val existingPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList().first()
+    assertEquals(1, keysStorage.getPgpKeyDetailsList().size)
     assertTrue(!existingPgpKeyDetailsAfterUpdating.isExpired)
     assertTrue(existingPgpKeyDetailsAfterUpdating.isNewerThan(existingPgpKeyDetailsBeforeUpdating))
 
@@ -183,6 +188,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   companion object {
+    private const val DELAY_TO_TEST_SUCCESS_CASE = 2000L
     private val EKM_KEY_WITH_EXTENDED_EXPIRATION = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/expired_extended@flowcrypt.test_prv_default.asc"
     )
