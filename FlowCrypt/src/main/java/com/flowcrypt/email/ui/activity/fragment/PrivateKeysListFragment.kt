@@ -87,7 +87,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
   override val progressView: View?
     get() = binding?.progressBar
   override val contentView: View?
-    get() = binding?.groupContent
+    get() = binding?.content
   override val statusView: View? = null
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
