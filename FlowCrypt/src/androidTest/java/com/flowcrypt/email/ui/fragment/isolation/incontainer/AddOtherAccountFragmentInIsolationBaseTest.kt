@@ -13,36 +13,30 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
-import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.DependsOnMailServer
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
+import com.flowcrypt.email.ui.base.AddOtherAccountBaseTest
 import com.flowcrypt.email.util.AuthCredentialsManager
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.not
-import org.hamcrest.Matchers.startsWith
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -58,7 +52,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class AddOtherAccountFragmentInIsolationTest : BaseTest() {
+class AddOtherAccountFragmentInIsolationBaseTest : AddOtherAccountBaseTest() {
   override val useIntents: Boolean = true
 
   @get:Rule
@@ -146,7 +140,6 @@ class AddOtherAccountFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @DependsOnMailServer
   fun testChangeFieldValuesWhenEmailChanged() {
     enableAdvancedMode()
 
@@ -250,7 +243,6 @@ class AddOtherAccountFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @NotReadyForCI
   fun testWrongFormatOfEmailAddress() {
     enableAdvancedMode()
     fillAllFields(authCreds)
@@ -268,79 +260,6 @@ class AddOtherAccountFragmentInIsolationTest : BaseTest() {
       onView(withId(com.google.android.material.R.id.snackbar_action))
         .check(matches(isDisplayed()))
         .perform(click())
-    }
-  }
-
-  @Test
-  @NotReadyForCI
-  @FlakyTest
-  fun testShowWarningIfAuthFail() {
-    enableAdvancedMode()
-    val creds = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")
-    fillAllFields(creds)
-    val someFailTextToChangeRightValue = "123"
-
-    val fieldIdentifiersWithIncorrectData = intArrayOf(
-      R.id.editTextEmail,
-      R.id.editTextUserName,
-      R.id.editTextImapServer,
-      R.id.editTextImapPort,
-      R.id.editTextSmtpServer,
-      R.id.editTextSmtpPort,
-      R.id.editTextSmtpUsername,
-      R.id.editTextSmtpPassword
-    )
-
-    val correctData = arrayOf(
-      creds.email,
-      creds.username,
-      creds.password,
-      creds.imapServer,
-      creds.imapPort.toString(),
-      creds.smtpServer,
-      creds.smtpPort.toString(),
-      creds.smtpSigInUsername,
-      creds.smtpSignInPassword
-    )
-
-    val numberOfChecks = if (creds.hasCustomSignInForSmtp) {
-      fieldIdentifiersWithIncorrectData.size
-    } else {
-      fieldIdentifiersWithIncorrectData.size - 2
-    }
-
-    for (i in 0 until numberOfChecks) {
-      onView(withId(fieldIdentifiersWithIncorrectData[i]))
-        .perform(scrollTo(), typeText(someFailTextToChangeRightValue), closeSoftKeyboard())
-      onView(withId(R.id.buttonTryToConnect))
-        .perform(scrollTo(), click())
-
-      onView(
-        anyOf(
-          withText(startsWith(TestConstants.IMAP)),
-          withText(startsWith(TestConstants.SMTP))
-        )
-      )
-        .check(matches(isDisplayed()))
-
-      if (i in intArrayOf(
-          R.id.editTextImapServer,
-          R.id.editTextImapPort,
-          R.id.editTextSmtpServer,
-          R.id.editTextSmtpPort
-        )
-      ) {
-        onView(withText(getResString(R.string.network_error)))
-          .check(matches(isDisplayed()))
-      }
-
-      onView(withText(getResString(R.string.cancel)))
-        .inRoot(isDialog())
-        .check(matches(isDisplayed()))
-        .perform(click())
-
-      onView(withId(fieldIdentifiersWithIncorrectData[i]))
-        .perform(scrollTo(), clearText(), typeText(correctData[i]), closeSoftKeyboard())
     }
   }
 
@@ -376,52 +295,6 @@ class AddOtherAccountFragmentInIsolationTest : BaseTest() {
       .check(matches(isDisplayed()))
     onView(withId(com.google.android.material.R.id.snackbar_action))
       .check(matches(isDisplayed())).perform(click())
-  }
-
-  private fun fillAllFields(authCreds: AuthCredentials) {
-    onView(withId(R.id.editTextEmail))
-      .perform(clearText(), typeText(authCreds.email), closeSoftKeyboard())
-    onView(withId(R.id.editTextUserName))
-      .perform(clearText(), typeText(authCreds.username), closeSoftKeyboard())
-    onView(withId(R.id.editTextPassword))
-      .perform(clearText(), typeText(authCreds.password), closeSoftKeyboard())
-
-    onView(withId(R.id.editTextImapServer))
-      .perform(clearText(), typeText(authCreds.imapServer), closeSoftKeyboard())
-    onView(withId(R.id.spinnerImapSecurityType))
-      .perform(scrollTo(), click())
-    onData(
-      allOf(
-        `is`(instanceOf<Any>(SecurityType::class.java)),
-        withSecurityTypeOption(authCreds.imapOpt)
-      )
-    )
-      .perform(click())
-    onView(withId(R.id.editTextImapPort))
-      .perform(clearText(), typeText(authCreds.imapPort.toString()), closeSoftKeyboard())
-
-    onView(withId(R.id.editTextSmtpServer))
-      .perform(clearText(), typeText(authCreds.smtpServer), closeSoftKeyboard())
-    onView(withId(R.id.spinnerSmtpSecyrityType))
-      .perform(scrollTo(), click())
-    onData(
-      allOf(
-        `is`(instanceOf<Any>(SecurityType::class.java)),
-        withSecurityTypeOption(authCreds.smtpOpt)
-      )
-    )
-      .perform(click())
-    onView(withId(R.id.editTextSmtpPort))
-      .perform(clearText(), typeText(authCreds.smtpPort.toString()), closeSoftKeyboard())
-
-    if (authCreds.hasCustomSignInForSmtp) {
-      onView(withId(R.id.checkBoxRequireSignInForSmtp))
-        .perform(click())
-      onView(withId(R.id.editTextSmtpUsername))
-        .perform(clearText(), typeText(authCreds.smtpSigInUsername), closeSoftKeyboard())
-      onView(withId(R.id.editTextSmtpPassword))
-        .perform(clearText(), typeText(authCreds.smtpSignInPassword), closeSoftKeyboard())
-    }
   }
 
   private fun clearAllFields() {
@@ -467,12 +340,6 @@ class AddOtherAccountFragmentInIsolationTest : BaseTest() {
       .perform(scrollTo(), clearText(), closeSoftKeyboard())
     onView(withId(R.id.editTextSmtpPassword))
       .perform(scrollTo(), clearText(), closeSoftKeyboard())
-  }
-
-  private fun enableAdvancedMode() {
-    onView(withId(R.id.checkBoxAdvancedMode))
-      .check(matches(isNotChecked()))
-      .perform(scrollTo(), click())
   }
 
   companion object {
