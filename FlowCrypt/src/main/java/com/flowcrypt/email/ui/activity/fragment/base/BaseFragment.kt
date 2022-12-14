@@ -53,19 +53,11 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
   private var idlingCount: AtomicInteger = AtomicInteger(0)
 
   override fun incrementIdlingCount() {
-    idlingCount.incrementAndGet()
-    LogsUtil.d(
-      this.javaClass.simpleName,
-      this.javaClass.simpleName + ":>>>> = " + idlingCount + "|" + idlingCount.hashCode()
-    )
+    IdlingCountListener.handleIncrement(idlingCount, this.javaClass)
   }
 
   override fun decrementIdlingCount() {
-    idlingCount.decrementAndGet()
-    LogsUtil.d(
-      this.javaClass.simpleName,
-      this.javaClass.simpleName + ":<<<< = " + idlingCount + "|" + idlingCount.hashCode()
-    )
+    IdlingCountListener.handleDecrement(idlingCount, this.javaClass)
   }
 
   override fun onAttach(context: Context) {
@@ -137,10 +129,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
   override fun onDestroy() {
     super.onDestroy()
     LogsUtil.d(loggingTag, "onDestroy")
-    LogsUtil.d(
-      this.javaClass.simpleName,
-      this.javaClass.simpleName + ":idlingCount = " + idlingCount + "|" + idlingCount.hashCode()
-    )
+    IdlingCountListener.printIdlingStats(idlingCount, this.javaClass)
   }
 
   override fun onDetach() {

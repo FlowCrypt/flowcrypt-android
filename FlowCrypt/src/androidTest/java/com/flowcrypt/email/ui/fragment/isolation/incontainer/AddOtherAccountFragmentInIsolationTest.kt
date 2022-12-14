@@ -52,7 +52,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class AddOtherAccountFragmentInIsolationBaseTest : AddOtherAccountBaseTest() {
+class AddOtherAccountFragmentInIsolationTest : AddOtherAccountBaseTest() {
   override val useIntents: Boolean = true
 
   @get:Rule

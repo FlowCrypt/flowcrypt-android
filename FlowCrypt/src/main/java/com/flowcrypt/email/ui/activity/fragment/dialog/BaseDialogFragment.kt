@@ -11,7 +11,6 @@ import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.util.IdlingCountListener
-import com.flowcrypt.email.util.LogsUtil
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -27,27 +26,16 @@ abstract class BaseDialogFragment : DialogFragment(), IdlingCountListener {
   private var idlingCount: AtomicInteger = AtomicInteger(0)
 
   override fun incrementIdlingCount() {
-    idlingCount.incrementAndGet()
-    LogsUtil.d(
-      this.javaClass.simpleName,
-      this.javaClass.simpleName + ":>>>> = " + idlingCount + "|" + idlingCount.hashCode()
-    )
+    IdlingCountListener.handleIncrement(idlingCount, this.javaClass)
   }
 
   override fun decrementIdlingCount() {
-    idlingCount.decrementAndGet()
-    LogsUtil.d(
-      this.javaClass.simpleName,
-      this.javaClass.simpleName + ":<<<< = " + idlingCount + "|" + idlingCount.hashCode()
-    )
+    IdlingCountListener.handleDecrement(idlingCount, this.javaClass)
   }
 
   override fun onDestroy() {
     super.onDestroy()
-    LogsUtil.d(
-      this.javaClass.simpleName,
-      this.javaClass.simpleName + ":idlingCount = " + idlingCount + "|" + idlingCount.hashCode()
-    )
+    IdlingCountListener.printIdlingStats(idlingCount, this.javaClass)
   }
 
   protected fun modifyLinkMovementMethod(hasHtml: Boolean, useLinkify: Boolean) {

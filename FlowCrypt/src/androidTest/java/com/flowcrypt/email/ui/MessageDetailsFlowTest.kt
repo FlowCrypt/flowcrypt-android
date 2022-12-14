@@ -250,7 +250,6 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
-
   fun testDecryptionError_NO_MDC() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_error_no_mdc.json",

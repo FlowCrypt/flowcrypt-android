@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util
 
+import java.util.concurrent.atomic.AtomicInteger
+
 /**
  * This listener will be used to help debug idling issues for Instrumentation UI tests.
  *
@@ -16,4 +18,29 @@ package com.flowcrypt.email.util
 interface IdlingCountListener {
   fun incrementIdlingCount()
   fun decrementIdlingCount()
+
+  companion object {
+    fun handleIncrement(atomicInteger: AtomicInteger, clazz: Class<*>) {
+      atomicInteger.incrementAndGet()
+      LogsUtil.d(
+        clazz.simpleName,
+        clazz.simpleName + ":>>>> = " + atomicInteger + "|" + atomicInteger.hashCode()
+      )
+    }
+
+    fun handleDecrement(atomicInteger: AtomicInteger, clazz: Class<*>) {
+      atomicInteger.incrementAndGet()
+      LogsUtil.d(
+        clazz.simpleName,
+        clazz.simpleName + ":<<<< = " + atomicInteger + "|" + atomicInteger.hashCode()
+      )
+    }
+
+    fun printIdlingStats(atomicInteger: AtomicInteger, clazz: Class<*>) {
+      LogsUtil.d(
+        clazz.simpleName,
+        clazz.simpleName + ":idlingCount = " + atomicInteger + "|" + atomicInteger.hashCode()
+      )
+    }
+  }
 }
