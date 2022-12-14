@@ -304,7 +304,6 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @FlakyTest
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo(
       "messages/info/encrypted_msg_info_text_with_missing_key.json",
