@@ -5,11 +5,17 @@
 
 package com.flowcrypt.email.ui
 
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.matcher.RootMatchers
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.clearText
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -23,7 +29,8 @@ import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.base.AddOtherAccountBaseTest
 import com.flowcrypt.email.util.AuthCredentialsManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Matchers
+import org.hamcrest.CoreMatchers.anyOf
+import org.hamcrest.CoreMatchers.startsWith
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -38,7 +45,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class AddOtherAccountFlowBaseTest : AddOtherAccountBaseTest() {
+class AddOtherAccountFlowTest : AddOtherAccountBaseTest() {
 
   override val activeActivityRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
@@ -91,22 +98,21 @@ class AddOtherAccountFlowBaseTest : AddOtherAccountBaseTest() {
     }
 
     for (i in 0 until numberOfChecks) {
-      Espresso.onView(ViewMatchers.withId(fieldIdentifiersWithIncorrectData[i]))
+      onView(withId(fieldIdentifiersWithIncorrectData[i]))
         .perform(
-          ViewActions.scrollTo(),
-          ViewActions.typeText(someFailTextToChangeRightValue),
-          ViewActions.closeSoftKeyboard()
+          scrollTo(),
+          typeText(someFailTextToChangeRightValue),
+          closeSoftKeyboard()
         )
-      Espresso.onView(ViewMatchers.withId(R.id.buttonTryToConnect))
-        .perform(ViewActions.scrollTo(), ViewActions.click())
+      onView(withId(R.id.buttonTryToConnect))
+        .perform(scrollTo(), click())
 
-      Espresso.onView(
-        Matchers.anyOf(
-          ViewMatchers.withText(Matchers.startsWith(TestConstants.IMAP)),
-          ViewMatchers.withText(Matchers.startsWith(TestConstants.SMTP))
+      onView(
+        anyOf(
+          withText(startsWith(TestConstants.IMAP)),
+          withText(startsWith(TestConstants.SMTP))
         )
-      )
-        .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+      ).check(matches(isDisplayed()))
 
       if (i in intArrayOf(
           R.id.editTextImapServer,
@@ -115,21 +121,21 @@ class AddOtherAccountFlowBaseTest : AddOtherAccountBaseTest() {
           R.id.editTextSmtpPort
         )
       ) {
-        Espresso.onView(ViewMatchers.withText(getResString(R.string.network_error)))
-          .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        onView(withText(getResString(R.string.network_error)))
+          .check(matches(isDisplayed()))
       }
 
-      Espresso.onView(ViewMatchers.withText(getResString(R.string.cancel)))
-        .inRoot(RootMatchers.isDialog())
-        .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        .perform(ViewActions.click())
+      onView(withText(getResString(R.string.cancel)))
+        .inRoot(isDialog())
+        .check(matches(isDisplayed()))
+        .perform(click())
 
-      Espresso.onView(ViewMatchers.withId(fieldIdentifiersWithIncorrectData[i]))
+      onView(withId(fieldIdentifiersWithIncorrectData[i]))
         .perform(
-          ViewActions.scrollTo(),
-          ViewActions.clearText(),
-          ViewActions.typeText(correctData[i]),
-          ViewActions.closeSoftKeyboard()
+          scrollTo(),
+          clearText(),
+          typeText(correctData[i]),
+          closeSoftKeyboard()
         )
     }
   }
