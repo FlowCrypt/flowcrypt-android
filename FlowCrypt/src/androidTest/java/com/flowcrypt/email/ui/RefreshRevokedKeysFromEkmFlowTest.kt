@@ -99,7 +99,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     assertTrue(existingPgpKeyDetailsBeforeUpdating.isRevoked)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(3000)
 
     //check existing key after updating. We should have the same key as before.
     val existingPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList().first()
@@ -132,7 +132,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     assertTrue(firstPgpKeyDetailsBeforeUpdating.isRevoked)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(3000)
 
     //check existing keys after updating. We should have the same key as before + one new.
     assertEquals(keysStorage.getPgpKeyDetailsList().size, 2)
