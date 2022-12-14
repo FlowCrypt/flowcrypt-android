@@ -10,7 +10,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -40,6 +39,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -81,6 +81,8 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
     return when (testNameRule.methodName) {
       "testDeleteNotMatchingKeys" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          //we need to add delay for this response to prevent showing 'need passphrase' dialog
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS_WITH_KEY_WHERE_MODIFICATION_DATE_AFTER_REVOKED))
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -88,7 +90,6 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
   }
 
   @Test
-  @FlakyTest
   fun testDeleteNotMatchingKeys() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
@@ -105,7 +106,7 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
       .firstOrNull { it.fingerprint == addSecondPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint })
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(DELAY_FOR_EKM_REQUEST)
 
     //check existing keys after updating. We should have only the first key.
     assertEquals(keysStorage.getPgpKeyDetailsList().size, 1)
@@ -129,6 +130,8 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
   }
 
   companion object {
+    private const val DELAY_FOR_EKM_REQUEST = 2000L
+
     private val EKM_KEY_WITH_MODIFICATION_DATE_AFTER_REVOKED =
       PrivateKeysManager.getPgpKeyDetailsFromAssets(
         "pgp/default@flowcrypt.test_fisrtKey_prv_default_mod_06_17_2022.asc"
