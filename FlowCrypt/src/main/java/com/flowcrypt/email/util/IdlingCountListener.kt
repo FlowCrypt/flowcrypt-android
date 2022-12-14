@@ -29,7 +29,7 @@ interface IdlingCountListener {
     }
 
     fun handleDecrement(atomicInteger: AtomicInteger, clazz: Class<*>) {
-      atomicInteger.incrementAndGet()
+      atomicInteger.decrementAndGet()
       LogsUtil.d(
         clazz.simpleName,
         clazz.simpleName + ":<<<< = " + atomicInteger + "|" + atomicInteger.hashCode()
