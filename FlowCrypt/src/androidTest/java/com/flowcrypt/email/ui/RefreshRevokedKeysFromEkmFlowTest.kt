@@ -39,6 +39,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -72,10 +73,13 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     return when (testNameRule.methodName) {
       "testDisallowUpdateRevokedKeys" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS_WITH_KEY_WHERE_MODIFICATION_DATE_AFTER_REVOKED))
 
       "testDisallowDeleteRevokedKeys" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          //we need to add delay for this response to prevent showing 'need passphrase' dialog
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS_DIFFERENT_FINGERPRINT_KEY))
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -115,6 +119,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
 
   @Test
   @FlakyTest
+
   fun testDisallowDeleteRevokedKeys() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(

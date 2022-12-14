@@ -106,7 +106,7 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
       .firstOrNull { it.fingerprint == addSecondPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint })
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(DELAY_FOR_EKM_REQUEST)
+    Thread.sleep(2000)
 
     //check existing keys after updating. We should have only the first key.
     assertEquals(keysStorage.getPgpKeyDetailsList().size, 1)
@@ -130,8 +130,6 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
   }
 
   companion object {
-    private const val DELAY_FOR_EKM_REQUEST = 2000L
-
     private val EKM_KEY_WITH_MODIFICATION_DATE_AFTER_REVOKED =
       PrivateKeysManager.getPgpKeyDetailsFromAssets(
         "pgp/default@flowcrypt.test_fisrtKey_prv_default_mod_06_17_2022.asc"

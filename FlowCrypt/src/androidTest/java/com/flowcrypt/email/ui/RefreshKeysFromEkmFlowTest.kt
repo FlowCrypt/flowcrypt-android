@@ -77,7 +77,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     return when (testNameRule.methodName) {
       "testUpdatePrvKeyFromEkmSuccessSilent" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBodyDelay(DELAY_TO_TEST_SUCCESS_CASE, TimeUnit.MILLISECONDS)
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
 
       "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
@@ -104,7 +104,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     val existingPgpKeyDetailsBeforeUpdating = checkExistingKeyBeforeUpdating(keysStorage)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(DELAY_TO_TEST_SUCCESS_CASE)
+    Thread.sleep(2000)
 
     //check existing key after updating
     val existingPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList().first()
@@ -188,7 +188,6 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   companion object {
-    private const val DELAY_TO_TEST_SUCCESS_CASE = 2000L
     private val EKM_KEY_WITH_EXTENDED_EXPIRATION = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/expired_extended@flowcrypt.test_prv_default.asc"
     )
