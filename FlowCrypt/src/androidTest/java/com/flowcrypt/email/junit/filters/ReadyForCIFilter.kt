@@ -18,7 +18,7 @@ open class ReadyForCIFilter : NonFlakyTestsFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = NotReadyForCI::class.java
     return super.evaluateTest(description)
-        && isAnnotationNotPresentAtClassNorMethod(description, annotationClass)
+        && !isAnnotationPresentAtClassOrMethod(description, annotationClass)
   }
 
   override fun describe() = "Filter tests that are ready to be run on a CI server"

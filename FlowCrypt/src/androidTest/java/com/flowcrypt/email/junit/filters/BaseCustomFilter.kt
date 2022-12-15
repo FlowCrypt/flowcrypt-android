@@ -15,29 +15,11 @@ import org.junit.runner.Description
  *         E-mail: DenBond7@gmail.com
  */
 abstract class BaseCustomFilter : AbstractFilter() {
-  protected fun isAnnotationNotPresentAtClassNorMethod(
-    description: Description?,
-    annotationClass: Class<out Annotation?>
-  ): Boolean {
-    return description?.testClass?.isAnnotationPresent(annotationClass) == false
-        && description.getAnnotation(annotationClass) == null
-  }
-
   protected fun isAnnotationPresentAtClassOrMethod(
     description: Description?,
     annotationClass: Class<out Annotation?>
   ): Boolean {
     return description?.testClass?.isAnnotationPresent(annotationClass) == true
         || description?.getAnnotation(annotationClass) != null
-  }
-
-  protected fun isAnnotationNotPresentAtClassOrMethod(
-    description: Description?,
-    annotationClass: Class<out Annotation?>,
-    parentFunction: (Description?) -> Boolean
-  ): Boolean {
-    val hasClassAnnotation = description?.testClass?.isAnnotationPresent(annotationClass) == true
-    if (hasClassAnnotation) return false
-    return parentFunction(description) && description?.getAnnotation(annotationClass) == null
   }
 }

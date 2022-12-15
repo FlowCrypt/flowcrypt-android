@@ -77,14 +77,12 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
         val gson = ApiHelper.getInstance(getTargetContext()).gson
 
         when {
-          request.path?.startsWith("/api") == true -> {
-            if (request.path.equals("/api/")) {
-              return handleFesAvailabilityAPI(gson)
-            }
+          request.path.equals("/api/") -> {
+            return handleFesAvailabilityAPI(gson)
+          }
 
-            if (request.path.equals("/api/v1/client-configuration?domain=localhost:1212")) {
-              return handleClientConfigurationAPI(gson)
-            }
+          request.path.equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+            return handleClientConfigurationAPI(gson)
           }
 
           request.path?.startsWith("/ekm") == true -> {
