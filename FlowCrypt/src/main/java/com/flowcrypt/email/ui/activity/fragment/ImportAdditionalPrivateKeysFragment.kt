@@ -131,7 +131,7 @@ class ImportAdditionalPrivateKeysFragment :
     backupsViewModel.onlineBackupsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@ImportAdditionalPrivateKeysFragment)
           showProgress(progressMsg = getString(R.string.loading_backups))
         }
 
@@ -173,14 +173,14 @@ class ImportAdditionalPrivateKeysFragment :
             binding?.buttonImportBackup?.gone()
           }
           showContent()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
         }
 
         Result.Status.EXCEPTION -> {
           binding?.buttonImportBackup?.gone()
           toast(R.string.error_occurred_while_receiving_private_keys)
           showContent()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
         }
 
         else -> {}
@@ -193,7 +193,7 @@ class ImportAdditionalPrivateKeysFragment :
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@ImportAdditionalPrivateKeysFragment)
             showProgress(getString(R.string.processing))
           }
 
@@ -205,7 +205,7 @@ class ImportAdditionalPrivateKeysFragment :
                 bundleOf(KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second))
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -229,7 +229,7 @@ class ImportAdditionalPrivateKeysFragment :
                 ?: getString(R.string.unknown_error)
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
           }
           else -> {}
         }

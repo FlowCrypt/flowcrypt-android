@@ -108,7 +108,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     privateKeysViewModel.parseKeysResultLiveData.observe(this) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@ChoosePublicKeyDialogFragment)
           buttonOk?.visibility = View.GONE
           UIUtil.exchangeViewVisibility(true, progressBar, listViewKeys)
         }
@@ -158,14 +158,14 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             }
           }
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@ChoosePublicKeyDialogFragment)
         }
 
         Result.Status.EXCEPTION -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
           textViewMsg?.text = it.exception?.message
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@ChoosePublicKeyDialogFragment)
         }
         else -> {}
       }

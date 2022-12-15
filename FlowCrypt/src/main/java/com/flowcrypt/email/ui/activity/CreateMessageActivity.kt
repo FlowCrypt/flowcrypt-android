@@ -71,9 +71,9 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
 
   override fun onLoadKeysProgress(status: Result.Status) {
     if (status == Result.Status.LOADING) {
-      FlavorSettings.getCountingIdlingResource().incrementSafely()
+      FlavorSettings.getCountingIdlingResource().incrementSafely(this@CreateMessageActivity)
     } else {
-      FlavorSettings.getCountingIdlingResource().decrementSafely()
+      FlavorSettings.getCountingIdlingResource().decrementSafely(this@CreateMessageActivity)
     }
   }
 

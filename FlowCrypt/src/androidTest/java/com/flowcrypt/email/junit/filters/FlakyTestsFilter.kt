@@ -5,20 +5,20 @@
 
 package com.flowcrypt.email.junit.filters
 
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
+import androidx.test.filters.FlakyTest
 import org.junit.runner.Description
 
 /**
  * @author Denis Bondarenko
- *         Date: 2/17/21
- *         Time: 5:24 PM
+ *         Date: 12/7/22
+ *         Time: 1:25 PM
  *         E-mail: DenBond7@gmail.com
  */
-open class NotReadyForCIFilter : BaseCustomFilter() {
+class FlakyTestsFilter : BaseCustomFilter() {
   override fun evaluateTest(description: Description?): Boolean {
-    val annotationClass = NotReadyForCI::class.java
+    val annotationClass = FlakyTest::class.java
     return isAnnotationPresentAtClassOrMethod(description, annotationClass)
   }
 
-  override fun describe() = "Filter tests that can't be run on CI yet"
+  override fun describe() = "Filter tests that are flaky"
 }

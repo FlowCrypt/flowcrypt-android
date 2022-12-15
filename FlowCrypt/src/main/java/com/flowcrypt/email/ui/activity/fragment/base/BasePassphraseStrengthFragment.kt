@@ -34,6 +34,8 @@ import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuringException
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import java.nio.charset.StandardCharsets
 
@@ -58,13 +60,15 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
       passwordStrengthViewModel.pwdStrengthResultStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            withContext(Dispatchers.Main) {
+              countingIdlingResource?.incrementSafely(this@BasePassphraseStrengthFragment)
+            }
           }
 
           Result.Status.SUCCESS -> {
             pwdStrengthResult = it.data
             updateStrengthViews()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BasePassphraseStrengthFragment)
           }
 
           Result.Status.EXCEPTION -> {
@@ -74,7 +78,7 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
                 ?: getString(R.string.unknown_error), Toast.LENGTH_LONG
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BasePassphraseStrengthFragment)
           }
 
           else -> {

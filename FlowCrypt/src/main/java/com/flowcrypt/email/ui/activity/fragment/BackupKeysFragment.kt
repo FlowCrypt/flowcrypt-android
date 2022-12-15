@@ -168,7 +168,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@BackupKeysFragment)
             showProgress(getString(R.string.processing))
             areBackupsSavingNow = true
           }
@@ -183,7 +183,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
               showContent()
               showInfoSnackbar(binding?.root, getString(R.string.error_occurred_please_try_again))
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BackupKeysFragment)
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -198,7 +198,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
               )
             }
             privateKeysViewModel.saveBackupAsFileLiveData.value = Result.none()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BackupKeysFragment)
           }
 
           else -> {}
@@ -211,7 +211,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     backupsViewModel.postBackupLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@BackupKeysFragment)
           isPrivateKeySendingNow = true
           showProgress(getString(R.string.processing))
         }
@@ -220,7 +220,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
           isPrivateKeySendingNow = false
           toast(R.string.backed_up_successfully)
           navController?.popBackStack(R.id.mainSettingsFragment, false)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@BackupKeysFragment)
         }
 
         Result.Status.EXCEPTION -> {
@@ -232,7 +232,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
           }
 
           backupsViewModel.postBackupLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@BackupKeysFragment)
         }
 
         else -> {

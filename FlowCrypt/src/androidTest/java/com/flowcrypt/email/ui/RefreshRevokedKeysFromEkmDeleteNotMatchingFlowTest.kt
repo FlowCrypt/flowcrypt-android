@@ -32,7 +32,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,6 +39,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -81,6 +81,8 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
     return when (testNameRule.methodName) {
       "testDeleteNotMatchingKeys" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          //we need to add delay for this response to prevent showing 'need passphrase' dialog
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS_WITH_KEY_WHERE_MODIFICATION_DATE_AFTER_REVOKED))
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -88,7 +90,6 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
   fun testDeleteNotMatchingKeys() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(

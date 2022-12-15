@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.observeOnce
@@ -106,7 +107,7 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@BaseSingInFragment)
             showProgress(getString(R.string.processing))
           }
 
@@ -117,13 +118,13 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
                 pair.second.first()
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BaseSingInFragment)
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             showContent()
-            showInfoDialogWithExceptionDetails(it.exception)
-            countingIdlingResource?.decrementSafely()
+            showInfoDialogWithExceptionDetails(it.exception, it.exceptionMsg)
+            countingIdlingResource?.decrementSafely(this@BaseSingInFragment)
           }
           else -> {}
         }
@@ -138,7 +139,7 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@BaseSingInFragment)
             showProgress(getString(R.string.processing))
           }
 
@@ -149,13 +150,13 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
                 pair.second
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BaseSingInFragment)
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             showContent()
             showInfoDialogWithExceptionDetails(it.exception)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BaseSingInFragment)
           }
           else -> {}
         }
@@ -168,13 +169,13 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@BaseSingInFragment)
             showProgress(getString(R.string.processing))
           }
 
           Result.Status.SUCCESS -> {
             it.data?.let { pair -> onSetupCompleted(pair.first) }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BaseSingInFragment)
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -200,7 +201,7 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
                 ?: getString(R.string.unknown_error)
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@BaseSingInFragment)
           }
           else -> {}
         }

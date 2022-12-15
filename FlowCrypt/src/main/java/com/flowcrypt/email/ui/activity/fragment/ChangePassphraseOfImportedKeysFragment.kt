@@ -98,7 +98,7 @@ class ChangePassphraseOfImportedKeysFragment :
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@ChangePassphraseOfImportedKeysFragment)
             isBackEnabled = false
             showProgress(getString(R.string.please_wait_while_pass_phrase_will_be_changed))
           }
@@ -109,9 +109,9 @@ class ChangePassphraseOfImportedKeysFragment :
               //making backups is not allowed by OrgRules.
               isBackEnabled = true
               showContent()
-              countingIdlingResource?.decrementSafely()
+              countingIdlingResource?.decrementSafely(this@ChangePassphraseOfImportedKeysFragment)
             } else {
-              countingIdlingResource?.decrementSafely()
+              countingIdlingResource?.decrementSafely(this@ChangePassphraseOfImportedKeysFragment)
               loadPrivateKeysViewModel.fetchAvailableKeys(args.accountEntity)
             }
           }
@@ -129,7 +129,7 @@ class ChangePassphraseOfImportedKeysFragment :
                 Passphrase.fromPassword(args.passphrase)
               )
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ChangePassphraseOfImportedKeysFragment)
           }
 
           else -> {}
@@ -141,19 +141,19 @@ class ChangePassphraseOfImportedKeysFragment :
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@ChangePassphraseOfImportedKeysFragment)
             showProgress(getString(R.string.please_wait_while_backup_will_be_saved))
           }
 
           Result.Status.SUCCESS -> {
             isBackEnabled = true
             showContent()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ChangePassphraseOfImportedKeysFragment)
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             navigateToMakeBackupFragment()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ChangePassphraseOfImportedKeysFragment)
           }
 
           else -> {}
@@ -168,14 +168,14 @@ class ChangePassphraseOfImportedKeysFragment :
         when (it.status) {
           Result.Status.LOADING -> {
             if (it.progress == null) {
-              countingIdlingResource?.incrementSafely()
+              countingIdlingResource?.incrementSafely(this@ChangePassphraseOfImportedKeysFragment)
             }
             showProgress(getString(R.string.searching_backups))
           }
 
           Result.Status.SUCCESS -> {
             val keyDetailsList = it.data
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ChangePassphraseOfImportedKeysFragment)
             if (keyDetailsList?.isEmpty() == true) {
               navigateToMakeBackupFragment()
             } else {
@@ -185,7 +185,7 @@ class ChangePassphraseOfImportedKeysFragment :
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             navigateToMakeBackupFragment()
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ChangePassphraseOfImportedKeysFragment)
           }
 
           else -> {}

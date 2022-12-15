@@ -10,7 +10,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -27,7 +26,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -55,7 +53,7 @@ class PrivateKeysListFragmentEkmInIsolationTest : BaseTest() {
       enforceKeygenAlgo = null,
       enforceKeygenExpireMonths = null
     )
-  )
+  ).copy(useAPI = true)
 
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
@@ -76,11 +74,8 @@ class PrivateKeysListFragmentEkmInIsolationTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @FlakyTest
-  @Ignore("failed sometimes on CI")
   fun testAddNewKeyGone() {
     launchFragmentInContainer<PrivateKeysListFragment>()
-
     onView(withId(R.id.floatActionButtonAddKey))
       .check(matches(not(isDisplayed())))
   }

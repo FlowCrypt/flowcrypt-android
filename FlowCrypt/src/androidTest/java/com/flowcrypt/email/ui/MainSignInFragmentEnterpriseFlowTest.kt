@@ -6,7 +6,9 @@
 package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -35,6 +37,8 @@ import com.flowcrypt.email.ui.base.BaseSignTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.gson.Gson
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -72,23 +76,36 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(getTargetContext()).gson
 
-        if (request.path?.startsWith("/api") == true) {
-          if (request.path.equals("/api/")) {
+        when {
+          request.path.equals("/api/") -> {
             return handleFesAvailabilityAPI(gson)
           }
 
-          if (request.path.equals("/api/v1/client-configuration?domain=localhost:1212")) {
+          request.path.equals("/api/v1/client-configuration?domain=localhost:1212") -> {
             return handleClientConfigurationAPI(gson)
           }
-        }
 
-        if (request.path?.startsWith("/ekm") == true) {
-          handleEkmAPI(request, gson)?.let { return it }
-        }
+          request.path?.startsWith("/ekm") == true -> {
+            handleEkmAPI(request, gson)?.let { return it }
+          }
 
-        if (request.path.equals("/account/get")) {
-          val account = extractEmailFromRecordedRequest(request)
-          return handleGetDomainRulesAPI(account, gson)
+          request.path.equals("/account/get") -> {
+            val account = extractEmailFromRecordedRequest(request)
+            return handleGetDomainRulesAPI(account, gson)
+          }
+
+          request.requestUrl?.encodedPath == "/gmail/v1/users/me/messages"
+              && request.requestUrl?.queryParameter("q")
+            ?.startsWith("from:${EMAIL_FES_ENFORCE_ATTESTER_SUBMIT}") == true ->
+            return MockResponse()
+              .setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(
+                ListMessagesResponse().apply {
+                  factory = GsonFactory.getDefaultInstance()
+                  messages = emptyList()
+                  resultSizeEstimate = 0
+                }.toString()
+              )
         }
 
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -286,40 +303,41 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  @Ignore("emulator can't resolve fes.localhost. Temporary disabled")
   fun testFesServerUpGetClientConfigurationFailed() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
     )
     isDialogWithTextDisplayed(
       decorView,
-      "ApiException:" + ApiException(ApiError(code = 403, msg = "")).message!!
+      "ApiException:" + ApiException(ApiError(code = 404, msg = "")).message!!
     )
   }
 
   @Test
-  @Ignore("emulator can't resolve fes.localhost. Temporary disabled. Should be reviewed.")
   fun testFailAttesterSubmit() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_ENFORCE_ATTESTER_SUBMIT))
     val passphrase = "unconventional blueberry unlike any other"
-    onView(withId(R.id.eTPassphrase))
+    onView(withId(R.id.buttonCreateNewKey))
       .check(matches(isDisplayed()))
-      .perform(ViewActions.replaceText(passphrase), ViewActions.closeSoftKeyboard())
-    onView(withId(R.id.btSetPassphrase))
+      .perform(click())
+    onView(withId(R.id.editTextKeyPassword))
       .check(matches(isDisplayed()))
-      .perform(ViewActions.click())
-    onView(withId(R.id.eTRepeatedPassphrase))
+      .perform(replaceText(passphrase), closeSoftKeyboard())
+    onView(withId(R.id.buttonSetPassPhrase))
       .check(matches(isDisplayed()))
-      .perform(ViewActions.replaceText(passphrase), ViewActions.closeSoftKeyboard())
-    onView(withId(R.id.btConfirmPassphrase))
+      .perform(click())
+    onView(withId(R.id.editTextKeyPasswordSecond))
       .check(matches(isDisplayed()))
-      .perform(ViewActions.click())
+      .perform(replaceText(passphrase), closeSoftKeyboard())
 
-    /* checkIsSnackbarDisplayedAndClick(SUBMIT_API_ERROR_RESPONSE.apiError?.msg!!)
+    onView(withId(R.id.buttonConfirmPassPhrases))
+      .check(matches(isDisplayed()))
+      .perform(click())
 
-     checkIsSnackBarDisplayed()
-     onView(withText(SUBMIT_API_ERROR_RESPONSE.apiError?.msg))
-       .check(matches(isDisplayed()))*/
+    isDialogWithTextDisplayed(
+      decorView,
+      ApiException(ApiError(code = 404, msg = "")).message!!
+    )
   }
 
   private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
@@ -502,6 +520,18 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
         )
       )
 
+      EMAIL_FES_ENFORCE_ATTESTER_SUBMIT -> {
+        return successMockResponseForOrgRules(
+          gson = gson,
+          orgRules = OrgRules(
+            flags = listOf(
+              OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+            ),
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
+          )
+        )
+      }
+
       else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
@@ -517,40 +547,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       )
 
   companion object {
-    /*private val mockWebServerRule =
-      FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-          val gson =
-            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-          val model = gson.fromJson(
-            InputStreamReader(request.body.inputStream()),
-            InitialLegacySubmitModel::class.java
-          )
-
-          if (request.path.equals("/initial/legacy_submit")) {
-            when (model.email) {
-              CreatePrivateKeyFlowEnterpriseFlowTest.EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(
-                HttpURLConnection.HTTP_OK
-              )
-                .setBody(gson.toJson(CreatePrivateKeyFlowEnterpriseFlowTest.SUBMIT_API_ERROR_RESPONSE))
-            }
-          }
-
-          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        }
-      })
-
-      const val EMAIL_ENFORCE_ATTESTER_SUBMIT = "enforce_attester_submit@flowcrypt.test"
-
-    val SUBMIT_API_ERROR_RESPONSE = InitialLegacySubmitResponse(
-      ApiError(
-        400, "Invalid email " +
-            "address", "internal_error"
-      ), false
-    )
-
-      */
-
     private const val EMAIL_EKM_URL_SUCCESS = "https://localhost:1212/ekm/"
     private const val EMAIL_EKM_URL_SUCCESS_EMPTY_LIST = "https://localhost:1212/ekm/empty/"
     private const val EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY =

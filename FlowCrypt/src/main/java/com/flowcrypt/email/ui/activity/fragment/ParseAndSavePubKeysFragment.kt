@@ -104,7 +104,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@ParseAndSavePubKeysFragment)
             showProgress()
           }
 
@@ -117,7 +117,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
               pubKeysAdapter.submitList(pgpKeyDetailsList)
               showContent()
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ParseAndSavePubKeysFragment)
           }
 
           Result.Status.EXCEPTION -> {
@@ -125,7 +125,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
               getString(R.string.source_has_wrong_pgp_structure, getString(R.string.public_))
             )
             showInfoDialogWithExceptionDetails(it.exception)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@ParseAndSavePubKeysFragment)
           }
 
           else -> {

@@ -142,7 +142,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData.observe(this) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@FixNeedPassphraseIssueDialogFragment)
           binding?.pBLoading?.visible()
         }
 
@@ -181,14 +181,14 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             }
             prvKeysRecyclerViewAdapter.submitList(matchingKeys)
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
 
         Result.Status.EXCEPTION -> {
           binding?.pBLoading?.gone()
           binding?.tVStatusMessage?.visible()
           binding?.tVStatusMessage?.text = it.exception?.message
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
         else -> {
         }
@@ -201,7 +201,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(this) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@FixNeedPassphraseIssueDialogFragment)
           binding?.pBCheckPassphrase?.visible()
         }
 
@@ -257,7 +257,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             }
           }
 
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -267,7 +267,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
               ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_check_pass_phrase)
           )
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
         else -> {}
       }

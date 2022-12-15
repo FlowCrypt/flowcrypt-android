@@ -36,7 +36,6 @@ import com.google.gson.Gson
 import okhttp3.mockwebserver.MockResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -44,6 +43,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -75,7 +75,12 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
 
   override fun handleEkmAPI(gson: Gson): MockResponse {
     return when (testNameRule.methodName) {
-      "testUpdatePrvKeyFromEkmSuccessSilent", "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
+      "testUpdatePrvKeyFromEkmSuccessSilent" ->
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
+          .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
+
+      "testUpdatePrvKeyFromEkmShowFixMissingPassphrase" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
 
@@ -88,7 +93,6 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
   fun testUpdatePrvKeyFromEkmSuccessSilent() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
@@ -104,6 +108,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
 
     //check existing key after updating
     val existingPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList().first()
+    assertEquals(1, keysStorage.getPgpKeyDetailsList().size)
     assertTrue(!existingPgpKeyDetailsAfterUpdating.isExpired)
     assertTrue(existingPgpKeyDetailsAfterUpdating.isNewerThan(existingPgpKeyDetailsBeforeUpdating))
 

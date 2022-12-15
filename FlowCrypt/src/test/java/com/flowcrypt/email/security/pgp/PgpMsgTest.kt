@@ -213,7 +213,6 @@ class PgpMsgTest {
   }
 
   @Test
-  // @Ignore("BC ArmoredInputStream issue")
   fun wrongArmorChecksumTest() {
     val r = processMessage("decrypt - issue 1347 - wrong checksum")
     assertTrue("Error not returned", r.exception != null)

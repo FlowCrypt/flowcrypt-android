@@ -290,7 +290,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@PrivateKeyDetailsFragment)
           showProgress()
         }
 
@@ -303,12 +303,12 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
             matchPassphrase(it.data)
           }
           showContent()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showContent()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
         }
         else -> {}
       }
@@ -330,13 +330,13 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@PrivateKeyDetailsFragment)
         }
 
         Result.Status.SUCCESS -> {
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
           navController?.navigateUp()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -345,7 +345,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
             ?: "Couldn't delete a key with fingerprint =" +
             " {${pgpKeyDetailsViewModel.getPgpKeyDetails()?.fingerprint ?: ""}}"
           )
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
         else -> {}
@@ -357,7 +357,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@PrivateKeyDetailsFragment)
         }
 
         Result.Status.SUCCESS -> {
@@ -402,7 +402,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           }
 
           binding?.tVPassPhraseVerification?.text = verificationMsg
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -411,7 +411,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
               ?: it.exception?.javaClass?.simpleName
               ?: getString(R.string.could_not_check_pass_phrase)
           )
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
         }
         else -> {}
       }

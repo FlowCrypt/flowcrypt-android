@@ -84,6 +84,7 @@ abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
   }
 
   companion object {
+    const val DELAY_FOR_EKM_REQUEST = 2000L
     private const val EKM_URL = "https://localhost:1212/ekm/"
   }
 }

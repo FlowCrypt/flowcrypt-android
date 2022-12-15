@@ -157,7 +157,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@PublicKeyDetailsFragment)
             showProgress()
           }
 
@@ -170,7 +170,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
               updateViews(pgpKeyDetails)
               showContent()
             }
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@PublicKeyDetailsFragment)
           }
 
           Result.Status.EXCEPTION -> {
@@ -187,7 +187,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
             }
 
             showInfoDialog(dialogTitle = "", dialogMsg = msg)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@PublicKeyDetailsFragment)
           }
           else -> {}
         }

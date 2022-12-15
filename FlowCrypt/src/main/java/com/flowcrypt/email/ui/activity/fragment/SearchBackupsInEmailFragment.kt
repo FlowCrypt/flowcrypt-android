@@ -62,7 +62,7 @@ class SearchBackupsInEmailFragment : BaseFragment<FragmentSearchBackupsInEmailBi
     backupsViewModel.onlineBackupsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@SearchBackupsInEmailFragment)
           showProgress()
         }
 
@@ -76,17 +76,17 @@ class SearchBackupsInEmailFragment : BaseFragment<FragmentSearchBackupsInEmailBi
             binding?.btBackup?.text = getString(R.string.see_more_backup_options)
           }
           showContent()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@SearchBackupsInEmailFragment)
         }
 
         Result.Status.EXCEPTION -> {
           toast(it.exceptionMsg)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@SearchBackupsInEmailFragment)
           navController?.navigateUp()
         }
 
         else -> {
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@SearchBackupsInEmailFragment)
         }
       }
     }

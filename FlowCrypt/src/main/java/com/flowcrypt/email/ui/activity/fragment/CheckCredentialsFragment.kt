@@ -61,7 +61,7 @@ class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>()
         when (it.status) {
           Result.Status.LOADING -> {
             if (it.progress == null) {
-              countingIdlingResource?.incrementSafely()
+              countingIdlingResource?.incrementSafely(this@CheckCredentialsFragment)
             }
             showProgress(it.progressMsg)
           }
@@ -72,7 +72,7 @@ class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>()
               REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
               bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
             )
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@CheckCredentialsFragment)
           }
         }
       }

@@ -519,7 +519,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     checkFesServerViewModel.checkFesServerLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@MainSignInFragment)
           showProgress(progressMsg = it.progressMsg)
         }
 
@@ -540,13 +540,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           }
 
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR -> {
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.EXCEPTION -> {
@@ -588,7 +588,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           }
 
           checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
         else -> {}
       }
@@ -624,7 +624,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     domainOrgRulesViewModel.domainOrgRulesLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@MainSignInFragment)
           showProgress(progressMsg = it.progressMsg)
         }
 
@@ -640,13 +640,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             askUserToReLogin()
           }
           domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES)
           domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         else -> {}
@@ -658,7 +658,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     ekmViewModel.ekmLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@MainSignInFragment)
           showProgress(progressMsg = it.progressMsg)
         }
 
@@ -674,7 +674,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               )
           )
           ekmViewModel.ekmLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -700,7 +700,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
           }
           ekmViewModel.ekmLiveData.value = Result.none()
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         else -> {}
@@ -712,7 +712,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     privateKeysViewModel.protectPrivateKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@MainSignInFragment)
           showProgress(getString(R.string.processing))
         }
 
@@ -725,7 +725,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           getTempAccount()?.let { account ->
             accountViewModel.addNewAccount(account)
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -735,7 +735,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             dialogMsg = it.exceptionMsg,
             isCancelable = true
           )
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         else -> {}

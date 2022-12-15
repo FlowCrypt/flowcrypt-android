@@ -246,9 +246,9 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {
     val existedIdList = passPhraseMap.keys
     val refreshedIdList = keyEntityList.map { it.fingerprint }
-    val removeCandidates = existedIdList - refreshedIdList
+    val removeCandidates = existedIdList - refreshedIdList.toSet()
     val addCandidates = refreshedIdList - existedIdList
-    val updateCandidates = refreshedIdList - addCandidates
+    val updateCandidates = refreshedIdList - addCandidates.toSet()
 
     for (id in removeCandidates) {
       passPhraseMap.remove(id)

@@ -23,8 +23,10 @@ import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
+import com.flowcrypt.email.util.IdlingCountListener
 import com.flowcrypt.email.util.LogsUtil
 import com.google.android.material.snackbar.Snackbar
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The base fragment class.
@@ -34,7 +36,7 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
+abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingCountListener {
   protected var binding: T? = null
   protected val accountViewModel: AccountViewModel by viewModels()
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
@@ -47,6 +49,16 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
 
   protected var snackBar: Snackbar? = null
     private set
+
+  private var idlingCount: AtomicInteger = AtomicInteger(0)
+
+  override fun incrementIdlingCount() {
+    IdlingCountListener.handleIncrement(idlingCount, this.javaClass)
+  }
+
+  override fun decrementIdlingCount() {
+    IdlingCountListener.handleDecrement(idlingCount, this.javaClass)
+  }
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -117,6 +129,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings {
   override fun onDestroy() {
     super.onDestroy()
     LogsUtil.d(loggingTag, "onDestroy")
+    IdlingCountListener.printIdlingStats(idlingCount, this.javaClass)
   }
 
   override fun onDetach() {

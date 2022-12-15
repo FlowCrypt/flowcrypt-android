@@ -238,7 +238,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
     onView(withId(R.id.recyclerViewMsgs))
       .check(matches(withEmptyRecyclerView()))
 
-    //check that on the server side we have only one draft
+    //check that on the server side we have no drafts
     val responseAfterDeletingFirstDraft = runBlocking {
       GmailApiHelper.loadMsgsBaseInfo(
         context = getTargetContext(),

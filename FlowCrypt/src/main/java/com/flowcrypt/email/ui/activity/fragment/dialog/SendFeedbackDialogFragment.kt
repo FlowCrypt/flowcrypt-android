@@ -75,7 +75,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
       sendFeedbackViewModel.postFeedbackStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@SendFeedbackDialogFragment)
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.textAlignment = View.TEXT_ALIGNMENT_CENTER
@@ -88,7 +88,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
               REQUEST_KEY_RESULT,
               bundleOf(KEY_RESULT to (it.data?.isSent == true))
             )
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -107,7 +107,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
               errorMsg
             )
 
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
           }
 
           else -> {}

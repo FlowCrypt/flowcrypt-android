@@ -31,7 +31,6 @@ import okhttp3.mockwebserver.MockResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -39,6 +38,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -72,10 +72,13 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     return when (testNameRule.methodName) {
       "testDisallowUpdateRevokedKeys" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS_WITH_KEY_WHERE_MODIFICATION_DATE_AFTER_REVOKED))
 
       "testDisallowDeleteRevokedKeys" ->
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          //we need to add delay for this response to prevent showing 'need passphrase' dialog
+          .setBodyDelay(DELAY_FOR_EKM_REQUEST, TimeUnit.MILLISECONDS)
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS_DIFFERENT_FINGERPRINT_KEY))
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -95,7 +98,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     assertTrue(existingPgpKeyDetailsBeforeUpdating.isRevoked)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(3000)
 
     //check existing key after updating. We should have the same key as before.
     val existingPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList().first()
@@ -114,7 +117,6 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   @Test
-  @Ignore("failed sometimes on CI")
   fun testDisallowDeleteRevokedKeys() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
@@ -127,7 +129,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     assertTrue(firstPgpKeyDetailsBeforeUpdating.isRevoked)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(3000)
 
     //check existing keys after updating. We should have the same key as before + one new.
     assertEquals(keysStorage.getPgpKeyDetailsList().size, 2)

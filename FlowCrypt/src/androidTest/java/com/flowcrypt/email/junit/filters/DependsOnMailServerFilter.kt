@@ -18,8 +18,7 @@ class DependsOnMailServerFilter : ReadyForCIFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = DependsOnMailServer::class.java
     return super.evaluateTest(description)
-        && (description?.testClass?.isAnnotationPresent(annotationClass) == true
-        || description?.getAnnotation(annotationClass) != null)
+        && isAnnotationPresentAtClassOrMethod(description, annotationClass)
   }
 
   override fun describe() = "Filter tests that depend on an email server"

@@ -87,7 +87,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
   override val progressView: View?
     get() = binding?.progressBar
   override val contentView: View?
-    get() = binding?.groupContent
+    get() = binding?.content
   override val statusView: View? = null
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -138,7 +138,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress()
-          countingIdlingResource?.incrementSafely()
+          countingIdlingResource?.incrementSafely(this@PrivateKeysListFragment)
         }
 
         Result.Status.SUCCESS -> {
@@ -149,13 +149,13 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
           } else {
             showContent()
           }
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeysListFragment)
         }
 
         Result.Status.EXCEPTION -> {
           showContent()
           toast(it.exception?.message, Toast.LENGTH_SHORT)
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@PrivateKeysListFragment)
         }
         else -> {}
       }

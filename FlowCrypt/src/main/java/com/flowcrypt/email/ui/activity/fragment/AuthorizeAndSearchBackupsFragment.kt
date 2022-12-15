@@ -83,14 +83,14 @@ class AuthorizeAndSearchBackupsFragment :
         when (it.status) {
           Result.Status.LOADING -> {
             if (it.progress == null) {
-              countingIdlingResource?.incrementSafely()
+              countingIdlingResource?.incrementSafely(this@AuthorizeAndSearchBackupsFragment)
             }
             showProgress(it.progressMsg)
           }
 
           Result.Status.SUCCESS -> {
             loadPrivateKeysViewModel.fetchAvailableKeys(args.account)
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@AuthorizeAndSearchBackupsFragment)
           }
 
           else -> {
@@ -99,7 +99,7 @@ class AuthorizeAndSearchBackupsFragment :
               REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
               bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
             )
-            countingIdlingResource?.decrementSafely()
+            countingIdlingResource?.decrementSafely(this@AuthorizeAndSearchBackupsFragment)
           }
         }
       }
@@ -111,7 +111,7 @@ class AuthorizeAndSearchBackupsFragment :
       when (it.status) {
         Result.Status.LOADING -> {
           if (it.progress == null) {
-            countingIdlingResource?.incrementSafely()
+            countingIdlingResource?.incrementSafely(this@AuthorizeAndSearchBackupsFragment)
           }
           showProgress(it.progressMsg)
         }
@@ -122,7 +122,7 @@ class AuthorizeAndSearchBackupsFragment :
             REQUEST_KEY_SEARCH_BACKUPS,
             bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it)
           )
-          countingIdlingResource?.decrementSafely()
+          countingIdlingResource?.decrementSafely(this@AuthorizeAndSearchBackupsFragment)
         }
       }
     }
