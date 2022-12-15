@@ -18,11 +18,7 @@ import org.hamcrest.Description
  */
 class EmptyRecyclerViewMatcher<T : View> : BaseMatcher<T>() {
   override fun matches(item: Any): Boolean {
-    return if (item is RecyclerView) {
-      item.adapter?.itemCount == 0
-    } else {
-      false
-    }
+    return (item as? RecyclerView)?.adapter?.itemCount == 0
   }
 
   override fun describeTo(description: Description) {

@@ -18,11 +18,7 @@ import org.hamcrest.Description
  */
 class RecyclerViewItemCountMatcher<T : View>(private val itemCount: Int) : BaseMatcher<T>() {
   override fun matches(item: Any): Boolean {
-    return if (item is RecyclerView) {
-      item.adapter?.itemCount == itemCount
-    } else {
-      false
-    }
+    return (item as? RecyclerView)?.adapter?.itemCount == itemCount
   }
 
   override fun describeTo(description: Description) {

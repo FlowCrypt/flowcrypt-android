@@ -28,11 +28,7 @@ class DrawableMatcher(private val expectedId: Int) : TypeSafeMatcher<View>(View:
   override fun describeTo(description: Description) {
     description.appendText("with drawable from resource id: ")
     description.appendValue(expectedId)
-    if (resourceName != null) {
-      description.appendText("[")
-      description.appendText(resourceName)
-      description.appendText("]")
-    }
+    resourceName?.let { description.appendText("[").appendText(it).appendText("]") }
   }
 
   override fun matchesSafely(target: View): Boolean {

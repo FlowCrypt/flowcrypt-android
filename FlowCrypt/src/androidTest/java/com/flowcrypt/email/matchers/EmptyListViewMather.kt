@@ -18,11 +18,7 @@ import org.hamcrest.Description
  */
 class EmptyListViewMather<T : View> : BaseMatcher<T>() {
   override fun matches(item: Any): Boolean {
-    return if (item is ListView) {
-      item.adapter.count == 0
-    } else {
-      false
-    }
+    return (item as? ListView)?.adapter?.count == 0
   }
 
   override fun describeTo(description: Description) {
