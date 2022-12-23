@@ -7,6 +7,7 @@
 package com.flowcrypt.email.extensions.jakarta.mail
 
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.core.msg.RawBlockParser
 import jakarta.mail.Part
 import jakarta.mail.internet.ContentType
 
@@ -46,4 +47,9 @@ fun Part.isOpenPGPMimeSigned(): Boolean {
   }
   return isMimeType("multipart/signed") && type?.getParameter("protocol")
     ?.lowercase() == "application/pgp-signature"
+}
+
+fun Part.hasPgpMessage(): Boolean {
+  val detectedBlocks = RawBlockParser.detectBlocks(this)
+  return detectedBlocks.any { it.type == RawBlockParser.RawBlockType.PGP_MSG }
 }
