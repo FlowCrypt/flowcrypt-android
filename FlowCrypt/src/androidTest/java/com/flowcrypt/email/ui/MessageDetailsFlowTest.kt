@@ -49,9 +49,11 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.Assert.assertArrayEquals
@@ -959,5 +961,22 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
       PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE
     )
+  }
+
+  @Test
+  fun testEncryptedMsgMultipartAlternativePGPInTextPlain() {
+    val msgInfo = getMsgInfo(
+      "messages/info/encrypted_msg_info_multipart_alternative_pgp_in_text_plain.json",
+      "messages/mime/encrypted_msg_info_multipart_alternative_pgp_in_text_plain.txt"
+    )
+
+    baseCheck(msgInfo)
+
+    assertEquals(1, msgInfo?.msgBlocks?.size)
+    MatcherAssert.assertThat(
+      msgInfo?.msgBlocks?.first(), instanceOf(GenericMsgBlock::class.java)
+    )
+
+    checkWebViewText(msgInfo?.text)
   }
 }

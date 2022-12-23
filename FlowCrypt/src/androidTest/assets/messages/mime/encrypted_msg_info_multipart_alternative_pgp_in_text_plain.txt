@@ -1,0 +1,73 @@
+Return-Path: <default@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id 82y8GHu5pWOLBQAAc/RpdQ
+	(envelope-from <default@flowcrypt.test>)
+	for <default@flowcrypt.test>; Fri, 23 Dec 2022 14:21:47 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 61C879C50FD
+	for <default@flowcrypt.test>; Fri, 23 Dec 2022 14:21:47 +0000 (UTC)
+Content-Type: multipart/alternative;
+ boundary="------------OUGufQ9fV6Fe0hg0F08jsVG5"
+Message-ID: <5a4b467f-791c-ba78-ebdc-2ac4d9d7f8ef@flowcrypt.test>
+Date: Fri, 23 Dec 2022 16:21:47 +0200
+Mime-Version: 1.0
+Content-Language: en-US
+To: default@flowcrypt.test
+From: Default User <default@flowcrypt.test>
+Subject: multipart/alternative. PGP message in text/plain
+
+This is a multi-part message in MIME format.
+--------------OUGufQ9fV6Fe0hg0F08jsVG5
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+hF4DTxRYvSK3u1MSAQdAE/HxTBlWf6yiwtqRiFG27zTDVLVbZp6WPI2els6g7wEw
+yipUKQPalpbu1XLGH4FDBn9Bjs28vAJN6ks+DdpImP5xbRmp2l2HoEIRbRbpHW0F
+hF4DTxRYvSK3u1MSAQdABuGdtpsYREOSlkPyD6dBaXscyz7UGEU5Vvd6IDymS1cw
+jxHcyMlWmkH6eLVDuDbrPQEq5QUB/0VoZDpv16kU3a0qmYruGhT2pONcu9sgYdiP
+0sAAAaB6TJ13qxMTI3qf6HUS3Ve8R5HINfF+xFHMl0W+zZzXIEXzN7jy/gnux5Hk
+WhVjVDGpvFsJJmVID+Thl0KowK5IZ2ZpWIX729F2P2cGi6aj5n73sHZFd+veOXya
+Kqz31Zs5GAMbAogkr7LZtnmsCDYZelHIgJFCP4oolVnsg15Eexs0N9YDGH3LJLng
+HO54Umys7mcM6XWBu4IjeqvpsmBhno6LaNiTWmRLf3tc4FOTWYm8kZo3PBYkmShz
+upRR
+=dndW
+-----END PGP MESSAGE-----
+
+Footer with some text
+
+--------------OUGufQ9fV6Fe0hg0F08jsVG5
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <p>-----BEGIN PGP MESSAGE-----<br>
+      Version: PGPainless<br>
+      <br>
+      hF4DTxRYvSK3u1MSAQdAE/HxTBlWf6yiwtqRiFG27zTDVLVbZp6WPI2els6g7wEw<br>
+      yipUKQPalpbu1XLGH4FDBn9Bjs28vAJN6ks+DdpImP5xbRmp2l2HoEIRbRbpHW0F<br>
+      hF4DTxRYvSK3u1MSAQdABuGdtpsYREOSlkPyD6dBaXscyz7UGEU5Vvd6IDymS1cw<br>
+      jxHcyMlWmkH6eLVDuDbrPQEq5QUB/0VoZDpv16kU3a0qmYruGhT2pONcu9sgYdiP<br>
+      0sAAAaB6TJ13qxMTI3qf6HUS3Ve8R5HINfF+xFHMl0W+zZzXIEXzN7jy/gnux5Hk<br>
+      WhVjVDGpvFsJJmVID+Thl0KowK5IZ2ZpWIX729F2P2cGi6aj5n73sHZFd+veOXya<br>
+      Kqz31Zs5GAMbAogkr7LZtnmsCDYZelHIgJFCP4oolVnsg15Eexs0N9YDGH3LJLng<br>
+      HO54Umys7mcM6XWBu4IjeqvpsmBhno6LaNiTWmRLf3tc4FOTWYm8kZo3PBYkmShz<br>
+      upRR<br>
+      =dndW<br>
+      -----END PGP MESSAGE-----<br>
+      <br>
+      <font color="#ef2929">Footer with some text</font><br>
+    </p>
+  </body>
+</html>
+
+--------------OUGufQ9fV6Fe0hg0F08jsVG5--
