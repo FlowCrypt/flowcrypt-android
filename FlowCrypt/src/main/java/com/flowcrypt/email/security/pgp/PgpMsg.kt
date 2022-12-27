@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.jakarta.mail.hasPgpMessage
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
@@ -285,12 +286,21 @@ object PgpMsg {
       part.isMultipart() -> {
         val multiPart = part.content as Multipart
         val isMultipartAlternative = part.isMultipartAlternative()
+        var isAlternativePartUsed = false
         for (partCount in 0 until multiPart.count) {
           val subPart = multiPart.getBodyPart(partCount)
-          if (!subPart.isMultipart() && isMultipartAlternative) {
-            //if we found multipart/alternative we can skip part with Content-Type: text/plain
-            if (multiPart.count > 1 && subPart.isPlainText()) {
+          if (!subPart.isMultipart() && isMultipartAlternative && multiPart.count > 1) {
+            //if it multipart/alternative case with more than 1 part
+            //we should handle only one part and skip other
+            if (isAlternativePartUsed) {
               continue
+            } else if (subPart.isPlainText()) {
+              if (subPart.hasPgpMessage()) {
+                isAlternativePartUsed = true
+              } else {
+                //we prefer to use HTML part if there are no PGP things
+                continue
+              }
             }
           }
 
