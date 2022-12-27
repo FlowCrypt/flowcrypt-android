@@ -123,7 +123,7 @@ class FoldersManager constructor(val account: String) {
           it.fullName
         )
       ) {
-        this.folders[prepareFolderKey(it)] = generateFolder(account, it, imapFolder.name)
+        this.folders[prepareFolderKey(it)] = generateFolder(account, it)
       }
     }
   }
@@ -267,7 +267,7 @@ class FoldersManager constructor(val account: String) {
   }
 
   private fun prepareFolderKey(imapFolder: IMAPFolder): String {
-    val folderType = getFolderType(generateFolder(account, imapFolder, null))
+    val folderType = getFolderType(generateFolder(account, imapFolder))
     return folderType?.value ?: imapFolder.fullName
   }
 
@@ -347,12 +347,16 @@ class FoldersManager constructor(val account: String) {
      * @return
      * @throws MessagingException
      */
-    fun generateFolder(account: String, imapFolder: IMAPFolder, folderAlias: String?): LocalFolder {
+    fun generateFolder(account: String, imapFolder: IMAPFolder): LocalFolder {
+      val isCustom = isCustom(imapFolder)
       return LocalFolder(
-        account, imapFolder.fullName, folderAlias, Arrays.asList(
-          *imapFolder
-            .attributes
-        ), isCustom(imapFolder), 0, ""
+        account = account,
+        fullName = imapFolder.fullName,
+        folderAlias = if (isCustom) imapFolder.fullName else imapFolder.name,
+        attributes = listOf(*imapFolder.attributes),
+        isCustom = isCustom,
+        msgCount = 0,
+        searchQuery = ""
       )
     }
 

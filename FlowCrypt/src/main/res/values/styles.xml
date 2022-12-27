@@ -186,4 +186,8 @@
         <item name="android:textColor">@color/transparent_white</item>
         <item name="textAllCaps">false</item>
     </style>
+
+    <style name="NavigationViewTheme">
+        <item name="android:ellipsize">end</item>
+    </style>
 </resources>

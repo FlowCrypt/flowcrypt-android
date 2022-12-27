@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -87,9 +88,11 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) :
       withContext(Dispatchers.IO) {
         saveLabels(context, account) {
           val folders = store.defaultFolder.list("*")
-          folders.mapNotNull {
+          folders.filter { folder ->
+            (folder as? IMAPFolder)?.let { !EmailUtil.containsNoSelectAttr(it) } ?: false
+          }.mapNotNull {
             try {
-              FoldersManager.generateFolder(account.email, it as IMAPFolder, it.name)
+              FoldersManager.generateFolder(account.email, it as IMAPFolder)
             } catch (e: Exception) {
               e.printStackTrace()
               null
