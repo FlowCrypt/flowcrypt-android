@@ -22,10 +22,6 @@ class SecurityTypeOptionMatcher(val option: SecurityType.Option) :
   }
 
   override fun matches(item: Any?): Boolean {
-    return if (item is SecurityType) {
-      item.opt == option
-    } else {
-      false
-    }
+    return (item as? SecurityType)?.opt == option
   }
 }

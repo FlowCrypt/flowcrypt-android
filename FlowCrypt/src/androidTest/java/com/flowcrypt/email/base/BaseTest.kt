@@ -55,6 +55,9 @@ import jakarta.mail.internet.MimeMessage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.hasItem
+import org.hamcrest.Matchers.hasToString
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
@@ -184,7 +187,8 @@ abstract class BaseTest : BaseActivityTestImplementation {
    * @param message An input message.
    */
   protected fun checkIsSnackbarDisplayedAndClick(message: String) {
-    onView(withText(message)).check(matches(isDisplayed()))
+    onView(withText(message))
+      .check(matches(isDisplayed()))
 
     onView(withId(com.google.android.material.R.id.snackbar_action))
       .check(matches(isDisplayed()))
@@ -230,7 +234,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
     if (primaryClip?.itemCount != 0) {
       clipboardText = primaryClip?.getItemAt(0)?.text
     }
-    assertThat<CharSequence>(clipboardText, Matchers.hasToString(text.toString()))
+    assertThat<CharSequence>(clipboardText, hasToString(text.toString()))
   }
 
   protected fun getResString(resId: Int): String {
@@ -304,9 +308,9 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   fun intendingActivityResultContractsGetContent(resultData: Intent, type: String = "*/*") {
     intending(
-      Matchers.allOf(
+      allOf(
         hasAction(Intent.ACTION_GET_CONTENT),
-        hasCategories(Matchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
         hasType(type)
       )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
@@ -317,10 +321,15 @@ abstract class BaseTest : BaseActivityTestImplementation {
     @StyleRes themeResId: Int = R.style.AppTheme,
     initialState: Lifecycle.State = Lifecycle.State.RESUMED,
     factory: FragmentFactory? = null
-  ): FragmentScenario<F> = FragmentScenario.launchInContainer(
-    F::class.java, fragmentArgs, themeResId, initialState,
-    factory
-  )
+  ): FragmentScenario<F> {
+    return FragmentScenario.launchInContainer(
+      fragmentClass = F::class.java,
+      fragmentArgs = fragmentArgs,
+      themeResId = themeResId,
+      initialState = initialState,
+      factory = factory
+    )
+  }
 
   private fun addMsgToCache(key: String, inputStream: InputStream) {
     MsgsCacheManager.storeMsg(key, MimeMessage(Session.getInstance(Properties()), inputStream))

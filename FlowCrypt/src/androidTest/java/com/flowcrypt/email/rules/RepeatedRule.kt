@@ -19,13 +19,9 @@ class RepeatedRule : BaseRule() {
   override fun execute() {}
 
   override fun apply(statement: Statement, description: Description): Statement {
-    var result = statement
-    val repeat = description.getAnnotation(Repeat::class.java)
-    if (repeat != null) {
-      val times = repeat.value
-      result = RepeatStatement(statement, times)
-    }
-    return result
+    val repeat = description.getAnnotation(Repeat::class.java) ?: return statement
+    val times = repeat.value
+    return RepeatStatement(statement, times)
   }
 
   private class RepeatStatement(

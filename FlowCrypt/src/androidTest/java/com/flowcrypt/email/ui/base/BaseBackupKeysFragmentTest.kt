@@ -9,11 +9,15 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
 import android.net.Uri
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.base.BaseTest
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasItem
 import java.io.File
 
 /**
@@ -28,13 +32,12 @@ abstract class BaseBackupKeysFragmentTest : BaseTest(), AddAccountToDatabaseRule
   protected fun intendingFileChoose(file: File) {
     val resultData = Intent()
     resultData.data = Uri.fromFile(file)
-    Intents.intending(
-      Matchers.allOf(
-        IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        IntentMatchers.hasCategories(Matchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
-        IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_CREATE_DOCUMENT),
+        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasType(Constants.MIME_TYPE_PGP_KEY)
       )
-    )
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
   }
 }

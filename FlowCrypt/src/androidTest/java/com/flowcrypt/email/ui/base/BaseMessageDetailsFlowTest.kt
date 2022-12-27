@@ -15,10 +15,10 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.BoundedMatcher
-import androidx.test.espresso.matcher.RootMatchers
+import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -37,8 +37,10 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withToolBarText
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
@@ -259,13 +261,13 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .perform(scrollTo(), click())
 
     onView(withText(title))
-      .inRoot(RootMatchers.isPlatformPopup())
+      .inRoot(isPlatformPopup())
       .perform(click())
 
-    Intents.intended(IntentMatchers.hasComponent(CreateMessageActivity::class.java.name))
+    intended(hasComponent(CreateMessageActivity::class.java.name))
 
     onView(withId(R.id.toolbar))
-      .check(matches(CustomMatchers.withToolBarText(title)))
+      .check(matches(withToolBarText(title)))
   }
 
   protected fun withHeaderInfo(header: MsgDetailsRecyclerViewAdapter.Header):
@@ -290,18 +292,14 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     vararg badgeTypes: PgpBadgeListAdapter.PgpBadge.Type
   ) {
     onView(withId(R.id.rVPgpBadges))
-      .check(matches(CustomMatchers.withRecyclerViewItemCount(badgeCount)))
+      .check(matches(withRecyclerViewItemCount(badgeCount)))
 
 
     for (badgeType in badgeTypes) {
       onView(withId(R.id.rVPgpBadges))
         .perform(
           RecyclerViewActions.scrollToHolder(
-            CustomMatchers.withPgpBadge(
-              PgpBadgeListAdapter.PgpBadge(
-                badgeType
-              )
-            )
+            withPgpBadge(PgpBadgeListAdapter.PgpBadge(badgeType))
           )
         )
     }
