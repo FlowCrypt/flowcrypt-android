@@ -27,6 +27,7 @@ import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -77,8 +78,10 @@ class PrivateKeyDetailsFragmentExpiredKeyInIsolationTest : BaseTest() {
   @Test
   fun testShowExpirationDate() {
     val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    assertNotNull(details.expiration)
+    val expiration = requireNotNull(details.expiration)
     val expectedExpirationDate = "Jan 1, 2011"
-    val actualExpirationDate = dateFormat.format(Date(requireNotNull(details.expiration)))
+    val actualExpirationDate = dateFormat.format(Date(expiration))
     assertEquals(expectedExpirationDate, actualExpirationDate)
 
     onView(withId(R.id.textViewExpirationDate))
@@ -86,9 +89,7 @@ class PrivateKeyDetailsFragmentExpiredKeyInIsolationTest : BaseTest() {
         matches(
           withText(
             getHtmlString(
-              details.expiration?.let {
-                getResString(R.string.key_expiration, actualExpirationDate)
-              } ?: getResString(R.string.key_expiration, getResString(R.string.key_does_not_expire))
+              getResString(R.string.key_expiration, actualExpirationDate)
             )
           )
         )
