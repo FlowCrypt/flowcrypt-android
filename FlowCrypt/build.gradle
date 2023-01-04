@@ -371,7 +371,7 @@ dependencies {
 
     //it fixed compilation issue https://github.com/FlowCrypt/flowcrypt-android/pull/2064.
     //Should be reviewed and removed when more dependencies will be updated
-    implementation 'androidx.test:monitor:1.6.0'
+    implementation 'androidx.test:monitor:1.6.1'
 
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.5.1'
