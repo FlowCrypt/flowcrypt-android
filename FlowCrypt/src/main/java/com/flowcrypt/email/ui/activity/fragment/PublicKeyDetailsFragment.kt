@@ -12,7 +12,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -45,6 +44,7 @@ import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
@@ -251,7 +251,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       getString(R.string.template_algorithm, pgpKeyDetails.algo.algorithm)
     binding?.textViewCreated?.text = getString(
       R.string.template_created,
-      DateFormat.getMediumDateFormat(context).format(Date(pgpKeyDetails.created))
+      DateTimeUtil.getPgpDateFormat(context).format(Date(pgpKeyDetails.created))
     )
   }
 

@@ -9,7 +9,6 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.graphics.Typeface
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -31,6 +30,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.Date
 
@@ -128,18 +128,18 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
 
     binding?.tVCreated?.text = getString(
       R.string.template_created,
-      DateFormat.getMediumDateFormat(context).format(Date(args.pgpKeyDetails.created))
+      DateTimeUtil.getPgpDateFormat(context).format(Date(args.pgpKeyDetails.created))
     )
     binding?.tVModified?.text = getString(
       R.string.template_modified,
-      DateFormat.getMediumDateFormat(context).format(Date(args.pgpKeyDetails.lastModified ?: 0))
+      DateTimeUtil.getPgpDateFormat(context).format(Date(args.pgpKeyDetails.lastModified ?: 0))
     )
 
     if (args.pgpKeyDetails.isExpired) {
       binding?.tVWarning?.visible()
       val warningText = getString(
         R.string.warning_key_expired,
-        DateFormat.getMediumDateFormat(context).format(Date(args.pgpKeyDetails.expiration ?: 0))
+        DateTimeUtil.getPgpDateFormat(context).format(Date(args.pgpKeyDetails.expiration ?: 0))
       )
       if (binding?.tVWarning?.text.isNullOrEmpty()) {
         binding?.tVWarning?.text = warningText

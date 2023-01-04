@@ -10,6 +10,7 @@ import android.text.format.DateFormat
 import android.text.format.DateUtils
 import java.util.Calendar
 import java.util.GregorianCalendar
+import java.util.TimeZone
 
 /**
  * This class can be used to work with datea and time.
@@ -55,6 +56,20 @@ class DateTimeUtil {
       } else {
         val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH
         DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
+      }
+    }
+
+    /**
+     * Get unified date format for PGP keys that uses UTC timezone.
+     * https://github.com/FlowCrypt/flowcrypt-android/issues/2121
+     */
+    fun getPgpDateFormat(context: Context?): java.text.DateFormat {
+      return (if (context != null) {
+        DateFormat.getMediumDateFormat(context)
+      } else {
+        java.text.DateFormat.getDateInstance()
+      }).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
       }
     }
   }

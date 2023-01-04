@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import android.text.format.DateFormat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -33,6 +32,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.allOf
@@ -54,7 +54,7 @@ import java.util.Date
 @RunWith(AndroidJUnit4::class)
 class PrivateKeysListFragmentInIsolationTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-  private val dateFormat = DateFormat.getMediumDateFormat(getTargetContext())
+  private val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

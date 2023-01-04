@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +17,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionPgpKeyDetails
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.Date
 
@@ -44,7 +44,7 @@ class PrivateKeysRecyclerViewAdapter(
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
     val context = viewHolder.itemView.context
     if (dateFormat == null) {
-      dateFormat = DateFormat.getMediumDateFormat(context)
+      dateFormat = DateTimeUtil.getPgpDateFormat(context)
     }
 
     val pgpKeyDetails = pgpKeyDetailsList[position]
