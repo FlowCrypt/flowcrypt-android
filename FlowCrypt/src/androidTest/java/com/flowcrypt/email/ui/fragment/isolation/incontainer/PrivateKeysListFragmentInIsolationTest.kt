@@ -37,6 +37,8 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
+import org.junit.Assert
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -165,16 +167,17 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
       .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
       .check(matches(withRecyclerViewItemCount(1)))
 
+    assertNotNull(pgpKeyDetails.expiration)
+    val expiration = requireNotNull(pgpKeyDetails.expiration)
+    val expectedExpirationDate = "Jan 1, 2011"
+    val actualExpirationDate = dateFormat.format(Date(expiration))
+    Assert.assertEquals(expectedExpirationDate, actualExpirationDate)
+
     doBaseCheckingForKey(
       keyOwner = "expired@flowcrypt.test",
       fingerprint = "599132F15A04487AA6356C7F717B789F05D874DA",
       creationDate = dateFormat.format(Date(pgpKeyDetails.created)),
-      expirationDate = pgpKeyDetails.expiration?.let {
-        getResString(R.string.key_expiration, dateFormat.format(Date(it)))
-      } ?: getResString(
-        R.string.key_expiration,
-        getResString(R.string.key_does_not_expire)
-      ),
+      expirationDate = getResString(R.string.key_expiration, actualExpirationDate),
       isUsableForEncryption = pgpKeyDetails.usableForEncryption,
       statusLabelText = getResString(R.string.expired),
       statusLabelTextColor = R.color.white,
