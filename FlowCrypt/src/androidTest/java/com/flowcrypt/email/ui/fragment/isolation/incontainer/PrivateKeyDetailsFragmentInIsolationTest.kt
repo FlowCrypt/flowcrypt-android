@@ -65,6 +65,7 @@ import java.util.Date
 class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
+  private val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
   override val useIntents: Boolean = true
 
   @get:Rule
@@ -111,8 +112,19 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
             getHtmlString(
               getResString(
                 R.string.template_creation_date,
-                DateTimeUtil.getPgpDateFormat(getTargetContext()).format(Date(details.created))
+                dateFormat.format(Date(details.created))
               )
+            )
+          )
+        )
+      )
+
+    onView(withId(R.id.textViewExpirationDate))
+      .check(
+        matches(
+          withText(
+            getHtmlString(
+              getResString(R.string.key_expiration, getResString(R.string.key_does_not_expire))
             )
           )
         )

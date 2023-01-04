@@ -20,7 +20,7 @@ import com.flowcrypt.email.util.PrivateKeysManager
  * Time: 17:54
  * E-mail: DenBond7@gmail.com
  */
-class AddPrivateKeyToDatabaseRule(
+class AddPrivateKeyToDatabaseRule constructor(
   val accountEntity: AccountEntity,
   val keyPath: String,
   val passphrase: String,
