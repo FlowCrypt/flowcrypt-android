@@ -29,7 +29,7 @@ class DomainOrgRulesViewModel(application: Application) : BaseAndroidViewModel(a
   val domainOrgRulesLiveData: MutableLiveData<Result<ApiResponse>> =
     MutableLiveData(Result.none())
 
-  fun fetchOrgRules(account: String, idToken: String, fesUrl: String? = null) {
+  fun fetchOrgRules(idToken: String, fesUrl: String? = null) {
     viewModelScope.launch {
       val context: Context = getApplication()
       domainOrgRulesLiveData.value =
@@ -39,7 +39,7 @@ class DomainOrgRulesViewModel(application: Application) : BaseAndroidViewModel(a
         domainOrgRulesLiveData.value = repository.getDomainOrgRules(
           context = context,
           idToken = idToken,
-          fesUrl = null,
+          fesUrl = fesUrl,
         )
       } catch (e: Exception) {
         domainOrgRulesLiveData.value = Result.exception(e)
