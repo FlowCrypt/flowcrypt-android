@@ -11,7 +11,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -50,6 +49,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.activity.result.contract.CreateCustomDocument
@@ -250,13 +250,13 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
       )
       binding?.textViewStatusValue?.text = value.getStatusText(requireContext())
 
-      val dateFormat = DateFormat.getMediumDateFormat(context)
+      val dateFormat = DateTimeUtil.getPgpDateFormat(context)
       binding?.textViewCreationDate?.text = getString(
         R.string.template_creation_date,
         dateFormat.format(Date(value.created))
       )
       binding?.textViewExpirationDate?.text = value.expiration?.let {
-        getString(R.string.key_expiration, dateFormat?.format(Date(it)))
+        getString(R.string.key_expiration, dateFormat.format(Date(it)))
       } ?: getString(R.string.key_expiration, getString(R.string.key_does_not_expire))
       binding?.tVUsers?.text = getString(R.string.template_users, value.getUserIdsAsSingleString())
 

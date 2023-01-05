@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +14,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import java.util.Date
 
@@ -37,7 +37,7 @@ class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyAc
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
     if (dateFormat == null) {
-      dateFormat = DateFormat.getMediumDateFormat(holder.itemView.context)
+      dateFormat = DateTimeUtil.getPgpDateFormat(holder.itemView.context)
     }
 
     getItem(position)?.let { holder.bind(it, onPubKeyActionsListener) }

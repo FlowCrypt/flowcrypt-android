@@ -10,7 +10,6 @@ import android.app.Instrumentation
 import android.content.Intent
 import android.os.Environment
 import android.text.TextUtils
-import android.text.format.DateFormat
 import androidx.core.content.FileProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -39,6 +38,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.allOf
@@ -65,6 +65,7 @@ import java.util.Date
 class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
+  private val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
   override val useIntents: Boolean = true
 
   @get:Rule
@@ -111,8 +112,19 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
             getHtmlString(
               getResString(
                 R.string.template_creation_date,
-                DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created))
+                dateFormat.format(Date(details.created))
               )
+            )
+          )
+        )
+      )
+
+    onView(withId(R.id.textViewExpirationDate))
+      .check(
+        matches(
+          withText(
+            getHtmlString(
+              getResString(R.string.key_expiration, getResString(R.string.key_does_not_expire))
             )
           )
         )

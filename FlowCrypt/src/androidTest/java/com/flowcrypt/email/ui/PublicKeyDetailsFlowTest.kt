@@ -10,7 +10,6 @@ import android.app.Instrumentation
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.text.format.DateFormat
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -39,6 +38,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers
@@ -128,9 +128,7 @@ class PublicKeyDetailsFlowTest : BaseTest() {
           withText(
             getResString(
               R.string.template_created,
-              DateFormat.getMediumDateFormat(getTargetContext()).format(
-                Date(keyDetails.created)
-              )
+              DateTimeUtil.getPgpDateFormat(getTargetContext()).format(Date(keyDetails.created))
             )
           )
         )
