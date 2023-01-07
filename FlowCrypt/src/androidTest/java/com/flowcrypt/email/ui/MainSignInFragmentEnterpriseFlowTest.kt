@@ -309,7 +309,12 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     )
     isDialogWithTextDisplayed(
       decorView,
-      "ApiException:" + ApiException(ApiError(code = 404, msg = "")).message!!
+      "ApiException:" + ApiException(
+        ApiError(
+          code = HttpURLConnection.HTTP_FORBIDDEN,
+          msg = ""
+        )
+      ).message!!
     )
   }
 
@@ -336,7 +341,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
 
     isDialogWithTextDisplayed(
       decorView,
-      ApiException(ApiError(code = 404, msg = "")).message!!
+      ApiException(ApiError(code = HttpURLConnection.HTTP_NOT_FOUND, msg = "")).message!!
     )
   }
 
@@ -349,7 +354,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       }
       MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     } else when (testNameRule.methodName) {
-      "testFesServerUpHasConnectionHttpCode404" -> {
+      "testFesServerUpHasConnectionHttpCode404", "testFailAttesterSubmit" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
 
