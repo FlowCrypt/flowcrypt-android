@@ -601,10 +601,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun continueWithRegularFlow() {
     val idToken = googleSignInAccount?.idToken
-    val account = googleSignInAccount?.account?.name
 
-    if (account != null && idToken != null) {
-      domainOrgRulesViewModel.fetchOrgRules(account, idToken)
+    if (idToken != null) {
+      domainOrgRulesViewModel.fetchOrgRules(idToken = idToken)
     } else {
       showContent()
       askUserToReLogin()
