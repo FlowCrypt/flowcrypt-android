@@ -46,6 +46,9 @@ global_job_config:
       - cache restore gradle-wrapper
       - cache restore gradle-cache
       - cache restore android-build-cache
+      # Install libnss-myhostname to resolve localhost subdomains like fes.localhost
+      - sudo apt update
+      - sudo apt install -y libnss-myhostname
       # Install Android dependencies if needed
       - ./script/ci-install-android-sdk.sh
       # Install ninja
