@@ -411,13 +411,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          domainOrgRulesViewModel.fetchOrgRules(
-            account = account,
-            idToken = idToken,
-            fesUrl = fesUrl
-          )
+          domainOrgRulesViewModel.fetchOrgRules(idToken = idToken, fesUrl = fesUrl)
         }
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
@@ -529,11 +524,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               val domain = EmailUtil.getDomain(account)
               val idToken = googleSignInAccount?.idToken ?: return@let
               fesUrl = GeneralUtil.generateFesUrl(domain)
-              domainOrgRulesViewModel.fetchOrgRules(
-                account = account,
-                idToken = idToken,
-                fesUrl = fesUrl
-              )
+              domainOrgRulesViewModel.fetchOrgRules(idToken = idToken, fesUrl = fesUrl)
             }
           } else {
             continueBasedOnFlavorSettings()
@@ -610,10 +601,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun continueWithRegularFlow() {
     val idToken = googleSignInAccount?.idToken
-    val account = googleSignInAccount?.account?.name
 
-    if (account != null && idToken != null) {
-      domainOrgRulesViewModel.fetchOrgRules(account, idToken)
+    if (idToken != null) {
+      domainOrgRulesViewModel.fetchOrgRules(idToken = idToken)
     } else {
       showContent()
       askUserToReLogin()
