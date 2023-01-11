@@ -14,6 +14,8 @@ sleep 20
 # on SemaphoreCI ping fes.localhost on an emulator returns 'unknown host fes.localhost'.
 # Need to change /etc/hosts
 adb remount # Use this option to have a writable system image during an emulation session
+adb reboot
+sleep 20
 adb shell "echo \"127.0.0.1  fes.localhost\" >> /etc/hosts"
 # to test WKD we need to route all traffic for localhost to localhost:1212
 adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
