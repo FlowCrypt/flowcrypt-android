@@ -286,10 +286,51 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  fun testFesServerUpNotEnterpriseServer() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_NOT_ENTERPRISE_SERVER))
-    onView(withText(R.string.set_pass_phrase))
-      .check(matches(isDisplayed()))
+  fun testFesServerNotEnterpriseServer() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(email = EMAIL_FES_NOT_ALLOWED_SERVER))
+
+    isDialogWithTextDisplayed(
+      decorView,
+      "ApiException:" + ApiException(
+        ApiError(
+          code = HttpURLConnection.HTTP_NOT_FOUND,
+          msg = ""
+        )
+      ).message!!
+    )
+  }
+
+  @Test
+  fun testFesServerExternalServiceAlias() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_EXTERNAL_SERVICE))
+    //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
+    //to check that external-service was accepted and we called getOrgRulesFromFes()
+
+    isDialogWithTextDisplayed(
+      decorView,
+      "ApiException:" + ApiException(
+        ApiError(
+          code = HttpURLConnection.HTTP_NOT_ACCEPTABLE,
+          msg = ""
+        )
+      ).message!!
+    )
+  }
+
+  @Test
+  fun testFesServerEnterpriseServerAlias() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_ENTERPRISE_SERVER))
+    //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
+    //to check that external-service was accepted and we called getOrgRulesFromFes()
+    isDialogWithTextDisplayed(
+      decorView,
+      "ApiException:" + ApiException(
+        ApiError(
+          code = HttpURLConnection.HTTP_CONFLICT,
+          msg = ""
+        )
+      ).message!!
+    )
   }
 
   @Test
@@ -362,9 +403,19 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
         MockResponse().setResponseCode(500)
       }
 
-      "testFesServerUpNotEnterpriseServer" -> {
+      "testFesServerNotEnterpriseServer" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
+      }
+
+      "testFesServerExternalServiceAlias" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "external-service")))
+      }
+
+      "testFesServerEnterpriseServerAlias" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "enterprise-server")))
       }
 
       else -> {
@@ -375,24 +426,30 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
-    val returnError = testNameRule.methodName == "testFesServerUpGetClientConfigurationFailed"
-    return MockResponse()
-      .setResponseCode(
-        if (returnError) HttpURLConnection.HTTP_FORBIDDEN else HttpURLConnection.HTTP_OK
-      ).apply {
-        if (!returnError) {
-          setBody(
-            gson.toJson(
-              ClientConfigurationResponse(
-                orgRules = OrgRules(
-                  flags = ACCEPTED_ORG_RULES,
-                  keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-                )
-              )
-            )
+    val responseCode = when (testNameRule.methodName) {
+      "testFesServerUpGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
+      "testFesServerExternalServiceAlias" -> HttpURLConnection.HTTP_NOT_ACCEPTABLE
+      "testFesServerEnterpriseServerAlias" -> HttpURLConnection.HTTP_CONFLICT
+      else -> HttpURLConnection.HTTP_OK
+    }
+
+    val body = when (testNameRule.methodName) {
+      "testFesServerUpGetClientConfigurationFailed",
+      "testFesServerExternalServiceAlias",
+      "testFesServerEnterpriseServerAlias" -> null
+      else -> gson.toJson(
+        ClientConfigurationResponse(
+          orgRules = OrgRules(
+            flags = ACCEPTED_ORG_RULES,
+            keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
           )
-        }
-      }
+        )
+      )
+    }
+
+    return MockResponse().setResponseCode(responseCode).apply {
+      body?.let { setBody(it) }
+    }
   }
 
   private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
@@ -516,14 +573,16 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
 
       EMAIL_FES_REQUEST_TIME_OUT,
       EMAIL_FES_HTTP_404,
-      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS,
-      EMAIL_FES_NOT_ENTERPRISE_SERVER -> return successMockResponseForOrgRules(
+      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS -> return successMockResponseForOrgRules(
         gson = gson,
         orgRules = OrgRules(
           flags = ACCEPTED_ORG_RULES,
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
         )
       )
+
+      EMAIL_FES_NOT_ALLOWED_SERVER -> return MockResponse()
+        .setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
 
       EMAIL_FES_ENFORCE_ATTESTER_SUBMIT -> {
         return successMockResponseForOrgRules(
@@ -575,7 +634,11 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@localhost:1212"
     private const val EMAIL_FES_HTTP_404 = "fes_404@localhost:1212"
     private const val EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS = "fes_not404_not_success@localhost:1212"
-    private const val EMAIL_FES_NOT_ENTERPRISE_SERVER = "fes_not_enterprise_server@localhost:1212"
+    private const val EMAIL_FES_NOT_ALLOWED_SERVER = "fes_not_allowed_server@localhost:1212"
+    private const val EMAIL_FES_SERVER_EXTERNAL_SERVICE =
+      "fes_server_external_service@localhost:1212"
+    private const val EMAIL_FES_SERVER_ENTERPRISE_SERVER =
+      "fes_server_enterprise_server@localhost:1212"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS =
       "fes_client_configuration_success@localhost:1212"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_FAILED =
