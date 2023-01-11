@@ -519,7 +519,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         Result.Status.SUCCESS -> {
-          if ("enterprise-server" == it.data?.service) {
+          if (it.data?.service in arrayOf("enterprise-server", "external-service")) {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
               val idToken = googleSignInAccount?.idToken ?: return@let
