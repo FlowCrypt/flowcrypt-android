@@ -29,6 +29,9 @@ global_job_config:
       - sudo apt install -y dnsmasq
       - sudo sed -i '1s/^/nameserver 127.0.0.53\n/' /etc/resolv.conf
       - sudo service systemd-resolved restart
+      # print some debug info
+      - sudo service dnsmasq status
+      - ping fel.localhost -c 1
       # use JAVA 11 by default
       - sem-version java 11
       # general settings
