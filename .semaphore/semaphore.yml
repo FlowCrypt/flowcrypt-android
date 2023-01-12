@@ -30,7 +30,6 @@ global_job_config:
       - sudo sed -i '1s/^/nameserver 127.0.0.53\n/' /etc/resolv.conf
       - sudo service systemd-resolved restart
       # print some debug info
-      - sudo journalctl -u dnsmasq -n 5
       - ping fel.localhost -c 1
       # use JAVA 11 by default
       - sem-version java 11
