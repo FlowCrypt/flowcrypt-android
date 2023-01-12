@@ -25,7 +25,13 @@ global_job_config:
       value: /home/semaphore/Android/Sdk
   prologue:
     commands:
+      # fix DNS issue for localhost
+      - sudo apt install -y dnsmasq
+      - sudo sed -i '1s/^/nameserver 127.0.0.53\n/' /etc/resolv.conf
+      - sudo service systemd-resolved restart
+      # use JAVA 11 by default
       - sem-version java 11
+      # general settings
       - export PATH=${ANDROID_SDK_ROOT}/emulator:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
