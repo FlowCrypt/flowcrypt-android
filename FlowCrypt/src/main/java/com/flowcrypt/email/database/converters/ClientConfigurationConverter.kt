@@ -6,7 +6,7 @@
 package com.flowcrypt.email.database.converters
 
 import androidx.room.TypeConverter
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.google.gson.GsonBuilder
 
 /**
@@ -15,16 +15,16 @@ import com.google.gson.GsonBuilder
  *         Time: 2:19 PM
  *         E-mail: DenBond7@gmail.com
  */
-class OrgRulesConverter {
+class ClientConfigurationConverter {
   private val gson = GsonBuilder()
     .excludeFieldsWithoutExposeAnnotation()
     .serializeNulls()
     .create()
 
   @TypeConverter
-  fun fromOrgRules(orgRules: OrgRules?): String? {
+  fun fromClientConfiguration(clientConfiguration: ClientConfiguration?): String? {
     return try {
-      orgRules?.let { gson.toJson(orgRules) }
+      clientConfiguration?.let { gson.toJson(clientConfiguration) }
     } catch (e: Exception) {
       e.printStackTrace()
       null
@@ -32,9 +32,9 @@ class OrgRulesConverter {
   }
 
   @TypeConverter
-  fun toOrgRules(orgRulesJson: String?): OrgRules? {
+  fun toClientConfiguration(clientConfigurationJson: String?): ClientConfiguration? {
     return try {
-      orgRulesJson?.let { gson.fromJson(it, OrgRules::class.java) }
+      clientConfigurationJson?.let { gson.fromJson(it, ClientConfiguration::class.java) }
     } catch (e: Exception) {
       e.printStackTrace()
       null

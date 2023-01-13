@@ -22,11 +22,9 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentMainSignInBinding
@@ -45,7 +43,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CheckFesServerViewModel
-import com.flowcrypt.email.jetpack.viewmodel.DomainOrgRulesViewModel
+import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -59,7 +57,7 @@ import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
+import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -87,11 +85,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
-  private var orgRules: OrgRules? = null
+  private var clientConfiguration: ClientConfiguration? = null
   private var fesUrl: String? = null
 
   private val checkFesServerViewModel: CheckFesServerViewModel by viewModels()
-  private val domainOrgRulesViewModel: DomainOrgRulesViewModel by viewModels()
+  private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
   private var useStartTlsForSmtp = false
 
@@ -144,7 +142,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     return googleSignInAccount?.let {
       AccountEntity(
         googleSignInAccount = it,
-        orgRules = orgRules,
+        clientConfiguration = clientConfiguration,
         useFES = fesUrl?.isNotEmpty() == true,
         useStartTlsForSmtp = useStartTlsForSmtp,
       )
@@ -225,7 +223,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         if (EmailUtil.getDomain(account) in publicEmailDomains) {
           onSignSuccess(googleSignInAccount)
         } else {
-          orgRules = null
+          clientConfiguration = null
           fesUrl = null
           checkFesServerViewModel.checkFesServerAvailability(account)
         }
@@ -258,7 +256,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
     if (existedAccount == null) {
       getTempAccount()?.let {
-        if (orgRules?.flags?.firstOrNull { rule -> rule == OrgRules.DomainRule.NO_PRV_BACKUP } != null) {
+        if (clientConfiguration?.flags?.firstOrNull { rule -> rule == ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP } != null) {
           requireContext().startService(
             Intent(requireContext(), CheckClipboardToFindKeyService::class.java)
           )
@@ -404,20 +402,20 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          orgRules = null
+          clientConfiguration = null
           fesUrl = null
           val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
           checkFesServerViewModel.checkFesServerAvailability(account)
         }
 
-        REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES -> if (result == TwoWayDialogFragment.RESULT_OK) {
+        REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          domainOrgRulesViewModel.fetchOrgRules(idToken = idToken, fesUrl = fesUrl)
+          clientConfigurationViewModel.fetchClientConfiguration(idToken = idToken, fesUrl = fesUrl)
         }
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          orgRules?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
+          clientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
         }
       }
     }
@@ -506,7 +504,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun initEnterpriseViewModels() {
     initCheckFesServerViewModel()
-    initDomainOrgRulesViewModel()
+    initClientConfigurationViewModel()
     initEkmViewModel()
   }
 
@@ -524,7 +522,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               val domain = EmailUtil.getDomain(account)
               val idToken = googleSignInAccount?.idToken ?: return@let
               fesUrl = GeneralUtil.generateFesUrl(domain)
-              domainOrgRulesViewModel.fetchOrgRules(idToken = idToken, fesUrl = fesUrl)
+              clientConfigurationViewModel.fetchClientConfiguration(
+                idToken = idToken,
+                fesUrl = fesUrl
+              )
             }
           } else {
             continueBasedOnFlavorSettings()
@@ -603,15 +604,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     val idToken = googleSignInAccount?.idToken
 
     if (idToken != null) {
-      domainOrgRulesViewModel.fetchOrgRules(idToken = idToken)
+      clientConfigurationViewModel.fetchClientConfiguration(idToken = idToken)
     } else {
       showContent()
       askUserToReLogin()
     }
   }
 
-  private fun initDomainOrgRulesViewModel() {
-    domainOrgRulesViewModel.domainOrgRulesLiveData.observe(viewLifecycleOwner) {
+  private fun initClientConfigurationViewModel() {
+    clientConfigurationViewModel.clientConfigurationLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@MainSignInFragment)
@@ -620,22 +621,26 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           val idToken = googleSignInAccount?.idToken
-          orgRules = (it.data as? DomainOrgRulesResponse)?.orgRules
-            ?: (it.data as? ClientConfigurationResponse)?.orgRules
+          clientConfiguration = it.data?.clientConfiguration
 
           if (idToken != null) {
-            orgRules?.let { fetchedOrgRules -> ekmViewModel.fetchPrvKeys(fetchedOrgRules, idToken) }
+            clientConfiguration?.let { fetchedClientConfiguration ->
+              ekmViewModel.fetchPrvKeys(
+                fetchedClientConfiguration,
+                idToken
+              )
+            }
           } else {
             showContent()
             askUserToReLogin()
           }
-          domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
+          clientConfigurationViewModel.clientConfigurationLiveData.value = Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES)
-          domainOrgRulesViewModel.domainOrgRulesLiveData.value = Result.none()
+          showDialogWithRetryButton(it, REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION)
+          clientConfigurationViewModel.clientConfigurationLiveData.value = Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
@@ -674,11 +679,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               onSignSuccess(googleSignInAccount)
             }
 
-            is UnsupportedOrgRulesException -> {
+            is UnsupportedClientConfigurationException -> {
               showInfoDialog(
                 dialogTitle = "",
                 dialogMsg = getString(
-                  R.string.combination_of_org_rules_is_not_supported,
+                  R.string.combination_of_client_configuration_is_not_supported,
                   it.exception.message
                 ),
                 isCancelable = true
@@ -776,7 +781,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   companion object {
-    private const val REQUEST_CODE_RETRY_GET_DOMAIN_ORG_RULES = 105
+    private const val REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106
     private const val REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY = 107
   }

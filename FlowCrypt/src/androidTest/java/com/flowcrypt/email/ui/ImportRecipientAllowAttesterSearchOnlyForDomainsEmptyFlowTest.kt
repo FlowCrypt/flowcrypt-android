@@ -16,7 +16,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -41,11 +41,11 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class ImportRecipientAllowAttesterSearchOnlyForDomainsEmptyFlowTest : BaseTest() {
-  private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
-    OrgRules(
+  private val userWithClientConfiguration = AccountDaoManager.getUserWithClientConfiguration(
+    ClientConfiguration(
       flags = listOf(
-        OrgRules.DomainRule.NO_PRV_CREATE,
-        OrgRules.DomainRule.NO_PRV_BACKUP
+        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
@@ -56,7 +56,7 @@ class ImportRecipientAllowAttesterSearchOnlyForDomainsEmptyFlowTest : BaseTest()
     )
   )
 
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(

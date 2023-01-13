@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.launch
 
@@ -24,25 +24,25 @@ import kotlinx.coroutines.launch
  *         Time: 6:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-class DomainOrgRulesViewModel(application: Application) : BaseAndroidViewModel(application) {
+class ClientConfigurationViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository = FlowcryptApiRepository()
-  val domainOrgRulesLiveData: MutableLiveData<Result<ApiResponse>> =
+  val clientConfigurationLiveData: MutableLiveData<Result<ClientConfigurationResponse>> =
     MutableLiveData(Result.none())
 
-  fun fetchOrgRules(idToken: String, fesUrl: String? = null) {
+  fun fetchClientConfiguration(idToken: String, fesUrl: String? = null) {
     viewModelScope.launch {
       val context: Context = getApplication()
-      domainOrgRulesLiveData.value =
+      clientConfigurationLiveData.value =
         Result.loading(progressMsg = context.getString(R.string.loading_domain_rules))
 
       try {
-        domainOrgRulesLiveData.value = repository.getDomainOrgRules(
+        clientConfigurationLiveData.value = repository.getClientConfiguration(
           context = context,
           idToken = idToken,
           fesUrl = fesUrl,
         )
       } catch (e: Exception) {
-        domainOrgRulesLiveData.value = Result.exception(e)
+        clientConfigurationLiveData.value = Result.exception(e)
       }
     }
   }

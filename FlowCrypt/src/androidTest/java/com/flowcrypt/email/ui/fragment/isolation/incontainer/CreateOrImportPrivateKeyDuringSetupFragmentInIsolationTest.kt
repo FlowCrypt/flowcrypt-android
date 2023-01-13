@@ -12,7 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -60,11 +60,11 @@ class CreateOrImportPrivateKeyDuringSetupFragmentInIsolationTest : BaseTest() {
   fun testButtonCreateNewKeyVisibilityForExistingRule() {
     launchFragmentInContainer<CreateOrImportPrivateKeyDuringSetupFragment>(
       fragmentArgs = CreateOrImportPrivateKeyDuringSetupFragmentArgs(
-        accountEntity = AccountDaoManager.getUserWithOrgRules(
-          OrgRules(
+        accountEntity = AccountDaoManager.getUserWithClientConfiguration(
+          ClientConfiguration(
             flags = listOf(
-              OrgRules.DomainRule.NO_PRV_CREATE,
-              OrgRules.DomainRule.NO_PRV_BACKUP
+              ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+              ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
             )
           )
         )

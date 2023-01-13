@@ -8,7 +8,7 @@ package com.flowcrypt.email.ui.base
 import androidx.test.ext.junit.rules.activityScenarioRule
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -39,12 +39,12 @@ abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
 
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
-  protected val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
-    OrgRules(
+  protected val userWithClientConfiguration = AccountDaoManager.getUserWithClientConfiguration(
+    ClientConfiguration(
       flags = listOf(
-        OrgRules.DomainRule.NO_PRV_CREATE,
-        OrgRules.DomainRule.NO_PRV_BACKUP,
-        OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
+        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
+        ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE
       ),
       customKeyserverUrl = null,
       keyManagerUrl = EKM_URL,
@@ -53,7 +53,7 @@ abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
     )
   ).copy(email = "ekm@localhost:1212")
 
-  protected val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+  protected val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
 
   protected val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
     object : Dispatcher() {

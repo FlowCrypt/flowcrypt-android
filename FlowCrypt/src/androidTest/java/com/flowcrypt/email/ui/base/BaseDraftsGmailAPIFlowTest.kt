@@ -24,8 +24,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -84,14 +84,14 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
   protected val draftsCache = mutableListOf<Draft>()
 
   private val accountEntity = AccountDaoManager.getDefaultAccountDao().copy(
-    accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = OrgRules(
+    accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
       flags = listOf(
-        OrgRules.DomainRule.NO_PRV_CREATE,
-        OrgRules.DomainRule.NO_PRV_BACKUP,
-        OrgRules.DomainRule.NO_ATTESTER_SUBMIT,
-        OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-        OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
-        OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
+        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
+        ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
+        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
+        ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
+        ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
       ),
       keyManagerUrl = "https://localhost:1212/",
     ), useAPI = true, useFES = true

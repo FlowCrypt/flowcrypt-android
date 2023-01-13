@@ -20,10 +20,10 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -154,10 +154,10 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
       adminApiVersion = "v1"
     )
 
-    private val DOMAIN_ORG_RULES_RESPONSE = DomainOrgRulesResponse(
-      orgRules = OrgRules(
+    private val CLIENT_CONFIGURATION_RESPONSE = ClientConfigurationResponse(
+      clientConfiguration = ClientConfiguration(
         flags = listOf(
-          OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+          ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT
         ),
       )
     )
@@ -174,7 +174,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
 
             request.path == "/account/get" -> MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(gson.toJson(DOMAIN_ORG_RULES_RESPONSE))
+              .setBody(gson.toJson(CLIENT_CONFIGURATION_RESPONSE))
 
             request.requestUrl?.encodedPath == "/gmail/v1/users/me/messages"
                 && request.requestUrl?.queryParameter("q")

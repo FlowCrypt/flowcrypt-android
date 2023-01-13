@@ -52,7 +52,7 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("Need to fix")
-class ImportPrivateKeyNoPubOrgRulesFlowTest : BaseTest() {
+class ImportPrivateKeyNoPubClientConfigurationFlowTest : BaseTest() {
   private val account = AccountDaoManager.getAccountDao("no.pub@org-rules-test.flowcrypt.com.json")
 
   override val useIntents: Boolean = true

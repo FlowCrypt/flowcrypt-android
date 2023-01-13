@@ -14,7 +14,7 @@ import android.net.Uri
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.MainActivity
 
@@ -40,14 +40,15 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
       cancel(NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
     }
 
-    val intent = if (account?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
-      Intent(context, MainActivity::class.java)
-    } else {
-      Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse("flowcrypt://email.flowcrypt.com/settings/security")
-      )
-    }
+    val intent =
+      if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP) == true) {
+        Intent(context, MainActivity::class.java)
+      } else {
+        Intent(
+          Intent.ACTION_VIEW,
+          Uri.parse("flowcrypt://email.flowcrypt.com/settings/security")
+        )
+      }
 
     val pendingIntent =
       PendingIntent.getActivity(

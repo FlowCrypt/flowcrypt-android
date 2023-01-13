@@ -167,7 +167,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   override fun onStart() {
     super.onStart()
-    tryToUpdateOrgRules()
+    tryToUpdateClientConfiguration()
     onBackPressedCallback.isEnabled = true
   }
 
@@ -204,7 +204,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   ) {
     super.onDestinationChanged(controller, destination, arguments)
     if (navController.currentDestination?.id == R.id.messagesListFragment) {
-      tryToUpdateOrgRules()
+      tryToUpdateClientConfiguration()
     }
   }
 
@@ -421,7 +421,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     })
   }
 
-  private fun tryToUpdateOrgRules() {
+  private fun tryToUpdateClientConfiguration() {
     if (isUpdateFromEnterpriseApisRequired
       && navController.currentDestination?.id == R.id.messagesListFragment
     ) {

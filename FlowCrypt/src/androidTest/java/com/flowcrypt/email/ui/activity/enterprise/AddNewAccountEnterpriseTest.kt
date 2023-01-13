@@ -16,8 +16,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -89,12 +89,11 @@ class AddNewAccountEnterpriseTest : BaseSignTest() {
               )
                 .setBody(
                   gson.toJson(
-                    DomainOrgRulesResponse(
-                      apiError = null,
-                      orgRules = OrgRules(
+                    ClientConfigurationResponse(
+                      clientConfiguration = ClientConfiguration(
                         flags = listOf(
-                          OrgRules.DomainRule.NO_PRV_CREATE,
-                          OrgRules.DomainRule.NO_PRV_BACKUP
+                          ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+                          ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
                         ),
                         customKeyserverUrl = null,
                         keyManagerUrl = null,

@@ -32,7 +32,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
@@ -465,7 +465,7 @@ class AttachmentDownloadManagerService : Service() {
               listener?.onAttDownloaded(
                 attInfo = att,
                 uri = uri,
-                canBeOpened = !account.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
               )
             }
 
@@ -488,7 +488,7 @@ class AttachmentDownloadManagerService : Service() {
               ).use { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
                 )
               }
             }
@@ -515,7 +515,7 @@ class AttachmentDownloadManagerService : Service() {
               )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.isRuleExist(OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
                 )
               } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
             }

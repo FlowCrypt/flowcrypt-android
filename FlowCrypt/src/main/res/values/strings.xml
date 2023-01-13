@@ -481,7 +481,7 @@
         <item quantity="one">Please provide a pass phrase for the following key</item>
         <item quantity="other">Please provide a pass phrase for the following keys</item>
     </plurals>
-    <string name="combination_of_org_rules_is_not_supported">Combination of the following OrgRules\n\n%1$s\n\nis not supported</string>
+    <string name="combination_of_client_configuration_is_not_supported">Combination of the following client configuration\n\n%1$s\n\nis not supported</string>
     <string name="passphrase_was_changed">Your pass phrase was changed. From now, the new backups will be protected with a provided pass phrase.</string>
     <string name="processing_please_wait">Processing, please wait&#8230;</string>
     <string name="could_not_change_pass_phrase">Could not change the pass phrase</string>

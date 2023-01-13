@@ -11,4 +11,4 @@ package com.flowcrypt.email.util.exception
  *         Time: 7:40 PM
  *         E-mail: DenBond7@gmail.com
  */
-class UnsupportedOrgRulesException(message: String) : FlowCryptException(message)
+class UnsupportedClientConfigurationException(message: String) : FlowCryptException(message)

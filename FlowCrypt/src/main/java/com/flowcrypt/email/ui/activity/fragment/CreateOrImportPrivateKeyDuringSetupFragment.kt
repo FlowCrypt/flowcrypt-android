@@ -15,7 +15,7 @@ import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentCreateOrImportPrivateKeyDuringSetupBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
@@ -65,7 +65,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
       )
     }
 
-    if (args.accountEntity.isRuleExist(OrgRules.DomainRule.NO_PRV_CREATE)) {
+    if (args.accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE)) {
       binding?.buttonCreateNewKey?.gone()
     } else {
       binding?.buttonCreateNewKey?.setOnClickListener {

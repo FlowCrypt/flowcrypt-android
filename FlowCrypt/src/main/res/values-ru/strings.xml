@@ -311,7 +311,7 @@
     <string name="can_not_connect_to_the_server">Невозможно подключиться к серверу</string>
     <string name="change_pass_phrase">Изменить ключевую фразу</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Изменение ключевой фразы, пожалуйста, подождите</string>
-    <string name="combination_of_org_rules_is_not_supported">Комбинация следующих организационных правил\n\n%1$s\n\nне поддерживается</string>
+    <string name="combination_of_client_configuration_is_not_supported">Комбинация следующих конфигураций клиента\n\n%1$s\n\nне поддерживается</string>
     <string name="compose">Написать</string>
     <string name="the_contact_was_deleted">Контакт \"%1$s\" удален</string>
     <string name="could_not_load_oauth_server_configuration">Не удалось загрузить конфигурацию сервера OAuth</string>

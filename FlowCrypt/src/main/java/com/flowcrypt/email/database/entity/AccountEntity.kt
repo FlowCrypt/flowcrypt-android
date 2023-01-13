@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import kotlinx.parcelize.IgnoredOnParcel
@@ -73,7 +73,7 @@ data class AccountEntity constructor(
   @ColumnInfo(
     name = "client_configuration",
     defaultValue = "NULL"
-  ) val clientConfiguration: OrgRules? = null,
+  ) val clientConfiguration: ClientConfiguration? = null,
   @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false,
   @ColumnInfo(name = "use_fes", defaultValue = "0") val useFES: Boolean = false
 ) : Parcelable {
@@ -94,7 +94,7 @@ data class AccountEntity constructor(
 
   constructor(
     googleSignInAccount: GoogleSignInAccount,
-    orgRules: OrgRules? = null,
+    clientConfiguration: ClientConfiguration? = null,
     useFES: Boolean,
     useStartTlsForSmtp: Boolean = false,
   ) : this(
@@ -127,12 +127,12 @@ data class AccountEntity constructor(
     smtpPassword = null,
     contactsLoaded = false,
     showOnlyEncrypted = false,
-    clientConfiguration = orgRules,
+    clientConfiguration = clientConfiguration,
     useAPI = FlavorSettings.isGMailAPIEnabled(),
     useFES = useFES
   )
 
-  constructor(authCredentials: AuthCredentials, orgRules: OrgRules? = null) :
+  constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :
       this(
         email = authCredentials.email.lowercase(),
         accountType =
@@ -160,7 +160,7 @@ data class AccountEntity constructor(
         smtpPassword = authCredentials.smtpSignInPassword,
         contactsLoaded = false,
         showOnlyEncrypted = false,
-        clientConfiguration = orgRules,
+        clientConfiguration = clientConfiguration,
         useAPI = false,
         useFES = false
       )
@@ -224,8 +224,8 @@ data class AccountEntity constructor(
     }
   }
 
-  fun isRuleExist(domainRule: OrgRules.DomainRule): Boolean {
-    return clientConfiguration?.hasRule(domainRule) ?: false
+  fun hasClientConfigurationProperty(configurationProperty: ClientConfiguration.ConfigurationProperty): Boolean {
+    return clientConfiguration?.hasProperty(configurationProperty) ?: false
   }
 
   companion object {

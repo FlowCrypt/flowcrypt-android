@@ -269,7 +269,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
           return@cancelPreviousThenRun apiRepository.pubLookup(
             context = getApplication(),
             email = email,
-            orgRules = activeAccount?.clientConfiguration
+            clientConfiguration = activeAccount?.clientConfiguration
           )
         }
     }
@@ -312,7 +312,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       val response = apiRepository.pubLookup(
         context = getApplication(),
         email = email,
-        orgRules = activeAccount?.clientConfiguration
+        clientConfiguration = activeAccount?.clientConfiguration
       )
 
       when (response.status) {

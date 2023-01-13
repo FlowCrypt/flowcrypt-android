@@ -24,7 +24,7 @@ import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -447,10 +447,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     pgpKeyDetails: PgpKeyDetails,
     idToken: String? = null,
   ) {
-    if (accountEntity.isRuleExist(OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+    if (accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT)) {
       registerUserPublicKey(accountEntity, pgpKeyDetails, idToken, false)
 
-      if (!accountEntity.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)) {
+      if (!accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(
             BackupPrivateKeyToInboxAction(
@@ -462,7 +462,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         }
       }
     } else {
-      if (!accountEntity.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)) {
+      if (!accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(
             BackupPrivateKeyToInboxAction(
@@ -565,14 +565,14 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         email = accountEntity.email,
         pubKey = keyDetails.publicKey,
         idToken = idToken,
-        orgRules = accountEntity.clientConfiguration,
+        clientConfiguration = accountEntity.clientConfiguration,
       )
     } else {
       apiRepository.submitPubKeyWithConditionalEmailVerification(
         context = getApplication(),
         email = accountEntity.email,
         pubKey = keyDetails.publicKey,
-        orgRules = accountEntity.clientConfiguration,
+        clientConfiguration = accountEntity.clientConfiguration,
       )
     }
 

@@ -14,8 +14,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result.Status
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -47,17 +45,17 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
         maxRetryAttemptCount = 5
       )
 
-      val result = repository.getDomainOrgRules(
+      val result = repository.getClientConfiguration(
         context = applicationContext,
         fesUrl = fesUrl,
         idToken = idToken
       )
 
       if (result.status == Status.SUCCESS) {
-        val fetchedOrgRules = (result.data as? DomainOrgRulesResponse)?.orgRules
-          ?: (result.data as? ClientConfigurationResponse)?.orgRules
-        fetchedOrgRules?.let { orgRules ->
-          roomDatabase.accountDao().updateSuspend(account.copy(clientConfiguration = orgRules))
+        val fetchedClientConfiguration = result.data?.clientConfiguration
+        fetchedClientConfiguration?.let { clientConfiguration ->
+          roomDatabase.accountDao()
+            .updateSuspend(account.copy(clientConfiguration = clientConfiguration))
         }
       }
     } catch (e: Exception) {
