@@ -202,7 +202,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        if (account?.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
           if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
             previewAttachment(
               attachmentInfo = attachmentInfo,
@@ -213,7 +213,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       override fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo) {
-        if (account?.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
           if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
             previewAttachment(
               attachmentInfo = attachmentInfo,
@@ -431,7 +431,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     attachmentsRecyclerViewAdapter.isPreviewEnabled =
-      account?.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
+      account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
   }
 
   /**
@@ -1609,7 +1609,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       if (attInfo.rawData?.isNotEmpty() == true) {
         downloadInlinedAtt(attInfo)
       } else {
-        if (account?.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
           navController?.navigate(
             MessageDetailsFragmentDirections
               .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
@@ -1716,7 +1716,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             previewAttachment(
               attachmentInfo = it,
               useEnterpriseBehaviour =
-              account?.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
+              account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
             )
           }
         }

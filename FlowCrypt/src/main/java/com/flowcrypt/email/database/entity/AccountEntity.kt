@@ -224,7 +224,7 @@ data class AccountEntity constructor(
     }
   }
 
-  fun isRuleExist(configurationProperty: ClientConfiguration.ConfigurationProperty): Boolean {
+  fun hasClientConfigurationProperty(configurationProperty: ClientConfiguration.ConfigurationProperty): Boolean {
     return clientConfiguration?.hasProperty(configurationProperty) ?: false
   }
 

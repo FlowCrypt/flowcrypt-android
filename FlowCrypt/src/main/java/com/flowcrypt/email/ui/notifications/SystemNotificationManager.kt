@@ -41,7 +41,7 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
     }
 
     val intent =
-      if (account?.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP) == true) {
+      if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP) == true) {
         Intent(context, MainActivity::class.java)
       } else {
         Intent(

@@ -465,7 +465,7 @@ class AttachmentDownloadManagerService : Service() {
               listener?.onAttDownloaded(
                 attInfo = att,
                 uri = uri,
-                canBeOpened = !account.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
               )
             }
 
@@ -488,7 +488,7 @@ class AttachmentDownloadManagerService : Service() {
               ).use { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
                 )
               }
             }
@@ -515,7 +515,7 @@ class AttachmentDownloadManagerService : Service() {
               )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.isRuleExist(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
                 )
               } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
             }

@@ -65,7 +65,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
       )
     }
 
-    if (args.accountEntity.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE)) {
+    if (args.accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE)) {
       binding?.buttonCreateNewKey?.gone()
     } else {
       binding?.buttonCreateNewKey?.setOnClickListener {

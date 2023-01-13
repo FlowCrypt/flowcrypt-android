@@ -125,7 +125,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     }
 
     binding?.btBackup?.setOnClickListener {
-      if (account?.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)
+      if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)
           ?.not() == true
       ) {
         if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isEmpty()) {
@@ -350,7 +350,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
   }
 
   private fun updateBackupButtonVisibility(accountEntity: AccountEntity?) {
-    if (accountEntity?.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP) == true) {
+    if (accountEntity?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP) == true) {
       binding?.btBackup?.gone()
     }
   }

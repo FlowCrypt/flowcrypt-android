@@ -102,7 +102,7 @@ class MainSettingsFragment : BasePreferenceFragment() {
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     findPreference<Preference>(Constants.PREF_KEY_BACKUPS)?.isVisible =
-      !(accountEntity?.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)
+      !(accountEntity?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)
         ?: false)
 
     if (accountEntity?.useAPI == false) {

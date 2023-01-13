@@ -447,10 +447,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     pgpKeyDetails: PgpKeyDetails,
     idToken: String? = null,
   ) {
-    if (accountEntity.isRuleExist(ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT)) {
+    if (accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT)) {
       registerUserPublicKey(accountEntity, pgpKeyDetails, idToken, false)
 
-      if (!accountEntity.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
+      if (!accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(
             BackupPrivateKeyToInboxAction(
@@ -462,7 +462,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         }
       }
     } else {
-      if (!accountEntity.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
+      if (!accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
         if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
           val backupAction = ActionQueueEntity.fromAction(
             BackupPrivateKeyToInboxAction(

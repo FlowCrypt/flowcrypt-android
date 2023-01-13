@@ -105,7 +105,7 @@ class ChangePassphraseOfImportedKeysFragment :
 
           Result.Status.SUCCESS -> {
             isPassphraseChanged = true
-            if (args.accountEntity.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
+            if (args.accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
               //making backups is not allowed by ClientConfiguration.
               isBackEnabled = true
               showContent()
