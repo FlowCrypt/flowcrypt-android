@@ -10,7 +10,6 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
@@ -120,7 +119,7 @@ interface ApiService {
   suspend fun getClientConfigurationFromFlowCryptComBackend(
     @Header("Authorization") authorization: String,
     @Body body: Any = Any(),
-  ): Response<DomainOrgRulesResponse>
+  ): Response<ClientConfigurationResponse>
 
   /**
    * This method calls "https://fes.$domain/api/v1/client-configuration?domain=$domain"

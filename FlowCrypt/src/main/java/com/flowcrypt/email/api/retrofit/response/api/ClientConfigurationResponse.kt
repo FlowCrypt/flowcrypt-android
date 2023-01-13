@@ -22,6 +22,6 @@ import kotlinx.parcelize.Parcelize
 data class ClientConfigurationResponse constructor(
   @SerializedName("error")
   @Expose override val apiError: ApiError? = null,
-  @SerializedName("clientConfiguration")
+  @SerializedName("clientConfiguration", alternate = ["domain_org_rules"])
   @Expose val clientConfiguration: ClientConfiguration?
 ) : ApiResponse

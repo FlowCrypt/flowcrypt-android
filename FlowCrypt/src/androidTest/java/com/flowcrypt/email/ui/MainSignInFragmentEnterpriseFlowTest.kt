@@ -20,7 +20,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
@@ -609,7 +608,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       .setBody(
         gson.toJson(
-          DomainOrgRulesResponse(
+          ClientConfigurationResponse(
             clientConfiguration = clientConfiguration
           )
         )
@@ -658,7 +657,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE
     )
 
-    private val CLIENT_CONFIGURATION_ERROR_RESPONSE = DomainOrgRulesResponse(
+    private val CLIENT_CONFIGURATION_ERROR_RESPONSE = ClientConfigurationResponse(
       ApiError(
         HttpURLConnection.HTTP_UNAUTHORIZED,
         "Not logged in or unknown account", "auth"

@@ -22,8 +22,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -623,13 +621,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           val idToken = googleSignInAccount?.idToken
-          clientConfiguration = (it.data as? DomainOrgRulesResponse)?.clientConfiguration
-            ?: (it.data as? ClientConfigurationResponse)?.clientConfiguration
+          clientConfiguration = it.data?.clientConfiguration
 
           if (idToken != null) {
-            clientConfiguration?.let { fetchedOrgRules ->
+            clientConfiguration?.let { fetchedClientConfiguration ->
               ekmViewModel.fetchPrvKeys(
-                fetchedOrgRules,
+                fetchedClientConfiguration,
                 idToken
               )
             }

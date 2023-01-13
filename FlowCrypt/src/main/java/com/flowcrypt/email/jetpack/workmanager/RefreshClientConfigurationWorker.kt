@@ -14,8 +14,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result.Status
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -54,9 +52,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
       )
 
       if (result.status == Status.SUCCESS) {
-        val fetchedClientConfiguration =
-          (result.data as? DomainOrgRulesResponse)?.clientConfiguration
-            ?: (result.data as? ClientConfigurationResponse)?.clientConfiguration
+        val fetchedClientConfiguration = result.data?.clientConfiguration
         fetchedClientConfiguration?.let { clientConfiguration ->
           roomDatabase.accountDao()
             .updateSuspend(account.copy(clientConfiguration = clientConfiguration))

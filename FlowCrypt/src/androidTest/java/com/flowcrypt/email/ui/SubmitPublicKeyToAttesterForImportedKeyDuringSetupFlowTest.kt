@@ -20,7 +20,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -154,7 +154,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
       adminApiVersion = "v1"
     )
 
-    private val CLIENT_CONFIGURATION_RESPONSE = DomainOrgRulesResponse(
+    private val CLIENT_CONFIGURATION_RESPONSE = ClientConfigurationResponse(
       clientConfiguration = ClientConfiguration(
         flags = listOf(
           ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT
