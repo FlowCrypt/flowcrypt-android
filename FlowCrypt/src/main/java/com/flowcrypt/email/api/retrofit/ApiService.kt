@@ -117,7 +117,7 @@ interface ApiService {
    * This method calls "https://flowcrypt.com/api/account/get"
    */
   @POST(BuildConfig.API_URL + "account/get")
-  suspend fun getOrgRulesFromFlowCryptComBackend(
+  suspend fun getClientConfigurationFromFlowCryptComBackend(
     @Header("Authorization") authorization: String,
     @Body body: Any = Any(),
   ): Response<DomainOrgRulesResponse>
@@ -128,7 +128,7 @@ interface ApiService {
    * @param fesUrl URL of FES
    */
   @GET
-  suspend fun getOrgRulesFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
+  suspend fun getClientConfigurationFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
 
   /**
    * Set or replace public key with idToken as an auth mechanism

@@ -10,10 +10,10 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAndOrSignedContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.jfixture.MsgBlockGenerationCustomization
 import com.flowcrypt.email.jfixture.SelectConstructorCustomisation
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -75,13 +75,16 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     )
 
     fixture.customise().sameInstance(
-      OrgRules::class.java,
-      OrgRules(
-        flags = listOf(OrgRules.DomainRule.NO_ATTESTER_SUBMIT, OrgRules.DomainRule.NO_PRV_CREATE),
+      ClientConfiguration::class.java,
+      ClientConfiguration(
+        flags = listOf(
+          ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
+          ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE
+        ),
         customKeyserverUrl = "https://keyserver.test",
         keyManagerUrl = "https://keymanager.test",
         disallowAttesterSearchForDomains = listOf("item_1", "item_2"),
-        enforceKeygenAlgo = OrgRules.KeyAlgo.curve25519,
+        enforceKeygenAlgo = ClientConfiguration.KeyAlgo.curve25519,
         enforceKeygenExpireMonths = 12
       )
     )

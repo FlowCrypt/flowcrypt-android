@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 
 /**
  * @author Denis Bondarenko
@@ -13,4 +13,4 @@ import com.flowcrypt.email.api.retrofit.response.model.OrgRules
  *         Time: 5:53 PM
  *         E-mail: DenBond7@gmail.com
  */
-class EkmNotSupportedException(val orgRules: OrgRules) : FlowCryptException()
+class EkmNotSupportedException(val clientConfiguration: ClientConfiguration) : FlowCryptException()

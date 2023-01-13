@@ -14,14 +14,14 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules.DomainRule
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration.ConfigurationProperty
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
-import com.flowcrypt.email.util.exception.UnsupportedOrgRulesException
+import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
 import kotlinx.coroutines.launch
 
 /**
@@ -36,27 +36,28 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
   private val repository = FlowcryptApiRepository()
   val ekmLiveData: MutableLiveData<Result<EkmPrivateKeysResponse>> = MutableLiveData(Result.none())
 
-  fun fetchPrvKeys(orgRules: OrgRules, idToken: String) {
+  fun fetchPrvKeys(clientConfiguration: ClientConfiguration, idToken: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
       ekmLiveData.value = Result.loading(progressMsg = context.getString(R.string.fetching_keys))
       try {
-        if (!orgRules.usesKeyManager() || !orgRules.mustAutoImportOrAutoGenPrvWithKeyManager()) {
+        if (!clientConfiguration.usesKeyManager() || !clientConfiguration.mustAutoImportOrAutoGenPrvWithKeyManager()) {
           ekmLiveData.value = Result.exception(
-            EkmNotSupportedException(orgRules)
+            EkmNotSupportedException(clientConfiguration)
           )
           return@launch
         }
 
-        val unsupportedOrgRulesException = checkForUnsupportedOrgRulesCombination(orgRules)
-        if (unsupportedOrgRulesException != null) {
-          ekmLiveData.value = Result.exception(unsupportedOrgRulesException)
+        val unsupportedClientConfigurationException =
+          checkForUnsupportedClientConfigurationCombination(clientConfiguration)
+        if (unsupportedClientConfigurationException != null) {
+          ekmLiveData.value = Result.exception(unsupportedClientConfigurationException)
           return@launch
         }
 
         val ekmPrivateResult = repository.getPrivateKeysViaEkm(
           context = context,
-          ekmUrl = orgRules.keyManagerUrl
+          ekmUrl = clientConfiguration.keyManagerUrl
             ?: throw IllegalArgumentException("key_manager_url is empty"),
           idToken = idToken
         )
@@ -105,31 +106,31 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
     }
   }
 
-  private fun checkForUnsupportedOrgRulesCombination(orgRules: OrgRules):
-      UnsupportedOrgRulesException? {
-    if (orgRules.hasRule(DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN)) {
-      if (orgRules.hasRule(DomainRule.PASS_PHRASE_QUIET_AUTOGEN)) {
-        return UnsupportedOrgRulesException(
-          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " + DomainRule.PASS_PHRASE_QUIET_AUTOGEN
+  private fun checkForUnsupportedClientConfigurationCombination(clientConfiguration: ClientConfiguration):
+      UnsupportedClientConfigurationException? {
+    if (clientConfiguration.hasProperty(ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN)) {
+      if (clientConfiguration.hasProperty(ConfigurationProperty.PASS_PHRASE_QUIET_AUTOGEN)) {
+        return UnsupportedClientConfigurationException(
+          ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " + ConfigurationProperty.PASS_PHRASE_QUIET_AUTOGEN
         )
       }
 
-      if (!orgRules.hasRule(DomainRule.FORBID_STORING_PASS_PHRASE)) {
-        return UnsupportedOrgRulesException(
-          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " +
-              DomainRule.FORBID_STORING_PASS_PHRASE
+      if (!clientConfiguration.hasProperty(ConfigurationProperty.FORBID_STORING_PASS_PHRASE)) {
+        return UnsupportedClientConfigurationException(
+          ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " +
+              ConfigurationProperty.FORBID_STORING_PASS_PHRASE
         )
       }
 
-      if (orgRules.hasRule(DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
-        return UnsupportedOrgRulesException(
-          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " + DomainRule.ENFORCE_ATTESTER_SUBMIT
+      if (clientConfiguration.hasProperty(ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT)) {
+        return UnsupportedClientConfigurationException(
+          ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + " + ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT
         )
       }
 
-      if (!orgRules.hasRule(DomainRule.NO_PRV_CREATE)) {
-        return UnsupportedOrgRulesException(
-          DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " + DomainRule.NO_PRV_CREATE
+      if (!clientConfiguration.hasProperty(ConfigurationProperty.NO_PRV_CREATE)) {
+        return UnsupportedClientConfigurationException(
+          ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " + ConfigurationProperty.NO_PRV_CREATE
         )
       }
     }

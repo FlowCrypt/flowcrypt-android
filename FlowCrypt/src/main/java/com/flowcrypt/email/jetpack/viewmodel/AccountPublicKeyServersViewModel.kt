@@ -106,7 +106,7 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
           val pubResponseResult = apiRepository.pubLookup(
             context = getApplication(),
             email = normalizedEmail,
-            orgRules = accountEntity.clientConfiguration
+            clientConfiguration = accountEntity.clientConfiguration
           )
           pubResponseResult.data?.pubkey?.let { key ->
             results.addAll(PgpKey.parseKeys(key).pgpKeyDetailsList.map {

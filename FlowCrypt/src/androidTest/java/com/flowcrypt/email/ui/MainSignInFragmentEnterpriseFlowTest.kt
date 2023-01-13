@@ -24,8 +24,8 @@ import com.flowcrypt.email.api.retrofit.response.api.DomainOrgRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -129,14 +129,14 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
 
   @Test
   fun testErrorGetDomainRules() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_ORG_RULES_ERROR))
-    isDialogWithTextDisplayed(decorView, DOMAIN_ORG_RULES_ERROR_RESPONSE.apiError?.msg!!)
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR))
+    isDialogWithTextDisplayed(decorView, CLIENT_CONFIGURATION_ERROR_RESPONSE.apiError?.msg!!)
     onView(withText(R.string.retry))
       .check(matches(isDisplayed()))
   }
 
   @Test
-  fun testOrgRulesCombinationNotSupportedForMustAutogenPassPhraseQuietlyExisted() {
+  fun testClientConfigurationCombinationNotSupportedForMustAutogenPassPhraseQuietlyExisted() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(
         EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED
@@ -145,15 +145,15 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     isDialogWithTextDisplayed(
       decorView = decorView,
       message = getResString(
-        R.string.combination_of_org_rules_is_not_supported,
-        OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name +
-            " + " + OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
+        R.string.combination_of_client_configuration_is_not_supported,
+        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name +
+            " + " + ClientConfiguration.ConfigurationProperty.PASS_PHRASE_QUIET_AUTOGEN
       )
     )
   }
 
   @Test
-  fun testOrgRulesCombinationNotSupportedForForbidStoringPassPhraseMissing() {
+  fun testClientConfigurationCombinationNotSupportedForForbidStoringPassPhraseMissing() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(
         EMAIL_FORBID_STORING_PASS_PHRASE_MISSING
@@ -162,15 +162,15 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     isDialogWithTextDisplayed(
       decorView = decorView,
       message = getResString(
-        R.string.combination_of_org_rules_is_not_supported,
-        OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " +
-            OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
+        R.string.combination_of_client_configuration_is_not_supported,
+        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing " +
+            ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE
       )
     )
   }
 
   @Test
-  fun testOrgRulesCombinationNotSupportedForMustSubmitToAttesterExisted() {
+  fun testClientConfigurationCombinationNotSupportedForMustSubmitToAttesterExisted() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(
         EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED
@@ -179,15 +179,15 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     isDialogWithTextDisplayed(
       decorView = decorView,
       message = getResString(
-        R.string.combination_of_org_rules_is_not_supported,
-        OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name +
-            " + " + OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+        R.string.combination_of_client_configuration_is_not_supported,
+        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name +
+            " + " + ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT
       )
     )
   }
 
   @Test
-  fun testOrgRulesCombinationNotSupportedForForbidCreatingPrivateKeyMissing() {
+  fun testClientConfigurationCombinationNotSupportedForForbidCreatingPrivateKeyMissing() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(
         EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING
@@ -196,9 +196,9 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     isDialogWithTextDisplayed(
       decorView = decorView,
       message = getResString(
-        R.string.combination_of_org_rules_is_not_supported,
-        OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing "
-            + OrgRules.DomainRule.NO_PRV_CREATE
+        R.string.combination_of_client_configuration_is_not_supported,
+        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN.name + " + missing "
+            + ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE
       )
     )
   }
@@ -304,7 +304,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   fun testFesServerExternalServiceAlias() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_EXTERNAL_SERVICE))
     //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
-    //to check that external-service was accepted and we called getOrgRulesFromFes()
+    //to check that external-service was accepted and we called getClientConfigurationFromFes()
 
     isDialogWithTextDisplayed(
       decorView,
@@ -321,7 +321,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   fun testFesServerEnterpriseServerAlias() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_ENTERPRISE_SERVER))
     //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
-    //to check that external-service was accepted and we called getOrgRulesFromFes()
+    //to check that external-service was accepted and we called getClientConfigurationFromFes()
     isDialogWithTextDisplayed(
       decorView,
       "ApiException:" + ApiException(
@@ -439,8 +439,8 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "testFesServerEnterpriseServerAlias" -> null
       else -> gson.toJson(
         ClientConfigurationResponse(
-          orgRules = OrgRules(
-            flags = ACCEPTED_ORG_RULES,
+          clientConfiguration = ClientConfiguration(
+            flags = ACCEPTED_FLAGS,
             keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
           )
         )
@@ -490,93 +490,95 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
 
   private fun handleGetDomainRulesAPI(account: String?, gson: Gson): MockResponse {
     when (account) {
-      EMAIL_DOMAIN_ORG_RULES_ERROR -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(gson.toJson(DOMAIN_ORG_RULES_ERROR_RESPONSE))
+      EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR -> return MockResponse().setResponseCode(
+        HttpURLConnection.HTTP_OK
+      )
+        .setBody(gson.toJson(CLIENT_CONFIGURATION_ERROR_RESPONSE))
 
-      EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForOrgRules(
+      EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
+        clientConfiguration = ClientConfiguration(
           flags = listOf(
-            OrgRules.DomainRule.NO_PRV_CREATE,
-            OrgRules.DomainRule.NO_PRV_BACKUP
+            ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+            ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
           )
         )
       )
 
-      EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED -> return successMockResponseForOrgRules(
+      EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
+        clientConfiguration = ClientConfiguration(
           flags = listOf(
-            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-            OrgRules.DomainRule.PASS_PHRASE_QUIET_AUTOGEN
+            ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
+            ClientConfiguration.ConfigurationProperty.PASS_PHRASE_QUIET_AUTOGEN
           ),
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
         )
       )
 
-      EMAIL_FORBID_STORING_PASS_PHRASE_MISSING -> return successMockResponseForOrgRules(
+      EMAIL_FORBID_STORING_PASS_PHRASE_MISSING -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
+        clientConfiguration = ClientConfiguration(
           flags = listOf(
-            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN
+            ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN
           ),
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
         )
       )
 
-      EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED -> return successMockResponseForOrgRules(
+      EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
+        clientConfiguration = ClientConfiguration(
           flags = listOf(
-            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-            OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
-            OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+            ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
+            ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
+            ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT
           ),
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
         )
       )
 
-      EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING -> return successMockResponseForOrgRules(
+      EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
+        clientConfiguration = ClientConfiguration(
           flags = listOf(
-            OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-            OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE
+            ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
+            ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE
           ),
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
         )
       )
 
-      EMAIL_GET_KEYS_VIA_EKM_ERROR -> return successMockResponseForOrgRules(
+      EMAIL_GET_KEYS_VIA_EKM_ERROR -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
-          flags = ACCEPTED_ORG_RULES,
+        clientConfiguration = ClientConfiguration(
+          flags = ACCEPTED_FLAGS,
           keyManagerUrl = EMAIL_EKM_URL_ERROR,
         )
       )
 
-      EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST -> return successMockResponseForOrgRules(
+      EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
-          flags = ACCEPTED_ORG_RULES,
+        clientConfiguration = ClientConfiguration(
+          flags = ACCEPTED_FLAGS,
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS_EMPTY_LIST,
         )
       )
 
-      EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED -> return successMockResponseForOrgRules(
+      EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
-          flags = ACCEPTED_ORG_RULES,
+        clientConfiguration = ClientConfiguration(
+          flags = ACCEPTED_FLAGS,
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY,
         )
       )
 
       EMAIL_FES_REQUEST_TIME_OUT,
       EMAIL_FES_HTTP_404,
-      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS -> return successMockResponseForOrgRules(
+      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS -> return successMockResponseForClientConfiguration(
         gson = gson,
-        orgRules = OrgRules(
-          flags = ACCEPTED_ORG_RULES,
+        clientConfiguration = ClientConfiguration(
+          flags = ACCEPTED_FLAGS,
           keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
         )
       )
@@ -585,11 +587,11 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
         .setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
 
       EMAIL_FES_ENFORCE_ATTESTER_SUBMIT -> {
-        return successMockResponseForOrgRules(
+        return successMockResponseForClientConfiguration(
           gson = gson,
-          orgRules = OrgRules(
+          clientConfiguration = ClientConfiguration(
             flags = listOf(
-              OrgRules.DomainRule.ENFORCE_ATTESTER_SUBMIT
+              ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT
             ),
             keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
           )
@@ -600,12 +602,15 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     }
   }
 
-  private fun successMockResponseForOrgRules(gson: Gson, orgRules: OrgRules) =
+  private fun successMockResponseForClientConfiguration(
+    gson: Gson,
+    clientConfiguration: ClientConfiguration
+  ) =
     MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       .setBody(
         gson.toJson(
           DomainOrgRulesResponse(
-            orgRules = orgRules
+            clientConfiguration = clientConfiguration
           )
         )
       )
@@ -617,7 +622,8 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "https://localhost:1212/ekm/not_fully_decrypted_key/"
     private const val EMAIL_EKM_URL_ERROR = "https://localhost:1212/ekm/error/"
     private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.test"
-    private const val EMAIL_DOMAIN_ORG_RULES_ERROR = "domain_org_rules_error@flowcrypt.test"
+    private const val EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR =
+      "client_configuration_error@flowcrypt.test"
     private const val EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED =
       "must_autogen_pass_phrase_quietly_existed@flowcrypt.test"
     private const val EMAIL_FORBID_STORING_PASS_PHRASE_MISSING =
@@ -646,13 +652,13 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     private const val EMAIL_FES_ENFORCE_ATTESTER_SUBMIT =
       "enforce_attester_submit@localhost:1212"
 
-    private val ACCEPTED_ORG_RULES = listOf(
-      OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-      OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
-      OrgRules.DomainRule.NO_PRV_CREATE
+    private val ACCEPTED_FLAGS = listOf(
+      ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
+      ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
+      ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE
     )
 
-    private val DOMAIN_ORG_RULES_ERROR_RESPONSE = DomainOrgRulesResponse(
+    private val CLIENT_CONFIGURATION_ERROR_RESPONSE = DomainOrgRulesResponse(
       ApiError(
         HttpURLConnection.HTTP_UNAUTHORIZED,
         "Not logged in or unknown account", "auth"

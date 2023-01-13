@@ -22,7 +22,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
@@ -55,14 +55,14 @@ import java.io.File
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
-  private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
-    OrgRules(
+  private val userWithClientConfiguration = AccountDaoManager.getUserWithClientConfiguration(
+    ClientConfiguration(
       flags = listOf(
-        OrgRules.DomainRule.HIDE_ARMOR_META
+        ClientConfiguration.ConfigurationProperty.HIDE_ARMOR_META
       )
     )
   )
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
   private val recipientEntity = RecipientEntity(
     email = addAccountToDatabaseRule.account.email,
     name = addAccountToDatabaseRule.account.displayName

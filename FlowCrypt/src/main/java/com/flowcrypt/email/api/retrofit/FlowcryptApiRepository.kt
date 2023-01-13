@@ -21,7 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.flowcrypt.email.api.wkd.WkdClient
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit
  *         E-mail: DenBond7@gmail.com
  */
 class FlowcryptApiRepository : ApiRepository {
-  override suspend fun getDomainOrgRules(
+  override suspend fun getClientConfiguration(
     context: Context,
     fesUrl: String?,
     idToken: String
@@ -61,9 +61,9 @@ class FlowcryptApiRepository : ApiRepository {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       getResult(context = context) {
         if (fesUrl != null) {
-          apiService.getOrgRulesFromFes(fesUrl = fesUrl)
+          apiService.getClientConfigurationFromFes(fesUrl = fesUrl)
         } else {
-          apiService.getOrgRulesFromFlowCryptComBackend(authorization = "Bearer $idToken")
+          apiService.getClientConfigurationFromFlowCryptComBackend(authorization = "Bearer $idToken")
         }
       }
     }
@@ -73,10 +73,10 @@ class FlowcryptApiRepository : ApiRepository {
     email: String,
     pubKey: String,
     idToken: String,
-    orgRules: OrgRules?
+    clientConfiguration: ClientConfiguration?
   ): Result<SubmitPubKeyResponse> =
     withContext(Dispatchers.IO) {
-      if (orgRules?.canSubmitPubToAttester() == false) {
+      if (clientConfiguration?.canSubmitPubToAttester() == false) {
         return@withContext Result.exception(
           IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
         )
@@ -89,10 +89,10 @@ class FlowcryptApiRepository : ApiRepository {
     context: Context,
     email: String,
     pubKey: String,
-    orgRules: OrgRules?
+    clientConfiguration: ClientConfiguration?
   ): Result<SubmitPubKeyResponse> =
     withContext(Dispatchers.IO) {
-      if (orgRules?.canSubmitPubToAttester() == false) {
+      if (clientConfiguration?.canSubmitPubToAttester() == false) {
         return@withContext Result.exception(
           IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
         )
@@ -115,7 +115,7 @@ class FlowcryptApiRepository : ApiRepository {
     requestCode: Long,
     context: Context,
     email: String,
-    orgRules: OrgRules?
+    clientConfiguration: ClientConfiguration?
   ): Result<PubResponse> =
     withContext(Dispatchers.IO) {
       val resultWrapperFun = fun(result: Result<String>): Result<PubResponse> {
@@ -161,7 +161,7 @@ class FlowcryptApiRepository : ApiRepository {
           return@withContext resultWrapperFun(wkdResult)
         }
 
-        if (orgRules?.canLookupThisRecipientOnAttester(email) == false) {
+        if (clientConfiguration?.canLookupThisRecipientOnAttester(email) == false) {
           return@withContext Result.success(
             requestCode = requestCode,
             data = PubResponse(null, null)

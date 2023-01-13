@@ -19,7 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
@@ -52,11 +52,11 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class PrivateKeyDetailsFragmentPassInRamFlexibleTimeInIsolationTest : BaseTest() {
-  private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
-    OrgRules(
+  private val userWithClientConfiguration = AccountDaoManager.getUserWithClientConfiguration(
+    ClientConfiguration(
       flags = listOf(
-        OrgRules.DomainRule.NO_PRV_CREATE,
-        OrgRules.DomainRule.NO_PRV_BACKUP
+        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
@@ -66,7 +66,7 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeInIsolationTest : BaseTest()
       inMemoryPassPhraseSessionLength = 1
     )
   )
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
     keyPath = KEY_PATH,

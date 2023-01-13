@@ -392,7 +392,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       return@withContext apiRepository.pubLookup(
         context = application,
         email = email,
-        orgRules = activeAccount?.clientConfiguration
+        clientConfiguration = activeAccount?.clientConfiguration
       )
     }
 

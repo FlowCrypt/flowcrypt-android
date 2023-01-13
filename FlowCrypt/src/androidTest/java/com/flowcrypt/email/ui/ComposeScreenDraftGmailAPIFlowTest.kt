@@ -18,7 +18,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -66,14 +66,14 @@ class ComposeScreenDraftGmailAPIFlowTest : BaseComposeScreenTest() {
   private val accountEntity = AccountDaoManager.getDefaultAccountDao()
     .copy(
       accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE,
-      clientConfiguration = OrgRules(
+      clientConfiguration = ClientConfiguration(
         flags = listOf(
-          OrgRules.DomainRule.NO_PRV_CREATE,
-          OrgRules.DomainRule.NO_PRV_BACKUP,
-          OrgRules.DomainRule.NO_ATTESTER_SUBMIT,
-          OrgRules.DomainRule.PRV_AUTOIMPORT_OR_AUTOGEN,
-          OrgRules.DomainRule.FORBID_STORING_PASS_PHRASE,
-          OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
+          ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+          ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
+          ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
+          ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
+          ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
+          ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
         ),
         keyManagerUrl = "https://localhost:1212/",
       ),

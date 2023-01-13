@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.database.converters.OrgRulesConverter
+import com.flowcrypt.email.database.converters.ClientConfigurationConverter
 import com.flowcrypt.email.database.converters.PassphraseTypeConverter
 import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
@@ -63,7 +63,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
-@TypeConverters(PassphraseTypeConverter::class, OrgRulesConverter::class)
+@TypeConverters(PassphraseTypeConverter::class, ClientConfigurationConverter::class)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun msgDao(): MessageDao
 

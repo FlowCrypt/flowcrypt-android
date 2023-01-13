@@ -20,7 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
 
@@ -35,10 +35,10 @@ import com.google.gson.JsonObject
 interface ApiRepository : BaseApiRepository {
   /**
    * @param context Interface to global information about an application environment.
-   * @param fesUrl Url that will be used to fetch [OrgRules].
+   * @param fesUrl Url that will be used to fetch [ClientConfiguration].
    * @param idToken OIDC token.
    */
-  suspend fun getDomainOrgRules(
+  suspend fun getClientConfiguration(
     context: Context,
     fesUrl: String? = null,
     idToken: String
@@ -49,27 +49,27 @@ interface ApiRepository : BaseApiRepository {
    * @param email For this email address will be applied changes.
    * @param pubKey A new public key.
    * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
-   * @param orgRules An instance of [OrgRules]. We have to check if submitting pub keys is allowed.
+   * @param clientConfiguration An instance of [ClientConfiguration]. We have to check if submitting pub keys is allowed.
    */
   suspend fun submitPrimaryEmailPubKey(
     context: Context,
     email: String,
     pubKey: String,
     idToken: String,
-    orgRules: OrgRules? = null
+    clientConfiguration: ClientConfiguration? = null
   ): Result<SubmitPubKeyResponse>
 
   /**
    * @param context Interface to global information about an application environment.
    * @param email For this email address will be applied changes.
    * @param pubKey A new public key.
-   * @param orgRules An instance of [OrgRules]. We have to check if submitting pub keys is allowed.
+   * @param clientConfiguration An instance of [ClientConfiguration]. We have to check if submitting pub keys is allowed.
    */
   suspend fun submitPubKeyWithConditionalEmailVerification(
     context: Context,
     email: String,
     pubKey: String,
-    orgRules: OrgRules? = null
+    clientConfiguration: ClientConfiguration? = null
   ): Result<SubmitPubKeyResponse>
 
   /**
@@ -86,13 +86,13 @@ interface ApiRepository : BaseApiRepository {
    * @param requestCode A unique request code for this call
    * @param context     Interface to global information about an application environment.
    * @param email       A user email.
-   * @param orgRules    Contains client configurations.
+   * @param clientConfiguration    Contains client configurations.
    */
   suspend fun pubLookup(
     requestCode: Long = 0L,
     context: Context,
     email: String,
-    orgRules: OrgRules? = null
+    clientConfiguration: ClientConfiguration? = null
   ): Result<PubResponse>
 
   /**
@@ -122,7 +122,7 @@ interface ApiRepository : BaseApiRepository {
    * Get private keys via "<ekm>/v1/keys/private"
    *
    * @param context Interface to global information about an application environment.
-   * @param ekmUrl key_manager_url from [OrgRules].
+   * @param ekmUrl key_manager_url from [ClientConfiguration].
    * @param idToken OIDC token.
    */
   suspend fun getPrivateKeysViaEkm(

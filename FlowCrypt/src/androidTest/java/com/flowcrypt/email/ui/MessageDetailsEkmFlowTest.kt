@@ -15,7 +15,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -47,12 +47,12 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
     "messages/attachments/simple_att.json",
     AttachmentInfo::class.java
   )
-  private val userWithOrgRules = AccountDaoManager.getUserWithOrgRules(
-    OrgRules(
+  private val userWithClientConfiguration = AccountDaoManager.getUserWithClientConfiguration(
+    ClientConfiguration(
       flags = listOf(
-        OrgRules.DomainRule.NO_PRV_CREATE,
-        OrgRules.DomainRule.NO_PRV_BACKUP,
-        OrgRules.DomainRule.RESTRICT_ANDROID_ATTACHMENT_HANDLING
+        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
+        ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
       ),
       customKeyserverUrl = null,
       keyManagerUrl = "https://keymanagerurl.test",
@@ -61,7 +61,7 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
       enforceKeygenExpireMonths = null
     )
   )
-  override val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithOrgRules)
+  override val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
     keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc",

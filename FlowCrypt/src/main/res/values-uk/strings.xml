@@ -312,7 +312,7 @@
     <string name="can_not_connect_to_the_server">Неможливо підключитися до сервера</string>
     <string name="change_pass_phrase">Змінити ключову фразу</string>
     <string name="please_wait_while_pass_phrase_will_be_changed">Змінення ключової фрази, будь ласка, зачекайте</string>
-    <string name="combination_of_org_rules_is_not_supported">Комбінація наступних організаційних правил\n\n%1$s\n\nне підтримується</string>
+    <string name="combination_of_client_configuration_is_not_supported">Комбінація наступних конфігурацій клієнта\n\n%1$s\n\nне підтримується</string>
     <string name="compose">Написати</string>
     <string name="the_contact_was_deleted">Контакт \"%1$s\" видалено</string>
     <string name="could_not_load_oauth_server_configuration">Не вдалося завантажити конфигурацію сервера OAuth</string>

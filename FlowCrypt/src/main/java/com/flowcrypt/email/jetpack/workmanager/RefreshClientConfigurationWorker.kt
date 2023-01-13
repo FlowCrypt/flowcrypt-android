@@ -47,17 +47,19 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
         maxRetryAttemptCount = 5
       )
 
-      val result = repository.getDomainOrgRules(
+      val result = repository.getClientConfiguration(
         context = applicationContext,
         fesUrl = fesUrl,
         idToken = idToken
       )
 
       if (result.status == Status.SUCCESS) {
-        val fetchedOrgRules = (result.data as? DomainOrgRulesResponse)?.orgRules
-          ?: (result.data as? ClientConfigurationResponse)?.orgRules
-        fetchedOrgRules?.let { orgRules ->
-          roomDatabase.accountDao().updateSuspend(account.copy(clientConfiguration = orgRules))
+        val fetchedClientConfiguration =
+          (result.data as? DomainOrgRulesResponse)?.clientConfiguration
+            ?: (result.data as? ClientConfigurationResponse)?.clientConfiguration
+        fetchedClientConfiguration?.let { clientConfiguration ->
+          roomDatabase.accountDao()
+            .updateSuspend(account.copy(clientConfiguration = clientConfiguration))
         }
       }
     } catch (e: Exception) {

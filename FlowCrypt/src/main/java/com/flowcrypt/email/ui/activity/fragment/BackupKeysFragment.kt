@@ -15,7 +15,7 @@ import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentBackupKeysBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
@@ -125,7 +125,9 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     }
 
     binding?.btBackup?.setOnClickListener {
-      if (account?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP)?.not() == true) {
+      if (account?.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)
+          ?.not() == true
+      ) {
         if (KeysStorageImpl.getInstance(requireContext()).getRawKeys().isEmpty()) {
           showInfoSnackbar(
             view = binding?.root,
@@ -348,7 +350,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
   }
 
   private fun updateBackupButtonVisibility(accountEntity: AccountEntity?) {
-    if (accountEntity?.isRuleExist(OrgRules.DomainRule.NO_PRV_BACKUP) == true) {
+    if (accountEntity?.isRuleExist(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP) == true) {
       binding?.btBackup?.gone()
     }
   }

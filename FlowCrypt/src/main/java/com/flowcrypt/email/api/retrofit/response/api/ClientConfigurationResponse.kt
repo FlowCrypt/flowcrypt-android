@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.api
 
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.api.retrofit.response.model.OrgRules
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
@@ -23,5 +23,5 @@ data class ClientConfigurationResponse constructor(
   @SerializedName("error")
   @Expose override val apiError: ApiError? = null,
   @SerializedName("clientConfiguration")
-  @Expose val orgRules: OrgRules?
+  @Expose val clientConfiguration: ClientConfiguration?
 ) : ApiResponse
