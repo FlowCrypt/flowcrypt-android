@@ -38,6 +38,7 @@ import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.viewaction.CustomViewActions.clickOnFolderWithName
 import com.google.api.client.googleapis.json.GoogleJsonError
 import com.google.api.client.googleapis.json.GoogleJsonErrorContainer
+import com.google.api.client.json.Json
 import com.google.api.client.json.JsonObjectParser
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.Draft
@@ -274,6 +275,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
           return MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
         } else {
           return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+            .setHeader("Content-Type", Json.MEDIA_TYPE)
             .setBody(GoogleJsonErrorContainer().apply {
               factory = GsonFactory.getDefaultInstance()
               error = GoogleJsonError().apply {

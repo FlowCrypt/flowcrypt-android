@@ -36,6 +36,9 @@ import com.flowcrypt.email.ui.base.BaseSignTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
+import com.google.api.client.googleapis.json.GoogleJsonError
+import com.google.api.client.googleapis.json.GoogleJsonErrorContainer
+import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.gson.Gson
@@ -44,7 +47,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -94,22 +96,49 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
           }
 
           request.requestUrl?.encodedPath == "/gmail/v1/users/me/messages"
-              && request.requestUrl?.queryParameter("q")
-            ?.startsWith("from:${EMAIL_FES_ENFORCE_ATTESTER_SUBMIT}") == true ->
-            return MockResponse()
-              .setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(
-                ListMessagesResponse().apply {
-                  factory = GsonFactory.getDefaultInstance()
-                  messages = emptyList()
-                  resultSizeEstimate = 0
-                }.toString()
-              )
+              && request.requestUrl?.queryParameterNames?.contains("q") == true -> {
+            val q = requireNotNull(request.requestUrl?.queryParameter("q"))
+            return when {
+              q.startsWith("from:${EMAIL_FES_ENFORCE_ATTESTER_SUBMIT}") -> MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody(
+                  ListMessagesResponse().apply {
+                    factory = GsonFactory.getDefaultInstance()
+                    messages = emptyList()
+                    resultSizeEstimate = 0
+                  }.toString()
+                )
+
+              q.startsWith("from:${EMAIL_GMAIL}") ->
+                prepareMockResponseForPublicDomains(EMAIL_GMAIL)
+
+              q.startsWith("from:${EMAIL_GOOGLEMAIL}") ->
+                prepareMockResponseForPublicDomains(EMAIL_GOOGLEMAIL)
+
+              else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+            }
+          }
         }
 
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
     })
+
+  private fun prepareMockResponseForPublicDomains(string: String) =
+    MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+      .setBody(GoogleJsonErrorContainer().apply {
+        factory = GsonFactory.getDefaultInstance()
+        error = GoogleJsonError().apply {
+          code = HttpURLConnection.HTTP_NOT_FOUND
+          message = string
+          errors = listOf(GoogleJsonError.ErrorInfo().apply {
+            message = string
+            domain = "local"
+            reason = "notFound"
+          })
+        }
+      }.toString())
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -333,7 +362,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  @Ignore("emulator can't resolve fes.localhost. Temporary disabled")
   fun testFesServerUpGetClientConfigurationSuccess() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
@@ -383,6 +411,18 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       decorView,
       ApiException(ApiError(code = HttpURLConnection.HTTP_NOT_FOUND, msg = "")).message!!
     )
+  }
+
+  @Test
+  fun testFlowForPublicEmailDomainsGmail() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GMAIL))
+    checkIsSnackBarDisplayed(EMAIL_GMAIL)
+  }
+
+  @Test
+  fun testFlowForPublicEmailDomainsGoogleMail() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GOOGLEMAIL))
+    checkIsSnackBarDisplayed(EMAIL_GOOGLEMAIL)
   }
 
   private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
@@ -650,6 +690,9 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "fes_client_configuration_failed@localhost:1212"
     private const val EMAIL_FES_ENFORCE_ATTESTER_SUBMIT =
       "enforce_attester_submit@localhost:1212"
+
+    private const val EMAIL_GMAIL = "gmail@gmail.com"
+    private const val EMAIL_GOOGLEMAIL = "googlemail@googlemail.com"
 
     private val ACCEPTED_FLAGS = listOf(
       ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
