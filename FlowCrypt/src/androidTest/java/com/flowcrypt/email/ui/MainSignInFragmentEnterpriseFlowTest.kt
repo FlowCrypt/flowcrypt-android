@@ -371,6 +371,23 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
+  fun testCallFesServerForEnterpriseUser() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
+
+    //the mock web server should return error for https://fes.$domain/api/
+    isDialogWithTextDisplayed(
+      decorView,
+      "ApiException:" + ApiException(
+        ApiError(
+          code = HttpURLConnection.HTTP_UNAUTHORIZED,
+          msg = ""
+        )
+      ).message!!
+    )
+    //after this we will be sure that https://fes.$domain/api/ was called for an enterprise user
+  }
+
+  @Test
   fun testFesServerUpGetClientConfigurationFailed() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
@@ -469,13 +486,15 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "testFesServerUpGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
       "testFesServerExternalServiceAlias" -> HttpURLConnection.HTTP_NOT_ACCEPTABLE
       "testFesServerEnterpriseServerAlias" -> HttpURLConnection.HTTP_CONFLICT
+      "testCallFesServerForEnterpriseUser" -> HttpURLConnection.HTTP_UNAUTHORIZED
       else -> HttpURLConnection.HTTP_OK
     }
 
     val body = when (testNameRule.methodName) {
       "testFesServerUpGetClientConfigurationFailed",
       "testFesServerExternalServiceAlias",
-      "testFesServerEnterpriseServerAlias" -> null
+      "testFesServerEnterpriseServerAlias",
+      "testCallFesServerForEnterpriseUser" -> null
       else -> gson.toJson(
         ClientConfigurationResponse(
           clientConfiguration = ClientConfiguration(
@@ -690,6 +709,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "fes_client_configuration_failed@localhost:1212"
     private const val EMAIL_FES_ENFORCE_ATTESTER_SUBMIT =
       "enforce_attester_submit@localhost:1212"
+    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@localhost:1212"
 
     private const val EMAIL_GMAIL = "gmail@gmail.com"
     private const val EMAIL_GOOGLEMAIL = "googlemail@googlemail.com"
