@@ -372,7 +372,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  fun testCallFesServerForEnterpriseUser() {
+  fun testCallFesUrlToGetClientConfigurationForEnterpriseUser() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
 
     //the mock web server should return error for https://fes.$domain/api/
@@ -485,7 +485,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "testFesServerAvailableGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
       "testFesServerExternalServiceAlias" -> HttpURLConnection.HTTP_NOT_ACCEPTABLE
       "testFesServerEnterpriseServerAlias" -> HttpURLConnection.HTTP_CONFLICT
-      "testCallFesServerForEnterpriseUser" -> HttpURLConnection.HTTP_UNAUTHORIZED
+      "testCallFesUrlToGetClientConfigurationForEnterpriseUser" -> HttpURLConnection.HTTP_UNAUTHORIZED
       else -> HttpURLConnection.HTTP_OK
     }
 
@@ -493,7 +493,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "testFesServerAvailableGetClientConfigurationFailed",
       "testFesServerExternalServiceAlias",
       "testFesServerEnterpriseServerAlias",
-      "testCallFesServerForEnterpriseUser" -> null
+      "testCallFesUrlToGetClientConfigurationForEnterpriseUser" -> null
       else -> gson.toJson(
         ClientConfigurationResponse(
           clientConfiguration = ClientConfiguration(
