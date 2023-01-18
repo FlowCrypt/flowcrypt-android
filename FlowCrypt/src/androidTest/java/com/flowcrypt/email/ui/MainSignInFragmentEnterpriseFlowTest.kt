@@ -54,6 +54,7 @@ import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -293,28 +294,28 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  fun testFesAvailabilityServerUpRequestTimeOut() {
+  fun testFesAvailabilityServerAvailableRequestTimeOutHasConnection() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
     onView(withText(R.string.set_pass_phrase))
       .check(matches(isDisplayed()))
   }
 
   @Test
-  fun testFesServerUpHasConnectionHttpCode404() {
+  fun testFesServerAvailableHasConnectionHttpCode404() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_404))
     onView(withText(R.string.set_pass_phrase))
       .check(matches(isDisplayed()))
   }
 
   @Test
-  fun testFesServerUpHasConnectionHttpCodeNotSuccess() {
+  fun testFesServerAvailableHasConnectionHttpCodeNotSuccess() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS))
     onView(withText(R.string.set_pass_phrase))
       .check(matches(isDisplayed()))
   }
 
   @Test
-  fun testFesServerNotEnterpriseServer() {
+  fun testFesServerIsNotEnterpriseServer() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(email = EMAIL_FES_NOT_ALLOWED_SERVER))
 
     isDialogWithTextDisplayed(
@@ -362,7 +363,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  fun testFesServerUpGetClientConfigurationSuccess() {
+  fun testFesServerAvailableGetClientConfigurationSuccess() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
     )
@@ -388,7 +389,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  fun testFesServerUpGetClientConfigurationFailed() {
+  fun testFesServerAvailableGetClientConfigurationFailed() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)
     )
@@ -443,23 +444,21 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
-    return if (testNameRule.methodName == "testFesAvailabilityServerUpRequestTimeOut") {
-      val delayInMilliseconds = 6000
-      val initialTimeMillis = System.currentTimeMillis()
-      while (System.currentTimeMillis() - initialTimeMillis <= delayInMilliseconds) {
-        Thread.sleep(100)
-      }
+    return if ("testFesAvailabilityServerAvailableRequestTimeOutHasConnection" ==
+      testNameRule.methodName
+    ) {
       MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        .setHeadersDelay(6, TimeUnit.SECONDS)
     } else when (testNameRule.methodName) {
-      "testFesServerUpHasConnectionHttpCode404", "testFailAttesterSubmit" -> {
+      "testFesServerAvailableHasConnectionHttpCode404", "testFailAttesterSubmit" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
 
-      "testFesServerUpHasConnectionHttpCodeNotSuccess" -> {
+      "testFesServerAvailableHasConnectionHttpCodeNotSuccess" -> {
         MockResponse().setResponseCode(500)
       }
 
-      "testFesServerNotEnterpriseServer" -> {
+      "testFesServerIsNotEnterpriseServer" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
       }
@@ -483,7 +482,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
 
   private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
     val responseCode = when (testNameRule.methodName) {
-      "testFesServerUpGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
+      "testFesServerAvailableGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
       "testFesServerExternalServiceAlias" -> HttpURLConnection.HTTP_NOT_ACCEPTABLE
       "testFesServerEnterpriseServerAlias" -> HttpURLConnection.HTTP_CONFLICT
       "testCallFesServerForEnterpriseUser" -> HttpURLConnection.HTTP_UNAUTHORIZED
@@ -491,7 +490,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     }
 
     val body = when (testNameRule.methodName) {
-      "testFesServerUpGetClientConfigurationFailed",
+      "testFesServerAvailableGetClientConfigurationFailed",
       "testFesServerExternalServiceAlias",
       "testFesServerEnterpriseServerAlias",
       "testCallFesServerForEnterpriseUser" -> null

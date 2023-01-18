@@ -739,11 +739,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun showDialogWithRetryButton(it: Result<ApiResponse>, requestCode: Int) {
-    showContent()
     showDialogWithRetryButton(it.exceptionMsg, requestCode)
   }
 
   private fun showDialogWithRetryButton(errorMsg: String, requestCode: Int) {
+    showContent()
     showTwoWayDialog(
       requestCode = requestCode,
       dialogTitle = "",
