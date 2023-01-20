@@ -41,6 +41,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.viewaction.CustomViewActions.swipeToRefresh
+import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.HistoryMessageDeleted
@@ -88,7 +89,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
               "&format=full" -> {
 
             MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setHeader("Content-Type", "application/json; charset=UTF-8")
+              .setHeader("Content-Type", Json.MEDIA_TYPE)
               .setBody(
                 genMessage(
                   messageId = MESSAGE_ID_FIRST,
@@ -107,7 +108,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
               "&format=full" -> {
 
             MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setHeader("Content-Type", "application/json; charset=UTF-8")
+              .setHeader("Content-Type", Json.MEDIA_TYPE)
               .setBody(
                 genMessage(
                   messageId = MESSAGE_ID_SECOND,
