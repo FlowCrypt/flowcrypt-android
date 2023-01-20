@@ -121,15 +121,10 @@ class PgpKeyTest {
 
   @Test
   fun testReadCorruptedPrivateKey() {
-    try {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = true
-      val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
-      val passphrase = Passphrase.fromPassword("123")
-      assertThrows(KeyIntegrityException::class.java) {
-        PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
-      }
-    } finally {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = false
+    val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
+    val passphrase = Passphrase.fromPassword("123")
+    assertThrows(KeyIntegrityException::class.java) {
+      PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
     }
   }
 }

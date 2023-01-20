@@ -48,7 +48,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   override fun onCreate() {
     super.onCreate()
     setupGlobalSettingsForJavaMail()
-    setupPGPainless()
+    enableDeprecatedSHA1ForPGPainlessPolicy()
     setupKeysStorage()
     initPerInstallationSharedPrefs()
     MsgsCacheManager.init(this)
@@ -57,13 +57,6 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     SyncInboxWorker.enqueuePeriodic(this)
     enqueueMsgsCacheCleanerWorker()
     FlavorSettings.configure(this)
-  }
-
-  private fun setupPGPainless() {
-    enableDeprecatedSHA1ForPGPainlessPolicy()
-
-    //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
-    PGPainless.getPolicy().isEnableKeyParameterValidation = true
   }
 
   private fun setupGlobalSettingsForJavaMail() {
