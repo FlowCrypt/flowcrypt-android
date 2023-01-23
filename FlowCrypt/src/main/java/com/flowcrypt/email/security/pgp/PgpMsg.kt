@@ -750,9 +750,7 @@ object PgpMsg {
             }
 
             keyIdOfSigningKeys.addAll(invalidSignatureFailures.filter {
-              it.validationException.message?.startsWith(
-                "Missing verification certificate", true
-              ) ?: false
+              it.validationException.message?.matches("Missing verification key.?".toRegex()) == true
             }.mapNotNull { it.signatureVerification.signature.keyID })
           }
 
