@@ -56,7 +56,7 @@ interface ApiService {
   ): Response<WelcomeMessageResponse>
 
   /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/api/help/feedback"
+   * This method create a [Call] object for the API "https://flowcrypt.com/shared-tenant-fes/help/feedback"
    *
    * @param body POJO model for requests
    * @return [<]
@@ -113,7 +113,7 @@ interface ApiService {
   suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
 
   /**
-   * This method calls "https://flowcrypt.com/api/account/get"
+   * This method calls "https://flowcrypt.com/shared-tenant-fes/account/get"
    */
   @POST(BuildConfig.API_URL + "account/get")
   suspend fun getClientConfigurationFromFlowCryptComBackend(

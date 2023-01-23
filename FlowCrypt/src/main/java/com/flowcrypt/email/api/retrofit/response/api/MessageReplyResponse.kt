@@ -12,7 +12,7 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
 
 /**
- * This class describes a response from the https://flowcrypt.com/api/message/reply API.
+ * This class describes a response from the https://flowcrypt.com/shared-tenant-fes/message/reply API.
  *
  *
  * `POST /message/reply

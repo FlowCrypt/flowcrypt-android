@@ -105,7 +105,7 @@ android {
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
+            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
@@ -138,7 +138,7 @@ android {
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
+            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
@@ -153,7 +153,7 @@ android {
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
+            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
@@ -186,7 +186,7 @@ android {
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
+            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
