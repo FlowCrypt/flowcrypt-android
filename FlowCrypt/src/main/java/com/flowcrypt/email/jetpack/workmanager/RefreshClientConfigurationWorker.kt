@@ -38,7 +38,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
       return Result.success()
     }
 
-    val fesUrl = GeneralUtil.generateFesUrl(domain)
+    val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(domain)
     try {
       val idToken = GeneralUtil.getGoogleIdToken(
         context = applicationContext,
@@ -47,8 +47,8 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
       val result = repository.getClientConfiguration(
         context = applicationContext,
-        fesUrl = fesUrl,
-        idToken = idToken
+        customFesUrl = customFesUrl,
+        idToken = idToken,
       )
 
       if (result.status == Status.SUCCESS) {

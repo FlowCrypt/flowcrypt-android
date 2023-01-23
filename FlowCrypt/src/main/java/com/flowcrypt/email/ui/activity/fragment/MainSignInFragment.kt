@@ -42,7 +42,7 @@ import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.jetpack.viewmodel.CheckFesServerViewModel
+import com.flowcrypt.email.jetpack.viewmodel.CheckCustomUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.model.KeyImportDetails
@@ -86,9 +86,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var clientConfiguration: ClientConfiguration? = null
-  private var fesUrl: String? = null
+  private var customFesUrl: String? = null
 
-  private val checkFesServerViewModel: CheckFesServerViewModel by viewModels()
+  private val checkCustomUrlFesServerViewModel: CheckCustomUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
   private var useStartTlsForSmtp = false
@@ -143,7 +143,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       AccountEntity(
         googleSignInAccount = it,
         clientConfiguration = clientConfiguration,
-        useFES = fesUrl?.isNotEmpty() == true,
+        useFES = customFesUrl?.isNotEmpty() == true,
         useStartTlsForSmtp = useStartTlsForSmtp,
       )
     }
@@ -224,8 +224,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           onSignSuccess(googleSignInAccount)
         } else {
           clientConfiguration = null
-          fesUrl = null
-          checkFesServerViewModel.checkFesServerAvailability(account)
+          customFesUrl = null
+          checkCustomUrlFesServerViewModel.checkServerAvailability(account)
         }
       } else {
         val error = task.exception
@@ -403,14 +403,17 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
           clientConfiguration = null
-          fesUrl = null
+          customFesUrl = null
           val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
-          checkFesServerViewModel.checkFesServerAvailability(account)
+          checkCustomUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          clientConfigurationViewModel.fetchClientConfiguration(idToken = idToken, fesUrl = fesUrl)
+          clientConfigurationViewModel.fetchClientConfiguration(
+            idToken = idToken,
+            customFesUrl = customFesUrl
+          )
         }
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
@@ -509,7 +512,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun initCheckFesServerViewModel() {
-    checkFesServerViewModel.checkFesServerLiveData.observe(viewLifecycleOwner) {
+    checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@MainSignInFragment)
@@ -521,22 +524,22 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
               val idToken = googleSignInAccount?.idToken ?: return@let
-              fesUrl = GeneralUtil.generateFesUrl(domain)
+              customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(domain)
               clientConfigurationViewModel.fetchClientConfiguration(
                 idToken = idToken,
-                fesUrl = fesUrl
+                customFesUrl = customFesUrl
               )
             }
           } else {
             continueBasedOnFlavorSettings()
           }
 
-          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value = Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR -> {
-          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value = Result.none()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
@@ -579,7 +582,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
           }
 
-          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value = Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
         else -> {}

@@ -429,7 +429,7 @@ class GeneralUtil {
     /**
      * Generate a FES url.
      */
-    fun generateFesUrl(domain: String): String {
+    fun generatePotentialCustomFesUrl(domain: String): String {
       return "https://fes.$domain/api/v1/client-configuration?domain=$domain"
     }
 

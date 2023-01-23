@@ -115,21 +115,14 @@ interface ApiService {
   suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
 
   /**
-   * This method calls "https://flowcrypt.com/shared-tenant-fes/account/get"
-   */
-  @POST(BuildConfig.API_URL + "account/get")
-  suspend fun getClientConfigurationFromFlowCryptComBackend(
-    @Header("Authorization") authorization: String,
-    @Body body: Any = Any(),
-  ): Response<ClientConfigurationResponse>
-
-  /**
    * This method calls "https://fes.$domain/api/v1/client-configuration?domain=$domain"
    *
-   * @param fesUrl URL of FES
+   * @param customFesUrl A custom FES URL
    */
   @GET
-  suspend fun getClientConfigurationFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
+  suspend fun getClientConfigurationFromFes(
+    @Url customFesUrl: String? = BuildConfig.API_URL + "account/get"
+  ): Response<ClientConfigurationResponse>
 
   /**
    * Set or replace public key with idToken as an auth mechanism

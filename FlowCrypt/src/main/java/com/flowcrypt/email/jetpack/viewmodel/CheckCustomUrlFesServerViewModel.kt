@@ -23,15 +23,16 @@ import kotlinx.coroutines.launch
  *         Time: 9:54 AM
  *         E-mail: DenBond7@gmail.com
  */
-class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(application) {
+class CheckCustomUrlFesServerViewModel(application: Application) :
+  BaseAndroidViewModel(application) {
   private val repository = FlowcryptApiRepository()
-  val checkFesServerLiveData: MutableLiveData<Result<FesServerResponse>> =
+  val checkFesServerAvailabilityLiveData: MutableLiveData<Result<FesServerResponse>> =
     MutableLiveData(Result.none())
 
-  fun checkFesServerAvailability(account: String) {
+  fun checkServerAvailability(account: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
-      checkFesServerLiveData.value =
+      checkFesServerAvailabilityLiveData.value =
         Result.loading(progressMsg = context.getString(R.string.loading))
 
       try {
@@ -43,7 +44,7 @@ class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(a
         if (result.status == Result.Status.EXCEPTION) {
           val causedException = result.exception
           if (causedException != null) {
-            checkFesServerLiveData.value = Result.exception(
+            checkFesServerAvailabilityLiveData.value = Result.exception(
               GeneralUtil.preProcessException(
                 context = context,
                 causedException = causedException
@@ -53,9 +54,9 @@ class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(a
           }
         }
 
-        checkFesServerLiveData.value = result
+        checkFesServerAvailabilityLiveData.value = result
       } catch (e: Exception) {
-        checkFesServerLiveData.value = Result.exception(e)
+        checkFesServerAvailabilityLiveData.value = Result.exception(e)
       }
     }
   }
