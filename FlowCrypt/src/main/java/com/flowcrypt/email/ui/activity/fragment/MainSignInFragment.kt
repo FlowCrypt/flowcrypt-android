@@ -409,11 +409,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          clientConfigurationViewModel.fetchClientConfiguration(
-            idToken = idToken,
-            customFesUrl = customFesUrl
-          )
+          clientConfigurationViewModel.fetchClientConfiguration(customFesUrl)
         }
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
@@ -523,12 +519,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           if (it.data?.service in arrayOf("enterprise-server", "external-service")) {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
-              val idToken = googleSignInAccount?.idToken ?: return@let
               customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(domain)
-              clientConfigurationViewModel.fetchClientConfiguration(
-                idToken = idToken,
-                customFesUrl = customFesUrl
-              )
+              clientConfigurationViewModel.fetchClientConfiguration(customFesUrl)
             }
           } else {
             continueBasedOnFlavorSettings()
@@ -604,14 +596,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueWithRegularFlow() {
-    val idToken = googleSignInAccount?.idToken
-
-    if (idToken != null) {
-      clientConfigurationViewModel.fetchClientConfiguration(idToken = idToken)
-    } else {
-      showContent()
-      askUserToReLogin()
-    }
+    clientConfigurationViewModel.fetchClientConfiguration()
   }
 
   private fun initClientConfigurationViewModel() {

@@ -29,7 +29,7 @@ class ClientConfigurationViewModel(application: Application) : BaseAndroidViewMo
   val clientConfigurationLiveData: MutableLiveData<Result<ClientConfigurationResponse>> =
     MutableLiveData(Result.none())
 
-  fun fetchClientConfiguration(idToken: String, customFesUrl: String? = null) {
+  fun fetchClientConfiguration(customFesUrl: String? = null) {
     viewModelScope.launch {
       val context: Context = getApplication()
       clientConfigurationLiveData.value =
@@ -38,7 +38,6 @@ class ClientConfigurationViewModel(application: Application) : BaseAndroidViewMo
       try {
         clientConfigurationLiveData.value = repository.getClientConfiguration(
           context = context,
-          idToken = idToken,
           customFesUrl = customFesUrl,
         )
       } catch (e: Exception) {
