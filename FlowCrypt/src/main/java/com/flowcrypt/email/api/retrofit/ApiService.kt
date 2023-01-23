@@ -61,7 +61,9 @@ interface ApiService {
    * @param body POJO model for requests
    * @return [<]
    */
-  @POST(BuildConfig.API_URL + "help/feedback")
+  //@POST(BuildConfig.API_URL + "help/feedback")
+  //ref https://github.com/FlowCrypt/flowcrypt-android/pull/2171#discussion_r1084124018
+  @POST("https://flowcrypt.com/api/help/feedback")
   suspend fun postHelpFeedback(@Body body: PostHelpFeedbackModel): Response<PostHelpFeedbackResponse>
 
   /**
