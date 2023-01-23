@@ -56,7 +56,7 @@ interface ApiService {
   ): Response<WelcomeMessageResponse>
 
   /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/shared-tenant-fes/help/feedback"
+   * This method create a [Call] object for the API "https://flowcrypt.com/api/help/feedback"
    *
    * @param body POJO model for requests
    * @return [<]
