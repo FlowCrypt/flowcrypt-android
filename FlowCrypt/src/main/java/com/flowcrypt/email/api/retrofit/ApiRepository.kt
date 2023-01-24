@@ -35,11 +35,13 @@ import com.google.gson.JsonObject
 interface ApiRepository : BaseApiRepository {
   /**
    * @param context Interface to global information about an application environment.
-   * @param customFesUrl Url that will be used to fetch [ClientConfiguration]
+   * @param fesUrl Url that will be used to fetch [ClientConfiguration].
+   * @param idToken OIDC token.
    */
   suspend fun getClientConfiguration(
     context: Context,
-    customFesUrl: String? = null
+    fesUrl: String? = null,
+    idToken: String
   ): Result<ClientConfigurationResponse>
 
   /**

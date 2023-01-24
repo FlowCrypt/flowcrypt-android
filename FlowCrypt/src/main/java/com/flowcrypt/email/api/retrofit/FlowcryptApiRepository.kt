@@ -54,7 +54,8 @@ import java.util.concurrent.TimeUnit
 class FlowcryptApiRepository : ApiRepository {
   override suspend fun getClientConfiguration(
     context: Context,
-    customFesUrl: String?
+    customFesUrl: String?,
+    idToken: String
   ): Result<ClientConfigurationResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
