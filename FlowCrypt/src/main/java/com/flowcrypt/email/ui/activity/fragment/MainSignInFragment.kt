@@ -84,8 +84,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     FragmentMainSignInBinding.inflate(inflater, container, false)
 
   private lateinit var client: GoogleSignInClient
-  private var googleSignInAccount: GoogleSignInAccount? = null
-  private var clientConfiguration: ClientConfiguration? = null
+  private var cachedGoogleSignInAccount: GoogleSignInAccount? = null
+  private var cachedClientConfiguration: ClientConfiguration? = null
   private var cachedCustomFesUrl: String? = null
 
   private val checkCustomUrlFesServerViewModel: CheckCustomUrlFesServerViewModel by viewModels()
@@ -139,10 +139,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   override fun getTempAccount(): AccountEntity? {
-    return googleSignInAccount?.let {
+    return cachedGoogleSignInAccount?.let {
       AccountEntity(
         googleSignInAccount = it,
-        clientConfiguration = clientConfiguration,
+        clientConfiguration = cachedClientConfiguration,
         useFES = cachedCustomFesUrl?.isNotEmpty() == true,
         useStartTlsForSmtp = useStartTlsForSmtp,
       )
@@ -172,11 +172,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun initViews(view: View) {
     view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
+      cachedCustomFesUrl = null
+      cachedClientConfiguration = null
       importCandidates.clear()
       signInWithGmail()
     }
 
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
+      cachedCustomFesUrl = null
+      cachedClientConfiguration = null
       navController?.navigateSafe(
         R.id.mainSignInFragment,
         MainSignInFragmentDirections.actionMainSignInFragmentToAddOtherAccountFragment()
@@ -207,7 +211,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun signInWithGmail() {
-    googleSignInAccount = null
+    cachedGoogleSignInAccount = null
     client.signOut()
     forActivityResultSignIn.launch(client.signInIntent)
   }
@@ -215,18 +219,19 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {
     try {
       if (task.isSuccessful) {
-        googleSignInAccount = task.getResult(ApiException::class.java)
+        cachedGoogleSignInAccount = task.getResult(ApiException::class.java)
 
-        val account = googleSignInAccount?.account?.name ?: return
+        val account = cachedGoogleSignInAccount?.account?.name ?: return
         val domain = EmailUtil.getDomain(account)
-        cachedCustomFesUrl = GeneralUtil.generatePotentialCustomFesUrl(false, domain)
+        cachedCustomFesUrl = GeneralUtil.generatePotentialCustomFesUrl(
+          useFES = false,
+          domain = domain
+        )
 
         val publicEmailDomains = EmailUtil.getPublicEmailDomains()
         if (EmailUtil.getDomain(account) in publicEmailDomains) {
-          onSignSuccess(googleSignInAccount)
+          onSignSuccess(cachedGoogleSignInAccount)
         } else {
-          clientConfiguration = null
-          cachedCustomFesUrl = null
           checkCustomUrlFesServerViewModel.checkServerAvailability(account)
         }
       } else {
@@ -258,7 +263,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
     if (existedAccount == null) {
       getTempAccount()?.let {
-        if (clientConfiguration?.flags?.firstOrNull { rule -> rule == ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP } != null) {
+        if (cachedClientConfiguration?.flags?.firstOrNull { rule -> rule == ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP } != null) {
           requireContext().startService(
             Intent(requireContext(), CheckClipboardToFindKeyService::class.java)
           )
@@ -302,7 +307,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
             if (original is MailConnectException && !useStartTlsForSmtp) {
               useStartTlsForSmtp = true
-              onSignSuccess(googleSignInAccount)
+              onSignSuccess(cachedGoogleSignInAccount)
               return@setFragmentResultListener
             }
 
@@ -404,24 +409,24 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          clientConfiguration = null
+          cachedClientConfiguration = null
           cachedCustomFesUrl = null
-          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
           checkCustomUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          val url = cachedCustomFesUrl ?: return@setFragmentResultListener
+          val idToken = cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListener
+          val customFesUrl = cachedCustomFesUrl ?: return@setFragmentResultListener
           clientConfigurationViewModel.fetchClientConfiguration(
             idToken = idToken,
-            customFesUrl = url
+            customFesUrl = customFesUrl
           )
         }
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          clientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
+          val idToken = cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListener
+          cachedClientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
         }
       }
     }
@@ -462,7 +467,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {
-          this.googleSignInAccount = null
+          this.cachedGoogleSignInAccount = null
           showContent()
         }
       }
@@ -524,10 +529,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           if (it.data?.service in arrayOf("enterprise-server", "external-service")) {
-            googleSignInAccount?.account?.name?.let { account ->
+            cachedGoogleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
-              val idToken = googleSignInAccount?.idToken ?: return@let
-              val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(true, domain)
+              val idToken = cachedGoogleSignInAccount?.idToken ?: return@let
+              val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(
+                useFES = true,
+                domain = domain
+              )
               cachedCustomFesUrl = customFesUrl
               clientConfigurationViewModel.fetchClientConfiguration(
                 idToken = idToken,
@@ -608,7 +616,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueWithRegularFlow() {
-    val idToken = googleSignInAccount?.idToken
+    val idToken = cachedGoogleSignInAccount?.idToken
     val customFesUrl = cachedCustomFesUrl
 
     if (idToken != null && customFesUrl != null) {
@@ -631,11 +639,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         Result.Status.SUCCESS -> {
-          val idToken = googleSignInAccount?.idToken
-          clientConfiguration = it.data?.clientConfiguration
+          val idToken = cachedGoogleSignInAccount?.idToken
+          cachedClientConfiguration = it.data?.clientConfiguration
 
           if (idToken != null) {
-            clientConfiguration?.let { fetchedClientConfiguration ->
+            cachedClientConfiguration?.let { fetchedClientConfiguration ->
               ekmViewModel.fetchPrvKeys(
                 fetchedClientConfiguration,
                 idToken
@@ -687,7 +695,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           showContent()
           when (it.exception) {
             is EkmNotSupportedException -> {
-              onSignSuccess(googleSignInAccount)
+              onSignSuccess(cachedGoogleSignInAccount)
             }
 
             is UnsupportedClientConfigurationException -> {

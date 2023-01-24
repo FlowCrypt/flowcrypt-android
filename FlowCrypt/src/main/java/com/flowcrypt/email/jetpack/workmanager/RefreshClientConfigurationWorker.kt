@@ -38,7 +38,10 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
       return Result.success()
     }
 
-    val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(account.useFES, domain)
+    val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(
+      useFES = account.useFES,
+      domain = domain
+    )
     try {
       val idToken = GeneralUtil.getGoogleIdToken(
         context = applicationContext,
