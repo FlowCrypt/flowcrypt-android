@@ -141,12 +141,12 @@ interface ApiRepository : BaseApiRepository {
    * Grab a reply token before uploading a password protected message
    *
    * @param context Interface to global information about an application environment.
-   * @param domain A company domain.
-   * @param domain OIDC token.
+   * @param baseFesUrlPath A base FES URL path.
+   * @param idToken OIDC token.
    */
   suspend fun getReplyTokenForPasswordProtectedMsg(
     context: Context,
-    domain: String,
+    baseFesUrlPath: String,
     idToken: String
   ): Result<MessageReplyTokenResponse>
 

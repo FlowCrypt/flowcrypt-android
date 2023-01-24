@@ -195,9 +195,9 @@ interface ApiService {
   /**
    * This method grabs a reply token before uploading a password protected message
    */
-  @POST("https://fes.{domain}/api/v1/message/new-reply-token")
+  @POST("https://{baseFesUrlPath}/api/v1/message/new-reply-token")
   suspend fun getReplyTokenForPasswordProtectedMsg(
-    @Path("domain") domain: String,
+    @Path("baseFesUrlPath") baseFesUrlPath: String,
     @Header("Authorization") authorization: String
   ): Response<MessageReplyTokenResponse>
 
@@ -205,9 +205,9 @@ interface ApiService {
    * This method uploads a password protected message to a web portal
    */
   @Multipart
-  @POST("https://fes.{domain}/api/v1/message")
+  @POST("https://{baseFesUrlPath}/api/v1/message")
   suspend fun uploadPasswordProtectedMsgToWebPortal(
-    @Path("domain") domain: String,
+    @Path("baseFesUrlPath") baseFesUrlPath: String,
     @Header("Authorization") authorization: String,
     @Part("details") details: RequestBody,
     @Part content: MultipartBody.Part

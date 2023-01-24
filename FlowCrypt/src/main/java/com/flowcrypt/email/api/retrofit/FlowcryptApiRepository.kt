@@ -247,7 +247,7 @@ class FlowcryptApiRepository : ApiRepository {
 
   override suspend fun getReplyTokenForPasswordProtectedMsg(
     context: Context,
-    domain: String,
+    baseFesUrlPath: String,
     idToken: String
   ): Result<MessageReplyTokenResponse> =
     withContext(Dispatchers.IO) {
@@ -255,12 +255,12 @@ class FlowcryptApiRepository : ApiRepository {
       getResult(
         context = context,
         expectedResultClass = MessageReplyTokenResponse::class.java
-      ) { apiService.getReplyTokenForPasswordProtectedMsg(domain, "Bearer $idToken") }
+      ) { apiService.getReplyTokenForPasswordProtectedMsg(baseFesUrlPath, "Bearer $idToken") }
     }
 
   override suspend fun uploadPasswordProtectedMsgToWebPortal(
     context: Context,
-    domain: String,
+    baseFesUrlPath: String,
     idToken: String,
     messageUploadRequest: MessageUploadRequest,
     msg: String
@@ -281,7 +281,7 @@ class FlowcryptApiRepository : ApiRepository {
         )
 
         apiService.uploadPasswordProtectedMsgToWebPortal(
-          domain = domain,
+          baseFesUrlPath = baseFesUrlPath,
           authorization = "Bearer $idToken",
           details = details,
           content = content
