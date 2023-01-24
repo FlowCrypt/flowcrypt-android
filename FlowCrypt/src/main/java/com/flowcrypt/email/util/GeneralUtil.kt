@@ -429,8 +429,12 @@ class GeneralUtil {
     /**
      * Generate a FES url.
      */
-    fun generatePotentialCustomFesUrl(domain: String): String {
-      return "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+    fun generatePotentialCustomFesUrl(useFES: Boolean, domain: String): String {
+      return if (useFES) {
+        "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+      } else {
+        BuildConfig.API_URL + "api/v1/client-configuration?domain=$domain"
+      }
     }
 
     /**

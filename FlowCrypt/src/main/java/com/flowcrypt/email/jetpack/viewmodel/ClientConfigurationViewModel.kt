@@ -29,7 +29,7 @@ class ClientConfigurationViewModel(application: Application) : BaseAndroidViewMo
   val clientConfigurationLiveData: MutableLiveData<Result<ClientConfigurationResponse>> =
     MutableLiveData(Result.none())
 
-  fun fetchClientConfiguration(idToken: String, customFesUrl: String? = null) {
+  fun fetchClientConfiguration(idToken: String, customFesUrl: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
       clientConfigurationLiveData.value =

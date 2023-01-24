@@ -86,7 +86,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var clientConfiguration: ClientConfiguration? = null
-  private var customFesUrl: String? = null
+  private var cachedCustomFesUrl: String? = null
 
   private val checkCustomUrlFesServerViewModel: CheckCustomUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
@@ -143,7 +143,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       AccountEntity(
         googleSignInAccount = it,
         clientConfiguration = clientConfiguration,
-        useFES = customFesUrl?.isNotEmpty() == true,
+        useFES = cachedCustomFesUrl?.isNotEmpty() == true,
         useStartTlsForSmtp = useStartTlsForSmtp,
       )
     }
@@ -218,13 +218,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         googleSignInAccount = task.getResult(ApiException::class.java)
 
         val account = googleSignInAccount?.account?.name ?: return
+        val domain = EmailUtil.getDomain(account)
+        cachedCustomFesUrl = GeneralUtil.generatePotentialCustomFesUrl(false, domain)
 
         val publicEmailDomains = EmailUtil.getPublicEmailDomains()
         if (EmailUtil.getDomain(account) in publicEmailDomains) {
           onSignSuccess(googleSignInAccount)
         } else {
           clientConfiguration = null
-          customFesUrl = null
+          cachedCustomFesUrl = null
           checkCustomUrlFesServerViewModel.checkServerAvailability(account)
         }
       } else {
@@ -403,16 +405,17 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
           clientConfiguration = null
-          customFesUrl = null
+          cachedCustomFesUrl = null
           val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
           checkCustomUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
+          val url = cachedCustomFesUrl ?: return@setFragmentResultListener
           clientConfigurationViewModel.fetchClientConfiguration(
             idToken = idToken,
-            customFesUrl = customFesUrl
+            customFesUrl = url
           )
         }
 
@@ -524,7 +527,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             googleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
               val idToken = googleSignInAccount?.idToken ?: return@let
-              customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(domain)
+              val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(true, domain)
+              cachedCustomFesUrl = customFesUrl
               clientConfigurationViewModel.fetchClientConfiguration(
                 idToken = idToken,
                 customFesUrl = customFesUrl
@@ -605,9 +609,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun continueWithRegularFlow() {
     val idToken = googleSignInAccount?.idToken
+    val customFesUrl = cachedCustomFesUrl
 
-    if (idToken != null) {
-      clientConfigurationViewModel.fetchClientConfiguration(idToken = idToken)
+    if (idToken != null && customFesUrl != null) {
+      clientConfigurationViewModel.fetchClientConfiguration(
+        idToken = idToken,
+        customFesUrl = customFesUrl
+      )
     } else {
       showContent()
       askUserToReLogin()

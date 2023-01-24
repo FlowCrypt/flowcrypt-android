@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit
 
-import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
@@ -115,13 +114,15 @@ interface ApiService {
   suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
 
   /**
-   * This method calls "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+   * This method should call 'customFesUrl'. The last one should equal the following template
+   * "https://$domain/api/v1/client-configuration?domain=$domain"
    *
    * @param customFesUrl A custom FES URL
    */
   @GET
   suspend fun getClientConfigurationFromFes(
-    @Url customFesUrl: String? = BuildConfig.API_URL + "account/get"
+    @Header("Authorization") authorization: String,
+    @Url customFesUrl: String
   ): Response<ClientConfigurationResponse>
 
   /**
