@@ -35,27 +35,29 @@ import com.google.gson.JsonObject
 interface ApiRepository : BaseApiRepository {
   /**
    * @param context Interface to global information about an application environment.
-   * @param customFesUrl Url that will be used to fetch [ClientConfiguration].
+   * @param baseFesUrlPath A base FES URL path.
+   * @param domain A company domain.
    * @param idToken OIDC token.
    */
-  suspend fun getClientConfiguration(
+  suspend fun getClientConfigurationFromFes(
     context: Context,
-    customFesUrl: String,
-    idToken: String
+    idToken: String,
+    baseFesUrlPath: String,
+    domain: String,
   ): Result<ClientConfigurationResponse>
 
   /**
    * @param context Interface to global information about an application environment.
+   * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
    * @param email For this email address will be applied changes.
    * @param pubKey A new public key.
-   * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
    * @param clientConfiguration An instance of [ClientConfiguration]. We have to check if submitting pub keys is allowed.
    */
   suspend fun submitPrimaryEmailPubKey(
     context: Context,
+    idToken: String,
     email: String,
     pubKey: String,
-    idToken: String,
     clientConfiguration: ClientConfiguration? = null
   ): Result<SubmitPubKeyResponse>
 
@@ -74,12 +76,13 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
+   * @param idToken OIDC token.
    * @param model An instance of [WelcomeMessageModel].
    */
   suspend fun postWelcomeMessage(
     context: Context,
+    idToken: String,
     model: WelcomeMessageModel,
-    idToken: String
   ): Result<WelcomeMessageResponse>
 
   /**
@@ -141,28 +144,28 @@ interface ApiRepository : BaseApiRepository {
    * Grab a reply token before uploading a password protected message
    *
    * @param context Interface to global information about an application environment.
-   * @param baseFesUrlPath A base FES URL path.
    * @param idToken OIDC token.
+   * @param baseFesUrlPath A base FES URL path.
    */
   suspend fun getReplyTokenForPasswordProtectedMsg(
     context: Context,
+    idToken: String,
     baseFesUrlPath: String,
-    idToken: String
   ): Result<MessageReplyTokenResponse>
 
   /**
    * Upload a password protected message to a web portal
    *
    * @param context Interface to global information about an application environment.
-   * @param domain A company domain.
    * @param idToken OIDC token.
+   * @param baseFesUrlPath A base FES URL path.
    * @param messageUploadRequest an instance of [MessageUploadRequest]
    * @param msg an encrypted message that will be sent
    */
   suspend fun uploadPasswordProtectedMsgToWebPortal(
     context: Context,
-    domain: String,
     idToken: String,
+    baseFesUrlPath: String,
     messageUploadRequest: MessageUploadRequest,
     msg: String
   ): Result<MessageUploadResponse>

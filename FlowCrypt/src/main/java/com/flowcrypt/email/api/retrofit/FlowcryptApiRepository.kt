@@ -52,26 +52,28 @@ import java.util.concurrent.TimeUnit
  *         E-mail: DenBond7@gmail.com
  */
 class FlowcryptApiRepository : ApiRepository {
-  override suspend fun getClientConfiguration(
+  override suspend fun getClientConfigurationFromFes(
     context: Context,
-    customFesUrl: String,
-    idToken: String
+    idToken: String,
+    baseFesUrlPath: String,
+    domain: String,
   ): Result<ClientConfigurationResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       getResult(context = context) {
         apiService.getClientConfigurationFromFes(
           authorization = "Bearer $idToken",
-          customFesUrl = customFesUrl
+          baseFesUrlPath = baseFesUrlPath,
+          domain = domain
         )
       }
     }
 
   override suspend fun submitPrimaryEmailPubKey(
     context: Context,
+    idToken: String,
     email: String,
     pubKey: String,
-    idToken: String,
     clientConfiguration: ClientConfiguration?
   ): Result<SubmitPubKeyResponse> =
     withContext(Dispatchers.IO) {
@@ -81,7 +83,13 @@ class FlowcryptApiRepository : ApiRepository {
         )
       }
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.submitPrimaryEmailPubKey(email, pubKey, "Bearer $idToken") }
+      getResult {
+        apiService.submitPrimaryEmailPubKey(
+          authorization = "Bearer $idToken",
+          email = email,
+          pubKey = pubKey
+        )
+      }
     }
 
   override suspend fun submitPubKeyWithConditionalEmailVerification(
@@ -102,12 +110,12 @@ class FlowcryptApiRepository : ApiRepository {
 
   override suspend fun postWelcomeMessage(
     context: Context,
+    idToken: String,
     model: WelcomeMessageModel,
-    idToken: String
   ): Result<WelcomeMessageResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.postWelcomeMessage(model, "Bearer $idToken") }
+      getResult { apiService.postWelcomeMessage(authorization = "Bearer $idToken", body = model) }
     }
 
   override suspend fun pubLookup(
@@ -247,21 +255,26 @@ class FlowcryptApiRepository : ApiRepository {
 
   override suspend fun getReplyTokenForPasswordProtectedMsg(
     context: Context,
+    idToken: String,
     baseFesUrlPath: String,
-    idToken: String
   ): Result<MessageReplyTokenResponse> =
     withContext(Dispatchers.IO) {
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       getResult(
         context = context,
         expectedResultClass = MessageReplyTokenResponse::class.java
-      ) { apiService.getReplyTokenForPasswordProtectedMsg(baseFesUrlPath, "Bearer $idToken") }
+      ) {
+        apiService.getReplyTokenForPasswordProtectedMsg(
+          authorization = "Bearer $idToken",
+          baseFesUrlPath = baseFesUrlPath
+        )
+      }
     }
 
   override suspend fun uploadPasswordProtectedMsgToWebPortal(
     context: Context,
-    baseFesUrlPath: String,
     idToken: String,
+    baseFesUrlPath: String,
     messageUploadRequest: MessageUploadRequest,
     msg: String
   ): Result<MessageUploadResponse> =
@@ -281,8 +294,8 @@ class FlowcryptApiRepository : ApiRepository {
         )
 
         apiService.uploadPasswordProtectedMsgToWebPortal(
-          baseFesUrlPath = baseFesUrlPath,
           authorization = "Bearer $idToken",
+          baseFesUrlPath = baseFesUrlPath,
           details = details,
           content = content
         )

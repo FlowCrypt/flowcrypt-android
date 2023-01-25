@@ -53,6 +53,7 @@ import java.io.File
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
+import java.net.URL
 import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 import java.util.Locale
@@ -427,13 +428,16 @@ class GeneralUtil {
     }
 
     /**
-     * Generate a FES url.
+     * Generate a base FES URL path.
      */
-    fun generatePotentialCustomFesUrl(useFES: Boolean, domain: String): String {
-      return if (useFES) {
-        "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+    fun genBaseFesUrlPath(useSharedTenant: Boolean, domain: String): String {
+      return if (useSharedTenant) {
+        val url = URL(BuildConfig.SHARED_TENANT_FES_URL)
+        (url.host + url.path).replace("/$".toRegex(), "")
+        //for example flowcrypt.com/shared-tenant-fes
       } else {
-        BuildConfig.API_URL + "api/v1/client-configuration?domain=$domain"
+        "fes.$domain"
+        //for example fes.flowcrypt.com
       }
     }
 

@@ -50,8 +50,8 @@ interface ApiService {
    */
   @POST("welcome-message")
   suspend fun postWelcomeMessage(
+    @Header("Authorization") authorization: String,
     @Body body: WelcomeMessageModel,
-    @Header("Authorization") authorization: String
   ): Response<WelcomeMessageResponse>
 
   /**
@@ -60,7 +60,7 @@ interface ApiService {
    * @param body POJO model for requests
    * @return [<]
    */
-  //@POST(BuildConfig.API_URL + "help/feedback")
+  //@POST(BuildConfig.SHARED_TENANT_FES_URL + "help/feedback")
   //ref https://github.com/FlowCrypt/flowcrypt-android/pull/2171#discussion_r1084124018
   @POST("https://flowcrypt.com/api/help/feedback")
   suspend fun postHelpFeedback(@Body body: PostHelpFeedbackModel): Response<PostHelpFeedbackResponse>
@@ -114,15 +114,13 @@ interface ApiService {
   suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
 
   /**
-   * This method should call 'customFesUrl'. The last one should equal the following template
-   * "https://$domain/api/v1/client-configuration?domain=$domain"
-   *
-   * @param customFesUrl A custom FES URL
+   * Get client configuration
    */
-  @GET
+  @GET("https://{baseFesUrlPath}/api/v1/client-configuration?domain={domain}")
   suspend fun getClientConfigurationFromFes(
     @Header("Authorization") authorization: String,
-    @Url customFesUrl: String
+    @Path("baseFesUrlPath") baseFesUrlPath: String,
+    @Path("domain") domain: String
   ): Response<ClientConfigurationResponse>
 
   /**
@@ -132,9 +130,9 @@ interface ApiService {
    */
   @POST("pub/{email}")
   suspend fun submitPrimaryEmailPubKey(
+    @Header("Authorization") authorization: String,
     @Path("email") email: String,
     @Body pubKey: String,
-    @Header("Authorization") authorization: String
   ): Response<SubmitPubKeyResponse>
 
   /**
@@ -197,8 +195,8 @@ interface ApiService {
    */
   @POST("https://{baseFesUrlPath}/api/v1/message/new-reply-token")
   suspend fun getReplyTokenForPasswordProtectedMsg(
+    @Header("Authorization") authorization: String,
     @Path("baseFesUrlPath") baseFesUrlPath: String,
-    @Header("Authorization") authorization: String
   ): Response<MessageReplyTokenResponse>
 
   /**
@@ -207,9 +205,9 @@ interface ApiService {
   @Multipart
   @POST("https://{baseFesUrlPath}/api/v1/message")
   suspend fun uploadPasswordProtectedMsgToWebPortal(
-    @Path("baseFesUrlPath") baseFesUrlPath: String,
     @Header("Authorization") authorization: String,
+    @Path("baseFesUrlPath") baseFesUrlPath: String,
     @Part("details") details: RequestBody,
-    @Part content: MultipartBody.Part
+    @Part content: MultipartBody.Part,
   ): Response<MessageUploadResponse>
 }

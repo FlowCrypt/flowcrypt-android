@@ -86,7 +86,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private lateinit var client: GoogleSignInClient
   private var cachedGoogleSignInAccount: GoogleSignInAccount? = null
   private var cachedClientConfiguration: ClientConfiguration? = null
-  private var cachedCustomFesUrl: String? = null
+  private var cachedBaseFesUrlPath: String? = null
 
   private val checkCustomUrlFesServerViewModel: CheckCustomUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
@@ -139,11 +139,16 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   override fun getTempAccount(): AccountEntity? {
+    val sharedTenantFesBaseUrlPath = GeneralUtil.genBaseFesUrlPath(
+      useSharedTenant = true,
+      domain = ""
+    )
     return cachedGoogleSignInAccount?.let {
       AccountEntity(
         googleSignInAccount = it,
         clientConfiguration = cachedClientConfiguration,
-        useFES = cachedCustomFesUrl?.isNotEmpty() == true,
+        useFES = cachedBaseFesUrlPath?.isNotEmpty() == true &&
+            cachedBaseFesUrlPath != sharedTenantFesBaseUrlPath,
         useStartTlsForSmtp = useStartTlsForSmtp,
       )
     }
@@ -172,14 +177,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun initViews(view: View) {
     view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
-      cachedCustomFesUrl = null
+      cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       importCandidates.clear()
       signInWithGmail()
     }
 
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
-      cachedCustomFesUrl = null
+      cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       navController?.navigateSafe(
         R.id.mainSignInFragment,
@@ -223,8 +228,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         val account = cachedGoogleSignInAccount?.account?.name ?: return
         val domain = EmailUtil.getDomain(account)
-        cachedCustomFesUrl = GeneralUtil.generatePotentialCustomFesUrl(
-          useFES = false,
+        cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
+          useSharedTenant = true,
           domain = domain
         )
 
@@ -410,17 +415,20 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
           cachedClientConfiguration = null
-          cachedCustomFesUrl = null
+          cachedBaseFesUrlPath = null
           val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
           checkCustomUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken = cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListener
-          val customFesUrl = cachedCustomFesUrl ?: return@setFragmentResultListener
+          val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          val domain = EmailUtil.getDomain(account)
+          val baseFesUrlPath = cachedBaseFesUrlPath ?: return@setFragmentResultListener
           clientConfigurationViewModel.fetchClientConfiguration(
             idToken = idToken,
-            customFesUrl = customFesUrl
+            baseFesUrlPath = baseFesUrlPath,
+            domain = domain
           )
         }
 
@@ -532,14 +540,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             cachedGoogleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
               val idToken = cachedGoogleSignInAccount?.idToken ?: return@let
-              val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(
-                useFES = true,
+              val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
+                useSharedTenant = false,
                 domain = domain
               )
-              cachedCustomFesUrl = customFesUrl
+              cachedBaseFesUrlPath = baseFesUrlPath
               clientConfigurationViewModel.fetchClientConfiguration(
                 idToken = idToken,
-                customFesUrl = customFesUrl
+                baseFesUrlPath = baseFesUrlPath,
+                domain = domain
               )
             }
           } else {
@@ -617,12 +626,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun continueWithRegularFlow() {
     val idToken = cachedGoogleSignInAccount?.idToken
-    val customFesUrl = cachedCustomFesUrl
+    val account = cachedGoogleSignInAccount?.account?.name
+    val baseFesUrlPath = cachedBaseFesUrlPath
 
-    if (idToken != null && customFesUrl != null) {
+    if (idToken != null && account != null && baseFesUrlPath != null) {
+      val domain = EmailUtil.getDomain(account)
       clientConfigurationViewModel.fetchClientConfiguration(
         idToken = idToken,
-        customFesUrl = customFesUrl
+        baseFesUrlPath = baseFesUrlPath,
+        domain = domain
       )
     } else {
       showContent()

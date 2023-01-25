@@ -29,17 +29,18 @@ class ClientConfigurationViewModel(application: Application) : BaseAndroidViewMo
   val clientConfigurationLiveData: MutableLiveData<Result<ClientConfigurationResponse>> =
     MutableLiveData(Result.none())
 
-  fun fetchClientConfiguration(idToken: String, customFesUrl: String) {
+  fun fetchClientConfiguration(idToken: String, baseFesUrlPath: String, domain: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
       clientConfigurationLiveData.value =
         Result.loading(progressMsg = context.getString(R.string.loading_domain_rules))
 
       try {
-        clientConfigurationLiveData.value = repository.getClientConfiguration(
+        clientConfigurationLiveData.value = repository.getClientConfigurationFromFes(
           context = context,
           idToken = idToken,
-          customFesUrl = customFesUrl,
+          baseFesUrlPath = baseFesUrlPath,
+          domain = domain
         )
       } catch (e: Exception) {
         clientConfigurationLiveData.value = Result.exception(e)

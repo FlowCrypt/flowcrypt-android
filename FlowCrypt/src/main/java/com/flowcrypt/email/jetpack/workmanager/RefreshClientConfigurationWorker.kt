@@ -38,8 +38,8 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
       return Result.success()
     }
 
-    val customFesUrl = GeneralUtil.generatePotentialCustomFesUrl(
-      useFES = account.useFES,
+    val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
+      useSharedTenant = !account.useFES,
       domain = domain
     )
     try {
@@ -48,10 +48,11 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
         maxRetryAttemptCount = 5
       )
 
-      val result = repository.getClientConfiguration(
+      val result = repository.getClientConfigurationFromFes(
         context = applicationContext,
-        customFesUrl = customFesUrl,
         idToken = idToken,
+        baseFesUrlPath = baseFesUrlPath,
+        domain = domain
       )
 
       if (result.status == Status.SUCCESS) {

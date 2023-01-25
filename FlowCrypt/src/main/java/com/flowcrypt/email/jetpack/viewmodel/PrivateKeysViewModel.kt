@@ -562,9 +562,9 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     val submitPubKeyResult = if (idToken != null) {
       apiRepository.submitPrimaryEmailPubKey(
         context = getApplication(),
+        idToken = idToken,
         email = accountEntity.email,
         pubKey = keyDetails.publicKey,
-        idToken = idToken,
         clientConfiguration = accountEntity.clientConfiguration,
       )
     } else {
@@ -626,7 +626,11 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     withContext(Dispatchers.IO) {
       return@withContext try {
         val model = WelcomeMessageModel(accountEntity.email, keyDetails.publicKey)
-        val testWelcomeResult = apiRepository.postWelcomeMessage(getApplication(), model, idToken)
+        val testWelcomeResult = apiRepository.postWelcomeMessage(
+          context = getApplication(),
+          idToken = idToken,
+          model = model
+        )
         when (testWelcomeResult.status) {
           Result.Status.SUCCESS -> {
             testWelcomeResult.data?.apiError == null
