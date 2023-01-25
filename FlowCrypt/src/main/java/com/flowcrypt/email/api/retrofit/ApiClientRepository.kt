@@ -51,7 +51,7 @@ import java.util.concurrent.TimeUnit
  *         Time: 6:10 PM
  *         E-mail: DenBond7@gmail.com
  */
-class FlowcryptApiRepository : ApiRepository {
+class ApiClientRepository : ApiRepository {
   override suspend fun getClientConfigurationFromFes(
     context: Context,
     idToken: String,

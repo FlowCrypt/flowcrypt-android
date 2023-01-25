@@ -11,7 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.launch
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class ClientConfigurationViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val repository = FlowcryptApiRepository()
+  private val apiClientRepository = ApiClientRepository()
   val clientConfigurationLiveData: MutableLiveData<Result<ClientConfigurationResponse>> =
     MutableLiveData(Result.none())
 
@@ -36,7 +36,7 @@ class ClientConfigurationViewModel(application: Application) : BaseAndroidViewMo
         Result.loading(progressMsg = context.getString(R.string.loading_domain_rules))
 
       try {
-        clientConfigurationLiveData.value = repository.getClientConfigurationFromFes(
+        clientConfigurationLiveData.value = apiClientRepository.getClientConfigurationFromFes(
           context = context,
           idToken = idToken,
           baseFesUrlPath = baseFesUrlPath,

@@ -13,7 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result.Status
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -29,7 +29,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
   override suspend fun doWork(): Result {
     LogsUtil.d(TAG, "doWork")
-    val repository = FlowcryptApiRepository()
+    val apiClientRepository = ApiClientRepository()
     val publicEmailDomains = EmailUtil.getPublicEmailDomains()
     val account = roomDatabase.accountDao().getActiveAccount() ?: return Result.success()
 
@@ -48,7 +48,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
         maxRetryAttemptCount = 5
       )
 
-      val result = repository.getClientConfigurationFromFes(
+      val result = apiClientRepository.getClientConfigurationFromFes(
         context = applicationContext,
         idToken = idToken,
         baseFesUrlPath = baseFesUrlPath,

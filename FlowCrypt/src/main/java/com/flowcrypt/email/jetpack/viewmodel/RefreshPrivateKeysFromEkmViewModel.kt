@@ -10,7 +10,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -37,7 +37,7 @@ import org.pgpainless.util.Passphrase
  *         E-mail: DenBond7@gmail.com
  */
 class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountViewModel(application) {
-  private val repository = FlowcryptApiRepository()
+  private val apiClientRepository = ApiClientRepository()
   private val controlledRunnerRefreshPrivateKeysFromEkm = ControlledRunner<Result<Boolean?>>()
   private val refreshPrivateKeysFromEkmMutableStateFlow =
     MutableStateFlow<Result<Boolean?>>(Result.none())
@@ -73,7 +73,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
         maxRetryAttemptCount = retryAttempts
       )
 
-      val ekmPrivateResult = repository.getPrivateKeysViaEkm(
+      val ekmPrivateResult = apiClientRepository.getPrivateKeysViaEkm(
         context = context,
         ekmUrl = requireNotNull(activeAccount.clientConfiguration?.keyManagerUrl),
         idToken = idToken

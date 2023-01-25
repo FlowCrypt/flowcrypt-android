@@ -11,7 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.util.GeneralUtil
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  */
 class CheckCustomUrlFesServerViewModel(application: Application) :
   BaseAndroidViewModel(application) {
-  private val repository = FlowcryptApiRepository()
+  private val apiClientRepository = ApiClientRepository()
   val checkFesServerAvailabilityLiveData: MutableLiveData<Result<FesServerResponse>> =
     MutableLiveData(Result.none())
 
@@ -36,7 +36,7 @@ class CheckCustomUrlFesServerViewModel(application: Application) :
         Result.loading(progressMsg = context.getString(R.string.loading))
 
       try {
-        val result = repository.checkFes(
+        val result = apiClientRepository.checkFes(
           context = getApplication(),
           domain = EmailUtil.getDomain(account)
         )

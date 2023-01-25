@@ -14,8 +14,8 @@ import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.AuthTokenInfo
 import com.flowcrypt.email.api.oauth.OAuth2Helper
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.ApiRepository
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.exception.ApiException
@@ -43,7 +43,7 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val apiRepository: ApiRepository = FlowcryptApiRepository()
+  private val apiClientRepository: ApiRepository = ApiClientRepository()
   val microsoftOAuth2TokenLiveData = MutableLiveData<Result<AuthCredentials?>>()
   val authorizationRequestLiveData = MutableLiveData<Result<AuthorizationRequest>>()
 
@@ -107,7 +107,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
     viewModelScope.launch {
       microsoftOAuth2TokenLiveData.postValue(Result.loading())
       try {
-        val response = apiRepository.getMicrosoftOAuth2Token(
+        val response = apiClientRepository.getMicrosoftOAuth2Token(
           requestCode = requestCode,
           context = getApplication(),
           authorizeCode = authorizeCode,
@@ -208,7 +208,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
     provider: OAuth2Helper.Provider
   ): JSONObject =
     withContext(Dispatchers.IO) {
-      val jsonObjectResult = apiRepository.getOpenIdConfiguration(
+      val jsonObjectResult = apiClientRepository.getOpenIdConfiguration(
         requestCode = requestCode,
         context = getApplication(),
         url = provider.openidConfigurationUrl

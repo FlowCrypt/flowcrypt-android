@@ -11,7 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class EkmViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val repository = FlowcryptApiRepository()
+  private val apiClientRepository = ApiClientRepository()
   val ekmLiveData: MutableLiveData<Result<EkmPrivateKeysResponse>> = MutableLiveData(Result.none())
 
   fun fetchPrvKeys(clientConfiguration: ClientConfiguration, idToken: String) {
@@ -55,7 +55,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           return@launch
         }
 
-        val ekmPrivateResult = repository.getPrivateKeysViaEkm(
+        val ekmPrivateResult = apiClientRepository.getPrivateKeysViaEkm(
           context = context,
           ekmUrl = clientConfiguration.keyManagerUrl
             ?: throw IllegalArgumentException("key_manager_url is empty"),
