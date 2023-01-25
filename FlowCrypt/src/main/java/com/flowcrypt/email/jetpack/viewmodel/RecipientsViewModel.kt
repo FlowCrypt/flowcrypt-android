@@ -15,7 +15,6 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
-import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -48,7 +47,7 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
-  private val apiClientRepository: ApiRepository = ApiClientRepository()
+  private val apiClientRepository = ApiClientRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
   private val controlledRunnerForPubKeysFromServer = ControlledRunner<Result<PubResponse?>>()
 

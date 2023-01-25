@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
-import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -258,7 +257,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     private val viewModelScope: CoroutineScope,
     private val updateListener: (recipientInfo: RecipientInfo) -> Unit
   ) {
-    private val apiClientRepository: ApiRepository = ApiClientRepository()
+    private val apiClientRepository = ApiClientRepository()
     private val lookUpCandidates = ConcurrentHashMap<String, RecipientInfo>()
     private val recipientsSessionCache = ConcurrentHashMap<String, RecipientWithPubKeys>()
 

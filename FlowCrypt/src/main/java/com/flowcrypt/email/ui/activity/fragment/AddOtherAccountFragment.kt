@@ -281,7 +281,6 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       importCandidates.clear()
       it.isEnabled = false
       oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
-        requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
         provider = OAuth2Helper.Provider.MICROSOFT
       )
     }

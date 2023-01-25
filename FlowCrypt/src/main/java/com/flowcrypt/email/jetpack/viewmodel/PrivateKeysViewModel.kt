@@ -21,7 +21,6 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
-import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -60,7 +59,7 @@ import org.pgpainless.util.Passphrase
  */
 class PrivateKeysViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
-  private val apiClientRepository: ApiRepository = ApiClientRepository()
+  private val apiClientRepository = ApiClientRepository()
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
