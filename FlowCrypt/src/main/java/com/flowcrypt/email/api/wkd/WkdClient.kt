@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.wkd
 
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.RetrofitApiServiceInterface
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.util.BetterInternetAddress
 import kotlinx.coroutines.Dispatchers
@@ -102,7 +102,7 @@ object WkdClient {
     hu: String,
     user: String
   ): UrlLookupResult = withContext(Dispatchers.IO) {
-    val apiService = prepareApiService(context, directDomain)
+    val apiService = prepareRetrofitApiService(context, directDomain)
     val wkdResponse: Response<ResponseBody> = if (advancedHost != null) {
       val checkPolicyResponse = apiService.checkPolicyForWkdAdvanced(advancedHost, directDomain)
       if (!checkPolicyResponse.isSuccessful) return@withContext UrlLookupResult()
@@ -123,7 +123,10 @@ object WkdClient {
     }
   }
 
-  private fun prepareApiService(context: Context, directDomain: String): ApiService {
+  private fun prepareRetrofitApiService(
+    context: Context,
+    directDomain: String
+  ): RetrofitApiServiceInterface {
     val okHttpClient = OkHttpClient.Builder()
       .connectTimeout(DEFAULT_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS)
       .writeTimeout(DEFAULT_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS)
@@ -137,7 +140,7 @@ object WkdClient {
       .client(okHttpClient)
       .build()
 
-    return retrofit.create(ApiService::class.java)
+    return retrofit.create(RetrofitApiServiceInterface::class.java)
   }
 
   private data class UrlLookupResult(

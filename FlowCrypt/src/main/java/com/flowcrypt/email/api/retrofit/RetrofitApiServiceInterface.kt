@@ -44,7 +44,7 @@ import retrofit2.http.Url
  * Time: 13:39
  * E-mail: DenBond7@gmail.com
  */
-interface ApiService {
+interface RetrofitApiServiceInterface {
   /**
    * This method create a [Response] object for the API "https://flowcrypt.com/attester/welcome-message"
    */

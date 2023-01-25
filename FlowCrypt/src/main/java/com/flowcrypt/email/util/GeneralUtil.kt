@@ -34,7 +34,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.RetrofitApiServiceInterface
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
@@ -118,9 +118,9 @@ class GeneralUtil {
         .baseUrl(url)
         .client(okHttpClient)
         .build()
-      val apiService = retrofit.create(ApiService::class.java)
+      val retrofitApiService = retrofit.create(RetrofitApiServiceInterface::class.java)
       try {
-        apiService.isAvailable(url)
+        retrofitApiService.isAvailable(url)
         return@withContext true
       } catch (e: Exception) {
         return@withContext false

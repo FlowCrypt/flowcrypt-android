@@ -59,9 +59,10 @@ class FlowcryptApiRepository : ApiRepository {
     domain: String,
   ): Result<ClientConfigurationResponse> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
       getResult(context = context) {
-        apiService.getClientConfigurationFromFes(
+        retrofitApiService.getClientConfigurationFromFes(
           authorization = "Bearer $idToken",
           baseFesUrlPath = baseFesUrlPath,
           domain = domain
@@ -82,9 +83,10 @@ class FlowcryptApiRepository : ApiRepository {
           IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
         )
       }
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
       getResult {
-        apiService.submitPrimaryEmailPubKey(
+        retrofitApiService.submitPrimaryEmailPubKey(
           authorization = "Bearer $idToken",
           email = email,
           pubKey = pubKey
@@ -104,8 +106,9 @@ class FlowcryptApiRepository : ApiRepository {
           IllegalStateException(context.getString(R.string.can_not_replace_public_key_at_attester))
         )
       }
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.submitPubKeyWithConditionalEmailVerification(email, pubKey) }
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
+      getResult { retrofitApiService.submitPubKeyWithConditionalEmailVerification(email, pubKey) }
     }
 
   override suspend fun postWelcomeMessage(
@@ -114,8 +117,14 @@ class FlowcryptApiRepository : ApiRepository {
     model: WelcomeMessageModel,
   ): Result<WelcomeMessageResponse> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      getResult { apiService.postWelcomeMessage(authorization = "Bearer $idToken", body = model) }
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
+      getResult {
+        retrofitApiService.postWelcomeMessage(
+          authorization = "Bearer $idToken",
+          body = model
+        )
+      }
     }
 
   override suspend fun pubLookup(
@@ -179,8 +188,10 @@ class FlowcryptApiRepository : ApiRepository {
         throwable = IllegalStateException(context.getString(R.string.error_email_is_not_valid))
       )
 
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      val result = getResult(requestCode = requestCode) { apiService.getPubFromAttester(email) }
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
+      val result =
+        getResult(requestCode = requestCode) { retrofitApiService.getPubFromAttester(email) }
       return@withContext resultWrapperFun(result)
     }
 
@@ -190,12 +201,13 @@ class FlowcryptApiRepository : ApiRepository {
   ):
       Result<MicrosoftOAuth2TokenResponse> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
       getResult(
         context = context,
         expectedResultClass = MicrosoftOAuth2TokenResponse::class.java
       ) {
-        apiService.getMicrosoftOAuth2Token(
+        retrofitApiService.getMicrosoftOAuth2Token(
           code = authorizeCode,
           scope = scopes,
           codeVerifier = codeVerifier,
@@ -210,9 +222,10 @@ class FlowcryptApiRepository : ApiRepository {
     url: String
   ): Result<JsonObject> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
       getResult {
-        apiService.getOpenIdConfiguration(url)
+        retrofitApiService.getOpenIdConfiguration(url)
       }
     }
 
@@ -222,12 +235,13 @@ class FlowcryptApiRepository : ApiRepository {
     idToken: String
   ): Result<EkmPrivateKeysResponse> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
       val url = if (ekmUrl.endsWith("/")) ekmUrl else "$ekmUrl/"
       getResult(
         context = context,
         expectedResultClass = EkmPrivateKeysResponse::class.java
-      ) { apiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $idToken") }
+      ) { retrofitApiService.getPrivateKeysViaEkm("${url}v1/keys/private", "Bearer $idToken") }
     }
 
   override suspend fun checkFes(context: Context, domain: String): Result<FesServerResponse> =
@@ -246,11 +260,11 @@ class FlowcryptApiRepository : ApiRepository {
         .addConverterFactory(GsonConverterFactory.create(ApiHelper.getInstance(context).gson))
         .client(okHttpClient)
         .build()
-      val apiService = retrofit.create(ApiService::class.java)
+      val retrofitApiService = retrofit.create(RetrofitApiServiceInterface::class.java)
       return@withContext getResult(
         context = context,
         expectedResultClass = FesServerResponse::class.java
-      ) { apiService.checkFes(domain) }
+      ) { retrofitApiService.checkFes(domain) }
     }
 
   override suspend fun getReplyTokenForPasswordProtectedMsg(
@@ -259,12 +273,13 @@ class FlowcryptApiRepository : ApiRepository {
     baseFesUrlPath: String,
   ): Result<MessageReplyTokenResponse> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
       getResult(
         context = context,
         expectedResultClass = MessageReplyTokenResponse::class.java
       ) {
-        apiService.getReplyTokenForPasswordProtectedMsg(
+        retrofitApiService.getReplyTokenForPasswordProtectedMsg(
           authorization = "Bearer $idToken",
           baseFesUrlPath = baseFesUrlPath
         )
@@ -279,7 +294,8 @@ class FlowcryptApiRepository : ApiRepository {
     msg: String
   ): Result<MessageUploadResponse> =
     withContext(Dispatchers.IO) {
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val retrofitApiService =
+        ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
       getResult(
         context = context,
         expectedResultClass = MessageUploadResponse::class.java
@@ -293,7 +309,7 @@ class FlowcryptApiRepository : ApiRepository {
           msg.toByteArray().toRequestBody(Constants.MIME_TYPE_BINARY_DATA.toMediaTypeOrNull())
         )
 
-        apiService.uploadPasswordProtectedMsgToWebPortal(
+        retrofitApiService.uploadPasswordProtectedMsgToWebPortal(
           authorization = "Bearer $idToken",
           baseFesUrlPath = baseFesUrlPath,
           details = details,
@@ -306,10 +322,11 @@ class FlowcryptApiRepository : ApiRepository {
     context: Context,
     postHelpFeedbackModel: PostHelpFeedbackModel
   ): Result<PostHelpFeedbackResponse> = withContext(Dispatchers.IO) {
-    val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+    val retrofitApiService =
+      ApiHelper.getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
     getResult(
       context = context,
       expectedResultClass = PostHelpFeedbackResponse::class.java
-    ) { apiService.postHelpFeedback(postHelpFeedbackModel) }
+    ) { retrofitApiService.postHelpFeedback(postHelpFeedbackModel) }
   }
 }
