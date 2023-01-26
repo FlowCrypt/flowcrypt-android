@@ -106,6 +106,7 @@ android {
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
+            buildConfigField 'String', 'BACKEND_URL', "\"https://flowcrypt.com/api/\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
@@ -127,9 +128,24 @@ android {
     flavorDimensions "standard"
 
     productFlavors {
+        common {
+            dimension "standard"
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
+            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
+            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
+            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
+            buildConfigField 'String', 'BACKEND_URL', "\"https://flowcrypt.com/api/\""
+            resValue 'string', 'gradle_is_acra_enabled', 'true'
+            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
+            resValue 'string', 'gradle_is_http_log_enabled', 'false'
+            resValue 'string', 'gradle_http_log_level', 'NONE'
+        }
         //This flavor must be used only for a development.
         // It has settings for a fast building (some features are disabled or not included).
         dev {
+            initWith common
             versionNameSuffix "_dev"
             minSdkVersion rootProject.ext.minSdkVersion
             resConfigs 'en', 'xxhdpi'
@@ -137,62 +153,36 @@ android {
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
-            dimension "standard"
         }
 
         //This is a consumer flavor
         consumer {
-            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
-            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
-            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
-            resValue 'string', 'gradle_is_acra_enabled', 'true'
-            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
-            resValue 'string', 'gradle_is_http_log_enabled', 'false'
-            resValue 'string', 'gradle_is_http_log_enabled', 'true'
-            resValue 'string', 'gradle_http_log_level', 'BASIC'
-            dimension "standard"
+            initWith common
         }
 
         //This flavor must be used only for a testing
         devTest {
+            initWith common
             versionNameSuffix "_devTest"
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://localhost:1212/\""
             buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://localhost:1212/\""
+            buildConfigField 'String', 'BACKEND_URL', "\"https://localhost:1212/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
-            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
-            dimension "standard"
         }
 
         //This is an enterprise flavor
         enterprise {
+            initWith common
             applicationIdSuffix ".enterprise"
-            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
-            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
-            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
-            resValue 'string', 'gradle_is_acra_enabled', 'true'
-            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
-            resValue 'string', 'gradle_is_http_log_enabled', 'false'
-            resValue 'string', 'gradle_is_http_log_enabled', 'true'
-            resValue 'string', 'gradle_http_log_level', 'BASIC'
-            dimension "standard"
         }
 
         applicationVariants.all { variant ->
