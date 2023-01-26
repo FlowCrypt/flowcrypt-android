@@ -102,15 +102,16 @@ object WkdClient {
     hu: String,
     user: String
   ): UrlLookupResult = withContext(Dispatchers.IO) {
-    val apiService = prepareRetrofitApiService(context, directDomain)
+    val retrofitApiService = prepareRetrofitApiService(context, directDomain)
     val wkdResponse: Response<ResponseBody> = if (advancedHost != null) {
-      val checkPolicyResponse = apiService.checkPolicyForWkdAdvanced(advancedHost, directDomain)
+      val checkPolicyResponse =
+        retrofitApiService.checkPolicyForWkdAdvanced(advancedHost, directDomain)
       if (!checkPolicyResponse.isSuccessful) return@withContext UrlLookupResult()
-      apiService.getPubFromWkdAdvanced(advancedHost, directDomain, hu, user)
+      retrofitApiService.getPubFromWkdAdvanced(advancedHost, directDomain, hu, user)
     } else {
-      val checkPolicyResponse = apiService.checkPolicyForWkdDirect(directDomain)
+      val checkPolicyResponse = retrofitApiService.checkPolicyForWkdDirect(directDomain)
       if (!checkPolicyResponse.isSuccessful) return@withContext UrlLookupResult()
-      apiService.getPubFromWkdDirect(directDomain, hu, user)
+      retrofitApiService.getPubFromWkdDirect(directDomain, hu, user)
     }
 
     val incomingBytes = wkdResponse.body()?.byteStream()
