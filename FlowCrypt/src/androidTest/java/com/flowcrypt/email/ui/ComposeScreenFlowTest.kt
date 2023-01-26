@@ -705,7 +705,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
 
-    //because account.useFES == false btnSetWebPortalPassword should not be visible
+    //because account.useCustomerFesUrl == false btnSetWebPortalPassword should not be visible
     onView(withId(R.id.btnSetWebPortalPassword))
       .check(matches(not(isDisplayed())))
   }

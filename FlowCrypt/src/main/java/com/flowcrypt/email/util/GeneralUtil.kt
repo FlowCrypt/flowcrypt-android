@@ -430,14 +430,14 @@ class GeneralUtil {
     /**
      * Generate a base FES URL path.
      */
-    fun genBaseFesUrlPath(useSharedTenant: Boolean, domain: String): String {
-      return if (useSharedTenant) {
+    fun genBaseFesUrlPath(useCustomerFesUrl: Boolean, domain: String? = null): String {
+      return if (useCustomerFesUrl && domain != null) {
+        "fes.$domain"
+        //for example fes.customer-domain.com
+      } else {
         val url = URL(BuildConfig.SHARED_TENANT_FES_URL)
         (url.host + url.path).replace("/$".toRegex(), "")
         //flowcrypt.com/shared-tenant-fes
-      } else {
-        "fes.$domain"
-        //for example fes.customer-domain.com
       }
     }
 

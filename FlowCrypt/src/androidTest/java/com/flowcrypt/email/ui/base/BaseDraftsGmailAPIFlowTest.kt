@@ -95,7 +95,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
         ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
       ),
       keyManagerUrl = "https://localhost:1212/",
-    ), useAPI = true, useFES = true
+    ), useAPI = true, useCustomerFesUrl = true
   )
 
   protected val addAccountToDatabaseRule: AddAccountToDatabaseRule =

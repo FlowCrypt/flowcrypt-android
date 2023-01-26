@@ -78,7 +78,7 @@ class ComposeScreenDraftGmailAPIFlowTest : BaseComposeScreenTest() {
         keyManagerUrl = "https://localhost:1212/",
       ),
       useAPI = true,
-      useFES = true
+      useCustomerFesUrl = true
     )
 
   override val addAccountToDatabaseRule: AddAccountToDatabaseRule =

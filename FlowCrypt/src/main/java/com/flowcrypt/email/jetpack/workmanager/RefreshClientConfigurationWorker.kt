@@ -38,7 +38,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
     }
 
     val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
-      useSharedTenant = !account.useFES,
+      useCustomerFesUrl = account.useCustomerFesUrl,
       domain = domain
     )
     try {

@@ -139,15 +139,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   override fun getTempAccount(): AccountEntity? {
-    val sharedTenantFesBaseUrlPath = GeneralUtil.genBaseFesUrlPath(
-      useSharedTenant = true,
-      domain = ""
-    )
+    val sharedTenantFesBaseUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
     return cachedGoogleSignInAccount?.let {
       AccountEntity(
         googleSignInAccount = it,
         clientConfiguration = cachedClientConfiguration,
-        useFES = cachedBaseFesUrlPath?.isNotEmpty() == true &&
+        useCustomerFesUrl = cachedBaseFesUrlPath?.isNotEmpty() == true &&
             cachedBaseFesUrlPath != sharedTenantFesBaseUrlPath,
         useStartTlsForSmtp = useStartTlsForSmtp,
       )
@@ -227,11 +224,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         cachedGoogleSignInAccount = task.getResult(ApiException::class.java)
 
         val account = cachedGoogleSignInAccount?.account?.name ?: return
-        val domain = EmailUtil.getDomain(account)
-        cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
-          useSharedTenant = true,
-          domain = domain
-        )
+        cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
         val publicEmailDomains = EmailUtil.getPublicEmailDomains()
         if (EmailUtil.getDomain(account) in publicEmailDomains) {
@@ -541,7 +534,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               val domain = EmailUtil.getDomain(account)
               val idToken = cachedGoogleSignInAccount?.idToken ?: return@let
               val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
-                useSharedTenant = false,
+                useCustomerFesUrl = true,
                 domain = domain
               )
               cachedBaseFesUrlPath = baseFesUrlPath

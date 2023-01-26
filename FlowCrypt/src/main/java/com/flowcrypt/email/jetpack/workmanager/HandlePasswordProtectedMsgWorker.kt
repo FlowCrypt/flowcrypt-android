@@ -135,7 +135,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             //start of creating and uploading a password-protected msg to FES
             val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
             val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
-              useSharedTenant = !account.useFES,
+              useCustomerFesUrl = account.useCustomerFesUrl,
               domain = EmailUtil.getDomain(fromAddress.address)
             )
 
