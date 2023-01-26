@@ -155,7 +155,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
       )
 
       httpSender {
-        uri = "https://flowcrypt.com/api/help/acra"
+        uri = BuildConfig.BACKEND_URL + "help/acra"
         httpMethod = HttpSender.Method.POST
       }
     }

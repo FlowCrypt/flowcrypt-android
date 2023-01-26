@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit
 
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
@@ -62,7 +63,7 @@ interface RetrofitApiServiceInterface {
    */
   //@POST(BuildConfig.SHARED_TENANT_FES_URL + "help/feedback")
   //ref https://github.com/FlowCrypt/flowcrypt-android/pull/2171#discussion_r1084124018
-  @POST("https://flowcrypt.com/api/help/feedback")
+  @POST(BuildConfig.BACKEND_URL + "help/feedback")
   suspend fun backendPostHelpFeedback(@Body body: PostHelpFeedbackModel): Response<PostHelpFeedbackResponse>
 
   /**
