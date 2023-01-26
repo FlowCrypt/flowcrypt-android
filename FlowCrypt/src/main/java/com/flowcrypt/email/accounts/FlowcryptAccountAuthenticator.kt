@@ -87,7 +87,8 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
       try {
         val refreshToken = KeyStoreCryptoManager.decrypt(encryptedRefreshToken)
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        val apiResponse = retrofitApiService.refreshMicrosoftOAuth2Token(refreshToken).execute()
+        val apiResponse =
+          retrofitApiService.oAuthRefreshMicrosoftOAuth2Token(refreshToken).execute()
         if (apiResponse.isSuccessful) {
           val tokenResponse = apiResponse.body()
           authToken = KeyStoreCryptoManager.encrypt(tokenResponse?.accessToken)
