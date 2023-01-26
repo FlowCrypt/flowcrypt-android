@@ -194,13 +194,11 @@ object ApiClientRepository : BaseApiRepository {
       }
 
     /**
-     * @param requestCode A unique request code for this call
      * @param context     Interface to global information about an application environment.
      * @param email       A user email.
      * @param clientConfiguration    Contains client configurations.
      */
     suspend fun pubLookup(
-      requestCode: Long = 0L,
       context: Context,
       email: String,
       clientConfiguration: ClientConfiguration? = null
@@ -208,29 +206,22 @@ object ApiClientRepository : BaseApiRepository {
       withContext(Dispatchers.IO) {
         val resultWrapperFun = fun(result: Result<String>): Result<PubResponse> {
           return when (result.status) {
-            Result.Status.SUCCESS -> Result.success(
-              requestCode = requestCode,
-              data = PubResponse(null, result.data)
-            )
+            Result.Status.SUCCESS -> Result.success(data = PubResponse(null, result.data))
 
-            Result.Status.ERROR -> Result.error(
-              requestCode = requestCode,
-              data = PubResponse(null, null)
-            )
+            Result.Status.ERROR -> Result.error(data = PubResponse(null, null))
 
             Result.Status.EXCEPTION -> Result.exception(
-              requestCode = requestCode,
               throwable = result.exception ?: Exception(context.getString(R.string.unknown_error))
             )
 
-            Result.Status.LOADING -> Result.loading(requestCode = requestCode)
+            Result.Status.LOADING -> Result.loading()
 
             Result.Status.NONE -> Result.none()
           }
         }
 
         if (email.isValidEmail()) {
-          val wkdResult = getResult(requestCode = requestCode) {
+          val wkdResult = getResult {
             val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, email)
 
             //For now, we just peak at the first matching key. It should be improved inthe future.
@@ -250,19 +241,14 @@ object ApiClientRepository : BaseApiRepository {
           }
 
           if (clientConfiguration?.canLookupThisRecipientOnAttester(email) == false) {
-            return@withContext Result.success(
-              requestCode = requestCode,
-              data = PubResponse(null, null)
-            )
+            return@withContext Result.success(data = PubResponse(null, null))
           }
         } else return@withContext Result.exception(
-          requestCode = requestCode,
           throwable = IllegalStateException(context.getString(R.string.error_email_is_not_valid))
         )
 
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        val result =
-          getResult(requestCode = requestCode) { retrofitApiService.getPubFromAttester(email) }
+        val result = getResult { retrofitApiService.getPubFromAttester(email) }
         return@withContext resultWrapperFun(result)
       }
 

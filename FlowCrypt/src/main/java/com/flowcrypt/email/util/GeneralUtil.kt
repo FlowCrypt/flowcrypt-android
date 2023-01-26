@@ -434,10 +434,10 @@ class GeneralUtil {
       return if (useSharedTenant) {
         val url = URL(BuildConfig.SHARED_TENANT_FES_URL)
         (url.host + url.path).replace("/$".toRegex(), "")
-        //for example flowcrypt.com/shared-tenant-fes
+        //flowcrypt.com/shared-tenant-fes
       } else {
         "fes.$domain"
-        //for example fes.flowcrypt.com
+        //for example fes.customer-domain.com
       }
     }
 
