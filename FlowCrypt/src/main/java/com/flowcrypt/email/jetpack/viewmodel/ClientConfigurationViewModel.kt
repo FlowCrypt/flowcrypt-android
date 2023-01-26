@@ -35,7 +35,7 @@ class ClientConfigurationViewModel(application: Application) : BaseAndroidViewMo
         Result.loading(progressMsg = context.getString(R.string.loading_domain_rules))
 
       try {
-        clientConfigurationLiveData.value = ApiClientRepository.FES.getClientConfigurationFromFes(
+        clientConfigurationLiveData.value = ApiClientRepository.FES.getClientConfiguration(
           context = context,
           idToken = idToken,
           baseFesUrlPath = baseFesUrlPath,

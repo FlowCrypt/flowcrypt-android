@@ -42,7 +42,7 @@ import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.jetpack.viewmodel.CheckCustomUrlFesServerViewModel
+import com.flowcrypt.email.jetpack.viewmodel.CheckCustomerUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.model.KeyImportDetails
@@ -88,7 +88,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private var cachedClientConfiguration: ClientConfiguration? = null
   private var cachedBaseFesUrlPath: String? = null
 
-  private val checkCustomUrlFesServerViewModel: CheckCustomUrlFesServerViewModel by viewModels()
+  private val checkCustomerUrlFesServerViewModel: CheckCustomerUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
   private var useStartTlsForSmtp = false
@@ -230,7 +230,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         if (EmailUtil.getDomain(account) in publicEmailDomains) {
           onSignSuccess(cachedGoogleSignInAccount)
         } else {
-          checkCustomUrlFesServerViewModel.checkServerAvailability(account)
+          checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
       } else {
         val error = task.exception
@@ -410,7 +410,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           cachedClientConfiguration = null
           cachedBaseFesUrlPath = null
           val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
-          checkCustomUrlFesServerViewModel.checkServerAvailability(account)
+          checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
@@ -521,7 +521,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun initCheckFesServerViewModel() {
-    checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.observe(viewLifecycleOwner) {
+    checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@MainSignInFragment)
@@ -548,12 +548,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             continueBasedOnFlavorSettings()
           }
 
-          checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value = Result.none()
+          checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value =
+            Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR -> {
-          checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value = Result.none()
+          checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value =
+            Result.none()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
@@ -596,7 +598,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
           }
 
-          checkCustomUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value = Result.none()
+          checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value =
+            Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
         else -> {}

@@ -54,7 +54,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           return@launch
         }
 
-        val ekmPrivateResult = ApiClientRepository.EKM.getPrivateKeysViaEkm(
+        val ekmPrivateResult = ApiClientRepository.EKM.getPrivateKeys(
           context = context,
           ekmUrl = clientConfiguration.keyManagerUrl
             ?: throw IllegalArgumentException("key_manager_url is empty"),

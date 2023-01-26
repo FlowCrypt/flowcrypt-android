@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResp
 import com.flowcrypt.email.api.wkd.WkdClient
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
+import com.flowcrypt.email.util.GeneralUtil
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +61,7 @@ object ApiClientRepository : BaseApiRepository {
      * @param domain A company domain.
      * @param idToken OIDC token.
      */
-    suspend fun getClientConfigurationFromFes(
+    suspend fun getClientConfiguration(
       context: Context,
       idToken: String,
       baseFesUrlPath: String,
@@ -148,7 +149,10 @@ object ApiClientRepository : BaseApiRepository {
      * @param context Interface to global information about an application environment.
      * @param domain A company domain.
      */
-    suspend fun checkFes(context: Context, domain: String): Result<FesServerResponse> =
+    suspend fun checkIfFesIsAvailableAtCustomerFesUrl(
+      context: Context,
+      domain: String
+    ): Result<FesServerResponse> =
       withContext(Dispatchers.IO) {
         val connectionTimeoutInSeconds = 3L
         val okHttpClient = OkHttpClient.Builder()
@@ -159,8 +163,9 @@ object ApiClientRepository : BaseApiRepository {
             ApiHelper.configureOkHttpClientForDebuggingIfAllowed(context, this)
           }.build()
 
+        val genBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(true, domain)
         val retrofit = Retrofit.Builder()
-          .baseUrl("https://fes.$domain/api/")
+          .baseUrl("https://$genBaseFesUrlPath/api/")
           .addConverterFactory(GsonConverterFactory.create(ApiHelper.getInstance(context).gson))
           .client(okHttpClient)
           .build()
@@ -351,7 +356,7 @@ object ApiClientRepository : BaseApiRepository {
      * @param ekmUrl key_manager_url from [ClientConfiguration].
      * @param idToken OIDC token.
      */
-    suspend fun getPrivateKeysViaEkm(
+    suspend fun getPrivateKeys(
       context: Context,
       ekmUrl: String,
       idToken: String

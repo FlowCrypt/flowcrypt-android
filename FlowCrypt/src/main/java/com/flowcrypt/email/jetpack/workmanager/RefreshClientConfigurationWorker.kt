@@ -47,7 +47,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
         maxRetryAttemptCount = 5
       )
 
-      val result = ApiClientRepository.FES.getClientConfigurationFromFes(
+      val result = ApiClientRepository.FES.getClientConfiguration(
         context = applicationContext,
         idToken = idToken,
         baseFesUrlPath = baseFesUrlPath,

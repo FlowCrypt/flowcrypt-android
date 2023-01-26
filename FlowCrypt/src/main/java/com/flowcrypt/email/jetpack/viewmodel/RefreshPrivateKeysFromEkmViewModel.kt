@@ -72,7 +72,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
         maxRetryAttemptCount = retryAttempts
       )
 
-      val ekmPrivateResult = ApiClientRepository.EKM.getPrivateKeysViaEkm(
+      val ekmPrivateResult = ApiClientRepository.EKM.getPrivateKeys(
         context = context,
         ekmUrl = requireNotNull(activeAccount.clientConfiguration?.keyManagerUrl),
         idToken = idToken
