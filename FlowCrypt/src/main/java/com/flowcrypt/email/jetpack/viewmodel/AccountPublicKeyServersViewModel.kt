@@ -36,7 +36,6 @@ import java.io.IOException
  * E-mail: DenBond7@gmail.com
  */
 class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   val accountKeysInfoLiveData = MediatorLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
   private val initLiveData = Transformations
     .switchMap(activeAccountLiveData) { accountEntity ->
@@ -102,7 +101,7 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
 
         for (email in emails) {
           val normalizedEmail = email.lowercase()
-          val pubResponseResult = apiClientRepository.pubLookup(
+          val pubResponseResult = ApiClientRepository.Attester.pubLookup(
             context = getApplication(),
             email = normalizedEmail,
             clientConfiguration = accountEntity.clientConfiguration

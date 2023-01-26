@@ -257,7 +257,6 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     private val viewModelScope: CoroutineScope,
     private val updateListener: (recipientInfo: RecipientInfo) -> Unit
   ) {
-    private val apiClientRepository = ApiClientRepository()
     private val lookUpCandidates = ConcurrentHashMap<String, RecipientInfo>()
     private val recipientsSessionCache = ConcurrentHashMap<String, RecipientWithPubKeys>()
 
@@ -388,7 +387,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       email: String,
       activeAccount: AccountEntity?
     ): Result<PubResponse> = withContext(lookUpLimitedParallelismDispatcher) {
-      return@withContext apiClientRepository.pubLookup(
+      return@withContext ApiClientRepository.Attester.pubLookup(
         context = application,
         email = email,
         clientConfiguration = activeAccount?.clientConfiguration

@@ -59,7 +59,6 @@ import org.pgpainless.util.Passphrase
  */
 class PrivateKeysViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
-  private val apiClientRepository = ApiClientRepository()
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
@@ -559,7 +558,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     isSilent: Boolean = true,
   ): Boolean = withContext(Dispatchers.IO) {
     val submitPubKeyResult = if (idToken != null) {
-      apiClientRepository.submitPrimaryEmailPubKey(
+      ApiClientRepository.Attester.submitPrimaryEmailPubKey(
         context = getApplication(),
         idToken = idToken,
         email = accountEntity.email,
@@ -567,7 +566,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         clientConfiguration = accountEntity.clientConfiguration,
       )
     } else {
-      apiClientRepository.submitPubKeyWithConditionalEmailVerification(
+      ApiClientRepository.Attester.submitPubKeyWithConditionalEmailVerification(
         context = getApplication(),
         email = accountEntity.email,
         pubKey = keyDetails.publicKey,
@@ -625,7 +624,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     withContext(Dispatchers.IO) {
       return@withContext try {
         val model = WelcomeMessageModel(accountEntity.email, keyDetails.publicKey)
-        val testWelcomeResult = apiClientRepository.postWelcomeMessage(
+        val testWelcomeResult = ApiClientRepository.Attester.postWelcomeMessage(
           context = getApplication(),
           idToken = idToken,
           model = model

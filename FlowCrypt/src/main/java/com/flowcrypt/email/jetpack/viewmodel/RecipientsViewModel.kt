@@ -47,7 +47,6 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
   private val controlledRunnerForPubKeysFromServer = ControlledRunner<Result<PubResponse?>>()
 
@@ -265,7 +264,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       val activeAccount = getActiveAccountSuspend()
       lookUpPubKeysMutableStateFlow.value =
         controlledRunnerForPubKeysFromServer.cancelPreviousThenRun {
-          return@cancelPreviousThenRun apiClientRepository.pubLookup(
+          return@cancelPreviousThenRun ApiClientRepository.Attester.pubLookup(
             context = getApplication(),
             email = email,
             clientConfiguration = activeAccount?.clientConfiguration
@@ -308,7 +307,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       List<PgpKeyDetails>? = withContext(Dispatchers.IO) {
     try {
       val activeAccount = getActiveAccountSuspend()
-      val response = apiClientRepository.pubLookup(
+      val response = ApiClientRepository.Attester.pubLookup(
         context = getApplication(),
         email = email,
         clientConfiguration = activeAccount?.clientConfiguration

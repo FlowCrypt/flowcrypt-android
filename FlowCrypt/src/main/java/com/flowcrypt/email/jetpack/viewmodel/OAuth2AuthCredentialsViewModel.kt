@@ -42,7 +42,6 @@ import java.io.IOException
  *         E-mail: DenBond7@gmail.com
  */
 class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   val microsoftOAuth2TokenLiveData = MutableLiveData<Result<AuthCredentials?>>()
   val authorizationRequestLiveData = MutableLiveData<Result<AuthorizationRequest>>()
 
@@ -105,7 +104,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
     viewModelScope.launch {
       microsoftOAuth2TokenLiveData.postValue(Result.loading())
       try {
-        val response = apiClientRepository.getMicrosoftOAuth2Token(
+        val response = ApiClientRepository.OAuth.getMicrosoftOAuth2Token(
           context = getApplication(),
           authorizeCode = authorizeCode,
           scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
@@ -204,7 +203,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
     provider: OAuth2Helper.Provider
   ): JSONObject =
     withContext(Dispatchers.IO) {
-      val jsonObjectResult = apiClientRepository.getOpenIdConfiguration(
+      val jsonObjectResult = ApiClientRepository.OAuth.getOpenIdConfiguration(
         context = getApplication(),
         url = provider.openidConfigurationUrl
       )

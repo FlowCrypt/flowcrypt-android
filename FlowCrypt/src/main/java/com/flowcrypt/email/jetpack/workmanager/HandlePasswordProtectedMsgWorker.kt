@@ -96,7 +96,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
   private suspend fun prepareAndUploadPasswordProtectedMsgsToFES(account: AccountEntity) =
     withContext(Dispatchers.IO) {
-      val apiClientRepository = ApiClientRepository()
       val keysStorage = KeysStorageImpl.getInstance(applicationContext)
       val accountSecretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
 
@@ -143,7 +142,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val idToken = GeneralUtil.getGoogleIdToken(
               applicationContext, RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
             )
-            val replyToken = fetchReplyToken(apiClientRepository, baseFesUrlPath, idToken)
+            val replyToken = fetchReplyToken(baseFesUrlPath, idToken)
             val replyInfoData = ReplyInfoData(
               sender = fromAddress.address.lowercase(),
               recipient = (toCandidates + ccCandidates + bccCandidates)
@@ -188,7 +187,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             //upload resulting data to FES
             val fesUrl = uploadMsgToFESAndReturnUrl(
-              apiClientRepository = apiClientRepository,
               baseFesUrlPath = baseFesUrlPath,
               idToken = idToken,
               messageUploadRequest = genMessageUploadRequest(
@@ -343,13 +341,12 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   }
 
   private suspend fun uploadMsgToFESAndReturnUrl(
-    apiClientRepository: ApiClientRepository,
     baseFesUrlPath: String,
     idToken: String,
     messageUploadRequest: MessageUploadRequest,
     pwdEncryptedWithAttachments: String
   ): String = withContext(Dispatchers.IO) {
-    val messageUploadResponseResult = apiClientRepository.uploadPasswordProtectedMsgToWebPortal(
+    val messageUploadResponseResult = ApiClientRepository.FES.uploadPasswordProtectedMsgToWebPortal(
       context = applicationContext,
       baseFesUrlPath = baseFesUrlPath,
       idToken = idToken,
@@ -379,12 +376,11 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   }
 
   private suspend fun fetchReplyToken(
-    apiClientRepository: ApiClientRepository,
     baseFesUrlPath: String,
     idToken: String
   ): String = withContext(Dispatchers.IO) {
     val messageReplyTokenResponseResult =
-      apiClientRepository.getReplyTokenForPasswordProtectedMsg(
+      ApiClientRepository.FES.getReplyTokenForPasswordProtectedMsg(
         context = applicationContext,
         idToken = idToken,
         baseFesUrlPath = baseFesUrlPath,

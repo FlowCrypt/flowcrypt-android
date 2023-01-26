@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class ClientConfigurationViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   val clientConfigurationLiveData: MutableLiveData<Result<ClientConfigurationResponse>> =
     MutableLiveData(Result.none())
 
@@ -36,7 +35,7 @@ class ClientConfigurationViewModel(application: Application) : BaseAndroidViewMo
         Result.loading(progressMsg = context.getString(R.string.loading_domain_rules))
 
       try {
-        clientConfigurationLiveData.value = apiClientRepository.getClientConfigurationFromFes(
+        clientConfigurationLiveData.value = ApiClientRepository.FES.getClientConfigurationFromFes(
           context = context,
           idToken = idToken,
           baseFesUrlPath = baseFesUrlPath,

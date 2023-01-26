@@ -37,7 +37,6 @@ import org.pgpainless.util.Passphrase
  *         E-mail: DenBond7@gmail.com
  */
 class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   private val controlledRunnerRefreshPrivateKeysFromEkm = ControlledRunner<Result<Boolean?>>()
   private val refreshPrivateKeysFromEkmMutableStateFlow =
     MutableStateFlow<Result<Boolean?>>(Result.none())
@@ -73,7 +72,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
         maxRetryAttemptCount = retryAttempts
       )
 
-      val ekmPrivateResult = apiClientRepository.getPrivateKeysViaEkm(
+      val ekmPrivateResult = ApiClientRepository.EKM.getPrivateKeysViaEkm(
         context = context,
         ekmUrl = requireNotNull(activeAccount.clientConfiguration?.keyManagerUrl),
         idToken = idToken

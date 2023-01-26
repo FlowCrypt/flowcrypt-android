@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
  */
 class CheckCustomUrlFesServerViewModel(application: Application) :
   BaseAndroidViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   val checkFesServerAvailabilityLiveData: MutableLiveData<Result<FesServerResponse>> =
     MutableLiveData(Result.none())
 
@@ -36,7 +35,7 @@ class CheckCustomUrlFesServerViewModel(application: Application) :
         Result.loading(progressMsg = context.getString(R.string.loading))
 
       try {
-        val result = apiClientRepository.checkFes(
+        val result = ApiClientRepository.FES.checkFes(
           context = getApplication(),
           domain = EmailUtil.getDomain(account)
         )

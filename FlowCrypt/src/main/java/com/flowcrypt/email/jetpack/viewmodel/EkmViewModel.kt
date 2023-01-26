@@ -33,7 +33,6 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class EkmViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   val ekmLiveData: MutableLiveData<Result<EkmPrivateKeysResponse>> = MutableLiveData(Result.none())
 
   fun fetchPrvKeys(clientConfiguration: ClientConfiguration, idToken: String) {
@@ -55,7 +54,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           return@launch
         }
 
-        val ekmPrivateResult = apiClientRepository.getPrivateKeysViaEkm(
+        val ekmPrivateResult = ApiClientRepository.EKM.getPrivateKeysViaEkm(
           context = context,
           ekmUrl = clientConfiguration.keyManagerUrl
             ?: throw IllegalArgumentException("key_manager_url is empty"),

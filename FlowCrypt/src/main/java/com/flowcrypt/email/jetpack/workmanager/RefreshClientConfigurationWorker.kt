@@ -29,7 +29,6 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
   override suspend fun doWork(): Result {
     LogsUtil.d(TAG, "doWork")
-    val apiClientRepository = ApiClientRepository()
     val publicEmailDomains = EmailUtil.getPublicEmailDomains()
     val account = roomDatabase.accountDao().getActiveAccount() ?: return Result.success()
 
@@ -48,7 +47,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
         maxRetryAttemptCount = 5
       )
 
-      val result = apiClientRepository.getClientConfigurationFromFes(
+      val result = ApiClientRepository.FES.getClientConfigurationFromFes(
         context = applicationContext,
         idToken = idToken,
         baseFesUrlPath = baseFesUrlPath,

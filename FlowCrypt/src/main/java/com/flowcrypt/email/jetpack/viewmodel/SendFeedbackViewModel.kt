@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
  *         E-mail: DenBond7@gmail.com
  */
 class SendFeedbackViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val apiClientRepository = ApiClientRepository()
   private val postFeedbackMutableStateFlow: MutableStateFlow<Result<PostHelpFeedbackResponse?>> =
     MutableStateFlow(Result.none())
   val postFeedbackStateFlow: StateFlow<Result<PostHelpFeedbackResponse?>> =
@@ -48,7 +47,7 @@ class SendFeedbackViewModel(application: Application) : BaseAndroidViewModel(app
         Base64.encodeToString(screenshot?.byteArray ?: byteArrayOf(), Base64.DEFAULT)
 
       try {
-        postFeedbackMutableStateFlow.value = apiClientRepository.postHelpFeedback(
+        postFeedbackMutableStateFlow.value = ApiClientRepository.Backend.postHelpFeedback(
           context = context,
           PostHelpFeedbackModel(
             email = account.email,
