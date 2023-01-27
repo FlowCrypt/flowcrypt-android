@@ -162,7 +162,10 @@ object ApiClientRepository : BaseApiRepository {
             ApiHelper.configureOkHttpClientForDebuggingIfAllowed(context, this)
           }.build()
 
-        val genBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(true, domain)
+        val genBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
+          useCustomerFesUrl = true,
+          domain = domain
+        )
         val retrofit = Retrofit.Builder()
           .baseUrl("https://$genBaseFesUrlPath/api/")
           .addConverterFactory(GsonConverterFactory.create(ApiHelper.getInstance(context).gson))
