@@ -64,7 +64,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         return when {
-          request.path?.startsWith("/pub", ignoreCase = true) == true -> {
+          request.path?.startsWith("/attester/pub", ignoreCase = true) == true -> {
             val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
             when {
