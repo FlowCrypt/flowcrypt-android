@@ -117,11 +117,10 @@ interface RetrofitApiServiceInterface {
   /**
    * Get client configuration
    */
-  @GET("https://{baseFesUrlPath}/api/v1/client-configuration")
+  @GET
   suspend fun fesGetClientConfiguration(
     @Header("Authorization") authorization: String,
-    @Path("baseFesUrlPath") baseFesUrlPath: String,
-    @Query("domain") domain: String
+    @Url url: String
   ): Response<ClientConfigurationResponse>
 
   /**

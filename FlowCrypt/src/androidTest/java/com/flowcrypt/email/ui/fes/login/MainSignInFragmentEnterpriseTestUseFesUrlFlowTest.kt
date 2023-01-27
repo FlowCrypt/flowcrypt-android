@@ -26,7 +26,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -42,7 +41,6 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Need to think about this test. For devTest we have backand_url == fes_url")
 class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
@@ -66,9 +64,8 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
             return handleClientConfigurationAPI()
           }
 
-
-          request.path.equals("/account/get") -> {
-            isApiAccountUsed = true
+          request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=localhost:1212") -> {
+            isSharedTenantFesUsed = true
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
           }
         }
@@ -86,16 +83,16 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  private var isFesUrlUsed = false
-  private var isApiAccountUsed = false
+  private var isCustomFesUrlUsed = false
+  private var isSharedTenantFesUsed = false
 
   @Test
-  fun testCallFesUrlToGetClientConfigurationForEnterpriseUser() {
-    isFesUrlUsed = false
+  fun testCallCustomFesUrlToGetClientConfiguration() {
+    isCustomFesUrlUsed = false
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
 
-    assertEquals(false, isApiAccountUsed)
-    assertEquals(true, isFesUrlUsed)
+    assertEquals(false, isSharedTenantFesUsed)
+    assertEquals(true, isCustomFesUrlUsed)
 
     //the mock web server should return error for https://fes.$domain/api/
     isDialogWithTextDisplayed(
@@ -111,7 +108,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
   }
 
   private fun handleClientConfigurationAPI(): MockResponse {
-    isFesUrlUsed = true
+    isCustomFesUrlUsed = true
     return MockResponse().setResponseCode(HttpURLConnection.HTTP_UNAUTHORIZED)
   }
 

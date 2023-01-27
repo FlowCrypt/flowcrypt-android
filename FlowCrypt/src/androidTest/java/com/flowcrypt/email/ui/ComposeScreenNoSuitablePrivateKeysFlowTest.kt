@@ -140,7 +140,7 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
     val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
       object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
-          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
             val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
             when {

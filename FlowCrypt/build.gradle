@@ -171,9 +171,9 @@ android {
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            buildConfigField 'String', 'ATTESTER_URL', "\"https://localhost:1212/\""
-            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://localhost:1212/\""
-            buildConfigField 'String', 'BACKEND_URL', "\"https://localhost:1212/\""
+            buildConfigField 'String', 'ATTESTER_URL', "\"https://localhost:1212/attester/\""
+            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://localhost:1212/shared-tenant-fes/\""
+            buildConfigField 'String', 'BACKEND_URL', "\"https://localhost:1212/backend/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'

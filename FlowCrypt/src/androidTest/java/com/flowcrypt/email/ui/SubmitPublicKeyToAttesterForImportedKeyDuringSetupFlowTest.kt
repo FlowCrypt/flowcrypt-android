@@ -144,7 +144,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
 
   companion object {
     private const val USER_ENFORCE_ATTESTER_SUBMIT =
-      "user_enforce_attester_submit@localhost:1212"
+      "user_enforce_attester_submit@flowcrypt.test"
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
       vendor = "FlowCrypt",
@@ -175,7 +175,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
 
             request.path?.urlDecoded()
-              .equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+              .equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
               MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(gson.toJson(CLIENT_CONFIGURATION_RESPONSE))
             }
