@@ -13,6 +13,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.extensions.kotlin.urlDecoded
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -60,11 +61,13 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
           }
 
-          request.path.equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+          request.path?.urlDecoded()
+            .equals("/api/v1/client-configuration?domain=localhost:1212") -> {
             return handleClientConfigurationAPI()
           }
 
-          request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=localhost:1212") -> {
+          request.path?.urlDecoded()
+            .equals("/shared-tenant-fes/api/v1/client-configuration?domain=localhost:1212") -> {
             isSharedTenantFesUsed = true
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
           }
@@ -87,6 +90,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
   private var isSharedTenantFesUsed = false
 
   @Test
+
   fun testCallCustomFesUrlToGetClientConfiguration() {
     isCustomFesUrlUsed = false
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
