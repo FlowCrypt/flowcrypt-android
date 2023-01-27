@@ -264,7 +264,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       val activeAccount = getActiveAccountSuspend()
       lookUpPubKeysMutableStateFlow.value =
         controlledRunnerForPubKeysFromServer.cancelPreviousThenRun {
-          return@cancelPreviousThenRun ApiClientRepository.Attester.pubLookup(
+          return@cancelPreviousThenRun ApiClientRepository.PubLookup.fetchPubKey(
             context = getApplication(),
             email = email,
             clientConfiguration = activeAccount?.clientConfiguration
@@ -307,7 +307,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       List<PgpKeyDetails>? = withContext(Dispatchers.IO) {
     try {
       val activeAccount = getActiveAccountSuspend()
-      val response = ApiClientRepository.Attester.pubLookup(
+      val response = ApiClientRepository.PubLookup.fetchPubKey(
         context = getApplication(),
         email = email,
         clientConfiguration = activeAccount?.clientConfiguration

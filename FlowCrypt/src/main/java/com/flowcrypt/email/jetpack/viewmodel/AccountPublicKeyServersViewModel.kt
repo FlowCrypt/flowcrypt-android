@@ -101,7 +101,7 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
 
         for (email in emails) {
           val normalizedEmail = email.lowercase()
-          val pubResponseResult = ApiClientRepository.Attester.pubLookup(
+          val pubResponseResult = ApiClientRepository.PubLookup.fetchPubKey(
             context = getApplication(),
             email = normalizedEmail,
             clientConfiguration = accountEntity.clientConfiguration

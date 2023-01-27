@@ -199,65 +199,6 @@ object ApiClientRepository : BaseApiRepository {
       }
 
     /**
-     * @param context     Interface to global information about an application environment.
-     * @param email       A user email.
-     * @param clientConfiguration    Contains client configurations.
-     */
-    suspend fun pubLookup(
-      context: Context,
-      email: String,
-      clientConfiguration: ClientConfiguration? = null
-    ): Result<PubResponse> =
-      withContext(Dispatchers.IO) {
-        val resultWrapperFun = fun(result: Result<String>): Result<PubResponse> {
-          return when (result.status) {
-            Result.Status.SUCCESS -> Result.success(data = PubResponse(null, result.data))
-
-            Result.Status.ERROR -> Result.error(data = PubResponse(null, null))
-
-            Result.Status.EXCEPTION -> Result.exception(
-              throwable = result.exception ?: Exception(context.getString(R.string.unknown_error))
-            )
-
-            Result.Status.LOADING -> Result.loading()
-
-            Result.Status.NONE -> Result.none()
-          }
-        }
-
-        if (email.isValidEmail()) {
-          val wkdResult = getResult {
-            val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, email)
-
-            //For now, we just peak at the first matching key. It should be improved inthe future.
-            // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
-            val firstMatchingKey = pgpPublicKeyRingCollection?.firstOrNull {
-              KeyRingInfo(it)
-                .getEncryptionSubkeys(EncryptionPurpose.ANY)
-                .isNotEmpty()
-            }
-            firstMatchingKey?.armor()?.let { armoredPubKey ->
-              Response.success(armoredPubKey)
-            } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
-          }
-
-          if (wkdResult.status == Result.Status.SUCCESS && wkdResult.data?.isNotEmpty() == true) {
-            return@withContext resultWrapperFun(wkdResult)
-          }
-
-          if (clientConfiguration?.canLookupThisRecipientOnAttester(email) == false) {
-            return@withContext Result.success(data = PubResponse(null, null))
-          }
-        } else return@withContext Result.exception(
-          throwable = IllegalStateException(context.getString(R.string.error_email_is_not_valid))
-        )
-
-        val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        val result = getResult { retrofitApiService.attesterGetPubKey(email) }
-        return@withContext resultWrapperFun(result)
-      }
-
-    /**
      * @param context Interface to global information about an application environment.
      * @param idToken JSON Web Token signed by Google that can be used to identify a user to a backend.
      * @param email For this email address will be applied changes.
@@ -312,6 +253,69 @@ object ApiClientRepository : BaseApiRepository {
             pubKey
           )
         }
+      }
+  }
+
+  object PubLookup : BaseApiRepository {
+    /**
+     * Fetch a public key using all appropriate public key sources(WKD + Attester)
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param email       A user email.
+     * @param clientConfiguration    Contains client configurations.
+     */
+    suspend fun fetchPubKey(
+      context: Context,
+      email: String,
+      clientConfiguration: ClientConfiguration? = null
+    ): Result<PubResponse> =
+      withContext(Dispatchers.IO) {
+        val resultWrapperFun = fun(result: Result<String>): Result<PubResponse> {
+          return when (result.status) {
+            Result.Status.SUCCESS -> Result.success(data = PubResponse(null, result.data))
+
+            Result.Status.ERROR -> Result.error(data = PubResponse(null, null))
+
+            Result.Status.EXCEPTION -> Result.exception(
+              throwable = result.exception ?: Exception(context.getString(R.string.unknown_error))
+            )
+
+            Result.Status.LOADING -> Result.loading()
+
+            Result.Status.NONE -> Result.none()
+          }
+        }
+
+        if (email.isValidEmail()) {
+          val wkdResult = getResult {
+            val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, email)
+
+            //For now, we just peak at the first matching key. It should be improved inthe future.
+            // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
+            val firstMatchingKey = pgpPublicKeyRingCollection?.firstOrNull {
+              KeyRingInfo(it)
+                .getEncryptionSubkeys(EncryptionPurpose.ANY)
+                .isNotEmpty()
+            }
+            firstMatchingKey?.armor()?.let { armoredPubKey ->
+              Response.success(armoredPubKey)
+            } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
+          }
+
+          if (wkdResult.status == Result.Status.SUCCESS && wkdResult.data?.isNotEmpty() == true) {
+            return@withContext resultWrapperFun(wkdResult)
+          }
+
+          if (clientConfiguration?.canLookupThisRecipientOnAttester(email) == false) {
+            return@withContext Result.success(data = PubResponse(null, null))
+          }
+        } else return@withContext Result.exception(
+          throwable = IllegalStateException(context.getString(R.string.error_email_is_not_valid))
+        )
+
+        val retrofitApiService = ApiHelper.createRetrofitApiService(context)
+        val result = getResult { retrofitApiService.attesterGetPubKey(email) }
+        return@withContext resultWrapperFun(result)
       }
   }
 

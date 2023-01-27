@@ -387,7 +387,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       email: String,
       activeAccount: AccountEntity?
     ): Result<PubResponse> = withContext(lookUpLimitedParallelismDispatcher) {
-      return@withContext ApiClientRepository.Attester.pubLookup(
+      return@withContext ApiClientRepository.PubLookup.fetchPubKey(
         context = application,
         email = email,
         clientConfiguration = activeAccount?.clientConfiguration
