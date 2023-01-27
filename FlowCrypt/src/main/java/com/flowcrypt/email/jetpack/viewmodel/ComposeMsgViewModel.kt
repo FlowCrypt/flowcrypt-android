@@ -350,7 +350,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
         if (!lookUpCandidates.containsKey(email)) {
           return@withContext null
         }
-        val response = attesterPubLookup(email, activeAccount)
+        val response = pubLookup(email, activeAccount)
 
         when (response.status) {
           Result.Status.SUCCESS -> {
@@ -383,7 +383,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       null
     }
 
-    private suspend fun attesterPubLookup(
+    private suspend fun pubLookup(
       email: String,
       activeAccount: AccountEntity?
     ): Result<PubResponse> = withContext(lookUpLimitedParallelismDispatcher) {
