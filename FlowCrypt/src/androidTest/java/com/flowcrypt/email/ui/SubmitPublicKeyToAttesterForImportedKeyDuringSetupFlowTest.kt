@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
+import com.flowcrypt.email.extensions.kotlin.urlDecoded
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -143,7 +144,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
 
   companion object {
     private const val USER_ENFORCE_ATTESTER_SUBMIT =
-      "user_enforce_attester_submit@flowcrypt.test"
+      "user_enforce_attester_submit@localhost:1212"
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
       vendor = "FlowCrypt",
@@ -173,8 +174,11 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
             request.path == "api" -> MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
 
-            request.path == "/account/get" -> MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(gson.toJson(CLIENT_CONFIGURATION_RESPONSE))
+            request.path?.urlDecoded()
+              .equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+              MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody(gson.toJson(CLIENT_CONFIGURATION_RESPONSE))
+            }
 
             request.requestUrl?.encodedPath == "/gmail/v1/users/me/messages"
                 && request.requestUrl?.queryParameter("q")

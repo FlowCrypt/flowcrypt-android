@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
+import com.flowcrypt.email.extensions.kotlin.urlDecoded
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -80,20 +81,17 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
 
         when {
           request.path.equals("/api/") -> {
-            return handleFesAvailabilityAPI(gson)
+            return handleCheckIfFesIsAvailableAtCustomerFesUrl(gson)
           }
 
-          request.path.equals("/api/v1/client-configuration?domain=localhost:1212") -> {
-            return handleClientConfigurationAPI(gson)
+          request.path?.urlDecoded()
+            .equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+            val account = extractEmailFromRecordedRequest(request)
+            return handleClientConfigurationAPI(account, gson)
           }
 
           request.path?.startsWith("/ekm") == true -> {
             handleEkmAPI(request, gson)?.let { return it }
-          }
-
-          request.path.equals("/account/get") -> {
-            val account = extractEmailFromRecordedRequest(request)
-            return handleGetDomainRulesAPI(account, gson)
           }
 
           request.requestUrl?.encodedPath == "/gmail/v1/users/me/messages"
@@ -443,7 +441,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     checkIsSnackBarDisplayed(EMAIL_GOOGLEMAIL)
   }
 
-  private fun handleFesAvailabilityAPI(gson: Gson): MockResponse {
+  private fun handleCheckIfFesIsAvailableAtCustomerFesUrl(gson: Gson): MockResponse {
     return if ("testFesAvailabilityServerAvailableRequestTimeOutHasConnection" ==
       testNameRule.methodName
     ) {
@@ -480,7 +478,13 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     }
   }
 
-  private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
+  private fun handleClientConfigurationAPI(account: String?, gson: Gson): MockResponse {
+    val s = handleGetDomainRulesAPI(account, gson)
+
+    if (s != null) {
+      return s
+    }
+
     val responseCode = when (testNameRule.methodName) {
       "testFesServerAvailableGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
       "testFesServerExternalServiceAlias" -> HttpURLConnection.HTTP_NOT_ACCEPTABLE
@@ -545,7 +549,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     return null
   }
 
-  private fun handleGetDomainRulesAPI(account: String?, gson: Gson): MockResponse {
+  private fun handleGetDomainRulesAPI(account: String?, gson: Gson): MockResponse? {
     when (account) {
       EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR -> return MockResponse().setResponseCode(
         HttpURLConnection.HTTP_OK
@@ -655,7 +659,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
         )
       }
 
-      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      else -> return null
     }
   }
 
@@ -678,21 +682,21 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     private const val EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY =
       "https://localhost:1212/ekm/not_fully_decrypted_key/"
     private const val EMAIL_EKM_URL_ERROR = "https://localhost:1212/ekm/error/"
-    private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.test"
+    private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@localhost:1212"
     private const val EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR =
-      "client_configuration_error@flowcrypt.test"
+      "client_configuration_error@localhost:1212"
     private const val EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED =
-      "must_autogen_pass_phrase_quietly_existed@flowcrypt.test"
+      "must_autogen_pass_phrase_quietly_existed@localhost:1212"
     private const val EMAIL_FORBID_STORING_PASS_PHRASE_MISSING =
-      "forbid_storing_pass_phrase_missing@flowcrypt.test"
+      "forbid_storing_pass_phrase_missing@localhost:1212"
     private const val EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED =
-      "must_submit_to_attester_existed@flowcrypt.test"
+      "must_submit_to_attester_existed@localhost:1212"
     private const val EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING =
-      "forbid_creating_private_key_missing@flowcrypt.test"
-    private const val EMAIL_GET_KEYS_VIA_EKM_ERROR = "keys_via_ekm_error@flowcrypt.test"
-    private const val EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST = "keys_via_ekm_empty_list@flowcrypt.test"
+      "forbid_creating_private_key_missing@localhost:1212"
+    private const val EMAIL_GET_KEYS_VIA_EKM_ERROR = "keys_via_ekm_error@localhost:1212"
+    private const val EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST = "keys_via_ekm_empty_list@localhost:1212"
     private const val EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED =
-      "user_with_not_fully_decrypted_prv_key@flowcrypt.test"
+      "user_with_not_fully_decrypted_prv_key@localhost:1212"
     private const val EMAIL_FES_NO_CONNECTION = "fes_request_timeout@flowcrypt.test"
     private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@localhost:1212"
     private const val EMAIL_FES_HTTP_404 = "fes_404@localhost:1212"
