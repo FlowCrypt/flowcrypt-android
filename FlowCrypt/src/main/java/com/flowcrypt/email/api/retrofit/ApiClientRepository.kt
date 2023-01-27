@@ -72,7 +72,8 @@ object ApiClientRepository : BaseApiRepository {
         getResult(context = context) {
           retrofitApiService.fesGetClientConfiguration(
             authorization = "Bearer $idToken",
-            url = "https://$baseFesUrlPath/api/v1/client-configuration?domain=$domain"
+            baseFesUrlPath = baseFesUrlPath,
+            domain = domain
           )
         }
       }

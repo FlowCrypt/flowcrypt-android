@@ -117,10 +117,11 @@ interface RetrofitApiServiceInterface {
   /**
    * Get client configuration
    */
-  @GET
+  @GET("https://{baseFesUrlPath}/api/v1/client-configuration")
   suspend fun fesGetClientConfiguration(
     @Header("Authorization") authorization: String,
-    @Url url: String
+    @Path("baseFesUrlPath", encoded = true) baseFesUrlPath: String,
+    @Query("domain") domain: String
   ): Response<ClientConfigurationResponse>
 
   /**
@@ -196,7 +197,7 @@ interface RetrofitApiServiceInterface {
   @POST("https://{baseFesUrlPath}/api/v1/message/new-reply-token")
   suspend fun fesGetReplyTokenForPasswordProtectedMsg(
     @Header("Authorization") authorization: String,
-    @Path("baseFesUrlPath") baseFesUrlPath: String,
+    @Path("baseFesUrlPath", encoded = true) baseFesUrlPath: String,
   ): Response<MessageReplyTokenResponse>
 
   /**
@@ -206,7 +207,7 @@ interface RetrofitApiServiceInterface {
   @POST("https://{baseFesUrlPath}/api/v1/message")
   suspend fun fesUploadPasswordProtectedMsgToWebPortal(
     @Header("Authorization") authorization: String,
-    @Path("baseFesUrlPath") baseFesUrlPath: String,
+    @Path("baseFesUrlPath", encoded = true) baseFesUrlPath: String,
     @Part("details") details: RequestBody,
     @Part content: MultipartBody.Part,
   ): Response<MessageUploadResponse>
