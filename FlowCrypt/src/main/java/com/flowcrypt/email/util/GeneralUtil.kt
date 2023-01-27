@@ -436,7 +436,7 @@ class GeneralUtil {
         //for example fes.customer-domain.com
       } else {
         val url = URL(BuildConfig.SHARED_TENANT_FES_URL)
-        (url.host + url.path).replace("/$".toRegex(), "")
+        (url.authority + url.path).replace("/$".toRegex(), "")
         //flowcrypt.com/shared-tenant-fes
       }
     }
@@ -496,7 +496,7 @@ class GeneralUtil {
       withContext(Dispatchers.IO) {
         //before fetch idToken from [GoogleSignInClient]
         //we try to get IdToken from the flavor settings
-        FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
+        FlavorSettings.getGoogleIdToken().let { return@withContext it }
 
         val googleSignInClient = GoogleSignIn.getClient(
           context,
