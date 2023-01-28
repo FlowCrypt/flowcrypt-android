@@ -332,7 +332,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-
   fun testFesServerExternalServiceAlias() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_EXTERNAL_SERVICE))
     //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
@@ -350,7 +349,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-
   fun testFesServerEnterpriseServerAlias() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_ENTERPRISE_SERVER))
     //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
@@ -367,7 +365,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-
   fun testFesServerAvailableGetClientConfigurationSuccess() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
@@ -377,7 +374,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-
   fun testCallFesUrlToGetClientConfigurationForEnterpriseUser() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
 
@@ -395,7 +391,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-
   fun testFesServerAvailableGetClientConfigurationFailed() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_FAILED)

@@ -90,7 +90,6 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
   private var isSharedTenantFesUsed = false
 
   @Test
-
   fun testCallCustomFesUrlToGetClientConfiguration() {
     isCustomFesUrlUsed = false
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
