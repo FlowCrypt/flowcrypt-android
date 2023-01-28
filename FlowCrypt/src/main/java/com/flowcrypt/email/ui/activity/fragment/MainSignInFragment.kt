@@ -407,8 +407,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          cachedClientConfiguration = null
-          cachedBaseFesUrlPath = null
           val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
           checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
