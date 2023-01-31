@@ -306,7 +306,8 @@ object ProcessingOutgoingMessageInfoHelper {
             PgpEncryptAndOrSign.encryptAndOrSign(
               srcInputStream = originalFileInputStream,
               destOutputStream = encryptedTempFile.outputStream(),
-              pubKeys = pubKeys
+              pubKeys = pubKeys,
+              fileName = fileName,
             )
             val uri =
               FileProvider.getUriForFile(

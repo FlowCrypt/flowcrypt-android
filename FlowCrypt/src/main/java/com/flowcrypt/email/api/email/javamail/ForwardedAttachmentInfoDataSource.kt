@@ -43,7 +43,8 @@ class ForwardedAttachmentInfoDataSource(
       PgpEncryptAndOrSign.encryptAndOrSign(
         srcInputStream = srcInputStream,
         destOutputStream = tempByteArrayOutputStream,
-        pubKeys = requireNotNull(publicKeys)
+        pubKeys = requireNotNull(publicKeys),
+        fileName = name,
       )
 
       tempByteArrayOutputStream.toByteArray().inputStream()
