@@ -289,10 +289,11 @@ object ProcessingOutgoingMessageInfoHelper {
             continue
           }
 
+          val originalAttName = att.getSafeName()
           if (att.isEncryptionAllowed &&
             outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
           ) {
-            val fileName = att.getSafeName() + "." + Constants.PGP_FILE_EXT
+            val fileName = originalAttName + "." + Constants.PGP_FILE_EXT
             var encryptedTempFile = File(attsCacheDir, fileName)
 
             if (encryptedTempFile.exists()) {
@@ -307,7 +308,7 @@ object ProcessingOutgoingMessageInfoHelper {
               srcInputStream = originalFileInputStream,
               destOutputStream = encryptedTempFile.outputStream(),
               pubKeys = pubKeys,
-              fileName = fileName,
+              fileName = originalAttName,
             )
             val uri =
               FileProvider.getUriForFile(
@@ -318,7 +319,7 @@ object ProcessingOutgoingMessageInfoHelper {
             att.uri = uri
             att.name = encryptedTempFile.name
           } else {
-            var cachedAtt = File(attsCacheDir, att.getSafeName())
+            var cachedAtt = File(attsCacheDir, originalAttName)
             if (cachedAtt.exists()) {
               cachedAtt =
                 FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
