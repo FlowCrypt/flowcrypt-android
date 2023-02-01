@@ -9,6 +9,7 @@ import android.content.Context
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
+import org.apache.commons.io.FilenameUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayOutputStream
@@ -43,7 +44,8 @@ class ForwardedAttachmentInfoDataSource(
       PgpEncryptAndOrSign.encryptAndOrSign(
         srcInputStream = srcInputStream,
         destOutputStream = tempByteArrayOutputStream,
-        pubKeys = requireNotNull(publicKeys)
+        pubKeys = requireNotNull(publicKeys),
+        fileName = if (att.decryptWhenForward) FilenameUtils.removeExtension(name) else name,
       )
 
       tempByteArrayOutputStream.toByteArray().inputStream()
