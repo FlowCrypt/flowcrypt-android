@@ -910,7 +910,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
-            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo())
+            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
           } else {
             handleOtherBlock(block, layoutInflater)
           }
