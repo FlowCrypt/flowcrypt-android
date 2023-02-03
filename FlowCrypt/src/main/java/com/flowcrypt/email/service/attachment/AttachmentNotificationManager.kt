@@ -51,10 +51,8 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setGroup(GROUP_NAME_ATTACHMENTS)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
-    prepareAndShowNotificationsGroup(context, attInfo, true)
-
-
     notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
+    prepareAndShowNotificationsGroup(context, attInfo, true)
   }
 
   /**
