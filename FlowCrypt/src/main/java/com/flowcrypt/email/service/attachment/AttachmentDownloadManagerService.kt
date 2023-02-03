@@ -567,13 +567,13 @@ class AttachmentDownloadManagerService : Service() {
         put(MediaStore.Downloads.IS_PENDING, 1)
       }
 
-      val imageUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+      val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
 
-      requireNotNull(imageUri)
+      requireNotNull(fileUri)
 
       //we should check maybe a file is already exist. Then we will use the file name from the system
       val cursor =
-        resolver.query(imageUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
+        resolver.query(fileUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
       cursor?.let {
         if (it.moveToFirst()) {
           val nameIndex = it.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
@@ -588,18 +588,18 @@ class AttachmentDownloadManagerService : Service() {
       cursor?.close()
 
       val srcInputStream = attFile.inputStream()
-      val destOutputStream = resolver.openOutputStream(imageUri)
+      val destOutputStream = resolver.openOutputStream(fileUri)
         ?: throw IllegalArgumentException("provided URI could not be opened")
       srcInputStream.use { srcStream ->
         destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
       }
 
       //notify the system that the file is ready
-      resolver.update(imageUri, ContentValues().apply {
+      resolver.update(fileUri, ContentValues().apply {
         put(MediaStore.Downloads.IS_PENDING, 0)
       }, null, null)
 
-      return imageUri
+      return fileUri
     }
 
     /**
