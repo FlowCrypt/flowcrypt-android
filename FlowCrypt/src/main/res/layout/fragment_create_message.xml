@@ -253,6 +253,8 @@
                 android:text="@string/tap_to_protect_with_web_portal_password"
                 android:textAllCaps="false"
                 android:visibility="gone"
+                android:autoSizeMaxTextSize="@dimen/default_text_size_medium"
+                android:autoSizeTextType="uniform"
                 app:icon="@drawable/ic_password_not_protected_white_24" />
 
             <com.google.android.material.textfield.TextInputLayout
