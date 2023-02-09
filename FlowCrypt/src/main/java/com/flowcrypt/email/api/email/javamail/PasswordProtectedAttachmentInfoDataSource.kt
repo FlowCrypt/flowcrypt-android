@@ -11,6 +11,8 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import org.apache.commons.io.FilenameUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
@@ -30,11 +32,15 @@ class PasswordProtectedAttachmentInfoDataSource(
 ) : AttachmentInfoDataSource(context, att) {
   override fun getInputStream(): InputStream? {
     val inputStream = super.getInputStream() ?: return null
-    return PgpDecryptAndOrVerify.genDecryptionStream(
+    val buffer = ByteArrayOutputStream()
+    val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
       srcInputStream = inputStream,
       secretKeys = secretKeys,
       protector = protector
     )
+    decryptionStream.copyTo(buffer)
+    //todo-denbond7 should be improved to use a stream directly
+    return ByteArrayInputStream(buffer.toByteArray())
   }
 
   override fun getName(): String {
