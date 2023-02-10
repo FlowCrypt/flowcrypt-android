@@ -39,6 +39,7 @@ class PasswordProtectedAttachmentInfoDataSource(
       protector = protector
     )
     decryptionStream.copyTo(buffer)
+    //ref https://github.com/pgpainless/pgpainless/pull/360
     //todo-denbond7 should be improved to use a stream directly
     return ByteArrayInputStream(buffer.toByteArray())
   }
