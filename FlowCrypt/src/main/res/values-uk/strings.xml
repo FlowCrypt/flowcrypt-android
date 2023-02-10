@@ -494,4 +494,5 @@
     <string name="cannot_show_notifications_without_permission">У додатку не ввімкнено показ сповіщень</string>
     <string name="need_post_notification_permission">Нам потрібен дозвіл, щоб показувати сповіщення про нові листи</string>
     <string name="ask">Запитати</string>
+    <string name="password_should_fit_all_requirements">Пароль має відповідати всім вимогам</string>
 </resources>

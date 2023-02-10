@@ -53,8 +53,14 @@ class ProvidePasswordToProtectMsgFragment :
     binding?.eTPassphrase?.setOnEditorActionListener { v, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
-          checkAndMoveOn()
-          v.hideKeyboard()
+          val isPasswordCanBeUsed = webPortalPasswordStrengthViewModel.pwdStrengthResultStateFlow
+            .value.all { it.isMatching }
+          if (isPasswordCanBeUsed) {
+            checkAndMoveOn()
+            v.hideKeyboard()
+          } else {
+            toast(getString(R.string.password_should_fit_all_requirements))
+          }
           true
         }
         else -> false
