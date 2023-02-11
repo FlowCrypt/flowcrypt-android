@@ -23,9 +23,7 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
@@ -69,9 +67,9 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.apache.commons.io.FileUtils
 import org.hamcrest.Description
 import org.hamcrest.Matcher
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.emptyString
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Assert
 import org.junit.BeforeClass
@@ -735,19 +733,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .perform(click())
     onView(withText(att.name))
       .check(doesNotExist())
-  }
-
-  private fun addAtt(att: File) {
-    val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
-    intending(
-      allOf(
-        hasAction(Intent.ACTION_OPEN_DOCUMENT),
-        hasType("*/*")
-      )
-    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
-    onView(withId(R.id.menuActionAttachFile))
-      .check(matches(isDisplayed()))
-      .perform(click())
   }
 
   private fun addAttAndCheck(att: File) {
