@@ -5,121 +5,85 @@
 
 package com.flowcrypt.email.ui
 
+import android.os.Environment
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
-import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import com.flowcrypt.email.util.AccountDaoManager
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.gmail.model.ListSendAsResponse
+import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
+import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
-import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.pgpainless.PGPainless
+import org.pgpainless.key.util.UserId
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.HttpURLConnection
 
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class SendPasswordProtectedMessageFlowTest : BaseComposeScreenTest() {
-  private val accountEntity = AccountDaoManager.getDefaultAccountDao()
-    .copy(
-      accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE,
-      clientConfiguration = ClientConfiguration(
-        flags = listOf(
-          ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
-          ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
-          ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
-          ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
-          ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
-          ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
-        ),
-        keyManagerUrl = "https://localhost:1212/",
-      ),
-      useAPI = true,
-      useFES = true
-    )
+@Ignore("not completed")
+class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
-  override val addAccountToDatabaseRule =
-    AddAccountToDatabaseRule(accountEntity)
-  private val addPrivateKeyToDatabaseRule =
-    AddPrivateKeyToDatabaseRule(addAccountToDatabaseRule.account)
-
-  private val temporaryFolderRule = TemporaryFolder()
-  private val mockWebServerRule = FlowCryptMockWebServerRule(
-    TestConstants.MOCK_WEB_SERVER_PORT,
-    object : Dispatcher() {
+  override val mockWebServerRule =
+    FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        when {
-          request.path == "/gmail/v1/users/me/settings/sendAs" -> {
-            return MockResponse()
-              .setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(
-                ListSendAsResponse().apply {
-                  factory = GsonFactory.getDefaultInstance()
-                  sendAs = emptyList()
-                }.toString()
-              )
+        val gson = ApiHelper.getInstance(getTargetContext()).gson
+        return when {
+          request.path.equals("/api/v1/message/new-reply-token") -> {
+            MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(gson.toJson(MessageReplyTokenResponse(replyToken = REPLY_TOKEN)))
           }
 
-          else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+          else -> handleCommonAPICalls(request)
         }
       }
     })
 
   @get:Rule
-  var ruleChain: TestRule = RuleChain
-    .outerRule(RetryRule.DEFAULT)
-    .around(ClearAppSettingsRule())
-    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
-    .around(mockWebServerRule)
-    .around(addAccountToDatabaseRule)
-    .around(addPrivateKeyToDatabaseRule)
-    .around(
-      AddLabelsToDatabaseRule(
-        account = addAccountToDatabaseRule.account,
-        folders = listOf(
-          LocalFolder(
-            account = addAccountToDatabaseRule.account.email,
-            fullName = "Draft",
-            folderAlias = "Draft",
-            attributes = listOf("\\HasNoChildren", "\\Draft")
-          )
-        )
-      )
-    )
-    .around(temporaryFolderRule)
-    .around(activeActivityRule)
-    .around(ScreenshotTestRule())
+  var ruleChain: TestRule =
+    RuleChain.outerRule(RetryRule.DEFAULT)
+      .around(ClearAppSettingsRule())
+      .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+      .around(mockWebServerRule)
+      .around(addAccountToDatabaseRule)
+      .around(addPrivateKeyToDatabaseRule)
+      .around(addLabelsToDatabaseRule)
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testSendPasswordProtectedMessageWithFewAttachments() {
-    activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    onView(withId(R.id.floatActionButtonCompose))
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())
@@ -143,6 +107,10 @@ class SendPasswordProtectedMessageFlowTest : BaseComposeScreenTest() {
         closeSoftKeyboard()
       )
 
+    for (att in atts) {
+      addAtt(att)
+    }
+
     onView(withId(R.id.btnSetWebPortalPassword))
       .perform(
         scrollTo(),
@@ -154,6 +122,12 @@ class SendPasswordProtectedMessageFlowTest : BaseComposeScreenTest() {
         typeText(WEB_PORTAL_PASSWORD),
         pressImeActionButton()
       )
+
+    onView(withId(R.id.menuActionSend))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    Thread.sleep(10000)
   }
 
   companion object {
@@ -161,17 +135,48 @@ class SendPasswordProtectedMessageFlowTest : BaseComposeScreenTest() {
     private const val WEB_PORTAL_PASSWORD = "Qwerty1234@"
     private const val MESSAGE_SUBJECT = "Subject"
     private const val MESSAGE_TEXT = "Some text"
-    private const val ATTACHMENTS_COUNT = 3
+    private const val ATTACHMENT_NAME_1 = "text.txt"
+    private const val ATTACHMENT_NAME_2 = "text1.txt"
+    private const val ATTACHMENT_NAME_3 = "binary_key.key"
+    private const val REPLY_TOKEN = "some_reply_token"
     private var atts: MutableList<File> = mutableListOf()
-    /*private fun createFilesForCommonAtts() {
-      for (i in 0 until ATTACHMENTS_COUNT) {
-        atts.add(
-          TestGeneralUtil.createFileAndFillWithContent(
-            temporaryFolderRule,
-            "$i.txt", "Text for filling the attached file"
-          )
+    private val pgpSecretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(
+      UserId.nameAndEmail(RECIPIENT_WITHOUT_PUBLIC_KEY, RECIPIENT_WITHOUT_PUBLIC_KEY),
+      TestConstants.DEFAULT_PASSWORD
+    )
+
+    @BeforeClass
+    @JvmStatic
+    fun setUp() {
+      val directory = InstrumentationRegistry.getInstrumentation().targetContext
+        .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+        ?: File(Environment.DIRECTORY_DOCUMENTS)
+      atts.add(
+        TestGeneralUtil.createFileWithContent(
+          directory = directory,
+          fileName = ATTACHMENT_NAME_1,
+          inputStream = "Text for filling the attached file".toInputStream()
         )
-      }
-    }*/
+      )
+
+      atts.add(
+        TestGeneralUtil.createFileWithContent(
+          directory = directory,
+          fileName = ATTACHMENT_NAME_2,
+          inputStream = "Text for filling the attached file".toInputStream()
+        )
+      )
+
+      val buffer = ByteArrayOutputStream()
+      pgpSecretKeyRing.encode(buffer)
+
+      atts.add(
+        TestGeneralUtil.createFileWithContent(
+          directory = directory,
+          fileName = ATTACHMENT_NAME_3,
+          inputStream = ByteArrayInputStream(buffer.toByteArray())
+        )
+      )
+    }
   }
 }

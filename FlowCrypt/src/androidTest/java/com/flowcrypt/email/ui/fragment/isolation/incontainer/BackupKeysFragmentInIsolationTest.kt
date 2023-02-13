@@ -95,7 +95,7 @@ class BackupKeysFragmentInIsolationTest : BaseBackupKeysFragmentTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
+    val file = TestGeneralUtil.createFileWithTextContent("key.asc", "")
 
     intendingFileChoose(file)
     onView(withId(R.id.btBackup))

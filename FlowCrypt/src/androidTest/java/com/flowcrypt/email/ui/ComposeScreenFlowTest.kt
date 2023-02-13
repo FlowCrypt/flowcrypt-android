@@ -831,7 +831,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     private fun createFilesForCommonAtts() {
       for (i in 0 until ATTACHMENTS_COUNT) {
         atts.add(
-          TestGeneralUtil.createFileAndFillWithContent(
+          TestGeneralUtil.createFileWithTextContent(
             temporaryFolderRule,
             "$i.txt", "Text for filling the attached file"
           )

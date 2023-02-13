@@ -19,6 +19,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.Gson
@@ -92,7 +93,7 @@ object TestGeneralUtil {
     }
   }
 
-  fun createFileAndFillWithContent(fileName: String, fileText: String): File {
+  fun createFileWithTextContent(fileName: String, fileText: String): File {
     val file = File(
       InstrumentationRegistry.getInstrumentation().targetContext
         .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName
@@ -105,15 +106,35 @@ object TestGeneralUtil {
     return file
   }
 
-  fun createFileAndFillWithContent(
+  fun createFileWithTextContent(
     temporaryFolder: TemporaryFolder,
     fileName: String, fileText: String
   ): File {
+    return createFileWithContent(temporaryFolder, fileName, fileText.toInputStream())
+  }
+
+  fun createFileWithContent(
+    temporaryFolder: TemporaryFolder,
+    fileName: String, inputStream: InputStream
+  ): File {
     val file = temporaryFolder.newFile(fileName)
-    try {
-      FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
-    } catch (e: Exception) {
-      e.printStackTrace()
+    FileOutputStream(file).use { outputStream ->
+      inputStream.use {
+        it.copyTo(outputStream)
+      }
+    }
+    return file
+  }
+
+  fun createFileWithContent(
+    directory: File,
+    fileName: String, inputStream: InputStream
+  ): File {
+    val file = File(directory, fileName)
+    FileOutputStream(file).use { outputStream ->
+      inputStream.use {
+        it.copyTo(outputStream)
+      }
     }
     return file
   }

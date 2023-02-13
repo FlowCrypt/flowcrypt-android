@@ -15,10 +15,11 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -29,7 +30,7 @@ import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.allOf
 import java.io.File
 
 /**
@@ -45,7 +46,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule?.scenario
 
-  protected open val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  open val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   protected val intent: Intent =
     Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
@@ -80,14 +81,14 @@ abstract class BaseComposeScreenTest : BaseTest() {
 
   protected fun addAtt(att: File) {
     val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
-    Intents.intending(
-      Matchers.allOf(
-        IntentMatchers.hasAction(Intent.ACTION_OPEN_DOCUMENT),
-        IntentMatchers.hasType("*/*")
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_OPEN_DOCUMENT),
+        hasType("*/*")
       )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
     onView(withId(R.id.menuActionAttachFile))
-      .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+      .check(matches(isDisplayed()))
       .perform(click())
   }
 }
