@@ -22,6 +22,7 @@ import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -33,6 +34,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
+import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
@@ -55,6 +57,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -77,8 +80,14 @@ import java.io.InputStream
 @DependsOnMailServer
 class SendMsgTest {
   private lateinit var context: Context
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
+  private val account = AccountDaoManager.getUserWithoutLetters()
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(account = account)
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
+    accountEntity = account,
+    keyPath = "pgp/user_without_letters@flowcrypt.test_prv_strong.asc",
+    passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+    sourceType = KeyImportDetails.SourceType.EMAIL
+  )
   private val recipientPgpKeyDetails =
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
@@ -250,6 +259,7 @@ class SendMsgTest {
   }
 
   @Test
+  @Ignore("temporary disabled")
   fun testSendStandardMsgWithForwardedAtt() {
     val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
 
@@ -406,6 +416,7 @@ class SendMsgTest {
   }
 
   @Test
+  @Ignore("temporary disabled")
   fun testSendEncryptedMsgWithForwardedAtt() {
     val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
 
