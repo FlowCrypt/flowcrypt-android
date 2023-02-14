@@ -58,7 +58,6 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -132,24 +131,6 @@ class SendMsgTest {
     type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
     email = addAccountToDatabaseRule.account.email
     id = EmailUtil.generateContentId()
-  }
-
-  private val encryptedForwardedAttachmentInfo = AttachmentInfo().apply {
-    decryptWhenForward = true
-    email = addAccountToDatabaseRule.account.email
-    folder = "INBOX"
-    encodedSize = 3666
-    fwdUid = 0
-    id = "\u003c5ba91c02-76ad-4172-b7c4-b2ea2b13e50a@flowcrypt\u003e"
-    isDecrypted = false
-    isEncryptionAllowed = true
-    isForwarded = true
-    isProtected = false
-    name = ENCRYPTED_FORWARDED_ATTACHMENT_NAME
-    orderNumber = 0
-    path = "0/1"
-    type = "image/png; name\u003dandroid.png.pgp"
-    uid = 12
   }
 
   @Before
@@ -243,7 +224,19 @@ class SendMsgTest {
   @Test
   fun testSendStandardMsgWithForwardedAtt() {
     val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    val forwardedAttachmentInfo = prepareStandardForwardedAttachment()?.copy(isForwarded = true)
+    val forwardedAttachmentInfo = prepareForwardedAttachment(
+      OutgoingMessageInfo(
+        account = addAccountToDatabaseRule.account.email,
+        subject = "Standard Message + Att",
+        msg = "Standard Message + Att",
+        toRecipients = listOf(InternetAddress(addAccountToDatabaseRule.account.email)),
+        from = InternetAddress(addAccountToDatabaseRule.account.email),
+        encryptionType = MessageEncryptionType.STANDARD,
+        messageType = MessageType.NEW,
+        uid = EmailUtil.genOutboxUID(context),
+        atts = listOf(attachmentInfo)
+      )
+    )?.copy(isForwarded = true)
     assertNotNull(forwardedAttachmentInfo)
 
     val outgoingMessageInfo = OutgoingMessageInfo(
@@ -400,9 +393,27 @@ class SendMsgTest {
   }
 
   @Test
-  @Ignore("temporary disabled")
   fun testSendEncryptedMsgWithForwardedAtt() {
     val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
+
+    val encryptedForwardedAttachmentInfo = prepareForwardedAttachment(
+      OutgoingMessageInfo(
+        account = addAccountToDatabaseRule.account.email,
+        subject = "Encrypted Message + Att",
+        msg = "Encrypted Message + Att",
+        toRecipients = listOf(InternetAddress(addAccountToDatabaseRule.account.email)),
+        from = InternetAddress(addAccountToDatabaseRule.account.email),
+        encryptionType = MessageEncryptionType.ENCRYPTED,
+        messageType = MessageType.NEW,
+        uid = EmailUtil.genOutboxUID(context),
+        atts = listOf(attachmentInfo)
+      )
+    )?.copy(
+      name = attachmentInfo.name,
+      decryptWhenForward = true,
+      isForwarded = true
+    )
+    assertNotNull(encryptedForwardedAttachmentInfo)
 
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
@@ -413,7 +424,7 @@ class SendMsgTest {
       encryptionType = MessageEncryptionType.ENCRYPTED,
       messageType = MessageType.FORWARD,
       uid = EmailUtil.genOutboxUID(context),
-      forwardedAtts = listOf(encryptedForwardedAttachmentInfo)
+      forwardedAtts = listOf(requireNotNull(encryptedForwardedAttachmentInfo))
     )
 
     processOutgoingMessageInfo(outgoingMessageInfo)
@@ -453,7 +464,7 @@ class SendMsgTest {
         val attachmentPart = multipart.getBodyPart(1) as MimePart
         assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
         assertEquals(
-          ENCRYPTED_FORWARDED_ATTACHMENT_NAME + "." + Constants.PGP_FILE_EXT,
+          encryptedForwardedAttachmentInfo.name + "." + Constants.PGP_FILE_EXT,
           attachmentPart.fileName
         )
 
@@ -465,13 +476,14 @@ class SendMsgTest {
           pgpSecretKeyRing = pgpSecretKeyRing
         )
 
-        assertEquals(ENCRYPTED_FORWARDED_ATTACHMENT_NAME, attachmentOpenPgpMetadata.fileName)
+        assertEquals(encryptedForwardedAttachmentInfo.name, attachmentOpenPgpMetadata.fileName)
         assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
       }
     }
 
     val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+    //as we added 2 messages during this session we use countOfMsgBeforeTest + 2
+    assertEquals(countOfMsgBeforeTest + 2, countOfMsgAfterTest)
   }
 
   private suspend fun checkExistingMsgOnServer(
@@ -580,19 +592,7 @@ class SendMsgTest {
     )
   )
 
-  private fun prepareStandardForwardedAttachment(): AttachmentInfo? {
-    val outgoingMessageInfo = OutgoingMessageInfo(
-      account = addAccountToDatabaseRule.account.email,
-      subject = "Standard Message + Att",
-      msg = "Standard Message + Att",
-      toRecipients = listOf(InternetAddress(addAccountToDatabaseRule.account.email)),
-      from = InternetAddress(addAccountToDatabaseRule.account.email),
-      encryptionType = MessageEncryptionType.STANDARD,
-      messageType = MessageType.NEW,
-      uid = EmailUtil.genOutboxUID(context),
-      atts = listOf(attachmentInfo)
-    )
-
+  private fun prepareForwardedAttachment(outgoingMessageInfo: OutgoingMessageInfo): AttachmentInfo? {
     processOutgoingMessageInfo(outgoingMessageInfo)
 
     val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
@@ -620,9 +620,5 @@ class SendMsgTest {
 
   companion object {
     const val ATTACHMENT_NAME = "test.txt"
-
-    //It's a real name of the first attachment of the message with Uid = 12
-    //in INBOX for default@flowcrypt.test
-    const val ENCRYPTED_FORWARDED_ATTACHMENT_NAME = "android.png"
   }
 }
