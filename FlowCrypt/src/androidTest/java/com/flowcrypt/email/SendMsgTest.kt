@@ -56,6 +56,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -133,25 +134,6 @@ class SendMsgTest {
     id = EmailUtil.generateContentId()
   }
 
-  private val forwardedAttachmentInfo = AttachmentInfo().apply {
-    decryptWhenForward = false
-    email = addAccountToDatabaseRule.account.email
-    folder = "INBOX"
-    encodedSize = 950
-    fwdUid = 0
-    id = "\u003c481555a2-157f-4801-9e8a-c249b07d9990@flowcrypt\u003e"
-    isDecrypted = false
-    isEncryptionAllowed = true
-    isForwarded = true
-    isProtected = false
-    name = FORWARDED_ATTACHMENT_NAME
-    orderNumber = 0
-    path = "0/1"
-    type =
-      "text/plain; charset\u003dus-ascii; \r\n\tname\u003dflowcrypt-backup-defaultflowcrypttest.key"
-    uid = 1
-  }
-
   private val encryptedForwardedAttachmentInfo = AttachmentInfo().apply {
     decryptWhenForward = true
     email = addAccountToDatabaseRule.account.email
@@ -205,7 +187,7 @@ class SendMsgTest {
     runBlocking {
       val result = worker.doWork()
       assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { mimeMessage ->
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val mimeMultipart = mimeMessage.content as MimeMultipart
         assertEquals(1, mimeMultipart.count)
         assertEquals(
@@ -242,7 +224,7 @@ class SendMsgTest {
     runBlocking {
       val result = worker.doWork()
       assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { mimeMessage ->
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val multipart = mimeMessage.content as MimeMultipart
         assertEquals(outgoingMessageInfo.msg, multipart.getBodyPart(0).content)
 
@@ -259,20 +241,21 @@ class SendMsgTest {
   }
 
   @Test
-  @Ignore("temporary disabled")
   fun testSendStandardMsgWithForwardedAtt() {
     val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
+    val forwardedAttachmentInfo = prepareStandardForwardedAttachment()?.copy(isForwarded = true)
+    assertNotNull(forwardedAttachmentInfo)
 
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
-      subject = "Fwd: Your FlowCrypt Backup - Standard",
+      subject = "Fwd: Forward",
       msg = "Some forwarded text",
       toRecipients = listOf(InternetAddress(recipientPgpKeyDetails.getUserIdsAsSingleString())),
       from = InternetAddress(addAccountToDatabaseRule.account.email),
       encryptionType = MessageEncryptionType.STANDARD,
       messageType = MessageType.FORWARD,
       uid = EmailUtil.genOutboxUID(context),
-      forwardedAtts = listOf(forwardedAttachmentInfo)
+      forwardedAtts = listOf(requireNotNull(forwardedAttachmentInfo))
     )
 
     processOutgoingMessageInfo(outgoingMessageInfo)
@@ -288,20 +271,21 @@ class SendMsgTest {
       )
       val messagesSenderWorkerResult = messagesSenderWorker.doWork()
       assertThat(messagesSenderWorkerResult, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { mimeMessage ->
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val multipart = mimeMessage.content as MimeMultipart
         assertEquals(outgoingMessageInfo.msg, multipart.getBodyPart(0).content)
 
         val forwardedAttachmentPart = multipart.getBodyPart(1) as MimePart
         assertEquals(Part.ATTACHMENT, forwardedAttachmentPart.disposition)
-        assertEquals(FORWARDED_ATTACHMENT_NAME, forwardedAttachmentPart.fileName)
+        assertEquals(forwardedAttachmentInfo.name, forwardedAttachmentPart.fileName)
         assertEquals(forwardedAttachmentInfo.encodedSize, forwardedAttachmentPart.size.toLong())
         assertEquals(forwardedAttachmentInfo.type, forwardedAttachmentPart.contentType)
       }
     }
 
     val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+    //as we added 2 messages during this session we use countOfMsgBeforeTest + 2
+    assertEquals(countOfMsgBeforeTest + 2, countOfMsgAfterTest)
   }
 
   @Test
@@ -325,7 +309,7 @@ class SendMsgTest {
     runBlocking {
       val result = worker.doWork()
       assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { mimeMessage ->
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val encryptedContent =
           (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
         val buffer = ByteArrayOutputStream()
@@ -370,7 +354,7 @@ class SendMsgTest {
     runBlocking {
       val result = worker.doWork()
       assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { mimeMessage ->
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
         )
@@ -445,7 +429,7 @@ class SendMsgTest {
       )
       val messagesSenderWorkerResult = messagesSenderWorker.doWork()
       assertThat(messagesSenderWorkerResult, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { mimeMessage ->
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
         )
@@ -493,7 +477,8 @@ class SendMsgTest {
   private suspend fun checkExistingMsgOnServer(
     folderName: String,
     outgoingMessageInfo: OutgoingMessageInfo,
-    action: suspend (message: MimeMessage) -> Unit
+    useLast: Boolean = true,
+    action: suspend (folder: IMAPFolder, message: MimeMessage) -> Unit
   ) =
     withContext(Dispatchers.IO) {
       val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
@@ -503,8 +488,12 @@ class SendMsgTest {
         connection.executeIMAPAction {
           store.getFolder(folderName).use { folder ->
             val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-            //get the latest message that we added to a folder recently
-            val mimeMessage = imapFolder.messages.last() as MimeMessage
+            //get the message that we added to a folder recently
+            val mimeMessage = (if (useLast) {
+              imapFolder.messages.last()
+            } else {
+              imapFolder.messages.first()
+            }) as MimeMessage
             val buffer = ByteArrayOutputStream()
             mimeMessage.writeTo(buffer)
             //do base checks
@@ -529,7 +518,7 @@ class SendMsgTest {
             val actualAttachmentCount = getAttCount(mimeMessage)
             assertEquals(buffer.toString(), expectedAttachmentCount, actualAttachmentCount)
             //do external checks
-            action.invoke(mimeMessage)
+            action.invoke(folder, mimeMessage)
           }
         }
       }
@@ -591,12 +580,46 @@ class SendMsgTest {
     )
   )
 
+  private fun prepareStandardForwardedAttachment(): AttachmentInfo? {
+    val outgoingMessageInfo = OutgoingMessageInfo(
+      account = addAccountToDatabaseRule.account.email,
+      subject = "Standard Message + Att",
+      msg = "Standard Message + Att",
+      toRecipients = listOf(InternetAddress(addAccountToDatabaseRule.account.email)),
+      from = InternetAddress(addAccountToDatabaseRule.account.email),
+      encryptionType = MessageEncryptionType.STANDARD,
+      messageType = MessageType.NEW,
+      uid = EmailUtil.genOutboxUID(context),
+      atts = listOf(attachmentInfo)
+    )
+
+    processOutgoingMessageInfo(outgoingMessageInfo)
+
+    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
+    return runBlocking {
+      val result = worker.doWork()
+      assertThat(result, `is`(ListenableWorker.Result.success()))
+      val list = mutableListOf<AttachmentInfo>()
+      checkExistingMsgOnServer(
+        JavaEmailConstants.FOLDER_INBOX,
+        outgoingMessageInfo
+      ) { folder, mimeMessage ->
+        val uid = folder.getUID(mimeMessage)
+        list.addAll(EmailUtil.getAttsInfoFromPart(mimeMessage).map {
+          it.copy(
+            email = addAccountToDatabaseRule.account.email,
+            folder = folder.fullName,
+            uid = uid
+          )
+        })
+      }
+
+      return@runBlocking list.firstOrNull()
+    }
+  }
+
   companion object {
     const val ATTACHMENT_NAME = "test.txt"
-
-    //It's a real name of the first attachment of the message with Uid = 0
-    //in INBOX for default@flowcrypt.test
-    const val FORWARDED_ATTACHMENT_NAME = "flowcrypt-backup-defaultflowcrypttest.key"
 
     //It's a real name of the first attachment of the message with Uid = 12
     //in INBOX for default@flowcrypt.test
