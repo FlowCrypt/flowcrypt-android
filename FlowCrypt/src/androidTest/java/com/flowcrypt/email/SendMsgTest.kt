@@ -30,7 +30,6 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
-import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
@@ -168,8 +167,7 @@ class SendMsgTest {
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(RetryRule.DEFAULT)
-    .around(ClearAppSettingsRule())
+    .outerRule(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
@@ -504,11 +502,12 @@ class SendMsgTest {
               outgoingMessageInfo.ccRecipients?.toTypedArray(),
               mimeMessage.getRecipients(Message.RecipientType.CC)
             )
-            assertEquals(
-              ((outgoingMessageInfo.atts ?: emptyList()) + (outgoingMessageInfo.forwardedAtts
-                ?: emptyList())).size,
-              getAttCount(mimeMessage)
-            )
+            val expectedAttachmentCount = ((outgoingMessageInfo.atts ?: emptyList())
+                + (outgoingMessageInfo.forwardedAtts ?: emptyList())).size
+            val actualAttachmentCount = getAttCount(mimeMessage)
+            val buffer = ByteArrayOutputStream()
+            mimeMessage.writeTo(buffer)
+            assertEquals(buffer.toString(), expectedAttachmentCount, actualAttachmentCount)
             //do external checks
             action.invoke(mimeMessage)
           }
