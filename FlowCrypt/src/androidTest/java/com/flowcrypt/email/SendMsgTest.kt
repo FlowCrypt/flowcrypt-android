@@ -45,6 +45,7 @@ import jakarta.mail.internet.MimeMessage
 import jakarta.mail.internet.MimeMultipart
 import jakarta.mail.internet.MimePart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -485,28 +486,36 @@ class SendMsgTest {
   ) =
     withContext(Dispatchers.IO) {
       val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
+      //need to wait for email server internal sync
+      delay(3000)
       connection.store.use { store ->
         connection.executeIMAPAction {
           store.getFolder(folderName).use { folder ->
             val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
             //get the latest message that we added to a folder recently
-            val mimeMessage = imapFolder.getMessage(imapFolder.messageCount) as MimeMessage
+            val mimeMessage = imapFolder.messages.last() as MimeMessage
+            val buffer = ByteArrayOutputStream()
+            mimeMessage.writeTo(buffer)
             //do base checks
-            assertEquals(outgoingMessageInfo.subject, mimeMessage.subject)
-            assertArrayEquals(arrayOf(outgoingMessageInfo.from), mimeMessage.from)
+            assertEquals(buffer.toString(), outgoingMessageInfo.subject, mimeMessage.subject)
             assertArrayEquals(
+              buffer.toString(),
+              arrayOf(outgoingMessageInfo.from),
+              mimeMessage.from
+            )
+            assertArrayEquals(
+              buffer.toString(),
               outgoingMessageInfo.toRecipients?.toTypedArray(),
               mimeMessage.getRecipients(Message.RecipientType.TO)
             )
             assertArrayEquals(
+              buffer.toString(),
               outgoingMessageInfo.ccRecipients?.toTypedArray(),
               mimeMessage.getRecipients(Message.RecipientType.CC)
             )
             val expectedAttachmentCount = ((outgoingMessageInfo.atts ?: emptyList())
                 + (outgoingMessageInfo.forwardedAtts ?: emptyList())).size
             val actualAttachmentCount = getAttCount(mimeMessage)
-            val buffer = ByteArrayOutputStream()
-            mimeMessage.writeTo(buffer)
             assertEquals(buffer.toString(), expectedAttachmentCount, actualAttachmentCount)
             //do external checks
             action.invoke(mimeMessage)
