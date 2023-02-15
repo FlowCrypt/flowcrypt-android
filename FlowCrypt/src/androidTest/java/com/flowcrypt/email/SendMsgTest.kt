@@ -486,12 +486,12 @@ class SendMsgTest {
     assertEquals(countOfMsgBeforeTest + 2, countOfMsgAfterTest)
   }
 
-  private suspend fun checkExistingMsgOnServer(
+  private suspend fun <T> checkExistingMsgOnServer(
     folderName: String,
     outgoingMessageInfo: OutgoingMessageInfo,
     useLast: Boolean = true,
-    action: suspend (folder: IMAPFolder, message: MimeMessage) -> Unit
-  ) =
+    action: suspend (folder: IMAPFolder, message: MimeMessage) -> T
+  ): T =
     withContext(Dispatchers.IO) {
       val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
       //need to wait for email server internal sync
@@ -501,11 +501,10 @@ class SendMsgTest {
           store.getFolder(folderName).use { folder ->
             val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
             //get the message that we added to a folder recently
-            val mimeMessage = (if (useLast) {
-              imapFolder.messages.last()
-            } else {
-              imapFolder.messages.first()
-            }) as MimeMessage
+            val mimeMessage = imapFolder.messages.getOrElse(
+              if (useLast) imapFolder.messages.lastIndex else 0
+            ) { throw NoSuchElementException("List is empty.") } as MimeMessage
+
             val buffer = ByteArrayOutputStream()
             mimeMessage.writeTo(buffer)
             //do base checks
@@ -525,8 +524,9 @@ class SendMsgTest {
               outgoingMessageInfo.ccRecipients?.toTypedArray(),
               mimeMessage.getRecipients(Message.RecipientType.CC)
             )
-            val expectedAttachmentCount = ((outgoingMessageInfo.atts ?: emptyList())
-                + (outgoingMessageInfo.forwardedAtts ?: emptyList())).size
+            val expectedAttachmentCount = outgoingMessageInfo.atts.orEmpty().size +
+                outgoingMessageInfo.forwardedAtts.orEmpty().size
+
             val actualAttachmentCount = getAttCount(mimeMessage)
             assertEquals(buffer.toString(), expectedAttachmentCount, actualAttachmentCount)
             //do external checks
@@ -595,26 +595,22 @@ class SendMsgTest {
   private fun prepareForwardedAttachment(outgoingMessageInfo: OutgoingMessageInfo): AttachmentInfo? {
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     return runBlocking {
+      val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
       val result = worker.doWork()
       assertThat(result, `is`(ListenableWorker.Result.success()))
-      val list = mutableListOf<AttachmentInfo>()
       checkExistingMsgOnServer(
         JavaEmailConstants.FOLDER_INBOX,
         outgoingMessageInfo
       ) { folder, mimeMessage ->
-        val uid = folder.getUID(mimeMessage)
-        list.addAll(EmailUtil.getAttsInfoFromPart(mimeMessage).map {
+        EmailUtil.getAttsInfoFromPart(mimeMessage).map {
           it.copy(
             email = addAccountToDatabaseRule.account.email,
             folder = folder.fullName,
-            uid = uid
+            uid = folder.getUID(mimeMessage)
           )
-        })
+        }.firstOrNull()
       }
-
-      return@runBlocking list.firstOrNull()
     }
   }
 

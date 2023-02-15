@@ -108,7 +108,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       )
 
     for (att in atts) {
-      addAtt(att)
+      addAttachment(att)
     }
 
     onView(withId(R.id.btnSetWebPortalPassword))
@@ -151,30 +151,26 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       val directory = InstrumentationRegistry.getInstrumentation().targetContext
         .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
         ?: File(Environment.DIRECTORY_DOCUMENTS)
-      atts.add(
-        TestGeneralUtil.createFileWithContent(
-          directory = directory,
-          fileName = ATTACHMENT_NAME_1,
-          inputStream = "Text for filling the attached file".toInputStream()
-        )
-      )
-
-      atts.add(
-        TestGeneralUtil.createFileWithContent(
-          directory = directory,
-          fileName = ATTACHMENT_NAME_2,
-          inputStream = "Text for filling the attached file".toInputStream()
-        )
-      )
 
       val buffer = ByteArrayOutputStream()
       pgpSecretKeyRing.encode(buffer)
-
-      atts.add(
-        TestGeneralUtil.createFileWithContent(
-          directory = directory,
-          fileName = ATTACHMENT_NAME_3,
-          inputStream = ByteArrayInputStream(buffer.toByteArray())
+      atts.addAll(
+        listOf(
+          TestGeneralUtil.createFileWithContent(
+            directory = directory,
+            fileName = ATTACHMENT_NAME_1,
+            inputStream = "Text for filling the attached file".toInputStream()
+          ),
+          TestGeneralUtil.createFileWithContent(
+            directory = directory,
+            fileName = ATTACHMENT_NAME_2,
+            inputStream = "Text for filling the attached file".toInputStream()
+          ),
+          TestGeneralUtil.createFileWithContent(
+            directory = directory,
+            fileName = ATTACHMENT_NAME_3,
+            inputStream = ByteArrayInputStream(buffer.toByteArray())
+          )
         )
       )
     }

@@ -79,7 +79,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
       )
   }
 
-  protected fun addAtt(att: File) {
+  protected fun addAttachment(att: File) {
     val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
     intending(
       allOf(

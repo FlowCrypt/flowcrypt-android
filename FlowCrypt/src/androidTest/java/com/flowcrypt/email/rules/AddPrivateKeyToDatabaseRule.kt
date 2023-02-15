@@ -10,7 +10,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 
@@ -31,7 +30,7 @@ class AddPrivateKeyToDatabaseRule constructor(
     private set
 
   init {
-    pgpKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).pgpKeyDetailsList.first()
+    pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(keyPath, true)
   }
 
   constructor(

@@ -299,7 +299,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val fileWithBiggerSize = TestGeneralUtil.createFileWithGivenSize(
       Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule
     )
-    addAtt(fileWithBiggerSize)
+    addAttachment(fileWithBiggerSize)
 
     val sizeWarningMsg = getResString(
       R.string.template_warning_max_total_attachments_size,
@@ -736,7 +736,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   private fun addAttAndCheck(att: File) {
-    addAtt(att)
+    addAttachment(att)
     onView(withText(att.name))
       .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
   }
