@@ -1352,16 +1352,21 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
 
     lifecycleScope.launchWhenStarted {
-      composeMsgViewModel.attachmentsStateFlow.collect { attachments ->
-        val forwardedAtts = attachments.filter { it.id != null && it.isForwarded }
+      composeMsgViewModel.attachmentsStateFlow.collect { allAttachments ->
+        val forwardedAttachments = allAttachments.filter { it.id != null && it.isForwarded }
+        val addedAttachments = allAttachments - forwardedAttachments.toSet()
+        addedAttachments.forEachIndexed { index, attachmentInfo ->
+          attachmentInfo.path = index.toString()
+        }
+
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-            atts = attachments - forwardedAtts.toSet(),
-            forwardedAtts = forwardedAtts
+            atts = addedAttachments,
+            forwardedAtts = forwardedAttachments
           )
         )
 
-        showAtts(attachments)
+        showAtts(allAttachments)
       }
     }
   }

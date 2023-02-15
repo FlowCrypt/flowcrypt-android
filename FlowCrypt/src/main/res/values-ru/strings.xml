@@ -493,4 +493,5 @@
     <string name="cannot_show_notifications_without_permission">Отображение уведомлений не включено в приложении</string>
     <string name="need_post_notification_permission">Нам нужно разрешение, чтобы показывать уведомления о новых сообщениях</string>
     <string name="ask">Спросить</string>
+    <string name="password_should_fit_all_requirements">Пароль должен соответствовать всем требованиям</string>
 </resources>

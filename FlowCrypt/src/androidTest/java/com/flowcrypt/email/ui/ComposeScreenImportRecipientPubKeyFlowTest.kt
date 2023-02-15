@@ -74,7 +74,7 @@ class ComposeScreenImportRecipientPubKeyFlowTest : BaseComposeScreenTest() {
   fun testImportRecipientPubKeyFromFile() {
     fillDataAndMoveToImportPublicKeyScreen()
 
-    val fileWithPublicKey: File = TestGeneralUtil.createFileAndFillWithContent(
+    val fileWithPublicKey: File = TestGeneralUtil.createFileWithTextContent(
       TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
       publicKey
     )

@@ -48,5 +48,5 @@ interface StoreConnection {
   suspend fun <T> executeWithResult(action: suspend (store: Store) -> Result<T>): Result<T>
 
   @WorkerThread
-  suspend fun executeIMAPAction(action: suspend (store: Store) -> Unit)
+  suspend fun <T> executeIMAPAction(action: suspend (store: Store) -> T): T
 }

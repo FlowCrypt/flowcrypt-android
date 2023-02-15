@@ -23,9 +23,7 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
@@ -69,9 +67,9 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.apache.commons.io.FileUtils
 import org.hamcrest.Description
 import org.hamcrest.Matcher
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.emptyString
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Assert
 import org.junit.BeforeClass
@@ -301,7 +299,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val fileWithBiggerSize = TestGeneralUtil.createFileWithGivenSize(
       Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule
     )
-    addAtt(fileWithBiggerSize)
+    addAttachment(fileWithBiggerSize)
 
     val sizeWarningMsg = getResString(
       R.string.template_warning_max_total_attachments_size,
@@ -737,21 +735,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(doesNotExist())
   }
 
-  private fun addAtt(att: File) {
-    val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
-    intending(
-      allOf(
-        hasAction(Intent.ACTION_OPEN_DOCUMENT),
-        hasType("*/*")
-      )
-    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
-    onView(withId(R.id.menuActionAttachFile))
-      .check(matches(isDisplayed()))
-      .perform(click())
-  }
-
   private fun addAttAndCheck(att: File) {
-    addAtt(att)
+    addAttachment(att)
     onView(withText(att.name))
       .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
   }
@@ -846,7 +831,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     private fun createFilesForCommonAtts() {
       for (i in 0 until ATTACHMENTS_COUNT) {
         atts.add(
-          TestGeneralUtil.createFileAndFillWithContent(
+          TestGeneralUtil.createFileWithTextContent(
             temporaryFolderRule,
             "$i.txt", "Text for filling the attached file"
           )

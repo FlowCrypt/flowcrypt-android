@@ -39,9 +39,9 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.CoreMatchers.`is`
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
@@ -119,7 +119,7 @@ class ImportRecipientsFromSourceFragmentFlowTest : BaseTest() {
     publicKey = TestGeneralUtil.readFileFromAssetsAsString(
       "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-pub.asc"
     )
-    fileWithPublicKey = TestGeneralUtil.createFileAndFillWithContent(
+    fileWithPublicKey = TestGeneralUtil.createFileWithTextContent(
       fileName = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
       fileText = publicKey
     )

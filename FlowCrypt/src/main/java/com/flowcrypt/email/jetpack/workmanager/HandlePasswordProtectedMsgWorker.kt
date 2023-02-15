@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.javamail.PasswordProtectedAttachmentInfoDataSource
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.database.MessageState
@@ -34,6 +35,7 @@ import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.GsonBuilder
 import com.sun.mail.util.MailConnectException
+import jakarta.activation.DataHandler
 import jakarta.mail.Address
 import jakarta.mail.Message
 import jakarta.mail.MessagingException
@@ -42,8 +44,10 @@ import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.io.FilenameUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.util.Passphrase
@@ -115,26 +119,31 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
         try {
           if (msgEntity.isEncrypted == true && msgEntity.isPasswordProtected) {
-            //get msg attachments(including forwarded that can be encrypted)
+            //get msg attachments. Please pay attention that all of these attachments are encrypted.
             val attachments = getAttachments(msgEntity)
 
-            //create MimeMessage from content + attachments
-            val plainMimeMsgWithAttachments = getMimeMessage(msgEntity, attachments)
+            //create MimeMessage from encrypted content
+            val mimeMsgWithEncryptedContent = EmailUtil.createMimeMsg(
+              context = applicationContext,
+              sess = Session.getDefaultInstance(Properties()),
+              msgEntity = msgEntity,
+              atts = emptyList()
+            )
 
             //get recipients that will be used to create password-encrypted msg
             val toCandidates =
-              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.TO) ?: emptyArray()
+              mimeMsgWithEncryptedContent.getRecipients(Message.RecipientType.TO) ?: emptyArray()
             val ccCandidates =
-              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.CC) ?: emptyArray()
+              mimeMsgWithEncryptedContent.getRecipients(Message.RecipientType.CC) ?: emptyArray()
             val bccCandidates =
-              plainMimeMsgWithAttachments.getRecipients(Message.RecipientType.BCC) ?: emptyArray()
+              mimeMsgWithEncryptedContent.getRecipients(Message.RecipientType.BCC) ?: emptyArray()
 
             if (toCandidates.isEmpty() && ccCandidates.isEmpty() && bccCandidates.isEmpty()) {
               throw IllegalStateException("Wrong password-protected implementation")
             }
 
             //start of creating and uploading a password-protected msg to FES
-            val fromAddress = plainMimeMsgWithAttachments.getFromAddress()
+            val fromAddress = mimeMsgWithEncryptedContent.getFromAddress()
             val domain = EmailUtil.getDomain(fromAddress.address)
             val idToken = GeneralUtil.getGoogleIdToken(
               applicationContext, RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
@@ -149,7 +158,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
                 }
                 .toHashSet()
                 .toList(),
-              subject = plainMimeMsgWithAttachments.subject,
+              subject = mimeMsgWithEncryptedContent.subject,
               token = replyToken
             )
 
@@ -160,15 +169,19 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             val infoDiv = genInfoDiv(replyInfo)
             val originalText = getDecryptedContentFromMessage(
-              mimeMsgWithAttachments = plainMimeMsgWithAttachments,
+              mimeMsgWithEncryptedContent = mimeMsgWithEncryptedContent,
               accountSecretKeys = accountSecretKeys,
               keysStorage = keysStorage
             )
+
             val bodyWithReplyToken = originalText + "\n\n" + infoDiv
 
-            val rawMimeMsg = createRawPlainMimeMsgWithAttachments(
-              plainMimeMsgWithAttachments = plainMimeMsgWithAttachments,
-              bodyWithReplyToken = bodyWithReplyToken
+            val rawMimeMsg = createRawMimeMsgWithAttachments(
+              sourceMimeMessage = mimeMsgWithEncryptedContent,
+              bodyWithReplyToken = bodyWithReplyToken,
+              attachments = attachments,
+              accountSecretKeys = accountSecretKeys,
+              keysStorage = keysStorage
             )
 
             //encrypt the raw MIME message ONLY FOR THE MESSAGE PASSWORD
@@ -270,33 +283,43 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     }
   }
 
-  private fun createRawPlainMimeMsgWithAttachments(
-    plainMimeMsgWithAttachments: MimeMessage,
-    bodyWithReplyToken: String
+  private fun createRawMimeMsgWithAttachments(
+    sourceMimeMessage: MimeMessage,
+    bodyWithReplyToken: String,
+    attachments: List<AttachmentEntity>,
+    accountSecretKeys: PGPSecretKeyRingCollection,
+    keysStorage: KeysStorageImpl
   ): String {
-    // construct a regular plain mime message using bodyWithReplyToken + attachments
-    val multipart = plainMimeMsgWithAttachments.content as Multipart
-    //need to remove 'encrypted.asc' from the existing MIME
-    multipart.removeBodyPart(0)
-    multipart.addBodyPart(MimeBodyPart().apply { setText(bodyWithReplyToken) }, 0)
-    plainMimeMsgWithAttachments.saveChanges()
+    val resultMimeMessage = MimeMessage(sourceMimeMessage)
+    // construct a regular mime message using bodyWithReplyToken + attachments
+    val mimeMultipart = MimeMultipart()
+    mimeMultipart.addBodyPart(MimeBodyPart().apply { setText(bodyWithReplyToken) }, 0)
+
+    for (attachment in attachments) {
+      val attBodyPart = MimeBodyPart()
+      val attInfo = attachment.toAttInfo()
+      attBodyPart.dataHandler = DataHandler(
+        PasswordProtectedAttachmentInfoDataSource(
+          context = applicationContext,
+          att = attInfo,
+          secretKeys = accountSecretKeys,
+          protector = keysStorage.getSecretKeyRingProtector()
+        )
+      )
+      attBodyPart.fileName = FilenameUtils.removeExtension(attInfo.getSafeName())
+      attBodyPart.contentID = attInfo.id
+      mimeMultipart.addBodyPart(attBodyPart)
+    }
+
+    resultMimeMessage.setContent(mimeMultipart)
+    resultMimeMessage.saveChanges()
 
     //prepare raw MIME
     val rawMimeMsg = String(ByteArrayOutputStream().apply {
-      plainMimeMsgWithAttachments.writeTo(this)
+      resultMimeMessage.writeTo(this)
     }.toByteArray())
     return rawMimeMsg
   }
-
-  private suspend fun getMimeMessage(
-    msgEntity: MessageEntity,
-    attachments: List<AttachmentEntity>
-  ) = EmailUtil.createMimeMsg(
-    context = applicationContext,
-    sess = Session.getDefaultInstance(Properties()),
-    msgEntity = msgEntity.copy(isEncrypted = false),
-    atts = attachments
-  )
 
   private suspend fun getAttachments(msgEntity: MessageEntity) =
     roomDatabase.attachmentDao().getAttachmentsSuspend(
@@ -360,12 +383,12 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   }
 
   private suspend fun getDecryptedContentFromMessage(
-    mimeMsgWithAttachments: MimeMessage,
+    mimeMsgWithEncryptedContent: MimeMessage,
     accountSecretKeys: PGPSecretKeyRingCollection,
     keysStorage: KeysStorageImpl
   ): String = withContext(Dispatchers.IO) {
     val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
-      srcInputStream = (mimeMsgWithAttachments.content as Multipart).getBodyPart(0).content as InputStream,
+      srcInputStream = (mimeMsgWithEncryptedContent.content as Multipart).getBodyPart(0).content as InputStream,
       publicKeys = PGPPublicKeyRingCollection(emptyList()),
       secretKeys = accountSecretKeys,
       protector = keysStorage.getSecretKeyRingProtector()

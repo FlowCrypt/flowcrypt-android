@@ -26,7 +26,6 @@ import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
@@ -79,7 +78,7 @@ import kotlin.random.Random
  *         Time: 5:56 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
+abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
   abstract val mockWebServerRule: FlowCryptMockWebServerRule
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
   protected val draftsCache = mutableListOf<Draft>()
@@ -98,7 +97,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseTest() {
     ), useAPI = true, useFES = true
   )
 
-  protected val addAccountToDatabaseRule: AddAccountToDatabaseRule =
+  final override val addAccountToDatabaseRule: AddAccountToDatabaseRule =
     AddAccountToDatabaseRule(accountEntity)
 
   protected val addPrivateKeyToDatabaseRule =
