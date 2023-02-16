@@ -179,8 +179,7 @@ class SendMsgTest {
       }
     }
 
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+    afterTestCheck(countOfMsgBeforeTest + 1)
   }
 
   @Test
@@ -217,8 +216,7 @@ class SendMsgTest {
       }
     }
 
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+    afterTestCheck(countOfMsgBeforeTest + 1)
   }
 
   @Test
@@ -276,9 +274,8 @@ class SendMsgTest {
       }
     }
 
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
     //as we added 2 messages during this session we use countOfMsgBeforeTest + 2
-    assertEquals(countOfMsgBeforeTest + 2, countOfMsgAfterTest)
+    afterTestCheck(countOfMsgBeforeTest + 2)
   }
 
   @Test
@@ -322,8 +319,7 @@ class SendMsgTest {
       }
     }
 
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+    afterTestCheck(countOfMsgBeforeTest + 1)
   }
 
   @Test
@@ -388,8 +384,7 @@ class SendMsgTest {
       }
     }
 
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
+    afterTestCheck(countOfMsgBeforeTest + 1)
   }
 
   @Test
@@ -481,9 +476,8 @@ class SendMsgTest {
       }
     }
 
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
     //as we added 2 messages during this session we use countOfMsgBeforeTest + 2
-    assertEquals(countOfMsgBeforeTest + 2, countOfMsgAfterTest)
+    afterTestCheck(countOfMsgBeforeTest + 2)
   }
 
   private suspend fun <T> checkExistingMsgOnServer(
@@ -566,16 +560,27 @@ class SendMsgTest {
   }
 
   private suspend fun countOfMsgsOnServer(folderName: String): Int = withContext(Dispatchers.IO) {
-    var count = 0
     val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
-    connection.store.use { store ->
+    return@withContext connection.store.use { store ->
       connection.executeIMAPAction {
         store.getFolder(folderName).use { folder ->
-          count = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }.messageCount
+          (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }.messageCount
         }
       }
     }
-    return@withContext count
+  }
+
+  private suspend fun msgsSubjects(folderName: String): List<String> = withContext(Dispatchers.IO) {
+    val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
+    return@withContext connection.store.use { store ->
+      connection.executeIMAPAction {
+        store.getFolder(folderName).use { folder ->
+          return@executeIMAPAction (folder as IMAPFolder).apply {
+            open(Folder.READ_ONLY)
+          }.messages.map { it.subject }
+        }
+      }
+    }
   }
 
   private fun getOpenPgpMetadata(
@@ -612,6 +617,12 @@ class SendMsgTest {
         }.firstOrNull()
       }
     }
+  }
+
+  private fun afterTestCheck(countOfMsgBeforeTest: Int) {
+    val subjects = runBlocking { msgsSubjects(sentFolder.fullName) }
+    val countOfMsgAfterTest = subjects.size
+    assertEquals(subjects.joinToString(), countOfMsgBeforeTest, countOfMsgAfterTest)
   }
 
   companion object {
