@@ -16,25 +16,43 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.MediumTest
+import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
+import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.util.gson.GsonHelper
+import com.google.gson.GsonBuilder
+import jakarta.mail.BodyPart
+import jakarta.mail.Multipart
+import jakarta.mail.Part
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartReader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -42,14 +60,17 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.PGPainless
 import org.pgpainless.key.util.UserId
+import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.HttpURLConnection
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+import java.util.Properties
 
-@MediumTest
+@LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("not completed")
 class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
   override val mockWebServerRule =
@@ -60,6 +81,14 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
           request.path.equals("/api/v1/message/new-reply-token") -> {
             MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setBody(gson.toJson(MessageReplyTokenResponse(replyToken = REPLY_TOKEN)))
+          }
+
+          request.path.equals("/api/v1/message") -> {
+            //Analyze the request before proceeding
+            checkRequestToMessageApi(request)
+            isRequestToMessageAPITested = true
+            MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(gson.toJson(MessageUploadResponse(url = WEB_PORTAL_URL)))
           }
 
           else -> handleCommonAPICalls(request)
@@ -79,8 +108,11 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
+  private var isRequestToMessageAPITested = false
+
   @Test
   fun testSendPasswordProtectedMessageWithFewAttachments() {
+    isRequestToMessageAPITested = false
     onView(withId(R.id.floatActionButtonCompose))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -107,7 +139,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
         closeSoftKeyboard()
       )
 
-    for (att in atts) {
+    for (att in attachments) {
       addAttachment(att)
     }
 
@@ -128,6 +160,102 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       .perform(click())
 
     Thread.sleep(10000)
+    assertTrue(isRequestToMessageAPITested)
+  }
+
+  /**
+   * This method checks that we create a right structure when create a request to
+   * "https://fes.{domain}/api/v1/message". Also, it checks that we create a right MIME message
+   * in the encrypted data in the second part of the request. The right MIME message means
+   * we can read all data and all additional info looks well(headers, names and so on).
+   */
+  private fun checkRequestToMessageApi(request: RecordedRequest) {
+    val mediaType = request.headers["Content-Type"]?.toMediaType()
+    val boundary = mediaType?.parameter("boundary")
+    assertNotNull(boundary)
+    val multipartReader = MultipartReader(request.body, requireNotNull(boundary))
+
+    multipartReader.use {
+      checkFirstPartOfRequestToMessageAPI(multipartReader)
+      checkSecondPartOfRequestToMessageAPI(multipartReader)
+
+      //we should not have more than 2 parts
+      assertNull(multipartReader.nextPart())
+    }
+  }
+
+  private fun checkFirstPartOfRequestToMessageAPI(multipartReader: MultipartReader) {
+    val firstPart = multipartReader.nextPart()
+    assertNotNull(firstPart)
+
+    firstPart?.use {
+      val messageUploadRequest = GsonHelper.gson.fromJson(
+        firstPart.body.readString(StandardCharsets.UTF_8),
+        MessageUploadRequest::class.java
+      )
+
+      assertNotNull(messageUploadRequest)
+      assertEquals(REPLY_TOKEN, messageUploadRequest.associateReplyToken)
+    }
+  }
+
+  private fun checkSecondPartOfRequestToMessageAPI(multipartReader: MultipartReader) {
+    val secondPart = multipartReader.nextPart()
+    assertNotNull(secondPart)
+
+    secondPart?.use {
+      val sentPgpMessage = secondPart.body.readString(StandardCharsets.UTF_8)
+      val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
+        srcInputStream = sentPgpMessage.toInputStream(),
+        passphrase = Passphrase.fromPassword(WEB_PORTAL_PASSWORD)
+      )
+      //check that message was encrypted
+      assertTrue(decryptionResult.isEncrypted)
+      //check that message was not signed
+      assertFalse(decryptionResult.isSigned)
+      //check that message was not encrypted by public keys
+      assertEquals(setOf<Long>(), decryptionResult.openPgpMetadata?.recipientKeyIds)
+
+      val decryptedContent = decryptionResult.content
+      assertNotNull(decryptedContent)
+
+      //parse decrypted content to MIME message
+      val mimeMessage = MimeMessage(
+        Session.getInstance(Properties()),
+        ByteArrayInputStream(decryptedContent?.toByteArray())
+      )
+
+      val multipart = mimeMessage.content as Multipart
+      //this MIME message should contains 4 parts: text + 3 attachments(1 and 2 - text, 3 - binary)
+      assertEquals(4, multipart.count)
+
+      val replyInfoData = HandlePasswordProtectedMsgWorker.ReplyInfoData(
+        sender = addAccountToDatabaseRule.account.email.lowercase(),
+        recipient = listOf(RECIPIENT_WITHOUT_PUBLIC_KEY),
+        subject = MESSAGE_SUBJECT,
+        token = REPLY_TOKEN
+      )
+
+      val replyInfo = Base64.getEncoder().encodeToString(
+        GsonBuilder().create().toJson(replyInfoData).toByteArray()
+      )
+
+      val infoDiv = HandlePasswordProtectedMsgWorker.genInfoDiv(replyInfo)
+      val bodyWithReplyToken = MESSAGE_TEXT + "\n\n" + infoDiv
+
+      //check parts content. Check that content is the same as source
+      val textBodyPart = multipart.getBodyPart(0)
+      assertEquals(bodyWithReplyToken, textBodyPart.content.toString())
+      checkAttachmentPart(multipart.getBodyPart(1), 0)
+      checkAttachmentPart(multipart.getBodyPart(2), 1)
+      checkAttachmentPart(multipart.getBodyPart(3), 2)
+    }
+  }
+
+  private fun checkAttachmentPart(bodyPart: BodyPart, position: Int) {
+    assertEquals(Part.ATTACHMENT, bodyPart.disposition)
+    assertEquals(attachments[position].name, bodyPart.fileName)
+    assertArrayEquals(attachmentsDataCache[position], bodyPart.inputStream.readBytes())
   }
 
   companion object {
@@ -139,7 +267,9 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
     private const val ATTACHMENT_NAME_2 = "text1.txt"
     private const val ATTACHMENT_NAME_3 = "binary_key.key"
     private const val REPLY_TOKEN = "some_reply_token"
-    private var atts: MutableList<File> = mutableListOf()
+    private const val WEB_PORTAL_URL = "https://fes.flowcrypt.test/message/some_id"
+    private var attachmentsDataCache: MutableList<ByteArray> = mutableListOf()
+    private var attachments: MutableList<File> = mutableListOf()
     private val pgpSecretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(
       UserId.nameAndEmail(RECIPIENT_WITHOUT_PUBLIC_KEY, RECIPIENT_WITHOUT_PUBLIC_KEY),
       TestConstants.DEFAULT_PASSWORD
@@ -152,24 +282,31 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
         .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
         ?: File(Environment.DIRECTORY_DOCUMENTS)
 
-      val buffer = ByteArrayOutputStream()
-      pgpSecretKeyRing.encode(buffer)
-      atts.addAll(
+      attachmentsDataCache.addAll(
+        listOf(
+          "Text attachment 1".toByteArray(),//text data
+          "Text attachment 2".toByteArray(),//text data
+          ByteArrayOutputStream().apply { pgpSecretKeyRing.encode(this) }.toByteArray(),
+          //binary data
+        )
+      )
+
+      attachments.addAll(
         listOf(
           TestGeneralUtil.createFileWithContent(
             directory = directory,
             fileName = ATTACHMENT_NAME_1,
-            inputStream = "Text for filling the attached file".toInputStream()
+            inputStream = attachmentsDataCache[0].inputStream()
           ),
           TestGeneralUtil.createFileWithContent(
             directory = directory,
             fileName = ATTACHMENT_NAME_2,
-            inputStream = "Text for filling the attached file".toInputStream()
+            inputStream = attachmentsDataCache[1].inputStream()
           ),
           TestGeneralUtil.createFileWithContent(
             directory = directory,
             fileName = ATTACHMENT_NAME_3,
-            inputStream = ByteArrayInputStream(buffer.toByteArray())
+            inputStream = attachmentsDataCache[2].inputStream()
           )
         )
       )
