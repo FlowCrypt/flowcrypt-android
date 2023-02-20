@@ -678,21 +678,22 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     private const val EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY =
       "https://localhost:1212/ekm/not_fully_decrypted_key/"
     private const val EMAIL_EKM_URL_ERROR = "https://localhost:1212/ekm/error/"
-    private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.test"
+    private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.example"
     private const val EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR =
-      "client_configuration_error@flowcrypt.test"
+      "client_configuration_error@flowcrypt.example"
     private const val EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED =
-      "must_autogen_pass_phrase_quietly_existed@flowcrypt.test"
+      "must_autogen_pass_phrase_quietly_existed@flowcrypt.example"
     private const val EMAIL_FORBID_STORING_PASS_PHRASE_MISSING =
-      "forbid_storing_pass_phrase_missing@flowcrypt.test"
+      "forbid_storing_pass_phrase_missing@flowcrypt.example"
     private const val EMAIL_MUST_SUBMIT_TO_ATTESTER_EXISTED =
-      "must_submit_to_attester_existed@flowcrypt.test"
+      "must_submit_to_attester_existed@flowcrypt.example"
     private const val EMAIL_FORBID_CREATING_PRIVATE_KEY_MISSING =
-      "forbid_creating_private_key_missing@flowcrypt.test"
-    private const val EMAIL_GET_KEYS_VIA_EKM_ERROR = "keys_via_ekm_error@flowcrypt.test"
-    private const val EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST = "keys_via_ekm_empty_list@flowcrypt.test"
+      "forbid_creating_private_key_missing@flowcrypt.example"
+    private const val EMAIL_GET_KEYS_VIA_EKM_ERROR = "keys_via_ekm_error@flowcrypt.example"
+    private const val EMAIL_GET_KEYS_VIA_EKM_EMPTY_LIST =
+      "keys_via_ekm_empty_list@flowcrypt.example"
     private const val EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED =
-      "user_with_not_fully_decrypted_prv_key@flowcrypt.test"
+      "user_with_not_fully_decrypted_prv_key@flowcrypt.example"
     private const val EMAIL_FES_NO_CONNECTION = "fes_request_timeout@flowcrypt.test"
     private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@localhost:1212"
     private const val EMAIL_FES_HTTP_404 = "fes_404@localhost:1212"
