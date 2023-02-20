@@ -37,6 +37,7 @@ import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Flags
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Multipart
@@ -79,7 +80,7 @@ import java.io.InputStream
 @RunWith(AndroidJUnit4::class)
 @DependsOnMailServer
 class SendMsgTest {
-  private lateinit var context: Context
+  private val context: Context = ApplicationProvider.getApplicationContext()
   private val account = AccountDaoManager.getUserWithoutLetters()
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(account = account)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
@@ -134,8 +135,8 @@ class SendMsgTest {
   }
 
   @Before
-  fun setUp() {
-    context = ApplicationProvider.getApplicationContext()
+  fun cleanFolderBeforeStart() {
+    runBlocking { deleteAllMessagesInFolder(sentFolder.fullName) }
   }
 
   @get:Rule
@@ -582,6 +583,22 @@ class SendMsgTest {
       }
     }
   }
+
+  private suspend fun deleteAllMessagesInFolder(folderName: String) =
+    withContext(Dispatchers.IO) {
+      val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
+      return@withContext connection.store.use { store ->
+        connection.executeIMAPAction {
+          store.getFolder(folderName).use { folder ->
+            val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+            val messages = imapFolder.messages
+            if (messages.isNotEmpty()) {
+              imapFolder.setFlags(messages, Flags(Flags.Flag.DELETED), true)
+            }
+          }
+        }
+      }
+    }
 
   private fun getOpenPgpMetadata(
     inputStream: InputStream,
