@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="prompt_subject">Тема</string>
     <string name="send">Отправить</string>
     <string name="error_email_is_not_valid">Ошибка: неверный Email адрес</string>
@@ -494,4 +494,80 @@
     <string name="need_post_notification_permission">Нам нужно разрешение, чтобы показывать уведомления о новых сообщениях</string>
     <string name="ask">Спросить</string>
     <string name="password_should_fit_all_requirements">Пароль должен соответствовать всем требованиям</string>
+    <plurals name="found_backup_of_your_account_key">
+        <item quantity="one">Найдена %1$d резервная копия Вашего ключа</item>
+        <item quantity="few">Найдено %1$d резервные копии Вашего ключа</item>
+        <item quantity="many">Найдена %1$d резервных копий Вашего ключа</item>
+    </plurals>
+    <plurals name="you_have_backups_that_was_not_imported">
+        <item quantity="one">У Вас есть %1$d ключ, что не был импортирован.</item>
+        <item quantity="few">У Вас есть %1$d ключа, что не былы импортированы.</item>
+        <item quantity="many">У Вас есть %1$d ключей, что не былы импортированы.</item>
+    </plurals>
+    <plurals name="import_keys">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Импорт резервной копии ключа</item>
+        <item quantity="few">Импорт резервной копии ключей</item>
+        <item quantity="many">Импорт резервной копии ключей</item>
+    </plurals>
+    <plurals name="not_recovered_all_keys">
+        <item quantity="one">%1$d із %2$d успешно розблокировано. Остался %3$d ключ. Попробуйте другую ключевую фразу для розблокировки всех ключей.</item>
+        <item quantity="few">%1$d із %2$d успешно розблокировано. Осталось %3$d ключа. Попробуйте другую ключевую фразу для розблокировки всех ключей.</item>
+        <item quantity="many">%1$d із %2$d успешно розблокировано. Осталось %3$d ключей. Попробуйте другую ключевую фразу для розблокировки всех ключей.</item>
+    </plurals>
+    <plurals name="file_contains_some_amount_of_keys">
+        <item quantity="one">[%1$s]</item>
+        <item quantity="few">[%1$s] содержит %2$d ключа</item>
+        <item quantity="many">[%1$s] содержит %2$d ключей</item>
+    </plurals>
+    <plurals name="loaded_private_keys_from_clipboard">
+        <item quantity="one">Загружено %1$d закрытый ключ с буфера обмена</item>
+        <item quantity="few">Загружено %1$d закрытых ключа с буфера обмена</item>
+        <item quantity="many">Загружено %1$d закрытых ключей с буфера обмена</item>
+    </plurals>
+    <plurals name="tell_sender_to_update_their_settings">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Вы должны уведомить отправителя о необходимости обновить его настройки и отправить новое сообщение.</item>
+        <item quantity="few">Вы должны уведомить отправителя о необходимости обновить его настройки и отправить новое сообщение.\n\nВыберите открытый ключ, чтобы поделиться</item>
+        <item quantity="many">Вы должны уведомить отправителя о необходимости обновить его настройки и отправить новое сообщение.\n\nВыберите открытый ключ, чтобы поделиться</item>
+    </plurals>
+    <plurals name="choose_pub_key">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Ваш открытый ключ готовый для добавления</item>
+        <item quantity="few">Выберите открытый ключ, чтобы поделиться</item>
+        <item quantity="many">Выберите открытый ключ, чтобы поделиться</item>
+    </plurals>
+    <plurals name="outbox_msgs_count">
+        <item quantity="one">Отправка: %1$d в очереди</item>
+        <item quantity="few">Отправка: %1$d в очереди</item>
+        <item quantity="many">Отправка: %1$d в очереди</item>
+    </plurals>
+    <plurals name="has_failed_outgoing_msgs">
+        <item quantity="one">У вас есть %1$d исходящее сообщение, которое не может быть отправлено</item>
+        <item quantity="few">У вас есть %1$d исходящих сообщения, которые не могут быть отправлены</item>
+        <item quantity="many">У вас есть %1$d исходящих сообщений, которые не могут быть отправлены</item>
+    </plurals>
+    <plurals name="delete_msg_question">
+        <item quantity="one">Удалить это %1$d сообщение навсегда?</item>
+        <item quantity="few">Удалить эти %1$d сообщения навсегда?</item>
+        <item quantity="many">Удалить эти %1$d сообщений навсегда?</item>
+    </plurals>
+    <plurals name="found_folder">
+        <item quantity="other">Папки не найдены</item>
+        <item quantity="one">Найдено %1$d папку</item>
+        <item quantity="few">Найдено %1$d папки</item>
+        <item quantity="many">Найдено %1$d папок</item>
+    </plurals>
+    <plurals name="delete_key_question">
+        <item quantity="one">Удалить этот %1$d ключ навсегда?</item>
+        <item quantity="few">Удалить эти %1$d ключа навсегда?</item>
+        <item quantity="many">Удалить эти %1$d ключей навсегда?</item>
+    </plurals>
+    <plurals name="please_provide_passphrase_for_following_keys">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Пожалуйста, предоставьте ключевую фразу для хотя бы одного из следующих ключей</item>
+        <item quantity="few">Пожалуйста, предоставьте ключевую фразу для хотя бы одного из следующих ключей</item>
+        <item quantity="many">Пожалуйста, предоставьте ключевую фразу для хотя бы одного из следующих ключей</item>
+    </plurals>
+    <plurals name="please_provide_passphrase_for_all_following_keys">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Пожалуйста, предоставьте ключевую фразу для следующих ключей</item>
+        <item quantity="few">Пожалуйста, предоставьте ключевую фразу для следующих ключей</item>
+        <item quantity="many">Пожалуйста, предоставьте ключевую фразу для следующих ключей</item>
+    </plurals>
 </resources>

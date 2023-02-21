@@ -13,7 +13,13 @@
     </issue>
     <issue id="TrustAllX509TrustManager">
         <!-- Those issues are not relevant to our project, we can skip them -->
-        <ignore path="**/SslUtils$1.class" />
+
+        <!-- This library(google-http-client) has SslUtils and  trustAllSSLContext()
+         that should be used only for debugging and local testing.
+         We don't use it directly in the app and can skip.
+         -->
+        <ignore path="**/google-http-client-**.jar" />
+
         <ignore path="**/JcaJceUtils**" />
     </issue>
     <issue id="UnusedResources">
