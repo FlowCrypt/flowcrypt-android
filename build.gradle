@@ -22,7 +22,7 @@ buildscript {
         // in the individual module build.gradle files
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.22'
         classpath 'io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.22.0'
-        classpath 'com.project.starter:easylauncher:5.1.2'
+        classpath 'com.project.starter:easylauncher:6.1.0'
     }
 }
 
