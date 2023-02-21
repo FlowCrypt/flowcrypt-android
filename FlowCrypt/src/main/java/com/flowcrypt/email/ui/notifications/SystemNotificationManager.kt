@@ -81,7 +81,7 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
         ).build()
       )
 
-    notificationManagerCompat.notify(groupName, groupId, builder.build())
+    notify(groupName, groupId, builder.build())
   }
 
   companion object {
