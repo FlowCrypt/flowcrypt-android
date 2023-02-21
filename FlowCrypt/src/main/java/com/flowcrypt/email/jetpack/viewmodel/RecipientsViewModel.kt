@@ -10,8 +10,8 @@ import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.ApiRepository
@@ -56,7 +56,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     roomDatabase.recipientDao().getAllRecipientsLD()
   val recipientsWithPgpFlow = roomDatabase.recipientDao().getAllRecipientsWithPgpFlow()
   val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity>>> =
-    Transformations.switchMap(searchPatternLiveData) {
+    searchPatternLiveData.switchMap {
       liveData {
         emit(Result.loading())
         val foundContacts = if (it.isNullOrEmpty()) {

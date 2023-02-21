@@ -8,8 +8,8 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.IMAPStoreManager
@@ -38,7 +38,7 @@ import java.util.Properties
  */
 class BackupsViewModel(application: Application) : AccountViewModel(application) {
   val onlineBackupsLiveData: LiveData<Result<List<PgpKeyDetails>?>> =
-    Transformations.switchMap(activeAccountLiveData) { accountEntity ->
+    activeAccountLiveData.switchMap { accountEntity ->
       liveData {
         accountEntity?.let {
           emit(Result.loading())
@@ -57,7 +57,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
             } else {
               val connection = IMAPStoreManager.getConnection(accountEntity.id)
               if (connection == null) {
-                emit(Result.exception<List<PgpKeyDetails>?>(NullPointerException("There is no active connection for ${accountEntity.email}")))
+                emit(Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}")))
               } else {
                 when (accountEntity.accountType) {
                   AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
@@ -84,7 +84,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
             }
           } catch (e: Exception) {
             e.printStackTrace()
-            emit(Result.exception<List<PgpKeyDetails>?>(e))
+            emit(Result.exception(e))
           }
         }
       }

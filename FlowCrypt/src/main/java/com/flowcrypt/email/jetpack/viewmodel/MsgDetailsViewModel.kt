@@ -273,11 +273,11 @@ class MsgDetailsViewModel(
       afterKeysStorageUpdatedMsgLiveData,
       object : Observer<MessageEntity?> {
         var isFirstCall = true
-        override fun onChanged(messageEntity: MessageEntity?) {
+        override fun onChanged(value: MessageEntity?) {
           if (isFirstCall) {
             isFirstCall = false
           } else {
-            mediatorMsgLiveData.value = messageEntity
+            mediatorMsgLiveData.value = value
           }
         }
       })
