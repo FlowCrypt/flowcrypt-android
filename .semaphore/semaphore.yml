@@ -25,12 +25,16 @@ global_job_config:
       value: /home/semaphore/Android/Sdk
   prologue:
     commands:
-      # fix DNS issue for localhost
-      - sudo apt install -y dnsmasq
-      - sudo sed -i '1s/^/nameserver 127.0.0.53\n/' /etc/resolv.conf
-      - sudo service systemd-resolved restart
+      # fix DNS to ping *.localhost and *.flowcrypt.test
+      - sudo apt install -y dnsmasq resolvconf
+      - echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
+      - echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
+      - echo "address=/flowcrypt.test/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
+      - echo "address=/localhost/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
+      - sudo systemctl restart dnsmasq
       # print some debug info
       - ping fel.localhost -c 1
+      - ping fel.flowcrypt.test -c 1
       # use JAVA 11 by default
       - sem-version java 11
       # general settings

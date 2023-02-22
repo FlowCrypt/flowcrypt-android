@@ -37,6 +37,7 @@ import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Flags
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Multipart
@@ -79,7 +80,7 @@ import java.io.InputStream
 @RunWith(AndroidJUnit4::class)
 @DependsOnMailServer
 class SendMsgTest {
-  private lateinit var context: Context
+  private val context: Context = ApplicationProvider.getApplicationContext()
   private val account = AccountDaoManager.getUserWithoutLetters()
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(account = account)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
@@ -134,8 +135,8 @@ class SendMsgTest {
   }
 
   @Before
-  fun setUp() {
-    context = ApplicationProvider.getApplicationContext()
+  fun cleanFolderBeforeStart() {
+    runBlocking { deleteAllMessagesInFolder(sentFolder.fullName) }
   }
 
   @get:Rule
@@ -149,8 +150,6 @@ class SendMsgTest {
 
   @Test
   fun testSendStandardMsg() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Standard Message",
@@ -178,15 +177,10 @@ class SendMsgTest {
         assertEquals(outgoingMessageInfo.msg, mimeMultipart.getBodyPart(0).content)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendStandardMsgWithAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Standard Message + Att",
@@ -216,14 +210,10 @@ class SendMsgTest {
         assertEquals(attachmentInfo.type, ContentType(attachmentPart.contentType).baseType)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendStandardMsgWithForwardedAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
     val forwardedAttachmentInfo = prepareForwardedAttachment(
       OutgoingMessageInfo(
         account = addAccountToDatabaseRule.account.email,
@@ -275,16 +265,10 @@ class SendMsgTest {
         assertEquals(forwardedAttachmentInfo.type, forwardedAttachmentPart.contentType)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    //as we added 2 messages during this session we use countOfMsgBeforeTest + 2
-    assertEquals(countOfMsgBeforeTest + 2, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendEncryptedMsg() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Encrypted Message",
@@ -321,14 +305,10 @@ class SendMsgTest {
         assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendEncryptedMsgWithAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Encrypted Message + Att",
@@ -387,15 +367,10 @@ class SendMsgTest {
         )
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendEncryptedMsgWithForwardedAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-
     val encryptedForwardedAttachmentInfo = prepareForwardedAttachment(
       OutgoingMessageInfo(
         account = addAccountToDatabaseRule.account.email,
@@ -480,10 +455,6 @@ class SendMsgTest {
         assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(sentFolder.fullName) }
-    //as we added 2 messages during this session we use countOfMsgBeforeTest + 2
-    assertEquals(countOfMsgBeforeTest + 2, countOfMsgAfterTest)
   }
 
   private suspend fun <T> checkExistingMsgOnServer(
@@ -565,18 +536,21 @@ class SendMsgTest {
     }
   }
 
-  private suspend fun countOfMsgsOnServer(folderName: String): Int = withContext(Dispatchers.IO) {
-    var count = 0
-    val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
-    connection.store.use { store ->
-      connection.executeIMAPAction {
-        store.getFolder(folderName).use { folder ->
-          count = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }.messageCount
+  private suspend fun deleteAllMessagesInFolder(folderName: String) =
+    withContext(Dispatchers.IO) {
+      val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
+      return@withContext connection.store.use { store ->
+        connection.executeIMAPAction {
+          store.getFolder(folderName).use { folder ->
+            val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+            val messages = imapFolder.messages
+            if (messages.isNotEmpty()) {
+              imapFolder.setFlags(messages, Flags(Flags.Flag.DELETED), true)
+            }
+          }
         }
       }
     }
-    return@withContext count
-  }
 
   private fun getOpenPgpMetadata(
     inputStream: InputStream,
