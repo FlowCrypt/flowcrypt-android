@@ -28,7 +28,8 @@ subjectAltName = @alt_names
 [ alt_names ]
 DNS.1 = localhost
 DNS.2 = *.localhost
-DNS.3 = *.flowcrypt.test
+DNS.3 = flowcrypt.test
+DNS.4 = *.flowcrypt.test
 
 [ CA_default ]
 default_days      = 3650
