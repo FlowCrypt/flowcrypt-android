@@ -6,10 +6,37 @@ Download on your Android device from the [https://flowcrypt.com/download]
 
 ## Running tests
 
-This guide follows the [Google recommendations for testing apps on Android](https://developer.android.com/training/testing).
-There are JUnit and Instrumentation tests. To be able to run tests locally you should set up your environment
-according to [these instructions](https://developer.android.com/training/testing/espresso/setup#set-up-environment).
-Every scenario described in this section was tested on Ubuntu.
+This guide follows
+the [Google recommendations for testing apps on Android](https://developer.android.com/training/testing)
+. Every scenario described in this section was tested on Ubuntu.
+There are JUnit and Instrumentation tests. To be able to run tests locally you should set up your
+environment.
+
+#### Please follow these instructions:
+
+- [Set up your test environment](https://developer.android.com/training/testing/espresso/setup#set-up-environment)
+  .
+- Some of tests use [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver). We
+  run a local mock web server
+  via [FlowCryptMockWebServerRule](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/rules/FlowCryptMockWebServerRule.kt)
+  . It
+  uses [TestConstants.MOCK_WEB_SERVER_PORT](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/TestConstants.kt#L19)
+  as a port. Unfortunately, the Android system doesn't allow us to use `433`(https) port by default
+  to run a web server on the `localhost(127.0.0.1)`. That's why we have to run a mock web server on
+  another port(for example `1212`) and route all traffic from `127.0.0.1:433` to `127.0.0.1:1212`.
+  To do
+  that [script/ci-wait-for-emulator.sh](https://github.com/FlowCrypt/flowcrypt-android/blob/master/script/ci-wait-for-emulator.sh#L13)
+  can be used.
+- Also, the test environment should handle all requests to `*.flowcrypt.test`. All traffic
+  to `*.flowcrypt.test` should be routed to `localhost(127.0.0.1)`. To do that a DNS server can be
+  used. For example:
+
+      - sudo apt install -y dnsmasq resolvconf
+      - echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
+      - echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
+      - echo "address=/flowcrypt.test/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
+      - echo "address=/localhost/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
+      - sudo systemctl restart dnsmasq
 
 We have two types of tests which can be run:
 
@@ -26,21 +53,21 @@ folder to see more details. To be able to run tests which depend on an email ser
 
 Please use following steps to run **the independent tests** locally:
 
-- Setup your device (virtual or physical) via [these instructions](https://developer.android.com/training/testing/espresso/setup#set-up-environment).
+- Setup your device (virtual or physical) via [these instructions](#please_follow_these_instructions).
 - Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`).
   You can find more details [here](https://developer.android.com/training/testing/junit-runner#sharding-tests).
   Sharding the tests help us run them in pieces on a few emulators at the same time to reduce runtime.
 
 Please use following steps to run **tests that depend on an email** server locally:
 
-- Setup your device (virtual or physical) via [these instructions](https://developer.android.com/training/testing/espresso/setup#set-up-environment).
+- Setup your device (virtual or physical) via [these instructions](#please_follow_these_instructions).
 - Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 - Run `../script/ci-instrumentation-tests-with-mailserver.sh`
 - Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
 Please follow these steps to run **all tests** locally:
 
-- Setup your device (virtual or physical) via [these instructions](https://developer.android.com/training/testing/espresso/setup#set-up-environment).
+- Setup your device (virtual or physical) via [these instructions](#please_follow_these_instructions).
 - Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 - Run `./script/run-all-tests.sh` to execute all tests.
 - Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
