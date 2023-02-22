@@ -53,21 +53,21 @@ folder to see more details. To be able to run tests which depend on an email ser
 
 Please use following steps to run **the independent tests** locally:
 
-- Setup your device (virtual or physical) via [these instructions](#please_follow_these_instructions).
+- Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
 - Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`).
   You can find more details [here](https://developer.android.com/training/testing/junit-runner#sharding-tests).
   Sharding the tests help us run them in pieces on a few emulators at the same time to reduce runtime.
 
 Please use following steps to run **tests that depend on an email** server locally:
 
-- Setup your device (virtual or physical) via [these instructions](#please_follow_these_instructions).
+- Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
 - Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 - Run `../script/ci-instrumentation-tests-with-mailserver.sh`
 - Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
 Please follow these steps to run **all tests** locally:
 
-- Setup your device (virtual or physical) via [these instructions](#please_follow_these_instructions).
+- Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
 - Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 - Run `./script/run-all-tests.sh` to execute all tests.
 - Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
