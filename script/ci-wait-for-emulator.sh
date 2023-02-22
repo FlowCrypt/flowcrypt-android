@@ -8,7 +8,8 @@ adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
 
 ###################################################################################################
-# to test WKD we need to route all traffic for localhost to localhost:1212
+# to test WKD we need to route all traffic for localhost:443 to localhost:1212
+# as we can't use 443 directly for a mock web server.
 adb root
 # Need wait for the root environment
 sleep 20
