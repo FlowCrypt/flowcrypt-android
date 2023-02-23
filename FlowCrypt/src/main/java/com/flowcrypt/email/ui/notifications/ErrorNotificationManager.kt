@@ -65,7 +65,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
 
     prepareAndShowNotificationsGroup(context)
 
-    notificationManagerCompat.notify(
+    notify(
       groupName,
       R.id.notification_id_has_failed_outgoing_msgs,
       builder.build()
@@ -115,7 +115,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
 
     prepareAndShowNotificationsGroup(context)
 
-    notificationManagerCompat.notify(groupName, R.id.notification_id_auth_failure, builder.build())
+    notify(groupName, R.id.notification_id_auth_failure, builder.build())
   }
 
   /**
@@ -134,7 +134,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
       .setAutoCancel(true)
       .setGroupSummary(true)
       .setOnlyAlertOnce(true)
-    notificationManagerCompat.notify(groupName, groupId, groupBuilder.build())
+    notify(groupName, groupId, groupBuilder.build())
   }
 
   companion object {

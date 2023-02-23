@@ -152,7 +152,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setDefaults(Notification.DEFAULT_ALL)
         .setSubText(account.email)
 
-      notificationManagerCompat.notify(msg.uidAsHEX, -1, builder.build())
+      notify(msg.uidAsHEX, -1, builder.build())
     }
   }
 
