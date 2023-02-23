@@ -231,6 +231,6 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     const val MESSAGE_ID_SENT = "5555555555555553"
     const val THREAD_ID_SENT = "1111111111111113"
     const val LOCATION_URL =
-      "https://localhost:1212/upload/gmail/v1/users/me/messages/send?uploadType=resumable&upload_id=Location"
+      "https://flowcrypt.test/upload/gmail/v1/users/me/messages/send?uploadType=resumable&upload_id=Location"
   }
 }

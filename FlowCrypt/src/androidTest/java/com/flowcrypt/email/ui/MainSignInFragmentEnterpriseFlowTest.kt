@@ -83,7 +83,7 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
             return handleFesAvailabilityAPI(gson)
           }
 
-          request.path.equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+          request.path.equals("/api/v1/client-configuration?domain=flowcrypt.test") -> {
             return handleClientConfigurationAPI(gson)
           }
 
@@ -673,11 +673,11 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       )
 
   companion object {
-    private const val EMAIL_EKM_URL_SUCCESS = "https://localhost:1212/ekm/"
-    private const val EMAIL_EKM_URL_SUCCESS_EMPTY_LIST = "https://localhost:1212/ekm/empty/"
+    private const val EMAIL_EKM_URL_SUCCESS = "https://flowcrypt.test/ekm/"
+    private const val EMAIL_EKM_URL_SUCCESS_EMPTY_LIST = "https://flowcrypt.test/ekm/empty/"
     private const val EMAIL_EKM_URL_SUCCESS_NOT_FULLY_DECRYPTED_KEY =
-      "https://localhost:1212/ekm/not_fully_decrypted_key/"
-    private const val EMAIL_EKM_URL_ERROR = "https://localhost:1212/ekm/error/"
+      "https://flowcrypt.test/ekm/not_fully_decrypted_key/"
+    private const val EMAIL_EKM_URL_ERROR = "https://flowcrypt.test/ekm/error/"
     private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.example"
     private const val EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR =
       "client_configuration_error@flowcrypt.example"
@@ -695,21 +695,21 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     private const val EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED =
       "user_with_not_fully_decrypted_prv_key@flowcrypt.example"
     private const val EMAIL_FES_NO_CONNECTION = "fes_request_timeout@flowcrypt.test"
-    private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@localhost:1212"
-    private const val EMAIL_FES_HTTP_404 = "fes_404@localhost:1212"
-    private const val EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS = "fes_not404_not_success@localhost:1212"
-    private const val EMAIL_FES_NOT_ALLOWED_SERVER = "fes_not_allowed_server@localhost:1212"
+    private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@flowcrypt.test"
+    private const val EMAIL_FES_HTTP_404 = "fes_404@flowcrypt.test"
+    private const val EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS = "fes_not404_not_success@flowcrypt.test"
+    private const val EMAIL_FES_NOT_ALLOWED_SERVER = "fes_not_allowed_server@flowcrypt.test"
     private const val EMAIL_FES_SERVER_EXTERNAL_SERVICE =
-      "fes_server_external_service@localhost:1212"
+      "fes_server_external_service@flowcrypt.test"
     private const val EMAIL_FES_SERVER_ENTERPRISE_SERVER =
-      "fes_server_enterprise_server@localhost:1212"
+      "fes_server_enterprise_server@flowcrypt.test"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS =
-      "fes_client_configuration_success@localhost:1212"
+      "fes_client_configuration_success@flowcrypt.test"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_FAILED =
-      "fes_client_configuration_failed@localhost:1212"
+      "fes_client_configuration_failed@flowcrypt.test"
     private const val EMAIL_FES_ENFORCE_ATTESTER_SUBMIT =
-      "enforce_attester_submit@localhost:1212"
-    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@localhost:1212"
+      "enforce_attester_submit@flowcrypt.test"
+    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@flowcrypt.test"
 
     private const val EMAIL_GMAIL = "gmail@gmail.com"
     private const val EMAIL_GOOGLEMAIL = "googlemail@googlemail.com"

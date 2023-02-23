@@ -5,33 +5,36 @@
 
 package com.flowcrypt.email.ui
 
+import android.content.Context
 import android.os.Environment
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
-import androidx.test.espresso.action.ViewActions.pressImeActionButton
-import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.action.ViewActions.typeText
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.core.content.FileProvider
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.R
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
+import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.gson.GsonHelper
@@ -40,6 +43,7 @@ import jakarta.mail.BodyPart
 import jakarta.mail.Multipart
 import jakarta.mail.Part
 import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartReader
@@ -96,6 +100,16 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       }
     })
 
+  private val recipientWithPubKeys = listOf(
+    RecipientWithPubKeys(
+      RecipientEntity(
+        email = RECIPIENT_WITHOUT_PUBLIC_KEY,
+        name = null
+      ),
+      emptyList()
+    )
+  )
+
   @get:Rule
   var ruleChain: TestRule =
     RuleChain.outerRule(RetryRule.DEFAULT)
@@ -105,7 +119,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
       .around(addLabelsToDatabaseRule)
-      .around(activityScenarioRule)
+      .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))
       .around(ScreenshotTestRule())
 
   private var isRequestToMessageAPITested = false
@@ -113,53 +127,35 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
   @Test
   fun testSendPasswordProtectedMessageWithFewAttachments() {
     isRequestToMessageAPITested = false
-    onView(withId(R.id.floatActionButtonCompose))
-      .check(matches(isDisplayed()))
-      .perform(click())
 
-    onView(withId(R.id.chipLayoutTo))
-      .perform(scrollTo())
-    onView(withId(R.id.editTextEmailAddress))
-      .perform(
-        typeText(RECIPIENT_WITHOUT_PUBLIC_KEY),
-        pressImeActionButton(),
-        closeSoftKeyboard()
-      )
-    onView(withId(R.id.editTextEmailSubject))
-      .perform(
-        scrollTo(),
-        click(),
-        typeText(MESSAGE_SUBJECT),
-        closeSoftKeyboard()
-      )
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(
-        scrollTo(),
-        typeText(MESSAGE_TEXT),
-        closeSoftKeyboard()
-      )
+    val context: Context = ApplicationProvider.getApplicationContext()
+    val uid = EmailUtil.genOutboxUID(context)
+    val outgoingMessageInfo = OutgoingMessageInfo(
+      account = addAccountToDatabaseRule.account.email,
+      subject = MESSAGE_SUBJECT,
+      msg = MESSAGE_TEXT,
+      toRecipients = listOf(InternetAddress(RECIPIENT_WITHOUT_PUBLIC_KEY)),
+      from = InternetAddress(addAccountToDatabaseRule.account.email),
+      encryptionType = MessageEncryptionType.ENCRYPTED,
+      messageType = MessageType.NEW,
+      uid = uid,
+      password = WEB_PORTAL_PASSWORD.toCharArray(),
+      atts = attachments.mapIndexedNotNull { index, file ->
+        EmailUtil.getAttInfoFromUri(
+          context = context,
+          uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, file)
+        )?.copy(
+          email = addAccountToDatabaseRule.account.email,
+          uid = uid,
+          folder = JavaEmailConstants.FOLDER_OUTBOX,
+          path = index.toString()
+        )
+      }
+    )
 
-    for (att in attachments) {
-      addAttachment(att)
-    }
-
-    onView(withId(R.id.btnSetWebPortalPassword))
-      .perform(
-        scrollTo(),
-        click()
-      )
-
-    onView(withId(R.id.eTPassphrase))
-      .perform(
-        typeText(WEB_PORTAL_PASSWORD),
-        pressImeActionButton()
-      )
-
-    onView(withId(R.id.menuActionSend))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    Thread.sleep(10000)
+    ProcessingOutgoingMessageInfoHelper.process(context, outgoingMessageInfo)
+    //need to wait sometime until all processes will be completed
+    Thread.sleep(5000)
     assertTrue(isRequestToMessageAPITested)
   }
 

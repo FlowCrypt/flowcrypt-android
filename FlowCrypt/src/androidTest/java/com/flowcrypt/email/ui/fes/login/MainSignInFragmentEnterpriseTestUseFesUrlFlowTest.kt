@@ -60,7 +60,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
           }
 
-          request.path.equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+          request.path.equals("/api/v1/client-configuration?domain=flowcrypt.test") -> {
             return handleClientConfigurationAPI()
           }
 
@@ -113,7 +113,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
   }
 
   companion object {
-    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@localhost:1212"
+    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@flowcrypt.test"
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
       apiError = null,

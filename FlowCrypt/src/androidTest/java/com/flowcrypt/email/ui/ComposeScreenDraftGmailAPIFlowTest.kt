@@ -75,7 +75,7 @@ class ComposeScreenDraftGmailAPIFlowTest : BaseComposeScreenTest() {
           ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
           ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
         ),
-        keyManagerUrl = "https://localhost:1212/",
+        keyManagerUrl = "https://flowcrypt.test/",
       ),
       useAPI = true,
       useFES = true

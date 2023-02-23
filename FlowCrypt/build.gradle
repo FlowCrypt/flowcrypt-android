@@ -169,8 +169,8 @@ android {
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            buildConfigField 'String', 'ATTESTER_URL', "\"https://localhost:1212/\""
-            buildConfigField 'String', 'API_URL', "\"https://localhost:1212/\""
+            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.test/\""
+            buildConfigField 'String', 'API_URL', "\"https://flowcrypt.test/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
