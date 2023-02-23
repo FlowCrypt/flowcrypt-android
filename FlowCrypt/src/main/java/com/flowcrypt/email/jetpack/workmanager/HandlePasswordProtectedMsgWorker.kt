@@ -416,7 +416,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     return@withContext requireNotNull(messageReplyTokenResponseResult.data?.replyToken)
   }
 
-  private data class ReplyInfoData(
+  data class ReplyInfoData(
     val sender: String,
     val recipient: List<String>,
     val subject: String,
@@ -428,7 +428,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     private const val RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN = 6
     val NAME = HandlePasswordProtectedMsgWorker::class.java.simpleName
 
-    private fun genInfoDiv(replyInfo: String?) =
+    fun genInfoDiv(replyInfo: String?) =
       "<div style=\"display: none\" class=\"cryptup_reply\" cryptup-data=\"$replyInfo\"></div>"
 
     fun enqueue(context: Context) {
