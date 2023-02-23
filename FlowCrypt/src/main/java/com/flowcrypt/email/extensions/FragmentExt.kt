@@ -7,11 +7,8 @@ package com.flowcrypt.email.extensions
 
 import android.net.Uri
 import android.widget.Toast
-import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
@@ -89,28 +86,6 @@ fun <T> androidx.fragment.app.Fragment.getNavigationResult(
       currentOnResultSavedStateHandle?.remove<T>(key)
       onResult.invoke(it)
     }
-}
-
-fun <T> androidx.fragment.app.Fragment.getNavigationResultForDialog(
-  @IdRes destinationId: Int,
-  key: String,
-  onResult: (result: T) -> Unit
-) {
-  val navBackStackEntry = navController?.getBackStackEntry(destinationId) ?: return
-
-  val observer = LifecycleEventObserver { _, event ->
-    if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)) {
-      navBackStackEntry.savedStateHandle.get<T>(key)?.let(onResult)
-      navBackStackEntry.savedStateHandle.remove<T>(key)
-    }
-  }
-  navBackStackEntry.lifecycle.addObserver(observer)
-
-  viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
-    if (event == Lifecycle.Event.ON_DESTROY) {
-      navBackStackEntry.lifecycle.removeObserver(observer)
-    }
-  })
 }
 
 fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {

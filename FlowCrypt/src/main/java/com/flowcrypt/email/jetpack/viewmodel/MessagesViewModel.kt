@@ -9,8 +9,8 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Config
 import androidx.paging.PagedList
@@ -91,38 +91,36 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   private val foldersLiveData = MutableLiveData<LocalFolder>()
 
-  var msgsLiveData: LiveData<PagedList<MessageEntity>>? =
-    Transformations.switchMap(foldersLiveData) { localFolder ->
-      liveData {
-        cancelActionsForPreviousFolder()
-        val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: ""
+  var msgsLiveData: LiveData<PagedList<MessageEntity>>? = foldersLiveData.switchMap { localFolder ->
+    liveData {
+      cancelActionsForPreviousFolder()
+      val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: ""
 
-        val label = if (localFolder.searchQuery.isNullOrEmpty()) {
-          localFolder.fullName
-        } else {
-          JavaEmailConstants.FOLDER_SEARCH
-        }
-
-        emitSource(
-          roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
-            .toLiveData(
-              config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
-              boundaryCallback = boundaryCallback
-            )
-        )
+      val label = if (localFolder.searchQuery.isNullOrEmpty()) {
+        localFolder.fullName
+      } else {
+        JavaEmailConstants.FOLDER_SEARCH
       }
+
+      emitSource(
+        roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
+          .toLiveData(
+            config = Config(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
+            boundaryCallback = boundaryCallback
+          )
+      )
     }
+  }
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
-  var outboxMsgsLiveData: LiveData<List<MessageEntity>> =
-    Transformations.switchMap(activeAccountLiveData) {
-      roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
-    }
+  var outboxMsgsLiveData: LiveData<List<MessageEntity>> = activeAccountLiveData.switchMap {
+    roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
+  }
 
   val loadMsgsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
   val refreshMsgsLiveData = MutableLiveData<Result<Boolean?>>()
 
-  val msgsCountLiveData = Transformations.switchMap(loadMsgsFromRemoteServerLiveData) {
+  val msgsCountLiveData = loadMsgsFromRemoteServerLiveData.switchMap {
     liveData {
       if (it.status != Result.Status.SUCCESS) return@liveData
       val account = roomDatabase.accountDao().getActiveAccountSuspend()?.email ?: return@liveData
