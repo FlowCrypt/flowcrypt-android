@@ -394,6 +394,8 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
       protector = keysStorage.getSecretKeyRingProtector()
     )
 
+    decryptionResult.exception?.printStackTrace()
+
     return@withContext String(decryptionResult.content?.toByteArray() ?: byteArrayOf())
   }
 
