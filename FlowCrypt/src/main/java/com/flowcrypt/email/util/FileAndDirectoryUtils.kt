@@ -14,10 +14,7 @@ import java.util.regex.Pattern
 /**
  * This class describes methods for a work with files and directories.
  *
- * @author Denis Bondarenko
- * Date: 01.02.2018
- * Time: 14:20
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FileAndDirectoryUtils {
   companion object {

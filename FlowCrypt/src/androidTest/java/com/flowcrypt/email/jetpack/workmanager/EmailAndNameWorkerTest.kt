@@ -24,10 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * @author Denis Bondarenko
- * Date: 5/30/22
- * Time: 2:36 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @RunWith(AndroidJUnit4::class)
 class EmailAndNameWorkerTest {

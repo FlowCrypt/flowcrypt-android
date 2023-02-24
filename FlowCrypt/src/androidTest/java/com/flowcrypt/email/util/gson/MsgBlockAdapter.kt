@@ -15,10 +15,7 @@ import com.google.gson.JsonElement
 import java.lang.reflect.Type
 
 /**
- * @author Denis Bondarenko
- * Date: 3/19/19
- * Time: 2:58 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgBlockAdapter : JsonDeserializer<MsgBlock> {
   override fun deserialize(

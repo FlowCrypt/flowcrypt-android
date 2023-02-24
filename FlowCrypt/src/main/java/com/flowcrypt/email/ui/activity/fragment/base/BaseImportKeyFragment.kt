@@ -18,10 +18,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialog
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/16/21
- *         Time: 3:50 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseImportKeyFragment<T : ViewBinding> : BaseFragment<T>() {
   abstract val isPrivateKeyMode: Boolean

@@ -6,10 +6,7 @@
 package com.flowcrypt.email.util.exception
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/15/21
- *         Time: 3:41 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class WrongPassPhraseException(message: String, cause: Throwable) :
   FlowCryptException(message, cause)

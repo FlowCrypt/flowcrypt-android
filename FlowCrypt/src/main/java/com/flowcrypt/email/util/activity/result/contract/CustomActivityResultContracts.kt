@@ -15,10 +15,7 @@ import androidx.annotation.CallSuper
 /**
  * This class is based on [ActivityResultContracts.CreateDocument()]
  *
- * @author Denis Bondarenko
- *         Date: 6/7/22
- *         Time: 11:45 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class CreateCustomDocument(private val type: String) : ActivityResultContract<String, Uri?>() {
   @CallSuper

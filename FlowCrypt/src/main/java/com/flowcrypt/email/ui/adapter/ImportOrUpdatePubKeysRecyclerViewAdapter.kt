@@ -24,10 +24,7 @@ import com.flowcrypt.email.util.UIUtil
 /**
  * This adapter can be used for showing information about public keys when we want to import them
  *
- * @author Denis Bondarenko
- * Date: 09.05.2018
- * Time: 08:07
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ImportOrUpdatePubKeysRecyclerViewAdapter(
   private val pubKeyActionsListener: PubKeyActionsListener? = null

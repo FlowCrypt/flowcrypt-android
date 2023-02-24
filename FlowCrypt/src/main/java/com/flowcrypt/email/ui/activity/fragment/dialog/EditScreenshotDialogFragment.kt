@@ -30,10 +30,7 @@ import ja.burhanrashid52.photoeditor.shape.ShapeBuilder
 /**
  * It's a dialog which helps edit the given screenshot
  *
- * @author Denis Bondarenko
- *         Date: 9/4/19
- *         Time: 5:03 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EditScreenshotDialogFragment : BaseDialogFragment() {
   private var binding: FragmentScreenshotEditorBinding? = null

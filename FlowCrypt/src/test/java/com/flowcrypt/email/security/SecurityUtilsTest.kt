@@ -9,10 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * @author Denis Bondarenko
- * Date: 6/12/20
- * Time: 12:23 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SecurityUtilsTest {
   @Test

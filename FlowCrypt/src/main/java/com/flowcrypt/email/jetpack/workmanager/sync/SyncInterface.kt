@@ -6,10 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager.sync
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/24/21
- *         Time: 4:34 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface SyncInterface {
   fun useIndependentConnection(): Boolean = false

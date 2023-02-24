@@ -23,10 +23,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/28/21
- *         Time: 6:10 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecheckProvidedPassphraseFragment : BaseFragment<FragmentRecheckProvidedPassphraseBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

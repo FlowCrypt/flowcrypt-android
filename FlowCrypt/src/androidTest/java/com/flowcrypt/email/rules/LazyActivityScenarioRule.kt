@@ -13,10 +13,7 @@ import org.junit.rules.ExternalResource
 /**
  * https://medium.com/stepstone-tech/better-tests-with-androidxs-activityscenario-in-kotlin-part-1-6a6376b713ea
  *
- * @author Denis Bondarenko
- *         Date: 9/23/20
- *         Time: 8:36 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LazyActivityScenarioRule<A : Activity> : ExternalResource {
 

@@ -8,10 +8,7 @@ package com.flowcrypt.email.junit.annotations
 /**
  * This annotation was created for debugging purposes
  *
- * @author Denis Bondarenko
- *         Date: 7/27/19
- *         Time: 3:55 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 annotation class DebugTest

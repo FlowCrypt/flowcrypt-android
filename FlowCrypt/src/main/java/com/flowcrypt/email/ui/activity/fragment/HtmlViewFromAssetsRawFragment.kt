@@ -16,10 +16,7 @@ import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/8/22
- *         Time: 6:05 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class HtmlViewFromAssetsRawFragment : BaseFragment<FragmentHtmlViewFromAssetsRawBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

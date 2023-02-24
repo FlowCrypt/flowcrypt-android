@@ -19,10 +19,7 @@ import java.io.InputStream
  * It's a special version of [AttachmentInfoDataSource] which decrypts a source before using.
  * Also, it drops a file extension(as this an incoming attachment here always will have '.pgp').
  *
- * @author Denis Bondarenko
- *         Date: 2/6/23
- *         Time: 4:38 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PasswordProtectedAttachmentInfoDataSource(
   context: Context,

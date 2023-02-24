@@ -23,10 +23,7 @@ import kotlinx.coroutines.withContext
 /**
  * This class describes available methods for [MessageEntity]
  *
- * @author DenBond7
- * Date: 20.06.2017
- * Time: 10:49
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 abstract class MessageDao : BaseDao<MessageEntity> {

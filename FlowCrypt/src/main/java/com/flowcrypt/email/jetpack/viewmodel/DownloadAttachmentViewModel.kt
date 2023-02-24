@@ -37,10 +37,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/21/22
- *         Time: 11:39 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, application: Application) :
   AccountViewModel(application) {

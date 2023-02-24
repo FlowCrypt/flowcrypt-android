@@ -17,10 +17,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * It's a variant of [MsgBlock] which describes a public key.
  *
- * @author Denis Bondarenko
- * Date: 3/25/19
- * Time: 2:35 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class PublicKeyMsgBlock constructor(

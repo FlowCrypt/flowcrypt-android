@@ -12,10 +12,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This model describes info about an imported key.
  *
- * @author Denis Bondarenko
- * Date: 09.08.2018
- * Time: 15:47
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class KeyImportModel constructor(

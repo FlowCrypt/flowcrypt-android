@@ -22,10 +22,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/13/20
- *         Time: 12:32 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LabelsViewModel(application: Application) : AccountViewModel(application) {
   val labelsLiveData: LiveData<List<LabelEntity>> = activeAccountLiveData.switchMap {

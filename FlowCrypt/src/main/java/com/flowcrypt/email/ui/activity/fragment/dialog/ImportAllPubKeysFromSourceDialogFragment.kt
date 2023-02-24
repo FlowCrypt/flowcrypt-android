@@ -27,10 +27,7 @@ import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ImportPubKeysFromSourceSharedViewModel
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/17/21
- *         Time: 4:22 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
   private var binding: FragmentImportAllPubKeysFromSourceBinding? = null

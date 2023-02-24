@@ -30,10 +30,7 @@ import kotlinx.coroutines.withContext
 /**
  * This task moves messages back to INBOX
  *
- * @author Denis Bondarenko
- *         Date: 10/18/19
- *         Time: 6:14 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MovingToInboxWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

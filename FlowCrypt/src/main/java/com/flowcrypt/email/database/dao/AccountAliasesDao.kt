@@ -15,10 +15,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 /**
  * This object describes a logic of work with [AccountAliases].
  *
- * @author Denis Bondarenko
- * Date: 26.10.2017
- * Time: 15:51
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {

@@ -14,10 +14,7 @@ import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 
 /**
- * @author Denis Bondarenko
- * Date: 21.02.2018
- * Time: 17:54
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddPrivateKeyToDatabaseRule constructor(
   val accountEntity: AccountEntity,

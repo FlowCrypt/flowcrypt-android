@@ -31,10 +31,7 @@ import kotlinx.coroutines.withContext
 import java.util.Properties
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/30/20
- *         Time: 12:00 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class BackupsViewModel(application: Application) : AccountViewModel(application) {
   val onlineBackupsLiveData: LiveData<Result<List<PgpKeyDetails>?>> =

@@ -40,10 +40,7 @@ import org.apache.commons.io.IOUtils
 import java.nio.charset.StandardCharsets
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/11/22
- *         Time: 10:36 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>() {
   protected val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()

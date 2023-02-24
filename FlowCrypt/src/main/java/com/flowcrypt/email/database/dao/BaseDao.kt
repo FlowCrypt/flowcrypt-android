@@ -16,10 +16,7 @@ import kotlinx.coroutines.withContext
 /**
  * It's a base implementation of [androidx.room.Dao] interface which contains the common methods
  *
- * @author Denis Bondarenko
- *         Date: 12/19/19
- *         Time: 11:11 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface BaseDao<T> {
   @Insert

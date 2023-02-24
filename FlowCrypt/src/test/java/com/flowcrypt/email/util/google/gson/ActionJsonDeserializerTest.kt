@@ -12,10 +12,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * @author Denis Bondarenko
- * Date: 10/27/22
- * Time: 6:30 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ActionJsonDeserializerTest {
 

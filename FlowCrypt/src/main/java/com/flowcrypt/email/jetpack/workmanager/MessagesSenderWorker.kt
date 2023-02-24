@@ -65,11 +65,8 @@ import java.net.SocketException
 import javax.net.ssl.SSLException
 
 /**
- * @author Denis Bondarenko
+ * @author Denys Bondarenko
  *
- * Date: 11.09.2018
- * Time: 18:43
- * E-mail: DenBond7@gmail.com
  */
 class MessagesSenderWorker(context: Context, params: WorkerParameters) :
   BaseMsgWorker(context, params) {

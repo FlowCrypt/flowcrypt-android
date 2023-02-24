@@ -11,9 +11,6 @@ import androidx.lifecycle.AndroidViewModel
 /**
  * The base implementation of [AndroidViewModel]
  *
- * @author Denis Bondarenko
- *         Date: 10/23/19
- *         Time: 12:37 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseAndroidViewModel(application: Application) : AndroidViewModel(application)

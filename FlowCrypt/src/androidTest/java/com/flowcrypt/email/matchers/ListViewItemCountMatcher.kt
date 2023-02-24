@@ -12,10 +12,7 @@ import org.hamcrest.BaseMatcher
 import org.hamcrest.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/3/19
- *         Time: 3:47 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ListViewItemCountMatcher<T : View>(val itemCount: Int) : BaseMatcher<T>() {
   override fun matches(item: Any): Boolean {

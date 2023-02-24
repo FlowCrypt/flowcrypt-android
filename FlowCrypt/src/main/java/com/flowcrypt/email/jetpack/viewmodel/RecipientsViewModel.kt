@@ -42,10 +42,7 @@ import java.io.IOException
  * either from local storage or from remote servers eg Attester or WKD, based on client
  * configuration.
  *
- * @author Denis Bondarenko
- *         Date: 4/7/20
- *         Time: 11:19 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()

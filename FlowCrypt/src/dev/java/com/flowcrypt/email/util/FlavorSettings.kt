@@ -12,10 +12,7 @@ import leakcanary.LeakCanary
 import java.util.Properties
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/13/20
- *         Time: 12:41 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object FlavorSettings : EnvironmentSettings {
   override fun configure(context: Context) {

@@ -41,10 +41,7 @@ import kotlinx.parcelize.Parcelize
 import java.util.Properties
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/5/19
- *         Time: 6:30 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 //todo-denbond7 need to add ForeignKey on account table
 @Entity(

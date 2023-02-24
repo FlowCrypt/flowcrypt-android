@@ -8,10 +8,7 @@ package com.flowcrypt.email.api.email.javamail
 import jakarta.mail.internet.MimeMultipart
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/19/21
- *         Time: 4:27 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CustomMimeMultipart constructor(contentType: String?) : MimeMultipart() {
   init {

@@ -12,10 +12,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.adapter.PrivateKeysRecyclerViewAdapter
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/2/20
- *         Time: 4:45 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrivateKeyItemDetailsLookup(private val recyclerView: RecyclerView) :
   ItemDetailsLookup<PgpKeyDetails>() {

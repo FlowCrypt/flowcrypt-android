@@ -18,10 +18,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/23/21
- *         Time: 9:54 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository = FlowcryptApiRepository()

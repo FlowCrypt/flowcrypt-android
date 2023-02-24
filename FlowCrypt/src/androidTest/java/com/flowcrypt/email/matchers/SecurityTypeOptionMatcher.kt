@@ -10,10 +10,7 @@ import org.hamcrest.BaseMatcher
 import org.hamcrest.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/3/19
- *         Time: 3:08 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SecurityTypeOptionMatcher(val option: SecurityType.Option) :
   BaseMatcher<SecurityType.Option>() {

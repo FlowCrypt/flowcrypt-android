@@ -15,10 +15,7 @@ import org.junit.runners.model.Statement
  * It uses [retryCount] value from the constructor or can be overridden with [RetryOnFailure] annotation.
  * Max [retryCount] == [MAX_RETRY_VALUE]
  *
- * @author Denis Bondarenko
- *         Date: 9/26/20
- *         Time: 8:47 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RetryRule(private val retryCount: Int = 0) : BaseRule() {
   override fun execute() {}

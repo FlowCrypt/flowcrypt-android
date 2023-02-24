@@ -14,10 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/25/20
- *         Time: 5:11 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseWorker(context: Context, params: WorkerParameters) :
   CoroutineWorker(context, params) {

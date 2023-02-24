@@ -8,10 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.base
 import androidx.core.view.MenuHost
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/8/22
- *         Time: 12:33 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface UiUxSettings {
   val isToolbarVisible: Boolean

@@ -15,10 +15,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/5/19
- *         Time: 6:27 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Entity(tableName = "action_queue")
 data class ActionQueueEntity(

@@ -28,10 +28,7 @@ import kotlinx.coroutines.withContext
 /**
  * This task moves marked messages to INBOX folder
  *
- * @author Denis Bondarenko
- *         Date: 10/18/19
- *         Time: 12:02 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ArchiveMsgsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

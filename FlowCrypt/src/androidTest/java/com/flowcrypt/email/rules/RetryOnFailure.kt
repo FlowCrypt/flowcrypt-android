@@ -8,10 +8,7 @@ package com.flowcrypt.email.rules
 /**
  * An annotation for retry on failure. The value should be equal to or large than 0.
  *
- * @author Denis Bondarenko
- *         Date: 3/18/21
- *         Time: 12:35 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Target(
   AnnotationTarget.FUNCTION,

@@ -11,10 +11,7 @@ import androidx.room.Query
 import com.flowcrypt.email.database.entity.AttachmentEntity
 
 /**
- * @author Denis Bondarenko
- * Date: 08.08.2017
- * Time: 10:41
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 interface AttachmentDao : BaseDao<AttachmentEntity> {

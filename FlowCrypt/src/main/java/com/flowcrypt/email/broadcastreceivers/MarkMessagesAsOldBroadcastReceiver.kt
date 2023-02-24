@@ -18,10 +18,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 /**
  * This [BroadcastReceiver] will be used by [MessagesNotificationManager] to mark messages as old.
  *
- * @author Denis Bondarenko
- * Date: 03.07.2018
- * Time: 16:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MarkMessagesAsOldBroadcastReceiver : BroadcastReceiver() {
 

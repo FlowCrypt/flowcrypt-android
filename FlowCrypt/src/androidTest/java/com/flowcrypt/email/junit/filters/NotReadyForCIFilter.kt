@@ -9,10 +9,7 @@ import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import org.junit.runner.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/17/21
- *         Time: 5:24 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class NotReadyForCIFilter : BaseCustomFilter() {
   override fun evaluateTest(description: Description?): Boolean {

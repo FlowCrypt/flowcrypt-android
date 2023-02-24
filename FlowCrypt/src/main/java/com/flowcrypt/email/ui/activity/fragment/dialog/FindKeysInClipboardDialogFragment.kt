@@ -29,10 +29,7 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/16/21
- *         Time: 6:06 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
   private var binding: FragmentFindKeysInClipboardBinding? = null

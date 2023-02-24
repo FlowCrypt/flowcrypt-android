@@ -25,10 +25,7 @@ import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.material.appbar.AppBarLayout
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/6/20
- *         Time: 4:16 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?

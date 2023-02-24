@@ -13,10 +13,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This POJO object describes a base error from the API.
  *
- * @author Denis Bondarenko
- * Date: 12.07.2017
- * Time: 9:26
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class ApiError constructor(

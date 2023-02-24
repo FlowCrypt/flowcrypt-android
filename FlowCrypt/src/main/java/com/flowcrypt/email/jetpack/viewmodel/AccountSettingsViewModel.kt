@@ -15,10 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/25/20
- *         Time: 10:21 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class AccountSettingsViewModel(application: Application) :
   AccountViewModel(application) {

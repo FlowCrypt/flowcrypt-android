@@ -12,10 +12,7 @@ import org.junit.rules.TestRule
 import org.junit.runners.model.Statement
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/26/22
- *         Time: 10:30 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object GrantPermissionRuleChooser {
   fun grant(

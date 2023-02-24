@@ -19,10 +19,7 @@ import org.hamcrest.Matchers.isEmptyString
 import org.junit.Test
 
 /**
- * @author Denis Bondarenko
- * Date: 3/13/19
- * Time: 3:44 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BasePassphraseFlowTest : BaseCheckPassphraseOnFirstScreenFlowTest() {
 

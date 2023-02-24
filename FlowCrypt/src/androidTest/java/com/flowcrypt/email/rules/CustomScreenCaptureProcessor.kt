@@ -17,10 +17,7 @@ import org.apache.commons.io.FilenameUtils
 import java.io.BufferedOutputStream
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/28/20
- *         Time: 8:32 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CustomScreenCaptureProcessor : BasicScreenCaptureProcessor() {
   override fun process(capture: ScreenCapture?): String {

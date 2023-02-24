@@ -21,10 +21,7 @@ import org.pgpainless.util.Passphrase
 import java.util.Properties
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/19/22
- *         Time: 6:02 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ProcessMimeMessageTest {
   @Test

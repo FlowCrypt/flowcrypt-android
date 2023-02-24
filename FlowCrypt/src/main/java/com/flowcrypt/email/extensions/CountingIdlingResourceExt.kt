@@ -11,10 +11,7 @@ import com.flowcrypt.email.util.IdlingCountListener
 import com.flowcrypt.email.util.LogsUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/18/20
- *         Time: 7:26 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun CountingIdlingResource?.incrementSafely(any: Any, msg: String = "") {
   if (GeneralUtil.isDebugBuild()) {

@@ -19,10 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/19/21
- *         Time: 2:04 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecipientDetailsViewModel(
   recipientEntity: RecipientEntity, application: Application

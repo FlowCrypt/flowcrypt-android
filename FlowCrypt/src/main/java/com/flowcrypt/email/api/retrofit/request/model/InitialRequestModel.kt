@@ -11,10 +11,7 @@ import com.google.gson.annotations.SerializedName
 /**
  * The request model for the https://flowcrypt.com/attester/initial/request API.
  *
- * @author Denis Bondarenko
- * Date: 12.07.2017
- * Time: 16:48
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 data class InitialRequestModel(
   @SerializedName("email") @Expose val email: String,

@@ -31,10 +31,7 @@ import kotlinx.coroutines.withContext
 import org.pgpainless.util.Passphrase
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/25/22
- *         Time: 4:34 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountViewModel(application) {
   private val repository = FlowcryptApiRepository()

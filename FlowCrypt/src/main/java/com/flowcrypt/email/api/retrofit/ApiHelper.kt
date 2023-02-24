@@ -28,10 +28,7 @@ import java.util.concurrent.TimeUnit
  * This class will be used to perform network requests.
  * This class has instance of OkHttpClient and Retrofit.
  *
- * @author Denis Bondarenko
- * Date: 08.07.2015
- * Time: 13:06
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ApiHelper private constructor(context: Context) {
   private val okHttpClient: OkHttpClient

@@ -17,10 +17,7 @@ import com.flextrade.jfixture.utility.comparators.InverseComparator
 import java.lang.reflect.Type
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/23/20
- *         Time: 9:24 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SelectConstructorCustomisation(type: Type?) : Customisation {
   private val type: SpecimenType<*> = SpecimenType.of(type)

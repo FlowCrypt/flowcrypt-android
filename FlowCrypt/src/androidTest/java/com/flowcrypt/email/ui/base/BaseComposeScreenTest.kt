@@ -34,10 +34,7 @@ import org.hamcrest.Matchers.allOf
 import java.io.File
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/11/21
- *         Time: 4:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseComposeScreenTest : BaseTest() {
   override val useIntents: Boolean = true

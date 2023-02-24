@@ -27,10 +27,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/11/22
- *         Time: 10:04 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreatePrivateKeyFirstFragment :
   BasePassphraseStrengthFragment<FragmentCreatePrivateKeyFirstBinding>() {

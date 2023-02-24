@@ -17,10 +17,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/16/19
- *         Time: 8:38 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMode: Int) :
   ArrayAdapter<AttachmentInfo>(context, R.layout.pub_key_adapter_item_radio_button, atts) {

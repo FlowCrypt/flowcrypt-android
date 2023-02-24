@@ -17,10 +17,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
  * It's a custom realization of [ConstraintLayout] which implements [Checkable] interface. This
  * view group should contain only one view which extends [CompoundButton].
  *
- * @author Denis Bondarenko
- *         Date: 9/16/19
- *         Time: 11:49 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckableConstrainLayout(context: Context, attrs: AttributeSet) :
   ConstraintLayout(context, attrs), Checkable {

@@ -32,10 +32,7 @@ import java.lang.ref.WeakReference
  * This service will be used to do checking clipboard to find a valid key while the
  * service running.
  *
- * @author Denis Bondarenko
- * Date: 27.07.2017
- * Time: 9:07
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClipChangedListener {
 

@@ -10,10 +10,7 @@ import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import kotlinx.coroutines.runBlocking
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/18/22
- *         Time: 12:18 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddGmailAliasToDatabaseRule constructor(
   private val accountAliasesEntity: AccountAliasesEntity

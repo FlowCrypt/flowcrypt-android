@@ -15,10 +15,7 @@ import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/12/19
- *         Time: 10:12 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class DecryptedAttMsgBlock(

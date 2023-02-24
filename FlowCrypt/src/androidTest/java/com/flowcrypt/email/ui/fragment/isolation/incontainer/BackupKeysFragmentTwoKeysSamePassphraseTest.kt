@@ -33,10 +33,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/22/21
- *         Time: 11:27 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 @MediumTest

@@ -6,10 +6,7 @@
 package com.flowcrypt.email.api.retrofit
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/25/19
- *         Time: 10:29 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 enum class LoadingState {
   PREPARE_REQUEST,

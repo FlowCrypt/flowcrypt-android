@@ -9,10 +9,7 @@ import android.text.InputFilter
 import android.widget.TextView
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/11/20
- *         Time: 4:35 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun TextView.addInputFilter(inputFilter: InputFilter) {
   filters = (filters ?: emptyArray<InputFilter>()) + arrayOf(inputFilter)

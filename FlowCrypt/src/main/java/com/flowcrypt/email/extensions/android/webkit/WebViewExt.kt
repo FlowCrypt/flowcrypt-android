@@ -13,10 +13,7 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/29/22
- *         Time: 1:47 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun WebView.setupDayNight() {
   setBackgroundColor(Color.TRANSPARENT)

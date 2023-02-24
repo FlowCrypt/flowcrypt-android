@@ -10,10 +10,7 @@ import java.io.IOException
 /**
  * This exception indicates a common connection issue
  *
- * @author Denis Bondarenko
- *         Date: 12/3/20
- *         Time: 5:01 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CommonConnectionException(cause: Throwable?, val hasInternetAccess: Boolean? = null) :
   IOException(cause)

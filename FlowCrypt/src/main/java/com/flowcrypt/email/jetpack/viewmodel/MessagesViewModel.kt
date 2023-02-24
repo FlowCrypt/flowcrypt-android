@@ -67,10 +67,7 @@ import java.util.Properties
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/17/19
- *         Time: 4:37 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MessagesViewModel(application: Application) : AccountViewModel(application) {
   private var searchNextPageToken: String? = null

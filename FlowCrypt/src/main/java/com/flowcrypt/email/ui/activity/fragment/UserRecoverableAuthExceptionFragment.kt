@@ -40,10 +40,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/21/20
- *         Time: 12:18 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class UserRecoverableAuthExceptionFragment :
   BaseOAuthFragment<FragmentUserRecoverableAuthExceptionBinding>(), ProgressBehaviour {

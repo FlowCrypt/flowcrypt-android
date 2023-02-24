@@ -8,10 +8,7 @@ package com.flowcrypt.email.extensions.jakarta.mail
 import jakarta.mail.Multipart
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/19/22
- *         Time: 7:58 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun Multipart.hasPartWithHtmlText(): Boolean {
   for (i in 0 until count) {

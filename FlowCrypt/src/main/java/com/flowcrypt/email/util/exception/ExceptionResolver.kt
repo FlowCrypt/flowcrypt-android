@@ -27,10 +27,7 @@ import javax.net.ssl.SSLProtocolException
 /**
  * This class decides what an error can be handled by ACRA.
  *
- * @author Denis Bondarenko
- * Date: 25.01.2018
- * Time: 10:22
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object ExceptionResolver {
 

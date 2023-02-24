@@ -118,10 +118,7 @@ import java.io.InvalidObjectException
 /**
  * This fragment describe a logic of sent an encrypted or standard message.
  *
- * @author DenBond7
- * Date: 10.05.2017
- * Time: 11:27
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   AdapterView.OnItemSelectedListener, View.OnClickListener {

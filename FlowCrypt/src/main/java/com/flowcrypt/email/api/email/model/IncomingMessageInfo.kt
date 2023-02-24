@@ -23,10 +23,7 @@ import java.util.regex.Pattern
 /**
  * The class which describe an incoming message model.
  *
- * @author DenBond7
- * Date: 09.05.2017
- * Time: 11:20
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class IncomingMessageInfo constructor(

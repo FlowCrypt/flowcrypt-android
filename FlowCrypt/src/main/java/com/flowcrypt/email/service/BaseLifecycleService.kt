@@ -10,10 +10,7 @@ import androidx.lifecycle.LifecycleService
 import com.flowcrypt.email.util.LogsUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/6/21
- *         Time: 2:51 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseLifecycleService : LifecycleService() {
   override fun onCreate() {

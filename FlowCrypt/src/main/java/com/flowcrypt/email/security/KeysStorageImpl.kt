@@ -37,10 +37,7 @@ import java.util.concurrent.TimeUnit
  * This class implements [KeysStorage]. Here we collect information about imported private keys
  * for an active account and keep it in the memory.
  *
- * @author DenBond7
- * Date: 05.05.2017
- * Time: 13:06
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  *
  * @version 2.0 Updated to use [Passphrase] and [PGPSecretKeyRing]
  */

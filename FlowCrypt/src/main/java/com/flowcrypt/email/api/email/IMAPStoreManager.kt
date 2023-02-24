@@ -22,10 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/20/20
- *         Time: 11:28 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object IMAPStoreManager {
   private val RETRY_TIMEOUT = TimeUnit.MILLISECONDS.toMillis(200)

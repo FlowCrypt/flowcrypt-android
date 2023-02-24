@@ -21,10 +21,7 @@ import java.security.MessageDigest
  * For details see https://stackoverflow
  * .com/questions/25278821/how-to-round-an-image-with-glide-library/25806229#25806229
  *
- * @author Denis Bondarenko
- * Date: 17.07.2017
- * Time: 15:59
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CircleTransformation : BitmapTransformation() {
 

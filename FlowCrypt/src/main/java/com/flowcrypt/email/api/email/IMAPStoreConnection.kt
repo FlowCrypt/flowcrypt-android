@@ -27,10 +27,7 @@ import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLProtocolException
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/20/20
- *         Time: 11:30 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class IMAPStoreConnection(
   override val context: Context,

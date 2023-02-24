@@ -26,10 +26,7 @@ import com.flowcrypt.email.ui.adapter.PubKeysRecyclerViewAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/19/21
- *         Time: 1:03 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @ExperimentalCoroutinesApi
 class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>(),

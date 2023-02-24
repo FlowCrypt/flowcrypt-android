@@ -10,9 +10,6 @@ import java.io.IOException
 /**
  * This exception can happen when we try to use a snapshot of a corrupted message.
  *
- * @author Denis Bondarenko
- *         Date: 6/10/20
- *         Time: 2:24 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CorruptedMsgInCacheException : IOException()

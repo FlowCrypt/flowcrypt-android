@@ -58,10 +58,7 @@ import jakarta.mail.AuthenticationFailedException
 import java.net.SocketTimeoutException
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/20/20
- *         Time: 3:39 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBinding>(),
   AdapterView.OnItemSelectedListener {

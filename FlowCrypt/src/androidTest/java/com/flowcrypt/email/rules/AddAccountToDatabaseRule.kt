@@ -10,10 +10,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.AccountDaoManager
 
 /**
- * @author Denis Bondarenko
- * Date: 21.02.2018
- * Time: 17:54
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddAccountToDatabaseRule constructor(val account: AccountEntity) : BaseRule() {
   constructor() : this(AccountDaoManager.getDefaultAccountDao())

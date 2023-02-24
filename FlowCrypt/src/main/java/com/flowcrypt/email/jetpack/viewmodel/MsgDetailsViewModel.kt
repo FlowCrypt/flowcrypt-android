@@ -75,10 +75,7 @@ import java.util.Collections
 import java.util.LinkedList
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/26/19
- *         Time: 4:45 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgDetailsViewModel(
   val localFolder: LocalFolder,

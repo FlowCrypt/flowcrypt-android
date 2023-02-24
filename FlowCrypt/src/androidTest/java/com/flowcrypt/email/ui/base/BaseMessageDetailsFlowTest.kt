@@ -59,10 +59,7 @@ import org.hamcrest.Matchers.notNullValue
 import org.junit.After
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/7/21
- *         Time: 1:25 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseMessageDetailsFlowTest : BaseTest() {
   override val useIntents: Boolean = true

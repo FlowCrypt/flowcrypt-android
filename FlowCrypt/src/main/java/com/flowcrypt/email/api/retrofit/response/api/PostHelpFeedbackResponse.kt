@@ -27,10 +27,7 @@ import kotlinx.parcelize.Parcelize
 ` *
 </pre> *
  *
- * @author DenBond7
- * Date: 30.05.2017
- * Time: 12:34
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class PostHelpFeedbackResponse constructor(

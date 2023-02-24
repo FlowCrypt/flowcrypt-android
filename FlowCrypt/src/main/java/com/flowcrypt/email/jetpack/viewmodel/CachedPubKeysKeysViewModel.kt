@@ -27,10 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/13/21
- *         Time: 7:29 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(application) {
   private val allPubKeysFlow = roomDatabase.pubKeyDao().getAllPublicKeysFlow()

@@ -24,10 +24,7 @@ import kotlinx.parcelize.Parcelize
  *  * [Intent.ACTION_SEND_MULTIPLE]
  *
  *
- * @author Denis Bondarenko
- * Date: 13.03.2018
- * Time: 16:16
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class ExtraActionInfo(

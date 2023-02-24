@@ -22,10 +22,7 @@ import org.hamcrest.BaseMatcher
 import org.hamcrest.Matcher
 
 /**
- * @author Denis Bondarenko
- * Date: 3/15/19
- * Time: 5:20 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 class CustomMatchers {

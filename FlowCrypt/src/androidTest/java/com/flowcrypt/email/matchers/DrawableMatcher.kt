@@ -17,10 +17,7 @@ import org.hamcrest.TypeSafeMatcher
  * See details here https://github.com/dbottillo/Blog/blob/espresso_match_imageview/app/src/androidTest/java/com
  * /danielebottillo/blog/config/DrawableMatcher.java
  *
- * @author Denis Bondarenko
- * Date: 3/15/19
- * Time: 5:17 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DrawableMatcher(private val expectedId: Int) : TypeSafeMatcher<View>(View::class.java) {
   private var resourceName: String? = null

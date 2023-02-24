@@ -12,10 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/16/20
- *         Time: 1:59 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @SmallTest
 @DebugTest

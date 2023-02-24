@@ -23,10 +23,7 @@ import com.flowcrypt.email.ui.activity.MainActivity
 /**
  * It's a manager which helps to show errors notifications with a high priority.
  *
- * @author Denis Bondarenko
- *         Date: 6/26/20
- *         Time: 5:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ErrorNotificationManager(context: Context) : CustomNotificationManager(context) {
   override val groupName: String = GROUP_NAME_ERRORS

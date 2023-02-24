@@ -11,10 +11,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This class describes the message states.
  *
- * @author Denis Bondarenko
- * Date: 16.09.2018
- * Time: 15:11
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 //todo-denbond7 Modify [com.flowcrypt.email.database.dao.MessageDao.getFailedOutgoingMsgsCount]
 // if you add new states

@@ -25,10 +25,7 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.instanceOf
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/14/22
- *         Time: 1:20 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class AddOtherAccountBaseTest : BaseTest() {
   protected fun fillAllFields(authCredentials: AuthCredentials) {

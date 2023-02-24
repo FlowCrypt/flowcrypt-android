@@ -12,10 +12,7 @@ import org.junit.Rule
 /**
  * This [Rule] updates **an existed account** with given [ContentValues]
  *
- * @author Denis Bondarenko
- * Date: 15.05.2018
- * Time: 10:19
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class UpdateAccountRule(private val account: AccountEntity) : BaseRule() {
   override fun execute() {

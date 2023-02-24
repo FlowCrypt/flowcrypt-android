@@ -11,9 +11,6 @@ import com.google.gson.annotations.SerializedName
 /**
  * The request model for the https://flowcrypt.com/api/link/message API.
  *
- * @author Denis Bondarenko
- * Date: 13.07.2017
- * Time: 15:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 data class LinkMessageModel(@SerializedName("short") @Expose val shortValue: String) : RequestModel

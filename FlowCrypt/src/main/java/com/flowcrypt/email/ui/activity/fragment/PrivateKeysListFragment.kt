@@ -46,10 +46,7 @@ import com.flowcrypt.email.ui.adapter.selection.PrivateKeyItemDetailsLookup
 /**
  * This [Fragment] shows information about available private keys in the database.
  *
- * @author DenBond7
- * Date: 20.11.2018
- * Time: 10:30
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), ListProgressBehaviour,
   PrivateKeysRecyclerViewAdapter.OnKeySelectedListener {

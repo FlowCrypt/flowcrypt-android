@@ -18,10 +18,7 @@ import javax.net.ssl.SSLSocketFactory
 /**
  * This rule describes a logic of work of a mock web server
  *
- * @author Denis Bondarenko
- *         Date: 10/31/19
- *         Time: 2:59 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatcher) : BaseRule() {
   override fun execute() {}

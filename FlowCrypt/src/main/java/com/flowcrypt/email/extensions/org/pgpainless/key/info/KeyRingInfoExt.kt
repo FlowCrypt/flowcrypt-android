@@ -8,10 +8,7 @@ package com.flowcrypt.email.extensions.org.pgpainless.key.info
 import org.pgpainless.key.info.KeyRingInfo
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/2/21
- *         Time: 1:26 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun KeyRingInfo.usableForEncryption(): Boolean {
   return !publicKey.hasRevocation()

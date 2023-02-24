@@ -9,10 +9,7 @@ import androidx.test.filters.AbstractFilter
 import org.junit.runner.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/7/22
- *         Time: 11:12 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseCustomFilter : AbstractFilter() {
   protected fun isAnnotationPresentAtClassOrMethod(

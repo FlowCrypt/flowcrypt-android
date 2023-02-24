@@ -21,10 +21,7 @@ import kotlinx.parcelize.Parcelize
  * "repliable" (True, False, None)  # this message may be available for a reply
  * }`
  *
- * @author Denis Bondarenko
- * Date: 13.07.2017
- * Time: 15:16
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class LinkMessageResponse constructor(

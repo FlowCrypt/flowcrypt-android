@@ -12,10 +12,7 @@ import android.os.Build
 import android.widget.Toast
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/23/20
- *         Time: 10:52 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun Context.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
   Toast.makeText(this, text ?: "", duration).show()

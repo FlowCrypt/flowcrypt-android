@@ -24,10 +24,7 @@ import java.io.OutputStream
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/16/21
- *         Time: 3:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object PgpEncryptAndOrSign {
   fun encryptAndOrSignMsg(

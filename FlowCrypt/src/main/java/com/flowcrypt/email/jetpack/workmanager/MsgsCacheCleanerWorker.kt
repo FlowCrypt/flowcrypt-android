@@ -16,10 +16,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/11/20
- *         Time: 5:32 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgsCacheCleanerWorker(context: Context, params: WorkerParameters) :
   CoroutineWorker(context, params) {

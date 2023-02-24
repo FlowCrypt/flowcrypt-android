@@ -19,10 +19,7 @@ import java.util.Arrays
  *
  * See details here https://github.com/k9mail/k-9/blob/master/k9mail/src/main/java/com/fsck/k9/helper/MailTo.java
  *
- * @author Denis Bondarenko
- * Date: 13.03.2018
- * Time: 14:41
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RFC6068Parser {
   companion object {

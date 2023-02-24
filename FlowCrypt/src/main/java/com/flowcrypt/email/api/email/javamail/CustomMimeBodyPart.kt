@@ -10,10 +10,7 @@ import jakarta.mail.internet.MimeBodyPart
 import java.io.InputStream
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/20/21
- *         Time: 11:46 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CustomMimeBodyPart(inputStream: InputStream, headers: InternetHeaders) :
   MimeBodyPart(headers, null) {

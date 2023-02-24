@@ -23,10 +23,7 @@ import com.flowcrypt.email.R
 /**
  * The main developer options fragment.
  *
- * @author Denis Bondarenko
- * Date: 10.07.2017
- * Time: 11:19
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
   SharedPreferences.OnSharedPreferenceChangeListener {

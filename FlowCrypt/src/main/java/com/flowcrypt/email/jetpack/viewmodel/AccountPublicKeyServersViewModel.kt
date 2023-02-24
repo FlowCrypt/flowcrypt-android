@@ -31,10 +31,7 @@ import java.io.IOException
  * This [ViewModel] does job of receiving information about an array of public
  * keys from FlowCrypt Attester or WKD.
  *
- * @author Denis Bondarenko
- * Date: 13.11.2017
- * Time: 15:13
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()

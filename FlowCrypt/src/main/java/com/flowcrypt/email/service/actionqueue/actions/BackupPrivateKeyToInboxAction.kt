@@ -23,10 +23,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This action describes a task which backups a private key to INBOX.
  *
- * @author Denis Bondarenko
- * Date: 29.01.2018
- * Time: 16:58
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(

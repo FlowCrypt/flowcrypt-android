@@ -9,10 +9,7 @@ import androidx.recyclerview.selection.ItemKeyProvider
 import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/2/20
- *         Time: 4:56 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PgpKeyDetailsKeyProvider(private val items: List<PgpKeyDetails>) :
   ItemKeyProvider<PgpKeyDetails>(SCOPE_CACHED) {

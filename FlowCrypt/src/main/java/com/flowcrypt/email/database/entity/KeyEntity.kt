@@ -17,10 +17,7 @@ import kotlinx.parcelize.Parcelize
 import org.pgpainless.util.Passphrase
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/5/19
- *         Time: 4:12 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Entity(
   tableName = "keys",

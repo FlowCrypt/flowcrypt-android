@@ -30,10 +30,7 @@ import kotlinx.coroutines.withContext
 /**
  * This task does job of receiving labels of an active account.
  *
- * @author DenBond7
- * Date: 19.06.2017
- * Time: 13:34
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class UpdateLabelsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

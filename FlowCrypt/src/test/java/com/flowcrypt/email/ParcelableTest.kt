@@ -30,10 +30,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/20/20
- *         Time: 7:31 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])

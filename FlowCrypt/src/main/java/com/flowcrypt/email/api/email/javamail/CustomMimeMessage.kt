@@ -15,10 +15,7 @@ import java.util.Properties
 /**
  * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]
  *
- * @author Denis Bondarenko
- *         Date: 2/19/21
- *         Time: 4:26 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CustomMimeMessage constructor(
   session: Session = Session.getInstance(Properties()),

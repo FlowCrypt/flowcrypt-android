@@ -22,10 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/25/20
- *         Time: 6:08 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params), SyncInterface {

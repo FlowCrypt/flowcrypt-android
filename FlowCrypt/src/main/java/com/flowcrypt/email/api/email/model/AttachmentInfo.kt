@@ -15,10 +15,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * Simple POJO which defines information about email attachments.
  *
- * @author Denis Bondarenko
- * Date: 07.08.2017
- * Time: 18:38
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class AttachmentInfo constructor(

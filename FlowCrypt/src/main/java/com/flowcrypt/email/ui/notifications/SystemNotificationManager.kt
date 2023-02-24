@@ -21,10 +21,7 @@ import com.flowcrypt.email.ui.activity.MainActivity
 /**
  * It's a manager which helps to show system notifications.
  *
- * @author Denis Bondarenko
- *         Date: 8/17/19
- *         Time: 4:22 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SystemNotificationManager(context: Context) : CustomNotificationManager(context) {
   override val groupName: String = GROUP_NAME_SYSTEM

@@ -11,10 +11,7 @@ import org.hamcrest.BaseMatcher
 import org.hamcrest.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/3/19
- *         Time: 3:44 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmptyRecyclerViewMatcher<T : View> : BaseMatcher<T>() {
   override fun matches(item: Any): Boolean {

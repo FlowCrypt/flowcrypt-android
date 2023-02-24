@@ -16,10 +16,7 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/1/21
- *         Time: 9:59 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())

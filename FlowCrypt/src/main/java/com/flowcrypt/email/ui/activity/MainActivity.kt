@@ -77,10 +77,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- * Date: 3/8/22
- * Time: 11:13 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MainActivity : BaseActivity<ActivityMainBinding>() {
   private lateinit var client: GoogleSignInClient

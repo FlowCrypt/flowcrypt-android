@@ -22,10 +22,7 @@ import com.flowcrypt.email.util.UIUtil
 /**
  * This adapter can be used to show info about public keys from the https://flowcrypt.com/attester/lookup/email/.
  *
- * @author Denis Bondarenko
- * Date: 14.11.2017
- * Time: 9:42
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AttesterKeyAdapter :
   ListAdapter<Pair<String, PgpKeyDetails>, AttesterKeyAdapter.ViewHolder>(DIFF_CALLBACK) {

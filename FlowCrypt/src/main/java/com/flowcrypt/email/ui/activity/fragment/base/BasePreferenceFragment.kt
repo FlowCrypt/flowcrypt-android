@@ -17,10 +17,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 /**
  * The base realization of [PreferenceFragmentCompat].
  *
- * @author DenBond7
- * Date: 26.05.2017
- * Time: 10:16
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BasePreferenceFragment : PreferenceFragmentCompat(), UiUxSettings {
   protected val accountViewModel: AccountViewModel by viewModels()

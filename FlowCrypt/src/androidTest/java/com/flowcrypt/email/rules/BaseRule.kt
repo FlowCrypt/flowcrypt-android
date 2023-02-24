@@ -12,10 +12,7 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/3/19
- *         Time: 12:42 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseRule : TestRule {
   protected val context: Context = InstrumentationRegistry.getInstrumentation().context

@@ -61,10 +61,7 @@ import javax.net.ssl.SSLException
 import kotlin.random.Random
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/29/21
- *         Time: 9:30 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameters) :
   BaseMsgWorker(context, params) {

@@ -24,10 +24,7 @@ import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.util.Passphrase
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/12/19
- *         Time: 3:56 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val controlledRunnerForChecking = ControlledRunner<Result<List<CheckResult>>>()

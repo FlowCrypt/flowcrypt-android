@@ -129,10 +129,7 @@ import java.nio.charset.StandardCharsets
 /**
  * This fragment describe msgEntity of some message.
  *
- * @author DenBond7
- * Date: 03.05.2017
- * Time: 16:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), ProgressBehaviour,
   View.OnClickListener {

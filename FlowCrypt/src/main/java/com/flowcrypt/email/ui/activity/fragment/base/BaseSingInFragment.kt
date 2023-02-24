@@ -29,10 +29,7 @@ import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/21/20
- *         Time: 6:29 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), ProgressBehaviour {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()

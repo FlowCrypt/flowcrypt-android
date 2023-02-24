@@ -14,10 +14,7 @@ import org.hamcrest.Matcher
 /**
  * This view action does nothing
  *
- * @author Denis Bondarenko
- *         Date: 5/21/20
- *         Time: 2:58 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmptyAction : ViewAction {
   override fun perform(uiController: UiController, view: View) {

@@ -42,10 +42,7 @@ import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/22/22
- *         Time: 6:39 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

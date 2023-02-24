@@ -44,10 +44,7 @@ import org.junit.runner.RunWith
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/7/21
- *         Time: 1:16 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

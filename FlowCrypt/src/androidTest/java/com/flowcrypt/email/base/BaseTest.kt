@@ -54,10 +54,10 @@ import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasToString
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
@@ -67,10 +67,7 @@ import java.util.Properties
 /**
  * The base test implementation.
  *
- * @author Denis Bondarenko
- * Date: 26.12.2017
- * Time: 16:37
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())

@@ -12,10 +12,7 @@ import net.openid.appauth.ResponseTypeValues
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/16/20
- *         Time: 4:10 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class OAuth2Helper {
   enum class Provider constructor(val openidConfigurationUrl: String) {

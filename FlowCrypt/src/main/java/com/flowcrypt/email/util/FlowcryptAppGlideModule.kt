@@ -12,10 +12,7 @@ import com.bumptech.glide.module.AppGlideModule
  * [AppGlideModule] implementation of the application.
  * See http://sjudd.github.io/glide/doc/generatedapi.html for more details.
  *
- * @author Denis Bondarenko
- * Date: 22.12.2017
- * Time: 16:47
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @GlideModule
 class FlowcryptAppGlideModule : AppGlideModule()

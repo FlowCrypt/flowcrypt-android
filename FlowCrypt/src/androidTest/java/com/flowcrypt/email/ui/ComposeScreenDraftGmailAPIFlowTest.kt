@@ -55,10 +55,7 @@ import java.util.zip.GZIPInputStream
 import kotlin.random.Random
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/3/22
- *         Time: 5:32 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

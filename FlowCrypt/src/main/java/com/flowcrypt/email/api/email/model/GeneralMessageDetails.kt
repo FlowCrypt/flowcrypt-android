@@ -13,10 +13,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * Simple POJO class which describe a general message details.
  *
- * @author DenBond7
- * Date: 28.04.2017
- * Time: 11:51
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class GeneralMessageDetails constructor(

@@ -43,10 +43,7 @@ import org.pgpainless.util.Passphrase
 import java.nio.charset.StandardCharsets
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/8/22
- *         Time: 7:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

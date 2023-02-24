@@ -19,10 +19,7 @@ import kotlinx.coroutines.sync.withLock
  */
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/12/21
- *         Time: 10:31 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SingleRunner {
   /**

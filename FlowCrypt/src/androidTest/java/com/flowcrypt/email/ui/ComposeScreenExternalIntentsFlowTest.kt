@@ -58,10 +58,7 @@ import java.util.Random
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- * Date: 22.03.2018
- * Time: 08:55
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

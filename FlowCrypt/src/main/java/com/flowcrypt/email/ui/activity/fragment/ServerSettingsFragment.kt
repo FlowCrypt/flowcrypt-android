@@ -43,10 +43,7 @@ import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/11/20
- *         Time: 2:16 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), ProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

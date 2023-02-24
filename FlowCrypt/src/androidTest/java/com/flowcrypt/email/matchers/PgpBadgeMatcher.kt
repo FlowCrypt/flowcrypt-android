@@ -11,10 +11,7 @@ import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import org.hamcrest.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/14/21
- *         Time: 10:33 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PgpBadgeMatcher(private val pgpBadge: PgpBadgeListAdapter.PgpBadge) :
   BoundedMatcher<RecyclerView.ViewHolder, PgpBadgeListAdapter.ViewHolder>(

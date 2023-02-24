@@ -9,10 +9,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import java.io.IOException
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/8/21
- *         Time: 7:49 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class GmailAPIException(cause: GoogleJsonResponseException?) : IOException(cause) {
   override val message: String?
