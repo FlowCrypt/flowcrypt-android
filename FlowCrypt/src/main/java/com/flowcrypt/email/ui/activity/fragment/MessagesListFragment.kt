@@ -872,7 +872,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         menuActionMarkUnread?.isVisible = isChangeSeenStateActionEnabled()
 
         if (isChangeSeenStateActionEnabled()) {
-          val id = tracker?.selection?.first() ?: return true
+          val id = tracker?.selection?.firstOrNull() ?: return true
           val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
 
           menuActionMarkUnread?.isVisible = msgEntity?.isSeen == true

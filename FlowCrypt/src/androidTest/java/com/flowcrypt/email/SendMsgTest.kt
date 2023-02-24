@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.model.KeyImportDetails
@@ -160,10 +159,8 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
+      delay(3000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val mimeMultipart = mimeMessage.content as MimeMultipart
         assertEquals(1, mimeMultipart.count)
@@ -192,10 +189,8 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
+      delay(3000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val multipart = mimeMessage.content as MimeMultipart
         assertEquals(outgoingMessageInfo.msg, multipart.getBodyPart(0).content)
@@ -240,17 +235,8 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val forwardedAttachmentsDownloaderWorker =
-      TestListenableWorkerBuilder<ForwardedAttachmentsDownloaderWorker>(context).build()
-    val messagesSenderWorker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val forwardedAttachmentsDownloaderWorkerResult = forwardedAttachmentsDownloaderWorker.doWork()
-      assertThat(
-        forwardedAttachmentsDownloaderWorkerResult,
-        `is`(ListenableWorker.Result.success())
-      )
-      val messagesSenderWorkerResult = messagesSenderWorker.doWork()
-      assertThat(messagesSenderWorkerResult, `is`(ListenableWorker.Result.success()))
+      delay(5000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val multipart = mimeMessage.content as MimeMultipart
         assertEquals(outgoingMessageInfo.msg, multipart.getBodyPart(0).content)
@@ -279,10 +265,8 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
+      delay(3000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val encryptedContent =
           (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
@@ -320,10 +304,8 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
+      delay(3000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
@@ -401,17 +383,8 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val forwardedAttachmentsDownloaderWorker =
-      TestListenableWorkerBuilder<ForwardedAttachmentsDownloaderWorker>(context).build()
-    val messagesSenderWorker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val forwardedAttachmentsDownloaderWorkerResult = forwardedAttachmentsDownloaderWorker.doWork()
-      assertThat(
-        forwardedAttachmentsDownloaderWorkerResult,
-        `is`(ListenableWorker.Result.success())
-      )
-      val messagesSenderWorkerResult = messagesSenderWorker.doWork()
-      assertThat(messagesSenderWorkerResult, `is`(ListenableWorker.Result.success()))
+      delay(5000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
