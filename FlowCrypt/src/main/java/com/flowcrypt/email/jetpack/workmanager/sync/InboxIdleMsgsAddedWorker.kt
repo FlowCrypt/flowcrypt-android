@@ -27,10 +27,7 @@ import kotlinx.coroutines.withContext
 /**
  * This task does a job of loading all new messages which not exist in the cache but exist on the server.
  *
- * @author Denis Bondarenko
- * Date: 22.06.2018
- * Time: 15:50
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class InboxIdleMsgsAddedWorker(context: Context, params: WorkerParameters) :
   BaseIdleWorker(context, params) {

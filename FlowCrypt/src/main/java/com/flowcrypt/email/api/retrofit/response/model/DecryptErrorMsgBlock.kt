@@ -14,10 +14,7 @@ import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- * Date: 3/26/19
- * Time: 3:02 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class DecryptErrorMsgBlock(

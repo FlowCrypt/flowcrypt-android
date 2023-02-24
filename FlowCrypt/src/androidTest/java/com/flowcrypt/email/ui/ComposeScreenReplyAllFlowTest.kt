@@ -35,10 +35,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/13/20
- *         Time: 12:30 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

@@ -15,10 +15,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/14/20
- *         Time: 4:10 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ConnectionLifecycleObserver(context: Context?) : DefaultLifecycleObserver {
   val connectionLiveData: MutableLiveData<Boolean> = MutableLiveData(false)

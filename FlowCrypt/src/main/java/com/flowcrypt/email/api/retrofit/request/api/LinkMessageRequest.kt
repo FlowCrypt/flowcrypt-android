@@ -17,10 +17,7 @@ import com.flowcrypt.email.api.retrofit.request.model.LinkMessageModel
  * "short" (<type></type>'str'>)  # short id of the message
  * }`
  *
- * @author Denis Bondarenko
- * Date: 13.07.2017
- * Time: 15:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 //todo-denbond7 this class is redundant. We can refactor code and delete this
 class LinkMessageRequest(

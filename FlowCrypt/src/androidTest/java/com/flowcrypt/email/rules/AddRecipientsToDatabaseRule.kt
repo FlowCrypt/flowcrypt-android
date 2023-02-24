@@ -11,10 +11,7 @@ import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 /**
  * This [org.junit.Rule] can be used for saving [RecipientWithPubKeys] to the local database.
  *
- * @author Denis Bondarenko
- * Date: 2/20/19
- * Time: 5:16 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddRecipientsToDatabaseRule(val list: List<RecipientWithPubKeys>) : BaseRule() {
   override fun execute() {

@@ -24,10 +24,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDia
 /**
  * This fragment contains actions which related to Security options.
  *
- * @author DenBond7
- * Date: 08.08.2018.
- * Time: 10:47.
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

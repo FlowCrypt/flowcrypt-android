@@ -11,10 +11,7 @@ import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 
 /**
- * @author DenBond7
- * Date: 15.06.2017
- * Time: 9:18
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SharedPreferencesHelper {
   companion object {

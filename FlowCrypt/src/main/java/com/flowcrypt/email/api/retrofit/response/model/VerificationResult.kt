@@ -11,10 +11,7 @@ import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/10/21
- *         Time: 10:09 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class VerificationResult(

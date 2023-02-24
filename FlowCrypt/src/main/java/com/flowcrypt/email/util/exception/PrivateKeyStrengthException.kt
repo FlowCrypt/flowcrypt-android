@@ -6,9 +6,6 @@
 package com.flowcrypt.email.util.exception
 
 /**
- * @author Denis Bondarenko
- * Date: 10.08.2018
- * Time: 9:39
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrivateKeyStrengthException(message: String) : FlowCryptException(message)

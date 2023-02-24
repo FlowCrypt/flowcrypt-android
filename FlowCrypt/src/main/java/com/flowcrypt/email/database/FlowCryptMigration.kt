@@ -12,10 +12,7 @@ import com.flowcrypt.email.util.LogsUtil
 /**
  * Base class for a database migration.
  *
- * @author Denis Bondarenko
- *         Date: 2/23/21
- *         Time: 10:05 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class FlowCryptMigration(startVersion: Int, endVersion: Int) :
   Migration(startVersion, endVersion) {

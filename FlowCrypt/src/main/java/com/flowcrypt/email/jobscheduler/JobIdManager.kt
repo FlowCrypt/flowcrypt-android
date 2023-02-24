@@ -10,10 +10,7 @@ import android.app.job.JobInfo
 /**
  * This class describes job id constants for [JobInfo.Builder].
  *
- * @author Denis Bondarenko
- * Date: 21.06.2018
- * Time: 16:27
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class JobIdManager {
   companion object {

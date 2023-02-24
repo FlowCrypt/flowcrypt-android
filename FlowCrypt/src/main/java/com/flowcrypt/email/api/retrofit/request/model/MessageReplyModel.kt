@@ -11,10 +11,7 @@ import com.google.gson.annotations.SerializedName
 /**
  * The request model for the https://flowcrypt.com/api/message/reply API.
  *
- * @author Denis Bondarenko
- * Date: 13.07.2017
- * Time: 16:32
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 data class MessageReplyModel(
   @SerializedName("short") @Expose val shortValue: String,

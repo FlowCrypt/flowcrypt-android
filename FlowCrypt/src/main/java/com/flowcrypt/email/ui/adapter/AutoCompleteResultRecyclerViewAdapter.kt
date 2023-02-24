@@ -23,10 +23,7 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import jakarta.mail.Message
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/14/22
- *         Time: 11:13 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AutoCompleteResultRecyclerViewAdapter(
   val recipientType: Message.RecipientType,

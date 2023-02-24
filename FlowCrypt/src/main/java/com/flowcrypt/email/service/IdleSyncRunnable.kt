@@ -24,10 +24,7 @@ import java.util.concurrent.TimeUnit
  *
  * P.S. Currently we support only "INBOX" folder.
  *
- * @author Denis Bondarenko
- *         Date: 10/17/19
- *         Time: 3:33 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 //todo-denbond7 need to look at com.sun.mail.imap.IdleManager
 class IdleSyncRunnable(

@@ -8,10 +8,7 @@ package com.flowcrypt.email
 import android.os.Build
 
 /**
- * @author Denis Bondarenko
- * Date: 17.01.2018
- * Time: 15:15
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class TestConstants {
   companion object {

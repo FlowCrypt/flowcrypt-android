@@ -71,10 +71,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
- * @author Denis Bondarenko
- * Date: 01.02.2018
- * Time: 13:28
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

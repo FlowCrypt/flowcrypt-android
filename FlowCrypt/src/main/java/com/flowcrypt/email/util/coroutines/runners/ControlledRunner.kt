@@ -26,10 +26,7 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * See https://gist.github.com/objcode/7ab4e7b1df8acd88696cb0ccecad16f7#file-concurrencyhelpers-kt
  *
- * @author Denis Bondarenko
- *         Date: 2/12/21
- *         Time: 10:59 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ControlledRunner<T> {
   /**

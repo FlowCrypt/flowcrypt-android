@@ -11,10 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/5/20
- *         Time: 2:48 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgItemDetailsLookup(private val recyclerView: RecyclerView) : ItemDetailsLookup<Long>() {
   override fun getItemDetails(e: MotionEvent): ItemDetails<Long>? {

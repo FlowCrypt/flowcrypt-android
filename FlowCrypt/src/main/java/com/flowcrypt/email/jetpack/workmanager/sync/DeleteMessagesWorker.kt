@@ -33,10 +33,7 @@ import kotlinx.coroutines.withContext
  * This task finds all delete candidates in the local database and use that info to move marked
  * messages to TRASH folder on the remote server.
  *
- * @author Denis Bondarenko
- *         Date: 10/17/19
- *         Time: 6:16 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

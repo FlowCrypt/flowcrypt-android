@@ -30,10 +30,7 @@ import com.google.android.material.snackbar.Snackbar
 import org.pgpainless.util.Passphrase
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/29/21
- *         Time: 9:42 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ChangePassphraseOfImportedKeysFragment :
   BaseFragment<FragmentChangePassphraseOfImportedKeysBinding>(), ProgressBehaviour {

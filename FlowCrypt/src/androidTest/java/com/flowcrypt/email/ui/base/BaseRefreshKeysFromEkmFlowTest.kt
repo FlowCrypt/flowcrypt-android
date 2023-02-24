@@ -26,10 +26,7 @@ import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/22/22
- *         Time: 6:47 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
   abstract fun handleEkmAPI(gson: Gson): MockResponse

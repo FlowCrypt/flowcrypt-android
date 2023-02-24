@@ -32,10 +32,7 @@ import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 
 /**
- * @author Denis Bondarenko
- * Date: 6/9/20
- * Time: 9:09 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)

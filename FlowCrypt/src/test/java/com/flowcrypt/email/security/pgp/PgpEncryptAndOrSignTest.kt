@@ -24,10 +24,7 @@ import java.io.ByteArrayOutputStream
 
 
 /**
- * @author Denis Bondarenko
- * Date: 3/17/21
- * Time: 3:59 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PgpEncryptAndOrSignTest {
 

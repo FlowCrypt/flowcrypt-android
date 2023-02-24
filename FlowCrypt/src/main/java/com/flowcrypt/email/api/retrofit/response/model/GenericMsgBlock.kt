@@ -15,10 +15,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * Generic message block represents any message block without a dedicated support.
  *
- * @author Denis Bondarenko
- * Date: 3/26/19
- * Time: 9:46 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  *
  * @author Ivan Pizhenko
  */

@@ -33,10 +33,7 @@ import com.flowcrypt.email.util.LogsUtil
 /**
  * This is a base activity. This class describes a base logic for all activities.
  *
- * @author DenBond7
- * Date: 30.04.2017.
- * Time: 22:21.
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   protected lateinit var binding: T

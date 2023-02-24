@@ -8,10 +8,7 @@ package com.flowcrypt.email.util.exception
 /**
  * The base exception class.
  *
- * @author Denis Bondarenko
- * Date: 23.01.2018
- * Time: 12:16
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class FlowCryptException : Exception {
   constructor()

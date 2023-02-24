@@ -34,10 +34,7 @@ import org.junit.runner.RunWith
 import java.net.HttpURLConnection
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/31/19
- *         Time: 3:08 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

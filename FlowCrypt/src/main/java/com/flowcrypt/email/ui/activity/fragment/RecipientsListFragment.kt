@@ -26,10 +26,7 @@ import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
 /**
  * This fragment shows a list of contacts which have a public key.
  *
- * @author Denis Bondarenko
- *         Date: 9/20/19
- *         Time: 6:11 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
   ListProgressBehaviour {

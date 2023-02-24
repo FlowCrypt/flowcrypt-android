@@ -10,10 +10,7 @@ import org.acra.ACRA
 /**
  * This class describes methods for a work with [Exception]
  *
- * @author Denis Bondarenko
- * Date: 25.01.2018
- * Time: 10:22
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 class ExceptionUtil {

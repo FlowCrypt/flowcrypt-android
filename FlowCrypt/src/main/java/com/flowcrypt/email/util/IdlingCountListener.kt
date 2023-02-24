@@ -10,10 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * This listener will be used to help debug idling issues for Instrumentation UI tests.
  *
- * @author Denis Bondarenko
- *         Date: 12/9/22
- *         Time: 11:00 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface IdlingCountListener {
   fun incrementIdlingCount()

@@ -16,10 +16,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
  * This class describe creating of table which has name
  * ["accounts"], add, delete and update rows.
  *
- * @author Denis Bondarenko
- * Date: 14.07.2017
- * Time: 17:43
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 abstract class AccountDao : BaseDao<AccountEntity> {

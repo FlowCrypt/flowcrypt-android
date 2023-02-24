@@ -13,10 +13,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/5/19
- *         Time: 6:19 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Entity(
   tableName = "accounts_aliases",

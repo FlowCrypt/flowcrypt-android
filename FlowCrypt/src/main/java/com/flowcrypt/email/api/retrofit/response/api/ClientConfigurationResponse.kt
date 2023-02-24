@@ -13,10 +13,7 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/27/21
- *         Time: 4:16 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class ClientConfigurationResponse constructor(

@@ -41,10 +41,7 @@ import java.util.concurrent.ThreadPoolExecutor
 
 /**
  *
- * @author DenBond7
- * Date: 14.06.2017
- * Time: 12:18
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class IdleService : LifecycleService() {
   private val binder = LocalBinder()

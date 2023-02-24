@@ -10,10 +10,7 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/13/20
- *         Time: 12:41 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object FlavorSettings : EnvironmentSettings {
   private val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(

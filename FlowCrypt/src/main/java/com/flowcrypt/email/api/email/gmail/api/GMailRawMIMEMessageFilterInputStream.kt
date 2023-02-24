@@ -9,10 +9,7 @@ import java.io.FilterInputStream
 import java.io.InputStream
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/30/20
- *         Time: 2:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class GMailRawMIMEMessageFilterInputStream(inputStream: InputStream) :
   FilterInputStream(inputStream) {

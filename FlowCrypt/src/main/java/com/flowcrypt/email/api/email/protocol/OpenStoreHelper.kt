@@ -32,10 +32,7 @@ import jakarta.mail.Store
 /**
  * This util class help generate Store classes.
  *
- * @author DenBond7
- * Date: 03.05.2017
- * Time: 18:00
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class OpenStoreHelper {
   companion object {

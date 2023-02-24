@@ -37,10 +37,7 @@ import java.io.IOException
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/15/20
- *         Time: 2:46 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()

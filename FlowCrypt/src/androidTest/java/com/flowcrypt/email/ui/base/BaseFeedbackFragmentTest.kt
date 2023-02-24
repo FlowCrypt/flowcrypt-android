@@ -9,10 +9,7 @@ import android.util.Base64
 import com.flowcrypt.email.base.BaseTest
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/9/22
- *         Time: 11:24 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseFeedbackFragmentTest : BaseTest() {
   companion object {

@@ -8,10 +8,7 @@
 package com.flowcrypt.email.extensions.kotlin
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/20/21
- *         Time: 2:51 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun Long.toHex(): String {
   return java.lang.Long.toHexString(this).lowercase()

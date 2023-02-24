@@ -16,10 +16,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/29/21
- *         Time: 5:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ForwardedAttachmentInfoDataSource(
   context: Context,

@@ -15,10 +15,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * @author DenBond7
- * Date: 29.09.2017.
- * Time: 22:46.
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ExperimentalSettingsFragment : BasePreferenceFragment() {
 

@@ -13,10 +13,7 @@ import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/23/21
- *         Time: 9:50 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class EkmPrivateKeysResponse constructor(

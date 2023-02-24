@@ -9,10 +9,7 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * @author Denis Bondarenko
- * Date: 24.02.2018
- * Time: 17:28
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 class RepeatedRule : BaseRule() {

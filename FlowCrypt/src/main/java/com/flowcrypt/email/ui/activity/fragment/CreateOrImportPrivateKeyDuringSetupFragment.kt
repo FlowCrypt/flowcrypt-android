@@ -31,10 +31,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/10/22
- *         Time: 12:16 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreateOrImportPrivateKeyDuringSetupFragment :
   BaseFragment<FragmentCreateOrImportPrivateKeyDuringSetupBinding>() {

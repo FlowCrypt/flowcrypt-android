@@ -13,10 +13,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.jetpack.workmanager.BaseWorker
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/29/21
- *         Time: 4:56 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseMsgWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {

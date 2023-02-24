@@ -27,10 +27,7 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/11/21
- *         Time: 6:53 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LookUpPubKeysDialogFragment : BaseDialogFragment() {
   private var binding: FragmentLookUpPubKeysBinding? = null

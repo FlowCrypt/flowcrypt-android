@@ -9,10 +9,7 @@ import com.flextrade.jfixture.JFixture
 import com.flextrade.jfixture.customisation.Customisation
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/23/20
- *         Time: 2:31 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgBlockGenerationCustomization : Customisation {
   override fun customise(fixture: JFixture?) {

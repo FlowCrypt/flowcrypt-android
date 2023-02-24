@@ -16,10 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * @author DenBond7
- * Date: 13.05.2017
- * Time: 12:44
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 abstract class KeysDao {

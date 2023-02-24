@@ -10,10 +10,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/11/21
- *         Time: 6:51 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DecryptionException(
   val decryptionErrorType: PgpDecryptAndOrVerify.DecryptionErrorType,

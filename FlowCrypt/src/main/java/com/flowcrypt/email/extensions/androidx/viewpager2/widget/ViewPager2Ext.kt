@@ -9,10 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/14/22
- *         Time: 9:34 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 /**

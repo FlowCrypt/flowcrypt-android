@@ -8,10 +8,7 @@ package com.flowcrypt.email.extensions.org.pgpainless.util
 import org.pgpainless.util.Passphrase
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/7/21
- *         Time: 6:36 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 val Passphrase.asString: String?
   get() {

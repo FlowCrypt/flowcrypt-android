@@ -31,10 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * The base fragment class.
  *
- * @author DenBond7
- * Date: 27.04.2017
- * Time: 15:39
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingCountListener {
   protected var binding: T? = null

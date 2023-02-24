@@ -11,10 +11,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
- * @author Denis Bondarenko
- * Date: 17.08.2018
- * Time: 09:19
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddLabelsToDatabaseRule(
   val account: AccountEntity, val folders: List<LocalFolder>

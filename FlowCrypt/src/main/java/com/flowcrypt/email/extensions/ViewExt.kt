@@ -10,10 +10,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/27/20
- *         Time: 3:51 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun View.showKeyboard() {
   val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager

@@ -44,10 +44,7 @@ import java.io.InputStream
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/16/22
- *         Time: 8:02 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object ProcessingOutgoingMessageInfoHelper {
   fun process(context: Context, outgoingMessageInfo: OutgoingMessageInfo) {

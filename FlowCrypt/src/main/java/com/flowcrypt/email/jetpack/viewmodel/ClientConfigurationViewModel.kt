@@ -19,10 +19,7 @@ import kotlinx.coroutines.launch
 /**
  * This [ViewModel] can be used to resolve domain rules for enterprise users.
  *
- * @author Denis Bondarenko
- *         Date: 6/30/21
- *         Time: 6:56 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ClientConfigurationViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository = FlowcryptApiRepository()

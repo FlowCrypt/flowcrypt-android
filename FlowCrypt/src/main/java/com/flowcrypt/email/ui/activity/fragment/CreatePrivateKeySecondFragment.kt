@@ -26,10 +26,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/11/22
- *         Time: 11:36 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySecondBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

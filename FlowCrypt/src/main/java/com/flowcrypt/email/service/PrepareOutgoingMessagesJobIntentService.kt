@@ -17,10 +17,7 @@ import com.flowcrypt.email.util.LogsUtil
 /**
  * This service creates a new outgoing message using the given [OutgoingMessageInfo].
  *
- * @author DenBond7
- * Date: 22.05.2017
- * Time: 22:25
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   override fun onCreate() {

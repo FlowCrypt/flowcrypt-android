@@ -29,10 +29,7 @@ import org.jose4j.jwt.consumer.JwtConsumerBuilder
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/8/19
- *         Time: 3:39 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseSignTest : BaseTest() {
 

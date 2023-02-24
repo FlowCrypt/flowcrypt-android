@@ -13,10 +13,7 @@ import org.hamcrest.Matcher
 /**
  * Find a view by id in a recycler view item and click on it.
  *
- * @author Denis Bondarenko
- * Date: 2/20/19
- * Time: 6:07 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ClickOnViewInRecyclerViewItem(private val viewId: Int) : ViewAction {
 

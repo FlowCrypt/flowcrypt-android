@@ -44,10 +44,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
  * A helper class to manage database creation and version management which describes an
  * implementation of [RoomDatabase]
  *
- * @author DenBond7
- * Date: 13.05.2017
- * Time: 12:20
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Database(
   entities = [

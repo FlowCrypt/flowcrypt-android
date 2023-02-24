@@ -28,10 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/30/22
- *         Time: 10:51 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DeleteDraftsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

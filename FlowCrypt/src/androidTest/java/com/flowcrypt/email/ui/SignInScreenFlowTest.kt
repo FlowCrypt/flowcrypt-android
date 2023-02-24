@@ -33,10 +33,7 @@ import org.junit.runner.RunWith
 /**
  * A test for [MainActivity]
  *
- * @author Denis Bondarenko
- * Date: 13.02.2018
- * Time: 11:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

@@ -21,10 +21,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragmentArgs
 import com.flowcrypt.email.util.UIUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/26/22
- *         Time: 4:11 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun LifecycleOwner.showDialogFragment(
   navController: NavController?,

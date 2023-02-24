@@ -13,10 +13,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This class describes a details information about auth settings for some IMAP and SMTP servers.
  *
- * @author DenBond7
- * Date: 14.09.2017.
- * Time: 15:11.
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class AuthCredentials constructor(

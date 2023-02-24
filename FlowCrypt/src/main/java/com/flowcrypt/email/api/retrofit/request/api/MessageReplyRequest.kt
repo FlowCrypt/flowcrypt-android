@@ -22,10 +22,7 @@ import com.flowcrypt.email.api.retrofit.request.model.MessageReplyModel
  * "to" (<type></type>'str'>)  # recipient (CryptUp user and the sender of the original message)
  * }`
  *
- * @author Denis Bondarenko
- * Date: 13.07.2017
- * Time: 16:32
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 //todo-denbond7 this class is redundant. We can refactor code and delete this
 class MessageReplyRequest(

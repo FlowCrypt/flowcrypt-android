@@ -21,10 +21,7 @@ import kotlinx.parcelize.Parcelize
  * [voluntary] "error" (<type></type>'str'>)  # Encountered error if any
  * }`
  *
- * @author Denis Bondarenko
- * Date: 13.07.2017
- * Time: 16:33
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class MessageReplyResponse constructor(

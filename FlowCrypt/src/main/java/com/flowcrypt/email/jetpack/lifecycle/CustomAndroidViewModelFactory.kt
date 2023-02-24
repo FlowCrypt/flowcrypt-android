@@ -11,10 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/30/22
- *         Time: 5:22 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class CustomAndroidViewModelFactory(app: Application) :
   ViewModelProvider.AndroidViewModelFactory(app) {

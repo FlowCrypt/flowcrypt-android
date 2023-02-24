@@ -16,10 +16,7 @@ import com.flowcrypt.email.database.entity.LabelEntity
  * This class describes the structure of IMAP labels for different accounts and methods which
  * will be used to manipulate this data.
  *
- * @author DenBond7
- * Date: 14.06.2017
- * Time: 15:59
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 interface LabelDao : BaseDao<LabelEntity> {

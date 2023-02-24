@@ -30,10 +30,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/11/22
- *         Time: 12:38 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
   private var binding: FragmentCreatePrivateKeyDialogBinding? = null

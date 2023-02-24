@@ -33,10 +33,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDia
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/10/22
- *         Time: 6:07 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
   private var binding: FragmentParsePgpKeysFromSourceBinding? = null

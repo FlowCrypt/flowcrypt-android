@@ -73,10 +73,7 @@ import java.util.zip.GZIPInputStream
 import kotlin.random.Random
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/28/22
- *         Time: 5:56 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
   abstract val mockWebServerRule: FlowCryptMockWebServerRule

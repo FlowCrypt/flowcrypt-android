@@ -10,10 +10,7 @@ import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.google.gson.GsonBuilder
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/29/21
- *         Time: 2:19 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ClientConfigurationConverter {
   private val gson = GsonBuilder()

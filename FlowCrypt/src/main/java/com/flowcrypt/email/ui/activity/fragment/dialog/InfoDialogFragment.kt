@@ -22,10 +22,7 @@ import java.nio.charset.StandardCharsets
 /**
  * This class can be used to show an info dialog to the user.
  *
- * @author Denis Bondarenko
- * Date: 24.07.2017
- * Time: 17:34
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class InfoDialogFragment : BaseDialogFragment() {
   private val args by navArgs<InfoDialogFragmentArgs>()

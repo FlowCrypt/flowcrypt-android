@@ -46,10 +46,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Implementation of Flowcrypt API
  *
- * @author Denis Bondarenko
- *         Date: 10/24/19
- *         Time: 6:10 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FlowcryptApiRepository : ApiRepository {
   override suspend fun getClientConfiguration(

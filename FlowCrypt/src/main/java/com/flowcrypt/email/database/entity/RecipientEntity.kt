@@ -15,10 +15,7 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/5/19
- *         Time: 4:22 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Entity(
   tableName = "recipients",

@@ -86,10 +86,7 @@ import java.net.HttpURLConnection
 import java.time.Instant
 
 /**
- * @author Denis Bondarenko
- * Date: 06.02.2018
- * Time: 10:11
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

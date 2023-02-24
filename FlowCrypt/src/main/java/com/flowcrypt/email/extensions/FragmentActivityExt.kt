@@ -13,10 +13,7 @@ import com.flowcrypt.email.R
 /**
  * This class describes extension function for [FragmentActivity]
  *
- * @author Denis Bondarenko
- *         Date: 11/22/19
- *         Time: 3:37 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 val FragmentActivity.navController: NavController

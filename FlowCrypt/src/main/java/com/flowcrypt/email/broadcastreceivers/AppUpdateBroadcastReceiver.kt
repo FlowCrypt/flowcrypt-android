@@ -15,10 +15,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 /**
  * This [BroadcastReceiver] can be used to run some actions when the app will be updated.
  *
- * @author Denis Bondarenko
- * Date: 3/15/19
- * Time: 10:34 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AppUpdateBroadcastReceiver : BroadcastReceiver() {
 

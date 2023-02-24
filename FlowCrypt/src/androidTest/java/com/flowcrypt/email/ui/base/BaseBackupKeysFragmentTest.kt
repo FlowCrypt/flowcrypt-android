@@ -21,10 +21,7 @@ import org.hamcrest.Matchers.hasItem
 import java.io.File
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/17/21
- *         Time: 5:26 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseBackupKeysFragmentTest : BaseTest(), AddAccountToDatabaseRuleInterface {
   override val useIntents: Boolean = true

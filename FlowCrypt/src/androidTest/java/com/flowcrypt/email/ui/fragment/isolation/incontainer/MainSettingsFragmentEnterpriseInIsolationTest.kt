@@ -27,10 +27,7 @@ import org.junit.runner.RunWith
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/2/19
- *         Time: 11:40 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

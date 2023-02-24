@@ -30,10 +30,7 @@ import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.DownloadAttachmentViewModel
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/21/22
- *         Time: 10:52 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DownloadAttachmentDialogFragment : BaseDialogFragment() {
   private var binding: FragmentDownloadAttachmentBinding? = null

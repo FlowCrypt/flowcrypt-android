@@ -14,10 +14,7 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 
 /**
- * @author Denis Bondarenko
- * Date: 16.08.2018
- * Time: 11:14
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ToolBarTitleMatcher(private val textMatcher: Matcher<String>) :
   BoundedMatcher<View, Toolbar>(Toolbar::class.java) {

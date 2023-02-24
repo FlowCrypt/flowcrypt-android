@@ -10,9 +10,6 @@ import androidx.preference.PreferenceFragmentCompat
 /**
  * The base debugging fragment.
  *
- * @author Denis Bondarenko
- * Date: 10.07.2017
- * Time: 11:07
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseDevPreferencesFragment : PreferenceFragmentCompat()

@@ -40,10 +40,7 @@ import com.google.android.gms.common.util.CollectionUtils
 /**
  * This dialog can be used for collecting information about user public keys.
  *
- * @author Denis Bondarenko
- * Date: 24.11.2017
- * Time: 13:13
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener {
   private val args by navArgs<ChoosePublicKeyDialogFragmentArgs>()

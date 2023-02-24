@@ -6,10 +6,7 @@
 package com.flowcrypt.email.rules
 
 /**
- * @author Denis Bondarenko
- * Date: 24.02.2018
- * Time: 17:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Retention()
 @Target(

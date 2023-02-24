@@ -29,10 +29,7 @@ import kotlinx.parcelize.Parcelize
  * This [Action] checks all available private keys are they encrypted. If not we will try to encrypt a key and
  * save to the local database.
  *
- * @author Denis Bondarenko
- * Date: 2/25/19
- * Time: 4:03 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(

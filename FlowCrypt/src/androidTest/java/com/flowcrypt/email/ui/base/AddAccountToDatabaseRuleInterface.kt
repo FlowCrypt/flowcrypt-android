@@ -8,10 +8,7 @@ package com.flowcrypt.email.ui.base
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/18/21
- *         Time: 5:27 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface AddAccountToDatabaseRuleInterface {
   val addAccountToDatabaseRule

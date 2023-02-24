@@ -18,10 +18,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.visibleOrGone
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/24/20
- *         Time: 11:17 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AttachmentsRecyclerViewAdapter(
   private val attachmentActionListener: AttachmentActionListener,

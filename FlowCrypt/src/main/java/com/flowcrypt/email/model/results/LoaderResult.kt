@@ -8,10 +8,7 @@ package com.flowcrypt.email.model.results
 /**
  * This class used by Android loaders to create response result with an exception, if it happened.
  *
- * @author DenBond7
- * Date: 09.05.2017
- * Time: 16:02
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 //todo-denbond7 need to remove this class in the near future. Refactor code and remove this
 data class LoaderResult constructor(

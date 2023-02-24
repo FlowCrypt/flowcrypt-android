@@ -20,10 +20,7 @@ import kotlinx.parcelize.Parcelize
  * This action describes a task which loads Gmail aliases for the given account and save them to
  * the local database.
  *
- * @author Denis Bondarenko
- *         Date: 11/22/19
- *         Time: 12:09 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class LoadGmailAliasesAction(

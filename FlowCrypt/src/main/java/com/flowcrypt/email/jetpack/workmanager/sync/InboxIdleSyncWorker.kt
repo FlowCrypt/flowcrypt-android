@@ -34,10 +34,7 @@ import java.math.BigInteger
  * This task does a job of loading all new messages which not exist in the cache but exist on the server and updates
  * existing messages in the local database.
  *
- * @author DenBond7
- * Date: 22.06.2017
- * Time: 17:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
   BaseIdleWorker(context, params) {

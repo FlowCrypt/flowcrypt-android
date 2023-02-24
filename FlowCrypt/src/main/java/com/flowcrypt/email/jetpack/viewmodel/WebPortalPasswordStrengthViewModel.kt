@@ -19,10 +19,7 @@ import kotlinx.coroutines.withContext
 /**
  * This [ViewModel] implementation can be used to check the web portal strength
  *
- * @author Denis Bondarenko
- * Date: 1/21/22
- * Time: 08:15 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class WebPortalPasswordStrengthViewModel(application: Application) :
   BaseAndroidViewModel(application) {

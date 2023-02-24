@@ -10,10 +10,7 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/30/21
- *         Time: 1:42 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun MimeMessage.getAddresses(type: Message.RecipientType): List<String> {
   return getRecipients(type)

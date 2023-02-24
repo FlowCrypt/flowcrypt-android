@@ -8,10 +8,7 @@ package com.flowcrypt.email.util
 import android.util.Log
 
 /**
- * @author Denis Bondarenko
- * Date: 4/26/19
- * Time: 9:33 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LogsUtil {
   companion object {

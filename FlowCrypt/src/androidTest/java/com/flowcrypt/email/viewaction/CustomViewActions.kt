@@ -18,10 +18,7 @@ import org.hamcrest.Matcher
  *
  * See [androidx.test.espresso.contrib.NavigationViewActions] for more details
  *
- * @author Denis Bondarenko
- * Date: 16.08.2018
- * Time: 12:11
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 /**

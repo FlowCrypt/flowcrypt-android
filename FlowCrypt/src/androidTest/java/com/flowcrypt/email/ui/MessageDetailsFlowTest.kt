@@ -74,10 +74,7 @@ import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- * Date: 3/13/19
- * Time: 4:32 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

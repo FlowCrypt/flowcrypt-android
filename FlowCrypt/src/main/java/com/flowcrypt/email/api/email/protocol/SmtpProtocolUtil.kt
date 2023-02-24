@@ -22,10 +22,7 @@ import java.io.IOException
 /**
  * This class describes methods for a work with SMTP protocol.
  *
- * @author Denis Bondarenko
- * Date: 15.01.2018
- * Time: 13:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SmtpProtocolUtil {
 

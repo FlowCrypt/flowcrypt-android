@@ -17,10 +17,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * This object describes a logic of work with [RecipientEntity].
  *
- * @author DenBond7
- * Date: 17.05.2017
- * Time: 12:22
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 interface RecipientDao : BaseDao<RecipientEntity> {

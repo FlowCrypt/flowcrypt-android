@@ -13,10 +13,7 @@ import androidx.preference.DialogPreference
 /**
  * A custom [androidx.preference.Preference]
  *
- * @author Denis Bondarenko
- * Date: 17.11.2018
- * Time: 13:00
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class BuildConfInfoPreference : DialogPreference {
   constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int, defStyleRes: Int) :

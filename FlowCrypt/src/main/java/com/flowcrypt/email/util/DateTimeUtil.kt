@@ -15,10 +15,7 @@ import java.util.TimeZone
 /**
  * This class can be used to work with datea and time.
  *
- * @author DenBond7
- * Date: 08.06.2017
- * Time: 15:52
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DateTimeUtil {
   companion object {

@@ -13,10 +13,7 @@ import java.util.Random
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/12/21
- *         Time: 10:38 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun TemporaryFolder.createFileWithRandomData(
   fileSizeInBytes: Long,

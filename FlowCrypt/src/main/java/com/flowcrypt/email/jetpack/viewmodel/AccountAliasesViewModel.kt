@@ -23,10 +23,7 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/25/20
- *         Time: 10:20 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AccountAliasesViewModel(application: Application) : AccountViewModel(application) {
 

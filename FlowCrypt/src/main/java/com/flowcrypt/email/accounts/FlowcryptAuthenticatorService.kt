@@ -10,10 +10,7 @@ import android.content.Intent
 import android.os.IBinder
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/12/20
- *         Time: 5:03 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FlowcryptAuthenticatorService : Service() {
   private lateinit var authenticator: FlowcryptAccountAuthenticator

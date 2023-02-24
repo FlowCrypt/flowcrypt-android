@@ -27,10 +27,7 @@ import com.google.gson.JsonObject
 /**
  * It's a repository interface for the whole API calls over the app
  *
- * @author Denis Bondarenko
- *         Date: 10/24/19
- *         Time: 6:08 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface ApiRepository : BaseApiRepository {
   /**

@@ -45,10 +45,7 @@ import java.util.UUID
 /**
  * This realization of [CoroutineWorker] downloads the attachments for forwarding purposes.
  *
- * @author Denis Bondarenko
- * Date: 09.10.2018
- * Time: 11:48
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {

@@ -12,10 +12,7 @@ import com.google.android.gms.common.api.Scope
 /**
  * This class describes methods which can be used to work with Google API.
  *
- * @author Denis Bondarenko
- * Date: 09.10.2017
- * Time: 12:25
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class GoogleApiClientHelper {
 

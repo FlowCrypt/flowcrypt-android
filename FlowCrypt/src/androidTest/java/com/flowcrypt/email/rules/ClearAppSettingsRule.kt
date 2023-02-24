@@ -11,10 +11,7 @@ import java.io.IOException
 /**
  * The rule which clears the application settings.
  *
- * @author Denis Bondarenko
- * Date: 27.12.2017
- * Time: 11:57
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 class ClearAppSettingsRule : BaseRule() {

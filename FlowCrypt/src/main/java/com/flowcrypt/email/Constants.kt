@@ -10,10 +10,7 @@ import androidx.core.content.FileProvider
 /**
  * This class contains the common constants used in the application.
  *
- * @author DenBond7
- * Date: 25.04.2017
- * Time: 11:35
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class Constants {
   companion object {

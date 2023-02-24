@@ -41,10 +41,7 @@ import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/23/22
- *         Time: 4:53 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ImportAdditionalPrivateKeysFragment :
   BaseImportKeyFragment<FragmentImportAdditionalPrivateKeysBinding>(), ProgressBehaviour {

@@ -75,10 +75,7 @@ import java.util.concurrent.Future
  *  * A user can stop loading an attachment at any time.
  *
  *
- * @author Denis Bondarenko
- * Date: 16.08.2017
- * Time: 10:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AttachmentDownloadManagerService : Service() {
 

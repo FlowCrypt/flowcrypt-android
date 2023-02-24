@@ -30,10 +30,7 @@ import kotlinx.coroutines.withContext
 /**
  * This task identifies encrypted messages and updates information about messages in the local database.
  *
- * @author Denis Bondarenko
- * Date: 02.06.2018
- * Time: 14:30
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

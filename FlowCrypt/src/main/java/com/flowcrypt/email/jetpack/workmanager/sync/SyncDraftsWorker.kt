@@ -21,10 +21,7 @@ import com.google.api.services.gmail.model.ListDraftsResponse
 import jakarta.mail.Store
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/28/22
- *         Time: 6:43 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SyncDraftsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

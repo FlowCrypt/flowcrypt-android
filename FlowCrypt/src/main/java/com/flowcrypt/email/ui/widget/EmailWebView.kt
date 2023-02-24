@@ -25,10 +25,7 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
 /**
  * The custom realization of [WebView]
  *
- * @author Denis Bondarenko
- * Date: 02.09.2017
- * Time: 12:19
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmailWebView : WebView {
   private var onPageLoadingListener: OnPageLoadingListener? = null

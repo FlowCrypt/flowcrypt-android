@@ -13,10 +13,7 @@ import java.io.OutputStream
  * This class itself simply overrides all methods of [OutputStream] with versions that pass
  * all requests to the underlying output stream.
  *
- * @author Denis Bondarenko
- *         Date: 10/6/20
- *         Time: 10:02 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ProgressOutputStream(val out: OutputStream) : BufferedOutputStream(out) {
   override fun write(b: ByteArray) {

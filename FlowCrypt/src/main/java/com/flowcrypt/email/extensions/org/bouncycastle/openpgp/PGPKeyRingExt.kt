@@ -23,10 +23,7 @@ import java.io.IOException
 import java.time.Instant
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/11/21
- *         Time: 10:08 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 /**

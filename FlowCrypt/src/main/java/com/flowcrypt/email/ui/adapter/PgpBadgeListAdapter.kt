@@ -18,10 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/10/21
- *         Time: 11:41 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PgpBadgeListAdapter : ListAdapter<PgpBadgeListAdapter.PgpBadge,
     PgpBadgeListAdapter.ViewHolder>(DiffUtilCallBack()) {

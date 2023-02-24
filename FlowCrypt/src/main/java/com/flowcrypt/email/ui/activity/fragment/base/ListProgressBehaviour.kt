@@ -14,10 +14,7 @@ import com.flowcrypt.email.R
  * This interface helps to show a list of some data. It extends [ProgressBehaviour] with one more
  * common view - 'emptyView'.
  *
- * @author Denis Bondarenko
- *         Date: 2/18/20
- *         Time: 10:16 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface ListProgressBehaviour : ProgressBehaviour {
   val emptyView: View?

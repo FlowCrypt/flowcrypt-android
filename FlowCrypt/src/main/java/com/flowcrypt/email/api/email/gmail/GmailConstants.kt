@@ -8,10 +8,7 @@ package com.flowcrypt.email.api.email.gmail
 /**
  * This class described Gmail constants.
  *
- * @author DenBond7
- * Date: 28.04.2017
- * Time: 9:47
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class GmailConstants {
   companion object {

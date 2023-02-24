@@ -16,10 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * The base dialog fragment.
  *
- * @author Denis Bondarenko
- * Date: 01.08.2017
- * Time: 10:04
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseDialogFragment : DialogFragment(), IdlingCountListener {
 

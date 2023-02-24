@@ -35,10 +35,7 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- * Date: 18.01.2018
- * Time: 13:02
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object TestGeneralUtil {
   fun <T> readObjectFromResources(path: String, aClass: Class<T>): T {

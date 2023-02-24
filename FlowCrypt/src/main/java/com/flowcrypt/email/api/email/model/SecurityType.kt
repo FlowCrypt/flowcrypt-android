@@ -14,10 +14,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This class describes settings for some security type.
  *
- * @author Denis Bondarenko
- * Date: 13.09.2017
- * Time: 14:35
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class SecurityType constructor(

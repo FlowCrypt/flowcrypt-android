@@ -20,10 +20,7 @@ import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/20/21
- *         Time: 11:00 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Entity(
   tableName = "public_keys",

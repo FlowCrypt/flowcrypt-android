@@ -54,10 +54,7 @@ import java.io.File
 import java.net.HttpURLConnection
 
 /**
- * @author Denis Bondarenko
- * Date: 4/23/21
- * Time: 10:18 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

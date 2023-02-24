@@ -23,10 +23,7 @@ import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/22/20
- *         Time: 5:24 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseOAuthFragment<T : ViewBinding> : BaseFragment<T>() {
   protected val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()

@@ -35,10 +35,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/18/22
- *         Time: 3:55 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

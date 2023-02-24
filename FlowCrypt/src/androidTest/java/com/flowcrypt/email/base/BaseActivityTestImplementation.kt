@@ -10,10 +10,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import org.junit.rules.TestRule
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/15/20
- *         Time: 1:41 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface BaseActivityTestImplementation {
   val activityScenarioRule: ActivityScenarioRule<*>?

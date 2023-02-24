@@ -10,10 +10,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/23/21
- *         Time: 3:59 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class VerticalSpaceMarginItemDecoration(
   private val marginTop: Int,

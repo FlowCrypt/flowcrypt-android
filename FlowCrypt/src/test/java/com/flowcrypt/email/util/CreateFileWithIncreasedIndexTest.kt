@@ -11,10 +11,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/20/20
- *         Time: 1:26 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreateFileWithIncreasedIndexTest {
   @get:Rule

@@ -12,10 +12,7 @@ import com.google.android.material.appbar.AppBarLayout
 import org.hamcrest.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/3/19
- *         Time: 3:17 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AppBarLayoutBackgroundColorMatcher(val color: Int) :
   BoundedMatcher<View, AppBarLayout>(AppBarLayout::class.java) {

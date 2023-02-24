@@ -37,10 +37,7 @@ import java.util.*
 /**
  * This loader finds and returns a user backup of private keys from the mail.
  *
- * @author DenBond7
- * Date: 30.04.2017.
- * Time: 22:28.
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val privateKeysLiveData = MutableLiveData<Result<ArrayList<PgpKeyDetails>?>>()

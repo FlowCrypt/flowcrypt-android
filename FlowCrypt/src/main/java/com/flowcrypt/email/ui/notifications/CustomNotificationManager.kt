@@ -22,10 +22,7 @@ import androidx.core.content.ContextCompat
 /**
  * A base class for [android.app.Notification]
  *
- * @author Denis Bondarenko
- * Date: 27.06.2018
- * Time: 12:09
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class CustomNotificationManager(protected var context: Context) {
   protected var notificationManagerCompat: NotificationManagerCompat =

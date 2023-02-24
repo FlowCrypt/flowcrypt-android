@@ -9,10 +9,7 @@ import androidx.test.filters.FlakyTest
 import org.junit.runner.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/7/22
- *         Time: 1:25 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FlakyTestsFilter : BaseCustomFilter() {
   override fun evaluateTest(description: Description?): Boolean {

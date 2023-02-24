@@ -12,10 +12,7 @@ import com.google.gson.annotations.SerializedName
 /**
  * The model of [PostHelpFeedbackRequest].
  *
- * @author DenBond7
- * Date: 30.05.2017
- * Time: 12:42
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 data class PostHelpFeedbackModel(
   @Expose val email: String,

@@ -12,10 +12,7 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/29/22
- *         Time: 1:20 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecyclerViewItemMatcher(val matcher: Matcher<View>) :
   BoundedMatcher<View, RecyclerView>(RecyclerView::class.java) {

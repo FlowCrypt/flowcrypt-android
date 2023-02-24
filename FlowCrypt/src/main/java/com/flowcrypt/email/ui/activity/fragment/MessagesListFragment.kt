@@ -103,10 +103,7 @@ import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorA
  * This fragment used for show messages list. ListView is the base view in this fragment. After
  * the start, this fragment download user messages.
  *
- * @author DenBond7
- * Date: 27.04.2017
- * Time: 15:39
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListProgressBehaviour,
   SwipeRefreshLayout.OnRefreshListener, MsgsPagedListAdapter.OnMessageClickListener {

@@ -28,10 +28,7 @@ import java.time.ZoneId
 import java.util.Properties
 
 /**
- * @author Denis Bondarenko
- * Date: 3/16/21
- * Time: 7:22 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmailUtilTest {
   @Test

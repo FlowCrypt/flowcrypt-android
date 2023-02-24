@@ -10,10 +10,7 @@ import android.os.Build
 import android.os.Parcelable
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/19/22
- *         Time: 4:38 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 inline fun <reified T : Parcelable> Intent.getParcelableExtraViaExt(key: String): T? = when {
   Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> getParcelableExtra(key, T::class.java)

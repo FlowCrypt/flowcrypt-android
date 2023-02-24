@@ -12,10 +12,7 @@ import com.flowcrypt.email.R
 /**
  * This exception means that no key available for a given email account or alias.
  *
- * @author Denis Bondarenko
- * Date: 01.08.2018
- * Time: 12:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class NoKeyAvailableException(context: Context, val email: String, val alias: String? = null) :
   FlowCryptException(

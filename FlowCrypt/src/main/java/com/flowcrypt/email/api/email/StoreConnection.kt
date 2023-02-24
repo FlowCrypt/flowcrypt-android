@@ -16,10 +16,7 @@ import jakarta.mail.Store
  * That's an interface which helps to manage an instance of [jakarta.mail.Store]. All of methods
  * should be suspended and should be run out of the main thread.
  *
- * @author Denis Bondarenko
- *         Date: 11/20/20
- *         Time: 11:38 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface StoreConnection {
   val context: Context

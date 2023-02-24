@@ -12,10 +12,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * Must be run in non-UI thread. This class describes an action which will be run on a queue.
  *
- * @author Denis Bondarenko
- * Date: 29.01.2018
- * Time: 16:56
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface Action : Parcelable {
   var id: Long

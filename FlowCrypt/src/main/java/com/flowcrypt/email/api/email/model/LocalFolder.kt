@@ -15,10 +15,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This is a simple POJO object, which describe information about the email folder.
  *
- * @author DenBond7
- * Date: 07.06.2017
- * Time: 14:49
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class LocalFolder constructor(

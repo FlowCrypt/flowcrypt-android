@@ -16,10 +16,7 @@ import java.util.Locale
 /**
  * This fragment shows a general information about the current build.
  *
- * @author Denis Bondarenko
- * Date: 10.07.2017
- * Time: 12:11
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class BuildConfigInfoPreferencesFragment : PreferenceDialogFragmentCompat() {
 

@@ -39,10 +39,7 @@ import javax.crypto.spec.IvParameterSpec
  *
  * See the great articles https://proandroiddev.com/secure-data-in-android-encryption-7eda33e68f58
  *
- * @author DenBond7
- * Date: 12.05.2017
- * Time: 12:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  * @version 3.0 Migrated to use only AES cipher for encryption/decryption which uses
  * AndroidKeyStore for storing keys. Improved and simplified the code.
  */

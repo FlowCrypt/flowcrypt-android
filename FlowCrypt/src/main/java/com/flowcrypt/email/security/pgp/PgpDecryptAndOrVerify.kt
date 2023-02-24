@@ -30,10 +30,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/11/21
- *         Time: 2:10 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object PgpDecryptAndOrVerify {
   fun decrypt(

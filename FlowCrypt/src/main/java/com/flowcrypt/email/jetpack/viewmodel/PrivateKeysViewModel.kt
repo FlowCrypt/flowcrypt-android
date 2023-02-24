@@ -53,10 +53,7 @@ import org.pgpainless.util.Passphrase
 /**
  * This [ViewModel] implementation can be used to fetch details about imported keys.
  *
- * @author Denis Bondarenko
- * Date: 2/14/19
- * Time: 10:50 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrivateKeysViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())

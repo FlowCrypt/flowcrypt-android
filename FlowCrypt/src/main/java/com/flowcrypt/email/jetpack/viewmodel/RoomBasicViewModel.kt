@@ -20,10 +20,7 @@ import kotlinx.coroutines.withContext
 /**
  * This class helps to do background operations with [RoomDatabase]
  *
- * @author Denis Bondarenko
- *         Date: 3/13/20
- *         Time: 1:20 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class RoomBasicViewModel(application: Application) : BaseAndroidViewModel(application) {
   protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(application)

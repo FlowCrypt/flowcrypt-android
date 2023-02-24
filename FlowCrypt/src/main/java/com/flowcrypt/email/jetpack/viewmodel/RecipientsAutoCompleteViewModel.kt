@@ -17,10 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/12/22
- *         Time: 9:22 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecipientsAutoCompleteViewModel(application: Application) : RoomBasicViewModel(application) {
   private val controlledRunnerForAutoCompleteResult =
