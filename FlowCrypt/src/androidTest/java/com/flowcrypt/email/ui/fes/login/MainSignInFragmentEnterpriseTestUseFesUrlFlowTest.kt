@@ -13,7 +13,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.extensions.kotlin.urlDecoded
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -63,7 +62,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
           }
 
           request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
-            isApiAccountUsed = true
+            isSharedTenantFesUsed = true
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
           }
         }
