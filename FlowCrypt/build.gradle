@@ -426,7 +426,7 @@ dependencies {
         exclude group: 'com.sun.mail'
     }
 
-    implementation 'com.github.bumptech.glide:glide:4.14.2'
+    implementation 'com.github.bumptech.glide:glide:4.15.0'
     implementation 'com.nulab-inc:zxcvbn:1.7.0'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'com.burhanrashid52:photoeditor:3.0.0'
