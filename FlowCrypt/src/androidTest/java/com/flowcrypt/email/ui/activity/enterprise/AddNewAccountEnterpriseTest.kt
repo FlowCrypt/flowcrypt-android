@@ -18,7 +18,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
-import com.flowcrypt.email.extensions.kotlin.urlDecoded
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -81,9 +80,7 @@ class AddNewAccountEnterpriseTest : BaseSignTest() {
           val gson =
             ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
 
-          if (request.path?.urlDecoded()
-              .equals("/api/v1/client-configuration?domain=localhost:1212")
-          ) {
+          if (request.path.equals("/api/v1/client-configuration?domain=flowcrypt.test")) {
             when (extractEmailFromRecordedRequest(request)) {
               EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(
                 HttpURLConnection.HTTP_OK

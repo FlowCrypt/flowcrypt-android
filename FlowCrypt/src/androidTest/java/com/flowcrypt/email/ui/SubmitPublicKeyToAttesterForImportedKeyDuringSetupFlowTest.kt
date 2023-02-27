@@ -24,7 +24,6 @@ import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
-import com.flowcrypt.email.extensions.kotlin.urlDecoded
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -174,8 +173,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
             request.path == "api" -> MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
 
-            request.path?.urlDecoded()
-              .equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
+            request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
               MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(gson.toJson(CLIENT_CONFIGURATION_RESPONSE))
             }

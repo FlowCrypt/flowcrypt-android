@@ -15,9 +15,8 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.email.javamail.PasswordProtectedAttachmentInfoDataSource
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
