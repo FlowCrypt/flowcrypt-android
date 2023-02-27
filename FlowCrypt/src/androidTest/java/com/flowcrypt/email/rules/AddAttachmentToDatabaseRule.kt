@@ -10,10 +10,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
 
 /**
- * @author Denis Bondarenko
- * Date: 3/14/19
- * Time: 5:54 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddAttachmentToDatabaseRule(val attInfo: AttachmentInfo) : BaseRule() {
   override fun execute() {

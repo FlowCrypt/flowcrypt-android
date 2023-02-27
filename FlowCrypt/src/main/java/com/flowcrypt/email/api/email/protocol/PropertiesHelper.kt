@@ -16,10 +16,7 @@ import java.util.Properties
 /**
  * This util class help generates Properties to connect for different mail servers.
  *
- * @author DenBond7
- * Date: 03.05.2017
- * Time: 18:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PropertiesHelper {
   companion object {

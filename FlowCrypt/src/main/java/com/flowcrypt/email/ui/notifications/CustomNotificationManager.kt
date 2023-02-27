@@ -5,9 +5,13 @@
 
 package com.flowcrypt.email.ui.notifications
 
+import android.Manifest
+import android.app.Notification
 import android.app.Notification.InboxStyle
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
@@ -18,10 +22,7 @@ import androidx.core.content.ContextCompat
 /**
  * A base class for [android.app.Notification]
  *
- * @author Denis Bondarenko
- * Date: 27.06.2018
- * Time: 12:09
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class CustomNotificationManager(protected var context: Context) {
   protected var notificationManagerCompat: NotificationManagerCompat =
@@ -29,6 +30,20 @@ abstract class CustomNotificationManager(protected var context: Context) {
 
   abstract val groupName: String
   abstract val groupId: Int
+
+  open fun notify(tag: String?, id: Int, notification: Notification) {
+    val isAndroidTiramisuOrHigh = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    if (isAndroidTiramisuOrHigh &&
+      ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+      ) != PackageManager.PERMISSION_GRANTED
+    ) {
+      return
+    }
+
+    notificationManagerCompat.notify(tag, id, notification)
+  }
 
   /**
    * Cancel a notification with the given tag.

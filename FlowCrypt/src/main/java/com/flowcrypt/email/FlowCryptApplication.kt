@@ -39,16 +39,13 @@ import java.util.concurrent.TimeUnit
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state. The production version.
  *
- * @author DenBond7
- * Date: 02/01/2019
- * Time: 16:43
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FlowCryptApplication : Application(), Configuration.Provider {
   override fun onCreate() {
     super.onCreate()
     setupGlobalSettingsForJavaMail()
-    enableDeprecatedSHA1ForPGPainlessPolicy()
+    setupPGPainless()
     setupKeysStorage()
     initPerInstallationSharedPrefs()
     MsgsCacheManager.init(this)
@@ -57,6 +54,13 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     SyncInboxWorker.enqueuePeriodic(this)
     enqueueMsgsCacheCleanerWorker()
     FlavorSettings.configure(this)
+  }
+
+  private fun setupPGPainless() {
+    enableDeprecatedSHA1ForPGPainlessPolicy()
+
+    //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
+    PGPainless.getPolicy().isEnableKeyParameterValidation = true
   }
 
   private fun setupGlobalSettingsForJavaMail() {

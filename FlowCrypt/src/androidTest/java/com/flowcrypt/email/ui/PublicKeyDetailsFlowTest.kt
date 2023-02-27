@@ -54,10 +54,7 @@ import java.io.File
 import java.util.Date
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/2/19
- *         Time: 1:32 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

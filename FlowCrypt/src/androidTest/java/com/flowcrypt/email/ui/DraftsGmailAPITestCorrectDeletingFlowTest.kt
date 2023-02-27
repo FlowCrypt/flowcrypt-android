@@ -69,10 +69,7 @@ import java.net.HttpURLConnection
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/2050
  *
- * @author Denis Bondarenko
- *         Date: 11/28/22
- *         Time: 6:23 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

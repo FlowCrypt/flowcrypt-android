@@ -9,10 +9,7 @@ import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 
 /**
- * @author Denis Bondarenko
- * Date: 15.01.2018
- * Time: 16:34
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AccountDaoManager {
   companion object {

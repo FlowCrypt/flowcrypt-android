@@ -10,10 +10,7 @@ import android.text.Spanned
 import android.text.TextUtils
 
 /**
- * @author Denis Bondarenko
- * Date: 7/28/20
- * Time: 5:56 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface InputFilters {
   /**

@@ -8,9 +8,6 @@ package com.flowcrypt.email.util.exception
 /**
  * It's an exception which should be sent via ACRA reporter
  *
- * @author Denis Bondarenko
- *         Date: 6/25/20
- *         Time: 3:44 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ForceHandlingException(e: Exception) : Exception(e)

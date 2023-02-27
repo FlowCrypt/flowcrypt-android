@@ -13,10 +13,7 @@ import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/9/22
- *         Time: 11:07 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class BitmapMatcher(private val expectedBitmap: Bitmap) :
   TypeSafeMatcher<View>(View::class.java) {

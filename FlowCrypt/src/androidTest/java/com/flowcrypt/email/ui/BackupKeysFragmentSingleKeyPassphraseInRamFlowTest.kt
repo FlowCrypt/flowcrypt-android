@@ -39,10 +39,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/17/21
- *         Time: 5:05 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -85,7 +82,7 @@ class BackupKeysFragmentSingleKeyPassphraseInRamFlowTest : BaseBackupKeysFragmen
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
+    val file = TestGeneralUtil.createFileWithTextContent("key.asc", "")
 
     intendingFileChoose(file)
     onView(withId(R.id.btBackup))

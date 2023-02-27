@@ -24,10 +24,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 
 /**
- * @author DenBond7
- * Date: 30.05.2017
- * Time: 15:27
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SearchBackupsInEmailFragment : BaseFragment<FragmentSearchBackupsInEmailBinding>(),
   ProgressBehaviour {

@@ -13,10 +13,7 @@ import org.junit.Test
 import java.util.Properties
 
 /**
- * @author Denis Bondarenko
- * Date: 3/30/21
- * Time: 9:54 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FlowCryptMimeMessageTest {
   @Test

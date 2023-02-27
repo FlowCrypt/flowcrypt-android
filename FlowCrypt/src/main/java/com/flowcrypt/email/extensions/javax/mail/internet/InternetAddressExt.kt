@@ -12,10 +12,7 @@ import android.text.style.StyleSpan
 import jakarta.mail.internet.InternetAddress
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/30/21
- *         Time: 10:41 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 val InternetAddress.domain: String
   get() = address.substring(address.indexOf('@') + 1)

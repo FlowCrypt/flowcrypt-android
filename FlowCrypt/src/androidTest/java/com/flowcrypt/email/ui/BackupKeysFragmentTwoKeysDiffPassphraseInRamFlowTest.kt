@@ -40,10 +40,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/22/21
- *         Time: 11:36 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -99,7 +96,7 @@ class BackupKeysFragmentTwoKeysDiffPassphraseInRamFlowTest : BaseBackupKeysFragm
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
+    val file = TestGeneralUtil.createFileWithTextContent("key.asc", "")
 
     intendingFileChoose(file)
     onView(withId(R.id.btBackup))

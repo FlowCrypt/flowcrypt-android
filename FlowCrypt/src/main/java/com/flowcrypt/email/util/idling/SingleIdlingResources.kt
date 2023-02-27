@@ -13,10 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * See details here https://github.com/googlesamples/android-testing/blob/master/ui/espresso/IdlingResourceSample/app
  * /src/main/java/com/example/android/testing/espresso/IdlingResourceSample/IdlingResource/SimpleIdlingResource.java
  *
- * @author Denis Bondarenko
- * Date: 4/4/19
- * Time: 3:59 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SingleIdlingResources(initialValue: Boolean = true, val delay: Long = 0) : IdlingResource {
   @Volatile

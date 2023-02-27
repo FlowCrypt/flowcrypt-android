@@ -12,10 +12,7 @@ import com.flowcrypt.email.database.entity.ActionQueueEntity
 /**
  * This object describes a logic of working with [ActionQueueEntity] in the local database.
  *
- * @author Denis Bondarenko
- * Date: 30.01.2018
- * Time: 10:00
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 interface ActionQueueDao : BaseDao<ActionQueueEntity> {

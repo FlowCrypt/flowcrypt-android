@@ -12,10 +12,7 @@ import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/7/21
- *         Time: 11:37 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  *
  * See details here
  * https://stackoverflow.com/questions/28390574/checking-toast-message-in-android-espresso

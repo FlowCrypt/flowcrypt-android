@@ -24,10 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/25/20
- *         Time: 10:21 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class AccountViewModel(application: Application) : RoomBasicViewModel(application) {
   val addNewAccountLiveData = MutableLiveData<Result<AccountEntity?>>()

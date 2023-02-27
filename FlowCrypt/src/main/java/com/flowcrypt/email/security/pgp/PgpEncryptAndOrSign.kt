@@ -24,10 +24,7 @@ import java.io.OutputStream
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/16/21
- *         Time: 3:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object PgpEncryptAndOrSign {
   fun encryptAndOrSignMsg(
@@ -60,7 +57,8 @@ object PgpEncryptAndOrSign {
     secretKeyRingProtector: SecretKeyRingProtector? = null,
     doArmor: Boolean = false,
     hideArmorMeta: Boolean = false,
-    passphrase: Passphrase? = null
+    passphrase: Passphrase? = null,
+    fileName: String? = null,
   ) {
     val pubKeysStream = ByteArrayInputStream(pubKeys.joinToString(separator = "\n").toByteArray())
     val pgpPublicKeyRingCollection = pubKeysStream.use {
@@ -88,7 +86,8 @@ object PgpEncryptAndOrSign {
       secretKeyRingProtector = secretKeyRingProtector,
       doArmor = doArmor,
       hideArmorMeta = hideArmorMeta,
-      passphrase = passphrase
+      passphrase = passphrase,
+      fileName = fileName,
     )
   }
 
@@ -100,7 +99,8 @@ object PgpEncryptAndOrSign {
     secretKeyRingProtector: SecretKeyRingProtector? = null,
     doArmor: Boolean = false,
     hideArmorMeta: Boolean = false,
-    passphrase: Passphrase? = null
+    passphrase: Passphrase? = null,
+    fileName: String? = null,
   ) {
     srcInputStream.use { srcStream ->
       genEncryptionStream(
@@ -110,7 +110,8 @@ object PgpEncryptAndOrSign {
         secretKeyRingProtector = secretKeyRingProtector,
         doArmor = doArmor,
         hideArmorMeta = hideArmorMeta,
-        passphrase = passphrase
+        passphrase = passphrase,
+        fileName = fileName,
       ).use { encryptionStream ->
         srcStream.copyTo(encryptionStream)
       }
@@ -124,7 +125,8 @@ object PgpEncryptAndOrSign {
     secretKeyRingProtector: SecretKeyRingProtector?,
     doArmor: Boolean,
     hideArmorMeta: Boolean = false,
-    passphrase: Passphrase? = null
+    passphrase: Passphrase? = null,
+    fileName: String? = null,
   ): EncryptionStream {
     val encOpt = EncryptionOptions().apply {
       passphrase?.let { addPassphrase(passphrase) }
@@ -148,6 +150,8 @@ object PgpEncryptAndOrSign {
 
     producerOptions.isAsciiArmor = doArmor
     producerOptions.isHideArmorHeaders = doArmor && hideArmorMeta
+
+    fileName?.let { producerOptions.fileName = it }
 
     return PGPainless.encryptAndOrSign()
       .onOutputStream(destOutputStream)

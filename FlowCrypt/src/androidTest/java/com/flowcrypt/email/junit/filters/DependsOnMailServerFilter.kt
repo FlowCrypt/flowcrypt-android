@@ -9,10 +9,7 @@ import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import org.junit.runner.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/17/21
- *         Time: 5:06 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DependsOnMailServerFilter : ReadyForCIFilter() {
   override fun evaluateTest(description: Description?): Boolean {

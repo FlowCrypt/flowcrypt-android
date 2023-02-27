@@ -24,10 +24,7 @@ import java.util.Date
 /**
  * This adapter will be used to show a list of private keys.
  *
- * @author Denis Bondarenko
- * Date: 2/13/19
- * Time: 6:24 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrivateKeysRecyclerViewAdapter(
   private val listener: OnKeySelectedListener?,

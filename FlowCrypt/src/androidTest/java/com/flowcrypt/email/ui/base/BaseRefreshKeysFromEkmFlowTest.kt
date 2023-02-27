@@ -26,10 +26,7 @@ import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/22/22
- *         Time: 6:47 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
   abstract fun handleEkmAPI(gson: Gson): MockResponse
@@ -51,7 +48,7 @@ abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
       enforceKeygenAlgo = null,
       enforceKeygenExpireMonths = null
     )
-  ).copy(email = "ekm@localhost:1212")
+  ).copy(email = "ekm@flowcrypt.test")
 
   protected val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
 
@@ -85,6 +82,6 @@ abstract class BaseRefreshKeysFromEkmFlowTest : BaseTest() {
 
   companion object {
     const val DELAY_FOR_EKM_REQUEST = 2000L
-    private const val EKM_URL = "https://localhost:1212/ekm/"
+    private const val EKM_URL = "https://flowcrypt.test/ekm/"
   }
 }

@@ -55,10 +55,7 @@ import java.util.zip.GZIPInputStream
 import kotlin.random.Random
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/3/22
- *         Time: 5:32 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -75,7 +72,7 @@ class ComposeScreenDraftGmailAPIFlowTest : BaseComposeScreenTest() {
           ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
           ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
         ),
-        keyManagerUrl = "https://localhost:1212/",
+        keyManagerUrl = "https://flowcrypt.test/",
       ),
       useAPI = true,
       useCustomerFesUrl = true

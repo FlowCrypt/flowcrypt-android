@@ -17,10 +17,7 @@ import org.hamcrest.Matchers.`is`
 /**
  * This [ViewAssertion] implementation asserts the [RecyclerView] size.
  *
- * @author Denis Bondarenko
- * Date: 21.05.2018
- * Time: 15:43
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecyclerViewItemCountAssertion(private val expectedCount: Int) : ViewAssertion {
 

@@ -21,10 +21,7 @@ import com.flowcrypt.email.extensions.visible
 /**
  * This adapter describes logic to prepare show recipients from the database.
  *
- * @author DenBond7
- * Date: 26.05.2017
- * Time: 18:00
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecipientsRecyclerViewAdapter(
   val isDeleteEnabled: Boolean = true,

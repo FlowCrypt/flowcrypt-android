@@ -129,10 +129,7 @@ import java.nio.charset.StandardCharsets
 /**
  * This fragment describe msgEntity of some message.
  *
- * @author DenBond7
- * Date: 03.05.2017
- * Time: 16:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), ProgressBehaviour,
   View.OnClickListener {
@@ -910,7 +907,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
-            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo())
+            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
           } else {
             handleOtherBlock(block, layoutInflater)
           }

@@ -53,10 +53,7 @@ import org.junit.runner.RunWith
 /**
  * This class tests a case when we want to send a reply with [ServiceInfo]
  *
- * @author Denis Bondarenko
- * Date: 14.05.2018
- * Time: 16:34
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

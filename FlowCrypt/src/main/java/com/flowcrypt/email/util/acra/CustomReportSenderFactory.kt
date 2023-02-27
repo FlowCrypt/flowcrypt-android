@@ -16,10 +16,7 @@ import org.acra.sender.ReportSenderFactory
 /**
  * It's a custom realization of [ReportSenderFactory]
  *
- * @author Denis Bondarenko
- *         Date: 7/25/19
- *         Time: 3:17 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @AutoService(ReportSenderFactory::class)
 class CustomReportSenderFactory :

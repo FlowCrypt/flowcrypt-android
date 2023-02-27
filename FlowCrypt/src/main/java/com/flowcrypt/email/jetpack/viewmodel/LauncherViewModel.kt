@@ -22,10 +22,7 @@ import kotlinx.coroutines.launch
  * This [androidx.lifecycle.ViewModel] helps indicate when the app is ready to continue the init
  * launch
  *
- * @author Denis Bondarenko
- *         Date: 5/6/20
- *         Time: 4:22 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LauncherViewModel(application: Application) : AccountViewModel(application) {
   private val isInitLoadingCompletedMutableStateFlow = MutableStateFlow<InitData?>(null)

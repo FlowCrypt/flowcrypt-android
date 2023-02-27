@@ -11,10 +11,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/20/21
- *         Time: 4:58 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Dao
 interface PubKeyDao : BaseDao<PublicKeyEntity> {

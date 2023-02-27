@@ -24,10 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/9/20
- *         Time: 1:50 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : BaseIdleWorker(
   context,

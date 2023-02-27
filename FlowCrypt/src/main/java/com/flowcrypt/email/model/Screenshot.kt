@@ -9,10 +9,7 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/8/22
- *         Time: 2:23 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class Screenshot(val byteArray: ByteArray) : Parcelable {

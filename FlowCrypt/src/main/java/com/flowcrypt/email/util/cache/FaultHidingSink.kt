@@ -22,10 +22,7 @@ import okio.Sink
 import java.io.IOException
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/21/20
- *         Time: 12:05 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 internal open class FaultHidingSink(
   delegate: Sink,

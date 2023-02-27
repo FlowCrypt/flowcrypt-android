@@ -13,10 +13,7 @@ import java.io.IOException
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/28/20
- *         Time: 8:18 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ScreenshotTestRule : TestWatcher() {
   override fun failed(e: Throwable?, description: Description?) {

@@ -579,4 +579,5 @@
     <string name="cannot_show_notifications_without_permission">Showing notifications is not enabled in the app</string>
     <string name="need_post_notification_permission">We need permission to show notifications about new messages</string>
     <string name="ask">Ask</string>
+    <string name="password_should_fit_all_requirements">Password should fit all requirements</string>
 </resources>

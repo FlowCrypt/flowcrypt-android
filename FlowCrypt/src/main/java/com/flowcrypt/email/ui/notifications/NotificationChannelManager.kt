@@ -13,10 +13,7 @@ import com.flowcrypt.email.R
 /**
  * This manager does job of register [NotificationChannel] of the app.
  *
- * @author Denis Bondarenko
- * Date: 17.10.2017
- * Time: 12:12
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object NotificationChannelManager {
   const val CHANNEL_ID_ATTACHMENTS = "Attachments"

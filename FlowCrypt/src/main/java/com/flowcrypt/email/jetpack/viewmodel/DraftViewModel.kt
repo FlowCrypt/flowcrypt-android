@@ -48,10 +48,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/2/22
- *         Time: 3:45 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DraftViewModel(
   existingDraftMessageEntity: MessageEntity? = null,

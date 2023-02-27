@@ -62,10 +62,7 @@ import java.util.Date
 /**
  * This [Fragment] helps to show details about the given key.
  *
- * @author Denis Bondarenko
- * Date: 20.11.18
- * Time: 12:43
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>(),
   ProgressBehaviour {

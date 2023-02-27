@@ -94,10 +94,7 @@ import java.util.Properties
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- * Date: 29.09.2017
- * Time: 15:31
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmailUtil {
   companion object {

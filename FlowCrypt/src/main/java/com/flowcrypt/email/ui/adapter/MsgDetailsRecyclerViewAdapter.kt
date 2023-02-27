@@ -15,10 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/23/21
- *         Time: 4:02 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgDetailsRecyclerViewAdapter :
   ListAdapter<MsgDetailsRecyclerViewAdapter.Header,

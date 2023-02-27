@@ -17,10 +17,7 @@ import jakarta.mail.search.SubjectTerm
 /**
  * This class describes methods for search private key backups.
  *
- * @author Denis Bondarenko
- * Date: 26.09.2017
- * Time: 10:02
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SearchBackupsUtil {
   companion object {

@@ -13,10 +13,7 @@ import com.flowcrypt.email.database.entity.RecipientEntity
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/21/21
- *         Time: 11:29 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class RecipientWithPubKeys(

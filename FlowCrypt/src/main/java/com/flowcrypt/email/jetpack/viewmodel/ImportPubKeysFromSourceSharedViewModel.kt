@@ -8,10 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/17/21
- *         Time: 5:18 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ImportPubKeysFromSourceSharedViewModel(application: Application) :
   ParseKeysViewModel(application)

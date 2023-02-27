@@ -19,10 +19,7 @@ import java.util.ArrayList
 /**
  * This tool can help manage private keys in the database. For testing purposes only.
  *
- * @author Denis Bondarenko
- * Date: 27.12.2017
- * Time: 17:44
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrivateKeysManager {
   companion object {

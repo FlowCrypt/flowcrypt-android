@@ -14,10 +14,7 @@ import org.acra.sender.HttpSender
 /**
  * It's a custom realization of [HttpSender]. Here we can filter data which will be sent to a server
  *
- * @author Denis Bondarenko
- *         Date: 7/25/19
- *         Time: 3:15 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, null) {
   override fun send(context: Context, errorContent: CrashReportData) {

@@ -16,10 +16,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * Simple POJO class which describe an outgoing message model.
  *
- * @author DenBond7
- * Date: 09.05.2017
- * Time: 11:20
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class OutgoingMessageInfo constructor(

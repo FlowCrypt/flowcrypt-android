@@ -11,10 +11,7 @@ import org.junit.runners.model.Statement
 /**
  * This rule can rerun a task a few times if it succeeded. By default we have 3 attempts
  *
- * @author Denis Bondarenko
- *         Date: 9/30/20
- *         Time: 4:00 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RepeatRule(private val retryCount: Int = 3) : BaseRule() {
   override fun execute() {}

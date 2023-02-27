@@ -15,10 +15,7 @@ import kotlinx.parcelize.Parcelize
  * Response from the API
  * "https://flowcrypt.com/attester/pub/{id or email}"
  *
- * @author Denis Bondarenko
- * Date: 05.05.2018
- * Time: 14:01
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class PubResponse constructor(

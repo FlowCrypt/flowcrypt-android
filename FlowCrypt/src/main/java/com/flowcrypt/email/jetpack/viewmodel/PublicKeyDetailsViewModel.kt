@@ -20,10 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/19/21
- *         Time: 6:48 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PublicKeyDetailsViewModel(
   publicKeyEntity: PublicKeyEntity, application: Application

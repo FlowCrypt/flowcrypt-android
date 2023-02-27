@@ -10,7 +10,7 @@ jobs:
     name: Add issue to project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v0.0.3
+      - uses: actions/add-to-project@v0.4.0
         with:
           project-url: https://github.com/orgs/FlowCrypt/projects/1
           github-token: ${{ secrets.FLOWCRYPT_ROBOT_ACCESS_TOKEN }}

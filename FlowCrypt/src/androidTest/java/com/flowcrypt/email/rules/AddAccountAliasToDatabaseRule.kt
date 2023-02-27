@@ -9,10 +9,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/13/20
- *         Time: 12:49 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddAccountAliasToDatabaseRule constructor(val alias: AccountAliasesEntity) : BaseRule() {
   override fun execute() {

@@ -38,10 +38,7 @@ import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/24/22
- *         Time: 3:45 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>(),
   ListProgressBehaviour {

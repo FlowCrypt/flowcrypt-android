@@ -12,10 +12,7 @@ import okhttp3.Response
  * This [Interceptor] add a custom header (`api-version: version-value`) to all
  * requests.
  *
- * @author Denis Bondarenko
- * Date: 12.07.2017
- * Time: 13:40
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ApiVersionInterceptor : Interceptor {
 

@@ -25,10 +25,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/10/21
- *         Time: 8:31 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ImportRecipientsFromSourceFragment :
   BaseImportKeyFragment<FragmentImportRecipientsFromSourceBinding>() {

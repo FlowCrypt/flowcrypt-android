@@ -34,10 +34,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourc
 import com.flowcrypt.email.ui.adapter.ImportOrUpdatePubKeysRecyclerViewAdapter
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/12/21
- *         Time: 4:09 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBinding>(),
   ListProgressBehaviour {

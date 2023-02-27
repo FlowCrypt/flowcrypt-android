@@ -40,10 +40,7 @@ import java.io.InvalidObjectException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/23/21
- *         Time: 10:44 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Application) :
   RoomBasicViewModel(application) {

@@ -29,10 +29,7 @@ import com.flowcrypt.email.jetpack.viewmodel.SendFeedbackViewModel
 import com.flowcrypt.email.util.exception.ApiException
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/8/22
- *         Time: 1:37 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SendFeedbackDialogFragment : BaseDialogFragment() {
   private var binding: FragmentSendFeedbackDialogBinding? = null

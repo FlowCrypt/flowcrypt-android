@@ -10,10 +10,7 @@ import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/1/21
- *         Time: 10:27 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class MsgBlockError(@Expose val errorMsg: String? = null) : Parcelable

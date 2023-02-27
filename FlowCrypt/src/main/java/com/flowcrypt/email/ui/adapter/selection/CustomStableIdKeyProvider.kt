@@ -9,10 +9,7 @@ import androidx.recyclerview.selection.ItemKeyProvider
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/8/20
- *         Time: 4:44 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CustomStableIdKeyProvider(private val recyclerView: RecyclerView) :
   ItemKeyProvider<Long>(SCOPE_CACHED) {

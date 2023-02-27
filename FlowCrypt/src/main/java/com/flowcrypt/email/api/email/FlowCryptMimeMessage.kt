@@ -17,10 +17,7 @@ import java.io.InputStream
  * if the from address is not specified. Where "host" is extracted
  * from [InternetAddress.getLocalAddress]
  *
- * @author Denis Bondarenko
- *         Date: 3/30/21
- *         Time: 9:30 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class FlowCryptMimeMessage : MimeMessage {
   constructor(session: Session) : super(session)

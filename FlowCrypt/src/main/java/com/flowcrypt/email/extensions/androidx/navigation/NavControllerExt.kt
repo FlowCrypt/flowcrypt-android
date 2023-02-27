@@ -12,10 +12,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/14/22
- *         Time: 12:39 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun androidx.navigation.NavController.navigateSafe(
   @IdRes currentDestinationId: Int,

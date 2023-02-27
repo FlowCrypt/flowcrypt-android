@@ -19,10 +19,7 @@ import com.flowcrypt.email.util.UIUtil
  * This dialog can be used if we need to show a simple info dialog
  * that has two buttons (negative and positive).
  *
- * @author Denis Bondarenko
- * Date: 28.08.2018
- * Time: 15:28
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class TwoWayDialogFragment : BaseDialogFragment() {
   private val args by navArgs<TwoWayDialogFragmentArgs>()

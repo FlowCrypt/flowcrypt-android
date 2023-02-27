@@ -23,10 +23,7 @@ import com.flowcrypt.email.ui.activity.MainActivity
 /**
  * It's a manager which helps to show errors notifications with a high priority.
  *
- * @author Denis Bondarenko
- *         Date: 6/26/20
- *         Time: 5:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ErrorNotificationManager(context: Context) : CustomNotificationManager(context) {
   override val groupName: String = GROUP_NAME_ERRORS
@@ -65,7 +62,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
 
     prepareAndShowNotificationsGroup(context)
 
-    notificationManagerCompat.notify(
+    notify(
       groupName,
       R.id.notification_id_has_failed_outgoing_msgs,
       builder.build()
@@ -115,7 +112,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
 
     prepareAndShowNotificationsGroup(context)
 
-    notificationManagerCompat.notify(groupName, R.id.notification_id_auth_failure, builder.build())
+    notify(groupName, R.id.notification_id_auth_failure, builder.build())
   }
 
   /**
@@ -134,7 +131,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
       .setAutoCancel(true)
       .setGroupSummary(true)
       .setOnlyAlertOnce(true)
-    notificationManagerCompat.notify(groupName, groupId, groupBuilder.build())
+    notify(groupName, groupId, groupBuilder.build())
   }
 
   companion object {

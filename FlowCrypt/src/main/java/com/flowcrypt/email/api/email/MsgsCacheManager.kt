@@ -24,10 +24,7 @@ import java.io.OutputStream
 /**
  * This class describes a logic of caching massages. Here we use [DiskLruCache] to store and retrieve raw MIME messages.
  *
- * @author Denis Bondarenko
- *         Date: 8/12/19
- *         Time: 11:40 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object MsgsCacheManager {
   private const val CACHE_VERSION = BuildConfig.VERSION_CODE

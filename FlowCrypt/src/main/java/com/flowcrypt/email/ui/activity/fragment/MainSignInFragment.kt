@@ -74,10 +74,7 @@ import java.net.SocketTimeoutException
 import javax.net.ssl.SSLException
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/17/20
- *         Time: 12:06 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

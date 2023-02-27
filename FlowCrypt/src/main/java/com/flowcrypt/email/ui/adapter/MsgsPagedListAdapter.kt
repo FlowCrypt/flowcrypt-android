@@ -42,10 +42,7 @@ import java.util.regex.Pattern
 /**
  * This class is responsible for displaying the message in the list.
  *
- * @author Denis Bondarenko
- *         Date: 12/15/19
- *         Time: 4:48 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
   PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {

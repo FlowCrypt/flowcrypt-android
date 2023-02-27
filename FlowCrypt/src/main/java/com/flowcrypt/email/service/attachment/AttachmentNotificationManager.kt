@@ -27,10 +27,7 @@ import java.util.Random
 /**
  * This manager is responsible for displaying attachment notifications.
  *
- * @author Denis Bondarenko
- * Date: 17.08.2017
- * Time: 17:30
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AttachmentNotificationManager(context: Context) : CustomNotificationManager(context) {
 
@@ -51,10 +48,8 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setGroup(GROUP_NAME_ATTACHMENTS)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
+    notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, true)
-
-
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
   }
 
   /**
@@ -83,7 +78,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setGroup(GROUP_NAME_ATTACHMENTS)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
+    notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, true)
   }
 
@@ -119,7 +114,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setGroup(GROUP_NAME_ATTACHMENTS)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
 
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
+    notify(attInfo.id, attInfo.uid.toInt(), builder.build())
 
     prepareAndShowNotificationsGroup(context, attInfo, false)
   }
@@ -184,7 +179,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       builder.setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
     }
 
-    notificationManagerCompat.notify(attInfo.id, attInfo.uid.toInt(), builder.build())
+    notify(attInfo.id, attInfo.uid.toInt(), builder.build())
     prepareAndShowNotificationsGroup(context, attInfo, false)
   }
 
@@ -319,7 +314,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setDefaults(Notification.DEFAULT_ALL)
       .setAutoCancel(true)
       .setGroupSummary(true)
-    notificationManagerCompat.notify(groupName, groupId, groupBuilder.build())
+    notify(groupName, groupId, groupBuilder.build())
   }
 
   companion object {

@@ -10,10 +10,7 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/13/20
- *         Time: 12:41 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object FlavorSettings : EnvironmentSettings {
   private val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(
@@ -25,6 +22,6 @@ object FlavorSettings : EnvironmentSettings {
   override fun configure(context: Context) {}
   override fun getCountingIdlingResource() = countingIdlingResource
   override fun getGoogleIdToken(): String = UUID.randomUUID().toString()
-  override fun getGmailAPIRootUrl() = "https://localhost:1212/"
+  override fun getGmailAPIRootUrl() = "https://flowcrypt.test/"
   override fun isGMailAPIHttpRequestInitializerEnabled(): Boolean = false
 }

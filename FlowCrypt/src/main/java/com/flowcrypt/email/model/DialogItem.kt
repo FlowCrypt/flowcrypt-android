@@ -11,10 +11,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * Simple POJO class which describes a dialog item.
  *
- * @author Denis Bondarenko
- * Date: 01.08.2017
- * Time: 11:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class DialogItem constructor(

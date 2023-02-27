@@ -26,10 +26,7 @@ import kotlinx.parcelize.Parcelize
  * This class collects base info of [org.bouncycastle.openpgp.PGPKeyRing]
  * that can be used via [Parcelable] mechanism.
  *
- * @author Denis Bondarenko
- * Date: 2/11/19
- * Time: 1:23 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class PgpKeyDetails constructor(

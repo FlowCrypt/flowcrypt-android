@@ -39,8 +39,8 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.emptyString
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
@@ -58,10 +58,7 @@ import java.util.Random
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- * Date: 22.03.2018
- * Time: 08:55
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -115,7 +112,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
 
     for (i in 0 until ATTACHMENTS_COUNT) {
       atts.add(
-        TestGeneralUtil.createFileAndFillWithContent(
+        TestGeneralUtil.createFileWithTextContent(
           "$i.txt",
           UUID.randomUUID().toString()
         )

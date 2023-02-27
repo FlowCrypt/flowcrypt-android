@@ -42,10 +42,7 @@ import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import org.pgpainless.util.Passphrase
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/28/21
- *         Time: 2:50 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
   private var binding: FragmentFixEmptyPassphraseBinding? = null

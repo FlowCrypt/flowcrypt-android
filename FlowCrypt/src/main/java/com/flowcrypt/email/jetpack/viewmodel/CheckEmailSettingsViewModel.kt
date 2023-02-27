@@ -32,10 +32,7 @@ import kotlinx.coroutines.withContext
  * This [ViewModel] checks [AuthCredentials]. If incoming [AuthCredentials] is valid
  * then this it sends `true`, otherwise sends false.
  *
- * @author DenBond7
- * Date: 14.09.2017.
- * Time: 15:08.
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkEmailSettingsLiveData = MutableLiveData<Result<Boolean?>>()

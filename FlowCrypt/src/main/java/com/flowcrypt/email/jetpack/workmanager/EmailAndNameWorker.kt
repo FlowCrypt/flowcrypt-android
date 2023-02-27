@@ -28,10 +28,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
  *  *  else:
  * "save that email, name pair into DB like so: new RecipientEntity(email, name);"
  *
- * @author DenBond7
- * Date: 22.05.2017
- * Time: 22:25
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmailAndNameWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
   private var recipientDao: RecipientDao = FlowCryptRoomDatabase.getDatabase(context).recipientDao()

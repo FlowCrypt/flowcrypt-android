@@ -31,10 +31,7 @@ import java.io.ByteArrayOutputStream
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- * Date: 5/12/21
- * Time: 9:28 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PgpDecryptAndOrVerifyTest {
 

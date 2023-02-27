@@ -6,10 +6,7 @@
 package com.flowcrypt.email.security.model
 
 /**
- * @author DenBond7
- * Date: 13.05.2017
- * Time: 15:09
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 enum class PrivateKeySourceType constructor(private val text: String) {
   BACKUP("backup"),

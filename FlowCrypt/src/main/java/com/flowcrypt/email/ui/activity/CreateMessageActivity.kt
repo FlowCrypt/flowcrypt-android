@@ -29,10 +29,7 @@ import com.flowcrypt.email.util.FlavorSettings
 /**
  * This activity describes a logic of send encrypted or standard message.
  *
- * @author DenBond7
- * Date: 10.05.2017
- * Time: 11:43
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
   ChoosePublicKeyDialogFragment.OnLoadKeysProgressListener {

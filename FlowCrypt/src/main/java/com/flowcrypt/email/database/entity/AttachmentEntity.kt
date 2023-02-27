@@ -16,10 +16,7 @@ import androidx.room.PrimaryKey
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/5/19
- *         Time: 6:09 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Entity(
   tableName = "attachment",

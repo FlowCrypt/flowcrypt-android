@@ -12,10 +12,7 @@ import java.io.File
  * This class will help to get references to the application specific directories on
  * the filesystem.
  *
- * @author Denis Bondarenko
- *         Date: 7/12/19
- *         Time: 1:01 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object CacheManager {
   private const val DIRECTORY_CURRENT_MESSAGE = "current_msg"

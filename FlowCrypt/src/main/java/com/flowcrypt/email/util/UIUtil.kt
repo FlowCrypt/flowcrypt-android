@@ -20,10 +20,7 @@ import java.io.ByteArrayOutputStream
 /**
  * User interface util methods.
  *
- * @author DenBond7
- * Date: 26.04.2017
- * Time: 14:40
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class UIUtil {
   companion object {

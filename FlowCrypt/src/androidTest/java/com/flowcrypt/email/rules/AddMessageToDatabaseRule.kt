@@ -20,10 +20,7 @@ import jakarta.mail.UIDFolder
 import java.io.IOException
 
 /**
- * @author Denis Bondarenko
- * Date: 17.08.2018
- * Time: 09:48
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddMessageToDatabaseRule(val account: AccountEntity, val localFolder: LocalFolder) :
   BaseRule() {

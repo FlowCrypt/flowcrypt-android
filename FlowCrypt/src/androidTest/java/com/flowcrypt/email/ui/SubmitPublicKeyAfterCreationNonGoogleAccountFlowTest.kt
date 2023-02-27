@@ -44,10 +44,7 @@ import java.util.UUID
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/1984
  *
- * @author Denis Bondarenko
- *         Date: 10/13/22
- *         Time: 10:34 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @DependsOnMailServer
 class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {

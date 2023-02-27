@@ -19,10 +19,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import java.util.Date
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/19/21
- *         Time: 1:50 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyActionsListener) :
   ListAdapter<PublicKeyEntity, PubKeysRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {

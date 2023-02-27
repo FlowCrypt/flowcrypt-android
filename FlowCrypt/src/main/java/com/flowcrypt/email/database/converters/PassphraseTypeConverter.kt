@@ -9,10 +9,7 @@ import androidx.room.TypeConverter
 import com.flowcrypt.email.database.entity.KeyEntity
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/17/21
- *         Time: 6:13 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PassphraseTypeConverter {
   @TypeConverter

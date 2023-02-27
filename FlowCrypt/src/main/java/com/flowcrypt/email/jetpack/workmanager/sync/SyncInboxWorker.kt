@@ -16,10 +16,7 @@ import com.flowcrypt.email.BuildConfig
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/11/20
- *         Time: 4:52 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SyncInboxWorker(context: Context, params: WorkerParameters) :
   InboxIdleSyncWorker(context, params) {

@@ -28,10 +28,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/6/21
- *         Time: 9:56 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PassPhrasesInRAMService : BaseLifecycleService() {
   private lateinit var keysStorage: KeysStorage

@@ -35,10 +35,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import java.util.Date
 
 /**
- * @author Denis Bondarenko
- *         Date: 9/1/20
- *         Time: 4:28 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
   private var binding: FragmentUpdateRecipientPublicKeyBinding? = null

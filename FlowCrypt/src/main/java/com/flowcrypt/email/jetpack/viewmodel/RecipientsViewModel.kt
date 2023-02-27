@@ -10,8 +10,8 @@ import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
@@ -41,10 +41,7 @@ import java.io.IOException
  * either from local storage or from remote servers eg Attester or WKD, based on client
  * configuration.
  *
- * @author Denis Bondarenko
- *         Date: 4/7/20
- *         Time: 11:19 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
@@ -54,7 +51,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     roomDatabase.recipientDao().getAllRecipientsLD()
   val recipientsWithPgpFlow = roomDatabase.recipientDao().getAllRecipientsWithPgpFlow()
   val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity>>> =
-    Transformations.switchMap(searchPatternLiveData) {
+    searchPatternLiveData.switchMap {
       liveData {
         emit(Result.loading())
         val foundContacts = if (it.isNullOrEmpty()) {

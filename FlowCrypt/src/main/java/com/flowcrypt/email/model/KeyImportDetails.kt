@@ -21,10 +21,7 @@ import kotlinx.parcelize.Parcelize
  *  * [KeyImportDetails.SourceType.CLIPBOARD]
  *
  *
- * @author Denis Bondarenko
- * Date: 24.07.2017
- * Time: 12:56
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class KeyImportDetails constructor(

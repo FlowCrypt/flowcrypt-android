@@ -10,15 +10,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/29/20
- *         Time: 3:07 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
   observe(lifecycleOwner, object : Observer<T> {
-    override fun onChanged(t: T?) {
-      observer.onChanged(t)
+    override fun onChanged(value: T) {
+      observer.onChanged(value)
       removeObserver(this)
     }
   })

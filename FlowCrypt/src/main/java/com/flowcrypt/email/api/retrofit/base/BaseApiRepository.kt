@@ -19,10 +19,7 @@ import retrofit2.Converter
 import retrofit2.Response
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/12/19
- *         Time: 4:07 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface BaseApiRepository {
   /**

@@ -34,10 +34,7 @@ import jakarta.mail.Message
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/7/22
- *         Time: 5:35 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RecipientChipRecyclerViewAdapter(
   val recipientType: Message.RecipientType,

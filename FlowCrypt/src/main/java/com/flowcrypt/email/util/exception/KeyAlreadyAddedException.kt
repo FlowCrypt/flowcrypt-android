@@ -10,10 +10,7 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 /**
  * This exception means that the key already added.
  *
- * @author Denis Bondarenko
- * Date: 27.02.2018
- * Time: 14:09
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class KeyAlreadyAddedException(val keyDetails: PgpKeyDetails, errorMsg: String) :
   Exception(errorMsg)

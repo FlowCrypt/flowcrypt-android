@@ -21,10 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/10/20
- *         Time: 11:29 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

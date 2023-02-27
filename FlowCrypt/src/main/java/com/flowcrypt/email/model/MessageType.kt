@@ -15,10 +15,7 @@ import com.flowcrypt.email.model.MessageType.Companion.REPLY_ALL
 /**
  * The message types.
  *
- * @author Denis Bondarenko
- * Date: 20.03.2018
- * Time: 12:55
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Retention(AnnotationRetention.SOURCE)
 @IntDef(NEW, REPLY, REPLY_ALL, FORWARD, DRAFT)

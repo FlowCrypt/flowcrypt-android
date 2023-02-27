@@ -23,10 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/8/22
- *         Time: 1:07 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SendFeedbackViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val postFeedbackMutableStateFlow: MutableStateFlow<Result<PostHelpFeedbackResponse?>> =

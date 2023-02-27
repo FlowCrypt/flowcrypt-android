@@ -46,10 +46,7 @@ import com.google.android.material.snackbar.Snackbar
 /**
  * This activity helps to backup private keys
  *
- * @author Denis Bondarenko
- * Date: 07.08.2018
- * Time: 15:06
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

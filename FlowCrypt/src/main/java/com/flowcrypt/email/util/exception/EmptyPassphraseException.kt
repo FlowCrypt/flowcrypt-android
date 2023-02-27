@@ -6,10 +6,7 @@
 package com.flowcrypt.email.util.exception
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/14/21
- *         Time: 11:55 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmptyPassphraseException(val fingerprints: List<String>, message: String) :
   FlowCryptException(message)

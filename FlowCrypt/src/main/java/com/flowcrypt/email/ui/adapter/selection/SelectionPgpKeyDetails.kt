@@ -9,10 +9,7 @@ import androidx.recyclerview.selection.ItemDetailsLookup
 import com.flowcrypt.email.security.model.PgpKeyDetails
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/2/20
- *         Time: 5:03 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SelectionPgpKeyDetails(
   private val position: Int,

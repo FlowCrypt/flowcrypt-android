@@ -10,15 +10,11 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
-import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 
 /**
- * @author Denis Bondarenko
- * Date: 21.02.2018
- * Time: 17:54
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddPrivateKeyToDatabaseRule constructor(
   val accountEntity: AccountEntity,
@@ -31,7 +27,7 @@ class AddPrivateKeyToDatabaseRule constructor(
     private set
 
   init {
-    pgpKeyDetails = PgpKey.parseKeys(context.assets.open(keyPath)).pgpKeyDetailsList.first()
+    pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(keyPath, true)
   }
 
   constructor(

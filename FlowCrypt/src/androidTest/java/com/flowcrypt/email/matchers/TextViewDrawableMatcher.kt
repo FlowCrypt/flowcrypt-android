@@ -14,10 +14,7 @@ import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/14/22
- *         Time: 11:55 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class TextViewDrawableMatcher(
   @DrawableRes private val resourceId: Int,

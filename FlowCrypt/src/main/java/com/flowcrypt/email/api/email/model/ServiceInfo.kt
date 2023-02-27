@@ -11,10 +11,7 @@ import kotlinx.parcelize.Parcelize
 /**
  * This class describes service info details. Can be used when create a new messages.
  *
- * @author Denis Bondarenko
- * Date: 24.11.2017
- * Time: 10:57
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class ServiceInfo constructor(

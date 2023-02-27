@@ -9,9 +9,9 @@ import android.accounts.Account
 import android.app.Application
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
@@ -30,20 +30,16 @@ import java.io.IOException
  * This [ViewModel] does job of receiving information about an array of public
  * keys from FlowCrypt Attester or WKD.
  *
- * @author Denis Bondarenko
- * Date: 13.11.2017
- * Time: 15:13
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
   val accountKeysInfoLiveData = MediatorLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
-  private val initLiveData = Transformations
-    .switchMap(activeAccountLiveData) { accountEntity ->
-      liveData {
-        emit(Result.loading())
-        emit(getResult(accountEntity))
-      }
+  private val initLiveData = activeAccountLiveData.switchMap { accountEntity ->
+    liveData {
+      emit(Result.loading())
+      emit(getResult(accountEntity))
     }
+  }
   private val refreshingLiveData = MutableLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
 
   init {

@@ -11,10 +11,7 @@ import java.io.Serializable
 /**
  * It's a wrapper for coroutines calls
  *
- * @author Denis Bondarenko
- *         Date: 10/28/19
- *         Time: 3:42 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 data class Result<out T>(
   val status: Status,

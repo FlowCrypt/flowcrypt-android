@@ -17,10 +17,7 @@ import com.flowcrypt.email.model.DialogItem
 /**
  * This adapter can be used with [DialogItem]
  *
- * @author Denis Bondarenko
- * Date: 01.08.2017
- * Time: 11:29
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DialogItemAdapter(
   context: Context,

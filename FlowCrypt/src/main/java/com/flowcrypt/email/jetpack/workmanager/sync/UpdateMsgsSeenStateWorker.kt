@@ -28,10 +28,7 @@ import kotlinx.coroutines.withContext
 /**
  * This task mark candidates as read/unread.
  *
- * @author Denis Bondarenko
- *         Date: 10/18/19
- *         Time: 12:31 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

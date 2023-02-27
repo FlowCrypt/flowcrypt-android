@@ -36,10 +36,7 @@ import java.util.concurrent.TimeUnit
  * See https://github.com/square/okhttp/blob/master/okhttp-logging-interceptor/src/main/java
  * /okhttp3/logging/HttpLoggingInterceptor.java
  *
- * @author Denis Bondarenko
- * Date: 10.17.2017
- * Time: 13:55
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LoggingInFileInterceptor constructor(context: Context, fileName: String) : Interceptor {
   private val logger: Logger

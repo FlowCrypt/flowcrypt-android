@@ -15,10 +15,7 @@ import com.flowcrypt.email.R
  * is running. Here we should to have 'progressView', 'contentView' and 'statusView' to display
  * errors.
  *
- * @author Denis Bondarenko
- *         Date: 2/18/20
- *         Time: 10:12 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface ProgressBehaviour {
   val progressView: View?

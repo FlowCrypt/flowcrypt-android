@@ -39,10 +39,7 @@ import org.junit.runner.RunWith
 import java.io.File
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/11/22
- *         Time: 11:30 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -74,7 +71,7 @@ class ComposeScreenImportRecipientPubKeyFlowTest : BaseComposeScreenTest() {
   fun testImportRecipientPubKeyFromFile() {
     fillDataAndMoveToImportPublicKeyScreen()
 
-    val fileWithPublicKey: File = TestGeneralUtil.createFileAndFillWithContent(
+    val fileWithPublicKey: File = TestGeneralUtil.createFileWithTextContent(
       TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_pub.asc",
       publicKey
     )

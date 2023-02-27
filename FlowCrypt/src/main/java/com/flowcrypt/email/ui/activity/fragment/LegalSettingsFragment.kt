@@ -29,10 +29,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 /**
  * This [Fragment] consists information about a legal.
  *
- * @author DenBond7
- * Date: 26.05.2017
- * Time: 13:27
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

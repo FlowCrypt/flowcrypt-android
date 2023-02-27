@@ -23,10 +23,7 @@ import java.io.InputStream
 /**
  * This [ViewModel] implementation can be used to fetch details about the given keys.
  *
- * @author Denis Bondarenko
- *         Date: 9/21/19
- *         Time: 2:24 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class ParseKeysViewModel(application: Application) : AccountViewModel(application) {
   private val pgpKeyDetailsListMutableStateFlow: MutableStateFlow<Result<List<PgpKeyDetails>>> =

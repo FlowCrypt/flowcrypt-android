@@ -26,10 +26,7 @@ import com.flowcrypt.email.util.UIUtil
 /**
  * This fragment does a reliability check of a provided passphrase.
  *
- * @author Denis Bondarenko
- * Date: 05.08.2018
- * Time: 20:15
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckPassphraseStrengthFragment :
   BasePassphraseStrengthFragment<FragmentCheckPassphraseStrengthBinding>() {

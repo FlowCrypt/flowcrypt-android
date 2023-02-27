@@ -56,10 +56,7 @@ import java.util.Date
 /**
  * This fragment shows the given public key details
  *
- * @author Denis Bondarenko
- *         Date: 9/20/19
- *         Time: 8:54 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @ExperimentalCoroutinesApi
 class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>(),

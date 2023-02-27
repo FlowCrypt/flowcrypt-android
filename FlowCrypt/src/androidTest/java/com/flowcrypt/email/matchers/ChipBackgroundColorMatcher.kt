@@ -11,10 +11,7 @@ import com.google.android.material.chip.Chip
 import org.hamcrest.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/22/21
- *         Time: 10:19 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ChipBackgroundColorMatcher(
   private val color: Int

@@ -18,10 +18,7 @@ import java.io.OutputStream
 /**
  * The [DataSource] realization for a file which received from [Uri]
  *
- * @author Denis Bondarenko
- *         Date: 12/29/21
- *         Time: 5:27 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class AttachmentInfoDataSource(private val context: Context, val att: AttachmentInfo) :
   DataSource {

@@ -9,10 +9,7 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/15/21
- *         Time: 3:46 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 val <T> Result<T>.exceptionMsg: String
   get() {

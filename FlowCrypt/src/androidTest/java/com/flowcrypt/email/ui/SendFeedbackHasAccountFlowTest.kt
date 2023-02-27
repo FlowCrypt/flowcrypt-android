@@ -48,10 +48,7 @@ import java.net.HttpURLConnection
 import java.util.UUID
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/9/22
- *         Time: 11:29 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)

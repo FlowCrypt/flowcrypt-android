@@ -18,10 +18,7 @@ import java.lang.reflect.Type
 /**
  * This class describes information how serialize and deserialize [Action] objects using [Gson] framework.
  *
- * @author Denis Bondarenko
- * Date: 30.01.2018
- * Time: 11:58
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ActionJsonDeserializer : JsonDeserializer<Action> {
 

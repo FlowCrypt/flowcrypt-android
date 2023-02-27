@@ -20,10 +20,7 @@ import org.pgpainless.util.Passphrase
 import java.time.Instant
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/24/21
- *         Time: 5:33 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application) :
   AccountViewModel(application) {

@@ -11,10 +11,7 @@ import kotlinx.parcelize.Parcelize
 import org.json.JSONObject
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/12/19
- *         Time: 10:16 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class AttMeta(

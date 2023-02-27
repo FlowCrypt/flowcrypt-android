@@ -11,10 +11,7 @@ import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.ParseException
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/6/21
- *         Time: 5:19 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 /**
  * This method is similar to [jakarta.mail.internet.MimeBodyPart.isMimeType]

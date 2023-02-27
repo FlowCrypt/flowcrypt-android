@@ -26,10 +26,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDia
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/10/22
- *         Time: 5:23 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ImportPrivateKeysDuringSetupFragment :
   BaseImportKeyFragment<FragmentImportPrivateKeysDuringSetupBinding>() {

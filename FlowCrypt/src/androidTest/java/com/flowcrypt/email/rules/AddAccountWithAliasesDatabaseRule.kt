@@ -10,10 +10,7 @@ import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/13/20
- *         Time: 1:03 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AddAccountWithAliasesDatabaseRule constructor(
   val accountEntity: AccountEntity,

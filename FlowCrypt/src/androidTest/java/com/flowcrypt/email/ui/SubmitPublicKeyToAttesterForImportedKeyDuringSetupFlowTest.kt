@@ -84,7 +84,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
     ).toPgpKeyDetails()
 
     privateKey = requireNotNull(generatedKey.privateKey)
-    fileWithPrivateKey = TestGeneralUtil.createFileAndFillWithContent(
+    fileWithPrivateKey = TestGeneralUtil.createFileWithTextContent(
       fileName = USER_ENFORCE_ATTESTER_SUBMIT + "_prv.asc",
       fileText = privateKey
     )

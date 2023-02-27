@@ -11,10 +11,7 @@ import kotlinx.parcelize.Parcelize
 import org.pgpainless.decryption_verification.OpenPgpMetadata
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/8/21
- *         Time: 6:55 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class DecryptedAndOrSignedContentMsgBlock(

@@ -12,10 +12,7 @@ import androidx.test.espresso.matcher.BoundedDiagnosingMatcher
 import org.hamcrest.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/21/22
- *         Time: 1:31 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class BackgroundTintMatcher(private val expectedBackgroundTintList: ColorStateList) :
   BoundedDiagnosingMatcher<View?, View>(View::class.java) {

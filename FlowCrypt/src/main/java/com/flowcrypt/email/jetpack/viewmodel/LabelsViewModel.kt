@@ -9,8 +9,8 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
@@ -22,18 +22,14 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/13/20
- *         Time: 12:32 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LabelsViewModel(application: Application) : AccountViewModel(application) {
-  val labelsLiveData: LiveData<List<LabelEntity>> =
-    Transformations.switchMap(activeAccountLiveData) {
-      roomDatabase.labelDao().getLabelsLD(it?.email ?: "", it?.accountType)
-    }
+  val labelsLiveData: LiveData<List<LabelEntity>> = activeAccountLiveData.switchMap {
+    roomDatabase.labelDao().getLabelsLD(it?.email ?: "", it?.accountType)
+  }
 
-  val foldersManagerLiveData: LiveData<FoldersManager> = Transformations.switchMap(labelsLiveData) {
+  val foldersManagerLiveData: LiveData<FoldersManager> = labelsLiveData.switchMap {
     liveData {
       val foldersManager = activeAccountLiveData.value?.let { account ->
         FoldersManager.build(account.email, it)
@@ -46,12 +42,11 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
   val activeFolderLiveData: MediatorLiveData<LocalFolder> = MediatorLiveData()
 
   private val manuallyChangedFolderLiveData: MutableLiveData<LocalFolder?> = MutableLiveData()
-  private val initLocalFolderLiveData: LiveData<LocalFolder?> =
-    Transformations.switchMap(foldersManagerLiveData) {
-      liveData {
-        emit(it?.folderInbox ?: it?.findInboxFolder())
-      }
+  private val initLocalFolderLiveData: LiveData<LocalFolder?> = foldersManagerLiveData.switchMap {
+    liveData {
+      emit(it.folderInbox ?: it.findInboxFolder())
     }
+  }
 
   init {
     activeFolderLiveData.addSource(manuallyChangedFolderLiveData) {

@@ -11,10 +11,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 /**
  * This class defines the download attachment task result.
  *
- * @author Denis Bondarenko
- * Date: 16.08.2017
- * Time: 16:22
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 data class DownloadAttachmentTaskResult constructor(
   val attInfo: AttachmentInfo? = null,

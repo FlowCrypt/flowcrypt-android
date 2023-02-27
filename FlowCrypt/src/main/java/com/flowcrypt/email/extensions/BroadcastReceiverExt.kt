@@ -12,10 +12,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/28/19
- *         Time: 3:24 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 
 

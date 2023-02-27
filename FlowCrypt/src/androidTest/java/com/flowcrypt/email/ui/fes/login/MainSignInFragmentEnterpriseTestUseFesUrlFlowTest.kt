@@ -35,10 +35,7 @@ import org.junit.runner.RunWith
 import java.net.HttpURLConnection
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/31/19
- *         Time: 3:08 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -61,14 +58,12 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
           }
 
-          request.path?.urlDecoded()
-            .equals("/api/v1/client-configuration?domain=localhost:1212") -> {
+          request.path.equals("/api/v1/client-configuration?domain=flowcrypt.test") -> {
             return handleClientConfigurationAPI()
           }
 
-          request.path?.urlDecoded()
-            .equals("/shared-tenant-fes/api/v1/client-configuration?domain=localhost:1212") -> {
-            isSharedTenantFesUsed = true
+          request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
+            isApiAccountUsed = true
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
           }
         }
@@ -116,7 +111,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
   }
 
   companion object {
-    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@localhost:1212"
+    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@flowcrypt.test"
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
       apiError = null,

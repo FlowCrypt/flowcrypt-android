@@ -6,9 +6,6 @@
 package com.flowcrypt.email.util.exception
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/22/21
- *         Time: 7:40 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class UnsupportedClientConfigurationException(message: String) : FlowCryptException(message)

@@ -6,10 +6,7 @@
 package com.flowcrypt.email.api.retrofit.request.model
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/20/21
- *         Time: 12:19 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 data class MessageUploadRequest(
   val associateReplyToken: String,

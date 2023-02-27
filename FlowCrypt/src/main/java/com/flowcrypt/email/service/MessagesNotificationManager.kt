@@ -41,10 +41,7 @@ import kotlinx.coroutines.launch
 /**
  * This manager is responsible for displaying messages notifications.
  *
- * @author Denis Bondarenko
- * Date: 23.06.2018
- * Time: 12:10
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MessagesNotificationManager(context: Context) : CustomNotificationManager(context) {
 
@@ -152,7 +149,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setDefaults(Notification.DEFAULT_ALL)
         .setSubText(account.email)
 
-      notificationManagerCompat.notify(msg.uidAsHEX, -1, builder.build())
+      notify(msg.uidAsHEX, -1, builder.build())
     }
   }
 

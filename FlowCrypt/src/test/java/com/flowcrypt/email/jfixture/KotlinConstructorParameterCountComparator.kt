@@ -6,13 +6,9 @@
 package com.flowcrypt.email.jfixture
 
 import java.lang.reflect.Constructor
-import java.util.Comparator
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/23/20
- *         Time: 9:24 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class KotlinConstructorParameterCountComparator : Comparator<Constructor<*>> {
   override fun compare(ctor1: Constructor<*>, ctor2: Constructor<*>): Int {

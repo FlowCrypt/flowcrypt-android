@@ -81,10 +81,7 @@ import javax.net.ssl.SSLException
 /**
  * This class helps to work with Gmail API.
  *
- * @author Denis Bondarenko
- * Date: 30.10.2017
- * Time: 14:35
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class GmailApiHelper {
   companion object {

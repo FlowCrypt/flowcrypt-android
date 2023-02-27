@@ -31,10 +31,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 /**
  * This class describes notification settings.
  *
- * @author Denis Bondarenko
- * Date: 19.07.2018
- * Time: 12:04
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 open class NotificationsSettingsFragment : BasePreferenceFragment(),
   Preference.OnPreferenceClickListener,

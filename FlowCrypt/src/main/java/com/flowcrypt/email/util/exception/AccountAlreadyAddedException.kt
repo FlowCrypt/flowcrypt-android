@@ -6,9 +6,6 @@
 package com.flowcrypt.email.util.exception
 
 /**
- * @author Denis Bondarenko
- *         Date: 5/4/20
- *         Time: 1:09 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AccountAlreadyAddedException(errorMsg: String) : FlowCryptException(errorMsg)

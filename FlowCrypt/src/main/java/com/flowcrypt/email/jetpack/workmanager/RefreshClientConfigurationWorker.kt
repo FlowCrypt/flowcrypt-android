@@ -19,10 +19,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/24/21
- *         Time: 4:31 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class RefreshClientConfigurationWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {

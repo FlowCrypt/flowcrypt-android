@@ -18,10 +18,7 @@ import com.flowcrypt.email.util.GeneralUtil
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/1/21
- *         Time: 12:37 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PrvKeysRecyclerViewAdapter(
   val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()

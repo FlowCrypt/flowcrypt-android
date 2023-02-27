@@ -10,10 +10,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 /**
  * This class describes a logic of generation {@link AccountEntity} from the resources folder.
  *
- * @author Denis Bondarenko
- * Date: 27.12.2017
- * Time: 14:49
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AuthCredentialsManager {
   companion object {

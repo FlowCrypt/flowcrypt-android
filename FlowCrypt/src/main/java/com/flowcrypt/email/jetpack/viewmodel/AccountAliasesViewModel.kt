@@ -11,8 +11,8 @@ import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
@@ -23,28 +23,24 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/25/20
- *         Time: 10:20 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class AccountAliasesViewModel(application: Application) : AccountViewModel(application) {
 
   val accountAliasesLiveData: LiveData<List<AccountAliasesEntity>> =
-    Transformations.switchMap(activeAccountLiveData) {
+    activeAccountLiveData.switchMap {
       roomDatabase.accountAliasesDao().getAliasesLD(it?.email ?: "", it?.accountType ?: "")
     }
 
   private val freshAccountAliasesLiveData: LiveData<Collection<AccountAliasesEntity>> =
-    Transformations
-      .switchMap(activeAccountLiveData) { accountEntity ->
-        liveData {
-          val account = accountEntity?.account ?: return@liveData
-          val context: Context = getApplication()
-          val aliases: Collection<AccountAliasesEntity> = fetchAliases(context, account)
-          emit(aliases)
-        }
+    activeAccountLiveData.switchMap { accountEntity ->
+      liveData {
+        val account = accountEntity?.account ?: return@liveData
+        val context: Context = getApplication()
+        val aliases: Collection<AccountAliasesEntity> = fetchAliases(context, account)
+        emit(aliases)
       }
+    }
 
   fun fetchUpdates(lifecycleOwner: LifecycleOwner) {
     freshAccountAliasesLiveData.observe(lifecycleOwner, Observer { freshAliases ->

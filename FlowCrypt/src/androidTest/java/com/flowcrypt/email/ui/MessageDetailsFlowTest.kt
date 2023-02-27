@@ -20,10 +20,15 @@ import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -59,6 +64,7 @@ import org.hamcrest.Matchers.notNullValue
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -68,10 +74,7 @@ import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
 /**
- * @author Denis Bondarenko
- * Date: 3/13/19
- * Time: 4:32 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -99,6 +102,12 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     .around(addPrivateKeyToDatabaseRule)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
+
+  @Before
+  fun moveToHomeScreen() {
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    device.pressHome()
+  }
 
   @Test
   fun testReplyButton() {
@@ -978,5 +987,45 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     )
 
     checkWebViewText(msgInfo?.text)
+  }
+
+  @Test
+  fun testDownloadingInlinedAttachmentInOpenPGPMIME() {
+    val msgInfo = getMsgInfo(
+      "messages/info/open_pgp_mime_with_inlined_attachments.json",
+      "messages/mime/open_pgp_mime_with_inlined_attachments.txt"
+    )
+
+    val attachmentName = "thumb_up.png"
+    val downloadCompleteLabel = getResString(R.string.download_complete)
+    val uiAutomatorTimeout = 5000L
+
+    baseCheck(msgInfo)
+    Thread.sleep(1000)
+    onView(
+      allOf(
+        withId(R.id.imageButtonDownloadAtt), withParent(
+          allOf(withId(R.id.actionButtons), hasSibling(withText(attachmentName)))
+        )
+      )
+    )
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+
+    //Unfortunately, due to the Scoped Storage,
+    //we don't have direct access to the file system and we can't check that a new file was created.
+    //That's why we will use UIAutomator to check that we have a notification
+    //with text == "Download complete"
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    device.openNotification()
+    //wait until we have a notification in the notification bar
+    device.wait(Until.hasObject(By.text(attachmentName)), uiAutomatorTimeout)
+    //check that we have a notification with text == "Download complete"
+    val attachmentNameUiObject2 = device.findObject(By.text(attachmentName))
+    val downloadCompleteLabelUiObject2 = device.findObject(By.text(downloadCompleteLabel))
+    assertEquals(attachmentName, attachmentNameUiObject2.text)
+    assertEquals(downloadCompleteLabel, downloadCompleteLabelUiObject2.text)
+    device.pressHome()
   }
 }

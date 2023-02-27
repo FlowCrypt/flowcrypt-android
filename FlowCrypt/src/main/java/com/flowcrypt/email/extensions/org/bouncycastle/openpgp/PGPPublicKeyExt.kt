@@ -11,10 +11,7 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import java.io.IOException
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/20/22
- *         Time: 10:53 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Throws(IOException::class)
 fun PGPPublicKey.armor(

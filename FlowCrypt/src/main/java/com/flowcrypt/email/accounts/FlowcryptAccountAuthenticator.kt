@@ -21,10 +21,7 @@ import com.flowcrypt.email.ui.activity.MainActivity
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/12/20
- *         Time: 4:14 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthenticator(context) {
   override fun getAuthTokenLabel(authTokenType: String?): String {

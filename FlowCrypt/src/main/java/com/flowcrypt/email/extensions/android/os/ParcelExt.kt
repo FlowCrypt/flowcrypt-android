@@ -10,10 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 
 /**
- * @author Denis Bondarenko
- *         Date: 10/19/22
- *         Time: 4:00 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 inline fun <reified T : Parcelable> Parcel.readParcelableViaExt(
   clazz: Class<T>

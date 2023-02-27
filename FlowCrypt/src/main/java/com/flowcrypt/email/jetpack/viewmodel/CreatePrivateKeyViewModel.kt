@@ -24,10 +24,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.key.util.UserId
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/11/22
- *         Time: 3:39 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CreatePrivateKeyViewModel(application: Application) : RoomBasicViewModel(application) {
   private val createPrivateKeyMutableStateFlow: MutableStateFlow<Result<PgpKeyDetails>> =

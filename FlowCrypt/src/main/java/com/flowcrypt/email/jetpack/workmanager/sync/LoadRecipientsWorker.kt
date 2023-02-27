@@ -36,10 +36,7 @@ import java.util.Properties
 /**
  * This [CoroutineWorker] loads information about recipients from the SENT folder.
  *
- * @author Denis Bondarenko
- * Date: 23.04.2018
- * Time: 14:53
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

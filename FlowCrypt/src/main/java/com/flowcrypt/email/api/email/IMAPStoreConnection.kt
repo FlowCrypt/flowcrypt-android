@@ -27,10 +27,7 @@ import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLProtocolException
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/20/20
- *         Time: 11:30 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class IMAPStoreConnection(
   override val context: Context,
@@ -168,7 +165,7 @@ class IMAPStoreConnection(
       }
     }
 
-  override suspend fun executeIMAPAction(action: suspend (store: Store) -> Unit) =
+  override suspend fun <T> executeIMAPAction(action: suspend (store: Store) -> T): T =
     withContext(Dispatchers.IO) {
       try {
         LogsUtil.d(
@@ -183,11 +180,12 @@ class IMAPStoreConnection(
           IMAPStoreConnection::class.java.simpleName,
           "executeIMAPAction(${accountEntity.email}): start invoke ${action.javaClass}"
         )
-        action.invoke(store)
+        val result = action.invoke(store)
         LogsUtil.d(
           IMAPStoreConnection::class.java.simpleName,
           "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} completed"
         )
+        result
       } catch (e: Exception) {
         LogsUtil.d(
           IMAPStoreConnection::class.java.simpleName,

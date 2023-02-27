@@ -32,10 +32,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * @author Denis Bondarenko
- * Date: 17.08.2018
- * Time: 16:28
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -95,7 +92,7 @@ class BackupKeysFragmentInIsolationTest : BaseBackupKeysFragmentTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val file = TestGeneralUtil.createFileAndFillWithContent("key.asc", "")
+    val file = TestGeneralUtil.createFileWithTextContent("key.asc", "")
 
     intendingFileChoose(file)
     onView(withId(R.id.btBackup))

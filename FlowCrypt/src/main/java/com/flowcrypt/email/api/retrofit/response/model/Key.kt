@@ -10,10 +10,7 @@ import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
 
 /**
- * @author Denis Bondarenko
- *         Date: 6/30/21
- *         Time: 2:48 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Parcelize
 data class Key constructor(@Expose val decryptedPrivateKey: String? = null) : Parcelable

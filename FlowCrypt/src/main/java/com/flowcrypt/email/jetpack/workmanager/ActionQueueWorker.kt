@@ -18,10 +18,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 /**
  * We use [CoroutineWorker] to execute pending [Action] in background threads
  *
- * @author Denis Bondarenko
- * Date: 29.01.2018
- * Time: 16:54
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ActionQueueWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {

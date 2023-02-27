@@ -26,10 +26,7 @@ import kotlinx.coroutines.withContext
 /**
  * This [ViewModel] implementation can be used to check the passphrase strength
  *
- * @author Denis Bondarenko
- * Date: 4/2/19
- * Time: 11:11 AM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class PasswordStrengthViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val zxcvbn: Zxcvbn = Zxcvbn()

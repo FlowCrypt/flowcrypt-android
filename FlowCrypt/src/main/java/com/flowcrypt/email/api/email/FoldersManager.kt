@@ -22,10 +22,7 @@ import java.util.*
  * The [FoldersManager] describes a logic of work with remote folders. This class helps as
  * resolve problems with localized names of Gmail labels.
  *
- * @author DenBond7
- * Date: 07.06.2017
- * Time: 14:37
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class FoldersManager constructor(val account: String) {
   private var folders: LinkedHashMap<String, LocalFolder> = LinkedHashMap()

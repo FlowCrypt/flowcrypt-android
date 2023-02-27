@@ -19,10 +19,7 @@ import java.io.IOException
 
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/27/20
- *         Time: 9:25 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)

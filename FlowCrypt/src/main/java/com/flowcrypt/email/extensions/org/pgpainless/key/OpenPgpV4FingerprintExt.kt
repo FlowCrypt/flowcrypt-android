@@ -8,10 +8,7 @@ package com.flowcrypt.email.extensions.org.pgpainless.key
 import org.pgpainless.key.OpenPgpV4Fingerprint
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/7/21
- *         Time: 1:40 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 val OpenPgpV4Fingerprint.longId: String
   get() {

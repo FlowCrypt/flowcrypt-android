@@ -10,10 +10,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
 /**
- * @author Denis Bondarenko
- * Date: 3/19/19
- * Time: 2:55 PM
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object GsonHelper {
   val gson: Gson

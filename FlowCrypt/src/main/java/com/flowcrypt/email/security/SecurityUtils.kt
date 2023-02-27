@@ -36,10 +36,7 @@ import java.nio.charset.StandardCharsets
 /**
  * This class help to receive security information.
  *
- * @author DenBond7
- * Date: 05.05.2017
- * Time: 13:08
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class SecurityUtils {
   companion object {

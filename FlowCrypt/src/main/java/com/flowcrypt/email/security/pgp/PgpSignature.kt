@@ -18,10 +18,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
- * @author Denis Bondarenko
- *         Date: 8/31/21
- *         Time: 2:45 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object PgpSignature {
   fun extractClearText(source: String?, isSilent: Boolean = true): String? {

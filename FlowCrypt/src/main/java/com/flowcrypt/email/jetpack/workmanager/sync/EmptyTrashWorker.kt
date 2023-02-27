@@ -26,10 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/7/20
- *         Time: 10:19 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EmptyTrashWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

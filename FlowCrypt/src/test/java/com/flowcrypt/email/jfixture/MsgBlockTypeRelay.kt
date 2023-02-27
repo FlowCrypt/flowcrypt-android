@@ -16,10 +16,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 
 /**
- * @author Denis Bondarenko
- *         Date: 4/23/20
- *         Time: 2:33 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class MsgBlockTypeRelay : SpecimenBuilder {
   private val msgBlockClass = MsgBlock::class.java

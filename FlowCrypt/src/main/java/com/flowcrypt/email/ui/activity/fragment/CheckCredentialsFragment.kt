@@ -25,10 +25,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * @author Denis Bondarenko
- *         Date: 11/12/20
- *         Time: 1:57 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>(),
   ProgressBehaviour {

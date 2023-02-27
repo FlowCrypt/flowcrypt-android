@@ -5,10 +5,18 @@
 openssl req -new -nodes -keyout localhost-key.pem -out localhost-req.pem -days 3650 -subj \
 "/C=CZ/ST=Debug/O=FlowCrypt/CN=localhost/emailAddress=admin@flowcrypt.test" -config openssl-req.cnf
 
-# Sign certificate for localhost via CA
+# Sign a certificate for localhost via CA. To do that we need to copy generated 'localhost-key.pem'
+# and 'localhost-req.pem' to 'docker-mailserver/config/ssl'(as we have 'demoCA' there).
+# If we regenerate a cert maybe some changes in 'demoCA' will be required(fix duplicates).
+# After that we can call the following command(use 'android' as CA password):
 openssl ca -config openssl-ca.cnf -days 3650 -out localhost-cert.pem -infiles localhost-req.pem
 
-# Combine certificates for courier, should contains the following info
+# As a result we will receive 'localhost-cert.pem'. In the and of that file we have
+# '-----BEGIN CERTIFICATE-----...'
+
+# Combine certificates for courier, should contains the following info(
+# '-----BEGIN CERTIFICATE-----...' from 'localhost-cert.pem' and
+# '-----BEGIN PRIVATE KEY-----...' from 'localhost-key.pem')
 -----BEGIN CERTIFICATE-----
 ...
 -----END CERTIFICATE-----

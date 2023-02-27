@@ -21,10 +21,7 @@ import com.flowcrypt.email.util.GeneralUtil
 /**
  * This dialog will be used to show for a user different options to resolve a PGP not found situation.
  *
- * @author Denis Bondarenko
- * Date: 01.08.2017
- * Time: 10:04
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
   private val args by navArgs<NoPgpFoundDialogFragmentArgs>()

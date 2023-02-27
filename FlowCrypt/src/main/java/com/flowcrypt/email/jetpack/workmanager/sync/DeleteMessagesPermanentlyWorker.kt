@@ -27,10 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * @author Denis Bondarenko
- *         Date: 7/3/20
- *         Time: 5:33 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {

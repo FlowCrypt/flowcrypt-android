@@ -29,10 +29,7 @@ import java.util.Date
 import java.util.Properties
 
 /**
- * @author Denis Bondarenko
- *         Date: 1/6/21
- *         Time: 3:12 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class GmaiAPIMimeMessage(
   session: Session = Session.getInstance(Properties()),

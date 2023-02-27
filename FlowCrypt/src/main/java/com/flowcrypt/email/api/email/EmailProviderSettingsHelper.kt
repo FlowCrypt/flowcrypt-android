@@ -13,10 +13,7 @@ import com.flowcrypt.email.util.GeneralUtil
 /**
  * This class describes the base settings for added email providers
  *
- * @author Denis Bondarenko
- *         Date: 7/24/20
- *         Time: 9:09 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 object EmailProviderSettingsHelper {
   /*********************** Microsoft **********************/

@@ -18,10 +18,7 @@ import java.util.Locale
 /**
  * The debug log writer which will be used to write logs to the file.
  *
- * @author Denis Bondarenko
- * Date: 10.07.2017
- * Time: 16:10
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class DebugLogWriter(private val fileLog: File) {
   private val dateFormat: DateFormat

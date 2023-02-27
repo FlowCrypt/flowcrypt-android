@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -19,9 +19,9 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -30,29 +30,33 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
-import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
+import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.sun.mail.imap.IMAPFolder
+import jakarta.mail.Flags
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Multipart
 import jakarta.mail.Part
+import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import jakarta.mail.internet.MimeMultipart
 import jakarta.mail.internet.MimePart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -63,24 +67,28 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 /**
- * @author Denis Bondarenko
- * Date: 01.02.2018
- * Time: 13:28
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @DependsOnMailServer
 class SendMsgTest {
-  private lateinit var context: Context
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
+  private val context: Context = ApplicationProvider.getApplicationContext()
+  private val account = AccountDaoManager.getUserWithoutLetters()
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(account = account)
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
+    accountEntity = account,
+    keyPath = "pgp/user_without_letters@flowcrypt.test_prv_strong.asc",
+    passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+    sourceType = KeyImportDetails.SourceType.EMAIL
+  )
   private val recipientPgpKeyDetails =
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
-  private val SENT_FOLDER = LocalFolder(
+  private val sentFolder = LocalFolder(
     account = addAccountToDatabaseRule.account.email,
     fullName = "Sent",
     folderAlias = "Sent",
@@ -112,43 +120,32 @@ class SendMsgTest {
     )
   )
 
-  private val forwardedAttachmentInfo = AttachmentInfo().apply {
+  private val attachmentInfo = AttachmentInfo().apply {
+    val content = "Some text"
+    name = ATTACHMENT_NAME
+    encodedSize = content.length.toLong()
+    rawData = content.toByteArray()
+    type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
     email = addAccountToDatabaseRule.account.email
-    folder = "INBOX"
-    encodedSize = 950
-    fwdUid = 0
-    id = "\u003c481555a2-157f-4801-9e8a-c249b07d9990@flowcrypt\u003e"
-    isDecrypted = false
-    isEncryptionAllowed = true
-    isForwarded = true
-    isProtected = false
-    name = "flowcrypt-backup-defaultflowcrypttest.key"
-    orderNumber = 0
-    path = "0/1"
-    type =
-      "text/plain; charset\u003dus-ascii; \r\n\tname\u003dflowcrypt-backup-defaultflowcrypttest.key"
-    uid = 1
+    id = EmailUtil.generateContentId()
   }
 
   @Before
-  fun setUp() {
-    context = ApplicationProvider.getApplicationContext()
+  fun cleanFolderBeforeStart() {
+    runBlocking { deleteAllMessagesInFolder(sentFolder.fullName) }
   }
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
-    .outerRule(RetryRule.DEFAULT)
-    .around(ClearAppSettingsRule())
+    .outerRule(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
     .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))
-    .around(AddLabelsToDatabaseRule(addAccountToDatabaseRule.account, listOf(SENT_FOLDER)))
+    .around(AddLabelsToDatabaseRule(addAccountToDatabaseRule.account, listOf(sentFolder)))
 
   @Test
   fun testSendStandardMsg() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Standard Message",
@@ -162,26 +159,22 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+      delay(3000)
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
+        val mimeMultipart = mimeMessage.content as MimeMultipart
+        assertEquals(1, mimeMultipart.count)
         assertEquals(
-          outgoingMessageInfo.msg,
-          (mimeMessage.content as MimeMultipart).getBodyPart(0).content
+          addAccountToDatabaseRule.account.email,
+          (mimeMessage.from.firstOrNull() as? InternetAddress)?.address
         )
+        assertEquals(outgoingMessageInfo.msg, mimeMultipart.getBodyPart(0).content)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendStandardMsgWithAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Standard Message + Att",
@@ -191,84 +184,74 @@ class SendMsgTest {
       encryptionType = MessageEncryptionType.STANDARD,
       messageType = MessageType.NEW,
       uid = EmailUtil.genOutboxUID(context),
-      atts = listOf(AttachmentInfo().apply {
-        val content = "Some text"
-        name = "test.txt"
-        encodedSize = content.length.toLong()
-        rawData = content.toByteArray()
-        type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
-        email = addAccountToDatabaseRule.account.email
-        id = EmailUtil.generateContentId()
-      })
+      atts = listOf(attachmentInfo)
     )
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
-        assertEquals(
-          outgoingMessageInfo.msg,
-          (mimeMessage.content as MimeMultipart).getBodyPart(0).content
-        )
+      delay(3000)
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
+        val multipart = mimeMessage.content as MimeMultipart
+        assertEquals(outgoingMessageInfo.msg, multipart.getBodyPart(0).content)
+
+        val attachmentPart = multipart.getBodyPart(1) as MimePart
+        assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
+        assertEquals(ATTACHMENT_NAME, attachmentPart.fileName)
+        assertEquals(attachmentInfo.encodedSize, attachmentPart.size.toLong())
+        assertEquals(attachmentInfo.type, ContentType(attachmentPart.contentType).baseType)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendStandardMsgWithForwardedAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+    val forwardedAttachmentInfo = prepareForwardedAttachment(
+      OutgoingMessageInfo(
+        account = addAccountToDatabaseRule.account.email,
+        subject = "Standard Message + Att",
+        msg = "Standard Message + Att",
+        toRecipients = listOf(InternetAddress(addAccountToDatabaseRule.account.email)),
+        from = InternetAddress(addAccountToDatabaseRule.account.email),
+        encryptionType = MessageEncryptionType.STANDARD,
+        messageType = MessageType.NEW,
+        uid = EmailUtil.genOutboxUID(context),
+        atts = listOf(attachmentInfo)
+      )
+    )?.copy(isForwarded = true)
+    assertNotNull(forwardedAttachmentInfo)
 
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
-      subject = "Fwd: Your FlowCrypt Backup - Standard",
+      subject = "Fwd: Forward",
       msg = "Some forwarded text",
       toRecipients = listOf(InternetAddress(recipientPgpKeyDetails.getUserIdsAsSingleString())),
       from = InternetAddress(addAccountToDatabaseRule.account.email),
       encryptionType = MessageEncryptionType.STANDARD,
       messageType = MessageType.FORWARD,
       uid = EmailUtil.genOutboxUID(context),
-      forwardedAtts = listOf(forwardedAttachmentInfo)
+      forwardedAtts = listOf(requireNotNull(forwardedAttachmentInfo))
     )
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val forwardedAttachmentsDownloaderWorker =
-      TestListenableWorkerBuilder<ForwardedAttachmentsDownloaderWorker>(context).build()
-    val messagesSenderWorker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val forwardedAttachmentsDownloaderWorkerResult = forwardedAttachmentsDownloaderWorker.doWork()
-      assertThat(
-        forwardedAttachmentsDownloaderWorkerResult,
-        `is`(ListenableWorker.Result.success())
-      )
-      val messagesSenderWorkerResult = messagesSenderWorker.doWork()
-      assertThat(messagesSenderWorkerResult, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+      delay(5000)
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val multipart = mimeMessage.content as MimeMultipart
         assertEquals(outgoingMessageInfo.msg, multipart.getBodyPart(0).content)
 
-        val attachmentPart = multipart.getBodyPart(1) as MimePart
-        assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
-        assertEquals(forwardedAttachmentInfo.name, attachmentPart.fileName)
-        assertEquals(forwardedAttachmentInfo.encodedSize, attachmentPart.size.toLong())
-        assertEquals(forwardedAttachmentInfo.type, attachmentPart.contentType)
+        val forwardedAttachmentPart = multipart.getBodyPart(1) as MimePart
+        assertEquals(Part.ATTACHMENT, forwardedAttachmentPart.disposition)
+        assertEquals(forwardedAttachmentInfo.name, forwardedAttachmentPart.fileName)
+        assertEquals(forwardedAttachmentInfo.encodedSize, forwardedAttachmentPart.size.toLong())
+        assertEquals(forwardedAttachmentInfo.type, forwardedAttachmentPart.contentType)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendEncryptedMsg() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Encrypted Message",
@@ -282,11 +265,9 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+      delay(3000)
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val encryptedContent =
           (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
         val buffer = ByteArrayOutputStream()
@@ -295,37 +276,20 @@ class SendMsgTest {
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
         )
 
-        PgpDecryptAndOrVerify.decrypt(
-          srcInputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
-          destOutputStream = buffer,
-          secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
-          protector = PasswordBasedSecretKeyRingProtector.forKey(
-            pgpSecretKeyRing,
-            Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-          )
+        val openPgpMetadata = getOpenPgpMetadata(
+          inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
+          outputStream = buffer,
+          pgpSecretKeyRing = pgpSecretKeyRing
         )
-
+        assertEquals(true, openPgpMetadata.isEncrypted)
+        assertEquals(true, openPgpMetadata.isSigned)
         assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendEncryptedMsgWithAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-    val attachmentInfo = AttachmentInfo().apply {
-      val content = "Some text"
-      name = "test.txt"
-      encodedSize = content.length.toLong()
-      rawData = content.toByteArray()
-      type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
-      email = addAccountToDatabaseRule.account.email
-      id = EmailUtil.generateContentId()
-    }
-
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
       subject = "Encrypted Message + Att",
@@ -340,11 +304,9 @@ class SendMsgTest {
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val result = worker.doWork()
-      assertThat(result, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+      delay(3000)
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
         )
@@ -353,74 +315,77 @@ class SendMsgTest {
 
         //check content
         val encryptedTextContent = multipart.getBodyPart(0).content as String
+        val messageOutputStream = ByteArrayOutputStream()
+        val messageOpenPgpMetadata = getOpenPgpMetadata(
+          inputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
+          outputStream = messageOutputStream,
+          pgpSecretKeyRing = pgpSecretKeyRing
+        )
 
-        assertEquals(outgoingMessageInfo.msg, String(ByteArrayOutputStream().apply {
-          PgpDecryptAndOrVerify.decrypt(
-            srcInputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
-            destOutputStream = this,
-            secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
-            protector = PasswordBasedSecretKeyRingProtector.forKey(
-              pgpSecretKeyRing,
-              Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-            )
-          )
-        }.toByteArray()))
+        assertEquals(true, messageOpenPgpMetadata.isEncrypted)
+        assertEquals(true, messageOpenPgpMetadata.isSigned)
+        assertEquals(outgoingMessageInfo.msg, String(messageOutputStream.toByteArray()))
 
         //check attachment
         val attachmentPart = multipart.getBodyPart(1) as MimePart
         assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
-        assertEquals(attachmentInfo.name, attachmentPart.fileName)
+        assertEquals(ATTACHMENT_NAME + "." + Constants.PGP_FILE_EXT, attachmentPart.fileName)
+
+        val attachmentOutputStream = ByteArrayOutputStream()
+        val attachmentOpenPgpMetadata = getOpenPgpMetadata(
+          inputStream = attachmentPart.inputStream,
+          outputStream = attachmentOutputStream,
+          pgpSecretKeyRing = pgpSecretKeyRing
+        )
+
+        assertEquals(ATTACHMENT_NAME, attachmentOpenPgpMetadata.fileName)
+        assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
         assertEquals(
           String(requireNotNull(attachmentInfo.rawData)),
-          String(ByteArrayOutputStream().apply {
-            PgpDecryptAndOrVerify.decrypt(
-              srcInputStream = attachmentPart.inputStream,
-              destOutputStream = this,
-              secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
-              protector = PasswordBasedSecretKeyRingProtector.forKey(
-                pgpSecretKeyRing,
-                Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-              )
-            )
-          }.toByteArray())
+          String(attachmentOutputStream.toByteArray())
         )
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
   @Test
   fun testSendEncryptedMsgWithForwardedAtt() {
-    val countOfMsgBeforeTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
+    val encryptedForwardedAttachmentInfo = prepareForwardedAttachment(
+      OutgoingMessageInfo(
+        account = addAccountToDatabaseRule.account.email,
+        subject = "Encrypted Message + Att",
+        msg = "Encrypted Message + Att",
+        toRecipients = listOf(InternetAddress(addAccountToDatabaseRule.account.email)),
+        from = InternetAddress(addAccountToDatabaseRule.account.email),
+        encryptionType = MessageEncryptionType.ENCRYPTED,
+        messageType = MessageType.NEW,
+        uid = EmailUtil.genOutboxUID(context),
+        atts = listOf(attachmentInfo)
+      )
+    )?.copy(
+      name = attachmentInfo.name,
+      decryptWhenForward = true,
+      isForwarded = true
+    )
+    assertNotNull(encryptedForwardedAttachmentInfo)
 
     val outgoingMessageInfo = OutgoingMessageInfo(
       account = addAccountToDatabaseRule.account.email,
-      subject = "Fwd: Your FlowCrypt Backup - Encrypted",
+      subject = "Fwd: Simple encrypted message + attachment",
       msg = "Some forwarded text",
       toRecipients = listOf(InternetAddress(recipientPgpKeyDetails.getUserIdsAsSingleString())),
       from = InternetAddress(addAccountToDatabaseRule.account.email),
       encryptionType = MessageEncryptionType.ENCRYPTED,
       messageType = MessageType.FORWARD,
       uid = EmailUtil.genOutboxUID(context),
-      forwardedAtts = listOf(forwardedAttachmentInfo)
+      forwardedAtts = listOf(requireNotNull(encryptedForwardedAttachmentInfo))
     )
 
     processOutgoingMessageInfo(outgoingMessageInfo)
 
-    val forwardedAttachmentsDownloaderWorker =
-      TestListenableWorkerBuilder<ForwardedAttachmentsDownloaderWorker>(context).build()
-    val messagesSenderWorker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
     runBlocking {
-      val forwardedAttachmentsDownloaderWorkerResult = forwardedAttachmentsDownloaderWorker.doWork()
-      assertThat(
-        forwardedAttachmentsDownloaderWorkerResult,
-        `is`(ListenableWorker.Result.success())
-      )
-      val messagesSenderWorkerResult = messagesSenderWorker.doWork()
-      assertThat(messagesSenderWorkerResult, `is`(ListenableWorker.Result.success()))
-      checkExistingMsgOnServer(SENT_FOLDER.fullName, outgoingMessageInfo) { mimeMessage ->
+      delay(5000)
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
         )
@@ -429,74 +394,84 @@ class SendMsgTest {
 
         //check content
         val encryptedTextContent = multipart.getBodyPart(0).content as String
+        val messageOutputStream = ByteArrayOutputStream()
+        val messageOpenPgpMetadata = getOpenPgpMetadata(
+          inputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
+          outputStream = messageOutputStream,
+          pgpSecretKeyRing = pgpSecretKeyRing
+        )
 
-        assertEquals(outgoingMessageInfo.msg, String(ByteArrayOutputStream().apply {
-          PgpDecryptAndOrVerify.decrypt(
-            srcInputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
-            destOutputStream = this,
-            secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
-            protector = PasswordBasedSecretKeyRingProtector.forKey(
-              pgpSecretKeyRing,
-              Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-            )
-          )
-        }.toByteArray()))
+        assertEquals(true, messageOpenPgpMetadata.isEncrypted)
+        assertEquals(true, messageOpenPgpMetadata.isSigned)
+        assertEquals(outgoingMessageInfo.msg, String(messageOutputStream.toByteArray()))
 
         //check attachment
         val attachmentPart = multipart.getBodyPart(1) as MimePart
         assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
-        assertEquals(forwardedAttachmentInfo.name + ".pgp", attachmentPart.fileName)
+        assertEquals(
+          encryptedForwardedAttachmentInfo.name + "." + Constants.PGP_FILE_EXT,
+          attachmentPart.fileName
+        )
 
         //try to decrypt the forwarded attachment
-        assertEquals(
-          true, PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
-            srcInputStream = attachmentPart.inputStream,
-            secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
-            publicKeys = PGPPublicKeyRingCollection(listOf()),
-            protector = PasswordBasedSecretKeyRingProtector.forKey(
-              pgpSecretKeyRing,
-              Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-            )
-          ).isEncrypted
+        val attachmentOutputStream = ByteArrayOutputStream()
+        val attachmentOpenPgpMetadata = getOpenPgpMetadata(
+          inputStream = attachmentPart.inputStream,
+          outputStream = attachmentOutputStream,
+          pgpSecretKeyRing = pgpSecretKeyRing
         )
+
+        assertEquals(encryptedForwardedAttachmentInfo.name, attachmentOpenPgpMetadata.fileName)
+        assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
       }
     }
-
-    val countOfMsgAfterTest = runBlocking { countOfMsgsOnServer(SENT_FOLDER.fullName) }
-    assertEquals(countOfMsgBeforeTest + 1, countOfMsgAfterTest)
   }
 
-  private suspend fun checkExistingMsgOnServer(
+  private suspend fun <T> checkExistingMsgOnServer(
     folderName: String,
     outgoingMessageInfo: OutgoingMessageInfo,
-    action: suspend (message: MimeMessage) -> Unit
-  ) =
+    useLast: Boolean = true,
+    action: suspend (folder: IMAPFolder, message: MimeMessage) -> T
+  ): T =
     withContext(Dispatchers.IO) {
       val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
+      //need to wait for email server internal sync
+      delay(3000)
       connection.store.use { store ->
         connection.executeIMAPAction {
           store.getFolder(folderName).use { folder ->
             val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
-            //get the latest message that we added to a folder recently
-            val mimeMessage = imapFolder.getMessage(imapFolder.messageCount) as MimeMessage
+            //get the message that we added to a folder recently
+            val mimeMessage = imapFolder.messages.getOrElse(
+              if (useLast) imapFolder.messages.lastIndex else 0
+            ) { throw NoSuchElementException("List is empty.") } as MimeMessage
+
+            val buffer = ByteArrayOutputStream()
+            mimeMessage.writeTo(buffer)
             //do base checks
-            assertEquals(outgoingMessageInfo.subject, mimeMessage.subject)
-            assertArrayEquals(arrayOf(outgoingMessageInfo.from), mimeMessage.from)
+            assertEquals(buffer.toString(), outgoingMessageInfo.subject, mimeMessage.subject)
             assertArrayEquals(
+              buffer.toString(),
+              arrayOf(outgoingMessageInfo.from),
+              mimeMessage.from
+            )
+            assertArrayEquals(
+              buffer.toString(),
               outgoingMessageInfo.toRecipients?.toTypedArray(),
               mimeMessage.getRecipients(Message.RecipientType.TO)
             )
             assertArrayEquals(
+              buffer.toString(),
               outgoingMessageInfo.ccRecipients?.toTypedArray(),
               mimeMessage.getRecipients(Message.RecipientType.CC)
             )
-            assertEquals(
-              ((outgoingMessageInfo.atts ?: emptyList()) + (outgoingMessageInfo.forwardedAtts
-                ?: emptyList())).size,
-              getAttCount(mimeMessage)
-            )
+            val expectedAttachmentCount = outgoingMessageInfo.atts.orEmpty().size +
+                outgoingMessageInfo.forwardedAtts.orEmpty().size
+
+            val actualAttachmentCount = getAttCount(mimeMessage)
+            assertEquals(buffer.toString(), expectedAttachmentCount, actualAttachmentCount)
             //do external checks
-            action.invoke(mimeMessage)
+            action.invoke(folder, mimeMessage)
           }
         }
       }
@@ -531,16 +506,59 @@ class SendMsgTest {
     }
   }
 
-  private suspend fun countOfMsgsOnServer(folderName: String): Int = withContext(Dispatchers.IO) {
-    var count = 0
-    val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
-    connection.store.use { store ->
-      connection.executeIMAPAction {
-        store.getFolder(folderName).use { folder ->
-          count = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }.messageCount
+  private suspend fun deleteAllMessagesInFolder(folderName: String) =
+    withContext(Dispatchers.IO) {
+      val connection = IMAPStoreConnection(context, addAccountToDatabaseRule.account)
+      return@withContext connection.store.use { store ->
+        connection.executeIMAPAction {
+          store.getFolder(folderName).use { folder ->
+            val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+            val messages = imapFolder.messages
+            if (messages.isNotEmpty()) {
+              imapFolder.setFlags(messages, Flags(Flags.Flag.DELETED), true)
+            }
+          }
         }
       }
     }
-    return@withContext count
+
+  private fun getOpenPgpMetadata(
+    inputStream: InputStream,
+    outputStream: ByteArrayOutputStream,
+    pgpSecretKeyRing: PGPSecretKeyRing
+  ) = PgpDecryptAndOrVerify.decrypt(
+    srcInputStream = inputStream,
+    destOutputStream = outputStream,
+    secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
+    protector = PasswordBasedSecretKeyRingProtector.forKey(
+      pgpSecretKeyRing,
+      Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
+    )
+  )
+
+  private fun prepareForwardedAttachment(outgoingMessageInfo: OutgoingMessageInfo): AttachmentInfo? {
+    processOutgoingMessageInfo(outgoingMessageInfo)
+
+    return runBlocking {
+      val worker = TestListenableWorkerBuilder<MessagesSenderWorker>(context).build()
+      val result = worker.doWork()
+      assertThat(result, `is`(ListenableWorker.Result.success()))
+      checkExistingMsgOnServer(
+        JavaEmailConstants.FOLDER_INBOX,
+        outgoingMessageInfo
+      ) { folder, mimeMessage ->
+        EmailUtil.getAttsInfoFromPart(mimeMessage).map {
+          it.copy(
+            email = addAccountToDatabaseRule.account.email,
+            folder = folder.fullName,
+            uid = folder.getUID(mimeMessage)
+          )
+        }.firstOrNull()
+      }
+    }
+  }
+
+  companion object {
+    const val ATTACHMENT_NAME = "test.txt"
   }
 }

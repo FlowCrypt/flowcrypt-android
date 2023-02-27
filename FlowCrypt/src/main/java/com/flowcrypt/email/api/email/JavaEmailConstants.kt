@@ -8,10 +8,7 @@ package com.flowcrypt.email.api.email
 /**
  * This class described JavaEmail constants.
  *
- * @author DenBond7
- * Date: 28.04.2017
- * Time: 9:40
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class JavaEmailConstants {
   companion object {

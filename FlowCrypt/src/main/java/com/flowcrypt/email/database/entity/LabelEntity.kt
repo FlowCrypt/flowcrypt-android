@@ -16,10 +16,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.google.android.gms.common.util.CollectionUtils
 
 /**
- * @author Denis Bondarenko
- *         Date: 12/5/19
- *         Time: 5:57 PM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 @Entity(
   tableName = "labels",

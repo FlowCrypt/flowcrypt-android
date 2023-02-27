@@ -63,10 +63,7 @@ import java.util.concurrent.TimeUnit
 /**
  * General util methods.
  *
- * @author DenBond7
- * Date: 31.03.2017
- * Time: 16:55
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class GeneralUtil {
   companion object {

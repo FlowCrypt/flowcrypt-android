@@ -8,10 +8,7 @@ package com.flowcrypt.email.junit.filters
 import org.junit.runner.Description
 
 /**
- * @author Denis Bondarenko
- *         Date: 2/18/21
- *         Time: 10:42 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class OtherTestsFilter : BaseCustomFilter() {
   private val dependsOnMailServerFilter = DependsOnMailServerFilter()

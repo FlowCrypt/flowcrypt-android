@@ -29,10 +29,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDia
 import com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyDialogFragment
 
 /**
- * @author Denis Bondarenko
- *         Date: 3/24/22
- *         Time: 11:58 AM
- *         E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(), ProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =

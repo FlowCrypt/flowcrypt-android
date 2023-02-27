@@ -40,10 +40,7 @@ import retrofit2.http.Url
 /**
  * A base API interface for RETROFIT.
  *
- * @author Denis Bondarenko
- * Date: 10.03.2015
- * Time: 13:39
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 interface RetrofitApiServiceInterface {
   /**

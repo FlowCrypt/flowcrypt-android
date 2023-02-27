@@ -18,10 +18,7 @@ import java.io.InputStream
 /**
  * This class describes custom realization of some IMAP futures, which not found in JavaMail implementation.
  *
- * @author Denis Bondarenko
- * Date: 29.09.2017
- * Time: 14:57
- * E-mail: DenBond7@gmail.com
+ * @author Denys Bondarenko
  */
 class ImapProtocolUtil {
 
