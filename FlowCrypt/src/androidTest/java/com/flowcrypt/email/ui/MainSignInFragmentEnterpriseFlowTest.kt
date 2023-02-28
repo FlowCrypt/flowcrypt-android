@@ -25,7 +25,6 @@ import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.extensions.kotlin.urlDecoded
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -88,8 +87,12 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
           request.path?.startsWith("/ekm") == true -> {
             handleEkmAPI(request, gson)?.let { return it }
           }
-
-          request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
+          request.requestUrl?.encodedPath == "/shared-tenant-fes/api/v1/client-configuration" &&
+              request.requestUrl?.queryParameter("domain") in
+              listOf(
+                "flowcrypt.test",
+                "flowcrypt.example",
+              ) -> {
             val account = extractEmailFromRecordedRequest(request)
             return handleClientConfigurationAPIForSharedTenantFes(account, gson)
           }
