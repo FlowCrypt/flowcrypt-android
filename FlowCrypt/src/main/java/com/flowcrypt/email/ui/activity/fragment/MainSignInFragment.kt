@@ -540,7 +540,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               )
             }
           } else {
-            continueBasedOnFlavorSettings()
+            continueBasedOnFlavorSettings(getString(R.string.fes_server_has_wrong_settings))
           }
 
           checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value =
@@ -559,7 +559,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           when (it.exception) {
             is CommonConnectionException -> {
               if (it.exception.hasInternetAccess == true) {
-                continueBasedOnFlavorSettings()
+                continueBasedOnFlavorSettings(
+                  getString(
+                    R.string.check_fes_error_with_retry,
+                    it.exceptionMsg
+                  )
+                )
               } else {
                 showDialogWithRetryButton(
                   getString(R.string.no_connection_or_server_is_not_reachable),
@@ -575,7 +580,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
                 }
 
                 else -> {
-                  continueBasedOnFlavorSettings()
+                  continueBasedOnFlavorSettings(
+                    getString(
+                      R.string.fes_server_error,
+                      it.exceptionMsg
+                    )
+                  )
                 }
               }
             }
@@ -602,14 +612,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun continueBasedOnFlavorSettings() {
+  private fun continueBasedOnFlavorSettings(errorMsg: String) {
     if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-      /*
-       here we actually need to decide if we should show error or proceed with
-       regular setup flow based on exact customers that will skip to regular setup flow,
-       and the rest will be shown error.
-      */
-      continueWithRegularFlow()
+      showDialogWithRetryButton(
+        errorMsg,
+        REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
+      )
     } else {
       continueWithRegularFlow()
     }

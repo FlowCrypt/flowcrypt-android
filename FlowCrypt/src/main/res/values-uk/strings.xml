@@ -495,6 +495,9 @@
     <string name="need_post_notification_permission">Нам потрібен дозвіл, щоб показувати сповіщення про нові листи</string>
     <string name="ask">Запитати</string>
     <string name="password_should_fit_all_requirements">Пароль має відповідати всім вимогам</string>
+    <string name="fes_server_has_wrong_settings">Ваш FES сервер налаштований не вірно. Будь ласка, зверніться до служби підтримки.</string>
+    <string name="check_fes_error_with_retry">Виникла помилка.\nДеталі:%1$s\n\nБудь ласка, спробуйте ще раз.</string>
+    <string name="fes_server_error">Помилка сервера:%1$s</string>
     <plurals name="found_backup_of_your_account_key">
         <item quantity="one">Знайдена %1$d резервна копія Вашого ключа</item>
         <item quantity="few">Знайдено %1$d резервні копії Вашого ключа</item>
