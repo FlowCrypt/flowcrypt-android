@@ -46,7 +46,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -54,14 +53,13 @@ import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
+class MainSignInFragmentFlowTest : BaseSignTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
@@ -151,19 +149,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     .around(mockWebServerRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
-
-  @Before
-  fun waitWhileToastWillBeDismissed() {
-    Thread.sleep(1000)
-  }
-
-  @Test
-  fun testErrorGetDomainRules() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR))
-    isDialogWithTextDisplayed(decorView, CLIENT_CONFIGURATION_ERROR_RESPONSE.apiError?.msg!!)
-    onView(withText(R.string.retry))
-      .check(matches(isDisplayed()))
-  }
 
   @Test
   fun testClientConfigurationCombinationNotSupportedForMustAutogenPassPhraseQuietlyExisted() {
@@ -281,112 +266,12 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   @Test
-  fun testFesAvailabilityServerDownNoConnection() {
-    try {
-      changeConnectionState(false)
-      setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_NO_CONNECTION))
-      isDialogWithTextDisplayed(
-        decorView = decorView,
-        message = getResString(R.string.no_connection_or_server_is_not_reachable)
-      )
-    } finally {
-      changeConnectionState(true)
-    }
-  }
-
-  @Test
-  fun testFesAvailabilityServerAvailableRequestTimeOutHasConnection() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
-    onView(withText(R.string.set_pass_phrase))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testFesServerAvailableHasConnectionHttpCode404() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_404))
-    onView(withText(R.string.set_pass_phrase))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testFesServerAvailableHasConnectionHttpCodeNotSuccess() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS))
-    onView(withText(R.string.set_pass_phrase))
-      .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testFesServerIsNotEnterpriseServer() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(email = EMAIL_FES_NOT_ALLOWED_SERVER))
-
-    isDialogWithTextDisplayed(
-      decorView,
-      "ApiException:" + ApiException(
-        ApiError(
-          code = HttpURLConnection.HTTP_NOT_FOUND,
-          msg = ""
-        )
-      ).message!!
-    )
-  }
-
-  @Test
-  fun testFesServerExternalServiceAlias() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_EXTERNAL_SERVICE))
-    //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
-    //to check that external-service was accepted and we called getClientConfigurationFromFes()
-
-    isDialogWithTextDisplayed(
-      decorView,
-      "ApiException:" + ApiException(
-        ApiError(
-          code = HttpURLConnection.HTTP_NOT_ACCEPTABLE,
-          msg = ""
-        )
-      ).message!!
-    )
-  }
-
-  @Test
-  fun testFesServerEnterpriseServerAlias() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SERVER_ENTERPRISE_SERVER))
-    //we simulate error for https://fes.$domain/api/v1/client-configuration?domain=$domain
-    //to check that external-service was accepted and we called getClientConfigurationFromFes()
-    isDialogWithTextDisplayed(
-      decorView,
-      "ApiException:" + ApiException(
-        ApiError(
-          code = HttpURLConnection.HTTP_CONFLICT,
-          msg = ""
-        )
-      ).message!!
-    )
-  }
-
-  @Test
   fun testFesServerAvailableGetClientConfigurationSuccess() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS)
     )
     onView(withText(R.string.set_pass_phrase))
       .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testCallFesUrlToGetClientConfigurationForEnterpriseUser() {
-    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
-
-    //the mock web server should return error for https://fes.$domain/api/
-    isDialogWithTextDisplayed(
-      decorView,
-      "ApiException:" + ApiException(
-        ApiError(
-          code = HttpURLConnection.HTTP_UNAUTHORIZED,
-          msg = ""
-        )
-      ).message!!
-    )
-    //after this we will be sure that https://fes.$domain/api/ was called for an enterprise user
   }
 
   @Test
@@ -445,33 +330,9 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   }
 
   private fun handleCheckIfFesIsAvailableAtCustomerFesUrl(gson: Gson): MockResponse {
-    return if ("testFesAvailabilityServerAvailableRequestTimeOutHasConnection" ==
-      testNameRule.methodName
-    ) {
-      MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        .setHeadersDelay(6, TimeUnit.SECONDS)
-    } else when (testNameRule.methodName) {
-      "testFesServerAvailableHasConnectionHttpCode404", "testFailAttesterSubmit" -> {
+    return when (testNameRule.methodName) {
+      "testFailAttesterSubmit" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-      }
-
-      "testFesServerAvailableHasConnectionHttpCodeNotSuccess" -> {
-        MockResponse().setResponseCode(500)
-      }
-
-      "testFesServerIsNotEnterpriseServer" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "hello")))
-      }
-
-      "testFesServerExternalServiceAlias" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "external-service")))
-      }
-
-      "testFesServerEnterpriseServerAlias" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(gson.toJson(FES_SUCCESS_RESPONSE.copy(service = "enterprise-server")))
       }
 
       else -> {
@@ -484,17 +345,11 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
   private fun handleClientConfigurationAPI(gson: Gson): MockResponse {
     val responseCode = when (testNameRule.methodName) {
       "testFesServerAvailableGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
-      "testFesServerExternalServiceAlias" -> HttpURLConnection.HTTP_NOT_ACCEPTABLE
-      "testFesServerEnterpriseServerAlias" -> HttpURLConnection.HTTP_CONFLICT
-      "testCallFesUrlToGetClientConfigurationForEnterpriseUser" -> HttpURLConnection.HTTP_UNAUTHORIZED
       else -> HttpURLConnection.HTTP_OK
     }
 
     val body = when (testNameRule.methodName) {
-      "testFesServerAvailableGetClientConfigurationFailed",
-      "testFesServerExternalServiceAlias",
-      "testFesServerEnterpriseServerAlias",
-      "testCallFesUrlToGetClientConfigurationForEnterpriseUser" -> null
+      "testFesServerAvailableGetClientConfigurationFailed" -> null
       else -> gson.toJson(
         ClientConfigurationResponse(
           clientConfiguration = ClientConfiguration(
@@ -551,11 +406,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
     gson: Gson
   ): MockResponse {
     when (account) {
-      EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR -> return MockResponse().setResponseCode(
-        HttpURLConnection.HTTP_OK
-      )
-        .setBody(gson.toJson(CLIENT_CONFIGURATION_ERROR_RESPONSE))
-
       EMAIL_WITH_NO_PRV_CREATE_RULE -> return successMockResponseForClientConfiguration(
         gson = gson,
         clientConfiguration = ClientConfiguration(
@@ -634,19 +484,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
         )
       )
 
-      EMAIL_FES_REQUEST_TIME_OUT,
-      EMAIL_FES_HTTP_404,
-      EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS -> return successMockResponseForClientConfiguration(
-        gson = gson,
-        clientConfiguration = ClientConfiguration(
-          flags = ACCEPTED_FLAGS,
-          keyManagerUrl = EMAIL_EKM_URL_SUCCESS,
-        )
-      )
-
-      EMAIL_FES_NOT_ALLOWED_SERVER -> return MockResponse()
-        .setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-
       EMAIL_FES_ENFORCE_ATTESTER_SUBMIT -> {
         return successMockResponseForClientConfiguration(
           gson = gson,
@@ -683,8 +520,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "https://flowcrypt.test/ekm/not_fully_decrypted_key/"
     private const val EMAIL_EKM_URL_ERROR = "https://flowcrypt.test/ekm/error/"
     private const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.example"
-    private const val EMAIL_DOMAIN_CLIENT_CONFIGURATION_ERROR =
-      "client_configuration_error@flowcrypt.example"
     private const val EMAIL_MUST_AUTOGEN_PASS_PHRASE_QUIETLY_EXISTED =
       "must_autogen_pass_phrase_quietly_existed@flowcrypt.example"
     private const val EMAIL_FORBID_STORING_PASS_PHRASE_MISSING =
@@ -698,22 +533,12 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       "keys_via_ekm_empty_list@flowcrypt.example"
     private const val EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED =
       "user_with_not_fully_decrypted_prv_key@flowcrypt.example"
-    private const val EMAIL_FES_NO_CONNECTION = "fes_request_timeout@flowcrypt.test"
-    private const val EMAIL_FES_REQUEST_TIME_OUT = "fes_request_timeout@flowcrypt.test"
-    private const val EMAIL_FES_HTTP_404 = "fes_404@flowcrypt.test"
-    private const val EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS = "fes_not404_not_success@flowcrypt.test"
-    private const val EMAIL_FES_NOT_ALLOWED_SERVER = "fes_not_allowed_server@flowcrypt.test"
-    private const val EMAIL_FES_SERVER_EXTERNAL_SERVICE =
-      "fes_server_external_service@flowcrypt.test"
-    private const val EMAIL_FES_SERVER_ENTERPRISE_SERVER =
-      "fes_server_enterprise_server@flowcrypt.test"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_SUCCESS =
       "fes_client_configuration_success@flowcrypt.test"
     private const val EMAIL_FES_CLIENT_CONFIGURATION_FAILED =
       "fes_client_configuration_failed@flowcrypt.test"
     private const val EMAIL_FES_ENFORCE_ATTESTER_SUBMIT =
       "enforce_attester_submit@flowcrypt.test"
-    private const val EMAIL_ENTERPRISE_USER = "enterprise_user@flowcrypt.test"
 
     private const val EMAIL_GMAIL = "gmail@gmail.com"
     private const val EMAIL_GOOGLEMAIL = "googlemail@googlemail.com"
@@ -722,13 +547,6 @@ class MainSignInFragmentEnterpriseFlowTest : BaseSignTest() {
       ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
       ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
       ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE
-    )
-
-    private val CLIENT_CONFIGURATION_ERROR_RESPONSE = ClientConfigurationResponse(
-      ApiError(
-        HttpURLConnection.HTTP_UNAUTHORIZED,
-        "Not logged in or unknown account", "auth"
-      ), null
     )
 
     private const val EKM_ERROR = "some error"

@@ -37,5 +37,5 @@ val <T> Result<T>.exceptionMsg: String
       }
     }
 
-    return if (stringBuilder.isEmpty()) "Unknown error" else stringBuilder.toString()
+    return stringBuilder.toString().ifEmpty { "Unknown error" }
   }
