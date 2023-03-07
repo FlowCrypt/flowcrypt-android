@@ -76,7 +76,7 @@ blocks:
             # print Java version
             - java -version
             # compile project
-            - ./gradlew --console=plain assembleDevTestDebug
+            - ./gradlew --console=plain assembleConsumerUiTests
       epilogue:
         on_pass:
           commands:

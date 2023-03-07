@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./gradlew --console=plain :FlowCrypt:lintDevTestDebug
+./gradlew --console=plain :FlowCrypt:lintConsumerUiTests

@@ -27,7 +27,7 @@ lastDevice=${array[-1]}
 #Move to the project directory and build the app
 cd ~/StudioProjects/flowcrypt-android/
 echo "Compiling..."
-./gradlew assembleDevTestDebug
+./gradlew assembleConsumerUiTests
 
 echo " "
 echo "------------------------------------------------------"
@@ -47,8 +47,8 @@ for ((i = 0; i < $devicesCount; ++i)); do
   echo "------------------------------------------------------"
 
   if [[ $onlyIndependentTests = true ]] || [[ "$device" != "$lastDevice" ]]; then
-    gnome-terminal --title="$device" --tab -- /bin/sh -c "echo $device; echo '(independent tests)'; ANDROID_SERIAL=$device ./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter -Pandroid.testInstrumentationRunnerArguments.numShards=$devicesCount -Pandroid.testInstrumentationRunnerArguments.shardIndex=$i; exec bash"
+    gnome-terminal --title="$device" --tab -- /bin/sh -c "echo $device; echo '(independent tests)'; ANDROID_SERIAL=$device ./gradlew :FlowCrypt:connectedConsumerUiTestsAndroidTest -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter -Pandroid.testInstrumentationRunnerArguments.numShards=$devicesCount -Pandroid.testInstrumentationRunnerArguments.shardIndex=$i; exec bash"
   else
-    gnome-terminal --title="$device" --tab -- /bin/sh -c "echo $device; echo '(tests depend on an email server)'; ANDROID_SERIAL=$device ./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DependsOnMailServerFilter; exec bash"
+    gnome-terminal --title="$device" --tab -- /bin/sh -c "echo $device; echo '(tests depend on an email server)'; ANDROID_SERIAL=$device ./gradlew :FlowCrypt:connectedConsumerUiTestsAndroidTest -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DependsOnMailServerFilter; exec bash"
   fi
 done

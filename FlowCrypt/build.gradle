@@ -100,6 +100,8 @@ android {
             shrinkResources false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
@@ -111,13 +113,29 @@ android {
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_http_log_level', 'NONE'
-            signingConfig signingConfigs.release
         }
 
         debug {
+            initWith release
+            debuggable true
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
             applicationIdSuffix '.debug'
             signingConfig signingConfigs.debug
+
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
+            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
+            resValue 'string', 'gradle_is_acra_enabled', 'false'
+            resValue 'string', 'gradle_is_http_log_enabled', 'true'
+            resValue 'string', 'gradle_http_log_level', 'BODY'
+        }
+
+        uiTests {
+            initWith debug
+            versionNameSuffix '_test_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
+            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.test/attester/\""
+            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.test/shared-tenant-fes/\""
+            buildConfigField 'String', 'BACKEND_URL', "\"https://flowcrypt.test/backend/\""
         }
     }
 
@@ -128,65 +146,38 @@ android {
     flavorDimensions "standard"
 
     productFlavors {
-        common {
-            dimension "standard"
-            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
-            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
-            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
-            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.com/shared-tenant-fes/\""
-            buildConfigField 'String', 'BACKEND_URL', "\"https://flowcrypt.com/api/\""
-            resValue 'string', 'gradle_is_acra_enabled', 'true'
-            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
-            resValue 'string', 'gradle_is_http_log_enabled', 'false'
-            resValue 'string', 'gradle_http_log_level', 'NONE'
-        }
         //This flavor must be used only for a development.
-        // It has settings for a fast building (some features are disabled or not included).
+        //It has settings for a fast building (some features are disabled or not included).
         dev {
-            initWith common
+            dimension "standard"
             versionNameSuffix "_dev"
             minSdkVersion rootProject.ext.minSdkVersion
             resConfigs 'en', 'xxhdpi'
-            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
-            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
-            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
-            resValue 'string', 'gradle_is_http_log_enabled', 'true'
-            resValue 'string', 'gradle_http_log_level', 'BODY'
         }
 
         //This is a consumer flavor
         consumer {
-            initWith common
-        }
-
-        //This flavor must be used only for a testing
-        devTest {
-            initWith common
-            versionNameSuffix "_devTest"
-            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
-            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.test/attester/\""
-            buildConfigField 'String', 'SHARED_TENANT_FES_URL', "\"https://flowcrypt.test/shared-tenant-fes/\""
-            buildConfigField 'String', 'BACKEND_URL', "\"https://flowcrypt.test/backend/\""
-            resValue 'string', 'gradle_is_acra_enabled', 'false'
-            resValue 'string', 'gradle_is_http_log_enabled', 'true'
-            resValue 'string', 'gradle_http_log_level', 'BODY'
+            dimension "standard"
         }
 
         //This is an enterprise flavor
         enterprise {
-            initWith common
+            dimension "standard"
             applicationIdSuffix ".enterprise"
         }
 
         applicationVariants.all { variant ->
             variant.resValue 'string', 'application_id', variant.applicationId
+        }
+    }
+
+    variantFilter { variant ->
+        if (variant.name in ['devRelease', 'devUiTests']) {
+            println("Excluded \"$variant.name\" from build variant list as unused")
+            // Gradle ignores any variants that satisfy the conditions above.
+            setIgnore(true)
         }
     }
 
@@ -200,7 +191,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = JavaVersion.VERSION_11.toString()
         freeCompilerArgs += ["-opt-in=kotlin.RequiresOptIn"]
     }
 
@@ -305,7 +296,26 @@ easylauncher {
     buildTypes {
         debug {
             filters = [
-                    customRibbon(ribbonColor: "#6600CC", labelColor: "#FFFFFF", position: "top")
+                    chromeLike(
+                            ribbonColor: "#6600CC",
+                            labelColor: "#FFFFFF",
+                            position: "top",
+                            overlayHeight: 0.25,
+                            textSizeRatio: 0.2
+                    )
+            ]
+        }
+
+        uiTests {
+            filters = [
+                    chromeLike(
+                            label: "test",
+                            ribbonColor: "#E91E63",
+                            labelColor: "#FFFFFF",
+                            position: "top",
+                            overlayHeight: 0.25,
+                            textSizeRatio: 0.2
+                    )
             ]
         }
     }
@@ -313,7 +323,14 @@ easylauncher {
     variants {
         devDebug {
             filters = [
-                    customRibbon(label: "dev", ribbonColor: "#CC5F00", labelColor: "#FFFFFF", position: "top")
+                    chromeLike(
+                            label: "dev",
+                            ribbonColor: "#CC5F00",
+                            labelColor: "#FFFFFF",
+                            position: "top",
+                            overlayHeight: 0.25,
+                            textSizeRatio: 0.2
+                    )
             ]
         }
     }

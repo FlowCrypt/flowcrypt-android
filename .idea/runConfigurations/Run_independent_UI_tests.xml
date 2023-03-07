@@ -10,7 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value="connectedDevTestDebugAndroidTest" />
+          <option value="connectedConsumerUiTestsAndroidTest" />
         </list>
       </option>
       <option name="vmOptions" value="" />

@@ -6,5 +6,5 @@
 # -e log true \
 # com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
 
-./gradlew --console=plain :FlowCrypt:connectedDevTestDebugAndroidTest \
+./gradlew --console=plain :FlowCrypt:connectedConsumerUiTestsAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DependsOnMailServerFilter
