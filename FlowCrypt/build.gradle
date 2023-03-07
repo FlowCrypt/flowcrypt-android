@@ -139,6 +139,8 @@ android {
         }
     }
 
+    testBuildType "uiTests"
+
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
@@ -344,7 +346,7 @@ dependencies {
     kapt 'com.google.auto.service:auto-service:1.0.1'
 
     devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'
-    debugImplementation 'androidx.fragment:fragment-testing:1.5.5'
+    uiTestsImplementation 'androidx.fragment:fragment-testing:1.5.5'
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
