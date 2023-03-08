@@ -25,8 +25,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseFesDuringSetupFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.gson.Gson
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -58,24 +56,6 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
   override fun handleAPI(request: RecordedRequest, gson: Gson): MockResponse {
     return when {
       request.path?.startsWith("/ekm") == true -> handleEkmAPI(request, gson)
-
-      request.requestUrl?.encodedPath == "/gmail/v1/users/me/messages"
-          && request.requestUrl?.queryParameterNames?.contains("q") == true -> {
-        val q = requireNotNull(request.requestUrl?.queryParameter("q"))
-        return when {
-          q.startsWith("from:${EMAIL_FES_ENFORCE_ATTESTER_SUBMIT}") -> MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setBody(
-              ListMessagesResponse().apply {
-                factory = GsonFactory.getDefaultInstance()
-                messages = emptyList()
-                resultSizeEstimate = 0
-              }.toString()
-            )
-
-          else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        }
-      }
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
@@ -118,16 +98,12 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
 
   override fun handleClientConfigurationAPI(gson: Gson): MockResponse {
     val responseCode = when (testNameRule.methodName) {
-      "testFesServerAvailableGetClientConfigurationFailed" -> HttpURLConnection.HTTP_FORBIDDEN
       "testFesAvailableWrongServiceName" -> HttpURLConnection.HTTP_NOT_ACCEPTABLE
-      "testCallFesUrlToGetClientConfigurationForEnterpriseUser" -> HttpURLConnection.HTTP_UNAUTHORIZED
       else -> HttpURLConnection.HTTP_OK
     }
 
     val body = when (testNameRule.methodName) {
-      "testFesServerAvailableGetClientConfigurationFailed",
-      "testFesAvailableWrongServiceName",
-      "testCallFesUrlToGetClientConfigurationForEnterpriseUser" -> null
+      "testFesAvailableWrongServiceName" -> null
       else -> gson.toJson(
         ClientConfigurationResponse(
           clientConfiguration = ClientConfiguration(
@@ -224,6 +200,7 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
   @Test
   fun testFesAvailableSuccess() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SUCCESS))
+    Thread.sleep(2000)
     onView(withText(R.string.set_pass_phrase))
       .check(matches(isDisplayed()))
   }
@@ -261,7 +238,6 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
     private const val EMAIL_FES_HTTP_404 = "fes_404@flowcrypt.test"
     private const val EMAIL_FES_HTTP_NOT_404_NOT_SUCCESS = "fes_not404_not_success@flowcrypt.test"
     private const val EMAIL_FES_NOT_ALLOWED_SERVER = "fes_not_allowed_server@flowcrypt.test"
-    private const val EMAIL_FES_ENFORCE_ATTESTER_SUBMIT = "enforce_attester_submit@flowcrypt.test"
     private const val EMAIL_FES_SUCCESS = "fes_success@flowcrypt.test"
     private const val EMAIL_FES_SSL_ERROR = "fes_ssl_error@wrongssl.test"
 
