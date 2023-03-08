@@ -192,6 +192,32 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
       .check(matches(isDisplayed()))
   }
 
+  @Test
+  fun testFlowForPublicEmailDomainsGmail() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GMAIL))
+    isDialogWithTextDisplayed(
+      decorView,
+      getResString(
+        R.string.enterprise_does_not_support_pub_domains,
+        getResString(R.string.app_name),
+        "gmail.com"
+      )
+    )
+  }
+
+  @Test
+  fun testFlowForPublicEmailDomainsGoogleMail() {
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GOOGLEMAIL))
+    isDialogWithTextDisplayed(
+      decorView,
+      getResString(
+        R.string.enterprise_does_not_support_pub_domains,
+        getResString(R.string.app_name),
+        "googlemail.com"
+      )
+    )
+  }
+
   private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse {
     return when {
       request.path.equals("/ekm/v1/keys/private") ->
@@ -211,6 +237,9 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
     private const val EMAIL_FES_NOT_ALLOWED_SERVER = "fes_not_allowed_server@flowcrypt.test"
     private const val EMAIL_FES_SUCCESS = "fes_success@flowcrypt.test"
     private const val EMAIL_FES_SSL_ERROR = "fes_ssl_error@wrongssl.test"
+
+    private const val EMAIL_GMAIL = "gmail@gmail.com"
+    private const val EMAIL_GOOGLEMAIL = "googlemail@googlemail.com"
 
     private val ACCEPTED_FLAGS = listOf(
       ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,

@@ -224,8 +224,22 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
         val publicEmailDomains = EmailUtil.getPublicEmailDomains()
-        if (EmailUtil.getDomain(account) in publicEmailDomains) {
-          onSignSuccess(cachedGoogleSignInAccount)
+        val domain = EmailUtil.getDomain(account)
+        if (domain in publicEmailDomains) {
+          if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+            cachedGoogleSignInAccount = null
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = getString(
+                R.string.enterprise_does_not_support_pub_domains,
+                getString(R.string.app_name),
+                domain
+              ),
+              isCancelable = true
+            )
+          } else {
+            onSignSuccess(cachedGoogleSignInAccount)
+          }
         } else {
           checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
