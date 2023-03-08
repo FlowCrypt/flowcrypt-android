@@ -126,7 +126,7 @@ blocks:
             # Run logging
             - adb logcat --buffer=crash > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-with-mailserver.sh
+            - ./script/ci-instrumentation-tests-enterprise.sh
       epilogue:
         always:
           commands:
