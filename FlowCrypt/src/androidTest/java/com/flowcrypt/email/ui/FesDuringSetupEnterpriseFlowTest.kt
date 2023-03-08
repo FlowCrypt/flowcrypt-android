@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.junit.annotations.EnterpriseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
@@ -34,7 +35,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("not completed")
+@EnterpriseTest
 class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
