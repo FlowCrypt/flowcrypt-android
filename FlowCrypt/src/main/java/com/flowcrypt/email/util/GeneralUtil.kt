@@ -79,11 +79,11 @@ class GeneralUtil {
     }
 
     /**
-     * This method checks is it a debug build.
+     * This method checks is it a debug or uiTests build.
      *
-     * @return true - if the current build is a debug build.
+     * @return true - if the current build is a debug or uiTests build.
      */
-    fun isDebugBuild(): Boolean = "debug" == BuildConfig.BUILD_TYPE
+    fun isDebugBuild(): Boolean = BuildConfig.BUILD_TYPE in listOf("debug", "uiTests")
 
     /**
      * Checking for an Internet connection.
@@ -493,7 +493,7 @@ class GeneralUtil {
       withContext(Dispatchers.IO) {
         //before fetch idToken from [GoogleSignInClient]
         //we try to get IdToken from the flavor settings
-        FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
+        FlavorSettings.getGoogleIdToken().let { return@withContext it }
 
         val googleSignInClient = GoogleSignIn.getClient(
           context,
