@@ -44,7 +44,9 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.dev_preferences, rootKey)
     findPreference<SwitchPreference>(Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED)?.isVisible =
-      BuildConfig.FLAVOR == "dev"
+      BuildConfig.FLAVOR == Constants.FLAVOR_NAME_DEV
+    findPreference<SwitchPreference>(Constants.PREF_KEY_IS_ACRA_ENABLED)?.isVisible =
+      BuildConfig.FLAVOR != Constants.FLAVOR_NAME_ENTERPRISE
   }
 
   @Suppress("DEPRECATION")

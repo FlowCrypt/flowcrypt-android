@@ -181,13 +181,13 @@ android {
         //This is an enterprise flavor
         enterprise {
             applicationIdSuffix ".enterprise"
-            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
-            resValue 'string', 'gradle_is_acra_enabled', 'true'
+            resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
