@@ -138,5 +138,6 @@ class Constants {
      * Product Flavors.
      */
     const val FLAVOR_NAME_ENTERPRISE = "enterprise"
+    const val FLAVOR_NAME_DEV = "dev"
   }
 }
