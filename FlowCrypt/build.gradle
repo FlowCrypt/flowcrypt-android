@@ -168,6 +168,9 @@ android {
         enterprise {
             dimension "standard"
             applicationIdSuffix ".enterprise"
+
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
+            resValue 'string', 'gradle_is_acra_enabled', 'false'
         }
 
         applicationVariants.all { variant ->
@@ -371,7 +374,7 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.room:room-testing:2.5.0'
     testImplementation 'org.robolectric:robolectric:4.9.2'
-    testImplementation 'io.github.classgraph:classgraph:4.8.156'
+    testImplementation 'io.github.classgraph:classgraph:4.8.157'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable

@@ -126,6 +126,8 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   }
 
   private fun setupACRA() {
+    if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) return
+
     initAcra {
       reportFormat = StringFormat.JSON
       buildConfigClass = BuildConfig::class.java
@@ -207,7 +209,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
     WorkManager.getInstance(this).enqueueUniquePeriodicWork(
       MsgsCacheCleanerWorker.NAME,
-      ExistingPeriodicWorkPolicy.REPLACE, workRequest
+      ExistingPeriodicWorkPolicy.UPDATE, workRequest
     )
   }
 }
