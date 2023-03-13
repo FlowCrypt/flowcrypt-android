@@ -50,7 +50,6 @@ class UseFesAfterSetupDuringRefreshingClientConfigurationTest : BaseTest() {
     ClientConfiguration(flags = emptyList())
   ).copy(email = "default@flowcrypt.test")
 
-  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
   private val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -91,7 +90,7 @@ class UseFesAfterSetupDuringRefreshingClientConfigurationTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain.outerRule(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
-    .around(addAccountToDatabaseRule)
+    .around(AddAccountToDatabaseRule(userWithClientConfiguration))
     .around(AddPrivateKeyToDatabaseRule())
     .around(mockWebServerRule)
     .around(ScreenshotTestRule())
@@ -106,8 +105,9 @@ class UseFesAfterSetupDuringRefreshingClientConfigurationTest : BaseTest() {
         emptyArray(), accountBeforeUpdating?.clientConfiguration?.flags?.toTypedArray()
       )
 
-      val worker =
-        TestListenableWorkerBuilder<RefreshClientConfigurationWorker>(ApplicationProvider.getApplicationContext()).build()
+      val worker = TestListenableWorkerBuilder<RefreshClientConfigurationWorker>(
+        ApplicationProvider.getApplicationContext()
+      ).build()
       val result = worker.doWork()
       assertThat(result, CoreMatchers.`is`(ListenableWorker.Result.success()))
 
