@@ -14,8 +14,7 @@ import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.AuthTokenInfo
 import com.flowcrypt.email.api.oauth.OAuth2Helper
-import com.flowcrypt.email.api.retrofit.ApiRepository
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.exception.ApiException
@@ -40,11 +39,10 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val apiRepository: ApiRepository = FlowcryptApiRepository()
   val microsoftOAuth2TokenLiveData = MutableLiveData<Result<AuthCredentials?>>()
   val authorizationRequestLiveData = MutableLiveData<Result<AuthorizationRequest>>()
 
-  fun getAuthorizationRequestForProvider(requestCode: Long = 0L, provider: OAuth2Helper.Provider) {
+  fun getAuthorizationRequestForProvider(provider: OAuth2Helper.Provider) {
     viewModelScope.launch {
       authorizationRequestLiveData.postValue(Result.loading())
       val context: Context = getApplication()
@@ -52,7 +50,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
       try {
         val authRequest = when (provider) {
           OAuth2Helper.Provider.MICROSOFT -> {
-            val jsonObject = getJsonObjectForOpenidConfiguration(requestCode, provider)
+            val jsonObject = getJsonObjectForOpenidConfiguration(provider)
             val authorizationServiceDiscovery = AuthorizationServiceDiscovery(jsonObject)
             OAuth2Helper.getMicrosoftAuthorizationRequest(
               configuration = AuthorizationServiceConfiguration(authorizationServiceDiscovery),
@@ -97,15 +95,13 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
   }
 
   fun getMicrosoftOAuth2Token(
-    requestCode: Long = 0L,
     authorizeCode: String,
     authRequest: AuthorizationRequest
   ) {
     viewModelScope.launch {
       microsoftOAuth2TokenLiveData.postValue(Result.loading())
       try {
-        val response = apiRepository.getMicrosoftOAuth2Token(
-          requestCode = requestCode,
+        val response = ApiClientRepository.OAuth.getMicrosoftOAuth2Token(
           context = getApplication(),
           authorizeCode = authorizeCode,
           scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
@@ -201,12 +197,10 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
     }
 
   private suspend fun getJsonObjectForOpenidConfiguration(
-    requestCode: Long,
     provider: OAuth2Helper.Provider
   ): JSONObject =
     withContext(Dispatchers.IO) {
-      val jsonObjectResult = apiRepository.getOpenIdConfiguration(
-        requestCode = requestCode,
+      val jsonObjectResult = ApiClientRepository.OAuth.getOpenIdConfiguration(
         context = getApplication(),
         url = provider.openidConfigurationUrl
       )

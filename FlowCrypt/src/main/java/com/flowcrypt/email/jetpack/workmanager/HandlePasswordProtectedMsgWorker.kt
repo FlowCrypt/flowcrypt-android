@@ -16,7 +16,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.javamail.PasswordProtectedAttachmentInfoDataSource
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -97,7 +97,6 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
   private suspend fun prepareAndUploadPasswordProtectedMsgsToFES(account: AccountEntity) =
     withContext(Dispatchers.IO) {
-      val apiRepository = FlowcryptApiRepository()
       val keysStorage = KeysStorageImpl.getInstance(applicationContext)
       val accountSecretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
 
@@ -141,11 +140,15 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             //start of creating and uploading a password-protected msg to FES
             val fromAddress = mimeMsgWithEncryptedContent.getFromAddress()
-            val domain = EmailUtil.getDomain(fromAddress.address)
+            val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
+              useCustomerFesUrl = account.useCustomerFesUrl,
+              domain = EmailUtil.getDomain(fromAddress.address)
+            )
+
             val idToken = GeneralUtil.getGoogleIdToken(
               applicationContext, RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
             )
-            val replyToken = fetchReplyToken(apiRepository, domain, idToken)
+            val replyToken = fetchReplyToken(baseFesUrlPath, idToken)
             val replyInfoData = ReplyInfoData(
               sender = fromAddress.address.lowercase(),
               recipient = (toCandidates + ccCandidates + bccCandidates)
@@ -194,8 +197,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
             //upload resulting data to FES
             val fesUrl = uploadMsgToFESAndReturnUrl(
-              apiRepository = apiRepository,
-              domain = domain,
+              baseFesUrlPath = baseFesUrlPath,
               idToken = idToken,
               messageUploadRequest = genMessageUploadRequest(
                 replyToken,
@@ -359,15 +361,14 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   }
 
   private suspend fun uploadMsgToFESAndReturnUrl(
-    apiRepository: FlowcryptApiRepository,
-    domain: String,
+    baseFesUrlPath: String,
     idToken: String,
     messageUploadRequest: MessageUploadRequest,
     pwdEncryptedWithAttachments: String
   ): String = withContext(Dispatchers.IO) {
-    val messageUploadResponseResult = apiRepository.uploadPasswordProtectedMsgToWebPortal(
+    val messageUploadResponseResult = ApiClientRepository.FES.uploadPasswordProtectedMsgToWebPortal(
       context = applicationContext,
-      domain = domain,
+      baseFesUrlPath = baseFesUrlPath,
       idToken = idToken,
       messageUploadRequest = messageUploadRequest,
       msg = pwdEncryptedWithAttachments
@@ -397,15 +398,14 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   }
 
   private suspend fun fetchReplyToken(
-    apiRepository: FlowcryptApiRepository,
-    domain: String,
+    baseFesUrlPath: String,
     idToken: String
   ): String = withContext(Dispatchers.IO) {
     val messageReplyTokenResponseResult =
-      apiRepository.getReplyTokenForPasswordProtectedMsg(
+      ApiClientRepository.FES.getReplyTokenForPasswordProtectedMsg(
         context = applicationContext,
-        domain = domain,
-        idToken = idToken
+        idToken = idToken,
+        baseFesUrlPath = baseFesUrlPath,
       )
 
     com.flowcrypt.email.api.retrofit.response.base.Result.throwExceptionIfNotSuccess(

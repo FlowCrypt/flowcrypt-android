@@ -16,7 +16,6 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.ui.activity.MainActivity
 
@@ -84,8 +83,9 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
       }
       try {
         val refreshToken = KeyStoreCryptoManager.decrypt(encryptedRefreshToken)
-        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        val apiResponse = apiService.refreshMicrosoftOAuth2Token(refreshToken).execute()
+        val retrofitApiService = ApiHelper.createRetrofitApiService(context)
+        val apiResponse =
+          retrofitApiService.oAuthRefreshMicrosoftOAuth2Token(refreshToken).execute()
         if (apiResponse.isSuccessful) {
           val tokenResponse = apiResponse.body()
           authToken = KeyStoreCryptoManager.encrypt(tokenResponse?.accessToken)

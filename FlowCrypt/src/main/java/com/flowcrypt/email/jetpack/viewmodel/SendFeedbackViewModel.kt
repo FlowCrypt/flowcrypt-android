@@ -11,7 +11,7 @@ import android.util.Base64
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -26,7 +26,6 @@ import kotlinx.coroutines.launch
  * @author Denys Bondarenko
  */
 class SendFeedbackViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val repository = FlowcryptApiRepository()
   private val postFeedbackMutableStateFlow: MutableStateFlow<Result<PostHelpFeedbackResponse?>> =
     MutableStateFlow(Result.none())
   val postFeedbackStateFlow: StateFlow<Result<PostHelpFeedbackResponse?>> =
@@ -45,7 +44,7 @@ class SendFeedbackViewModel(application: Application) : BaseAndroidViewModel(app
         Base64.encodeToString(screenshot?.byteArray ?: byteArrayOf(), Base64.DEFAULT)
 
       try {
-        postFeedbackMutableStateFlow.value = repository.postHelpFeedback(
+        postFeedbackMutableStateFlow.value = ApiClientRepository.Backend.postHelpFeedback(
           context = context,
           PostHelpFeedbackModel(
             email = account.email,

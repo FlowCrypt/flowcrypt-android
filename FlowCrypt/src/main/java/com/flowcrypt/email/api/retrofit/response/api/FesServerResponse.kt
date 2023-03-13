@@ -18,10 +18,10 @@ import kotlinx.parcelize.Parcelize
 data class FesServerResponse constructor(
   @SerializedName("error")
   @Expose override val apiError: ApiError? = null,
-  @Expose val vendor: String?,
-  @Expose val service: String?,
-  @Expose val orgId: String?,
-  @Expose val version: String?,
-  @Expose val endUserApiVersion: String?,
-  @Expose val adminApiVersion: String?,
+  @Expose val vendor: String? = null,
+  @Expose val service: String? = null,
+  @Expose val orgId: String? = null,
+  @Expose val version: String? = null,
+  @Expose val endUserApiVersion: String? = null,
+  @Expose val adminApiVersion: String? = null,
 ) : ApiResponse

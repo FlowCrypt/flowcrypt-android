@@ -62,9 +62,12 @@ class ApiHelper private constructor(context: Context) {
   companion object {
     private const val TIMEOUT = 10
 
-    @JvmStatic
     fun getInstance(context: Context): ApiHelper {
       return ApiHelper(context)
+    }
+
+    fun createRetrofitApiService(context: Context): RetrofitApiServiceInterface {
+      return getInstance(context).retrofit.create(RetrofitApiServiceInterface::class.java)
     }
 
     fun configureOkHttpClientForDebuggingIfAllowed(

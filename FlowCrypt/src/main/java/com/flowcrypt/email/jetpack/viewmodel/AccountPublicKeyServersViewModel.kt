@@ -14,8 +14,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.retrofit.ApiRepository
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -34,7 +33,6 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
-  private val apiRepository: ApiRepository = FlowcryptApiRepository()
   val accountKeysInfoLiveData = MediatorLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
   private val initLiveData = activeAccountLiveData.switchMap { accountEntity ->
     liveData {
@@ -99,7 +97,7 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
 
         for (email in emails) {
           val normalizedEmail = email.lowercase()
-          val pubResponseResult = apiRepository.pubLookup(
+          val pubResponseResult = ApiClientRepository.PubLookup.fetchPubKey(
             context = getApplication(),
             email = normalizedEmail,
             clientConfiguration = accountEntity.clientConfiguration

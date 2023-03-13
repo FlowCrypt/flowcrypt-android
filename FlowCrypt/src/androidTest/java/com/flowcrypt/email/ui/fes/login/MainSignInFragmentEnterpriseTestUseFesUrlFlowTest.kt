@@ -61,8 +61,8 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
             return handleClientConfigurationAPI()
           }
 
-          request.path.equals("/account/get") -> {
-            isApiAccountUsed = true
+          request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
+            isSharedTenantFesUsed = true
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
           }
         }
@@ -80,16 +80,16 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  private var isFesUrlUsed = false
-  private var isApiAccountUsed = false
+  private var isCustomFesUrlUsed = false
+  private var isSharedTenantFesUsed = false
 
   @Test
-  fun testCallFesUrlToGetClientConfigurationForEnterpriseUser() {
-    isFesUrlUsed = false
+  fun testCallCustomFesUrlToGetClientConfiguration() {
+    isCustomFesUrlUsed = false
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_ENTERPRISE_USER))
 
-    assertEquals(false, isApiAccountUsed)
-    assertEquals(true, isFesUrlUsed)
+    assertEquals(false, isSharedTenantFesUsed)
+    assertEquals(true, isCustomFesUrlUsed)
 
     //the mock web server should return error for https://fes.$domain/api/
     isDialogWithTextDisplayed(
@@ -105,7 +105,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
   }
 
   private fun handleClientConfigurationAPI(): MockResponse {
-    isFesUrlUsed = true
+    isCustomFesUrlUsed = true
     return MockResponse().setResponseCode(HttpURLConnection.HTTP_UNAUTHORIZED)
   }
 

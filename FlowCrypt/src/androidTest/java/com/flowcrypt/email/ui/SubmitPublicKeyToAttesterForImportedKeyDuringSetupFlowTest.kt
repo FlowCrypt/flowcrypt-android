@@ -173,8 +173,10 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
             request.path == "api" -> MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setBody(gson.toJson(FES_SUCCESS_RESPONSE))
 
-            request.path == "/account/get" -> MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(gson.toJson(CLIENT_CONFIGURATION_RESPONSE))
+            request.path.equals("/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") -> {
+              MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody(gson.toJson(CLIENT_CONFIGURATION_RESPONSE))
+            }
 
             request.requestUrl?.encodedPath == "/gmail/v1/users/me/messages"
                 && request.requestUrl?.queryParameter("q")

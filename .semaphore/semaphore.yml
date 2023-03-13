@@ -30,6 +30,7 @@ global_job_config:
       - echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
       - echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
       - echo "address=/flowcrypt.test/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
+      - echo "address=/wrongssl.test/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
       - echo "address=/localhost/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
       - sudo systemctl restart dnsmasq
       # print some debug info
@@ -75,7 +76,7 @@ blocks:
             # print Java version
             - java -version
             # compile project
-            - ./gradlew --console=plain assembleDevTestDebug
+            - ./gradlew --console=plain assembleConsumerUiTests
       epilogue:
         on_pass:
           commands:
@@ -144,6 +145,19 @@ blocks:
             - adb logcat --buffer=crash > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
+
+        - name: 'Instrumentation tests(enterprise)'
+          execution_time_limit:
+            minutes: 45
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            #wait until ready
+            - ./script/ci-wait-for-emulator.sh
+            # Run logging
+            - adb logcat --buffer=crash > ~/logcat_log.txt &
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-enterprise.sh
       epilogue:
         always:
           commands:

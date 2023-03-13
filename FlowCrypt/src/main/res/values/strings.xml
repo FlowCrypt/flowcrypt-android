@@ -580,4 +580,8 @@
     <string name="need_post_notification_permission">We need permission to show notifications about new messages</string>
     <string name="ask">Ask</string>
     <string name="password_should_fit_all_requirements">Password should fit all requirements</string>
+    <string name="fes_server_has_wrong_settings">Your FES server has the wrong settings. Please ask your help desk for help.</string>
+    <string name="check_fes_error_with_retry">An error occurred.\nDetails:%1$s\n\nPlease try again.</string>
+    <string name="fes_server_error">Server error:%1$s</string>
+    <string name="enterprise_does_not_support_pub_domains">This version of %1$s cannot be used on %2$s domain. If you installed this app by accident, please install non-enterprise FlowCrypt app.</string>
 </resources>

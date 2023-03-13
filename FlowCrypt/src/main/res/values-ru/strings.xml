@@ -494,6 +494,10 @@
     <string name="need_post_notification_permission">Нам нужно разрешение, чтобы показывать уведомления о новых сообщениях</string>
     <string name="ask">Спросить</string>
     <string name="password_should_fit_all_requirements">Пароль должен соответствовать всем требованиям</string>
+    <string name="fes_server_has_wrong_settings">Ваш FES сервер настроен неверно. Пожалуйста, обратитесь в службу поддержки.</string>
+    <string name="check_fes_error_with_retry">Произошла ошибка.\nПодробности:%1$s\n\nПожалуйста, попробуйте еще раз.</string>
+    <string name="fes_server_error">Ошибка сервера:%1$s</string>
+    <string name="enterprise_does_not_support_pub_domains">Эта версия %1$s не может быть использована с доменом %2$s. Если Вы установили это приложение случайно, пожалуйста, установите некорпоративную версию %1$s.</string>
     <plurals name="found_backup_of_your_account_key">
         <item quantity="one">Найдена %1$d резервная копия Вашего ключа</item>
         <item quantity="few">Найдено %1$d резервные копии Вашего ключа</item>

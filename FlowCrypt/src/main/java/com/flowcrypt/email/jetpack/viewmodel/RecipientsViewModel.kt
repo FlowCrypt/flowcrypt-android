@@ -14,8 +14,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.ApiRepository
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -45,7 +44,6 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
-  private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
   private val controlledRunnerForPubKeysFromServer = ControlledRunner<Result<PubResponse?>>()
 
@@ -263,7 +261,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       val activeAccount = getActiveAccountSuspend()
       lookUpPubKeysMutableStateFlow.value =
         controlledRunnerForPubKeysFromServer.cancelPreviousThenRun {
-          return@cancelPreviousThenRun apiRepository.pubLookup(
+          return@cancelPreviousThenRun ApiClientRepository.PubLookup.fetchPubKey(
             context = getApplication(),
             email = email,
             clientConfiguration = activeAccount?.clientConfiguration
@@ -306,7 +304,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       List<PgpKeyDetails>? = withContext(Dispatchers.IO) {
     try {
       val activeAccount = getActiveAccountSuspend()
-      val response = apiRepository.pubLookup(
+      val response = ApiClientRepository.PubLookup.fetchPubKey(
         context = getApplication(),
         email = email,
         clientConfiguration = activeAccount?.clientConfiguration

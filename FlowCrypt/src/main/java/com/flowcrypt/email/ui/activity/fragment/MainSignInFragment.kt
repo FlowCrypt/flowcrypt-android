@@ -42,7 +42,7 @@ import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.jetpack.viewmodel.CheckFesServerViewModel
+import com.flowcrypt.email.jetpack.viewmodel.CheckCustomerUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.model.KeyImportDetails
@@ -81,11 +81,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     FragmentMainSignInBinding.inflate(inflater, container, false)
 
   private lateinit var client: GoogleSignInClient
-  private var googleSignInAccount: GoogleSignInAccount? = null
-  private var clientConfiguration: ClientConfiguration? = null
-  private var fesUrl: String? = null
+  private var cachedGoogleSignInAccount: GoogleSignInAccount? = null
+  private var cachedClientConfiguration: ClientConfiguration? = null
+  private var cachedBaseFesUrlPath: String? = null
 
-  private val checkFesServerViewModel: CheckFesServerViewModel by viewModels()
+  private val checkCustomerUrlFesServerViewModel: CheckCustomerUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
   private var useStartTlsForSmtp = false
@@ -136,11 +136,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   override fun getTempAccount(): AccountEntity? {
-    return googleSignInAccount?.let {
+    val sharedTenantFesBaseUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
+    return cachedGoogleSignInAccount?.let {
       AccountEntity(
         googleSignInAccount = it,
-        clientConfiguration = clientConfiguration,
-        useFES = fesUrl?.isNotEmpty() == true,
+        clientConfiguration = cachedClientConfiguration,
+        useCustomerFesUrl = cachedBaseFesUrlPath?.isNotEmpty() == true &&
+            cachedBaseFesUrlPath != sharedTenantFesBaseUrlPath,
         useStartTlsForSmtp = useStartTlsForSmtp,
       )
     }
@@ -169,11 +171,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun initViews(view: View) {
     view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
+      cachedBaseFesUrlPath = null
+      cachedClientConfiguration = null
       importCandidates.clear()
       signInWithGmail()
     }
 
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
+      cachedBaseFesUrlPath = null
+      cachedClientConfiguration = null
       navController?.navigateSafe(
         R.id.mainSignInFragment,
         MainSignInFragmentDirections.actionMainSignInFragmentToAddOtherAccountFragment()
@@ -204,7 +210,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun signInWithGmail() {
-    googleSignInAccount = null
+    cachedGoogleSignInAccount = null
     client.signOut()
     forActivityResultSignIn.launch(client.signInIntent)
   }
@@ -212,17 +218,30 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {
     try {
       if (task.isSuccessful) {
-        googleSignInAccount = task.getResult(ApiException::class.java)
+        cachedGoogleSignInAccount = task.getResult(ApiException::class.java)
 
-        val account = googleSignInAccount?.account?.name ?: return
+        val account = cachedGoogleSignInAccount?.account?.name ?: return
+        cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
         val publicEmailDomains = EmailUtil.getPublicEmailDomains()
-        if (EmailUtil.getDomain(account) in publicEmailDomains) {
-          onSignSuccess(googleSignInAccount)
+        val domain = EmailUtil.getDomain(account)
+        if (domain in publicEmailDomains) {
+          if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+            cachedGoogleSignInAccount = null
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = getString(
+                R.string.enterprise_does_not_support_pub_domains,
+                getString(R.string.app_name),
+                domain
+              ),
+              isCancelable = true
+            )
+          } else {
+            onSignSuccess(cachedGoogleSignInAccount)
+          }
         } else {
-          clientConfiguration = null
-          fesUrl = null
-          checkFesServerViewModel.checkFesServerAvailability(account)
+          checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
       } else {
         val error = task.exception
@@ -253,7 +272,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
     if (existedAccount == null) {
       getTempAccount()?.let {
-        if (clientConfiguration?.flags?.firstOrNull { rule -> rule == ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP } != null) {
+        if (cachedClientConfiguration?.flags?.firstOrNull { rule -> rule == ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP } != null) {
           requireContext().startService(
             Intent(requireContext(), CheckClipboardToFindKeyService::class.java)
           )
@@ -297,7 +316,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
             if (original is MailConnectException && !useStartTlsForSmtp) {
               useStartTlsForSmtp = true
-              onSignSuccess(googleSignInAccount)
+              onSignSuccess(cachedGoogleSignInAccount)
               return@setFragmentResultListener
             }
 
@@ -399,20 +418,25 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          clientConfiguration = null
-          fesUrl = null
-          val account = googleSignInAccount?.account?.name ?: return@setFragmentResultListener
-          checkFesServerViewModel.checkFesServerAvailability(account)
+          val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          clientConfigurationViewModel.fetchClientConfiguration(idToken = idToken, fesUrl = fesUrl)
+          val idToken = cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListener
+          val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          val domain = EmailUtil.getDomain(account)
+          val baseFesUrlPath = cachedBaseFesUrlPath ?: return@setFragmentResultListener
+          clientConfigurationViewModel.fetchClientConfiguration(
+            idToken = idToken,
+            baseFesUrlPath = baseFesUrlPath,
+            domain = domain
+          )
         }
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val idToken = googleSignInAccount?.idToken ?: return@setFragmentResultListener
-          clientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
+          val idToken = cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListener
+          cachedClientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
         }
       }
     }
@@ -453,7 +477,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {
-          this.googleSignInAccount = null
+          this.cachedGoogleSignInAccount = null
           showContent()
         }
       }
@@ -506,7 +530,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun initCheckFesServerViewModel() {
-    checkFesServerViewModel.checkFesServerLiveData.observe(viewLifecycleOwner) {
+    checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@MainSignInFragment)
@@ -515,25 +539,32 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           if (it.data?.service in arrayOf("enterprise-server", "external-service")) {
-            googleSignInAccount?.account?.name?.let { account ->
+            cachedGoogleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
-              val idToken = googleSignInAccount?.idToken ?: return@let
-              fesUrl = GeneralUtil.generateFesUrl(domain)
+              val idToken = cachedGoogleSignInAccount?.idToken ?: return@let
+              val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
+                useCustomerFesUrl = true,
+                domain = domain
+              )
+              cachedBaseFesUrlPath = baseFesUrlPath
               clientConfigurationViewModel.fetchClientConfiguration(
                 idToken = idToken,
-                fesUrl = fesUrl
+                baseFesUrlPath = baseFesUrlPath,
+                domain = domain
               )
             }
           } else {
-            continueBasedOnFlavorSettings()
+            continueBasedOnFlavorSettings(getString(R.string.fes_server_has_wrong_settings))
           }
 
-          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value =
+            Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
 
         Result.Status.ERROR -> {
-          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value =
+            Result.none()
           showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
@@ -542,7 +573,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           when (it.exception) {
             is CommonConnectionException -> {
               if (it.exception.hasInternetAccess == true) {
-                continueBasedOnFlavorSettings()
+                continueBasedOnFlavorSettings(
+                  getString(
+                    R.string.check_fes_error_with_retry,
+                    it.exceptionMsg
+                  )
+                )
               } else {
                 showDialogWithRetryButton(
                   getString(R.string.no_connection_or_server_is_not_reachable),
@@ -558,7 +594,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
                 }
 
                 else -> {
-                  continueBasedOnFlavorSettings()
+                  continueBasedOnFlavorSettings(
+                    getString(
+                      R.string.fes_server_error,
+                      it.exceptionMsg
+                    )
+                  )
                 }
               }
             }
@@ -576,7 +617,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
           }
 
-          checkFesServerViewModel.checkFesServerLiveData.value = Result.none()
+          checkCustomerUrlFesServerViewModel.checkFesServerAvailabilityLiveData.value =
+            Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
         else -> {}
@@ -584,24 +626,29 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun continueBasedOnFlavorSettings() {
+  private fun continueBasedOnFlavorSettings(errorMsg: String) {
     if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-      /*
-       here we actually need to decide if we should show error or proceed with
-       regular setup flow based on exact customers that will skip to regular setup flow,
-       and the rest will be shown error.
-      */
-      continueWithRegularFlow()
+      showDialogWithRetryButton(
+        errorMsg,
+        REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
+      )
     } else {
       continueWithRegularFlow()
     }
   }
 
   private fun continueWithRegularFlow() {
-    val idToken = googleSignInAccount?.idToken
+    val idToken = cachedGoogleSignInAccount?.idToken
+    val account = cachedGoogleSignInAccount?.account?.name
+    val baseFesUrlPath = cachedBaseFesUrlPath
 
-    if (idToken != null) {
-      clientConfigurationViewModel.fetchClientConfiguration(idToken = idToken)
+    if (idToken != null && account != null && baseFesUrlPath != null) {
+      val domain = EmailUtil.getDomain(account)
+      clientConfigurationViewModel.fetchClientConfiguration(
+        idToken = idToken,
+        baseFesUrlPath = baseFesUrlPath,
+        domain = domain
+      )
     } else {
       showContent()
       askUserToReLogin()
@@ -617,11 +664,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         Result.Status.SUCCESS -> {
-          val idToken = googleSignInAccount?.idToken
-          clientConfiguration = it.data?.clientConfiguration
+          val idToken = cachedGoogleSignInAccount?.idToken
+          cachedClientConfiguration = it.data?.clientConfiguration
 
           if (idToken != null) {
-            clientConfiguration?.let { fetchedClientConfiguration ->
+            cachedClientConfiguration?.let { fetchedClientConfiguration ->
               ekmViewModel.fetchPrvKeys(
                 fetchedClientConfiguration,
                 idToken
@@ -673,7 +720,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           showContent()
           when (it.exception) {
             is EkmNotSupportedException -> {
-              onSignSuccess(googleSignInAccount)
+              onSignSuccess(cachedGoogleSignInAccount)
             }
 
             is UnsupportedClientConfigurationException -> {

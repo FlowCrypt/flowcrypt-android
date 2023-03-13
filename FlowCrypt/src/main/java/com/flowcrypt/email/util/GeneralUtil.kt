@@ -34,7 +34,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.RetrofitApiServiceInterface
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
@@ -53,6 +53,7 @@ import java.io.File
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
+import java.net.URL
 import java.net.UnknownHostException
 import java.nio.charset.StandardCharsets
 import java.util.Locale
@@ -78,11 +79,11 @@ class GeneralUtil {
     }
 
     /**
-     * This method checks is it a debug build.
+     * This method checks is it a debug or uiTests build.
      *
-     * @return true - if the current build is a debug build.
+     * @return true - if the current build is a debug or uiTests build.
      */
-    fun isDebugBuild(): Boolean = "debug" == BuildConfig.BUILD_TYPE
+    fun isDebugBuild(): Boolean = BuildConfig.BUILD_TYPE in listOf("debug", "uiTests")
 
     /**
      * Checking for an Internet connection.
@@ -114,9 +115,9 @@ class GeneralUtil {
         .baseUrl(url)
         .client(okHttpClient)
         .build()
-      val apiService = retrofit.create(ApiService::class.java)
+      val retrofitApiService = retrofit.create(RetrofitApiServiceInterface::class.java)
       try {
-        apiService.isAvailable(url)
+        retrofitApiService.isAvailable(url)
         return@withContext true
       } catch (e: Exception) {
         return@withContext false
@@ -424,10 +425,17 @@ class GeneralUtil {
     }
 
     /**
-     * Generate a FES url.
+     * Generate a base FES URL path.
      */
-    fun generateFesUrl(domain: String): String {
-      return "https://fes.$domain/api/v1/client-configuration?domain=$domain"
+    fun genBaseFesUrlPath(useCustomerFesUrl: Boolean, domain: String? = null): String {
+      return if (useCustomerFesUrl && domain != null) {
+        "fes.$domain"
+        //for example fes.customer-domain.com
+      } else {
+        val url = URL(BuildConfig.SHARED_TENANT_FES_URL)
+        (url.authority + url.path).replace("/$".toRegex(), "")
+        //flowcrypt.com/shared-tenant-fes
+      }
     }
 
     /**

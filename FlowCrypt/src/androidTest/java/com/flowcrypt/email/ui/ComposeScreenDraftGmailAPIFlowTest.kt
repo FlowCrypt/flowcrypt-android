@@ -75,7 +75,7 @@ class ComposeScreenDraftGmailAPIFlowTest : BaseComposeScreenTest() {
         keyManagerUrl = "https://flowcrypt.test/",
       ),
       useAPI = true,
-      useFES = true
+      useCustomerFesUrl = true
     )
 
   override val addAccountToDatabaseRule: AddAccountToDatabaseRule =

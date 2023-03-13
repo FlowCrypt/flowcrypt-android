@@ -79,7 +79,8 @@ class AddNewAccountEnterpriseTest : BaseSignTest() {
         override fun dispatch(request: RecordedRequest): MockResponse {
           val gson =
             ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-          if (request.path.equals("/account/get")) {
+
+          if (request.path.equals("/api/v1/client-configuration?domain=flowcrypt.test")) {
             when (extractEmailFromRecordedRequest(request)) {
               EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(
                 HttpURLConnection.HTTP_OK

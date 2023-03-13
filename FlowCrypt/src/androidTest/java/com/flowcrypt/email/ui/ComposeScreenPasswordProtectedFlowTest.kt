@@ -51,7 +51,9 @@ class ComposeScreenPasswordProtectedFlowTest : BaseComposeScreenTest() {
   private val temporaryFolderRule = TemporaryFolder()
 
   override val addAccountToDatabaseRule: AddAccountToDatabaseRule
-    get() = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(useFES = true))
+    get() = AddAccountToDatabaseRule(
+      AccountDaoManager.getDefaultAccountDao().copy(useCustomerFesUrl = true)
+    )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

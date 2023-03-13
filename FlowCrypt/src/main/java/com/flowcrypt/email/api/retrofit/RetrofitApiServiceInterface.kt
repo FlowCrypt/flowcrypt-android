@@ -42,14 +42,14 @@ import retrofit2.http.Url
  *
  * @author Denys Bondarenko
  */
-interface ApiService {
+interface RetrofitApiServiceInterface {
   /**
    * This method create a [Response] object for the API "https://flowcrypt.com/attester/welcome-message"
    */
   @POST("welcome-message")
-  suspend fun postWelcomeMessage(
+  suspend fun attesterPostWelcomeMessage(
+    @Header("Authorization") authorization: String,
     @Body body: WelcomeMessageModel,
-    @Header("Authorization") authorization: String
   ): Response<WelcomeMessageResponse>
 
   /**
@@ -58,8 +58,10 @@ interface ApiService {
    * @param body POJO model for requests
    * @return [<]
    */
-  @POST(BuildConfig.API_URL + "help/feedback")
-  suspend fun postHelpFeedback(@Body body: PostHelpFeedbackModel): Response<PostHelpFeedbackResponse>
+  //@POST(BuildConfig.SHARED_TENANT_FES_URL + "help/feedback")
+  //ref https://github.com/FlowCrypt/flowcrypt-android/pull/2171#discussion_r1084124018
+  @POST(BuildConfig.BACKEND_URL + "help/feedback")
+  suspend fun backendPostHelpFeedback(@Body body: PostHelpFeedbackModel): Response<PostHelpFeedbackResponse>
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/pub"
@@ -67,7 +69,7 @@ interface ApiService {
    * @return [<]
    */
   @GET("pub/{keyIdOrEmailOrFingerprint}")
-  suspend fun getPubFromAttester(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
+  suspend fun attesterGetPubKey(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
 
   /**
    * Get RAW pub key(s) using an advanced WKD url
@@ -110,21 +112,14 @@ interface ApiService {
   suspend fun checkPolicyForWkdDirect(@Path("directHost") directHost: String): Response<ResponseBody>
 
   /**
-   * This method calls "https://flowcrypt.com/api/account/get"
+   * Get client configuration
    */
-  @POST(BuildConfig.API_URL + "account/get")
-  suspend fun getClientConfigurationFromFlowCryptComBackend(
+  @GET("https://{baseFesUrlPath}/api/v1/client-configuration")
+  suspend fun fesGetClientConfiguration(
     @Header("Authorization") authorization: String,
-    @Body body: Any = Any(),
+    @Path("baseFesUrlPath", encoded = true) baseFesUrlPath: String,
+    @Query("domain") domain: String
   ): Response<ClientConfigurationResponse>
-
-  /**
-   * This method calls "https://fes.$domain/api/v1/client-configuration?domain=$domain"
-   *
-   * @param fesUrl URL of FES
-   */
-  @GET
-  suspend fun getClientConfigurationFromFes(@Url fesUrl: String): Response<ClientConfigurationResponse>
 
   /**
    * Set or replace public key with idToken as an auth mechanism
@@ -132,10 +127,10 @@ interface ApiService {
    * Can only be used for primary email because idToken does not contain info about aliases
    */
   @POST("pub/{email}")
-  suspend fun submitPrimaryEmailPubKey(
+  suspend fun attesterSubmitPrimaryEmailPubKey(
+    @Header("Authorization") authorization: String,
     @Path("email") email: String,
     @Body pubKey: String,
-    @Header("Authorization") authorization: String
   ): Response<SubmitPubKeyResponse>
 
   /**
@@ -144,14 +139,14 @@ interface ApiService {
    * Can also be used for aliases
    */
   @POST("pub/{email}")
-  suspend fun submitPubKeyWithConditionalEmailVerification(
+  suspend fun attesterSubmitPubKeyWithConditionalEmailVerification(
     @Path("email") email: String,
     @Body pubKey: String
   ): Response<SubmitPubKeyResponse>
 
   @FormUrlEncoded
   @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)
-  suspend fun getMicrosoftOAuth2Token(
+  suspend fun oAuthGetMicrosoftOAuth2Token(
     @Field("code") code: String,
     @Field("scope") scope: String,
     @Field("code_verifier") codeVerifier: String,
@@ -162,7 +157,7 @@ interface ApiService {
 
   @FormUrlEncoded
   @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)
-  fun refreshMicrosoftOAuth2Token(
+  fun oAuthRefreshMicrosoftOAuth2Token(
     @Field("refresh_token") code: String,
     @Field("scope") scope: String = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
     @Field("client_id") clientId: String = OAuth2Helper.MICROSOFT_AZURE_APP_ID,
@@ -170,13 +165,13 @@ interface ApiService {
   ): Call<MicrosoftOAuth2TokenResponse>
 
   @GET
-  suspend fun getOpenIdConfiguration(@Url url: String): Response<JsonObject>
+  suspend fun oAuthGetOpenIdConfiguration(@Url url: String): Response<JsonObject>
 
   /**
    * Get private keys via "<ekm>/v1/keys/private"
    */
   @GET
-  suspend fun getPrivateKeysViaEkm(
+  suspend fun ekmGetPrivateKeys(
     @Url ekmUrl: String,
     @Header("Authorization") authorization: String
   ): Response<EkmPrivateKeysResponse>
@@ -185,7 +180,7 @@ interface ApiService {
    * This method check if "https://fes.$domain/api/" is available for interactions
    */
   @GET("https://fes.{domain}/api/")
-  suspend fun checkFes(@Path("domain") domain: String): Response<FesServerResponse>
+  suspend fun fesCheckIfServerIsAvailable(@Path("domain") domain: String): Response<FesServerResponse>
 
   /**
    * This method check if "url" is available for interactions
@@ -196,21 +191,21 @@ interface ApiService {
   /**
    * This method grabs a reply token before uploading a password protected message
    */
-  @POST("https://fes.{domain}/api/v1/message/new-reply-token")
-  suspend fun getReplyTokenForPasswordProtectedMsg(
-    @Path("domain") domain: String,
-    @Header("Authorization") authorization: String
+  @POST("https://{baseFesUrlPath}/api/v1/message/new-reply-token")
+  suspend fun fesGetReplyTokenForPasswordProtectedMsg(
+    @Header("Authorization") authorization: String,
+    @Path("baseFesUrlPath", encoded = true) baseFesUrlPath: String,
   ): Response<MessageReplyTokenResponse>
 
   /**
    * This method uploads a password protected message to a web portal
    */
   @Multipart
-  @POST("https://fes.{domain}/api/v1/message")
-  suspend fun uploadPasswordProtectedMsgToWebPortal(
-    @Path("domain") domain: String,
+  @POST("https://{baseFesUrlPath}/api/v1/message")
+  suspend fun fesUploadPasswordProtectedMsgToWebPortal(
     @Header("Authorization") authorization: String,
+    @Path("baseFesUrlPath", encoded = true) baseFesUrlPath: String,
     @Part("details") details: RequestBody,
-    @Part content: MultipartBody.Part
+    @Part content: MultipartBody.Part,
   ): Response<MessageUploadResponse>
 }

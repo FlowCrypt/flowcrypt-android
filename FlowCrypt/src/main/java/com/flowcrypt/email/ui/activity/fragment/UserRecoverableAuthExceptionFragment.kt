@@ -124,7 +124,6 @@ class UserRecoverableAuthExceptionFragment :
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
             oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
-              requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
               provider = OAuth2Helper.Provider.MICROSOFT
             )
           }
@@ -232,9 +231,5 @@ class UserRecoverableAuthExceptionFragment :
         }
       }
     }
-  }
-
-  companion object {
-    private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
   }
 }

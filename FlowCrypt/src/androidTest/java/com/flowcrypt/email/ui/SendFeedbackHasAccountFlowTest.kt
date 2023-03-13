@@ -70,7 +70,7 @@ class SendFeedbackHasAccountFlowTest : BaseFeedbackFragmentTest() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(getTargetContext()).gson
 
-        if (request.path?.startsWith("/help/feedback") == true) {
+        if (request.path?.startsWith("/backend/help/feedback") == true) {
           return handlePostFeedbackRequest(gson)
         }
 

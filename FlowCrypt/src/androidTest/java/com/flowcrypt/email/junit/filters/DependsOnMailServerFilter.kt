@@ -6,6 +6,7 @@
 package com.flowcrypt.email.junit.filters
 
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.EnterpriseTest
 import org.junit.runner.Description
 
 /**
@@ -13,9 +14,11 @@ import org.junit.runner.Description
  */
 class DependsOnMailServerFilter : ReadyForCIFilter() {
   override fun evaluateTest(description: Description?): Boolean {
-    val annotationClass = DependsOnMailServer::class.java
+    val annotationClassDependsOnMailServer = DependsOnMailServer::class.java
+    val annotationClassEnterpriseTest = EnterpriseTest::class.java
     return super.evaluateTest(description)
-        && isAnnotationPresentAtClassOrMethod(description, annotationClass)
+        && isAnnotationPresentAtClassOrMethod(description, annotationClassDependsOnMailServer)
+        && !isAnnotationPresentAtClassOrMethod(description, annotationClassEnterpriseTest)
   }
 
   override fun describe() = "Filter tests that depend on an email server"

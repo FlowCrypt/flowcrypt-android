@@ -20,8 +20,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
-import com.flowcrypt.email.api.retrofit.ApiRepository
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.request.model.WelcomeMessageModel
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -57,7 +56,6 @@ import org.pgpainless.util.Passphrase
  */
 class PrivateKeysViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
-  private val apiRepository: ApiRepository = FlowcryptApiRepository()
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
@@ -557,15 +555,15 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     isSilent: Boolean = true,
   ): Boolean = withContext(Dispatchers.IO) {
     val submitPubKeyResult = if (idToken != null) {
-      apiRepository.submitPrimaryEmailPubKey(
+      ApiClientRepository.Attester.submitPrimaryEmailPubKey(
         context = getApplication(),
+        idToken = idToken,
         email = accountEntity.email,
         pubKey = keyDetails.publicKey,
-        idToken = idToken,
         clientConfiguration = accountEntity.clientConfiguration,
       )
     } else {
-      apiRepository.submitPubKeyWithConditionalEmailVerification(
+      ApiClientRepository.Attester.submitPubKeyWithConditionalEmailVerification(
         context = getApplication(),
         email = accountEntity.email,
         pubKey = keyDetails.publicKey,
@@ -623,7 +621,11 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     withContext(Dispatchers.IO) {
       return@withContext try {
         val model = WelcomeMessageModel(accountEntity.email, keyDetails.publicKey)
-        val testWelcomeResult = apiRepository.postWelcomeMessage(getApplication(), model, idToken)
+        val testWelcomeResult = ApiClientRepository.Attester.postWelcomeMessage(
+          context = getApplication(),
+          idToken = idToken,
+          model = model
+        )
         when (testWelcomeResult.status) {
           Result.Status.SUCCESS -> {
             testWelcomeResult.data?.apiError == null

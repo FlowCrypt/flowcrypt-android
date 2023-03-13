@@ -87,7 +87,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 34
+    const val DB_VERSION = 35
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1163,6 +1163,59 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_34_35 = object : FlowCryptMigration(34, 35) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //create temp table with existing content
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS accounts_temp AS SELECT * FROM accounts;")
+        //drop old table
+        database.execSQL("DROP TABLE IF EXISTS accounts;")
+        //create a new table 'accounts' with the renamed field 'useFES' to 'useCustomerFesUrl'
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `accounts` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT," +
+              " `email` TEXT NOT NULL," +
+              " `account_type` TEXT DEFAULT NULL," +
+              " `display_name` TEXT DEFAULT NULL," +
+              " `given_name` TEXT DEFAULT NULL," +
+              " `family_name` TEXT DEFAULT NULL," +
+              " `photo_url` TEXT DEFAULT NULL," +
+              " `is_enabled` INTEGER DEFAULT 1," +
+              " `is_active` INTEGER DEFAULT 0," +
+              " `username` TEXT NOT NULL," +
+              " `password` TEXT NOT NULL," +
+              " `imap_server` TEXT NOT NULL," +
+              " `imap_port` INTEGER DEFAULT 143," +
+              " `imap_use_ssl_tls` INTEGER DEFAULT 0," +
+              " `imap_use_starttls` INTEGER DEFAULT 0," +
+              " `imap_auth_mechanisms` TEXT," +
+              " `smtp_server` TEXT NOT NULL," +
+              " `smtp_port` INTEGER DEFAULT 25," +
+              " `smtp_use_ssl_tls` INTEGER DEFAULT 0," +
+              " `smtp_use_starttls` INTEGER DEFAULT 0," +
+              " `smtp_auth_mechanisms` TEXT," +
+              " `smtp_use_custom_sign` INTEGER DEFAULT 0," +
+              " `smtp_username` TEXT DEFAULT NULL," +
+              " `smtp_password` TEXT DEFAULT NULL," +
+              " `contacts_loaded` INTEGER DEFAULT 0," +
+              " `show_only_encrypted` INTEGER DEFAULT 0," +
+              " `client_configuration` TEXT DEFAULT NULL," +
+              " `use_api` INTEGER NOT NULL DEFAULT 0," +
+              " `use_customer_fes_url` INTEGER NOT NULL DEFAULT 0)"
+
+        )
+        //create indices for new table
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_in_accounts`" +
+              " ON `accounts` (`email`, `account_type`);"
+        )
+        //fill new accounts table with existing data.
+        database.execSQL("INSERT INTO accounts SELECT * FROM accounts_temp;")
+        //drop temp table
+        database.execSQL("DROP TABLE IF EXISTS accounts_temp;")
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1211,6 +1264,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_31_32,
           MIGRATION_32_33,
           MIGRATION_33_34,
+          MIGRATION_34_35,
         ).build()
         INSTANCE = instance
         return instance

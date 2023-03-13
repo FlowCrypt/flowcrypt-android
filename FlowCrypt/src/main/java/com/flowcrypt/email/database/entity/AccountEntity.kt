@@ -72,7 +72,10 @@ data class AccountEntity constructor(
     defaultValue = "NULL"
   ) val clientConfiguration: ClientConfiguration? = null,
   @ColumnInfo(name = "use_api", defaultValue = "0") val useAPI: Boolean = false,
-  @ColumnInfo(name = "use_fes", defaultValue = "0") val useFES: Boolean = false
+  @ColumnInfo(
+    name = "use_customer_fes_url",
+    defaultValue = "0"
+  ) val useCustomerFesUrl: Boolean = false
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -92,7 +95,7 @@ data class AccountEntity constructor(
   constructor(
     googleSignInAccount: GoogleSignInAccount,
     clientConfiguration: ClientConfiguration? = null,
-    useFES: Boolean,
+    useCustomerFesUrl: Boolean,
     useStartTlsForSmtp: Boolean = false,
   ) : this(
     email = requireNotNull(googleSignInAccount.email).lowercase(),
@@ -126,7 +129,7 @@ data class AccountEntity constructor(
     showOnlyEncrypted = false,
     clientConfiguration = clientConfiguration,
     useAPI = FlavorSettings.isGMailAPIEnabled(),
-    useFES = useFES
+    useCustomerFesUrl = useCustomerFesUrl
   )
 
   constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :
@@ -159,7 +162,7 @@ data class AccountEntity constructor(
         showOnlyEncrypted = false,
         clientConfiguration = clientConfiguration,
         useAPI = false,
-        useFES = false
+        useCustomerFesUrl = false
       )
 
   constructor(email: String) :

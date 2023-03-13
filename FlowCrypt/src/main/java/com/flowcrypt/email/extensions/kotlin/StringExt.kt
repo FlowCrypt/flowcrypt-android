@@ -115,21 +115,11 @@ fun String.decodeFcHtmlAttr(): JSONObject? {
 
 fun String.decodeBase64Url(): String {
   return this.replace('+', '-').replace('_', '/').decodeBase64()
-    .joinToString { it.toUrlHex() }.decodeUriComponent()
+    .joinToString { it.toUrlHex() }.urlDecoded()
 }
 
 fun String.decodeBase64(): ByteArray {
   return Base64.getDecoder().decode(this)
-}
-
-// see https://stackoverflow.com/a/611117/1540501
-fun String.decodeUriComponent(): String {
-  return try {
-    URLDecoder.decode(this, "UTF-8")
-  } catch (e: UnsupportedEncodingException) {
-    // should never happen
-    throw IllegalStateException(e)
-  }
 }
 
 // see https://stackoverflow.com/a/611117/1540501
@@ -161,4 +151,8 @@ fun String.stripTrailing(ch: Char): String {
 
 fun String.isValidEmail(): Boolean {
   return BetterInternetAddress.isValidEmail(this)
+}
+
+fun String.urlDecoded(): String {
+  return URLDecoder.decode(this, StandardCharsets.UTF_8.name())
 }

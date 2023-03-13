@@ -11,7 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.util.GeneralUtil
@@ -20,19 +20,19 @@ import kotlinx.coroutines.launch
 /**
  * @author Denys Bondarenko
  */
-class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val repository = FlowcryptApiRepository()
-  val checkFesServerLiveData: MutableLiveData<Result<FesServerResponse>> =
+class CheckCustomerUrlFesServerViewModel(application: Application) :
+  BaseAndroidViewModel(application) {
+  val checkFesServerAvailabilityLiveData: MutableLiveData<Result<FesServerResponse>> =
     MutableLiveData(Result.none())
 
-  fun checkFesServerAvailability(account: String) {
+  fun checkServerAvailability(account: String) {
     viewModelScope.launch {
       val context: Context = getApplication()
-      checkFesServerLiveData.value =
+      checkFesServerAvailabilityLiveData.value =
         Result.loading(progressMsg = context.getString(R.string.loading))
 
       try {
-        val result = repository.checkFes(
+        val result = ApiClientRepository.FES.checkIfFesIsAvailableAtCustomerFesUrl(
           context = getApplication(),
           domain = EmailUtil.getDomain(account)
         )
@@ -40,7 +40,7 @@ class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(a
         if (result.status == Result.Status.EXCEPTION) {
           val causedException = result.exception
           if (causedException != null) {
-            checkFesServerLiveData.value = Result.exception(
+            checkFesServerAvailabilityLiveData.value = Result.exception(
               GeneralUtil.preProcessException(
                 context = context,
                 causedException = causedException
@@ -50,9 +50,9 @@ class CheckFesServerViewModel(application: Application) : BaseAndroidViewModel(a
           }
         }
 
-        checkFesServerLiveData.value = result
+        checkFesServerAvailabilityLiveData.value = result
       } catch (e: Exception) {
-        checkFesServerLiveData.value = Result.exception(e)
+        checkFesServerAvailabilityLiveData.value = Result.exception(e)
       }
     }
   }

@@ -91,7 +91,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
         ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
       ),
       keyManagerUrl = "https://flowcrypt.test/",
-    ), useAPI = true, useFES = true
+    ), useAPI = true, useCustomerFesUrl = true
   )
 
   final override val addAccountToDatabaseRule: AddAccountToDatabaseRule =

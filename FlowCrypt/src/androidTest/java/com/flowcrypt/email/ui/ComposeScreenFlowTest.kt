@@ -700,7 +700,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
 
-    //because account.useFES == false btnSetWebPortalPassword should not be visible
+    //because account.useCustomerFesUrl == false btnSetWebPortalPassword should not be visible
     onView(withId(R.id.btnSetWebPortalPassword))
       .check(matches(not(isDisplayed())))
   }
@@ -783,7 +783,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
       object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
-          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
             val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
             when {

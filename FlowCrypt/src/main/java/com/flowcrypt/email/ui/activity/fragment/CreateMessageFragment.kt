@@ -1539,7 +1539,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun isPasswordProtectedFunctionalityEnabled(): Boolean {
-    return accountViewModel.activeAccountLiveData.value?.useFES ?: return false
+    return accountViewModel.activeAccountLiveData.value?.useCustomerFesUrl ?: return false
   }
 
   private fun subscribeToSetWebPortalPassword() {

@@ -68,7 +68,7 @@ class MessageDetailsSignatureLookupFlowTest : BaseMessageDetailsFlowTest() {
     val mockWebServerRule =
       FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
-          if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
             when (request.requestUrl?.pathSegments?.lastOrNull()) {
               "denbond7@flowcrypt.test" -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(TestGeneralUtil.readFileFromAssetsAsString("pgp/denbond7@flowcrypt.test_pub_primary.asc"))
