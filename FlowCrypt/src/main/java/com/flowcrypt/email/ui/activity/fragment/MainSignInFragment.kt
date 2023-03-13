@@ -22,6 +22,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -538,7 +539,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         Result.Status.SUCCESS -> {
-          if (it.data?.service in arrayOf("enterprise-server", "external-service")) {
+          if (it.data?.service in ApiClientRepository.FES.ALLOWED_SERVICES) {
             cachedGoogleSignInAccount?.account?.name?.let { account ->
               val domain = EmailUtil.getDomain(account)
               val idToken = cachedGoogleSignInAccount?.idToken ?: return@let
