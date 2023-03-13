@@ -27,12 +27,28 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
   override suspend fun doWork(): Result {
     LogsUtil.d(TAG, "doWork")
     val publicEmailDomains = EmailUtil.getPublicEmailDomains()
-    val account = roomDatabase.accountDao().getActiveAccount() ?: return Result.success()
+    val tempAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return Result.success()
 
-    val domain = EmailUtil.getDomain(account.email)
+    val domain = EmailUtil.getDomain(tempAccount.email)
     if (domain in publicEmailDomains) {
       return Result.success()
     }
+
+    if (!tempAccount.useCustomerFesUrl) {
+      //attempting to call fes.domain.com
+      val result = ApiClientRepository.FES.checkIfFesIsAvailableAtCustomerFesUrl(
+        context = applicationContext,
+        domain = EmailUtil.getDomain(tempAccount.email)
+      )
+
+      if (result.status == Status.SUCCESS &&
+        result.data?.service in ApiClientRepository.FES.ALLOWED_SERVICES
+      ) {
+        roomDatabase.accountDao().updateAccountSuspend(tempAccount.copy(useCustomerFesUrl = true))
+      }
+    }
+
+    val account = roomDatabase.accountDao().getActiveAccountSuspend() ?: return Result.success()
 
     val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
       useCustomerFesUrl = account.useCustomerFesUrl,

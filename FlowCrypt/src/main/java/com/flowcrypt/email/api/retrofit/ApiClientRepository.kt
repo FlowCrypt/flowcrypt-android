@@ -55,6 +55,8 @@ import java.util.concurrent.TimeUnit
  */
 object ApiClientRepository : BaseApiRepository {
   object FES : BaseApiRepository {
+    val ALLOWED_SERVICES = arrayOf("enterprise-server", "external-service")
+
     /**
      * @param context Interface to global information about an application environment.
      * @param baseFesUrlPath A base FES URL path.
