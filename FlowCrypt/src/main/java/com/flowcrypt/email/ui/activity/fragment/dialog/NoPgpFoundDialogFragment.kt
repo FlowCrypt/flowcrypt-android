@@ -31,15 +31,13 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
     super.onCreate(savedInstanceState)
     dialogItems = ArrayList()
 
-    if (args.isProtectingWithPasswordEnabled) {
-      dialogItems.add(
-        DialogItem(
-          iconResourceId = R.drawable.ic_password_protected_gray_48,
-          title = getString(R.string.protect_with_password),
-          id = RESULT_CODE_PROTECT_WITH_PASSWORD
-        )
+    dialogItems.add(
+      DialogItem(
+        iconResourceId = R.drawable.ic_password_protected_gray_48,
+        title = getString(R.string.protect_with_password),
+        id = RESULT_CODE_PROTECT_WITH_PASSWORD
       )
-    }
+    )
 
     dialogItems.add(
       DialogItem(

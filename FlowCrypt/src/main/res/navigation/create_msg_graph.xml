@@ -99,9 +99,5 @@
         <argument
             android:name="isRemoveActionEnabled"
             app:argType="boolean" />
-        <argument
-            android:name="isProtectingWithPasswordEnabled"
-            android:defaultValue="false"
-            app:argType="boolean" />
     </dialog>
 </navigation>
