@@ -239,7 +239,23 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               isCancelable = true
             )
           } else {
-            onSignSuccess(cachedGoogleSignInAccount)
+            val idToken = cachedGoogleSignInAccount?.idToken
+            if (idToken == null) {
+              showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = getString(
+                  R.string.error_occurred_with_details_please_try_again,
+                  "GoogleSignInAccount.idToken == null"
+                ),
+                isCancelable = true
+              )
+            } else {
+              clientConfigurationViewModel.fetchClientConfiguration(
+                idToken = idToken,
+                baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
+                domain = domain
+              )
+            }
           }
         } else {
           checkCustomerUrlFesServerViewModel.checkServerAvailability(account)

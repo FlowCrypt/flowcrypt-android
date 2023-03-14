@@ -575,4 +575,5 @@
         <item quantity="few">Будь ласка надайте ключову фразу для наступних ключів</item>
         <item quantity="many">Будь ласка надайте ключову фразу для наступних ключів</item>
     </plurals>
+    <string name="error_occurred_with_details_please_try_again">Сталася помилка, спробуйте ще раз\n\nДеталі помилки:\n%1$s</string>
 </resources>

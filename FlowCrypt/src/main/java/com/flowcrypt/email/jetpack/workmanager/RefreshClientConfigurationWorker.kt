@@ -12,6 +12,8 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result.Status
@@ -26,19 +28,20 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
   override suspend fun doWork(): Result {
     LogsUtil.d(TAG, "doWork")
-    val publicEmailDomains = EmailUtil.getPublicEmailDomains()
     val tempAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return Result.success()
 
     val domain = EmailUtil.getDomain(tempAccount.email)
-    if (domain in publicEmailDomains) {
+    val isPublicDomain = domain in EmailUtil.getPublicEmailDomains()
+
+    if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE && isPublicDomain) {
       return Result.success()
     }
 
-    if (!tempAccount.useCustomerFesUrl) {
+    if (!tempAccount.useCustomerFesUrl && !isPublicDomain) {
       //attempting to call fes.domain.com
       val result = ApiClientRepository.FES.checkIfFesIsAvailableAtCustomerFesUrl(
         context = applicationContext,
-        domain = EmailUtil.getDomain(tempAccount.email)
+        domain = domain
       )
 
       if (result.status == Status.SUCCESS &&
@@ -51,7 +54,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
     val account = roomDatabase.accountDao().getActiveAccountSuspend() ?: return Result.success()
 
     val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
-      useCustomerFesUrl = account.useCustomerFesUrl,
+      useCustomerFesUrl = if (isPublicDomain) false else account.useCustomerFesUrl,
       domain = domain
     )
     try {
