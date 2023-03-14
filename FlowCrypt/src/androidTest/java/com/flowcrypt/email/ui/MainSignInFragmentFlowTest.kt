@@ -90,6 +90,8 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
               listOf(
                 "flowcrypt.test",
                 "flowcrypt.example",
+                "gmail.com",
+                "googlemail.com",
               ) -> {
             val account = extractEmailFromRecordedRequest(request)
             return handleClientConfigurationAPIForSharedTenantFes(account, gson)
@@ -495,6 +497,11 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
           )
         )
       }
+
+      EMAIL_GMAIL, EMAIL_GOOGLEMAIL -> return successMockResponseForClientConfiguration(
+        gson = gson,
+        clientConfiguration = ClientConfiguration()
+      )
 
       else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }

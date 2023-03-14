@@ -574,4 +574,5 @@
         <item quantity="few">Пожалуйста, предоставьте ключевую фразу для следующих ключей</item>
         <item quantity="many">Пожалуйста, предоставьте ключевую фразу для следующих ключей</item>
     </plurals>
+    <string name="error_occurred_with_details_please_try_again">Произошла ошибка, попробуйте еще раз\n\nДетали ошибки:\n%1$s</string>
 </resources>
