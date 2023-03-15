@@ -686,7 +686,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  fun testWebPortalPasswordButtonIsHidden() {
+  fun testWebPortalPasswordButtonIsVisibleForUserWithoutCustomerFesUrl() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
@@ -700,9 +700,9 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
 
-    //because account.useCustomerFesUrl == false btnSetWebPortalPassword should not be visible
+    //for users with account.useCustomerFesUrl == false btnSetWebPortalPassword should be visible too
     onView(withId(R.id.btnSetWebPortalPassword))
-      .check(matches(not(isDisplayed())))
+      .check(matches(isDisplayed()))
   }
 
   private fun checkIsDisplayedEncryptedAttributes() {
