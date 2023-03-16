@@ -10,7 +10,6 @@ import com.flowcrypt.email.rules.RetryRule.Companion.MAX_RETRY_VALUE
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import java.util.Objects
 
 /**
  * This rule can rerun a task a few times if it once failed.
@@ -35,21 +34,11 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
           .firstOrNull()
           ?.value
 
-        val hasFlakyAnnotation = Objects.nonNull(
-          description
-            .annotations
-            .filterIsInstance<FlakyTest>()
-            .firstOrNull()
-        )
-
-        //if a test is FlakyTest we will use 2*attempts
-        val value = (if (fromAnnotation == null || fromAnnotation !in 1..MAX_RETRY_VALUE) {
-          if (retryCount in 1..MAX_RETRY_VALUE) retryCount else 1
-        } else {
-          fromAnnotation
-        }) * if (hasFlakyAnnotation) 2 else 1
-
-        val attempts = if (value in 1..MAX_RETRY_VALUE) value else 1
+        val hasFlakyAnnotation = description.annotations.any { it is FlakyTest }
+        val baseValue = fromAnnotation?.takeIf { it in 1..MAX_RETRY_VALUE }
+          ?: retryCount.takeIf { it in 1..MAX_RETRY_VALUE } ?: 1
+        val multiplier = if (hasFlakyAnnotation) 2 else 1
+        val attempts = baseValue * multiplier
 
         var caughtThrowable: Throwable? = null
         repeat(attempts) { times ->
