@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.rules
 
+import androidx.test.filters.FlakyTest
 import com.flowcrypt.email.rules.RetryRule.Companion.MAX_RETRY_VALUE
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.runner.Description
@@ -33,11 +34,11 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
           .firstOrNull()
           ?.value
 
-        val attempts = if (fromAnnotation == null || fromAnnotation !in 1..MAX_RETRY_VALUE) {
-          if (retryCount in 1..MAX_RETRY_VALUE) retryCount else 1
-        } else {
-          fromAnnotation
-        }
+        val hasFlakyAnnotation = description.annotations.any { it is FlakyTest }
+        val baseValue = fromAnnotation?.takeIf { it in 1..MAX_RETRY_VALUE }
+          ?: retryCount.takeIf { it in 1..MAX_RETRY_VALUE } ?: 1
+        val multiplier = if (hasFlakyAnnotation) 2 else 1
+        val attempts = baseValue * multiplier
 
         var caughtThrowable: Throwable? = null
         repeat(attempts) { times ->
@@ -47,7 +48,7 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
               TestGeneralUtil.clearApp(targetContext)
               Thread.sleep(1000)
               caughtThrowable = it
-              System.err.println(description.displayName.toString() + ": run $times failed")
+              System.err.println(description.displayName.toString() + ": run ${times + 1} failed")
             }
         }
         System.err.println(description.displayName.toString() + ": giving up after " + attempts + " failures")
