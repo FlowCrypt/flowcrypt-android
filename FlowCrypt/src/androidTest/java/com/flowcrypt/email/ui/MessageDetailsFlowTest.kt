@@ -274,6 +274,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     launchActivity(details)
     matchHeader(msgInfo)
 
+    Thread.sleep(1000)
+
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val decryptError = block.decryptErr
     val errorMsg = getResString(
