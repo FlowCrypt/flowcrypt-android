@@ -5,10 +5,12 @@
 
 package com.flowcrypt.email.rules
 
+import androidx.test.filters.FlakyTest
 import com.flowcrypt.email.rules.RetryRule.Companion.MAX_RETRY_VALUE
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import java.util.Objects
 
 /**
  * This rule can rerun a task a few times if it once failed.
@@ -33,11 +35,21 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
           .firstOrNull()
           ?.value
 
-        val attempts = if (fromAnnotation == null || fromAnnotation !in 1..MAX_RETRY_VALUE) {
+        val hasFlakyAnnotation = Objects.nonNull(
+          description
+            .annotations
+            .filterIsInstance<FlakyTest>()
+            .firstOrNull()
+        )
+
+        //if a test is FlakyTest we will use 2*attempts
+        val value = (if (fromAnnotation == null || fromAnnotation !in 1..MAX_RETRY_VALUE) {
           if (retryCount in 1..MAX_RETRY_VALUE) retryCount else 1
         } else {
           fromAnnotation
-        }
+        }) * if (hasFlakyAnnotation) 2 else 1
+
+        val attempts = if (value in 1..MAX_RETRY_VALUE) value else 1
 
         var caughtThrowable: Throwable? = null
         repeat(attempts) { times ->
@@ -47,7 +59,7 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
               TestGeneralUtil.clearApp(targetContext)
               Thread.sleep(1000)
               caughtThrowable = it
-              System.err.println(description.displayName.toString() + ": run $times failed")
+              System.err.println(description.displayName.toString() + ": run ${times + 1} failed")
             }
         }
         System.err.println(description.displayName.toString() + ": giving up after " + attempts + " failures")
