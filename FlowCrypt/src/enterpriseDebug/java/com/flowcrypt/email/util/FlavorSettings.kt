@@ -11,6 +11,5 @@ import android.content.Context
  * @author Denys Bondarenko
  */
 object FlavorSettings : EnvironmentSettings {
-  override fun isGMailAPIEnabled(): Boolean = true
   override fun configure(context: Context) {}
 }

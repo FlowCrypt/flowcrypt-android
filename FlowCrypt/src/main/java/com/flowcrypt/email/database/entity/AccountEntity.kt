@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
-import com.flowcrypt.email.util.FlavorSettings
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
@@ -128,7 +127,7 @@ data class AccountEntity constructor(
     contactsLoaded = false,
     showOnlyEncrypted = false,
     clientConfiguration = clientConfiguration,
-    useAPI = FlavorSettings.isGMailAPIEnabled(),
+    useAPI = true,
     useCustomerFesUrl = useCustomerFesUrl
   )
 
