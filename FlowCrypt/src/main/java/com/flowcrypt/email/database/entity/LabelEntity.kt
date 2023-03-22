@@ -19,7 +19,7 @@ import com.google.android.gms.common.util.CollectionUtils
  * @author Denys Bondarenko
  */
 @Entity(
-  tableName = "labels",
+  tableName = LabelEntity.TABLE_NAME,
   indices = [
     Index(
       name = "email_account_type_name_in_labels",
@@ -52,7 +52,7 @@ data class LabelEntity(
   val attributesList: List<String> = parseAttributes(attributes)
 
   companion object {
-
+    const val TABLE_NAME = "labels"
     fun genLabel(accountEntity: AccountEntity, localFolder: LocalFolder): LabelEntity {
       return with(localFolder) {
         LabelEntity(

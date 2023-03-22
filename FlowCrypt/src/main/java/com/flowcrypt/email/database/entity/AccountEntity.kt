@@ -26,7 +26,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Entity(
-  tableName = "accounts",
+  tableName = AccountEntity.TABLE_NAME,
   indices = [
     Index(name = "email_account_type_in_accounts", value = ["email", "account_type"], unique = true)
   ]
@@ -228,6 +228,7 @@ data class AccountEntity constructor(
   }
 
   companion object {
+    const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
   }

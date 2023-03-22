@@ -87,7 +87,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 35
+    const val DB_VERSION = 36
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1216,6 +1216,52 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_35_36 = object : FlowCryptMigration(35, 36) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //we need to clean old cache for some 'com.google' users: messages, attachments, labels
+
+        val commonWhereClause = "email IN (SELECT email FROM " + AccountEntity.TABLE_NAME +
+            " WHERE account_type = ? AND use_api = ?)"
+        val commonWhereArgs = arrayOf(
+          AccountEntity.ACCOUNT_TYPE_GOOGLE,
+          "0",
+          JavaEmailConstants.FOLDER_OUTBOX
+        )
+        //delete messages for predefined 'com.google' users, except outgoing
+        database.delete(
+          MessageEntity.TABLE_NAME,
+          "$commonWhereClause AND folder != ?",
+          commonWhereArgs
+        )
+
+        //delete attachments for predefined 'com.google' users, except outgoing
+        database.delete(
+          AttachmentEntity.TABLE_NAME,
+          "$commonWhereClause AND folder != ?",
+          commonWhereArgs
+        )
+
+        //delete all labels for 'com.google' users
+        database.delete(
+          LabelEntity.TABLE_NAME,
+          commonWhereClause,
+          commonWhereArgs.copyOf(2)
+        )
+
+        //in the and we need to force using Gmail API by 'com.google' users via 'use_api = 1'
+        val contentValues = ContentValues()
+        contentValues.put("use_api", "1")
+        database.update(
+          AccountEntity.TABLE_NAME,
+          SQLiteDatabase.CONFLICT_IGNORE,
+          contentValues,
+          "account_type = ?",
+          arrayOf(AccountEntity.ACCOUNT_TYPE_GOOGLE)
+        )
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1265,6 +1311,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_32_33,
           MIGRATION_33_34,
           MIGRATION_34_35,
+          MIGRATION_35_36,
         ).build()
         INSTANCE = instance
         return instance
