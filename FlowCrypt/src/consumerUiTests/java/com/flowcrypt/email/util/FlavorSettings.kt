@@ -17,8 +17,6 @@ object FlavorSettings : EnvironmentSettings {
     GeneralUtil.genIdlingResourcesName(this::class.java),
     GeneralUtil.isDebugBuild()
   )
-
-  override fun isGMailAPIEnabled(): Boolean = true
   override fun configure(context: Context) {}
   override fun getCountingIdlingResource() = countingIdlingResource
   override fun getGoogleIdToken(): String = UUID.randomUUID().toString()
