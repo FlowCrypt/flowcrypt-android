@@ -44,12 +44,21 @@ We have two types of tests which can be run:
 - Tests which depend on an email server.
   Such tests are marked with the `@DependsOnMailServer` annotation.
 
+Also need to add that we have separate tests for **consumer** and **enterprise** versions.
+Enterprise tests are marked with the `@EnterpriseTest` annotation. These tests use
+the [Gmail API](https://developers.google.com/gmail/api/guides) and are independent of the mail
+server.
+
 We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit.
-To run tests which depend on an email server we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server),
+To run tests which depend on an email server we use a
+custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server),
 which extends [docker-mailserver](https://github.com/tomav/docker-mailserver).
-This image has predefined settings for local testing. It has accounts and messages which we need for testing.
-You can investigate [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver)
-folder to see more details. To be able to run tests which depend on an email server please install `docker-compose` with [these instructions](https://docs.docker.com/compose/install/).
+This image has predefined settings for local testing. It has accounts and messages which we need for
+testing.
+You can
+investigate [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver)
+folder to see more details. To be able to run tests which depend on an email server please
+install `docker-compose` with [these instructions](https://docs.docker.com/compose/install/).
 
 Please use following steps to run **the independent tests** locally:
 
@@ -67,10 +76,17 @@ Please use following steps to run **tests that depend on an email** server local
 
 Please follow these steps to run **all tests** locally:
 
-- Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
+- Setup your device (virtual or physical)
+  via [these instructions](#please-follow-these-instructions).
 - Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 - Run `./script/run-all-tests.sh` to execute all tests.
 - Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
+
+Please follow these steps to run **enterprise tests** locally:
+
+- Setup your device (virtual or physical)
+  via [these instructions](#please-follow-these-instructions).
+- Run `./script/ci-instrumentation-tests-enterprise.sh` to execute enterprise tests.
 
 ## Running the app in emulator first time
 
@@ -78,8 +94,8 @@ To be able to run the app on an emulator please follow these steps:
 
 ### Install and run an emulator
 
-- Run AVD Manager from `Tools -> AVD Manager` or click on 
-![image](https://user-images.githubusercontent.com/2863246/136424474-3de87e4d-ffac-49d6-82e3-ec9831399721.png)
+- Run AVD Manager from `Tools -> AVD Manager` or click on
+  ![image](https://user-images.githubusercontent.com/2863246/136424474-3de87e4d-ffac-49d6-82e3-ec9831399721.png)
 - Click on `Create Virtual Device`
 ![image](https://user-images.githubusercontent.com/2863246/136425173-78ee0834-242d-48a6-8ff0-ec40cc9f9d6a.png)
 - Select Hardware. `Pixel 4` will be a good choice. Then click `Next`
