@@ -8,8 +8,6 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FlowCryptMimeMessage
@@ -84,11 +82,8 @@ class DraftViewModel(
       if (isDeleted) return@launch
       val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return@launch
 
-      //here we enable 'drafts' functionality only for Google enterprise users who use Gmail API.
-      if (!activeAccount.isGoogleSignInAccount
-        || !activeAccount.useAPI
-        || BuildConfig.FLAVOR != Constants.FLAVOR_NAME_ENTERPRISE
-      ) {
+      //here we enable 'drafts' functionality only for Google users who use Gmail API.
+      if (!activeAccount.isGoogleSignInAccount || !activeAccount.useAPI) {
         return@launch
       }
 
