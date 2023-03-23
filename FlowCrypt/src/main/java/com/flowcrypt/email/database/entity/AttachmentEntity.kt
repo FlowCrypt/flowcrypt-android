@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  * @author Denys Bondarenko
  */
 @Entity(
-  tableName = "attachment",
+  tableName = AttachmentEntity.TABLE_NAME,
   indices = [
     Index(
       name = "email_uid_folder_path_in_attachment",
@@ -75,6 +75,8 @@ data class AttachmentEntity(
   }
 
   companion object {
+    const val TABLE_NAME = "attachment"
+
     fun fromAttInfo(attachmentInfo: AttachmentInfo): AttachmentEntity? {
       with(attachmentInfo) {
         val email = email ?: return null
