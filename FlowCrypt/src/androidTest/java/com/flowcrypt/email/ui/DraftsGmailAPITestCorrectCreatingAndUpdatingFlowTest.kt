@@ -22,6 +22,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
+import com.flowcrypt.email.junit.annotations.EnterpriseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -45,6 +46,7 @@ import java.net.HttpURLConnection
  * https://github.com/FlowCrypt/flowcrypt-android/issues/2050
  */
 @MediumTest
+@EnterpriseTest
 @RunWith(AndroidJUnit4::class)
 class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIFlowTest() {
   override val mockWebServerRule =
