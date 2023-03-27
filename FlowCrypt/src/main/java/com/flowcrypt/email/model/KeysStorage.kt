@@ -8,6 +8,7 @@ package com.flowcrypt.email.model
 import androidx.annotation.Keep
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.model.PgpKeyDetails
+import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
@@ -35,6 +36,8 @@ interface KeysStorage {
 
   fun updatePassphrasesCache()
 
+  fun clearPassphrasesCache()
+
   fun putPassphraseToCache(
     fingerprint: String,
     passphrase: Passphrase,
@@ -42,11 +45,15 @@ interface KeysStorage {
     passphraseType: KeyEntity.PassphraseType
   )
 
-  fun hasEmptyPassphrase(): Boolean
+  fun hasEmptyPassphrase(vararg types: KeyEntity.PassphraseType): Boolean
+
+  fun hasNonEmptyPassphrase(vararg types: KeyEntity.PassphraseType): Boolean
 
   fun hasPassphrase(passphrase: Passphrase): Boolean
 
   fun getFingerprintsWithEmptyPassphrase(): List<String>
 
   fun getFirstUsableForEncryptionPGPSecretKeyRing(user: String): PGPSecretKeyRing?
+
+  fun getPassPhrasesUpdatesFlow(): Flow<Long>
 }

@@ -8,6 +8,7 @@ package com.flowcrypt.email.security
 import android.content.Context
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -20,6 +21,7 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
 import jakarta.mail.internet.InternetAddress
+import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -203,10 +205,25 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
           passPhraseMap[key.fingerprint] = entry.copy(
             passphrase = Passphrase.emptyPassphrase()
           )
-          passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
         }
       }
     }
+
+    passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+  }
+
+  override fun clearPassphrasesCache() {
+    for (key in getRawKeys()) {
+      if (key.passphraseType == KeyEntity.PassphraseType.RAM) {
+        val entry = passPhraseMap[key.fingerprint] ?: continue
+        passPhraseMap[key.fingerprint] = entry.copy(
+          passphrase = Passphrase.emptyPassphrase(),
+          validUntil = Instant.now()
+        )
+      }
+    }
+
+    passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
   }
 
   override fun putPassphraseToCache(
@@ -224,8 +241,16 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
   }
 
-  override fun hasEmptyPassphrase(): Boolean {
-    return passPhraseMap.values.any { it.passphrase.isEmpty }
+  override fun hasEmptyPassphrase(vararg types: KeyEntity.PassphraseType): Boolean {
+    return passPhraseMap.values
+      .filter { it.passphraseType in types }
+      .any { it.passphrase.isEmpty }
+  }
+
+  override fun hasNonEmptyPassphrase(vararg types: KeyEntity.PassphraseType): Boolean {
+    return passPhraseMap.values
+      .filter { it.passphraseType in types }
+      .any { !it.passphrase.isEmpty }
   }
 
   override fun hasPassphrase(passphrase: Passphrase): Boolean {
@@ -239,6 +264,8 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   override fun getFirstUsableForEncryptionPGPSecretKeyRing(user: String): PGPSecretKeyRing? {
     return getPGPSecretKeyRingsByUserId(user).firstOrNull { KeyRingInfo(it).usableForEncryption() }
   }
+
+  override fun getPassPhrasesUpdatesFlow(): Flow<Long> = passphrasesUpdatesLiveData.asFlow()
 
   private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {
     val existedIdList = passPhraseMap.keys
