@@ -50,17 +50,18 @@ class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application)
     keysStorage.passphrasesUpdatesLiveData.switchMap {
       liveData {
         emit(Result.loading())
-        val pgpKeyDetailsResult = pgpKeyDetailsLiveDataDirect.value ?: try {
-          val account = getActiveAccountSuspend()
-          Result.success(
-            keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyDetails(
-              account?.clientConfiguration?.shouldHideArmorMeta() ?: false
+        emit(
+          try {
+            val account = getActiveAccountSuspend()
+            Result.success(
+              keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyDetails(
+                account?.clientConfiguration?.shouldHideArmorMeta() ?: false
+              )
             )
-          )
-        } catch (e: Exception) {
-          Result.exception(e)
-        }
-        emit(pgpKeyDetailsResult)
+          } catch (e: Exception) {
+            Result.exception(e)
+          }
+        )
       }
     }
 
