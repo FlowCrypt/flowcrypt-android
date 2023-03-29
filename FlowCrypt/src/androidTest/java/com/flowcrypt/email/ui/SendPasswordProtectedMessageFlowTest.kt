@@ -231,7 +231,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       )
 
       val multipart = mimeMessage.content as Multipart
-      //this MIME message should contains 4 parts:
+      //this MIME message should contains 5 parts:
       //text + 4 attachments(1 and 2 - text, 3 - binary, 4 - pub key)
       assertEquals(5, multipart.count)
 
