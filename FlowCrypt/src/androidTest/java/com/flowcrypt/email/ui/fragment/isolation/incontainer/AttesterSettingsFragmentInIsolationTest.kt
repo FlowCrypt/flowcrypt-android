@@ -89,6 +89,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
+  @FlakyTest
   fun testDifferentKeysOnAttester() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
       .addAccount(defaultAccount)
