@@ -6,12 +6,12 @@
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.clearText
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -36,7 +36,7 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.PrivateKeysManager
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.not
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -90,7 +90,7 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
     val endPassPhraseSessionLabel = getResString(R.string.end_pass_phrase_session)
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     //close the notification bar if needed
-    if (device.hasObject(By.res("com.android.systemui:id/expandableNotificationRow"))) {
+    if (device.hasObject(By.res(notificationResourcesName))) {
       device.pressBack()
     }
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
@@ -122,12 +122,12 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
         closeSoftKeyboard()
       )
     onView(withId(R.id.btnUpdatePassphrase))
-      .perform(ViewActions.click())
+      .perform(click())
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
-      .check(matches(ViewMatchers.hasTextColor(R.color.colorPrimaryLight)))
+      .check(matches(hasTextColor(R.color.colorPrimaryLight)))
     onView(withId(R.id.btnUpdatePassphrase))
-      .check(matches(Matchers.not(isDisplayed())))
+      .check(matches(not(isDisplayed())))
     assertTrue(keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM))
 
     //open notification and check we have "End Pass Phrase Session" button
@@ -155,7 +155,7 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
     activePassPhraseSessionLabel: String,
     endPassPhraseSessionLabel: String
   ) = device.findObjects(
-    By.res("com.android.systemui:id/expandableNotificationRow")
+    By.res(notificationResourcesName)
   ).firstNotNullOfOrNull {
     val isActivePassPhraseSessionItem = it.findObject(By.text(activePassPhraseSessionLabel)) != null
     if (isActivePassPhraseSessionItem) {
@@ -171,5 +171,9 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
       } else null
     } else null
   }
-}
 
+  companion object {
+    private const val notificationResourcesName =
+      "com.android.systemui:id/expandableNotificationRow"
+  }
+}
