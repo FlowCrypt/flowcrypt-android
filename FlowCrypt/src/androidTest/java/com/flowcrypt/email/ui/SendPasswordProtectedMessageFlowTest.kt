@@ -110,6 +110,13 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
     )
   )
 
+  private val pubKeyAttachmentInfo = requireNotNull(
+    EmailUtil.genAttInfoFromPubKey(
+      addPrivateKeyToDatabaseRule.pgpKeyDetails,
+      addPrivateKeyToDatabaseRule.accountEntity.email
+    )
+  )
+
   @get:Rule
   var ruleChain: TestRule =
     RuleChain.outerRule(RetryRule.DEFAULT)
@@ -150,7 +157,9 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
           folder = JavaEmailConstants.FOLDER_OUTBOX,
           path = index.toString()
         )
-      }
+      }.toMutableList().apply {
+        add(pubKeyAttachmentInfo.copy(path = 3.toString()))
+      }.toList()
     )
 
     ProcessingOutgoingMessageInfoHelper.process(context, outgoingMessageInfo)
@@ -222,8 +231,9 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       )
 
       val multipart = mimeMessage.content as Multipart
-      //this MIME message should contains 4 parts: text + 3 attachments(1 and 2 - text, 3 - binary)
-      assertEquals(4, multipart.count)
+      //this MIME message should contains 4 parts:
+      //text + 4 attachments(1 and 2 - text, 3 - binary, 4 - pub key)
+      assertEquals(5, multipart.count)
 
       val replyInfoData = HandlePasswordProtectedMsgWorker.ReplyInfoData(
         sender = addAccountToDatabaseRule.account.email.lowercase(),
@@ -245,6 +255,12 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       checkAttachmentPart(multipart.getBodyPart(1), 0)
       checkAttachmentPart(multipart.getBodyPart(2), 1)
       checkAttachmentPart(multipart.getBodyPart(3), 2)
+
+      //check pub key
+      val bodyPart = multipart.getBodyPart(4)
+      assertEquals(Part.ATTACHMENT, bodyPart.disposition)
+      assertEquals(pubKeyAttachmentInfo.name, bodyPart.fileName)
+      assertArrayEquals(pubKeyAttachmentInfo.rawData, bodyPart.inputStream.readBytes())
     }
   }
 
