@@ -243,14 +243,12 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   override fun hasEmptyPassphrase(vararg types: KeyEntity.PassphraseType): Boolean {
     return passPhraseMap.values
-      .filter { it.passphraseType in types }
-      .any { it.passphrase.isEmpty }
+      .any { entry -> entry.passphraseType in types && entry.passphrase.isEmpty }
   }
 
   override fun hasNonEmptyPassphrase(vararg types: KeyEntity.PassphraseType): Boolean {
     return passPhraseMap.values
-      .filter { it.passphraseType in types }
-      .any { !it.passphrase.isEmpty }
+      .any { entry -> entry.passphraseType in types && !entry.passphrase.isEmpty }
   }
 
   override fun hasPassphrase(passphrase: Passphrase): Boolean {

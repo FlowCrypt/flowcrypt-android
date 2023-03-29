@@ -20,6 +20,7 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -154,22 +155,21 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
     device: UiDevice,
     activePassPhraseSessionLabel: String,
     endPassPhraseSessionLabel: String
-  ) = device.findObjects(
-    By.res(notificationResourcesName)
-  ).firstNotNullOfOrNull {
-    val isActivePassPhraseSessionItem = it.findObject(By.text(activePassPhraseSessionLabel)) != null
-    if (isActivePassPhraseSessionItem) {
-      val expandButton = it.findObject(
-        By.pkg("com.android.systemui")
-          .clazz("android.widget.Button")
-          .res("android:id/expand_button")
-      )
+  ): UiObject2? {
+    val notifications = device.findObjects(By.res(notificationResourcesName))
 
-      if (expandButton != null) {
-        expandButton.click()
-        it.findObject(By.text(endPassPhraseSessionLabel))
+    return notifications.firstNotNullOfOrNull { notification ->
+      if (notification.hasObject(By.text(activePassPhraseSessionLabel))) {
+        val expandButton = notification.findObject(
+          By.pkg("com.android.systemui")
+            .clazz("android.widget.Button")
+            .res("android:id/expand_button")
+        )
+
+        expandButton?.click()
+        notification.findObject(By.text(endPassPhraseSessionLabel))
       } else null
-    } else null
+    }
   }
 
   companion object {
