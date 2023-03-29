@@ -12,9 +12,11 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.javamail.AttachmentInfoDataSource
 import com.flowcrypt.email.api.email.javamail.PasswordProtectedAttachmentInfoDataSource
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
@@ -297,15 +299,27 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     for (attachment in attachments) {
       val attBodyPart = MimeBodyPart()
       val attInfo = attachment.toAttInfo()
-      attBodyPart.dataHandler = DataHandler(
-        PasswordProtectedAttachmentInfoDataSource(
-          context = applicationContext,
-          att = attInfo,
-          secretKeys = accountSecretKeys,
-          protector = keysStorage.getSecretKeyRingProtector()
+      /*At this stage we should have encrypted files.
+      If the original file doesn't have 'pgp' extension it seems
+      it was not encrypted and should be sent as is.
+      For example, public keys that were sent via 'Include Public Key' action.*/
+      val isAttachmentEncrypted =
+        FilenameUtils.getExtension(attInfo.name).equals(Constants.PGP_FILE_EXT, true)
+
+      attBodyPart.dataHandler = if (isAttachmentEncrypted) {
+        DataHandler(
+          PasswordProtectedAttachmentInfoDataSource(
+            context = applicationContext,
+            att = attInfo,
+            secretKeys = accountSecretKeys,
+            protector = keysStorage.getSecretKeyRingProtector()
+          )
         )
-      )
-      attBodyPart.fileName = FilenameUtils.removeExtension(attInfo.getSafeName())
+      } else {
+        DataHandler(AttachmentInfoDataSource(context = applicationContext, att = attInfo))
+      }
+      attBodyPart.fileName =
+        if (isAttachmentEncrypted) FilenameUtils.removeExtension(attInfo.getSafeName()) else attInfo.getSafeName()
       attBodyPart.contentID = attInfo.id
       mimeMultipart.addBodyPart(attBodyPart)
     }
