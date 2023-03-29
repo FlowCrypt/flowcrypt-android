@@ -575,4 +575,5 @@
         <item quantity="many">Пожалуйста, предоставьте ключевую фразу для следующих ключей</item>
     </plurals>
     <string name="error_occurred_with_details_please_try_again">Произошла ошибка, попробуйте еще раз\n\nДетали ошибки:\n%1$s</string>
+    <string name="end_pass_phrase_session">Завершить сессию ключевой фразы</string>
 </resources>

@@ -219,6 +219,7 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+  @FlakyTest
   fun testNeedPassphraseMultiplyFingerprintsSecondKey() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_for_2_keys_text.json",

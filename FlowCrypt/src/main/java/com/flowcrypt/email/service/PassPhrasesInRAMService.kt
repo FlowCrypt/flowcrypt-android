@@ -5,15 +5,22 @@
 
 package com.flowcrypt.email.service
 
+import android.Manifest
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.MainActivity
@@ -25,6 +32,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.Random
 import java.util.concurrent.TimeUnit
 
 /**
@@ -32,23 +40,41 @@ import java.util.concurrent.TimeUnit
  */
 class PassPhrasesInRAMService : BaseLifecycleService() {
   private lateinit var keysStorage: KeysStorage
-  private lateinit var repeatableActionFlow: Flow<Long>
+  private val repeatableActionFlow: Flow<Long> = setupFlowForPeriodicCheck()
 
   override fun onCreate() {
     super.onCreate()
     keysStorage = KeysStorageImpl.getInstance(applicationContext)
+    subscribeToPassphrasesUpdates()
     runChecking()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     val superStartedState = super.onStartCommand(intent, flags, startId)
-    startForeground(R.id.notification_id_passphrase_service, prepareNotification())
+    when (intent?.action) {
+      ACTION_END_PASSPHRASE_SESSION -> {
+        keysStorage.clearPassphrasesCache()
+        updateNotification(useActionButton = false)
+      }
+
+      else -> startForeground(
+        R.id.notification_id_passphrase_service, prepareNotification(
+          useActionButton = keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM)
+        )
+      )
+    }
     return superStartedState
   }
 
-  private fun runChecking() {
-    setupFlowForPeriodicCheck()
+  private fun subscribeToPassphrasesUpdates() {
+    lifecycleScope.launch {
+      keysStorage.getPassPhrasesUpdatesFlow().collect {
+        updateNotification(keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM))
+      }
+    }
+  }
 
+  private fun runChecking() {
     lifecycleScope.launch {
       repeatableActionFlow.collect {
         keysStorage.updatePassphrasesCache()
@@ -56,16 +82,14 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
     }
   }
 
-  private fun setupFlowForPeriodicCheck() {
-    repeatableActionFlow = flow {
-      while (lifecycleScope.isActive) {
-        emit(System.currentTimeMillis())
-        delay(DELAY_TIMEOUT)
-      }
-    }.flowOn(Dispatchers.Default)
-  }
+  private fun setupFlowForPeriodicCheck() = flow {
+    while (lifecycleScope.isActive) {
+      emit(System.currentTimeMillis())
+      delay(DELAY_TIMEOUT)
+    }
+  }.flowOn(Dispatchers.Default)
 
-  private fun prepareNotification(): Notification {
+  private fun prepareNotification(useActionButton: Boolean = true): Notification {
     return NotificationCompat.Builder(this, NotificationChannelManager.CHANNEL_ID_SILENT)
       .setContentTitle(getString(R.string.active_passphrase_session))
       .setSmallIcon(R.drawable.ic_baseline_password_24dp)
@@ -81,10 +105,54 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
         )
       )
       .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+      .apply {
+        if (useActionButton) {
+          addAction(genEndPassPhraseSessionAction())
+        }
+      }
       .build()
   }
 
+  private fun genEndPassPhraseSessionAction(): NotificationCompat.Action {
+    val intent = Intent(applicationContext, PassPhrasesInRAMService::class.java)
+    intent.action = ACTION_END_PASSPHRASE_SESSION
+
+    val pendingIntent = PendingIntent.getService(
+      applicationContext,
+      Random().nextInt(),
+      intent,
+      PendingIntent.FLAG_IMMUTABLE
+    )
+
+    return NotificationCompat.Action.Builder(
+      0,
+      getString(R.string.end_pass_phrase_session),
+      pendingIntent
+    ).build()
+  }
+
+  fun updateNotification(useActionButton: Boolean) {
+    val isAndroidTiramisuOrHigh = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    if (isAndroidTiramisuOrHigh && ContextCompat.checkSelfPermission(
+        applicationContext,
+        Manifest.permission.POST_NOTIFICATIONS
+      ) != PackageManager.PERMISSION_GRANTED
+    ) {
+      toast(getString(R.string.cannot_show_notifications_without_permission))
+      return
+    }
+
+    NotificationManagerCompat.from(applicationContext).notify(
+      R.id.notification_id_passphrase_service, prepareNotification(
+        useActionButton = useActionButton
+      )
+    )
+  }
+
   companion object {
+    const val ACTION_END_PASSPHRASE_SESSION =
+      BuildConfig.APPLICATION_ID + ".ACTION_END_PASSPHRASE_SESSION"
+
     /**
      * We will run checking every minute.
      */
