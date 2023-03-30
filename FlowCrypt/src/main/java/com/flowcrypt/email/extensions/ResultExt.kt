@@ -37,5 +37,10 @@ val <T> Result<T>.exceptionMsg: String
       }
     }
 
-    return stringBuilder.toString().ifEmpty { "Unknown error" }
+    if (stringBuilder.isEmpty()) {
+      stringBuilder.append("Unknown error")
+    }
+
+    exception?.stackTrace?.firstOrNull()?.let { stringBuilder.append("\n" + it) }
+    return stringBuilder.toString()
   }
