@@ -67,6 +67,8 @@ import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.exceptionMsgWithStack
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
@@ -1460,30 +1462,25 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
             is UserRecoverableAuthException -> {
               showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
-              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+              showStatus(msg = it.exceptionMsg)
             }
 
             is UserRecoverableAuthIOException -> {
               showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
-              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+              showStatus(msg = it.exceptionMsg)
             }
 
             is AuthenticationFailedException -> {
               showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
-              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+              showStatus(msg = it.exceptionMsg)
             }
 
             is AuthenticatorException -> {
               showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
-              showStatus(msg = it.exception.message ?: it.exception.javaClass.simpleName)
+              showStatus(msg = it.exceptionMsg)
             }
 
-            else -> {
-              showStatus(
-                msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-                ?: getString(R.string.unknown_error)
-              )
-            }
+            else -> showStatus(msg = it.exceptionMsgWithStack)
           }
           countingIdlingResource?.decrementSafely(this@MessageDetailsFragment)
         }
