@@ -102,6 +102,11 @@ fun LifecycleOwner.showNeedPassphraseDialog(
   customTitle: String? = null,
   showKeys: Boolean = true
 ) {
+  if (navController?.currentDestination?.id == R.id.fixNeedPassphraseIssueDialogFragment) {
+    //it prevents blinking
+    return
+  }
+
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.fix_need_pass_phrase_dialog_graph
