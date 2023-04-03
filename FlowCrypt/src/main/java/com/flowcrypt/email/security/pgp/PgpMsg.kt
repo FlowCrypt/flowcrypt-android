@@ -869,7 +869,8 @@ object PgpMsg {
       srcInputStream = rawBlock.content.inputStream(),
       publicKeys = verificationPublicKeys,
       secretKeys = secretKeys,
-      protector = protector
+      protector = protector,
+      retryCount = 3
     )
 
     val blocks = mutableListOf<MsgBlock>()
@@ -923,7 +924,8 @@ object PgpMsg {
           publicKeys = verificationPublicKeys,
           secretKeys = secretKeys,
           protector = protector,
-          ignoreMdcErrors = true
+          ignoreMdcErrors = true,
+          retryCount = 3
         )
         val decryptErrorMsgBlock = if (resultWithIgnoredMDCErrors.exception == null) {
           DecryptErrorMsgBlock(

@@ -23,6 +23,12 @@ class DecryptionException(
   }
 
   fun toDecryptError(): DecryptError {
-    return DecryptError(DecryptErrorDetails(decryptionErrorType, e.message), fingerprints, true)
+    return DecryptError(
+      DecryptErrorDetails(
+        decryptionErrorType,
+        e.message,
+        e.stackTrace.firstOrNull()?.toString()
+      ), fingerprints, true
+    )
   }
 }
