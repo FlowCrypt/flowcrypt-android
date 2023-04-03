@@ -16,5 +16,6 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class DecryptErrorDetails(
   @Expose val type: PgpDecryptAndOrVerify.DecryptionErrorType?,
-  @Expose val message: String?
+  @Expose val message: String?,
+  @Expose val stack: String? = null
 ) : Parcelable

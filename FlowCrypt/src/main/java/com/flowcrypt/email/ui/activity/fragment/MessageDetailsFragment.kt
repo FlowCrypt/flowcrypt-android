@@ -1217,8 +1217,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               "\n\n" + getString(
             R.string.decrypt_error_please_write_me,
             getString(R.string.support_email)
-          ) +
-              "\n\n" + decryptError.details.type + ": " + decryptError.details.message
+          ) + "\n\n" + decryptError.details.type +
+              ": " + decryptError.details.message +
+              "\n\n" + decryptError.details.stack
         return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 
