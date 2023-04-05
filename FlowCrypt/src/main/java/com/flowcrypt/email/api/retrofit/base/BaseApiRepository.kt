@@ -36,18 +36,12 @@ interface BaseApiRepository {
       if (response.isSuccessful) {
         val body = response.body()
         if (body != null) {
-          if (body is ApiResponse) {
-            return if (body.apiError != null) {
-              Result.error(data = body, requestCode = requestCode)
-            } else {
-              Result.success(data = body, requestCode = requestCode)
-            }
-          } else {
-            Result.success(data = body, requestCode = requestCode)
-          }
+          Result.success(data = body, requestCode = requestCode)
         } else {
           Result.exception(
-            throwable = ApiException(ApiError(response.code(), response.message())),
+            throwable = ApiException(
+              ApiError(code = response.code(), message = response.message())
+            ),
             requestCode = requestCode
           )
         }
@@ -55,7 +49,9 @@ interface BaseApiRepository {
         val errorBody = response.errorBody()
         if (errorBody == null) {
           return Result.exception(
-            throwable = ApiException(ApiError(response.code(), "errorBody == null")),
+            throwable = ApiException(
+              ApiError(code = response.code(), message = "errorBody == null")
+            ),
             requestCode = requestCode
           )
         } else {
@@ -73,7 +69,7 @@ interface BaseApiRepository {
             return Result.error(data = apiResponseWithError, requestCode = requestCode)
           } else {
             Result.exception(
-              throwable = ApiException(ApiError(response.code(), String(buffer))),
+              throwable = ApiException(ApiError(code = response.code(), message = String(buffer))),
               requestCode = requestCode
             )
           }

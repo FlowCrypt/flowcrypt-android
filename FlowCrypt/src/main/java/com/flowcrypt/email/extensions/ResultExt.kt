@@ -33,7 +33,7 @@ val <T> Result<T>.exceptionMsg: String
     if (stringBuilder.isEmpty()) {
       val apiResponse = data as? ApiResponse
       apiResponse?.apiError?.let { apiError ->
-        stringBuilder.append(apiError.msg)
+        stringBuilder.append(apiError.message)
       }
     }
 

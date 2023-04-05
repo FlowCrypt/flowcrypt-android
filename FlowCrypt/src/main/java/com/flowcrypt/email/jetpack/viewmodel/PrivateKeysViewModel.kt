@@ -576,12 +576,11 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         val body = submitPubKeyResult.data
         when {
           isSilent -> {
-            body != null && (body.apiError == null || body.apiError.code !in 400..499)
+            body?.apiError == null ||
+                (body.apiError?.code != null && body.apiError?.code !in 400..499)
           }
 
-          body?.apiError != null -> {
-            throw IllegalStateException(ApiException(body.apiError))
-          }
+          body?.apiError != null -> throw IllegalStateException(ApiException(body.apiError))
 
           else -> body != null
         }

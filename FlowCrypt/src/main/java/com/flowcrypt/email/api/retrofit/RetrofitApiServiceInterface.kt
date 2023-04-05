@@ -65,8 +65,6 @@ interface RetrofitApiServiceInterface {
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/pub"
-   *
-   * @return [<]
    */
   @GET("pub/{keyIdOrEmailOrFingerprint}")
   suspend fun attesterGetPubKey(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>

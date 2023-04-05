@@ -71,7 +71,10 @@ object ApiClientRepository : BaseApiRepository {
     ): Result<ClientConfigurationResponse> =
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult(context = context) {
+        getResult(
+          context = context,
+          expectedResultClass = ClientConfigurationResponse::class.java
+        ) {
           retrofitApiService.fesGetClientConfiguration(
             authorization = "Bearer $idToken",
             baseFesUrlPath = baseFesUrlPath,
@@ -195,7 +198,10 @@ object ApiClientRepository : BaseApiRepository {
     ): Result<WelcomeMessageResponse> =
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult {
+        getResult(
+          context = context,
+          expectedResultClass = WelcomeMessageResponse::class.java
+        ) {
           retrofitApiService.attesterPostWelcomeMessage(
             authorization = "Bearer $idToken",
             body = model
@@ -224,7 +230,10 @@ object ApiClientRepository : BaseApiRepository {
           )
         }
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult {
+        getResult(
+          context = context,
+          expectedResultClass = SubmitPubKeyResponse::class.java
+        ) {
           retrofitApiService.attesterSubmitPrimaryEmailPubKey(
             authorization = "Bearer $idToken",
             email = email,
@@ -252,7 +261,10 @@ object ApiClientRepository : BaseApiRepository {
           )
         }
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult {
+        getResult(
+          context = context,
+          expectedResultClass = SubmitPubKeyResponse::class.java
+        ) {
           retrofitApiService.attesterSubmitPubKeyWithConditionalEmailVerification(
             email,
             pubKey
@@ -275,22 +287,6 @@ object ApiClientRepository : BaseApiRepository {
       clientConfiguration: ClientConfiguration? = null
     ): Result<PubResponse> =
       withContext(Dispatchers.IO) {
-        val resultWrapperFun = fun(result: Result<String>): Result<PubResponse> {
-          return when (result.status) {
-            Result.Status.SUCCESS -> Result.success(data = PubResponse(null, result.data))
-
-            Result.Status.ERROR -> Result.error(data = PubResponse(null, null))
-
-            Result.Status.EXCEPTION -> Result.exception(
-              throwable = result.exception ?: Exception(context.getString(R.string.unknown_error))
-            )
-
-            Result.Status.LOADING -> Result.loading()
-
-            Result.Status.NONE -> Result.none()
-          }
-        }
-
         if (email.isValidEmail()) {
           val wkdResult = getResult {
             val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, email)
@@ -308,7 +304,7 @@ object ApiClientRepository : BaseApiRepository {
           }
 
           if (wkdResult.status == Result.Status.SUCCESS && wkdResult.data?.isNotEmpty() == true) {
-            return@withContext resultWrapperFun(wkdResult)
+            return@withContext Result.success(data = PubResponse(pubkey = wkdResult.data))
           }
 
           if (clientConfiguration?.canLookupThisRecipientOnAttester(email) == false) {
@@ -319,8 +315,17 @@ object ApiClientRepository : BaseApiRepository {
         )
 
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        val result = getResult { retrofitApiService.attesterGetPubKey(email) }
-        return@withContext resultWrapperFun(result)
+        return@withContext getResult(
+          context = context,
+          expectedResultClass = PubResponse::class.java
+        ) {
+          val response = retrofitApiService.attesterGetPubKey(email)
+          if (response.isSuccessful) {
+            Response.success(PubResponse(pubkey = response.body()))
+          } else {
+            Response.error(response.errorBody() ?: byteArrayOf().toResponseBody(), response.raw())
+          }
+        }
       }
   }
 

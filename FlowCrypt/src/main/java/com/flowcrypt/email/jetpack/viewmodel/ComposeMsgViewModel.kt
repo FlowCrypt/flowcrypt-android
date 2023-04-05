@@ -364,7 +364,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
             throw ApiException(
               response.data?.apiError ?: ApiError(
                 code = -1,
-                msg = "Unknown API error"
+                message = "Unknown API error"
               )
             )
           }

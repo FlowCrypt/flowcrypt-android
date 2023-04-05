@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.response.api
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.security.model.PgpKeyDetails
@@ -17,14 +16,9 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class EkmPrivateKeysResponse constructor(
-  @Expose val code: Int? = null,
-  @Expose val message: String? = null,
+  @Expose override val code: Int? = null,
+  @Expose override val message: String? = null,
+  @Expose override val details: String? = null,
   @Expose val privateKeys: List<Key>? = null,
   val pgpKeyDetailsList: List<PgpKeyDetails>? = null
-) : ApiResponse {
-
-  override val apiError: ApiError?
-    get() = if (code != null) {
-      ApiError(code = code, msg = message)
-    } else null
-}
+) : ApiResponse

@@ -16,6 +16,9 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class MicrosoftOAuth2TokenResponse constructor(
+  @Expose override val code: Int? = null,
+  @Expose override val message: String? = null,
+  @Expose override val details: String? = null,
   @SerializedName("access_token") @Expose val accessToken: String? = null,
   @SerializedName("token_type") @Expose val tokenType: String? = null,
   @SerializedName("expires_in") @Expose val expiresIn: Long? = null,
@@ -33,8 +36,8 @@ data class MicrosoftOAuth2TokenResponse constructor(
     get() = if (error != null) {
       ApiError(
         code = errorCodes?.firstOrNull(),
-        msg = error + "\n" + errorDescription,
-        internal = error
+        message = error + "\n" + errorDescription,
+        details = error
       )
     } else null
 
