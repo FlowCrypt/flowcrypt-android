@@ -150,7 +150,7 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_FORBIDDEN,
-          msg = ""
+          message = ""
         )
       ).message
     )
@@ -167,7 +167,7 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
           ApiException(
             ApiError(
               code = HttpURLConnection.HTTP_INTERNAL_ERROR,
-              msg = ""
+              message = ""
             )
           )
         ).exceptionMsg
@@ -256,7 +256,6 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
     )
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
-      apiError = null,
       vendor = "FlowCrypt",
       service = "enterprise-server",
       orgId = "localhost",

@@ -54,14 +54,12 @@ class FesDuringSetupCommonFlowTest : BaseFesDuringSetupFlowTest() {
   override fun handleCheckIfFesIsAvailableAtCustomerFesUrl(gson: Gson): MockResponse {
     return when (testNameRule.methodName) {
       "testFesFailedApiError" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_FORBIDDEN)
           .setBody(
             gson.toJson(
-              FesServerResponse(
-                ApiError(
-                  code = HttpURLConnection.HTTP_FORBIDDEN,
-                  msg = ERROR_TEXT
-                )
+              ApiError(
+                code = HttpURLConnection.HTTP_FORBIDDEN,
+                message = ERROR_TEXT
               )
             )
           )
@@ -112,7 +110,7 @@ class FesDuringSetupCommonFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_NOT_ACCEPTABLE,
-          msg = ""
+          message = ""
         )
       ).message!!
     )
@@ -128,7 +126,7 @@ class FesDuringSetupCommonFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_CONFLICT,
-          msg = ""
+          message = ""
         )
       ).message!!
     )
@@ -166,7 +164,6 @@ class FesDuringSetupCommonFlowTest : BaseFesDuringSetupFlowTest() {
     private const val ERROR_TEXT = "ERROR_TEXT"
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
-      apiError = null,
       vendor = "FlowCrypt",
       service = "enterprise-server",
       orgId = "localhost",

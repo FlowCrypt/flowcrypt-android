@@ -97,7 +97,7 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_UNAUTHORIZED,
-          msg = ""
+          message = ""
         )
       ).message!!
     )
@@ -113,7 +113,6 @@ class MainSignInFragmentEnterpriseTestUseFesUrlFlowTest : BaseSignTest() {
     private const val EMAIL_ENTERPRISE_USER = "enterprise_user@flowcrypt.test"
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
-      apiError = null,
       vendor = "FlowCrypt",
       service = "external-service",
       orgId = "localhost",

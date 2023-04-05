@@ -60,7 +60,6 @@ class UseFesAfterSetupDuringRefreshingClientConfigurationTest : BaseTest() {
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
               gson.toJson(
                 FesServerResponse(
-                  apiError = null,
                   vendor = "FlowCrypt",
                   service = "enterprise-server",
                   orgId = "localhost",

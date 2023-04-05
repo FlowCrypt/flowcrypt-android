@@ -145,7 +145,7 @@ class SendFeedbackHasAccountFlowTest : BaseFeedbackFragmentTest() {
       "testHandleApiErrorWhenSendingFeedback" -> {
         MockResponse()
           .setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
-          .setBody(gson.toJson(PostHelpFeedbackResponse(apiError = API_ERROR)))
+          .setBody(gson.toJson(API_ERROR))
       }
 
       "testSendingFeedbackSuccess" -> {
@@ -161,7 +161,7 @@ class SendFeedbackHasAccountFlowTest : BaseFeedbackFragmentTest() {
   companion object {
     private val API_ERROR = ApiError(
       code = HttpURLConnection.HTTP_BAD_REQUEST,
-      msg = "Wrong request received"
+      message = "Wrong request received"
     )
   }
 }

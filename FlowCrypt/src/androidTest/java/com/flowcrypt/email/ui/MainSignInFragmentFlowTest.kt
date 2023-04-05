@@ -286,7 +286,7 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_FORBIDDEN,
-          msg = ""
+          message = ""
         )
       ).message!!
     )
@@ -315,7 +315,7 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
 
     isDialogWithTextDisplayed(
       decorView,
-      ApiException(ApiError(code = HttpURLConnection.HTTP_NOT_FOUND, msg = "")).message!!
+      ApiException(ApiError(code = HttpURLConnection.HTTP_NOT_FOUND, message = "")).message!!
     )
   }
 
@@ -369,8 +369,15 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
 
   private fun handleEkmAPI(request: RecordedRequest, gson: Gson): MockResponse? {
     if (request.path.equals("/ekm/error/v1/keys/private")) {
-      return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(gson.toJson(EKM_ERROR_RESPONSE))
+      return MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
+        .setBody(
+          gson.toJson(
+            ApiError(
+              code = HttpURLConnection.HTTP_BAD_REQUEST,
+              message = EKM_ERROR
+            )
+          )
+        )
     }
 
     if (request.path.equals("/ekm/empty/v1/keys/private")) {
@@ -557,10 +564,6 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
     )
 
     private const val EKM_ERROR = "some error"
-    private val EKM_ERROR_RESPONSE = EkmPrivateKeysResponse(
-      code = HttpURLConnection.HTTP_BAD_REQUEST,
-      message = EKM_ERROR
-    )
 
     private val EKM_FES_RESPONSE = EkmPrivateKeysResponse(
       privateKeys = listOf(
@@ -571,7 +574,6 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
     )
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
-      apiError = null,
       vendor = "FlowCrypt",
       service = "enterprise-server",
       orgId = "localhost",
