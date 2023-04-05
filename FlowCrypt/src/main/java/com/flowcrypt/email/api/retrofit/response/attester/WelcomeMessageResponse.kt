@@ -13,8 +13,4 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class WelcomeMessageResponse constructor(
-  @Expose override val code: Int? = null,
-  @Expose override val message: String? = null,
-  @Expose override val details: String? = null,
-) : ApiResponse
+data class WelcomeMessageResponse constructor(@Expose val notUsed: Boolean? = null) : ApiResponse

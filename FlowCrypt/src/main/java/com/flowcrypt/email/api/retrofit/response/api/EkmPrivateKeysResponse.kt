@@ -16,9 +16,6 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class EkmPrivateKeysResponse constructor(
-  @Expose override val code: Int? = null,
-  @Expose override val message: String? = null,
-  @Expose override val details: String? = null,
   @Expose val privateKeys: List<Key>? = null,
   val pgpKeyDetailsList: List<PgpKeyDetails>? = null
 ) : ApiResponse

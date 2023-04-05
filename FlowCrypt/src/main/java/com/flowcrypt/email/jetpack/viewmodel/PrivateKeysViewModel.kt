@@ -576,11 +576,13 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         val body = submitPubKeyResult.data
         when {
           isSilent -> {
-            body?.apiError == null ||
-                (body.apiError?.code != null && body.apiError?.code !in 400..499)
+            submitPubKeyResult.apiError == null ||
+                (submitPubKeyResult.apiError.code != null && submitPubKeyResult.apiError.code !in 400..499)
           }
 
-          body?.apiError != null -> throw IllegalStateException(ApiException(body.apiError))
+          submitPubKeyResult.apiError != null -> {
+            throw IllegalStateException(ApiException(submitPubKeyResult.apiError))
+          }
 
           else -> body != null
         }
@@ -595,7 +597,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         }
 
         Result.Status.ERROR -> {
-          submitPubKeyResult.data?.apiError?.let { apiError -> throw ApiException(apiError) }
+          submitPubKeyResult.apiError?.let { apiError -> throw ApiException(apiError) }
             ?: throw IllegalStateException("Unknown API error")
         }
 
@@ -627,7 +629,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         )
         when (testWelcomeResult.status) {
           Result.Status.SUCCESS -> {
-            testWelcomeResult.data?.apiError == null
+            testWelcomeResult.apiError == null
           }
 
           else -> {

@@ -71,10 +71,7 @@ object ApiClientRepository : BaseApiRepository {
     ): Result<ClientConfigurationResponse> =
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult(
-          context = context,
-          expectedResultClass = ClientConfigurationResponse::class.java
-        ) {
+        getResult(context = context) {
           retrofitApiService.fesGetClientConfiguration(
             authorization = "Bearer $idToken",
             baseFesUrlPath = baseFesUrlPath,
@@ -97,10 +94,7 @@ object ApiClientRepository : BaseApiRepository {
     ): Result<MessageReplyTokenResponse> =
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult(
-          context = context,
-          expectedResultClass = MessageReplyTokenResponse::class.java
-        ) {
+        getResult(context = context) {
           retrofitApiService.fesGetReplyTokenForPasswordProtectedMsg(
             authorization = "Bearer $idToken",
             baseFesUrlPath = baseFesUrlPath
@@ -126,10 +120,7 @@ object ApiClientRepository : BaseApiRepository {
     ): Result<MessageUploadResponse> =
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult(
-          context = context,
-          expectedResultClass = MessageUploadResponse::class.java
-        ) {
+        getResult(context = context) {
           val details = GsonBuilder().create().toJson(messageUploadRequest)
             .toRequestBody(Constants.MIME_TYPE_JSON.toMediaTypeOrNull())
 
@@ -178,10 +169,11 @@ object ApiClientRepository : BaseApiRepository {
           .client(okHttpClient)
           .build()
         val retrofitApiService = retrofit.create(RetrofitApiServiceInterface::class.java)
-        return@withContext getResult(
-          context = context,
-          expectedResultClass = FesServerResponse::class.java
-        ) { retrofitApiService.fesCheckIfServerIsAvailable(domain) }
+        return@withContext getResult(context = context) {
+          retrofitApiService.fesCheckIfServerIsAvailable(
+            domain = domain
+          )
+        }
       }
   }
 
@@ -198,10 +190,7 @@ object ApiClientRepository : BaseApiRepository {
     ): Result<WelcomeMessageResponse> =
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult(
-          context = context,
-          expectedResultClass = WelcomeMessageResponse::class.java
-        ) {
+        getResult(context = context) {
           retrofitApiService.attesterPostWelcomeMessage(
             authorization = "Bearer $idToken",
             body = model
@@ -230,10 +219,7 @@ object ApiClientRepository : BaseApiRepository {
           )
         }
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult(
-          context = context,
-          expectedResultClass = SubmitPubKeyResponse::class.java
-        ) {
+        getResult(context = context) {
           retrofitApiService.attesterSubmitPrimaryEmailPubKey(
             authorization = "Bearer $idToken",
             email = email,
@@ -261,13 +247,10 @@ object ApiClientRepository : BaseApiRepository {
           )
         }
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        getResult(
-          context = context,
-          expectedResultClass = SubmitPubKeyResponse::class.java
-        ) {
+        getResult(context = context) {
           retrofitApiService.attesterSubmitPubKeyWithConditionalEmailVerification(
-            email,
-            pubKey
+            email = email,
+            pubKey = pubKey
           )
         }
       }
@@ -308,18 +291,15 @@ object ApiClientRepository : BaseApiRepository {
           }
 
           if (clientConfiguration?.canLookupThisRecipientOnAttester(email) == false) {
-            return@withContext Result.success(data = PubResponse(null, null))
+            return@withContext Result.success(data = PubResponse())
           }
         } else return@withContext Result.exception(
           throwable = IllegalStateException(context.getString(R.string.error_email_is_not_valid))
         )
 
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-        return@withContext getResult(
-          context = context,
-          expectedResultClass = PubResponse::class.java
-        ) {
-          val response = retrofitApiService.attesterGetPubKey(email)
+        return@withContext getResult(context = context) {
+          val response = retrofitApiService.attesterGetPubKey(keyIdOrEmailOrFingerprint = email)
           if (response.isSuccessful) {
             Response.success(PubResponse(pubkey = response.body()))
           } else {
@@ -341,10 +321,7 @@ object ApiClientRepository : BaseApiRepository {
       codeVerifier: String
     ): Result<MicrosoftOAuth2TokenResponse> = withContext(Dispatchers.IO) {
       val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-      getResult(
-        context = context,
-        expectedResultClass = MicrosoftOAuth2TokenResponse::class.java
-      ) {
+      getResult(context = context) {
         retrofitApiService.oAuthGetMicrosoftOAuth2Token(
           code = authorizeCode,
           scope = scopes,
@@ -362,7 +339,7 @@ object ApiClientRepository : BaseApiRepository {
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
         getResult {
-          retrofitApiService.oAuthGetOpenIdConfiguration(url)
+          retrofitApiService.oAuthGetOpenIdConfiguration(url = url)
         }
       }
   }
@@ -383,10 +360,12 @@ object ApiClientRepository : BaseApiRepository {
       withContext(Dispatchers.IO) {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
         val url = if (ekmUrl.endsWith("/")) ekmUrl else "$ekmUrl/"
-        getResult(
-          context = context,
-          expectedResultClass = EkmPrivateKeysResponse::class.java
-        ) { retrofitApiService.ekmGetPrivateKeys("${url}v1/keys/private", "Bearer $idToken") }
+        getResult(context = context) {
+          retrofitApiService.ekmGetPrivateKeys(
+            ekmUrl = "${url}v1/keys/private",
+            authorization = "Bearer $idToken"
+          )
+        }
       }
   }
 
@@ -402,10 +381,11 @@ object ApiClientRepository : BaseApiRepository {
       postHelpFeedbackModel: PostHelpFeedbackModel
     ): Result<PostHelpFeedbackResponse> = withContext(Dispatchers.IO) {
       val retrofitApiService = ApiHelper.createRetrofitApiService(context)
-      getResult(
-        context = context,
-        expectedResultClass = PostHelpFeedbackResponse::class.java
-      ) { retrofitApiService.backendPostHelpFeedback(postHelpFeedbackModel) }
+      getResult(context = context) {
+        retrofitApiService.backendPostHelpFeedback(
+          body = postHelpFeedbackModel
+        )
+      }
     }
   }
 }

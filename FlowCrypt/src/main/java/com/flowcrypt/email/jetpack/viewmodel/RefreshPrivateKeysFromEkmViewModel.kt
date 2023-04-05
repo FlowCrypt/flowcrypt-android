@@ -87,7 +87,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
             )
           }
 
-          Result.Status.ERROR -> Result.exception(ApiException(ekmPrivateResult.data?.apiError))
+          Result.Status.ERROR -> Result.exception(ApiException(ekmPrivateResult.apiError))
 
           else -> throw IllegalStateException(
             "Unsupported status = ${ekmPrivateResult.status} at this step"

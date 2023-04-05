@@ -323,8 +323,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
         Result.Status.ERROR -> {
           throw ApiException(
-            response.data?.apiError
-              ?: ApiError(code = -1, message = "Unknown API error")
+            response.apiError ?: ApiError(code = -1, message = "Unknown API error")
           )
         }
 

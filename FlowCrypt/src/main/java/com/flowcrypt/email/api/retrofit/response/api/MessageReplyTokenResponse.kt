@@ -14,8 +14,5 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class MessageReplyTokenResponse(
-  @Expose override val code: Int? = null,
-  @Expose override val message: String? = null,
-  @Expose override val details: String? = null,
   @Expose val replyToken: String? = null
 ) : ApiResponse

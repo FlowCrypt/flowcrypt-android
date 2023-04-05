@@ -16,9 +16,6 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class ClientConfigurationResponse constructor(
-  @Expose override val code: Int? = null,
-  @Expose override val message: String? = null,
-  @Expose override val details: String? = null,
   @SerializedName("clientConfiguration", alternate = ["domain_org_rules"])
   @Expose val clientConfiguration: ClientConfiguration?
 ) : ApiResponse

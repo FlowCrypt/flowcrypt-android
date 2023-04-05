@@ -13,9 +13,4 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class MessageUploadResponse(
-  @Expose override val code: Int? = null,
-  @Expose override val message: String? = null,
-  @Expose override val details: String? = null,
-  @Expose val url: String? = null
-) : ApiResponse
+data class MessageUploadResponse(@Expose val url: String? = null) : ApiResponse

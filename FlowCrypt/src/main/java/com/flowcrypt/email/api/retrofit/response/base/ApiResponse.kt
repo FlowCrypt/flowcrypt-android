@@ -10,10 +10,4 @@ import android.os.Parcelable
 /**
  * @author Denys Bondarenko
  */
-interface ApiResponse : Parcelable {
-  val code: Int?
-  val message: String?
-  val details: String?
-  val apiError: ApiError?
-    get() = code?.let { ApiError(code = it, message = message, details = details) }
-}
+interface ApiResponse : Parcelable
