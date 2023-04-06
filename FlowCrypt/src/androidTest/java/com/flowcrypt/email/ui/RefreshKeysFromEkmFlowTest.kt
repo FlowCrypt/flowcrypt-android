@@ -84,7 +84,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
 
       "testUpdatePrvKeyFromEkmShowApiError" ->
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
           .setBody(gson.toJson(EKM_API_ERROR))
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -192,7 +192,8 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
       "pgp/expired_extended@flowcrypt.test_prv_default.asc"
     )
     private const val EKM_ERROR = "some error"
-    private val EKM_API_ERROR = ApiError(code = 400, message = EKM_ERROR)
+    private val EKM_API_ERROR =
+      ApiError(code = HttpURLConnection.HTTP_BAD_REQUEST, message = EKM_ERROR)
     private val EKM_RESPONSE_SUCCESS = EkmPrivateKeysResponse(
       privateKeys = listOf(
         Key(
