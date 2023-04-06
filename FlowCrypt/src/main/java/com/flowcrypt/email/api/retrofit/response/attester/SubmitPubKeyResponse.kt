@@ -13,4 +13,4 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class SubmitPubKeyResponse constructor(@Expose val notUsed: Boolean? = null) : ApiResponse
+data class SubmitPubKeyResponse constructor(@Expose val isSent: Boolean? = null) : ApiResponse

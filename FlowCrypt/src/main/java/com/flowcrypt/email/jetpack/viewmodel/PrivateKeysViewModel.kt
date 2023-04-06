@@ -573,7 +573,6 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
     when (submitPubKeyResult.status) {
       Result.Status.SUCCESS -> {
-        val body = submitPubKeyResult.data
         when {
           isSilent -> {
             submitPubKeyResult.apiError == null ||
@@ -584,7 +583,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
             throw IllegalStateException(ApiException(submitPubKeyResult.apiError))
           }
 
-          else -> body != null
+          else -> submitPubKeyResult.data?.isSent == true
         }
       }
 

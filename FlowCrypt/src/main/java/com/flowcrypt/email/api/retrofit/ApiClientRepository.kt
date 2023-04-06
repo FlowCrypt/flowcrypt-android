@@ -220,11 +220,18 @@ object ApiClientRepository : BaseApiRepository {
         }
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
         getResult(context = context) {
-          retrofitApiService.attesterSubmitPrimaryEmailPubKey(
+          val response = retrofitApiService.attesterSubmitPrimaryEmailPubKey(
             authorization = "Bearer $idToken",
             email = email,
             pubKey = pubKey
           )
+          //we have to handle a response manually due to different behavior. More details here
+          //https://github.com/FlowCrypt/flowcrypt-android/issues/2241#issuecomment-1497787161
+          if (response.isSuccessful) {
+            Response.success(SubmitPubKeyResponse(isSent = true))
+          } else {
+            Response.error(response.errorBody() ?: byteArrayOf().toResponseBody(), response.raw())
+          }
         }
       }
 
@@ -248,10 +255,17 @@ object ApiClientRepository : BaseApiRepository {
         }
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
         getResult(context = context) {
-          retrofitApiService.attesterSubmitPubKeyWithConditionalEmailVerification(
+          val response = retrofitApiService.attesterSubmitPubKeyWithConditionalEmailVerification(
             email = email,
             pubKey = pubKey
           )
+          //we have to handle a response manually due to different behavior. More details here
+          //https://github.com/FlowCrypt/flowcrypt-android/issues/2241#issuecomment-1497787161
+          if (response.isSuccessful) {
+            Response.success(SubmitPubKeyResponse(isSent = true))
+          } else {
+            Response.error(response.errorBody() ?: byteArrayOf().toResponseBody(), response.raw())
+          }
         }
       }
   }
@@ -300,6 +314,8 @@ object ApiClientRepository : BaseApiRepository {
         val retrofitApiService = ApiHelper.createRetrofitApiService(context)
         return@withContext getResult(context = context) {
           val response = retrofitApiService.attesterGetPubKey(keyIdOrEmailOrFingerprint = email)
+          //we have to handle a response manually due to different behavior. More details here
+          //https://github.com/FlowCrypt/flowcrypt-android/issues/2241#issuecomment-1497787161
           if (response.isSuccessful) {
             Response.success(PubResponse(pubkey = response.body()))
           } else {

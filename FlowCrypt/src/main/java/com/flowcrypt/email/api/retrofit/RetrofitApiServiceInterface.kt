@@ -15,8 +15,8 @@ import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.SubmitPubKeyResponse
 import com.flowcrypt.email.api.retrofit.response.attester.WelcomeMessageResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
 import okhttp3.MultipartBody
@@ -65,6 +65,10 @@ interface RetrofitApiServiceInterface {
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/pub"
+   *
+   * @return a pub key as a string if success result or JSON as [ApiError].
+   * But here we have an exception
+   * (https://github.com/FlowCrypt/flowcrypt-android/issues/2241#issuecomment-1497787161)
    */
   @GET("pub/{keyIdOrEmailOrFingerprint}")
   suspend fun attesterGetPubKey(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
@@ -123,24 +127,28 @@ interface RetrofitApiServiceInterface {
    * Set or replace public key with idToken as an auth mechanism
    * Used during setup
    * Can only be used for primary email because idToken does not contain info about aliases
+   *
+   * @return a string if success result or JSON as [ApiError]
    */
   @POST("pub/{email}")
   suspend fun attesterSubmitPrimaryEmailPubKey(
     @Header("Authorization") authorization: String,
     @Path("email") email: String,
     @Body pubKey: String,
-  ): Response<SubmitPubKeyResponse>
+  ): Response<String>
 
   /**
    * Request to replace public key that will be verified by clicking email
    * Used when user manually chooses to replace key
    * Can also be used for aliases
+   *
+   * @return a string if success result or JSON as [ApiError]
    */
   @POST("pub/{email}")
   suspend fun attesterSubmitPubKeyWithConditionalEmailVerification(
     @Path("email") email: String,
     @Body pubKey: String
-  ): Response<SubmitPubKeyResponse>
+  ): Response<String>
 
   @FormUrlEncoded
   @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)
