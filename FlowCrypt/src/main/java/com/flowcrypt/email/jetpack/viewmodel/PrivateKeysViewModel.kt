@@ -621,20 +621,13 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     withContext(Dispatchers.IO) {
       return@withContext try {
         val model = WelcomeMessageModel(accountEntity.email, keyDetails.publicKey)
-        val testWelcomeResult = ApiClientRepository.Attester.postWelcomeMessage(
+        val result = ApiClientRepository.Attester.postWelcomeMessage(
           context = getApplication(),
           idToken = idToken,
           model = model
         )
-        when (testWelcomeResult.status) {
-          Result.Status.SUCCESS -> {
-            testWelcomeResult.apiError == null
-          }
 
-          else -> {
-            false
-          }
-        }
+        result.status == Result.Status.SUCCESS
       } catch (e: Exception) {
         e.printStackTrace()
         false
