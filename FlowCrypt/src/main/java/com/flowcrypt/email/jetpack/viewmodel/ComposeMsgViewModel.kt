@@ -362,9 +362,9 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
           Result.Status.ERROR -> {
             throw ApiException(
-              response.data?.apiError ?: ApiError(
+              response.apiError ?: ApiError(
                 code = -1,
-                msg = "Unknown API error"
+                message = "Unknown API error"
               )
             )
           }

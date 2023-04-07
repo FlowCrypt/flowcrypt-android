@@ -11,15 +11,12 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
 
 /**
- * This POJO object describes a base error from the API.
- *
- * @author Denys Bondarenko
+* @author Denys Bondarenko
  */
 @Parcelize
 data class ApiError constructor(
   @Expose val code: Int? = null,
-  @SerializedName("message") @Expose val msg: String? = null,
-  @Expose val internal: String? = null,
-  @Expose val stack: String? = null,
-  @Expose val type: String? = null
+  @Expose val message: String? = null,
+  @SerializedName("details", alternate = ["internal"])
+  @Expose val details: String? = null,
 ) : Parcelable

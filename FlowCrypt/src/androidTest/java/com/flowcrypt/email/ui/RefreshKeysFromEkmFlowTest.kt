@@ -18,6 +18,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
@@ -83,8 +84,8 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
           .setBody(gson.toJson(EKM_RESPONSE_SUCCESS))
 
       "testUpdatePrvKeyFromEkmShowApiError" ->
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(gson.toJson(EKM_ERROR_RESPONSE))
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
+          .setBody(gson.toJson(EKM_API_ERROR))
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
@@ -164,7 +165,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     isDialogWithTextDisplayed(decorView, getResString(R.string.refreshing_keys_from_ekm_failed))
 
     val stringBuilder = StringBuilder()
-    val exception = ApiException(EKM_ERROR_RESPONSE.apiError)
+    val exception = ApiException(EKM_API_ERROR)
     stringBuilder.append(exception.javaClass.simpleName)
     stringBuilder.append(":")
     stringBuilder.append(exception.message)
@@ -191,10 +192,8 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
       "pgp/expired_extended@flowcrypt.test_prv_default.asc"
     )
     private const val EKM_ERROR = "some error"
-    private val EKM_ERROR_RESPONSE = EkmPrivateKeysResponse(
-      code = 400,
-      message = EKM_ERROR
-    )
+    private val EKM_API_ERROR =
+      ApiError(code = HttpURLConnection.HTTP_BAD_REQUEST, message = EKM_ERROR)
     private val EKM_RESPONSE_SUCCESS = EkmPrivateKeysResponse(
       privateKeys = listOf(
         Key(

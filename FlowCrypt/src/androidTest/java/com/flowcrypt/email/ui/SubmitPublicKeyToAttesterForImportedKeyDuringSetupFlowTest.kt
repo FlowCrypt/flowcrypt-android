@@ -137,7 +137,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
   private fun checkAttesterErrorIsDisplayed() {
     isDialogWithTextDisplayed(
       decorView = decorView,
-      message = requireNotNull(ApiException(ApiError(code = 404, msg = "")).message)
+      message = requireNotNull(ApiException(ApiError(code = 404, message = "")).message)
     )
   }
 

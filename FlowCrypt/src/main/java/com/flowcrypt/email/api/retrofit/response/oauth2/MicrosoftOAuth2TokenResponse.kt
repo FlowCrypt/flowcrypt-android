@@ -29,12 +29,12 @@ data class MicrosoftOAuth2TokenResponse constructor(
   @SerializedName("trace_id") @Expose val traceId: String? = null,
   @SerializedName("correlation_id") @Expose val correlationId: String? = null
 ) : ApiResponse {
-  override val apiError: ApiError?
+  val apiError: ApiError?
     get() = if (error != null) {
       ApiError(
         code = errorCodes?.firstOrNull(),
-        msg = error + "\n" + errorDescription,
-        internal = error
+        message = error + "\n" + errorDescription,
+        details = error
       )
     } else null
 

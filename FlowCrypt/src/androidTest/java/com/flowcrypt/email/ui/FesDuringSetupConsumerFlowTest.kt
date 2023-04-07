@@ -149,7 +149,7 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_NOT_ACCEPTABLE,
-          msg = ""
+          message = ""
         )
       ).message
     )
@@ -163,7 +163,7 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_BAD_REQUEST,
-          msg = ""
+          message = ""
         )
       ).message
     )
@@ -177,7 +177,7 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_FORBIDDEN,
-          msg = ""
+          message = ""
         )
       ).message
     )
@@ -191,7 +191,7 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_GONE,
-          msg = ""
+          message = ""
         )
       ).message
     )
@@ -215,7 +215,7 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
       "ApiException:" + ApiException(
         ApiError(
           code = HttpURLConnection.HTTP_NOT_FOUND,
-          msg = ""
+          message = ""
         )
       ).message
     )
@@ -256,7 +256,6 @@ class FesDuringSetupConsumerFlowTest : BaseFesDuringSetupFlowTest() {
     )
 
     private val FES_SUCCESS_RESPONSE = FesServerResponse(
-      apiError = null,
       vendor = "FlowCrypt",
       service = "enterprise-server",
       orgId = "localhost",

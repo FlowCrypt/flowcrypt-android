@@ -16,6 +16,7 @@ import java.io.Serializable
 data class Result<out T>(
   val status: Status,
   val data: T? = null,
+  val apiError: ApiError? = null,
   val exception: Throwable? = null,
   val requestCode: Long = 0,
   val resultCode: Int = 0,
@@ -55,10 +56,10 @@ data class Result<out T>(
       )
     }
 
-    fun <T> error(data: T? = null, requestCode: Long = 0): Result<T> {
+    fun <T> error(apiError: ApiError, requestCode: Long = 0): Result<T> {
       return Result(
         status = Status.ERROR,
-        data = data,
+        apiError = apiError,
         requestCode = requestCode
       )
     }
@@ -79,7 +80,7 @@ data class Result<out T>(
     fun <T : ApiResponse> throwExceptionIfNotSuccess(result: Result<T>) {
       when (result.status) {
         Status.EXCEPTION -> result.exception?.let { throw it }
-        Status.ERROR -> result.data?.apiError?.let { throw ApiException(it) }
+        Status.ERROR -> result.apiError?.let { throw ApiException(it) }
         else -> {
           //do nothing
         }

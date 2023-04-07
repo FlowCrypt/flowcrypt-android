@@ -164,6 +164,8 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
     //open the first draft and modify it
     onView(withId(R.id.recyclerViewMsgs))
       .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
+    //wait for the message details
+    Thread.sleep(2000)
     onView(withId(R.id.imageButtonEditDraft))
       .check(matches(isDisplayed()))
       .perform(click())

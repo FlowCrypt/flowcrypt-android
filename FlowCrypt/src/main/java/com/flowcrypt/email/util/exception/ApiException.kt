@@ -15,4 +15,4 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class ApiException(val apiError: ApiError?) :
-  IOException("API error: code = " + apiError?.code + ", message = " + apiError?.msg)
+  IOException("API error: code = " + apiError?.code + ", message = " + apiError?.message)

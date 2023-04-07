@@ -573,17 +573,16 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
     when (submitPubKeyResult.status) {
       Result.Status.SUCCESS -> {
-        val body = submitPubKeyResult.data
         when {
           isSilent -> {
-            body != null && (body.apiError == null || body.apiError.code !in 400..499)
+            submitPubKeyResult.apiError?.code?.let { it !in 400..499 } ?: true
           }
 
-          body?.apiError != null -> {
-            throw IllegalStateException(ApiException(body.apiError))
+          submitPubKeyResult.apiError != null -> {
+            throw IllegalStateException(ApiException(submitPubKeyResult.apiError))
           }
 
-          else -> body != null
+          else -> submitPubKeyResult.data?.isSent == true
         }
       }
 
@@ -596,7 +595,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         }
 
         Result.Status.ERROR -> {
-          submitPubKeyResult.data?.apiError?.let { apiError -> throw ApiException(apiError) }
+          submitPubKeyResult.apiError?.let { apiError -> throw ApiException(apiError) }
             ?: throw IllegalStateException("Unknown API error")
         }
 
@@ -621,20 +620,13 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     withContext(Dispatchers.IO) {
       return@withContext try {
         val model = WelcomeMessageModel(accountEntity.email, keyDetails.publicKey)
-        val testWelcomeResult = ApiClientRepository.Attester.postWelcomeMessage(
+        val result = ApiClientRepository.Attester.postWelcomeMessage(
           context = getApplication(),
           idToken = idToken,
           model = model
         )
-        when (testWelcomeResult.status) {
-          Result.Status.SUCCESS -> {
-            testWelcomeResult.data?.apiError == null
-          }
 
-          else -> {
-            false
-          }
-        }
+        result.status == Result.Status.SUCCESS
       } catch (e: Exception) {
         e.printStackTrace()
         false

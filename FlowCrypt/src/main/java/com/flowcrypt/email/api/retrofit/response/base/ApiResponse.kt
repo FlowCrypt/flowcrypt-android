@@ -8,10 +8,6 @@ package com.flowcrypt.email.api.retrofit.response.base
 import android.os.Parcelable
 
 /**
- * An interface for identification API response
- *
  * @author Denys Bondarenko
  */
-interface ApiResponse : Parcelable {
-  val apiError: ApiError?
-}
+interface ApiResponse : Parcelable

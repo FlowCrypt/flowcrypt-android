@@ -34,7 +34,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
     viewModelScope.launch {
       checkPrvKeysLiveData.value = Result.loading()
       if (passphrase.isEmpty) {
-        checkPrvKeysLiveData.value = Result.error(emptyList())
+        checkPrvKeysLiveData.value = Result.success(emptyList())
         return@launch
       }
       checkPrvKeysLiveData.value = controlledRunnerForChecking.cancelPreviousThenRun {

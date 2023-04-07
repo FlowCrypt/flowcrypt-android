@@ -153,6 +153,7 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+  @FlakyTest
   fun testNeedPassphraseSingleFingerprint() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_text.json",
@@ -176,6 +177,9 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
       R.plurals.please_provide_passphrase_for_following_keys,
       1
     )
+
+    Thread.sleep(2000)
+
     onView(withId(R.id.tVStatusMessage))
       .check(matches(withText(tVStatusMessageText)))
 

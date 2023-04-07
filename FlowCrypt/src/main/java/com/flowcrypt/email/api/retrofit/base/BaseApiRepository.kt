@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.retrofit.base
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.util.exception.ApiException
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +27,6 @@ interface BaseApiRepository {
   suspend fun <T> getResult(
     requestCode: Long = 0L,
     context: Context? = null,
-    expectedResultClass: Class<T>? = null,
     call: suspend () -> Response<T>
   ): Result<T> {
     return try {
@@ -36,18 +34,12 @@ interface BaseApiRepository {
       if (response.isSuccessful) {
         val body = response.body()
         if (body != null) {
-          if (body is ApiResponse) {
-            return if (body.apiError != null) {
-              Result.error(data = body, requestCode = requestCode)
-            } else {
-              Result.success(data = body, requestCode = requestCode)
-            }
-          } else {
-            Result.success(data = body, requestCode = requestCode)
-          }
+          Result.success(data = body, requestCode = requestCode)
         } else {
           Result.exception(
-            throwable = ApiException(ApiError(response.code(), response.message())),
+            throwable = ApiException(
+              ApiError(code = response.code(), message = response.message())
+            ),
             requestCode = requestCode
           )
         }
@@ -55,25 +47,23 @@ interface BaseApiRepository {
         val errorBody = response.errorBody()
         if (errorBody == null) {
           return Result.exception(
-            throwable = ApiException(ApiError(response.code(), "errorBody == null")),
+            throwable = ApiException(
+              ApiError(code = response.code(), message = "errorBody == null")
+            ),
             requestCode = requestCode
           )
         } else {
           val buffer = errorBody.bytes()
-          val apiResponseWithError = parseError(
+          val apiError = parseApiError(
             context,
-            expectedResultClass,
             buffer.toResponseBody(errorBody.contentType())
           )
 
-          if (apiResponseWithError != null
-            && apiResponseWithError is ApiResponse
-            && apiResponseWithError.apiError != null
-          ) {
-            return Result.error(data = apiResponseWithError, requestCode = requestCode)
+          if (apiError != null) {
+            return Result.error(apiError = apiError, requestCode = requestCode)
           } else {
             Result.exception(
-              throwable = ApiException(ApiError(response.code(), String(buffer))),
+              throwable = ApiException(ApiError(code = response.code(), message = String(buffer))),
               requestCode = requestCode
             )
           }
@@ -85,18 +75,16 @@ interface BaseApiRepository {
     }
   }
 
-  private suspend fun <T> parseError(
+  private suspend fun parseApiError(
     context: Context?,
-    exceptedClass: Class<T>?,
     responseBody: ResponseBody
-  ): T? =
+  ): ApiError? =
     withContext(Dispatchers.IO) {
       context ?: return@withContext null
-      exceptedClass ?: return@withContext null
       try {
-        val errorConverter: Converter<ResponseBody, T> =
+        val errorConverter: Converter<ResponseBody, ApiError> =
           ApiHelper.getInstance(context).retrofit.responseBodyConverter(
-            exceptedClass,
+            ApiError::class.java,
             arrayOfNulls(0)
           )
         return@withContext errorConverter.convert(responseBody)

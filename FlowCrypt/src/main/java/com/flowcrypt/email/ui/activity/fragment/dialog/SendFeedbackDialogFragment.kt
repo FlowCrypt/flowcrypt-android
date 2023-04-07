@@ -92,7 +92,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
             binding?.pBLoading?.gone()
             binding?.btRetry?.visible()
 
-            val exception = it.exception ?: ApiException(it.data?.apiError)
+            val exception = it.exception ?: ApiException(it.apiError)
             val errorMsg = if (exception.message.isNullOrEmpty()) {
               exception.javaClass.simpleName
             } else exception.message
