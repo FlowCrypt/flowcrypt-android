@@ -575,8 +575,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       Result.Status.SUCCESS -> {
         when {
           isSilent -> {
-            submitPubKeyResult.apiError == null ||
-                (submitPubKeyResult.apiError.code != null && submitPubKeyResult.apiError.code !in 400..499)
+            submitPubKeyResult.apiError?.code?.let { it !in 400..499 } ?: true
           }
 
           submitPubKeyResult.apiError != null -> {
