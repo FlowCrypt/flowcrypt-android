@@ -9,7 +9,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.flowcrypt.email.R
-import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * This class describes extension function for [FragmentActivity]
@@ -26,6 +25,7 @@ fun FragmentActivity.showFeedbackFragment() {
 }
 
 fun FragmentActivity.showInfoDialog(
+  requestKey: String,
   requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
@@ -38,6 +38,7 @@ fun FragmentActivity.showInfoDialog(
   showInfoDialog(
     context = this,
     navController = navController,
+    requestKey = requestKey,
     requestCode = requestCode,
     dialogTitle = dialogTitle,
     dialogMsg = dialogMsg,
@@ -51,10 +52,7 @@ fun FragmentActivity.showInfoDialog(
 
 fun FragmentActivity.showTwoWayDialog(
   requestCode: Int = 0,
-  requestKey: String? = GeneralUtil.generateUniqueExtraKey(
-    "REQUEST_KEY_BUTTON_CLICK",
-    this::class.java
-  ),
+  requestKey: String,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
   positiveButtonTitle: String? = null,

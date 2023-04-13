@@ -33,7 +33,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -59,6 +58,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.setFragmentResultListenerForInfoDialog
 import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -1215,7 +1215,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   private fun subscribeToInfoDialog() {
-    setFragmentResultListener(InfoDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+    setFragmentResultListenerForInfoDialog { _, bundle ->
       when (bundle.getInt(InfoDialogFragment.KEY_REQUEST_CODE)) {
         REQUEST_CODE_INFO_DIALOG_FAILED_TO_SEND -> {
           currentFolder?.let {

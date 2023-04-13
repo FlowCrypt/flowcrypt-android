@@ -98,6 +98,10 @@ fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGT
 }
 
 fun androidx.fragment.app.Fragment.showInfoDialog(
+  requestKey: String? = GeneralUtil.generateUniqueExtraKey(
+    "REQUEST_KEY_INFO_BUTTON_CLICK",
+    this::class.java
+  ),
   requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
@@ -110,6 +114,7 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
   showInfoDialog(
     context = requireContext(),
     navController = navController,
+    requestKey = requestKey,
     requestCode = requestCode,
     dialogTitle = dialogTitle,
     dialogMsg = dialogMsg,
@@ -155,6 +160,16 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForTwoWayDialog(
 ) {
   val requestKey = GeneralUtil.generateUniqueExtraKey(
     "REQUEST_KEY_BUTTON_CLICK",
+    this::class.java
+  )
+  parentFragmentManager.setFragmentResultListener(requestKey, this, listener)
+}
+
+fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
+  listener: ((requestKey: String, bundle: Bundle) -> Unit)
+) {
+  val requestKey = GeneralUtil.generateUniqueExtraKey(
+    "REQUEST_KEY_INFO_BUTTON_CLICK",
     this::class.java
   )
   parentFragmentManager.setFragmentResultListener(requestKey, this, listener)

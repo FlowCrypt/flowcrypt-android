@@ -39,6 +39,7 @@ fun LifecycleOwner.showDialogFragment(
 fun LifecycleOwner.showInfoDialog(
   context: Context,
   navController: NavController?,
+  requestKey: String? = null,
   requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
@@ -52,6 +53,7 @@ fun LifecycleOwner.showInfoDialog(
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.info_dialog_graph
       override val arguments = InfoDialogFragmentArgs(
+        requestKey = requestKey,
         requestCode = requestCode,
         dialogTitle = dialogTitle,
         dialogMsg = dialogMsg,
