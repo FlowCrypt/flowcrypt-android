@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -33,7 +34,7 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> =
     roomDatabase.accountDao().getActiveAccountLD()
   val activeAccountLiveData: LiveData<AccountEntity?> =
-    pureActiveAccountLiveData.switchMap { accountEntity ->
+    pureActiveAccountLiveData.distinctUntilChanged().switchMap { accountEntity ->
       liveData {
         emit(getAccountEntityWithDecryptedInfoSuspend(accountEntity))
       }
