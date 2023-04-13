@@ -11,6 +11,7 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.IBinder
 import android.view.LayoutInflater
@@ -20,10 +21,12 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -67,11 +70,14 @@ import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.flowcrypt.email.util.google.gmail.GmailContract
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.launch
@@ -127,6 +133,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
   }
 
+  private val requestGmailAppPermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+      if (isGranted) {
+        subscribeToLabelChangesInOfficialGmailApp()
+      }
+    }
+
   override fun inflateBinding(inflater: LayoutInflater): ActivityMainBinding =
     ActivityMainBinding.inflate(layoutInflater)
 
@@ -160,6 +173,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     subscribeToCollectRefreshPrivateKeysFromEkm()
     subscribeToFixNeedPassphraseIssueDialogFragment()
+    subscribeToInfoDialog()
   }
 
   override fun onStart() {
@@ -302,12 +316,49 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.navigationView.getHeaderView(0)?.let { headerView ->
           navigationViewManager?.initUserProfileView(this@MainActivity, headerView, accountEntity)
         }
+
+        if (accountEntity.isGoogleSignInAccount) {
+          requestGmailAppContentProviderPermissionIfPossible()
+        }
       }
     }
 
     accountViewModel.nonActiveAccountsLiveData.observe(this) {
       navigationViewManager?.genAccountsLayout(this@MainActivity, it)
     }
+  }
+
+  private fun requestGmailAppContentProviderPermissionIfPossible() {
+    if (GmailContract.canReadLabels(this)) {
+      val permission = GmailContract.PERMISSION
+      val value = PackageManager.PERMISSION_GRANTED
+      val isGranted = ContextCompat.checkSelfPermission(this, permission) == value
+      when {
+        isGranted -> {
+          subscribeToLabelChangesInOfficialGmailApp()
+        }
+
+        shouldShowRequestPermissionRationale(permission) -> {
+          showInfoDialog(
+            requestKey = requestKeyForInfoDialog,
+            requestCode = REQUEST_CODE_REQUEST_PERMISSION_TO_INTERACT_WITH_GMAIL_APP,
+            dialogTitle = "",
+            dialogMsg = "For now, we can check for new messages no more than once every 15 minutes. Please grant permission to interact with the official Gmail app for Android to be able to get updates more frequently.",
+            isCancelable = false
+          )
+        }
+
+        else -> {
+          requestGmailAppPermissionLauncher.launch(permission)
+        }
+      }
+    }
+
+    //improve all fragments that return result
+  }
+
+  private fun subscribeToLabelChangesInOfficialGmailApp() {
+    toast("Start checking Gmail")
   }
 
   private fun setupLabelsViewModel() {
@@ -456,6 +507,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
                 !is CommonConnectionException -> {
                   showInfoDialog(
+                    requestKey = requestKeyForInfoDialog,
                     dialogMsg = it.exceptionMsg,
                     dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
                   )
@@ -481,6 +533,18 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           refreshPrivateKeysFromEkmViewModel.refreshPrivateKeys()
         }
       }
+  }
+
+  private fun subscribeToInfoDialog() {
+    binding.fragmentContainerView.getFragment<Fragment>().childFragmentManager.setFragmentResultListener(
+      requestKeyForInfoDialog, this
+    ) { _, bundle ->
+      when (bundle.getInt(InfoDialogFragment.KEY_REQUEST_CODE)) {
+        REQUEST_CODE_REQUEST_PERMISSION_TO_INTERACT_WITH_GMAIL_APP -> {
+          requestGmailAppPermissionLauncher.launch(GmailContract.PERMISSION)
+        }
+      }
+    }
   }
 
   /**
@@ -532,10 +596,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   companion object {
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM = 1000
+    private const val REQUEST_CODE_REQUEST_PERMISSION_TO_INTERACT_WITH_GMAIL_APP = 1001
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val KEY_ACCOUNT = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT"
+
+    val requestKeyForInfoDialog = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_BUTTON_CLICK",
+      MainActivity::class.java
+    )
   }
 }
