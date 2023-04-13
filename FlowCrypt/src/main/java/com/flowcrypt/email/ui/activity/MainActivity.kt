@@ -12,8 +12,12 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.database.ContentObserver
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -40,6 +44,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.NavGraphDirections
@@ -65,6 +70,7 @@ import com.flowcrypt.email.jetpack.viewmodel.RefreshPrivateKeysFromEkmViewModel
 import com.flowcrypt.email.jetpack.workmanager.ActionQueueWorker
 import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
@@ -137,8 +143,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
       if (isGranted) {
         subscribeToLabelChangesInOfficialGmailApp()
+      } else {
+        unsubscribeToLabelChangesInOfficialGmailApp()
       }
     }
+
+  private var contentObserverForOfficialGmailApp: ContentObserver? = null
 
   override fun inflateBinding(inflater: LayoutInflater): ActivityMainBinding =
     ActivityMainBinding.inflate(layoutInflater)
@@ -205,6 +215,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   override fun onDestroy() {
     super.onDestroy()
     unbindService(idleServiceConnection)
+    unsubscribeToLabelChangesInOfficialGmailApp()
     actionBarDrawerToggle?.let { binding.drawerLayout.removeDrawerListener(it) }
   }
 
@@ -319,6 +330,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         if (accountEntity.isGoogleSignInAccount) {
           requestGmailAppContentProviderPermissionIfPossible()
+        } else {
+          unsubscribeToLabelChangesInOfficialGmailApp()
         }
       }
     }
@@ -357,8 +370,29 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     //improve all fragments that return result
   }
 
+  @Suppress("DEPRECATION")
   private fun subscribeToLabelChangesInOfficialGmailApp() {
-    toast("Start checking Gmail")
+    activeAccount?.account?.let { account ->
+      val uri = GmailContract.Labels.getLabelsUri(account.name)
+      contentObserverForOfficialGmailApp =
+        object : ContentObserver(Handler(Looper.getMainLooper())) {
+          override fun onChange(selfChange: Boolean) {
+            super.onChange(selfChange)
+            Log.d("DDDDDD", "changed")
+            InboxIdleSyncWorker.enqueue(applicationContext, ExistingWorkPolicy.KEEP)
+          }
+        }
+
+      contentObserverForOfficialGmailApp?.let {
+        contentResolver.registerContentObserver(uri, false, it)
+      }
+    }
+  }
+
+  private fun unsubscribeToLabelChangesInOfficialGmailApp() {
+    contentObserverForOfficialGmailApp?.let {
+      contentResolver.unregisterContentObserver(it)
+    }
   }
 
   private fun setupLabelsViewModel() {
@@ -604,8 +638,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     const val KEY_ACCOUNT = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT"
 
     val requestKeyForInfoDialog = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_BUTTON_CLICK",
-      MainActivity::class.java
+      "REQUEST_KEY_BUTTON_CLICK", MainActivity::class.java
     )
   }
 }
