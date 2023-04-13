@@ -12,6 +12,11 @@
         android:id="@+id/twoWayDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment">
         <argument
+            android:name="requestKey"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
             android:name="requestCode"
             android:defaultValue="0"
             app:argType="integer" />
