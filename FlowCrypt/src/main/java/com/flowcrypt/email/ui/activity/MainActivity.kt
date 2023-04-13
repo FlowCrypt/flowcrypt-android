@@ -30,6 +30,7 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
@@ -260,6 +261,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           lifecycleScope.launch {
             val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@MainActivity)
             WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
+            NotificationManagerCompat.from(applicationContext).cancelAll()
             roomDatabase.accountDao().switchAccountSuspend(accountEntity)
             binding.drawerLayout.closeDrawer(GravityCompat.START)
           }
