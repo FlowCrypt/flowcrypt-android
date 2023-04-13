@@ -78,6 +78,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -207,6 +208,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override fun onPause() {
     super.onPause()
     snackBar?.dismiss()
+  }
+
+  override fun onResume() {
+    super.onResume()
+    val nonNullAccount = account ?: return
+    val manager = labelsViewModel.foldersManagerLiveData.value ?: return
+    MessagesNotificationManager(requireContext()).cancelAll(nonNullAccount, manager)
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
