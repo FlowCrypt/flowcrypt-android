@@ -40,6 +40,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.GsonBuilder
 import jakarta.mail.BodyPart
+import jakarta.mail.Message
 import jakarta.mail.Multipart
 import jakarta.mail.Part
 import jakarta.mail.Session
@@ -103,7 +104,14 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
   private val recipientWithPubKeys = listOf(
     RecipientWithPubKeys(
       RecipientEntity(
-        email = RECIPIENT_WITHOUT_PUBLIC_KEY,
+        email = TO_RECIPIENT_WITHOUT_PUBLIC_KEY,
+        name = null
+      ),
+      emptyList()
+    ),
+    RecipientWithPubKeys(
+      RecipientEntity(
+        email = BCC_RECIPIENT_WITHOUT_PUBLIC_KEY,
         name = null
       ),
       emptyList()
@@ -141,7 +149,8 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       account = addAccountToDatabaseRule.account.email,
       subject = MESSAGE_SUBJECT,
       msg = MESSAGE_TEXT,
-      toRecipients = listOf(InternetAddress(RECIPIENT_WITHOUT_PUBLIC_KEY)),
+      toRecipients = listOf(InternetAddress(TO_RECIPIENT_WITHOUT_PUBLIC_KEY)),
+      bccRecipients = listOf(InternetAddress(BCC_RECIPIENT_WITHOUT_PUBLIC_KEY)),
       from = InternetAddress(addAccountToDatabaseRule.account.email),
       encryptionType = MessageEncryptionType.ENCRYPTED,
       messageType = MessageType.NEW,
@@ -201,6 +210,19 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
       assertNotNull(messageUploadRequest)
       assertEquals(REPLY_TOKEN, messageUploadRequest.associateReplyToken)
+      assertEquals(addAccountToDatabaseRule.account.email, messageUploadRequest.from)
+      assertArrayEquals(
+        arrayOf(TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
+        messageUploadRequest.to.toTypedArray()
+      )
+      assertArrayEquals(
+        emptyArray(),
+        messageUploadRequest.cc.toTypedArray()
+      )
+      assertArrayEquals(
+        arrayOf(BCC_RECIPIENT_WITHOUT_PUBLIC_KEY),
+        messageUploadRequest.bcc.toTypedArray()
+      )
     }
   }
 
@@ -230,6 +252,30 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
         ByteArrayInputStream(decryptedContent?.toByteArray())
       )
 
+      //we should be sure that me have right recipients in MIME message. BCC should be empty here.
+      assertEquals(
+        addAccountToDatabaseRule.account.email,
+        (mimeMessage.from.first() as InternetAddress).address
+      )
+      assertArrayEquals(
+        arrayOf(TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
+        mimeMessage.getRecipients(Message.RecipientType.TO)
+          .map { (it as InternetAddress).address }
+          .toTypedArray()
+      )
+      assertArrayEquals(
+        emptyArray(),
+        mimeMessage.getRecipients(Message.RecipientType.CC)
+          ?.map { (it as InternetAddress).address }
+          ?.toTypedArray() ?: emptyArray()
+      )
+      assertArrayEquals(
+        emptyArray(),
+        mimeMessage.getRecipients(Message.RecipientType.BCC)
+          ?.map { (it as InternetAddress).address }
+          ?.toTypedArray() ?: emptyArray()
+      )
+
       val multipart = mimeMessage.content as Multipart
       //this MIME message should contains 5 parts:
       //text + 4 attachments(1 and 2 - text, 3 - binary, 4 - pub key)
@@ -237,7 +283,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
       val replyInfoData = HandlePasswordProtectedMsgWorker.ReplyInfoData(
         sender = addAccountToDatabaseRule.account.email.lowercase(),
-        recipient = listOf(RECIPIENT_WITHOUT_PUBLIC_KEY),
+        recipient = listOf(BCC_RECIPIENT_WITHOUT_PUBLIC_KEY, TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
         subject = MESSAGE_SUBJECT,
         token = REPLY_TOKEN
       )
@@ -271,7 +317,8 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
   }
 
   companion object {
-    private const val RECIPIENT_WITHOUT_PUBLIC_KEY = "no_key@flowcrypt.test"
+    private const val TO_RECIPIENT_WITHOUT_PUBLIC_KEY = "to_no_key@flowcrypt.test"
+    private const val BCC_RECIPIENT_WITHOUT_PUBLIC_KEY = "bcc_no_key@flowcrypt.test"
     private const val WEB_PORTAL_PASSWORD = "Qwerty1234@"
     private const val MESSAGE_SUBJECT = "Subject"
     private const val MESSAGE_TEXT = "Some text"
@@ -283,7 +330,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
     private var attachmentsDataCache: MutableList<ByteArray> = mutableListOf()
     private var attachments: MutableList<File> = mutableListOf()
     private val pgpSecretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(
-      UserId.nameAndEmail(RECIPIENT_WITHOUT_PUBLIC_KEY, RECIPIENT_WITHOUT_PUBLIC_KEY),
+      UserId.nameAndEmail(TO_RECIPIENT_WITHOUT_PUBLIC_KEY, TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
       TestConstants.DEFAULT_PASSWORD
     )
 
