@@ -182,7 +182,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
   companion object {
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".IDLE_SYNC_INBOX"
 
-    fun enqueue(context: Context) {
+    fun enqueue(context: Context, policy: ExistingWorkPolicy = ExistingWorkPolicy.REPLACE) {
       val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
@@ -191,7 +191,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
         .getInstance(context.applicationContext)
         .enqueueUniqueWork(
           GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.REPLACE,
+          policy,
           OneTimeWorkRequestBuilder<InboxIdleSyncWorker>()
             .addTag(TAG_SYNC)
             .setConstraints(constraints)
