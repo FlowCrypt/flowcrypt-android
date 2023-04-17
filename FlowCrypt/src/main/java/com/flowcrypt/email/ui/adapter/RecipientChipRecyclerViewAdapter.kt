@@ -192,7 +192,11 @@ class RecipientChipRecyclerViewAdapter(
 
       val color = when {
         recipientInfo.isUpdating -> {
-          MaterialColors.getColor(chip.context, R.attr.colorSurface, Color.WHITE)
+          MaterialColors.getColor(
+            chip.context,
+            com.google.android.material.R.attr.colorSurface,
+            Color.WHITE
+          )
         }
 
         recipientWithPubKeys.hasAtLeastOnePubKey() -> {
@@ -216,11 +220,19 @@ class RecipientChipRecyclerViewAdapter(
     private fun updateChipTextColor(chip: Chip, recipientInfo: RecipientInfo) {
       val color = when {
         recipientInfo.isUpdating -> {
-          MaterialColors.getColor(chip.context, R.attr.colorOnSurface, Color.BLACK)
+          MaterialColors.getColor(
+            chip.context,
+            com.google.android.material.R.attr.colorOnSurface,
+            Color.BLACK
+          )
         }
 
         else -> {
-          MaterialColors.getColor(chip.context, R.attr.colorOnSurfaceInverse, Color.WHITE)
+          MaterialColors.getColor(
+            chip.context,
+            com.google.android.material.R.attr.colorOnSurfaceInverse,
+            Color.WHITE
+          )
         }
       }
 
@@ -283,11 +295,11 @@ class RecipientChipRecyclerViewAdapter(
   }
 
   companion object {
-    const val CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY = R.color.colorPrimary
-    const val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED = R.color.orange
-    const val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED = R.color.red
-    const val CHIP_COLOR_RES_ID_NO_PUB_KEY = R.color.gray
-    const val CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY = R.color.red
+    val CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY = R.color.colorPrimary
+    val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_EXPIRED = R.color.orange
+    val CHIP_COLOR_RES_ID_HAS_PUB_KEY_BUT_REVOKED = R.color.red
+    val CHIP_COLOR_RES_ID_NO_PUB_KEY = R.color.gray
+    val CHIP_COLOR_RES_ID_NO_USABLE_PUB_KEY = R.color.red
     private const val MAX_VISIBLE_ITEMS_COUNT = 3
 
     private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Item>() {

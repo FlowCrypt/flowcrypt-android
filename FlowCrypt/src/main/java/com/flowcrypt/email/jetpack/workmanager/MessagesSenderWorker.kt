@@ -541,7 +541,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
   companion object {
     private val TAG = MessagesSenderWorker::class.java.simpleName
-    private const val NOTIFICATION_ID = R.id.notification_id_sending_msgs_worker
+    private val NOTIFICATION_ID = R.id.notification_id_sending_msgs_worker
     val NAME = MessagesSenderWorker::class.java.simpleName
 
     fun enqueue(context: Context, forceSending: Boolean = false) {

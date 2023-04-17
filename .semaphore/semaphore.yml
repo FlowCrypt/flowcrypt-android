@@ -36,8 +36,8 @@ global_job_config:
       # print some debug info
       - ping fel.localhost -c 1
       - ping fel.flowcrypt.test -c 1
-      # use JAVA 11 by default
-      - sem-version java 11
+      # use JAVA 17 by default
+      - sem-version java 17
       # general settings
       - export PATH=${ANDROID_SDK_ROOT}/emulator:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
