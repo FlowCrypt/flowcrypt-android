@@ -577,5 +577,4 @@
     </plurals>
     <string name="error_occurred_with_details_please_try_again">Сталася помилка, спробуйте ще раз\n\nДеталі помилки:\n%1$s</string>
     <string name="end_pass_phrase_session">Завершити сесію ключової фрази</string>
-    <string name="get_permission_gmail_app_explanation">На даний момент ми можемо робити перевірку наявності нових повідомлень не частіше одного разу кожних 15 хвилин. Будь ласка надайте дозвіл на взаємодію з офіціфним додатком Gmail для Android, щоб мати можливіть отримувати повідомлення частіше.</string>
 </resources>
