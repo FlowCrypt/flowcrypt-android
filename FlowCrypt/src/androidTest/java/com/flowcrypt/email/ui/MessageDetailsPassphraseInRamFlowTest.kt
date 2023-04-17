@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
@@ -225,6 +226,8 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   @FlakyTest
   fun testNeedPassphraseMultiplyFingerprintsSecondKey() {
+    countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_for_2_keys_text.json",
       classOfT = IncomingMessageInfo::class.java
@@ -239,6 +242,8 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
         replaceText(TestConstants.DEFAULT_SECOND_STRONG_PASSWORD),
         pressImeActionButton()
       )
+
+    Thread.sleep(2000)
 
     checkWebView(decryptedInfo)
   }
@@ -303,6 +308,7 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
     )
 
     launchActivity(incomingMsgInfo!!.msgEntity)
+    Thread.sleep(2000)
 
     val decryptErrorMsgBlock = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val expectedKeysCount = 2

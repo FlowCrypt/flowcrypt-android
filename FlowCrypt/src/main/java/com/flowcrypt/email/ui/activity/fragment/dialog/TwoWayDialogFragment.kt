@@ -48,31 +48,29 @@ class TwoWayDialogFragment : BaseDialogFragment() {
       args.positiveButtonTitle
     ) { _, _ ->
       navController?.navigateUp()
-      setFragmentResult(
-        REQUEST_KEY_BUTTON_CLICK,
-        bundleOf(KEY_REQUEST_CODE to args.requestCode, KEY_RESULT to RESULT_OK)
-      )
+      setFragmentResult(RESULT_OK)
     }
 
     dialogBuilder.setNegativeButton(
       args.negativeButtonTitle
     ) { _, _ ->
       navController?.navigateUp()
-      setFragmentResult(
-        REQUEST_KEY_BUTTON_CLICK,
-        bundleOf(KEY_REQUEST_CODE to args.requestCode, KEY_RESULT to RESULT_CANCELED)
-      )
+      setFragmentResult(RESULT_CANCELED)
     }
 
     return dialogBuilder.create()
   }
 
-  companion object {
-    val REQUEST_KEY_BUTTON_CLICK = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_BUTTON_CLICK",
-      TwoWayDialogFragment::class.java
-    )
+  private fun setFragmentResult(result: Int) {
+    args.requestKey?.let { requestKey ->
+      setFragmentResult(
+        requestKey,
+        bundleOf(KEY_REQUEST_CODE to args.requestCode, KEY_RESULT to result)
+      )
+    }
+  }
 
+  companion object {
     val KEY_REQUEST_CODE = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_CODE", TwoWayDialogFragment::class.java
     )
@@ -81,10 +79,10 @@ class TwoWayDialogFragment : BaseDialogFragment() {
       "KEY_RESULT", TwoWayDialogFragment::class.java
     )
 
-    /** Standard activity result: operation canceled.  */
+    /** Result: operation canceled.  */
     const val RESULT_CANCELED = 0
 
-    /** Standard activity result: operation succeeded. */
+    /** Result: operation succeeded. */
     const val RESULT_OK = 1
   }
 }

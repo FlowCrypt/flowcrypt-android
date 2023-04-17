@@ -6,6 +6,7 @@
 package com.flowcrypt.email.extensions
 
 import android.net.Uri
+import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
 import androidx.test.espresso.idling.CountingIdlingResource
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
@@ -22,6 +24,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDia
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragmentArgs
 import com.flowcrypt.email.util.FlavorSettings
+import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.material.appbar.AppBarLayout
 
 /**
@@ -96,6 +99,10 @@ fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGT
 }
 
 fun androidx.fragment.app.Fragment.showInfoDialog(
+  requestKey: String? = GeneralUtil.generateUniqueExtraKey(
+    Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
+    this::class.java
+  ),
   requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
@@ -108,6 +115,7 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
   showInfoDialog(
     context = requireContext(),
     navController = navController,
+    requestKey = requestKey,
     requestCode = requestCode,
     dialogTitle = dialogTitle,
     dialogMsg = dialogMsg,
@@ -120,6 +128,10 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
 }
 
 fun androidx.fragment.app.Fragment.showTwoWayDialog(
+  requestKey: String? = GeneralUtil.generateUniqueExtraKey(
+    Constants.REQUEST_KEY_BUTTON_CLICK,
+    this::class.java
+  ),
   requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
@@ -132,6 +144,7 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
   showTwoWayDialog(
     context = requireContext(),
     navController = navController,
+    requestKey = requestKey,
     requestCode = requestCode,
     dialogTitle = dialogTitle,
     dialogMsg = dialogMsg,
@@ -141,6 +154,26 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
     hasHtml = hasHtml,
     useLinkify = useLinkify
   )
+}
+
+fun androidx.fragment.app.Fragment.setFragmentResultListenerForTwoWayDialog(
+  listener: ((requestKey: String, bundle: Bundle) -> Unit)
+) {
+  val requestKey = GeneralUtil.generateUniqueExtraKey(
+    Constants.REQUEST_KEY_BUTTON_CLICK,
+    this::class.java
+  )
+  parentFragmentManager.setFragmentResultListener(requestKey, this, listener)
+}
+
+fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
+  listener: ((requestKey: String, bundle: Bundle) -> Unit)
+) {
+  val requestKey = GeneralUtil.generateUniqueExtraKey(
+    Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
+    this::class.java
+  )
+  parentFragmentManager.setFragmentResultListener(requestKey, this, listener)
 }
 
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(

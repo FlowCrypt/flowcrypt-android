@@ -32,6 +32,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -254,7 +255,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
   }
 
   private fun subscribeToTwoWayDialog() {
-    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+    setFragmentResultListenerForTwoWayDialog { _, bundle ->
       val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
       val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
 
