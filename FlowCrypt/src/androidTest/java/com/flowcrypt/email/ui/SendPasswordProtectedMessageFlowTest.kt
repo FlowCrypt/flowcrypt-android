@@ -108,6 +108,12 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
         name = null
       ),
       emptyList()
+    ), RecipientWithPubKeys(
+      RecipientEntity(
+        email = CC_RECIPIENT_WITHOUT_PUBLIC_KEY,
+        name = null
+      ),
+      emptyList()
     ),
     RecipientWithPubKeys(
       RecipientEntity(
@@ -150,6 +156,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       subject = MESSAGE_SUBJECT,
       msg = MESSAGE_TEXT,
       toRecipients = listOf(InternetAddress(TO_RECIPIENT_WITHOUT_PUBLIC_KEY)),
+      ccRecipients = listOf(InternetAddress(CC_RECIPIENT_WITHOUT_PUBLIC_KEY)),
       bccRecipients = listOf(InternetAddress(BCC_RECIPIENT_WITHOUT_PUBLIC_KEY)),
       from = InternetAddress(addAccountToDatabaseRule.account.email),
       encryptionType = MessageEncryptionType.ENCRYPTED,
@@ -216,7 +223,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
         messageUploadRequest.to.toTypedArray()
       )
       assertArrayEquals(
-        emptyArray(),
+        arrayOf(CC_RECIPIENT_WITHOUT_PUBLIC_KEY),
         messageUploadRequest.cc.toTypedArray()
       )
       assertArrayEquals(
@@ -259,21 +266,15 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       )
       assertArrayEquals(
         arrayOf(TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
-        mimeMessage.getRecipients(Message.RecipientType.TO)
-          .map { (it as InternetAddress).address }
-          .toTypedArray()
+        getEmailAddresses(mimeMessage, Message.RecipientType.TO)
+      )
+      assertArrayEquals(
+        arrayOf(CC_RECIPIENT_WITHOUT_PUBLIC_KEY),
+        getEmailAddresses(mimeMessage, Message.RecipientType.CC)
       )
       assertArrayEquals(
         emptyArray(),
-        mimeMessage.getRecipients(Message.RecipientType.CC)
-          ?.map { (it as InternetAddress).address }
-          ?.toTypedArray() ?: emptyArray()
-      )
-      assertArrayEquals(
-        emptyArray(),
-        mimeMessage.getRecipients(Message.RecipientType.BCC)
-          ?.map { (it as InternetAddress).address }
-          ?.toTypedArray() ?: emptyArray()
+        getEmailAddresses(mimeMessage, Message.RecipientType.BCC)
       )
 
       val multipart = mimeMessage.content as Multipart
@@ -283,7 +284,11 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
       val replyInfoData = HandlePasswordProtectedMsgWorker.ReplyInfoData(
         sender = addAccountToDatabaseRule.account.email.lowercase(),
-        recipient = listOf(BCC_RECIPIENT_WITHOUT_PUBLIC_KEY, TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
+        recipient = listOf(
+          CC_RECIPIENT_WITHOUT_PUBLIC_KEY,
+          BCC_RECIPIENT_WITHOUT_PUBLIC_KEY,
+          TO_RECIPIENT_WITHOUT_PUBLIC_KEY
+        ),
         subject = MESSAGE_SUBJECT,
         token = REPLY_TOKEN
       )
@@ -310,6 +315,11 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
     }
   }
 
+  private fun getEmailAddresses(mimeMessage: MimeMessage, type: Message.RecipientType) =
+    mimeMessage.getRecipients(type)
+      ?.map { (it as InternetAddress).address }
+      ?.toTypedArray() ?: emptyArray()
+
   private fun checkAttachmentPart(bodyPart: BodyPart, position: Int) {
     assertEquals(Part.ATTACHMENT, bodyPart.disposition)
     assertEquals(attachments[position].name, bodyPart.fileName)
@@ -318,6 +328,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
   companion object {
     private const val TO_RECIPIENT_WITHOUT_PUBLIC_KEY = "to_no_key@flowcrypt.test"
+    private const val CC_RECIPIENT_WITHOUT_PUBLIC_KEY = "cc_no_key@flowcrypt.test"
     private const val BCC_RECIPIENT_WITHOUT_PUBLIC_KEY = "bcc_no_key@flowcrypt.test"
     private const val WEB_PORTAL_PASSWORD = "Qwerty1234@"
     private const val MESSAGE_SUBJECT = "Subject"
