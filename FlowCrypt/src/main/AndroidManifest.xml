@@ -6,7 +6,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="LockedOrientationActivity">
-    <!-- we use tools:ignore="LockedOrientationActivity" as for now we support android:screenOrientation="portrait" only-->
+
+<!-- we use tools:ignore="LockedOrientationActivity" as for now we support android:screenOrientation="portrait" only-->
 
     <!-- android.permission.INTERNET is needed to make a network requests -->
     <uses-permission android:name="android.permission.INTERNET" />
