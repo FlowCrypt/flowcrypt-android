@@ -456,7 +456,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                 this.threadId = threadId
               }
 
-              val mediaContent = FileContent("message/rfc822", copyOfMimeMsg)
+              val mediaContent = FileContent(Constants.MIME_TYPE_RFC822, copyOfMimeMsg)
 
               gmailMsg = gmail
                 .users()

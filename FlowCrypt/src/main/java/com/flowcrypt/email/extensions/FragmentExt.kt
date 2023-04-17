@@ -14,6 +14,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
 import androidx.test.espresso.idling.CountingIdlingResource
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
@@ -99,7 +100,7 @@ fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGT
 
 fun androidx.fragment.app.Fragment.showInfoDialog(
   requestKey: String? = GeneralUtil.generateUniqueExtraKey(
-    "REQUEST_KEY_INFO_BUTTON_CLICK",
+    Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
     this::class.java
   ),
   requestCode: Int = 0,
@@ -128,7 +129,7 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
 
 fun androidx.fragment.app.Fragment.showTwoWayDialog(
   requestKey: String? = GeneralUtil.generateUniqueExtraKey(
-    "REQUEST_KEY_BUTTON_CLICK",
+    Constants.REQUEST_KEY_BUTTON_CLICK,
     this::class.java
   ),
   requestCode: Int = 0,
@@ -159,7 +160,7 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForTwoWayDialog(
   listener: ((requestKey: String, bundle: Bundle) -> Unit)
 ) {
   val requestKey = GeneralUtil.generateUniqueExtraKey(
-    "REQUEST_KEY_BUTTON_CLICK",
+    Constants.REQUEST_KEY_BUTTON_CLICK,
     this::class.java
   )
   parentFragmentManager.setFragmentResultListener(requestKey, this, listener)
@@ -169,7 +170,7 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
   listener: ((requestKey: String, bundle: Bundle) -> Unit)
 ) {
   val requestKey = GeneralUtil.generateUniqueExtraKey(
-    "REQUEST_KEY_INFO_BUTTON_CLICK",
+    Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
     this::class.java
   )
   parentFragmentManager.setFragmentResultListener(requestKey, this, listener)

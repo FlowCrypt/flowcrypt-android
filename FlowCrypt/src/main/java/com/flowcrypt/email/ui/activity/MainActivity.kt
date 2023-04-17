@@ -640,7 +640,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     const val KEY_ACCOUNT = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT"
 
     val requestKeyForInfoDialog = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_BUTTON_CLICK", MainActivity::class.java
+      "REQUEST_KEY_INFO_BUTTON_CLICK", MainActivity::class.java
     )
   }
 }
