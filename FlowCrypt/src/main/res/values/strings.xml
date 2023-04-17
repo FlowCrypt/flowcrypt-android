@@ -586,4 +586,5 @@
     <string name="enterprise_does_not_support_pub_domains">This version of %1$s cannot be used on %2$s domain. If you installed this app by accident, please install non-enterprise FlowCrypt app.</string>
     <string name="error_occurred_with_details_please_try_again">Error occurred, please try again\n\nError details:\n%1$s</string>
     <string name="end_pass_phrase_session">End Pass Phrase Session</string>
+    <string name="get_permission_gmail_app_explanation">For now, we can check for new messages no more than once every 15 minutes. Please grant permission to interact with the official Gmail app for Android to be able to get updates more frequently.</string>
 </resources>

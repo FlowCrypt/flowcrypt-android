@@ -17,7 +17,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -358,7 +357,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             requestKey = requestKeyForInfoDialog,
             requestCode = REQUEST_CODE_REQUEST_PERMISSION_TO_INTERACT_WITH_GMAIL_APP,
             dialogTitle = "",
-            dialogMsg = "For now, we can check for new messages no more than once every 15 minutes. Please grant permission to interact with the official Gmail app for Android to be able to get updates more frequently.",
+            dialogMsg = getString(R.string.get_permission_gmail_app_explanation),
             isCancelable = false
           )
         }
@@ -368,11 +367,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
       }
     }
-
-    //improve all fragments that return result
   }
 
-  @Suppress("DEPRECATION")
   private fun subscribeToLabelChangesInOfficialGmailApp() {
     activeAccount?.account?.let { account ->
       val uri = GmailContract.Labels.getLabelsUri(account.name)
@@ -380,7 +376,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         object : ContentObserver(Handler(Looper.getMainLooper())) {
           override fun onChange(selfChange: Boolean) {
             super.onChange(selfChange)
-            Log.d("DDDDDD", "changed")
             InboxIdleSyncWorker.enqueue(applicationContext, ExistingWorkPolicy.KEEP)
           }
         }
