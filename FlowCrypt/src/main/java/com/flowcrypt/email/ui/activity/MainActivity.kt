@@ -11,12 +11,8 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
-import android.database.ContentObserver
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -24,13 +20,11 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -44,9 +38,9 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
@@ -70,20 +64,17 @@ import com.flowcrypt.email.jetpack.viewmodel.RefreshPrivateKeysFromEkmViewModel
 import com.flowcrypt.email.jetpack.workmanager.ActionQueueWorker
 import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.flowcrypt.email.util.google.gmail.GmailContract
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.launch
@@ -139,17 +130,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
   }
 
-  private val requestGmailAppPermissionLauncher =
-    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-      if (isGranted) {
-        subscribeToLabelChangesInOfficialGmailApp()
-      } else {
-        unsubscribeToLabelChangesInOfficialGmailApp()
-      }
-    }
-
-  private var contentObserverForOfficialGmailApp: ContentObserver? = null
-
   override fun inflateBinding(inflater: LayoutInflater): ActivityMainBinding =
     ActivityMainBinding.inflate(layoutInflater)
 
@@ -183,7 +163,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     subscribeToCollectRefreshPrivateKeysFromEkm()
     subscribeToFixNeedPassphraseIssueDialogFragment()
-    subscribeToInfoDialog()
   }
 
   override fun onStart() {
@@ -215,7 +194,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   override fun onDestroy() {
     super.onDestroy()
     unbindService(idleServiceConnection)
-    unsubscribeToLabelChangesInOfficialGmailApp()
     actionBarDrawerToggle?.let { binding.drawerLayout.removeDrawerListener(it) }
   }
 
@@ -328,67 +306,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.navigationView.getHeaderView(0)?.let { headerView ->
           navigationViewManager?.initUserProfileView(this@MainActivity, headerView, accountEntity)
         }
-
-        if (accountEntity.isGoogleSignInAccount) {
-          requestGmailAppContentProviderPermissionIfPossible()
-        } else {
-          unsubscribeToLabelChangesInOfficialGmailApp()
-        }
       }
     }
 
     accountViewModel.nonActiveAccountsLiveData.observe(this) {
       navigationViewManager?.genAccountsLayout(this@MainActivity, it)
-    }
-  }
-
-  private fun requestGmailAppContentProviderPermissionIfPossible() {
-    if (GmailContract.canReadLabels(this)) {
-      val permission = GmailContract.PERMISSION
-      val value = PackageManager.PERMISSION_GRANTED
-      val isGranted = ContextCompat.checkSelfPermission(this, permission) == value
-      when {
-        isGranted -> {
-          subscribeToLabelChangesInOfficialGmailApp()
-        }
-
-        shouldShowRequestPermissionRationale(permission) -> {
-          showInfoDialog(
-            requestKey = requestKeyForInfoDialog,
-            requestCode = REQUEST_CODE_REQUEST_PERMISSION_TO_INTERACT_WITH_GMAIL_APP,
-            dialogTitle = "",
-            dialogMsg = getString(R.string.get_permission_gmail_app_explanation),
-            isCancelable = false
-          )
-        }
-
-        else -> {
-          requestGmailAppPermissionLauncher.launch(permission)
-        }
-      }
-    }
-  }
-
-  private fun subscribeToLabelChangesInOfficialGmailApp() {
-    activeAccount?.account?.let { account ->
-      val uri = GmailContract.Labels.getLabelsUri(account.name)
-      contentObserverForOfficialGmailApp =
-        object : ContentObserver(Handler(Looper.getMainLooper())) {
-          override fun onChange(selfChange: Boolean) {
-            super.onChange(selfChange)
-            InboxIdleSyncWorker.enqueue(applicationContext, ExistingWorkPolicy.KEEP)
-          }
-        }
-
-      contentObserverForOfficialGmailApp?.let {
-        contentResolver.registerContentObserver(uri, false, it)
-      }
-    }
-  }
-
-  private fun unsubscribeToLabelChangesInOfficialGmailApp() {
-    contentObserverForOfficialGmailApp?.let {
-      contentResolver.unregisterContentObserver(it)
     }
   }
 
@@ -517,9 +439,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           Result.Status.LOADING -> {
             FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
           }
+
           Result.Status.SUCCESS -> {
             FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
           }
+
           Result.Status.EXCEPTION -> {
             it.exception?.let { exception ->
               when (exception) {
@@ -538,7 +462,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
                 !is CommonConnectionException -> {
                   showInfoDialog(
-                    requestKey = requestKeyForInfoDialog,
+                    requestKey = GeneralUtil.generateUniqueExtraKey(
+                      Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
+                      this::class.java
+                    ),
                     dialogMsg = it.exceptionMsg,
                     dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
                   )
@@ -547,6 +474,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
             FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
           }
+
           else -> {}
         }
       }
@@ -566,18 +494,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       }
   }
 
-  private fun subscribeToInfoDialog() {
-    binding.fragmentContainerView.getFragment<Fragment>().childFragmentManager.setFragmentResultListener(
-      requestKeyForInfoDialog, this
-    ) { _, bundle ->
-      when (bundle.getInt(InfoDialogFragment.KEY_REQUEST_CODE)) {
-        REQUEST_CODE_REQUEST_PERMISSION_TO_INTERACT_WITH_GMAIL_APP -> {
-          requestGmailAppPermissionLauncher.launch(GmailContract.PERMISSION)
-        }
-      }
-    }
-  }
-
   /**
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
    * update task when the drawer will be opened.
@@ -595,7 +511,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     openDrawerContentDescRes,
     closeDrawerContentDescRes
   ) {
-
     var slideOffset = 0f
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
@@ -627,15 +542,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   companion object {
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM = 1000
-    private const val REQUEST_CODE_REQUEST_PERMISSION_TO_INTERACT_WITH_GMAIL_APP = 1001
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val KEY_ACCOUNT = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT"
-
-    val requestKeyForInfoDialog = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_INFO_BUTTON_CLICK", MainActivity::class.java
-    )
   }
 }
