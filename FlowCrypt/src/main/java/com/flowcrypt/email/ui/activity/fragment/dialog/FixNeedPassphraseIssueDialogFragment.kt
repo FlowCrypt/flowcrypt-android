@@ -282,7 +282,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
   companion object {
     val REQUEST_KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_BUTTON_CLICK",
+      "REQUEST_KEY_UPDATE_BUTTON_CLICK",
       FixNeedPassphraseIssueDialogFragment::class.java
     )
 

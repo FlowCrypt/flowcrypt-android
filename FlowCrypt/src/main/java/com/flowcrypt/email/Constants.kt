@@ -139,5 +139,11 @@ class Constants {
      */
     const val FLAVOR_NAME_ENTERPRISE = "enterprise"
     const val FLAVOR_NAME_DEV = "dev"
+
+    /**
+     * Global request keys.
+     */
+    const val REQUEST_KEY_BUTTON_CLICK = "REQUEST_KEY_BUTTON_CLICK"
+    const val REQUEST_KEY_INFO_BUTTON_CLICK = "REQUEST_KEY_INFO_BUTTON_CLICK"
   }
 }

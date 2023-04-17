@@ -25,6 +25,7 @@ fun FragmentActivity.showFeedbackFragment() {
 }
 
 fun FragmentActivity.showInfoDialog(
+  requestKey: String,
   requestCode: Int = 0,
   dialogTitle: String? = null,
   dialogMsg: String? = null,
@@ -37,6 +38,7 @@ fun FragmentActivity.showInfoDialog(
   showInfoDialog(
     context = this,
     navController = navController,
+    requestKey = requestKey,
     requestCode = requestCode,
     dialogTitle = dialogTitle,
     dialogMsg = dialogMsg,
@@ -45,5 +47,31 @@ fun FragmentActivity.showInfoDialog(
     hasHtml = hasHtml,
     useLinkify = useLinkify,
     useWebViewToRender = useWebViewToRender
+  )
+}
+
+fun FragmentActivity.showTwoWayDialog(
+  requestCode: Int = 0,
+  requestKey: String,
+  dialogTitle: String? = null,
+  dialogMsg: String? = null,
+  positiveButtonTitle: String? = null,
+  negativeButtonTitle: String? = null,
+  isCancelable: Boolean = true,
+  hasHtml: Boolean = false,
+  useLinkify: Boolean = false
+) {
+  showTwoWayDialog(
+    context = this,
+    navController = navController,
+    requestKey = requestKey,
+    requestCode = requestCode,
+    dialogTitle = dialogTitle,
+    dialogMsg = dialogMsg,
+    positiveButtonTitle = positiveButtonTitle,
+    negativeButtonTitle = negativeButtonTitle,
+    isCancelable = isCancelable,
+    hasHtml = hasHtml,
+    useLinkify = useLinkify
   )
 }

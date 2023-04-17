@@ -45,10 +45,12 @@ class InfoDialogFragment : BaseDialogFragment() {
       }
       setPositiveButton(args.buttonTitle) { _, _ ->
         navController?.navigateUp()
-        setFragmentResult(
-          REQUEST_KEY_BUTTON_CLICK,
-          bundleOf(KEY_REQUEST_CODE to args.requestCode)
-        )
+        args.requestKey?.let { requestKey ->
+          setFragmentResult(
+            requestKey,
+            bundleOf(KEY_REQUEST_CODE to args.requestCode)
+          )
+        }
       }
     }
 
@@ -74,11 +76,6 @@ class InfoDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_BUTTON_CLICK = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_BUTTON_CLICK",
-      InfoDialogFragment::class.java
-    )
-
     val KEY_REQUEST_CODE = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_CODE", InfoDialogFragment::class.java
     )

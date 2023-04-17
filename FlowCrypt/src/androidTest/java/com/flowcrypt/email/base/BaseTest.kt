@@ -71,7 +71,7 @@ import java.util.Properties
  */
 abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
-  private var countingIdlingResource: IdlingResource? = null
+  protected var countingIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
 
   protected val decorView: View?
