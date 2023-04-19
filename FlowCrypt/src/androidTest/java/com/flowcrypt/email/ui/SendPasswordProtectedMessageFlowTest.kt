@@ -242,7 +242,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
         srcInputStream = sentPgpMessage.toInputStream(),
         passphrase = Passphrase.fromPassword(WEB_PORTAL_PASSWORD)
-      )
+      ) {}
       //check that message was encrypted
       assertTrue(decryptionResult.isEncrypted)
       //check that message was not signed

@@ -407,7 +407,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
       publicKeys = PGPPublicKeyRingCollection(emptyList()),
       secretKeys = accountSecretKeys,
       protector = keysStorage.getSecretKeyRingProtector()
-    )
+    ) {}
 
     decryptionResult.exception?.printStackTrace()
 

@@ -6,6 +6,7 @@
 package com.flowcrypt.email.security.pgp
 
 import android.os.Parcelable
+import android.util.Log
 import com.flowcrypt.email.util.exception.DecryptionException
 import kotlinx.parcelize.Parcelize
 import org.bouncycastle.openpgp.PGPDataValidationException
@@ -58,11 +59,6 @@ object PgpDecryptAndOrVerify {
     }
   }
 
-  /**
-   * Note: we have to use 'additionalRetryCount' to prevent randomly errors.
-   * I hope it will be a temporary solution.
-   * More details here: https://github.com/pgpainless/pgpainless/issues/365
-   */
   fun decryptAndOrVerifyWithResult(
     srcInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection? = null,
@@ -70,50 +66,60 @@ object PgpDecryptAndOrVerify {
     protector: SecretKeyRingProtector? = null,
     passphrase: Passphrase? = null,
     ignoreMdcErrors: Boolean = false,
-    additionalRetryCount: Int = 0
+    attempts: Int = 1,
+    action: (i: Int) -> Unit
   ): DecryptionResult {
-    srcInputStream.use { srcStream ->
-      val destOutputStream = ByteArrayOutputStream()
-      destOutputStream.use { outStream ->
-        try {
-          val decryptionStream = genDecryptionStream(
-            srcInputStream = srcStream,
-            publicKeys = publicKeys,
-            secretKeys = secretKeys,
-            protector = protector,
-            passphrase = passphrase,
-            ignoreMdcErrors = ignoreMdcErrors
-          )
+    var decryptionResult: DecryptionResult =
+      DecryptionResult.withError(processDecryptionException(IllegalStateException()))
+    for (i in 0 until attempts) {
+      if (srcInputStream.markSupported()) {
+        srcInputStream.reset()
+      }
+      try {
+        srcInputStream.use { srcStream ->
+          val destOutputStream = ByteArrayOutputStream()
+          destOutputStream.use { outStream ->
 
-          decryptionStream.use { it.copyTo(outStream) }
-          return DecryptionResult(
-            openPgpMetadata = decryptionStream.result,
-            content = destOutputStream
-          )
-        } catch (e: Exception) {
-          if (additionalRetryCount > 0 && srcStream.markSupported()) {
-            srcStream.reset()
-            return decryptAndOrVerifyWithResult(
-              srcInputStream,
-              publicKeys,
-              secretKeys,
-              protector,
-              passphrase,
-              ignoreMdcErrors,
-              additionalRetryCount - 1
+            val decryptionStream = genDecryptionStream(
+              srcInputStream = srcStream,
+              publicKeys = publicKeys,
+              secretKeys = secretKeys,
+              protector = protector,
+              passphrase = passphrase,
+              ignoreMdcErrors = ignoreMdcErrors
             )
-          } else {
-            e.printStackTrace()
-            return DecryptionResult.withError(
-              processDecryptionException(e)
+
+            Log.d("DDDDDD", "try to decrypt = $i + ${Thread.currentThread().name}")
+
+            decryptionStream.use { it.copyTo(outStream) }
+            decryptionResult = DecryptionResult(
+              openPgpMetadata = decryptionStream.result,
+              content = destOutputStream
             )
+            action.invoke(i)
           }
         }
+      } catch (e: Exception) {
+        Log.d(
+          "DDDDDD",
+          "Attempt with exception = $i + ${Thread.currentThread().name} | $srcInputStream | $publicKeys | $secretKeys | $protector"
+        )
+        e.printStackTrace()
+        return DecryptionResult.withError(
+          processDecryptionException(e)
+        )
       }
     }
+
+    Log.d(
+      "DDDDDD",
+      "Attempt = $attempts + ${Thread.currentThread().name} | $srcInputStream | $publicKeys | $secretKeys | $protector"
+    )
+    return decryptionResult
   }
 
   @Suppress("DEPRECATION")
+  //@Synchronized
   fun genDecryptionStream(
     srcInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection? = null,
