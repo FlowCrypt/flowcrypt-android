@@ -15,6 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.junit.Assert
 import org.junit.Test
 import org.pgpainless.PGPainless
@@ -26,7 +27,7 @@ class PgpDecryptMultiThreadsKotlinTest {
 
   @Test
   fun testDecryptionInMultiThreads() {
-    val numberOfThreads = 2
+    val numberOfThreads = 5
     val numberOfAttempts = 500
     val atomicInteger = AtomicInteger()
 
@@ -61,9 +62,7 @@ class PgpDecryptMultiThreadsKotlinTest {
     val pgpPublicKeyRingCollection = PGPainless.readKeyRing().publicKeyRingCollection(
       SENDER_PUBLIC_KEY + "\n" + RECEIVER_PUBLIC_KEY
     )
-    val secretKeyRingCollection = PGPainless.readKeyRing().secretKeyRingCollection(
-      SENDER_PRIVATE_KEY
-    )
+    val secretKeyRingCollection = PGPSecretKeyRingCollection(listOf(secretKeyRing))
 
     val decryptionResult = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = ENCRYPTED_TEXT.toInputStream(),
@@ -96,6 +95,11 @@ class PgpDecryptMultiThreadsKotlinTest {
         "k40IfHsK0fGgR+NrRAw=\n" +
         "=osuI\n" +
         "-----END PGP PRIVATE KEY BLOCK-----"
+
+    val secretKeyRing = PGPainless.readKeyRing().secretKeyRing(
+      SENDER_PRIVATE_KEY
+    )
+
     private const val SENDER_PUBLIC_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
         "Version: PGPainless\n" +
         "\n" +

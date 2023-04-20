@@ -18,12 +18,13 @@ import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryptio
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
-import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
 import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
+import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.protection.KeyRingProtectionSettings
@@ -68,8 +69,8 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     liveData {
       val combinedSource =
         it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
-      val pgpKeyRingCollection = PgpKey.parseKeysRaw(combinedSource)
-      val keys = pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList()
+      val pgpKeyRingCollection = PGPainless.readKeyRing().secretKeyRingCollection(combinedSource)
+      val keys = pgpKeyRingCollection.keyRings.asSequence().toList()
       emit(keys)
     }
   }
@@ -87,7 +88,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   }
 
   override fun getPGPSecretKeyRings(): List<PGPSecretKeyRing> {
-    return secretKeyRingsLiveData.value ?: emptyList()
+    //return secretKeyRingsLiveData.value ?: emptyList()
+    return secretKeyRingsLiveData.value?.map {
+      PGPSecretKeyRing(it.encoded, BcKeyFingerprintCalculator())
+    } ?: emptyList()
   }
 
   override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
