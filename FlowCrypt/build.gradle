@@ -248,7 +248,7 @@ android {
         }
     }
 
-    tasks.register('renameReleaseBuilds') {
+    tasks.register('renameReleaseBuild') {
         doLast {
             applicationVariants.all { variant ->
                 if (variant.buildType.buildType == buildTypes.release) {
@@ -264,33 +264,32 @@ android {
         }
     }
 
-    task copyReleaseApks(type: Copy) {
-        from("$buildDir") {
-            include '**/*release*.apk'
-        }
+    tasks.register('copyReleaseApks') {
+        dependsOn 'renameReleaseBuild'
 
-        includeEmptyDirs = false
-        into '../release'
-        eachFile { file ->
-            file.path = file.name
+        doLast {
+            copy {
+                from("$buildDir") {
+                    include '**/*release*.apk'
+                }
+
+                includeEmptyDirs = false
+                into '../release'
+                eachFile { file ->
+                    file.path = file.name
+                }
+            }
         }
     }
 
-    afterEvaluate {
-        Task taskPackageConsumerRelease = tasks.findByName('packageConsumerRelease')
-        if (taskPackageConsumerRelease != null) {
-            taskPackageConsumerRelease.finalizedBy renameReleaseBuilds
-        }
+    tasks.register('prepareConsumerReleaseApk') {
+        dependsOn 'assembleConsumerRelease'
+        finalizedBy 'copyReleaseApks'
+    }
 
-        Task taskPackageConsumerEnterprise = tasks.findByName('packageEnterpriseRelease')
-        if (taskPackageConsumerEnterprise != null) {
-            taskPackageConsumerEnterprise.finalizedBy renameReleaseBuilds
-        }
-
-        Task renameReleaseBuilds = tasks.findByName('renameReleaseBuilds')
-        if (renameReleaseBuilds != null) {
-            renameReleaseBuilds.finalizedBy copyReleaseApks
-        }
+    tasks.register('prepareEnterpriseReleaseApk') {
+        dependsOn 'assembleEnterpriseRelease'
+        finalizedBy 'copyReleaseApks'
     }
 }
 
