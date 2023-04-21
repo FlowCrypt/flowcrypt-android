@@ -6,9 +6,12 @@
 package com.flowcrypt.email.util.acra
 
 import android.content.Context
+import com.flowcrypt.email.api.retrofit.request.model.CrashReportModel
+import com.google.gson.GsonBuilder
 import org.acra.ReportField
 import org.acra.config.CoreConfiguration
 import org.acra.data.CrashReportData
+import org.acra.data.StringFormat
 import org.acra.sender.HttpSender
 
 /**
@@ -26,6 +29,20 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
     }
 
     super.send(context, errorContent)
+  }
+
+  override fun convertToString(report: CrashReportData?, format: StringFormat): String {
+    val stackTrace = report?.getString(ReportField.STACK_TRACE)
+
+    val crashReportModel = CrashReportModel(
+      name = null,
+      message = null,
+      url = null,
+      line = null,
+      col = null,
+      trace = stackTrace
+    )
+    return GsonBuilder().create().toJson(crashReportModel)
   }
 
   /**
