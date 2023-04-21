@@ -82,7 +82,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   @OptIn(DelicateCoroutinesApi::class)
-  fun cancelAll(context: Context, account: AccountEntity, foldersManager: FoldersManager) {
+  fun cancelAll(account: AccountEntity, foldersManager: FoldersManager) {
     cancel(NOTIFICATIONS_GROUP_MESSAGES)
     val localFolder = foldersManager.findInboxFolder()
 

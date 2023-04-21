@@ -39,6 +39,7 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
@@ -429,21 +430,25 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun subscribeToTwoWayDialog() {
-    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+    setFragmentResultListenerForTwoWayDialog { _, bundle ->
       val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
       val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
 
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          val account = cachedGoogleSignInAccount?.account?.name
+            ?: return@setFragmentResultListenerForTwoWayDialog
           checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val idToken = cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListener
-          val account = cachedGoogleSignInAccount?.account?.name ?: return@setFragmentResultListener
+          val idToken =
+            cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListenerForTwoWayDialog
+          val account = cachedGoogleSignInAccount?.account?.name
+            ?: return@setFragmentResultListenerForTwoWayDialog
           val domain = EmailUtil.getDomain(account)
-          val baseFesUrlPath = cachedBaseFesUrlPath ?: return@setFragmentResultListener
+          val baseFesUrlPath =
+            cachedBaseFesUrlPath ?: return@setFragmentResultListenerForTwoWayDialog
           clientConfigurationViewModel.fetchClientConfiguration(
             idToken = idToken,
             baseFesUrlPath = baseFesUrlPath,
@@ -452,7 +457,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val idToken = cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListener
+          val idToken =
+            cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListenerForTwoWayDialog
           cachedClientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
         }
       }

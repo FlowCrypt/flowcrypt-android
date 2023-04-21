@@ -179,7 +179,10 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
             val bodyWithReplyToken = originalText + "\n\n" + infoDiv
 
             val rawMimeMsg = createRawMimeMsgWithAttachments(
-              sourceMimeMessage = mimeMsgWithEncryptedContent,
+              sourceMimeMessage = mimeMsgWithEncryptedContent.apply {
+                //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2279
+                setRecipients(Message.RecipientType.BCC, emptyArray())
+              },
               bodyWithReplyToken = bodyWithReplyToken,
               attachments = attachments,
               accountSecretKeys = accountSecretKeys,

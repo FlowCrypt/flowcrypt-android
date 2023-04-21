@@ -29,6 +29,7 @@ import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
+import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.AccountSettingsViewModel
@@ -397,7 +398,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   }
 
   private fun subscribeToTwoWayDialog() {
-    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+    setFragmentResultListenerForTwoWayDialog { _, bundle ->
       val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
       val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
 

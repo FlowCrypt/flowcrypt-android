@@ -74,6 +74,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -1574,7 +1575,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToTwoWayDialog() {
-    setFragmentResultListener(TwoWayDialogFragment.REQUEST_KEY_BUTTON_CLICK) { _, bundle ->
+    setFragmentResultListenerForTwoWayDialog { _, bundle ->
       val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
       val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
 

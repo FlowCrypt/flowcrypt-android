@@ -187,16 +187,17 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildFeatures {
+        buildConfig true
         viewBinding true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
         freeCompilerArgs += ["-opt-in=kotlin.RequiresOptIn"]
     }
 
@@ -247,7 +248,7 @@ android {
         }
     }
 
-    tasks.register('renameReleaseBuilds') {
+    tasks.register('renameReleaseBuild') {
         doLast {
             applicationVariants.all { variant ->
                 if (variant.buildType.buildType == buildTypes.release) {
@@ -263,33 +264,32 @@ android {
         }
     }
 
-    task copyReleaseApks(type: Copy) {
-        from("$buildDir") {
-            include '**/*release*.apk'
-        }
+    tasks.register('copyReleaseApks') {
+        dependsOn 'renameReleaseBuild'
 
-        includeEmptyDirs = false
-        into '../release'
-        eachFile { file ->
-            file.path = file.name
+        doLast {
+            copy {
+                from("$buildDir") {
+                    include '**/*release*.apk'
+                }
+
+                includeEmptyDirs = false
+                into '../release'
+                eachFile { file ->
+                    file.path = file.name
+                }
+            }
         }
     }
 
-    afterEvaluate {
-        Task taskPackageConsumerRelease = tasks.findByName('packageConsumerRelease')
-        if (taskPackageConsumerRelease != null) {
-            taskPackageConsumerRelease.finalizedBy renameReleaseBuilds
-        }
+    tasks.register('prepareConsumerReleaseApk') {
+        dependsOn 'assembleConsumerRelease'
+        finalizedBy 'copyReleaseApks'
+    }
 
-        Task taskPackageConsumerEnterprise = tasks.findByName('packageEnterpriseRelease')
-        if (taskPackageConsumerEnterprise != null) {
-            taskPackageConsumerEnterprise.finalizedBy renameReleaseBuilds
-        }
-
-        Task renameReleaseBuilds = tasks.findByName('renameReleaseBuilds')
-        if (renameReleaseBuilds != null) {
-            renameReleaseBuilds.finalizedBy copyReleaseApks
-        }
+    tasks.register('prepareEnterpriseReleaseApk') {
+        dependsOn 'assembleEnterpriseRelease'
+        finalizedBy 'copyReleaseApks'
     }
 }
 
@@ -373,7 +373,7 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.room:room-testing:2.5.1'
-    testImplementation 'org.robolectric:robolectric:4.9.2'
+    testImplementation 'org.robolectric:robolectric:4.10'
     testImplementation 'io.github.classgraph:classgraph:4.8.157'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'

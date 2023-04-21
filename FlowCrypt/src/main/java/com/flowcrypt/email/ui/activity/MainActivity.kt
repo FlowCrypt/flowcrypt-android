@@ -24,6 +24,7 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -39,6 +40,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
@@ -69,6 +71,7 @@ import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
@@ -235,6 +238,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           lifecycleScope.launch {
             val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@MainActivity)
             WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
+            NotificationManagerCompat.from(applicationContext).cancelAll()
             roomDatabase.accountDao().switchAccountSuspend(accountEntity)
             binding.drawerLayout.closeDrawer(GravityCompat.START)
           }
@@ -435,9 +439,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           Result.Status.LOADING -> {
             FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
           }
+
           Result.Status.SUCCESS -> {
             FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
           }
+
           Result.Status.EXCEPTION -> {
             it.exception?.let { exception ->
               when (exception) {
@@ -456,6 +462,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
                 !is CommonConnectionException -> {
                   showInfoDialog(
+                    requestKey = GeneralUtil.generateUniqueExtraKey(
+                      Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
+                      this::class.java
+                    ),
                     dialogMsg = it.exceptionMsg,
                     dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
                   )
@@ -464,6 +474,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
             FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
           }
+
           else -> {}
         }
       }
@@ -500,7 +511,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     openDrawerContentDescRes,
     closeDrawerContentDescRes
   ) {
-
     var slideOffset = 0f
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {

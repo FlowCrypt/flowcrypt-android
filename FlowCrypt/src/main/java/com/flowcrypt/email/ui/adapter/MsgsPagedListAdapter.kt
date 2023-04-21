@@ -176,7 +176,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       if (messageEntity.isSeen) {
         changeViewsTypeface(viewHolder, Typeface.NORMAL)
         viewHolder.textViewSenderAddress?.setTextColor(
-          MaterialColors.getColor(context, R.attr.colorOnSurfaceVariant, Color.BLACK)
+          MaterialColors.getColor(
+            context,
+            com.google.android.material.R.attr.colorOnSurfaceVariant,
+            Color.BLACK
+          )
         )
         viewHolder.textViewDate?.setTextColor(
           MaterialColors.getColor(context, R.attr.itemSubTitleColor, Color.BLACK)
