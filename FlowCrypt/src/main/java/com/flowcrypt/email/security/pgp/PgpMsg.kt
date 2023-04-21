@@ -423,6 +423,7 @@ object PgpMsg {
             )
           )
         }
+
         else -> {
           //skip for now
         }
@@ -598,6 +599,7 @@ object PgpMsg {
               attrs.add(innerText)
               return@allowElements "span"
             }
+
             "a" -> {
               val fromImage = getAttribute(attrs, FC_FROM_IMAGE_ATTR)
               if (fromImage == true.toString()) {
@@ -614,6 +616,7 @@ object PgpMsg {
                 return@allowElements elementName
               }
             }
+
             else -> return@allowElements elementName
           }
         },
@@ -869,9 +872,8 @@ object PgpMsg {
       srcInputStream = rawBlock.content.inputStream(),
       publicKeys = verificationPublicKeys,
       secretKeys = secretKeys,
-      protector = protector,
-      attempts = 1000
-    ) {}
+      protector = protector
+    )
 
     val blocks = mutableListOf<MsgBlock>()
     if (decryptionResult.exception == null) {
@@ -924,9 +926,8 @@ object PgpMsg {
           publicKeys = verificationPublicKeys,
           secretKeys = secretKeys,
           protector = protector,
-          ignoreMdcErrors = true,
-          attempts = 1000
-        ) {}
+          ignoreMdcErrors = true
+        )
         val decryptErrorMsgBlock = if (resultWithIgnoredMDCErrors.exception == null) {
           DecryptErrorMsgBlock(
             content = String(resultWithIgnoredMDCErrors.content?.toByteArray() ?: byteArrayOf()),

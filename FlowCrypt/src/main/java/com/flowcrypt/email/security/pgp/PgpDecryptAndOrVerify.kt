@@ -6,7 +6,6 @@
 package com.flowcrypt.email.security.pgp
 
 import android.os.Parcelable
-import android.util.Log
 import com.flowcrypt.email.util.exception.DecryptionException
 import kotlinx.parcelize.Parcelize
 import org.bouncycastle.openpgp.PGPDataValidationException
@@ -65,57 +64,33 @@ object PgpDecryptAndOrVerify {
     secretKeys: PGPSecretKeyRingCollection? = null,
     protector: SecretKeyRingProtector? = null,
     passphrase: Passphrase? = null,
-    ignoreMdcErrors: Boolean = false,
-    attempts: Int = 1,
-    action: (i: Int) -> Unit
+    ignoreMdcErrors: Boolean = false
   ): DecryptionResult {
-    var decryptionResult: DecryptionResult =
-      DecryptionResult.withError(processDecryptionException(IllegalStateException()))
-    for (i in 0 until attempts) {
-      if (srcInputStream.markSupported()) {
-        srcInputStream.reset()
-      }
-      try {
-        srcInputStream.use { srcStream ->
-          val destOutputStream = ByteArrayOutputStream()
-          destOutputStream.use { outStream ->
+    srcInputStream.use { srcStream ->
+      val destOutputStream = ByteArrayOutputStream()
+      destOutputStream.use { outStream ->
+        try {
+          val decryptionStream = genDecryptionStream(
+            srcInputStream = srcStream,
+            publicKeys = publicKeys,
+            secretKeys = secretKeys,
+            protector = protector,
+            passphrase = passphrase,
+            ignoreMdcErrors = ignoreMdcErrors
+          )
 
-            val decryptionStream = genDecryptionStream(
-              srcInputStream = srcStream,
-              publicKeys = publicKeys,
-              secretKeys = secretKeys,
-              protector = protector,
-              passphrase = passphrase,
-              ignoreMdcErrors = ignoreMdcErrors
-            )
-
-            Log.d("DDDDDD", "try to decrypt = $i + ${Thread.currentThread().name}")
-
-            decryptionStream.use { it.copyTo(outStream) }
-            decryptionResult = DecryptionResult(
-              openPgpMetadata = decryptionStream.result,
-              content = destOutputStream
-            )
-            action.invoke(i)
-          }
+          decryptionStream.use { it.copyTo(outStream) }
+          return DecryptionResult(
+            openPgpMetadata = decryptionStream.result,
+            content = destOutputStream
+          )
+        } catch (e: Exception) {
+          return DecryptionResult.withError(
+            processDecryptionException(e)
+          )
         }
-      } catch (e: Exception) {
-        Log.d(
-          "DDDDDD",
-          "Attempt with exception = $i + ${Thread.currentThread().name} | $srcInputStream | $publicKeys | $secretKeys | $protector"
-        )
-        e.printStackTrace()
-        return DecryptionResult.withError(
-          processDecryptionException(e)
-        )
       }
     }
-
-    Log.d(
-      "DDDDDD",
-      "Attempt = $attempts + ${Thread.currentThread().name} | $srcInputStream | $publicKeys | $secretKeys | $protector"
-    )
-    return decryptionResult
   }
 
   @Suppress("DEPRECATION")
