@@ -33,10 +33,10 @@ class SamePGPSignatureVerificationMultiThreadingTest {
 
     runBlocking {
       executeInParallel(numberOfThreads) {
-        for (i in 0 until numberOfAttempts) {
+        repeat(numberOfAttempts) {
           doDecryption { decryptionResult ->
             if (decryptionResult.exception == null) {
-              atomicInteger.addAndGet(1)
+              atomicInteger.incrementAndGet()
             }
           }
         }
@@ -54,7 +54,7 @@ class SamePGPSignatureVerificationMultiThreadingTest {
   ) = withContext(Dispatchers.IO)
   {
     val steps = mutableListOf<Deferred<Unit>>()
-    for (i in 0 until threads) {
+    repeat(threads) {
       steps.add(async { action.invoke() })
     }
 
