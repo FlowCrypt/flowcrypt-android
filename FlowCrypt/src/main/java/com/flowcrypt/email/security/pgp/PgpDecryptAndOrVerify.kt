@@ -58,19 +58,13 @@ object PgpDecryptAndOrVerify {
     }
   }
 
-  /**
-   * Note: we have to use 'additionalRetryCount' to prevent randomly errors.
-   * I hope it will be a temporary solution.
-   * More details here: https://github.com/pgpainless/pgpainless/issues/365
-   */
   fun decryptAndOrVerifyWithResult(
     srcInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection? = null,
     secretKeys: PGPSecretKeyRingCollection? = null,
     protector: SecretKeyRingProtector? = null,
     passphrase: Passphrase? = null,
-    ignoreMdcErrors: Boolean = false,
-    additionalRetryCount: Int = 0
+    ignoreMdcErrors: Boolean = false
   ): DecryptionResult {
     srcInputStream.use { srcStream ->
       val destOutputStream = ByteArrayOutputStream()
@@ -91,23 +85,9 @@ object PgpDecryptAndOrVerify {
             content = destOutputStream
           )
         } catch (e: Exception) {
-          if (additionalRetryCount > 0 && srcStream.markSupported()) {
-            srcStream.reset()
-            return decryptAndOrVerifyWithResult(
-              srcInputStream,
-              publicKeys,
-              secretKeys,
-              protector,
-              passphrase,
-              ignoreMdcErrors,
-              additionalRetryCount - 1
-            )
-          } else {
-            e.printStackTrace()
-            return DecryptionResult.withError(
-              processDecryptionException(e)
-            )
-          }
+          return DecryptionResult.withError(
+            processDecryptionException(e)
+          )
         }
       }
     }
