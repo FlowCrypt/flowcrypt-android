@@ -1,14 +1,11 @@
 /*
- * Copyright (c) 2023. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
- * Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
- * Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
- * Vestibulum commodo. Ut rhoncus gravida arcu.
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: denbond7
  */
-package com.flowcrypt.email
+
+package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.extensions.kotlin.toInputStream
-import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -16,48 +13,59 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import org.junit.Assert
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.util.concurrent.atomic.AtomicInteger
 
-class PgpDecryptMultiThreadsKotlinTest {
-
+/*
+* It's a test for https://github.com/bcgit/bc-java/issues/1379. It will fail when PGPSignature will
+* be fixed.
+* */
+class SamePGPSignatureVerificationMultiThreadingTest {
   @Test
   fun testDecryptionInMultiThreads() {
-    val numberOfThreads = 5
-    val numberOfAttempts = 500
+    val numberOfThreads = 10
+    val numberOfAttempts = 1000
     val atomicInteger = AtomicInteger()
 
     runBlocking {
-      useParallel(numberOfThreads) {
-        doDecryption(atomicInteger, numberOfAttempts)
+      executeInParallel(numberOfThreads) {
+        for (i in 0 until numberOfAttempts) {
+          doDecryption { decryptionResult ->
+            if (decryptionResult.exception == null) {
+              atomicInteger.addAndGet(1)
+            }
+          }
+        }
       }
     }
 
-    Assert.assertEquals((numberOfThreads * numberOfAttempts).toLong(), atomicInteger.get().toLong())
+    //for now we attempts count != numberOfThreads * numberOfAttempts
+    //because some of the attempts should fail
+    assertNotEquals((numberOfThreads * numberOfAttempts).toLong(), atomicInteger.get().toLong())
   }
 
-  private suspend fun useParallel(
-    parallelCount: Int = 1,
+  private suspend fun executeInParallel(
+    threads: Int = 1,
     action: suspend () -> Unit
   ) = withContext(Dispatchers.IO)
   {
     val steps = mutableListOf<Deferred<Unit>>()
-    for (i in 0 until parallelCount) {
+    for (i in 0 until threads) {
       steps.add(async { action.invoke() })
     }
 
     awaitAll(*steps.toTypedArray())
   }
 
-  private fun doDecryption(atomicInteger: AtomicInteger, attemptsCount: Int) {
+  private fun doDecryption(
+    afterCompleteCallback: (decryptionResult: PgpDecryptAndOrVerify.DecryptionResult) -> Unit
+  ) {
     val secretKeyRingProtector = SecretKeyRingProtector.unlockAnyKeyWith(
-      Passphrase.fromPassword(
-        PASSPHRASE
-      )
+      Passphrase.fromPassword(PASSPHRASE)
     )
     val pgpPublicKeyRingCollection = PGPainless.readKeyRing().publicKeyRingCollection(
       SENDER_PUBLIC_KEY + "\n" + RECEIVER_PUBLIC_KEY
@@ -68,13 +76,9 @@ class PgpDecryptMultiThreadsKotlinTest {
       srcInputStream = ENCRYPTED_TEXT.toInputStream(),
       publicKeys = pgpPublicKeyRingCollection,
       secretKeys = secretKeyRingCollection,
-      protector = secretKeyRingProtector,
-      attempts = attemptsCount
-    ) {
-      atomicInteger.addAndGet(1)
-    }
-
-    Assert.assertEquals(ORIGINAL_TEXT, decryptionResult.content.toString())
+      protector = secretKeyRingProtector
+    )
+    afterCompleteCallback.invoke(decryptionResult)
   }
 
   companion object {
@@ -138,6 +142,5 @@ class PgpDecryptMultiThreadsKotlinTest {
         "=20Uz\n" +
         "-----END PGP MESSAGE-----"
     private const val PASSPHRASE = "android"
-    private const val ORIGINAL_TEXT = "Some text"
   }
 }
