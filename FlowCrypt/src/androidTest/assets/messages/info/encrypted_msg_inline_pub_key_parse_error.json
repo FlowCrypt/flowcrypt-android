@@ -10,7 +10,7 @@
       "complete": false,
       "content": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: PGPainless\n\nmDMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZ\nceAWUq+0F2RlbmJvbmQ3QGZsb3djcnlwdC50ZXN0iHgEExYKACAFAmCLnFgCGwMF\nFgIDAQAECwkIBwUVCgkICwIeAQIZAQAKCRDDIInNavjWzm3JAQCgFgCEyD58iEa/\nunaAldoabgO4OARgi5xYEgorBgEEAZdVAQUBAQdAB1/Mrq5JGYim4KqGTSK4OESQ\nUwPgK56q0yrkiU9WgyYDAQgHiHUEGBYKAB0FAmCLnFgCGwwFFgIDAQAECwkIBwUV\nCgkICwIeAQAKCRDDIInNavjWzjMgAQCU+R1fItqdY6lt9jXUqipmXuqVaEFPwNA8\nYJ1rIwDwVQEAyUc8162KWzA2iQB5akwLwNr/pLDDtOWwhLUkrBb3mAc\u003d\n\u003dpXF6\n-----END PGP PUBLIC KEY BLOCK-----\n",
       "error": {
-        "errorMsg": "[IOException]: crc check failed in armored message."
+        "errorMsg": "[ArmoredInputException]: crc check failed in armored message"
       },
       "type": "publicKey"
     }
