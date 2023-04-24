@@ -350,7 +350,7 @@ dependencies {
 
     devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'
     //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
-    uiTestsImplementation 'androidx.fragment:fragment-testing:1.5.6'
+    uiTestsImplementation 'androidx.fragment:fragment-testing:1.5.7'
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
