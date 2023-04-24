@@ -8,6 +8,7 @@ package com.flowcrypt.email.security.pgp
 import android.os.Parcelable
 import com.flowcrypt.email.util.exception.DecryptionException
 import kotlinx.parcelize.Parcelize
+import org.bouncycastle.bcpg.ArmoredInputException
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
@@ -150,8 +151,8 @@ object PgpDecryptAndOrVerify {
         val exception = e.cause ?: e
 
         when {
-          exception is IOException && exception.message.equals(
-            "crc check failed in armored message.",
+          exception is ArmoredInputException && exception.message.equals(
+            "crc check failed in armored message",
             true
           ) -> {
             DecryptionException(DecryptionErrorType.FORMAT, e)
