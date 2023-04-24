@@ -6,6 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
+import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -225,9 +226,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
   ): MessageState = withContext(Dispatchers.IO) {
     var msgState = MessageState.QUEUED
     for (attachmentEntity in atts) {
-      val attInfo = attachmentEntity.toAttInfo()
-
-      if (!attInfo.isForwarded) {
+      if (!attachmentEntity.isForwarded) {
         continue
       }
 
@@ -236,10 +235,11 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       val attFile = File(msgAttsDir, attName)
       val exists = attFile.exists()
 
+      var uri: Uri? = null
       if (exists) {
-        attInfo.uri =
+        uri =
           FileProvider.getUriForFile(applicationContext, Constants.FILE_PROVIDER_AUTHORITY, attFile)
-      } else if (attInfo.uri == null) {
+      } else if (attachmentEntity.fileUri == null) {
         FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
         val inputStream = action.invoke(attachmentEntity)
         val tempFile = File(fwdAttsCacheDir, UUID.randomUUID().toString())
@@ -252,7 +252,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
           if (msgAttsDir.exists()) {
             FileUtils.moveFile(tempFile, attFile)
-            attInfo.uri = FileProvider.getUriForFile(
+            uri = FileProvider.getUriForFile(
               applicationContext,
               Constants.FILE_PROVIDER_AUTHORITY,
               attFile
@@ -268,11 +268,11 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
         }
       }
 
-      if (attInfo.uri != null) {
-        val updateCandidate = AttachmentEntity.fromAttInfo(attInfo)?.copy(id = attachmentEntity.id)
-        updateCandidate?.let {
-          FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().updateSuspend(it)
-        }
+      if (uri != null) {
+        FlowCryptRoomDatabase
+          .getDatabase(applicationContext)
+          .attachmentDao()
+          .updateSuspend(attachmentEntity.copy(fileUri = uri.toString()))
       }
     }
 

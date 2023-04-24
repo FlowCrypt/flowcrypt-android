@@ -711,13 +711,18 @@ class MsgDetailsViewModel(
           imapFolder.fetch(arrayOf(msg), fetchProfile)
 
           val msgUid = messageEntity.uid
-          val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
-            AttachmentEntity.fromAttInfo(it.apply {
-              email = accountEntity.email
-              this.folder =
-                if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else JavaEmailConstants.FOLDER_SEARCH
-              uid = msgUid
-            })
+          val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull { attachmentInfo ->
+            AttachmentEntity.fromAttInfo(
+              attachmentInfo.copy(
+                email = accountEntity.email,
+                folder = if (localFolder.searchQuery.isNullOrEmpty()) {
+                  localFolder.fullName
+                } else {
+                  JavaEmailConstants.FOLDER_SEARCH
+                },
+                uid = msgUid
+              )
+            )
           }
 
           FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()
@@ -736,13 +741,16 @@ class MsgDetailsViewModel(
           accountEntity,
           messageEntity.uidAsHEX
         )
-        val attachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
-          AttachmentEntity.fromAttInfo(it.apply {
-            this.email = accountEntity.email
-            this.folder = localFolder.fullName
-            this.uid = msg.uid
-          })
-        }
+        val attachments =
+          GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+            AttachmentEntity.fromAttInfo(
+              attachmentInfo.copy(
+                email = accountEntity.email,
+                folder = localFolder.fullName,
+                uid = msg.uid
+              )
+            )
+          }
         FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()
           .insertWithReplaceSuspend(attachments)
       } catch (e: Exception) {

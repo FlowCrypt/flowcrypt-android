@@ -92,7 +92,7 @@ data class AttachmentEntity(
           encodedSize = encodedSize,
           type = type,
           attachmentId = id,
-          fileUri = if (uri != null) uri.toString() else null,
+          fileUri = uri?.toString(),
           forwardedFolder = fwdFolder,
           forwardedUid = fwdUid,
           path = path,

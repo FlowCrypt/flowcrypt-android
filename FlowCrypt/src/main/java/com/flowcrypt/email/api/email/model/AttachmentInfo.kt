@@ -19,38 +19,28 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class AttachmentInfo constructor(
-  var rawData: ByteArray? = null,
-  var email: String? = null,
-  var folder: String? = null,
-  var uid: Long = 0,
-  var fwdFolder: String? = null,
-  var fwdUid: Long = 0,
-  var name: String? = null,
-  var encodedSize: Long = 0,
-  var type: String = Constants.MIME_TYPE_BINARY_DATA,
-  var id: String? = null,
-  var path: String = "0",
-  var uri: Uri? = null,
-  var isProtected: Boolean = false,
-  var isForwarded: Boolean = false,
-  var isDecrypted: Boolean = false,
-  var isEncryptionAllowed: Boolean = true,
-  var orderNumber: Int = 0,
-  var decryptWhenForward: Boolean = false,
+  val rawData: ByteArray? = null,
+  val email: String? = null,
+  val folder: String? = null,
+  val uid: Long = 0,
+  val fwdFolder: String? = null,
+  val fwdUid: Long = 0,
+  val name: String? = null,
+  val encodedSize: Long = 0,
+  val type: String = Constants.MIME_TYPE_BINARY_DATA,
+  val id: String? = null,
+  val path: String = "0",
+  val uri: Uri? = null,
+  val isProtected: Boolean = false,
+  val isForwarded: Boolean = false,
+  val isDecrypted: Boolean = false,
+  val isEncryptionAllowed: Boolean = true,
+  val orderNumber: Int = 0,
+  val decryptWhenForward: Boolean = false,
 ) : Parcelable {
 
   val uniqueStringId: String
     get() = uid.toString() + "_" + id + "_" + path
-
-  fun copy(newFolder: String, newUid: Long): AttachmentInfo {
-    return copy(
-      folder = newFolder,
-      uid = newUid,
-      fwdFolder = this.folder,
-      fwdUid = this.uid,
-      orderNumber = 0
-    )
-  }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -112,6 +102,51 @@ data class AttachmentInfo constructor(
 
   fun isPossiblyEncrypted(): Boolean {
     return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
+  }
+
+  @Suppress("ArrayInDataClass")
+  data class Builder(
+    var rawData: ByteArray? = null,
+    var email: String? = null,
+    var folder: String? = null,
+    var uid: Long = 0,
+    var fwdFolder: String? = null,
+    var fwdUid: Long = 0,
+    var name: String? = null,
+    var encodedSize: Long = 0,
+    var type: String = Constants.MIME_TYPE_BINARY_DATA,
+    var id: String? = null,
+    var path: String = "0",
+    var uri: Uri? = null,
+    var isProtected: Boolean = false,
+    var isForwarded: Boolean = false,
+    var isDecrypted: Boolean = false,
+    var isEncryptionAllowed: Boolean = true,
+    var orderNumber: Int = 0,
+    var decryptWhenForward: Boolean = false,
+  ) {
+    fun build(): AttachmentInfo {
+      return AttachmentInfo(
+        rawData = rawData,
+        email = email,
+        folder = folder,
+        uid = uid,
+        fwdFolder = fwdFolder,
+        fwdUid = fwdUid,
+        name = name,
+        encodedSize = encodedSize,
+        type = type,
+        id = id,
+        path = path,
+        uri = uri,
+        isProtected = isProtected,
+        isForwarded = isForwarded,
+        isDecrypted = isDecrypted,
+        isEncryptionAllowed = isEncryptionAllowed,
+        orderNumber = orderNumber,
+        decryptWhenForward = decryptWhenForward,
+      )
+    }
   }
 
   companion object {

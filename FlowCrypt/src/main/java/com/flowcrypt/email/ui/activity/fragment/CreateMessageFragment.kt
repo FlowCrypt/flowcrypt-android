@@ -403,6 +403,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               MessageEncryptionType.ENCRYPTED -> composeMsgViewModel.switchMessageEncryptionType(
                 MessageEncryptionType.STANDARD
               )
+
               MessageEncryptionType.STANDARD -> composeMsgViewModel.switchMessageEncryptionType(
                 MessageEncryptionType.ENCRYPTED
               )
@@ -600,8 +601,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               Constants.FILE_PROVIDER_AUTHORITY,
               draftAtt
             )
-            attachmentInfo.uri = uri
-            composeMsgViewModel.addAttachments(listOf(attachmentInfo))
+            composeMsgViewModel.addAttachments(listOf(attachmentInfo.copy(uri = uri)))
           }
         } catch (e: IOException) {
           e.printStackTrace()
@@ -943,6 +943,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       MessageType.REPLY_ALL -> {
         binding?.chipLayoutCc?.visibleOrGone(initializationData.ccAddresses.isNotEmpty())
       }
+
       MessageType.FORWARD -> updateViewsIfFwdMode(initializationData)
     }
   }
@@ -1341,10 +1342,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     lifecycleScope.launchWhenStarted {
       composeMsgViewModel.attachmentsStateFlow.collect { allAttachments ->
         val forwardedAttachments = allAttachments.filter { it.id != null && it.isForwarded }
-        val addedAttachments = allAttachments - forwardedAttachments.toSet()
-        addedAttachments.forEachIndexed { index, attachmentInfo ->
-          attachmentInfo.path = index.toString()
-        }
+        val addedAttachments = (allAttachments - forwardedAttachments.toSet())
+          .mapIndexed { index, attachmentInfo ->
+            attachmentInfo.copy(path = index.toString())
+          }
 
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1410,6 +1411,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         recipients,
         args.serviceInfo?.isToFieldEditable ?: true
       )
+
       Message.RecipientType.CC -> ccRecipientsChipRecyclerViewAdapter.submitList(recipients)
       Message.RecipientType.BCC -> bccRecipientsChipRecyclerViewAdapter.submitList(recipients)
     }
@@ -1718,6 +1720,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             adapter.submitList(finalList)
             countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
           }
+
           else -> {}
         }
       }
