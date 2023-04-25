@@ -120,7 +120,7 @@ class SendMsgTest {
     )
   )
 
-  private val attachmentInfo = AttachmentInfo().apply {
+  private val attachmentInfo = AttachmentInfo.Builder().apply {
     val content = "Some text"
     name = ATTACHMENT_NAME
     encodedSize = content.length.toLong()
@@ -128,7 +128,7 @@ class SendMsgTest {
     type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
     email = addAccountToDatabaseRule.account.email
     id = EmailUtil.generateContentId()
-  }
+  }.build()
 
   @Before
   fun cleanFolderBeforeStart() {
