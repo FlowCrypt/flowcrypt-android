@@ -348,6 +348,8 @@ object ProcessingOutgoingMessageInfoHelper {
         val candidate = attachmentInfo.copy(
           folder = JavaEmailConstants.FOLDER_OUTBOX,
           uid = uid,
+          fwdFolder = attachmentInfo.folder,
+          fwdUid = attachmentInfo.uid,
           type = attachmentInfo.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA },
           orderNumber = 0
         )
