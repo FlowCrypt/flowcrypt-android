@@ -427,20 +427,21 @@ class AttachmentDownloadManagerService : Service() {
     private val context: Context,
     private val att: AttachmentInfo
   ) : Runnable {
+    var finalFileName = att.getSafeName()
     private var listener: OnDownloadAttachmentListener? = null
     private var attTempFile: File = File.createTempFile("tmp", null, context.externalCacheDir)
 
     override fun run() {
       if (GeneralUtil.isDebugBuild()) {
         Thread.currentThread().name =
-          AttDownloadRunnable::class.java.simpleName + "|" + att.getSafeName()
+          AttDownloadRunnable::class.java.simpleName + "|" + finalFileName
       }
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       try {
         val email = att.email
         if (email == null) {
-          listener?.onCanceled(att)
+          listener?.onCanceled(att.copy(name = finalFileName))
           return
         }
 
@@ -448,21 +449,23 @@ class AttachmentDownloadManagerService : Service() {
           roomDatabase.accountDao().getAccount(email)
         )
         if (account == null) {
-          listener?.onCanceled(att)
+          listener?.onCanceled(att.copy(name = finalFileName))
           return
         }
 
         if (att.uri != null) {
-          val inputStream = context.contentResolver.openInputStream(att.uri!!)
+          val inputStream = context.contentResolver.openInputStream(att.uri)
           if (inputStream != null) {
             FileUtils.copyInputStreamToFile(inputStream, attTempFile)
             attTempFile = decryptFileIfNeeded(context, attTempFile)
             if (!Thread.currentThread().isInterrupted) {
               val uri = storeFileToSharedFolder(context, attTempFile)
               listener?.onAttDownloaded(
-                attInfo = att,
+                attInfo = att.copy(name = finalFileName),
                 uri = uri,
-                canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                canBeOpened = !account.hasClientConfigurationProperty(
+                  ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
+                )
               )
             }
 
@@ -485,7 +488,9 @@ class AttachmentDownloadManagerService : Service() {
               ).use { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  canBeOpened = !account.hasClientConfigurationProperty(
+                    ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
+                  )
                 )
               }
             }
@@ -497,7 +502,7 @@ class AttachmentDownloadManagerService : Service() {
           OpenStoreHelper.openStore(context, account, session).use { store ->
             val label = roomDatabase.labelDao().getLabel(email, account.accountType, att.folder!!)
               ?: if (roomDatabase.accountDao().getAccount(email) == null) {
-                listener?.onCanceled(this.att)
+                listener?.onCanceled(att.copy(name = finalFileName))
                 store.close()
                 return
               } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
@@ -512,7 +517,9 @@ class AttachmentDownloadManagerService : Service() {
               )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  canBeOpened = !account.hasClientConfigurationProperty(
+                    ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
+                  )
                 )
               } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
             }
@@ -521,7 +528,7 @@ class AttachmentDownloadManagerService : Service() {
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
-        listener?.onError(att, e)
+        listener?.onError(attInfo = att.copy(name = finalFileName), e = e)
       } finally {
         deleteTempFile(attTempFile)
       }
@@ -531,14 +538,18 @@ class AttachmentDownloadManagerService : Service() {
       downloadFile(attTempFile, inputStream)
 
       if (Thread.currentThread().isInterrupted) {
-        listener?.onCanceled(this.att)
+        listener?.onCanceled(att.copy(name = finalFileName))
       } else {
         attTempFile = decryptFileIfNeeded(context, attTempFile)
         if (Thread.currentThread().isInterrupted) {
-          listener?.onCanceled(this.att)
+          listener?.onCanceled(att.copy(name = finalFileName))
         } else {
           val uri = storeFileToSharedFolder(context, attTempFile)
-          listener?.onAttDownloaded(this.att, uri, canBeOpened)
+          listener?.onAttDownloaded(
+            attInfo = att.copy(name = finalFileName),
+            uri = uri,
+            canBeOpened = canBeOpened
+          )
         }
       }
     }
@@ -558,7 +569,7 @@ class AttachmentDownloadManagerService : Service() {
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {
-        put(MediaStore.DownloadColumns.DISPLAY_NAME, att.getSafeName())
+        put(MediaStore.DownloadColumns.DISPLAY_NAME, finalFileName)
         put(MediaStore.DownloadColumns.SIZE, attFile.length())
         put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
         put(MediaStore.Downloads.IS_PENDING, 1)
@@ -576,8 +587,8 @@ class AttachmentDownloadManagerService : Service() {
           val nameIndex = it.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
           if (nameIndex != -1) {
             val nameFromSystem = it.getString(nameIndex)
-            if (nameFromSystem != att.getSafeName()) {
-              att.name = nameFromSystem
+            if (nameFromSystem != finalFileName) {
+              finalFileName = nameFromSystem
             }
           }
         }
@@ -602,9 +613,8 @@ class AttachmentDownloadManagerService : Service() {
     /**
      * We use this method to support saving files on Android 9 and less which uses an old approach.
      */
-    @Suppress("DEPRECATION")
     private fun storeLegacy(attFile: File, context: Context): Uri {
-      val fileName = att.getSafeName()
+      val fileName = finalFileName
       val fileDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
       var sharedFile = File(fileDir, fileName)
       sharedFile = if (sharedFile.exists()) {
@@ -613,7 +623,7 @@ class AttachmentDownloadManagerService : Service() {
         sharedFile
       }
 
-      att.name = sharedFile.name
+      finalFileName = sharedFile.name
       val srcInputStream = attFile.inputStream()
       val destOutputStream = FileUtils.openOutputStream(sharedFile)
       srcInputStream.use { srcStream ->
@@ -631,7 +641,7 @@ class AttachmentDownloadManagerService : Service() {
         FileUtils.openOutputStream(attFile).use { outputStream ->
           val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
           var count = 0.0
-          val size = this.att.encodedSize.toDouble()
+          val size = att.encodedSize.toDouble()
           var numberOfReadBytes: Int
           var lastPercentage = 0
           var currentPercentage = 0
@@ -700,8 +710,8 @@ class AttachmentDownloadManagerService : Service() {
             protector = protector
           )
 
-          att.name = FilenameUtils.getBaseName(att.name)
-          if (att.name == null && result.fileName != null) att.name = result.fileName
+          finalFileName = FilenameUtils.getBaseName(att.getSafeName())
+          if (att.name == null && result.fileName != null) finalFileName = result.fileName
 
           return decryptedFile
         } catch (e: Exception) {
@@ -730,7 +740,11 @@ class AttachmentDownloadManagerService : Service() {
 
     private fun updateProgress(currentPercentage: Int, timeLeft: Long) {
       if (!Thread.currentThread().isInterrupted) {
-        listener?.onProgress(att, currentPercentage, timeLeft)
+        listener?.onProgress(
+          attInfo = att.copy(name = finalFileName),
+          progressInPercentage = currentPercentage,
+          timeLeft = timeLeft
+        )
       }
     }
 

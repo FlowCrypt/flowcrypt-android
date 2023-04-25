@@ -162,10 +162,10 @@ class EmailUtil {
      */
     fun getAttInfoFromUri(context: Context?, uri: Uri?): AttachmentInfo? {
       if (context != null && uri != null) {
-        val attInfo = AttachmentInfo()
-        attInfo.uri = uri
-        attInfo.type = GeneralUtil.getFileMimeTypeFromUri(context, uri)
-        attInfo.id = generateContentId()
+        val attInfoBuilder = AttachmentInfo.Builder()
+        attInfoBuilder.uri = uri
+        attInfoBuilder.type = GeneralUtil.getFileMimeTypeFromUri(context, uri)
+        attInfoBuilder.id = generateContentId()
 
         val cursor = context.contentResolver.query(
           uri, arrayOf(
@@ -177,21 +177,21 @@ class EmailUtil {
           if (cursor.moveToFirst()) {
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             if (nameIndex != -1) {
-              attInfo.name = cursor.getString(nameIndex)
+              attInfoBuilder.name = cursor.getString(nameIndex)
             }
 
             val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
             if (sizeIndex != -1) {
-              attInfo.encodedSize = cursor.getLong(sizeIndex)
+              attInfoBuilder.encodedSize = cursor.getLong(sizeIndex)
             }
           }
           cursor.close()
         } else if (ContentResolver.SCHEME_FILE.equals(uri.scheme, ignoreCase = true)) {
-          attInfo.name = GeneralUtil.getFileNameFromUri(context, uri)
-          attInfo.encodedSize = GeneralUtil.getFileSizeFromUri(context, uri)
+          attInfoBuilder.name = GeneralUtil.getFileNameFromUri(context, uri)
+          attInfoBuilder.encodedSize = GeneralUtil.getFileSizeFromUri(context, uri)
         }
 
-        return attInfo
+        return attInfoBuilder.build()
       } else
         return null
     }
@@ -207,17 +207,17 @@ class EmailUtil {
         val fileName = "0x" + pgpKeyDetails.fingerprint.uppercase() + ".asc"
 
         return if (!TextUtils.isEmpty(pgpKeyDetails.publicKey)) {
-          val attachmentInfo = AttachmentInfo()
+          val attachmentInfoBuilder = AttachmentInfo.Builder()
 
-          attachmentInfo.name = fileName
-          attachmentInfo.encodedSize = pgpKeyDetails.publicKey.length.toLong()
-          attachmentInfo.rawData = pgpKeyDetails.publicKey.toByteArray()
-          attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
-          attachmentInfo.email = email
-          attachmentInfo.id = generateContentId()
-          attachmentInfo.isEncryptionAllowed = false
+          attachmentInfoBuilder.name = fileName
+          attachmentInfoBuilder.encodedSize = pgpKeyDetails.publicKey.length.toLong()
+          attachmentInfoBuilder.rawData = pgpKeyDetails.publicKey.toByteArray()
+          attachmentInfoBuilder.type = Constants.MIME_TYPE_PGP_KEY
+          attachmentInfoBuilder.email = email
+          attachmentInfoBuilder.id = generateContentId()
+          attachmentInfoBuilder.isEncryptionAllowed = false
 
-          attachmentInfo
+          attachmentInfoBuilder.build()
         } else {
           null
         }
@@ -465,7 +465,7 @@ class EmailUtil {
      * @return The first address as a human readable string or email.
      */
     fun getFirstAddressString(addresses: List<InternetAddress>?): String {
-      if (addresses == null || addresses.isEmpty()) {
+      if (addresses.isNullOrEmpty()) {
         return ""
       }
 
@@ -767,14 +767,14 @@ class EmailUtil {
           )
         }
       } else if (Part.ATTACHMENT.equals(part.disposition, ignoreCase = true)) {
-        val attachmentInfo = AttachmentInfo()
-        attachmentInfo.name = part.fileName ?: depth
-        attachmentInfo.encodedSize = part.size.toLong()
-        attachmentInfo.type = part.contentType ?: ""
-        attachmentInfo.id = (part as? IMAPBodyPart)?.contentID
+        val attachmentInfoBuilder = AttachmentInfo.Builder()
+        attachmentInfoBuilder.name = part.fileName ?: depth
+        attachmentInfoBuilder.encodedSize = part.size.toLong()
+        attachmentInfoBuilder.type = part.contentType ?: ""
+        attachmentInfoBuilder.id = (part as? IMAPBodyPart)?.contentID
           ?: generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
-        attachmentInfo.path = depth
-        attachmentInfoList.add(attachmentInfo)
+        attachmentInfoBuilder.path = depth
+        attachmentInfoList.add(attachmentInfoBuilder.build())
       }
 
       return attachmentInfoList

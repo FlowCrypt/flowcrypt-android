@@ -120,15 +120,15 @@ class SendMsgTest {
     )
   )
 
-  private val attachmentInfo = AttachmentInfo().apply {
-    val content = "Some text"
-    name = ATTACHMENT_NAME
-    encodedSize = content.length.toLong()
-    rawData = content.toByteArray()
-    type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
-    email = addAccountToDatabaseRule.account.email
+  private val attachmentContent = "Some text"
+  private val attachmentInfo = AttachmentInfo(
+    name = ATTACHMENT_NAME,
+    encodedSize = attachmentContent.length.toLong(),
+    rawData = attachmentContent.toByteArray(),
+    type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN,
+    email = addAccountToDatabaseRule.account.email,
     id = EmailUtil.generateContentId()
-  }
+  )
 
   @Before
   fun cleanFolderBeforeStart() {

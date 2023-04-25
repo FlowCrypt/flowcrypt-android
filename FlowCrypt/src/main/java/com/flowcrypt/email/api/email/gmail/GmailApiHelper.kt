@@ -89,8 +89,6 @@ class GmailApiHelper {
     const val PATTERN_SEARCH_ENCRYPTED_MESSAGES =
       "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg"
 
-    const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
-    const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
     const val MESSAGE_RESPONSE_FORMAT_METADATA = "metadata"
 
     const val FOLDER_TYPE_USER = "user"
@@ -112,6 +110,8 @@ class GmailApiHelper {
     )
     private const val COUNT_OF_LOADED_EMAILS_BY_STEP =
       JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
+    private const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
+    private const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -607,12 +607,14 @@ class GmailApiHelper {
       for (msg in msgs) {
         try {
           if (msg.uid in savedMsgUIDsSet) {
-            attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull {
-              AttachmentEntity.fromAttInfo(it.apply {
-                this.email = account.email
-                this.folder = localFolder.fullName
-                this.uid = msg.uid
-              })
+            attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+              AttachmentEntity.fromAttInfo(
+                attachmentInfo.copy(
+                  email = account.email,
+                  folder = localFolder.fullName,
+                  uid = msg.uid
+                )
+              )
             })
           }
         } catch (e: Exception) {
@@ -814,14 +816,14 @@ class GmailApiHelper {
           )
         }
       } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
-        val attachmentInfo = AttachmentInfo()
-        attachmentInfo.name = messagePart.filename ?: depth
-        attachmentInfo.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
-        attachmentInfo.type = messagePart.mimeType ?: ""
-        attachmentInfo.id = messagePart.contentId()
+        val attachmentInfoBuilder = AttachmentInfo.Builder()
+        attachmentInfoBuilder.name = messagePart.filename ?: depth
+        attachmentInfoBuilder.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
+        attachmentInfoBuilder.type = messagePart.mimeType ?: ""
+        attachmentInfoBuilder.id = messagePart.contentId()
           ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
-        attachmentInfo.path = depth
-        attachmentInfoList.add(attachmentInfo)
+        attachmentInfoBuilder.path = depth
+        attachmentInfoList.add(attachmentInfoBuilder.build())
       }
 
       return attachmentInfoList

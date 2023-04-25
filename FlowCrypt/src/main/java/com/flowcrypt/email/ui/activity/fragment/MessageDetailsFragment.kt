@@ -170,8 +170,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
-        lastClickedAtt = attachmentInfo
-        lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+        lastClickedAtt =
+          attachmentInfo.copy(orderNumber = GeneralUtil.genAttOrderId(requireContext()))
 
         if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
           for (block in msgInfo?.msgBlocks ?: emptyList()) {
@@ -394,6 +394,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               binding?.layoutReplyButtons?.layoutFwdButton?.let { view -> onClick(view) }
               true
             }
+
             else -> {
               true
             }
@@ -522,12 +523,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
-  private fun makeAttsProtected(atts: List<AttachmentInfo>) {
-    for (att in atts) {
-      att.isProtected = true
-    }
-  }
-
   /**
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
@@ -547,8 +542,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     var atts: MutableList<AttachmentInfo>? = null
     if (att != null) {
       atts = ArrayList()
-      att.isProtected = true
-      atts.add(att)
+      atts.add(att.copy(isProtected = true))
     }
 
     startActivity(
@@ -1522,12 +1516,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )
+
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_READ -> {
           UpdateMsgsSeenStateWorker.enqueue(requireContext())
           navigateUp = false
         }
+
         else -> {}
       }
 
@@ -1591,10 +1587,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
-      ) ?: return@setFragmentResultListener
+      )?.map { attachmentInfo ->
+        attachmentInfo.copy(isProtected = true)
+      } ?: return@setFragmentResultListener
 
       if (keyList.isNotEmpty()) {
-        makeAttsProtected(keyList)
         sendTemplateMsgWithPublicKey(keyList[0])
       }
     }
@@ -1652,15 +1649,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
     val (file, uri) = useFileProviderToGenerateUri(attInfo)
-    context?.let {
-      attInfo.uri = uri
-      it.startService(
-        AttachmentDownloadManagerService.newIntent(
-          context,
-          attInfo.copy(rawData = null, name = file.name)
-        )
+    context?.startService(
+      AttachmentDownloadManagerService.newIntent(
+        context,
+        attInfo.copy(rawData = null, name = file.name, uri = uri)
       )
-    }
+    )
   } catch (e: Exception) {
     e.printStackTrace()
     ExceptionUtil.handleError(e)
@@ -1685,26 +1679,28 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun subscribeToDownloadAttachmentViaDialog() {
     setFragmentResultListener(DownloadAttachmentDialogFragment.REQUEST_KEY_ATTACHMENT_DATA) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
+      val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
       val attachmentInfo =
         bundle.getParcelableViaExt<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
-      val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
-      attachmentInfo?.rawData = data
+          ?.copy(rawData = data)
 
-      for (att in attachmentsRecyclerViewAdapter.currentList) {
-        if (attachmentInfo == att) {
-          att.rawData = data
-          att.name = if (SecurityUtils.isPossiblyEncryptedData(att.name)) {
-            FilenameUtils.getBaseName(att.name)
-          } else {
-            att.name
-          }
-          attachmentsRecyclerViewAdapter.notifyItemRangeChanged(
-            0,
-            attachmentsRecyclerViewAdapter.currentList.size
+      val existingList = attachmentsRecyclerViewAdapter.currentList.toMutableList()
+      val modifiedList = existingList.map {
+        if (it == attachmentInfo) {
+          it.copy(
+            rawData = data,
+            name = if (SecurityUtils.isPossiblyEncryptedData(it.name)) {
+              FilenameUtils.getBaseName(it.name)
+            } else {
+              it.name
+            }
           )
-          break
+        } else {
+          it
         }
       }
+
+      attachmentsRecyclerViewAdapter.submitList(modifiedList)
 
       when (requestCode) {
         REQUEST_CODE_PREVIEW_ATTACHMENT -> {

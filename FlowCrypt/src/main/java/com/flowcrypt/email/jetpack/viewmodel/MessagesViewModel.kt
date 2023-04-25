@@ -460,6 +460,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           is ListDraftsResponse -> messagesBaseInfo.drafts?.associateBy(
             { it.message.id },
             { it.id }) ?: emptyMap()
+
           else -> emptyMap()
         }
 
@@ -580,12 +581,14 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       for (msg in msgs) {
         if (remoteFolder.getUID(msg) in savedMsgUIDsSet) {
           val uid = remoteFolder.getUID(msg)
-          attachments.addAll(EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
-            AttachmentEntity.fromAttInfo(it.apply {
-              this.email = account.email
-              this.folder = localFolder.fullName
-              this.uid = uid
-            })
+          attachments.addAll(EmailUtil.getAttsInfoFromPart(msg).mapNotNull { attachmentInfo ->
+            AttachmentEntity.fromAttInfo(
+              attachmentInfo.copy(
+                email = account.email,
+                folder = localFolder.fullName,
+                uid = uid
+              )
+            )
           })
         }
       }
