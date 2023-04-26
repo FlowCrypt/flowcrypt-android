@@ -14,13 +14,13 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportAllPubKeysFromSourceBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
@@ -59,7 +59,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupImportPubKeysFromSourceSharedViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         if (it.status == Result.Status.SUCCESS) {
           val pgpKeyDetailsList = it.data
@@ -75,7 +75,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupCachedPubKeysKeysViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       cachedPubKeysKeysViewModel.importAllPubKeysPubKeyStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {

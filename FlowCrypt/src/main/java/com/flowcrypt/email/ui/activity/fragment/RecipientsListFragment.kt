@@ -11,12 +11,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.databinding.FragmentRecipientsListBinding
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -85,9 +85,9 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
   }
 
   private fun setupRecipientsViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       recipientsViewModel.recipientsWithPgpFlow.collect {
-        if (it.isNullOrEmpty()) {
+        if (it.isEmpty()) {
           showEmptyView()
         } else {
           recipientsRecyclerViewAdapter.submitList(it)

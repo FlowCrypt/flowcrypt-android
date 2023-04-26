@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
@@ -22,6 +21,7 @@ import com.flowcrypt.email.databinding.FragmentParseAndSavePubKeysBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.toast
@@ -97,7 +97,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   }
 
   private fun setupImportPubKeysFromSourceSharedViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -133,13 +133,13 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   }
 
   private fun setupCachedPubKeysKeysViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       cachedPubKeysKeysViewModel.filteredPubKeysStateFlow.collect {
         pubKeysAdapter.swap(it)
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       cachedPubKeysKeysViewModel.addPubKeysStateFlow.collect {
         when (it.status) {
           Result.Status.SUCCESS -> {
@@ -156,7 +156,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       cachedPubKeysKeysViewModel.updateExistingPubKeyStateFlow.collect {
         when (it.status) {
           Result.Status.SUCCESS -> {

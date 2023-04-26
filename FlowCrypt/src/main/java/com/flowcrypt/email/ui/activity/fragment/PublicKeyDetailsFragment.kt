@@ -36,6 +36,7 @@ import com.flowcrypt.email.databinding.FragmentPublicKeyDetailsBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
@@ -150,7 +151,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   }
 
   private fun setupPublicKeyDetailsViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {

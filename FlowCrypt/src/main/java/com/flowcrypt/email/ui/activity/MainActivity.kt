@@ -30,9 +30,11 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
@@ -433,49 +435,51 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun subscribeToCollectRefreshPrivateKeysFromEkm() {
-    lifecycleScope.launchWhenStarted {
-      refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
-          }
+    lifecycleScope.launch {
+      repeatOnLifecycle(Lifecycle.State.STARTED) {
+        refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
+          when (it.status) {
+            Result.Status.LOADING -> {
+              FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
+            }
 
-          Result.Status.SUCCESS -> {
-            FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
-          }
+            Result.Status.SUCCESS -> {
+              FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
+            }
 
-          Result.Status.EXCEPTION -> {
-            it.exception?.let { exception ->
-              when (exception) {
-                is EmptyPassphraseException -> {
-                  showNeedPassphraseDialog(
-                    navController = navController,
-                    fingerprints = exception.fingerprints,
-                    logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
-                    requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM,
-                    customTitle = getString(
-                      R.string.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
-                    ),
-                    showKeys = false
-                  )
-                }
+            Result.Status.EXCEPTION -> {
+              it.exception?.let { exception ->
+                when (exception) {
+                  is EmptyPassphraseException -> {
+                    showNeedPassphraseDialog(
+                      navController = navController,
+                      fingerprints = exception.fingerprints,
+                      logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
+                      requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM,
+                      customTitle = getString(
+                        R.string.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
+                      ),
+                      showKeys = false
+                    )
+                  }
 
-                !is CommonConnectionException -> {
-                  showInfoDialog(
-                    requestKey = GeneralUtil.generateUniqueExtraKey(
-                      Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
-                      this::class.java
-                    ),
-                    dialogMsg = it.exceptionMsg,
-                    dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
-                  )
+                  !is CommonConnectionException -> {
+                    showInfoDialog(
+                      requestKey = GeneralUtil.generateUniqueExtraKey(
+                        Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
+                        this::class.java
+                      ),
+                      dialogMsg = it.exceptionMsg,
+                      dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
+                    )
+                  }
                 }
               }
+              FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
             }
-            FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
-          }
 
-          else -> {}
+            else -> {}
+          }
         }
       }
     }
