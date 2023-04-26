@@ -249,7 +249,12 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       assertFalse(decryptionResult.isSigned)
       //check that message was not encrypted by public keys
       //ref https://github.com/pgpainless/pgpainless/issues/376
-      //assertEquals(setOf<Long>(), decryptionResult.messageMetadata?.toLegacyMetadata())
+      assertTrue(
+        decryptionResult.messageMetadata?.encryptionLayers
+          ?.asSequence()
+          ?.toList()
+          ?.flatMap { it.recipients }?.isEmpty() == true
+      )
 
       val decryptedContent = decryptionResult.content
       assertNotNull(decryptedContent)
