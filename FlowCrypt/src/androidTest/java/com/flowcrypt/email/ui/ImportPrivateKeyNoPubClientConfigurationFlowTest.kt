@@ -14,9 +14,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -110,9 +108,9 @@ class ImportPrivateKeyNoPubClientConfigurationFlowTest : BaseTest() {
     val mockWebServerRule =
       FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
-          val gson =
-            ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-          /*if (request.path.equals("/initial/legacy_submit")) {
+          /*val gson =
+              ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+            if (request.path.equals("/initial/legacy_submit")) {
             val requestModel = gson.fromJson(
               InputStreamReader(request.body.inputStream()),
               InitialLegacySubmitModel::class.java
