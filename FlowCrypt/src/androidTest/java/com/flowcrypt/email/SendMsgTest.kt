@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.model.KeyImportDetails
@@ -276,13 +277,13 @@ class SendMsgTest {
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
         )
 
-        val openPgpMetadata = getOpenPgpMetadata(
+        val messageMetadata = getMessageMetadata(
           inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
           outputStream = buffer,
           pgpSecretKeyRing = pgpSecretKeyRing
         )
-        assertEquals(true, openPgpMetadata.isEncrypted)
-        assertEquals(true, openPgpMetadata.isSigned)
+        assertEquals(true, messageMetadata.isEncrypted)
+        assertEquals(true, messageMetadata.isSigned)
         assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
       }
     }
@@ -316,7 +317,7 @@ class SendMsgTest {
         //check content
         val encryptedTextContent = multipart.getBodyPart(0).content as String
         val messageOutputStream = ByteArrayOutputStream()
-        val messageOpenPgpMetadata = getOpenPgpMetadata(
+        val messageOpenPgpMetadata = getMessageMetadata(
           inputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
           outputStream = messageOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
@@ -332,14 +333,14 @@ class SendMsgTest {
         assertEquals(ATTACHMENT_NAME + "." + Constants.PGP_FILE_EXT, attachmentPart.fileName)
 
         val attachmentOutputStream = ByteArrayOutputStream()
-        val attachmentOpenPgpMetadata = getOpenPgpMetadata(
+        val attachmentMessageMetadata = getMessageMetadata(
           inputStream = attachmentPart.inputStream,
           outputStream = attachmentOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
         )
 
-        assertEquals(ATTACHMENT_NAME, attachmentOpenPgpMetadata.fileName)
-        assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
+        assertEquals(ATTACHMENT_NAME, attachmentMessageMetadata.filename)
+        assertEquals(true, attachmentMessageMetadata.isEncrypted)
         assertEquals(
           String(requireNotNull(attachmentInfo.rawData)),
           String(attachmentOutputStream.toByteArray())
@@ -395,7 +396,7 @@ class SendMsgTest {
         //check content
         val encryptedTextContent = multipart.getBodyPart(0).content as String
         val messageOutputStream = ByteArrayOutputStream()
-        val messageOpenPgpMetadata = getOpenPgpMetadata(
+        val messageOpenPgpMetadata = getMessageMetadata(
           inputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
           outputStream = messageOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
@@ -415,14 +416,14 @@ class SendMsgTest {
 
         //try to decrypt the forwarded attachment
         val attachmentOutputStream = ByteArrayOutputStream()
-        val attachmentOpenPgpMetadata = getOpenPgpMetadata(
+        val attachmentMessageMetadata = getMessageMetadata(
           inputStream = attachmentPart.inputStream,
           outputStream = attachmentOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
         )
 
-        assertEquals(encryptedForwardedAttachmentInfo.name, attachmentOpenPgpMetadata.fileName)
-        assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
+        assertEquals(encryptedForwardedAttachmentInfo.name, attachmentMessageMetadata.filename)
+        assertEquals(true, attachmentMessageMetadata.isEncrypted)
       }
     }
   }
@@ -522,7 +523,7 @@ class SendMsgTest {
       }
     }
 
-  private fun getOpenPgpMetadata(
+  private fun getMessageMetadata(
     inputStream: InputStream,
     outputStream: ByteArrayOutputStream,
     pgpSecretKeyRing: PGPSecretKeyRing
