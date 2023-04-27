@@ -38,8 +38,6 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -64,6 +62,7 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
@@ -105,7 +104,6 @@ import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -1195,7 +1193,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupComposeMsgViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.messageEncryptionTypeStateFlow.collect {
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1224,7 +1222,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
         if (recipients.any { it.value.isUpdating } && !updatingRecipientsMarker) {
           updatingRecipientsMarker = true
@@ -1249,7 +1247,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1267,7 +1265,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsCcStateFlow.collect { recipients ->
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1287,7 +1285,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsBccStateFlow.collect { recipients ->
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1307,7 +1305,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.webPortalPasswordStateFlow.collect { webPortalPassword ->
         binding?.btnSetWebPortalPassword?.apply {
           if (webPortalPassword.isEmpty()) {
@@ -1339,7 +1337,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.attachmentsStateFlow.collect { allAttachments ->
         val forwardedAttachments = allAttachments.filter { it.id != null && it.isForwarded }
         val addedAttachments = (allAttachments - forwardedAttachments.toSet())
@@ -1360,18 +1358,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupDraftViewModel() {
-    viewLifecycleOwner.lifecycleScope.launch {
-      viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-        draftViewModel.draftRepeatableCheckingFlow.collect {
-          draftViewModel.processDraft(
-            currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
-            timeToCompare = startOfSessionInMilliseconds
-          )
-        }
+    launchAndRepeatWithViewLifecycle {
+      draftViewModel.draftRepeatableCheckingFlow.collect {
+        draftViewModel.processDraft(
+          currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
+          timeToCompare = startOfSessionInMilliseconds
+        )
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       draftViewModel.savingDraftStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -1658,7 +1654,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupRecipientsAutoCompleteViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {

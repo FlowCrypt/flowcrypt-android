@@ -17,11 +17,11 @@ import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentProvidePasswordToProtectMsgBinding
 import com.flowcrypt.email.extensions.hideKeyboard
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.WebPortalPasswordStrengthViewModel
@@ -93,7 +93,7 @@ class ProvidePasswordToProtectMsgFragment :
   }
 
   private fun initWebPortalPasswordStrengthViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       webPortalPasswordStrengthViewModel.pwdStrengthResultStateFlow.collect {
         updateStrengthViews(it)
       }

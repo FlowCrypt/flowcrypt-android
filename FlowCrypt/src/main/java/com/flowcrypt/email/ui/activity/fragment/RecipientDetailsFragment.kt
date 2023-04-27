@@ -11,12 +11,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentRecipientDetailsBinding
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.RecipientDetailsViewModel
@@ -73,10 +73,10 @@ class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>()
   }
 
   private fun setupRecipientDetailsViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       recipientDetailsViewModel.recipientPubKeysFlow.collect {
         it ?: return@collect
-        if (it.isNullOrEmpty()) {
+        if (it.isEmpty()) {
           showEmptyView(resourcesId = R.drawable.ic_no_result_grey_24dp)
         } else {
           pubKeysRecyclerViewAdapter.submitList(it)

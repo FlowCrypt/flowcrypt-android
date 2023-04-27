@@ -20,7 +20,6 @@ import androidx.annotation.ColorRes
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -28,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
@@ -53,7 +53,7 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
   abstract fun onContinue()
 
   protected fun initPasswordStrengthViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       passwordStrengthViewModel.pwdStrengthResultStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {

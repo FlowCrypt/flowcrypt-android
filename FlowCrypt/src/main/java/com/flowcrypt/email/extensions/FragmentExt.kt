@@ -10,6 +10,9 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
@@ -26,6 +29,8 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDia
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.material.appbar.AppBarLayout
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * @author Denys Bondarenko
@@ -34,7 +39,7 @@ import com.google.android.material.appbar.AppBarLayout
 val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
   get() = activity?.findViewById(R.id.appBarLayout)
 
-val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
+val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource
   get() = FlavorSettings.getCountingIdlingResource()
 
 val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
@@ -55,18 +60,11 @@ val androidx.fragment.app.Fragment.navController: NavController?
 val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
   get() = navController?.currentBackStackEntry?.savedStateHandle
 
-val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
-  get() = navController?.previousBackStackEntry?.savedStateHandle
-
 fun androidx.fragment.app.Fragment.doBaseUISetup(uiUxSettings: UiUxSettings) {
   (activity as? BaseActivity<*>)?.setDrawerLockMode(uiUxSettings.isSideMenuLocked)
   appBarLayout?.visibleOrGone(uiUxSettings.isToolbarVisible)
   supportActionBar?.setDisplayHomeAsUpEnabled(uiUxSettings.isDisplayHomeAsUpEnabled)
   supportActionBar?.subtitle = null
-}
-
-fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T) {
-  previousOnResultSavedStateHandle?.set(key, value)
 }
 
 fun androidx.fragment.app.Fragment.getOnResultSavedStateHandle(destinationId: Int? = null) =
@@ -244,6 +242,17 @@ fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
         titleResourceId = titleResourceId,
         returnResultImmediatelyIfSingle = returnResultImmediatelyIfSingle
       ).toBundle()
+    }
+  }
+}
+
+inline fun androidx.fragment.app.Fragment.launchAndRepeatWithViewLifecycle(
+  minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
+  crossinline block: suspend CoroutineScope.() -> Unit
+) {
+  viewLifecycleOwner.lifecycleScope.launch {
+    viewLifecycleOwner.repeatOnLifecycle(minActiveState) {
+      block()
     }
   }
 }

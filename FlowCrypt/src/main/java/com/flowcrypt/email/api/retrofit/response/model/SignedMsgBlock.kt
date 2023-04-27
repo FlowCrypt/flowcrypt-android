@@ -12,7 +12,7 @@ import com.google.gson.annotations.Expose
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
-import org.pgpainless.decryption_verification.OpenPgpMetadata
+import org.pgpainless.decryption_verification.MessageMetadata
 
 /**
  * Message block which represents content with a signature.
@@ -26,7 +26,7 @@ data class SignedMsgBlock(
 ) : MsgBlock {
 
   @IgnoredOnParcel
-  var openPgpMetadata: OpenPgpMetadata? = null
+  var openPgpMetadata: MessageMetadata? = null
 
   @IgnoredOnParcel
   @Expose

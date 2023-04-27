@@ -36,7 +36,7 @@ class SyncInboxWorker(context: Context, params: WorkerParameters) :
         .getInstance(context.applicationContext)
         .enqueueUniquePeriodicWork(
           GROUP_UNIQUE_TAG,
-          ExistingPeriodicWorkPolicy.REPLACE,
+          ExistingPeriodicWorkPolicy.UPDATE,
           PeriodicWorkRequestBuilder<SyncInboxWorker>(15, TimeUnit.MINUTES)
             .setConstraints(constraints)
             .build()

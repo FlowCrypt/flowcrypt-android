@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
-import android.content.Intent
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
@@ -457,8 +456,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
 
-    val result = Intent()
-    /*result.putExtra(
+    /*val result = Intent()
+      result.putExtra(
       SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT,
       pgpKeyDetails.toRecipientEntity()
     )

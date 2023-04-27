@@ -703,7 +703,7 @@ class AttachmentDownloadManagerService : Service() {
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
 
         try {
-          val result = PgpDecryptAndOrVerify.decrypt(
+          val messageMetadata = PgpDecryptAndOrVerify.decrypt(
             srcInputStream = inputStream,
             destOutputStream = decryptedFile.outputStream(),
             secretKeys = pgpSecretKeyRingCollection,
@@ -711,7 +711,10 @@ class AttachmentDownloadManagerService : Service() {
           )
 
           finalFileName = FilenameUtils.getBaseName(att.getSafeName())
-          if (att.name == null && result.fileName != null) finalFileName = result.fileName
+          val fileNameFromMessageMetadata = messageMetadata.filename
+          if (att.name == null && fileNameFromMessageMetadata != null) {
+            finalFileName = fileNameFromMessageMetadata
+          }
 
           return decryptedFile
         } catch (e: Exception) {

@@ -13,7 +13,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -23,6 +22,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.CreatePrivateKeyViewModel
@@ -80,7 +80,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupCreatePrivateKeyViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithLifecycle {
       createPrivateKeyViewModel.createPrivateKeyStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {

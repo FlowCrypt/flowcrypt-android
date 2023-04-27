@@ -35,6 +35,7 @@ import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.extensions.org.owasp.html.allowAttributesOnElementsExt
+import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import jakarta.mail.Multipart
@@ -48,7 +49,6 @@ import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import org.bouncycastle.openpgp.PGPSignature
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -56,7 +56,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.owasp.html.HtmlPolicyBuilder
-import org.pgpainless.key.SubkeyIdentifier
+import org.pgpainless.decryption_verification.SignatureVerification
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -271,7 +271,7 @@ object PgpMsg {
             ).toList(),
             isOpenPGPMimeSigned = true
           ).apply {
-            openPgpMetadata = detachedSignatureVerificationResult.openPgpMetadata
+            messageMetadata = detachedSignatureVerificationResult.messageMetadata
           }
 
           blocks.add(decryptedAndOrSignedContentMsgBlock)
@@ -334,7 +334,7 @@ object PgpMsg {
           }
 
           val msgBlocks = processRawBlocks(
-            rawBlocks = detectedRawBlocks - attachmentRawBlocks,
+            rawBlocks = detectedRawBlocks - attachmentRawBlocks.toSet(),
             verificationPublicKeys = verificationPublicKeys,
             secretKeys = secretKeys,
             protector = protector
@@ -475,7 +475,7 @@ object PgpMsg {
             val srcAttr = getAttribute(attrs, "src", "")
             val altAttr = getAttribute(attrs, "alt")
             when {
-              srcAttr.startsWith("data:") == true -> {
+              srcAttr.startsWith("data:") -> {
                 attrs.clear()
                 attrs.add("src")
                 attrs.add(srcAttr)
@@ -485,8 +485,7 @@ object PgpMsg {
                 }
               }
 
-              (srcAttr.startsWith("http://") == true
-                  || srcAttr.startsWith("https://") == true) -> {
+              (srcAttr.startsWith("http://") || srcAttr.startsWith("https://")) -> {
                 // Orignal typecript:
                 // return { tagName: 'a', attribs: { href: String(attribs.src), target: "_blank" },
                 //   text: imgContentReplaceable };
@@ -712,7 +711,7 @@ object PgpMsg {
     var hasBadSignatures = false
     var signedBlockCount = 0
     var isPartialSigned = false
-    val verifiedSignatures = mutableMapOf<SubkeyIdentifier, PGPSignature>()
+    val verifiedSignatures = mutableListOf<SignatureVerification>()
     val keyIdOfSigningKeys = mutableListOf<Long>()
 
     for (block in msgBlocks) {
@@ -723,9 +722,9 @@ object PgpMsg {
       // block.content = isContentBlock(block.type)
       //     ? block.content.toUtfStr() : block.content.toRawBytesStr();
       if (block.type in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
-        val openPgpMetadata = when (block) {
+        val messageMetadata = when (block) {
           is DecryptedAndOrSignedContentMsgBlock -> {
-            block.openPgpMetadata
+            block.messageMetadata
           }
 
           is SignedMsgBlock -> {
@@ -736,17 +735,17 @@ object PgpMsg {
         }
 
         if (!isEncrypted) {
-          isEncrypted = openPgpMetadata?.isEncrypted ?: false
+          isEncrypted = messageMetadata?.isEncrypted ?: false
         }
 
-        if (openPgpMetadata?.isSigned == true) {
+        if (messageMetadata?.isSigned == true) {
           signedBlockCount++
 
-          if (openPgpMetadata.invalidInbandSignatures.isNotEmpty()
-            || openPgpMetadata.invalidDetachedSignatures.isNotEmpty()
+          if (messageMetadata.rejectedInlineSignatures.isNotEmpty()
+            || messageMetadata.rejectedDetachedSignatures.isNotEmpty()
           ) {
-            val invalidSignatureFailures = openPgpMetadata.invalidInbandSignatures +
-                openPgpMetadata.invalidDetachedSignatures
+            val invalidSignatureFailures = messageMetadata.rejectedInlineSignatures +
+                messageMetadata.rejectedDetachedSignatures
 
             hasBadSignatures = invalidSignatureFailures.any {
               it.validationException.underlyingException != null
@@ -758,15 +757,15 @@ object PgpMsg {
           }
 
           if (verifiedSignatures.isEmpty()) {
-            verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
+            verifiedSignatures.addAll(messageMetadata.verifiedSignatures)
           } else {
-            val keyIdsOfAllVerifiedSignatures = verifiedSignatures.keys.map { it.keyId }
-            val keyIdsOfCurrentVerifiedSignatures = openPgpMetadata.verifiedSignatures.keys.map {
-              it.keyId
+            val keyIdsOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey?.keyId }
+            val keyIdsOfCurrentVerifiedSignatures = messageMetadata.verifiedSignatures.map {
+              it.signingKey?.keyId
             }
             if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
               hasMixedSignatures = true
-              verifiedSignatures.putAll(openPgpMetadata.verifiedSignatures)
+              verifiedSignatures.addAll(messageMetadata.verifiedSignatures)
             }
           }
         }
@@ -958,7 +957,7 @@ object PgpMsg {
       blocks = blocks,
       isOpenPGPMimeSigned = rawBlock.isOpenPGPMimeSigned
     ).apply {
-      openPgpMetadata = decryptionResult.openPgpMetadata
+      messageMetadata = decryptionResult.messageMetadata
     }
   }
 
@@ -1011,7 +1010,7 @@ object PgpMsg {
       SignedMsgBlock(
         content = clearTextVerificationResult.clearText,
         isOpenPGPMimeSigned = rawBlock.isOpenPGPMimeSigned
-      ).apply { openPgpMetadata = clearTextVerificationResult.openPgpMetadata }
+      ).apply { openPgpMetadata = clearTextVerificationResult.messageMetadata }
     } catch (e: Exception) {
       SignedMsgBlock(
         content = rawBlock.content.decodeToString(),
