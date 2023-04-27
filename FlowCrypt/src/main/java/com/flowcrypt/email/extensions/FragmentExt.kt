@@ -251,7 +251,7 @@ inline fun androidx.fragment.app.Fragment.launchAndRepeatWithViewLifecycle(
   crossinline block: suspend CoroutineScope.() -> Unit
 ) {
   viewLifecycleOwner.lifecycleScope.launch {
-    viewLifecycleOwner.lifecycle.repeatOnLifecycle(minActiveState) {
+    viewLifecycleOwner.repeatOnLifecycle(minActiveState) {
       block()
     }
   }

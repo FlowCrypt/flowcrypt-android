@@ -23,7 +23,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -72,11 +72,11 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
   }
 
   private fun collectDownloadAttachmentStateFlow() {
-    launchAndRepeatWithViewLifecycle {
+    launchAndRepeatWithLifecycle {
       downloadAttachmentViewModel.downloadAttachmentStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely(this@DownloadAttachmentDialogFragment)
+            countingIdlingResource.incrementSafely(this@DownloadAttachmentDialogFragment)
             binding?.progressBar?.visible()
             if (it.progress != null) {
               binding?.progressBar?.isIndeterminate = false
@@ -102,7 +102,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
                 )
               )
             }
-            countingIdlingResource?.decrementSafely(this@DownloadAttachmentDialogFragment)
+            countingIdlingResource.decrementSafely(this@DownloadAttachmentDialogFragment)
           }
 
           Result.Status.EXCEPTION -> {
@@ -113,7 +113,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
             } else exception.message
             binding?.textViewStatus?.text =
               context?.getString(R.string.error_occurred_during_downloading_att, errorMsg)
-            countingIdlingResource?.decrementSafely(this@DownloadAttachmentDialogFragment)
+            countingIdlingResource.decrementSafely(this@DownloadAttachmentDialogFragment)
           }
 
           else -> {

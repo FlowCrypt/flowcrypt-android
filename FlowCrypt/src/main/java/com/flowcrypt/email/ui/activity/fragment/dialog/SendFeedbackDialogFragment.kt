@@ -22,7 +22,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.SendFeedbackViewModel
@@ -68,11 +68,11 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupSendFeedbackViewModel() {
-    launchAndRepeatWithViewLifecycle {
+    launchAndRepeatWithLifecycle {
       sendFeedbackViewModel.postFeedbackStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely(this@SendFeedbackDialogFragment)
+            countingIdlingResource.incrementSafely(this@SendFeedbackDialogFragment)
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.textAlignment = View.TEXT_ALIGNMENT_CENTER
@@ -85,7 +85,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
               REQUEST_KEY_RESULT,
               bundleOf(KEY_RESULT to (it.data?.isSent == true))
             )
-            countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
+            countingIdlingResource.decrementSafely(this@SendFeedbackDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -104,7 +104,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
               errorMsg
             )
 
-            countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
+            countingIdlingResource.decrementSafely(this@SendFeedbackDialogFragment)
           }
 
           else -> {}

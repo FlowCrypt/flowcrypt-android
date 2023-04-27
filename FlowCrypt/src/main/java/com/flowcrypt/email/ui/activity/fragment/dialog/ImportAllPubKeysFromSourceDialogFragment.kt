@@ -20,7 +20,7 @@ import com.flowcrypt.email.databinding.FragmentImportAllPubKeysFromSourceBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
@@ -59,7 +59,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupImportPubKeysFromSourceSharedViewModel() {
-    launchAndRepeatWithViewLifecycle {
+    launchAndRepeatWithLifecycle {
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         if (it.status == Result.Status.SUCCESS) {
           val pgpKeyDetailsList = it.data
@@ -75,7 +75,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupCachedPubKeysKeysViewModel() {
-    launchAndRepeatWithViewLifecycle {
+    launchAndRepeatWithLifecycle {
       cachedPubKeysKeysViewModel.importAllPubKeysPubKeyStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -88,7 +88,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
 
               binding?.pB?.progress = it.progress.toInt()
             } else {
-              countingIdlingResource?.incrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
+              countingIdlingResource.incrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
             }
           }
 
@@ -98,7 +98,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
               REQUEST_KEY_IMPORT_PUB_KEYS_RESULT,
               bundleOf(KEY_IMPORT_PUB_KEYS_RESULT to it.data)
             )
-            countingIdlingResource?.decrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
+            countingIdlingResource.decrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
           }
 
           else -> {

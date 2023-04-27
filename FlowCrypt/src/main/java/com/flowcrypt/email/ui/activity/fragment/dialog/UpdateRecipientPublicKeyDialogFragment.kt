@@ -25,7 +25,7 @@ import com.flowcrypt.email.databinding.FragmentUpdateRecipientPublicKeyBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
@@ -145,11 +145,11 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
   }
 
   private fun collectUpdateRecipientPublicKey() {
-    launchAndRepeatWithViewLifecycle {
+    launchAndRepeatWithLifecycle {
       recipientsViewModel.updateRecipientPublicKeyStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource?.incrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
+            countingIdlingResource.incrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
           }
 
           Result.Status.SUCCESS -> {
@@ -160,7 +160,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_UPDATE_RECIPIENT_PUBLIC_KEY to isUpdated)
               )
             }
-            countingIdlingResource?.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
+            countingIdlingResource.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -170,7 +170,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
             } else exception.message
 
             toast(errorMsg)
-            countingIdlingResource?.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
+            countingIdlingResource.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
           }
           else -> {
           }
