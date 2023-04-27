@@ -84,6 +84,8 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
       fragmentArgs = SelectRecipientsFragmentArgs().toBundle()
     )
 
+    unregisterCountingIdlingResource()
+    Thread.sleep(1000)
     onView(withId(R.id.recyclerViewContacts))
       .check(matches(not(withEmptyRecyclerView())))
   }

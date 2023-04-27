@@ -85,6 +85,7 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
           request.path?.startsWith("/ekm") == true -> {
             handleEkmAPI(request, gson)?.let { return it }
           }
+
           request.requestUrl?.encodedPath == "/shared-tenant-fes/api/v1/client-configuration" &&
               request.requestUrl?.queryParameter("domain") in
               listOf(
@@ -295,6 +296,7 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
   @Test
   fun testFailAttesterSubmit() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_ENFORCE_ATTESTER_SUBMIT))
+    unregisterCountingIdlingResource()
     val passphrase = "unconventional blueberry unlike any other"
     onView(withId(R.id.buttonCreateNewKey))
       .check(matches(isDisplayed()))
@@ -312,7 +314,7 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
     onView(withId(R.id.buttonConfirmPassPhrases))
       .check(matches(isDisplayed()))
       .perform(click())
-
+    Thread.sleep(1000)
     isDialogWithTextDisplayed(
       decorView,
       ApiException(ApiError(code = HttpURLConnection.HTTP_NOT_FOUND, message = "")).message!!
