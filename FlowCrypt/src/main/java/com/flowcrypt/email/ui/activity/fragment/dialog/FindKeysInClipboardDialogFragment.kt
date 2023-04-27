@@ -110,7 +110,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
       parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely(this@FindKeysInClipboardDialogFragment)
+            countingIdlingResource?.incrementSafely(this@FindKeysInClipboardDialogFragment)
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -130,7 +130,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_CLIPBOARD_TEXT to clipboardText)
               )
             }
-            countingIdlingResource.decrementSafely(this@FindKeysInClipboardDialogFragment)
+            countingIdlingResource?.decrementSafely(this@FindKeysInClipboardDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -142,7 +142,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
               exception.javaClass.simpleName
             } else exception.message
 
-            countingIdlingResource.decrementSafely(this@FindKeysInClipboardDialogFragment)
+            countingIdlingResource?.decrementSafely(this@FindKeysInClipboardDialogFragment)
           }
           else -> {
           }

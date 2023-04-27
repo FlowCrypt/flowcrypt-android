@@ -96,7 +96,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
       parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely(this@ParsePgpKeysFromSourceDialogFragment)
+            countingIdlingResource?.incrementSafely(this@ParsePgpKeysFromSourceDialogFragment)
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -122,7 +122,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
                 )
               }
             }
-            countingIdlingResource.decrementSafely(this@ParsePgpKeysFromSourceDialogFragment)
+            countingIdlingResource?.decrementSafely(this@ParsePgpKeysFromSourceDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -135,7 +135,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
               binding?.btRetry?.visible()
             }
 
-            countingIdlingResource.decrementSafely(this@ParsePgpKeysFromSourceDialogFragment)
+            countingIdlingResource?.decrementSafely(this@ParsePgpKeysFromSourceDialogFragment)
           }
           else -> {
           }

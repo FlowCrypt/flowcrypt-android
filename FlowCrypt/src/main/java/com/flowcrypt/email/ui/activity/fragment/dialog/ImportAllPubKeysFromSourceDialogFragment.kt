@@ -88,7 +88,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
 
               binding?.pB?.progress = it.progress.toInt()
             } else {
-              countingIdlingResource.incrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
+              countingIdlingResource?.incrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
             }
           }
 
@@ -98,7 +98,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
               REQUEST_KEY_IMPORT_PUB_KEYS_RESULT,
               bundleOf(KEY_IMPORT_PUB_KEYS_RESULT to it.data)
             )
-            countingIdlingResource.decrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
+            countingIdlingResource?.decrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
           }
 
           else -> {

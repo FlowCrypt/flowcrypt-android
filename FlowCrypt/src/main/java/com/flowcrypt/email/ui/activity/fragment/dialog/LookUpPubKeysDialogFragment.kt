@@ -66,7 +66,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
       recipientsViewModel.lookUpPubKeysStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely(this@LookUpPubKeysDialogFragment)
+            countingIdlingResource?.incrementSafely(this@LookUpPubKeysDialogFragment)
             binding?.pBLoading?.visible()
             binding?.btnRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -80,7 +80,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_PUB_KEYS to pubKeys)
               )
             }
-            countingIdlingResource.decrementSafely(this@LookUpPubKeysDialogFragment)
+            countingIdlingResource?.decrementSafely(this@LookUpPubKeysDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -92,7 +92,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
               exception.javaClass.simpleName
             } else exception.message
 
-            countingIdlingResource.decrementSafely(this@LookUpPubKeysDialogFragment)
+            countingIdlingResource?.decrementSafely(this@LookUpPubKeysDialogFragment)
           }
           else -> {
           }

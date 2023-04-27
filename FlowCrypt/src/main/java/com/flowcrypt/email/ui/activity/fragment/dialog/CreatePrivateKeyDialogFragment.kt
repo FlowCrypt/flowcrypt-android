@@ -84,7 +84,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
       createPrivateKeyViewModel.createPrivateKeyStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            countingIdlingResource.incrementSafely(this@CreatePrivateKeyDialogFragment)
+            countingIdlingResource?.incrementSafely(this@CreatePrivateKeyDialogFragment)
             binding?.pBLoading?.visible()
             binding?.btRetry?.gone()
             binding?.tVStatusMessage?.text = getString(R.string.loading)
@@ -101,7 +101,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
                 bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
               )
             }
-            countingIdlingResource.decrementSafely(this@CreatePrivateKeyDialogFragment)
+            countingIdlingResource?.decrementSafely(this@CreatePrivateKeyDialogFragment)
           }
 
           Result.Status.EXCEPTION, Result.Status.ERROR -> {
@@ -114,7 +114,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
               binding?.btRetry?.visible()
             }
 
-            countingIdlingResource.decrementSafely(this@CreatePrivateKeyDialogFragment)
+            countingIdlingResource?.decrementSafely(this@CreatePrivateKeyDialogFragment)
           }
           else -> {
           }
