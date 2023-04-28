@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
   get() = activity?.findViewById(R.id.appBarLayout)
 
-val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource
+val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
   get() = FlavorSettings.getCountingIdlingResource()
 
 val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
@@ -228,6 +228,7 @@ fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
 }
 
 fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
+  requestKey: String,
   email: String,
   choiceMode: Int,
   titleResourceId: Int,
@@ -237,6 +238,7 @@ fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.choose_public_key_dialog_graph
       override val arguments = ChoosePublicKeyDialogFragmentArgs(
+        requestKey = requestKey,
         email = email,
         choiceMode = choiceMode,
         titleResourceId = titleResourceId,

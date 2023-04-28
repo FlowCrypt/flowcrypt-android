@@ -164,6 +164,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
           countingIdlingResource?.decrementSafely(this@ChoosePublicKeyDialogFragment)
         }
+
         else -> {}
       }
     }
@@ -190,10 +191,12 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   private fun sendResult(atts: MutableList<AttachmentInfo>) {
-    setFragmentResult(
-      REQUEST_KEY_RESULT,
-      bundleOf(KEY_ATTACHMENT_INFO_LIST to atts)
-    )
+    args.requestKey?.let {
+      setFragmentResult(
+        it,
+        bundleOf(KEY_ATTACHMENT_INFO_LIST to atts)
+      )
+    }
   }
 
   /**
@@ -220,11 +223,6 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   companion object {
-    val REQUEST_KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_RESULT",
-      ChoosePublicKeyDialogFragment::class.java
-    )
-
     val KEY_ATTACHMENT_INFO_LIST =
       GeneralUtil.generateUniqueExtraKey(
         "KEY_ATTACHMENT_INFO_LIST",

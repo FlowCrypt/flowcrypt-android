@@ -528,8 +528,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
    */
   private fun showSendersPublicKeyDialog() {
     showChoosePublicKeyDialogFragment(
-      args.messageEntity.email,
-      ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings
+      requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY,
+      email = args.messageEntity.email,
+      choiceMode = ListView.CHOICE_MODE_SINGLE,
+      titleResourceId = R.plurals.tell_sender_to_update_their_settings
     )
   }
 
@@ -1584,7 +1586,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
-    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       )?.map { attachmentInfo ->
@@ -1740,5 +1742,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
+
+    private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      MessageDetailsFragment::class.java
+    )
   }
 }

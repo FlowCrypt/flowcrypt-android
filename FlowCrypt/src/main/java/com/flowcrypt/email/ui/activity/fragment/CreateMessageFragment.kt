@@ -1081,10 +1081,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun showPubKeyDialog() {
     account?.email?.let {
       showChoosePublicKeyDialogFragment(
-        it,
-        ListView.CHOICE_MODE_SINGLE,
-        R.plurals.choose_pub_key,
-        true
+        requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY,
+        email = it,
+        choiceMode = ListView.CHOICE_MODE_SINGLE,
+        titleResourceId = R.plurals.choose_pub_key,
+        returnResultImmediatelyIfSingle = true
       )
     }
   }
@@ -1639,7 +1640,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
-    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       ) ?: return@setFragmentResultListener
@@ -1725,5 +1726,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   companion object {
     private val TAG = CreateMessageFragment::class.java.simpleName
+
+    private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      CreateMessageFragment::class.java
+    )
   }
 }
