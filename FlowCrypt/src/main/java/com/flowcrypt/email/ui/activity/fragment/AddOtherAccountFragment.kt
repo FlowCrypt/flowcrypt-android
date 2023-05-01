@@ -869,12 +869,12 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
         AddOtherAccountFragment::class.java
       )
 
-    val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+    private val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHECK_PRIVATE_KEYS",
       AddOtherAccountFragment::class.java
     )
 
-    val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+    private val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PRIVATE_KEYS",
       AddOtherAccountFragment::class.java
     )
