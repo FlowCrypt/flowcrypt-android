@@ -76,7 +76,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             it.data?.pubkey.let { pubKeys ->
               setFragmentResult(
-                REQUEST_KEY_PUB_KEYS,
+                args.requestKey,
                 bundleOf(KEY_PUB_KEYS to pubKeys)
               )
             }
@@ -102,7 +102,6 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    const val REQUEST_KEY_PUB_KEYS = "REQUEST_KEY_PUB_KEYS"
     const val KEY_PUB_KEYS = "KEY_PUB_KEYS"
   }
 }

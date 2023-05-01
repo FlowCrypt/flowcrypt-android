@@ -523,6 +523,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment"
         tools:layout="@layout/fragment_look_up_pub_keys">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="email"
             app:argType="string" />
     </dialog>
