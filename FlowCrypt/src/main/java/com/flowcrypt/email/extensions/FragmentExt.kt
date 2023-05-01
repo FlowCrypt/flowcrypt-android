@@ -175,10 +175,16 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
 }
 
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
+  requestKey: String,
   fingerprints: List<String>,
   logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
 ) {
-  showNeedPassphraseDialog(navController, fingerprints, logicType)
+  showNeedPassphraseDialog(
+    requestKey = requestKey,
+    navController = navController,
+    fingerprints = fingerprints,
+    logicType = logicType
+  )
 }
 
 fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(

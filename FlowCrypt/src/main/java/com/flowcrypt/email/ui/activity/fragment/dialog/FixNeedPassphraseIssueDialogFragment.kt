@@ -93,6 +93,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           checkPassphrase()
           true
         }
+
         else -> false
       }
     }
@@ -166,6 +167,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                     matchingKeys.size
                   )
                 }
+
                 AT_LEAST_ONE -> {
                   if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
                     binding?.tVStatusMessage?.text = resources.getQuantityString(
@@ -187,6 +189,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           binding?.tVStatusMessage?.text = it.exception?.message
           countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
+
         else -> {
         }
       }
@@ -234,15 +237,16 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                   if (countOfMatchedPassphrases == checkResults.size) {
                     navController?.navigateUp()
                     setFragmentResult(
-                      REQUEST_KEY_RESULT,
+                      args.requestKey,
                       bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                     )
                   }
                 }
+
                 AT_LEAST_ONE -> {
                   navController?.navigateUp()
                   setFragmentResult(
-                    REQUEST_KEY_RESULT,
+                    args.requestKey,
                     bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                   )
                 }
@@ -266,6 +270,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           )
           countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
+
         else -> {}
       }
     }
@@ -281,11 +286,6 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_UPDATE_BUTTON_CLICK",
-      FixNeedPassphraseIssueDialogFragment::class.java
-    )
-
     val KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_RESULT", FixNeedPassphraseIssueDialogFragment::class.java
     )

@@ -181,7 +181,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
-                  fingerprints
+                  requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+                  fingerprints = fingerprints
                 )
                 return
               }
@@ -697,7 +698,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     binding?.imageButtonEditDraft?.setOnClickListener {
       val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
       if (fingerprintList?.isNotEmpty() == true) {
-        showNeedPassphraseDialog(fingerprintList)
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+          fingerprints = fingerprintList
+        )
       } else {
         startActivity(
           CreateMessageActivity.generateIntent(
@@ -1229,7 +1233,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.fingerprints ?: return@OnClickListener
-            showNeedPassphraseDialog(fingerprints)
+            showNeedPassphraseDialog(
+              requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+              fingerprints = fingerprints
+            )
           }
         }
 
@@ -1540,7 +1547,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun observerPassphraseNeededLiveData() {
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
-        showNeedPassphraseDialog(fingerprintList)
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+          fingerprints = fingerprintList
+        )
       }
     }
   }
@@ -1754,6 +1764,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     private val REQUEST_KEY_DOWNLOAD_ATTACHMENT = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_DOWNLOAD_ATTACHMENT",
+      MessageDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
       MessageDetailsFragment::class.java
     )
   }

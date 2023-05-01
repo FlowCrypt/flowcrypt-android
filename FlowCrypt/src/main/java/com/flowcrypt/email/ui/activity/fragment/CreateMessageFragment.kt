@@ -85,7 +85,6 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
@@ -371,7 +370,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                   val fingerprint = openPgpV4Fingerprint.toString()
                   val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
                   if (passphrase?.isEmpty == true) {
-                    showNeedPassphraseDialog(listOf(fingerprint))
+                    showNeedPassphraseDialog(
+                      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+                      fingerprints = listOf(fingerprint)
+                    )
                     return true
                   }
                 } else {
@@ -1579,7 +1581,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
-    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, _ ->
+    setFragmentResultListener(REQUEST_KEY_FIX_MISSING_PASSPHRASE) { _, _ ->
       sendMsg()
     }
   }
@@ -1729,6 +1731,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
       CreateMessageFragment::class.java
     )
   }
