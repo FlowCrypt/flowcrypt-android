@@ -219,6 +219,7 @@ fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
 }
 
 fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
+  requestKey: String,
   source: String? = null,
   uri: Uri? = null,
   @ParsePgpKeysFromSourceDialogFragment.FilterType filterType: Long
@@ -227,6 +228,7 @@ fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.parse_keys_from_source_dialog_graph
       override val arguments = ParsePgpKeysFromSourceDialogFragmentArgs(
+        requestKey = requestKey,
         source = source,
         uri = uri,
         filterType = filterType

@@ -57,6 +57,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -64,6 +65,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -88,6 +90,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
   }
 
   override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
 
   fun initViews() {
     binding?.editTextNewPubKey?.addTextChangedListener {
@@ -97,6 +100,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
     binding?.buttonCheck?.setOnClickListener {
       importSourceType = KeyImportDetails.SourceType.MANUAL_ENTERING
       showParsePgpKeysFromSourceDialogFragment(
+        requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
         source = binding?.editTextNewPubKey?.text.toString(),
         filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
       )
@@ -131,6 +135,11 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
   companion object {
     private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      EditContactFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
       EditContactFragment::class.java
     )
   }

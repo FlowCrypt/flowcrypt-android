@@ -58,6 +58,7 @@ class ImportPrivateKeysDuringSetupFragment :
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
@@ -65,6 +66,7 @@ class ImportPrivateKeysDuringSetupFragment :
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
@@ -101,6 +103,7 @@ class ImportPrivateKeysDuringSetupFragment :
   }
 
   override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
 
   private fun subscribeToCheckPrivateKeys() {
     setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
@@ -134,6 +137,11 @@ class ImportPrivateKeysDuringSetupFragment :
 
     val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PRIVATE_KEYS",
+      ImportPrivateKeysDuringSetupFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
       ImportPrivateKeysDuringSetupFragment::class.java
     )
 

@@ -61,6 +61,7 @@ class ImportRecipientsFromSourceFragment :
   }
 
   override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
 
   private fun initViews() {
     binding?.eTKeyIdOrEmail?.setOnEditorActionListener { _, actionId, _ ->
@@ -123,6 +124,11 @@ class ImportRecipientsFromSourceFragment :
 
     private val REQUEST_KEY_LOOK_UP_PUB_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_LOOK_UP_PUB_KEYS",
+      ImportRecipientsFromSourceFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
       ImportRecipientsFromSourceFragment::class.java
     )
   }

@@ -117,7 +117,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
               } else {
                 navController?.navigateUp()
                 setFragmentResult(
-                  REQUEST_KEY_PARSED_KEYS,
+                  args.requestKey,
                   bundleOf(KEY_PARSED_KEYS to keys)
                 )
               }
@@ -176,10 +176,6 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_PARSED_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PARSED_KEYS", ParsePgpKeysFromSourceDialogFragment::class.java
-    )
-
     val KEY_PARSED_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_PARSED_KEYS", ParsePgpKeysFromSourceDialogFragment::class.java
     )
