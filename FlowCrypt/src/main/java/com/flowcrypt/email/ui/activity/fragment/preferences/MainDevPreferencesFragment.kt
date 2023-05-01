@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
@@ -19,6 +18,7 @@ import androidx.preference.SwitchPreference
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.toast
 
 /**
  * The main developer options fragment.
@@ -82,11 +82,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(),
   }
 
   private fun showApplicationDetailsMainActivity() {
-    Toast.makeText(
-      activity,
-      R.string.toast_message_press_force_stop_to_apply_changes,
-      Toast.LENGTH_SHORT
-    ).show()
+    toast(R.string.toast_message_press_force_stop_to_apply_changes)
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
     val uri = Uri.fromParts("package", requireActivity().packageName, null)
     intent.data = uri

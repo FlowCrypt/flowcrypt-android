@@ -93,8 +93,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     initViews(view)
     updateView(authCreds)
 
-    subscribeToCheckAccountSettings()
-    subscribeToAuthorizeAndSearchBackups()
+    subscribeToCheckAccountSettingsAndSearchBackups()
     subscribeToCheckPrivateKeys()
     subscribeCreateOrImportPrivateKeyDuringSetup()
     subscribeToTwoWayDialog()
@@ -205,6 +204,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
           tryToConnect()
           true
         }
+
         else -> false
       }
     }
@@ -317,123 +317,124 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     }
   }
 
-  @Suppress("UNCHECKED_CAST")
-  private fun subscribeToCheckAccountSettings() {
-    setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
-      val result: Result<*>? =
-        bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+  private fun subscribeToCheckAccountSettingsAndSearchBackups() {
+    setFragmentResultListener(REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS) { _, bundle ->
+      when (bundle.getInt(AuthorizeAndSearchBackupsFragment.KEY_RESULT_TYPE)) {
+        AuthorizeAndSearchBackupsFragment.RESULT_TYPE_SETTINGS -> {
+          val result: Result<*>? =
+            bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+          result?.let { handleCheckSettingsResult(it) }
+        }
 
-      if (result != null) {
-        when (result.status) {
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-            val exception = result.exception ?: return@setFragmentResultListener
-            val original = result.exception.cause
-            var title: String? = null
-            val msg: String? = if (exception.message.isNullOrEmpty()) {
-              exception.javaClass.simpleName
-            } else exception.message
-
-            if (original != null) {
-              if (original is AuthenticationFailedException) {
-                val isGmailImapServer = binding?.editTextImapServer?.text.toString()
-                  .equals(GmailConstants.GMAIL_IMAP_SERVER, ignoreCase = true)
-                val isMsgEmpty = TextUtils.isEmpty(original.message)
-                val hasAlert = original.message?.startsWith(
-                  GmailConstants
-                    .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED
-                )
-                if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
-                  showLessSecurityWarning()
-                  return@setFragmentResultListener
-                }
-              } else if (original is MailConnectException || original is SocketTimeoutException) {
-                title = getString(R.string.network_error)
-              }
-            } else if (exception is AccountAlreadyAddedException) {
-              showInfoSnackbar(view, exception.message, Snackbar.LENGTH_LONG)
-              return@setFragmentResultListener
-            }
-
-            val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
-              binding?.editTextEmail?.text.toString(), binding?.editTextPassword?.text.toString()
-            )?.faqUrl
-
-            val dialogMsg = if (binding?.checkBoxAdvancedMode?.isChecked == false) {
-              getString(R.string.show_error_msg_with_recommendations, msg)
-            } else {
-              msg
-            } + if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl)
-
-            showTwoWayDialog(
-              requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
-              dialogTitle = title,
-              dialogMsg = dialogMsg,
-              positiveButtonTitle = getString(R.string.retry),
-              negativeButtonTitle = getString(R.string.cancel),
-              isCancelable = true,
-              useLinkify = true
-            )
-          }
-
-          else -> {
-
-          }
+        AuthorizeAndSearchBackupsFragment.RESULT_TYPE_BACKUPS -> {
+          val result: Result<*>? =
+            bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+          result?.let { handleSearchBackupsResult(it) }
         }
       }
     }
   }
 
-  @Suppress("UNCHECKED_CAST")
-  private fun subscribeToAuthorizeAndSearchBackups() {
-    setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS) { _, bundle ->
-      val result: Result<*>? =
-        bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+  private fun handleSearchBackupsResult(result: Result<*>) {
+    when (result.status) {
+      Result.Status.SUCCESS -> {
+        dismissCurrentSnackBar()
 
-      if (result != null) {
-        when (result.status) {
-          Result.Status.SUCCESS -> {
-            dismissCurrentSnackBar()
-
-            val keyDetailsList = result.data as ArrayList<PgpKeyDetails>?
-            if (keyDetailsList?.isEmpty() == true) {
-              authCreds?.let { authCredentials ->
-                val account = AccountEntity(authCredentials)
-                navController?.navigate(
-                  AddOtherAccountFragmentDirections
-                    .actionAddOtherAccountFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
-                      accountEntity = account, isShowAnotherAccountBtnEnabled = true
-                    )
+        @Suppress("UNCHECKED_CAST") val keyDetailsList = result.data as ArrayList<PgpKeyDetails>?
+        if (keyDetailsList?.isEmpty() == true) {
+          authCreds?.let { authCredentials ->
+            val account = AccountEntity(authCredentials)
+            navController?.navigate(
+              AddOtherAccountFragmentDirections
+                .actionAddOtherAccountFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
+                  accountEntity = account, isShowAnotherAccountBtnEnabled = true
                 )
-                showContent()
-              }
-            } else {
-              navController?.navigate(
-                AddOtherAccountFragmentDirections
-                  .actionAddOtherAccountFragmentToCheckKeysFragment(
-                    privateKeys = (keyDetailsList ?: ArrayList()).toTypedArray(),
-                    sourceType = KeyImportDetails.SourceType.EMAIL,
-                    positiveBtnTitle = getString(R.string.continue_),
-                    negativeBtnTitle = getString(R.string.use_another_account),
-                    initSubTitlePlurals = R.plurals.found_backup_of_your_account_key
-                  )
-              )
-            }
-          }
-
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-            showInfoDialogWithExceptionDetails(
-              result.exception,
-              getString(R.string.could_not_load_private_keys)
             )
+            showContent()
           }
-
-          else -> {
-
-          }
+        } else {
+          navController?.navigate(
+            AddOtherAccountFragmentDirections
+              .actionAddOtherAccountFragmentToCheckKeysFragment(
+                privateKeys = (keyDetailsList ?: ArrayList()).toTypedArray(),
+                sourceType = KeyImportDetails.SourceType.EMAIL,
+                positiveBtnTitle = getString(R.string.continue_),
+                negativeBtnTitle = getString(R.string.use_another_account),
+                initSubTitlePlurals = R.plurals.found_backup_of_your_account_key
+              )
+          )
         }
       }
+
+      Result.Status.ERROR, Result.Status.EXCEPTION -> {
+        showContent()
+        showInfoDialogWithExceptionDetails(
+          result.exception,
+          getString(R.string.could_not_load_private_keys)
+        )
+      }
+
+      else -> {
+
+      }
+    }
+  }
+
+  private fun handleCheckSettingsResult(result: Result<*>) {
+    when (result.status) {
+      Result.Status.ERROR, Result.Status.EXCEPTION -> {
+        showContent()
+        val exception = result.exception ?: return
+        val original = result.exception.cause
+        var title: String? = null
+        val msg: String? = if (exception.message.isNullOrEmpty()) {
+          exception.javaClass.simpleName
+        } else exception.message
+
+        if (original != null) {
+          if (original is AuthenticationFailedException) {
+            val isGmailImapServer = binding?.editTextImapServer?.text.toString()
+              .equals(GmailConstants.GMAIL_IMAP_SERVER, ignoreCase = true)
+            val isMsgEmpty = TextUtils.isEmpty(original.message)
+            val hasAlert = original.message?.startsWith(
+              GmailConstants
+                .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED
+            )
+            if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
+              showLessSecurityWarning()
+              return
+            }
+          } else if (original is MailConnectException || original is SocketTimeoutException) {
+            title = getString(R.string.network_error)
+          }
+        } else if (exception is AccountAlreadyAddedException) {
+          showInfoSnackbar(view, exception.message, Snackbar.LENGTH_LONG)
+          return
+        }
+
+        val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
+          binding?.editTextEmail?.text.toString(),
+          binding?.editTextPassword?.text.toString()
+        )?.faqUrl
+
+        val dialogMsg = if (binding?.checkBoxAdvancedMode?.isChecked == false) {
+          getString(R.string.show_error_msg_with_recommendations, msg)
+        } else {
+          msg
+        } + if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl)
+
+        showTwoWayDialog(
+          requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
+          dialogTitle = title,
+          dialogMsg = dialogMsg,
+          positiveButtonTitle = getString(R.string.retry),
+          negativeButtonTitle = getString(R.string.cancel),
+          isCancelable = true,
+          useLinkify = true
+        )
+      }
+
+      else -> {}
     }
   }
 
@@ -529,7 +530,10 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
               navController?.navigate(
                 AddOtherAccountFragmentDirections
-                  .actionAddOtherAccountFragmentToAuthorizeAndSearchBackupsFragment(account)
+                  .actionAddOtherAccountFragmentToAuthorizeAndSearchBackupsFragment(
+                    requestKey = REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS,
+                    account = account
+                  )
               )
 
               return@let
@@ -551,6 +555,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
             "Couldn't fetch token"
           )
         }
+
         else -> {}
       }
     }
@@ -581,6 +586,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
             getString(R.string.could_not_load_oauth_server_configuration)
           )
         }
+
         else -> {}
       }
     }
@@ -779,6 +785,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
               )
               binding?.editTextSmtpPassword?.requestFocus()
             }
+
             else -> return true
           }
 
@@ -803,7 +810,10 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
         val account = AccountEntity(authCredentials)
         navController?.navigate(
           AddOtherAccountFragmentDirections
-            .actionAddOtherAccountFragmentToAuthorizeAndSearchBackupsFragment(account)
+            .actionAddOtherAccountFragmentToAuthorizeAndSearchBackupsFragment(
+              requestKey = REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS,
+              account = account
+            )
         )
       }
     }
@@ -850,7 +860,12 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   }
 
   companion object {
+    private val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS =
+      GeneralUtil.generateUniqueExtraKey(
+        "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS",
+        AddOtherAccountFragment::class.java
+      )
+
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
-    private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
   }
 }
