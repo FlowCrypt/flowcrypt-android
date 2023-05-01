@@ -90,6 +90,7 @@ class ImportPrivateKeysDuringSetupFragment :
       navController?.navigate(
         ImportPrivateKeysDuringSetupFragmentDirections
           .actionImportPrivateKeysDuringSetupFragmentToCheckKeysFragment(
+            requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
             privateKeys = keys.toTypedArray(),
             subTitle = title,
             sourceType = importSourceType,
@@ -106,7 +107,7 @@ class ImportPrivateKeysDuringSetupFragment :
   override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
 
   private fun subscribeToCheckPrivateKeys() {
-    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
         bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
@@ -142,6 +143,11 @@ class ImportPrivateKeysDuringSetupFragment :
 
     private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PARSE_PGP_KEYS",
+      ImportPrivateKeysDuringSetupFragment::class.java
+    )
+
+    val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
       ImportPrivateKeysDuringSetupFragment::class.java
     )
 

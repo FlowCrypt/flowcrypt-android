@@ -356,6 +356,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
           navController?.navigate(
             AddOtherAccountFragmentDirections
               .actionAddOtherAccountFragmentToCheckKeysFragment(
+                requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
                 privateKeys = (keyDetailsList ?: ArrayList()).toTypedArray(),
                 sourceType = KeyImportDetails.SourceType.EMAIL,
                 positiveBtnTitle = getString(R.string.continue_),
@@ -439,7 +440,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   }
 
   private fun subscribeToCheckPrivateKeys() {
-    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt(
         CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
       ) ?: emptyList<PgpKeyDetails>()
@@ -865,6 +866,11 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
         "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS",
         AddOtherAccountFragment::class.java
       )
+
+    val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
+      AddOtherAccountFragment::class.java
+    )
 
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
   }

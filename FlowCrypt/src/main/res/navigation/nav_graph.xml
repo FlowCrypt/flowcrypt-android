@@ -451,6 +451,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment"
         tools:layout="@layout/fragment_check_keys">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="privateKeys"
             app:argType="com.flowcrypt.email.security.model.PgpKeyDetails[]" />
         <argument

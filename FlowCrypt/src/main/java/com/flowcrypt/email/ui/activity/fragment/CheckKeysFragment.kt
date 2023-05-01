@@ -256,7 +256,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   private fun returnResult(@CheckingState checkingState: Int) {
     navController?.navigateUp()
     setFragmentResult(
-      REQUEST_KEY_CHECK_PRIVATE_KEYS,
+      args.requestKey,
       bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to ArrayList(unlockedKeys), KEY_STATE to checkingState)
     )
   }
@@ -345,11 +345,6 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   companion object {
-    val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
-      CheckKeysFragment::class.java
-    )
-
     val KEY_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_UNLOCKED_PRIVATE_KEYS", CheckKeysFragment::class.java
     )

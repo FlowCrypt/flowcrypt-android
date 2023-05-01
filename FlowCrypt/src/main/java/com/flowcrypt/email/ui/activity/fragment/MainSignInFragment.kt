@@ -406,7 +406,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun subscribeToCheckPrivateKeys() {
-    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt(
         CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
       ) ?: emptyList<PgpKeyDetails>()
@@ -536,6 +536,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       navController?.navigate(
         MainSignInFragmentDirections
           .actionMainSignInFragmentToCheckKeysFragment(
+            requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
             privateKeys = keyDetailsList.toTypedArray(),
             sourceType = KeyImportDetails.SourceType.EMAIL,
             positiveBtnTitle = getString(R.string.continue_),
@@ -854,6 +855,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS",
         MainSignInFragment::class.java
       )
+
+    val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
+      MainSignInFragment::class.java
+    )
 
     private const val REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106
