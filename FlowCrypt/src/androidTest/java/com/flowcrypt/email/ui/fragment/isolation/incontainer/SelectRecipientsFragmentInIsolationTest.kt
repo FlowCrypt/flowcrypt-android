@@ -34,6 +34,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -57,7 +58,9 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
   @FlakyTest
   fun testShowEmptyView() {
     launchFragmentInContainer<SelectRecipientsFragment>(
-      fragmentArgs = SelectRecipientsFragmentArgs().toBundle()
+      fragmentArgs = SelectRecipientsFragmentArgs(
+        requestKey = UUID.randomUUID().toString()
+      ).toBundle()
     )
     onView(withId(R.id.tVEmpty))
       .check(matches(isDisplayed()))
@@ -81,7 +84,9 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
     ).execute()
 
     launchFragmentInContainer<SelectRecipientsFragment>(
-      fragmentArgs = SelectRecipientsFragmentArgs().toBundle()
+      fragmentArgs = SelectRecipientsFragmentArgs(
+        requestKey = UUID.randomUUID().toString()
+      ).toBundle()
     )
 
     unregisterCountingIdlingResource()

@@ -29,6 +29,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -49,12 +50,14 @@ class CheckCredentialsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testReturnExceptionForFailedAuthorization() {
+    val requestKey = UUID.randomUUID().toString()
     val scenario = launchFragmentInContainer<CheckCredentialsFragment>(
       fragmentArgs = CheckCredentialsFragmentArgs(
         accountEntity = addAccountToDatabaseRule.account.copy(
           email = "unknown@flowcrypt.test",
           username = "unknown@flowcrypt.test"
-        )
+        ),
+        requestKey = requestKey
       ).toBundle()
     )
 
@@ -62,7 +65,7 @@ class CheckCredentialsFragmentInIsolationTest : BaseTest() {
     scenario.onFragment { fragment ->
       fragment.parentFragmentManager
         .setFragmentResultListener(
-          CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
+          requestKey,
           fragment
         ) { _, bundle ->
           actualResult = requireNotNull(
@@ -78,9 +81,11 @@ class CheckCredentialsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testAuthorizationSuccess() {
+    val requestKey = UUID.randomUUID().toString()
     val scenario = launchFragmentInContainer<CheckCredentialsFragment>(
       fragmentArgs = CheckCredentialsFragmentArgs(
-        accountEntity = addAccountToDatabaseRule.account
+        accountEntity = addAccountToDatabaseRule.account,
+        requestKey = requestKey
       ).toBundle()
     )
 
@@ -88,7 +93,7 @@ class CheckCredentialsFragmentInIsolationTest : BaseTest() {
     scenario.onFragment { fragment ->
       fragment.parentFragmentManager
         .setFragmentResultListener(
-          CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
+          requestKey,
           fragment
         ) { _, bundle ->
           actualResult = requireNotNull(

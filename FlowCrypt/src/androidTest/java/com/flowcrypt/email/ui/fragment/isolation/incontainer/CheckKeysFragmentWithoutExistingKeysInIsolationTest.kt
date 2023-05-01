@@ -30,6 +30,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -53,6 +54,7 @@ class CheckKeysFragmentWithoutExistingKeysInIsolationTest : BaseTest() {
   fun launchFragmentInContainerWithPredefinedArgs() {
     launchFragmentInContainer<CheckKeysFragment>(
       fragmentArgs = CheckKeysFragmentArgs(
+        requestKey = UUID.randomUUID().toString(),
         privateKeys = privateKeys.toTypedArray(),
         positiveBtnTitle = getTargetContext().getString(R.string.continue_),
         negativeBtnTitle = getTargetContext().getString(R.string.use_another_account),
