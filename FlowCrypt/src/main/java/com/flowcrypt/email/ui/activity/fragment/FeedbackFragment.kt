@@ -104,9 +104,10 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
 
               navController?.navigate(
                 FeedbackFragmentDirections.actionFeedbackFragmentToSendFeedbackDialogFragment(
-                  nonNullAccount,
-                  binding?.editTextUserMessage?.text.toString(),
-                  screenShotBytes?.let { Screenshot(it) }
+                  requestKey = REQUEST_KEY_SEND_FEEDBACK,
+                  accountEntity = nonNullAccount,
+                  feedbackMsg = binding?.editTextUserMessage?.text.toString(),
+                  screenshot = screenShotBytes?.let { Screenshot(it) }
                 )
               )
             }
@@ -158,7 +159,7 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
   }
 
   private fun subscribeToSendFeedback() {
-    setFragmentResultListener(SendFeedbackDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_SEND_FEEDBACK) { _, bundle ->
       val isSent = bundle.getBoolean(SendFeedbackDialogFragment.KEY_RESULT)
       if (isSent) {
         toast(getString(R.string.thank_you_for_feedback))
@@ -170,6 +171,11 @@ class FeedbackFragment : BaseFragment<FragmentFeedbackBinding>() {
   companion object {
     private val REQUEST_KEY_EDIT_SCREENSHOT = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_EDIT_SCREENSHOT",
+      FeedbackFragment::class.java
+    )
+
+    private val REQUEST_KEY_SEND_FEEDBACK = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_SEND_FEEDBACK",
       FeedbackFragment::class.java
     )
   }

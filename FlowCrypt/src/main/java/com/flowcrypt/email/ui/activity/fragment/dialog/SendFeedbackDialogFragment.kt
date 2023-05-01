@@ -82,7 +82,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
           Result.Status.SUCCESS -> {
             navController?.navigateUp()
             setFragmentResult(
-              REQUEST_KEY_RESULT,
+              args.requestKey,
               bundleOf(KEY_RESULT to (it.data?.isSent == true))
             )
             countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
@@ -114,7 +114,6 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    const val REQUEST_KEY_RESULT = "REQUEST_KEY_RESULT"
     const val KEY_RESULT = "KEY_RESULT"
   }
 }
