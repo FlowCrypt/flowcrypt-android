@@ -1563,9 +1563,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToAddMissingRecipientPublicKey() {
-    setFragmentResultListener(
-      ImportMissingPublicKeyFragment.REQUEST_KEY_RECIPIENT_WITH_PUB_KEY
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_RECIPIENT_WITH_PUB_KEY) { _, bundle ->
       val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         ImportMissingPublicKeyFragment.KEY_RECIPIENT_WITH_PUB_KEY
       )
@@ -1602,7 +1600,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           recipientWithPubKeys?.let {
             navController?.navigate(
               CreateMessageFragmentDirections
-                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
+                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(
+                  requestKey = REQUEST_KEY_RECIPIENT_WITH_PUB_KEY,
+                  recipientWithPubKeys = it
+                )
             )
           }
         }
@@ -1740,7 +1741,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       CreateMessageFragment::class.java
     )
 
-    val REQUEST_KEY_NO_PGP_FOUND = GeneralUtil.generateUniqueExtraKey(
+    private val REQUEST_KEY_RECIPIENT_WITH_PUB_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_RECIPIENT_WITH_PUB_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_NO_PGP_FOUND = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_NO_PGP_FOUND",
       CreateMessageFragment::class.java
     )

@@ -127,8 +127,8 @@ class ImportMissingPublicKeyFragment :
             navController?.navigateUp()
             it.data?.let { recipientWithPubKeys ->
               setFragmentResult(
-                REQUEST_KEY_RECIPIENT_WITH_PUB_KEY,
-                bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
+                requestKey = args.requestKey,
+                result = bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
@@ -154,11 +154,6 @@ class ImportMissingPublicKeyFragment :
   companion object {
     private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
-      ImportMissingPublicKeyFragment::class.java
-    )
-
-    val REQUEST_KEY_RECIPIENT_WITH_PUB_KEY = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_RECIPIENT_WITH_PUB_KEY",
       ImportMissingPublicKeyFragment::class.java
     )
 

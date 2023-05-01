@@ -69,6 +69,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.ImportMissingPublicKeyFragment"
         tools:layout="@layout/fragment_import_missing_public_key">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="recipientWithPubKeys"
             app:argType="com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys" />
     </fragment>
