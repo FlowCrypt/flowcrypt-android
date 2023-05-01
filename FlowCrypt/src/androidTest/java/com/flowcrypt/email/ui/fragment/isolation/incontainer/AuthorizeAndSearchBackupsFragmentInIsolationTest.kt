@@ -49,8 +49,10 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testReturnExceptionForFailedAuthorization() {
+    val requestKey = "testReturnExceptionForFailedAuthorization"
     val scenario = launchFragmentInContainer<AuthorizeAndSearchBackupsFragment>(
       fragmentArgs = AuthorizeAndSearchBackupsFragmentArgs(
+        requestKey = requestKey,
         account = addAccountToDatabaseRule.account.copy(
           email = "unknown@flowcrypt.test",
           username = "unknown@flowcrypt.test"
@@ -62,7 +64,7 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
     scenario.onFragment { fragment ->
       fragment.parentFragmentManager
         .setFragmentResultListener(
-          AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
+          requestKey,
           fragment
         ) { _, bundle ->
           actualResult = requireNotNull(
@@ -78,8 +80,10 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testSearchBackupsSuccess() {
+    val requestKey = "testSearchBackupsSuccess"
     val scenario = launchFragmentInContainer<AuthorizeAndSearchBackupsFragment>(
       fragmentArgs = AuthorizeAndSearchBackupsFragmentArgs(
+        requestKey = requestKey,
         account = addAccountToDatabaseRule.account
       ).toBundle()
     )
@@ -88,7 +92,7 @@ class AuthorizeAndSearchBackupsFragmentInIsolationTest : BaseTest() {
     scenario.onFragment { fragment ->
       fragment.parentFragmentManager
         .setFragmentResultListener(
-          AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS,
+          requestKey,
           fragment
         ) { _, bundle ->
           actualResult = requireNotNull(
