@@ -530,7 +530,11 @@
     <dialog
         android:id="@+id/importAllPubKeysFromSourceDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment"
-        tools:layout="@layout/fragment_import_all_pub_keys_from_source" />
+        tools:layout="@layout/fragment_import_all_pub_keys_from_source">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+    </dialog>
 
     <dialog
         android:id="@+id/downloadAttachmentDialogFragment"

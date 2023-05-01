@@ -32,6 +32,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment
 import com.flowcrypt.email.ui.adapter.ImportOrUpdatePubKeysRecyclerViewAdapter
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author Denys Bondarenko
@@ -87,7 +88,9 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
     binding?.btImportAll?.setOnClickListener {
       navController?.navigate(
         ParseAndSavePubKeysFragmentDirections
-          .actionParseAndSavePubKeysFragmentToImportAllPubKeysFromSourceDialogFragment()
+          .actionParseAndSavePubKeysFragmentToImportAllPubKeysFromSourceDialogFragment(
+            requestKey = REQUEST_KEY_IMPORT_PUB_KEYS
+          )
       )
     }
 
@@ -194,9 +197,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   }
 
   private fun subscribeToImportAllPubKeysFromSourceResult() {
-    setFragmentResultListener(
-      ImportAllPubKeysFromSourceDialogFragment.REQUEST_KEY_IMPORT_PUB_KEYS_RESULT
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_IMPORT_PUB_KEYS) { _, bundle ->
       val result =
         bundle.getBoolean(ImportAllPubKeysFromSourceDialogFragment.KEY_IMPORT_PUB_KEYS_RESULT)
       if (result) {
@@ -204,5 +205,12 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
         navController?.popBackStack(R.id.recipientsListFragment, false)
       }
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_IMPORT_PUB_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_PUB_KEYS",
+      ParseAndSavePubKeysFragment::class.java
+    )
   }
 }
