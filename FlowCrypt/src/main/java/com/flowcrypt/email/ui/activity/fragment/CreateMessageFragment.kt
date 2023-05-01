@@ -1537,9 +1537,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToSelectRecipients() {
-    setFragmentResultListener(
-      SelectRecipientsFragment.REQUEST_KEY_SELECT_RECIPIENTS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_SELECT_RECIPIENTS) { _, bundle ->
       val list =
         bundle.getParcelableArrayListViaExt<RecipientEntity>(SelectRecipientsFragment.KEY_RECIPIENTS)
       list?.let { recipients ->
@@ -1612,6 +1610,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           cachedRecipientWithoutPubKeys?.let {
             navController?.navigate(
               CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
+                requestKey = REQUEST_KEY_SELECT_RECIPIENTS,
                 title = getString(R.string.use_public_key_from)
               )
             )
@@ -1753,6 +1752,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     private val REQUEST_KEY_PASSWORD = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PASSWORD",
       CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_SELECT_RECIPIENTS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_SELECT_RECIPIENTS", CreateMessageFragment::class.java
     )
   }
 }

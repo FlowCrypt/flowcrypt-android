@@ -83,7 +83,9 @@
         android:id="@+id/selectRecipientsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.SelectRecipientsFragment"
         tools:layout="@layout/fragment_select_recipients">
-
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
         <argument
             android:name="useMultipleMode"
             android:defaultValue="false"
