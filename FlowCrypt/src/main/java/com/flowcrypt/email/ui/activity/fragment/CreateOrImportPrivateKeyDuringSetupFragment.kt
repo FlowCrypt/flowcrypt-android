@@ -57,7 +57,8 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
       navController?.navigate(
         CreateOrImportPrivateKeyDuringSetupFragmentDirections
           .actionCreateOrImportPrivateKeyDuringSetupFragmentToImportPrivateKeysDuringSetupFragment(
-            args.accountEntity
+            requestKey = REQUEST_KEY_PRIVATE_KEYS,
+            accountEntity = args.accountEntity
           )
       )
     }
@@ -99,7 +100,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   }
 
   private fun subscribeToCheckPrivateKeysFromImport() {
-    setFragmentResultListener(ImportPrivateKeysDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
       val keys =
         bundle.getParcelableArrayListViaExt<PgpKeyDetails>(ImportPrivateKeysDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       keys?.let { setResult(HANDLE_RESOLVED_KEYS, it, args.accountEntity) }
@@ -131,6 +132,11 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   companion object {
     private val REQUEST_KEY_CREATE_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PARSED_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
+    )
+
+    private val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PRIVATE_KEYS",
+      CreateOrImportPrivateKeyDuringSetupFragment::class.java
     )
 
     val KEY_STATE = GeneralUtil.generateUniqueExtraKey(

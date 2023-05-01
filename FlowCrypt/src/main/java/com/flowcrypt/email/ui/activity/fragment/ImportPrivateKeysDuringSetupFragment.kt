@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportPrivateKeysDuringSetupBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
@@ -32,6 +33,8 @@ class ImportPrivateKeysDuringSetupFragment :
   BaseImportKeyFragment<FragmentImportPrivateKeysDuringSetupBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentImportPrivateKeysDuringSetupBinding.inflate(inflater, container, false)
+
+  private val args by navArgs<ImportPrivateKeysDuringSetupFragmentArgs>()
 
   override val isPrivateKeyMode: Boolean = true
   override val isDisplayHomeAsUpEnabled = false
@@ -114,7 +117,7 @@ class ImportPrivateKeysDuringSetupFragment :
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           navController?.navigateUp()
           setFragmentResult(
-            REQUEST_KEY_PRIVATE_KEYS,
+            args.requestKey,
             bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys?.map {
               it.copy(
                 importSourceType = if (activeUri != null) {
@@ -136,17 +139,12 @@ class ImportPrivateKeysDuringSetupFragment :
       ImportPrivateKeysDuringSetupFragment::class.java
     )
 
-    val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PRIVATE_KEYS",
-      ImportPrivateKeysDuringSetupFragment::class.java
-    )
-
     private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PARSE_PGP_KEYS",
       ImportPrivateKeysDuringSetupFragment::class.java
     )
 
-    val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+    private val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHECK_PRIVATE_KEYS",
       ImportPrivateKeysDuringSetupFragment::class.java
     )
