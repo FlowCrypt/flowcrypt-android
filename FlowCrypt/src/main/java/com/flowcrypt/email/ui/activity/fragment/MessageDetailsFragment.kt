@@ -223,7 +223,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             navController?.navigate(
               MessageDetailsFragmentDirections
                 .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                  attachmentInfo, REQUEST_CODE_PREVIEW_ATTACHMENT
+                  attachmentInfo = attachmentInfo,
+                  requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+                  requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT
                 )
             )
           }
@@ -1608,7 +1610,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           navController?.navigate(
             MessageDetailsFragmentDirections
               .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                attInfo, REQUEST_CODE_SAVE_ATTACHMENT
+                attachmentInfo = attInfo,
+                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+                requestCode = REQUEST_CODE_SAVE_ATTACHMENT
               )
           )
         } else {
@@ -1679,7 +1683,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToDownloadAttachmentViaDialog() {
-    setFragmentResultListener(DownloadAttachmentDialogFragment.REQUEST_KEY_ATTACHMENT_DATA) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
       val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
       val attachmentInfo =
@@ -1745,6 +1749,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      MessageDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_DOWNLOAD_ATTACHMENT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_DOWNLOAD_ATTACHMENT",
       MessageDetailsFragment::class.java
     )
   }

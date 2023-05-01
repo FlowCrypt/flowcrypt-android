@@ -93,14 +93,16 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
           Result.Status.SUCCESS -> {
             navController?.navigateUp()
             it.data?.let { byteArray ->
-              setFragmentResult(
-                REQUEST_KEY_ATTACHMENT_DATA,
-                bundleOf(
-                  KEY_ATTACHMENT to args.attachmentInfo,
-                  KEY_ATTACHMENT_DATA to byteArray,
-                  KEY_REQUEST_CODE to args.requestCode
+              args.requestKey?.let { requestKey ->
+                setFragmentResult(
+                  requestKey,
+                  bundleOf(
+                    KEY_ATTACHMENT to args.attachmentInfo,
+                    KEY_ATTACHMENT_DATA to byteArray,
+                    KEY_REQUEST_CODE to args.requestCode
+                  )
                 )
-              )
+              }
             }
             countingIdlingResource?.decrementSafely(this@DownloadAttachmentDialogFragment)
           }
@@ -124,7 +126,6 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    const val REQUEST_KEY_ATTACHMENT_DATA = "REQUEST_KEY_PUB_KEYS"
     const val KEY_ATTACHMENT = "KEY_ATTACHMENT"
     const val KEY_ATTACHMENT_DATA = "KEY_ATTACHMENT_DATA"
     const val KEY_REQUEST_CODE = "KEY_REQUEST_CODE"
