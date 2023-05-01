@@ -96,10 +96,12 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
               handleException(NullPointerException("pgpKeyDetails == null"))
             } else {
               navController?.navigateUp()
-              setFragmentResult(
-                REQUEST_KEY_CREATE_KEY,
-                bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
-              )
+              args.requestKey?.let { requestKey ->
+                setFragmentResult(
+                  requestKey,
+                  bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
+                )
+              }
             }
             countingIdlingResource?.decrementSafely(this@CreatePrivateKeyDialogFragment)
           }
@@ -116,6 +118,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
 
             countingIdlingResource?.decrementSafely(this@CreatePrivateKeyDialogFragment)
           }
+
           else -> {
           }
         }
@@ -132,10 +135,6 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_CREATE_KEY = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PARSED_KEYS", CreatePrivateKeyDialogFragment::class.java
-    )
-
     val KEY_CREATED_KEY = GeneralUtil.generateUniqueExtraKey(
       "KEY_PARSED_KEYS", CreatePrivateKeyDialogFragment::class.java
     )
