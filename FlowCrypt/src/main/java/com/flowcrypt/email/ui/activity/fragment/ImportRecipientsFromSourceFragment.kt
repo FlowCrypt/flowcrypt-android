@@ -23,6 +23,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author Denys Bondarenko
@@ -59,6 +60,8 @@ class ImportRecipientsFromSourceFragment :
     // nothing to do here
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+
   private fun initViews() {
     binding?.eTKeyIdOrEmail?.setOnEditorActionListener { _, actionId, _ ->
       if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -72,7 +75,10 @@ class ImportRecipientsFromSourceFragment :
     }
 
     binding?.btLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = false
+      )
     }
 
     binding?.btLoadFromFile?.setOnClickListener {
@@ -104,5 +110,12 @@ class ImportRecipientsFromSourceFragment :
           .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pubKeysAsString)
       )
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportRecipientsFromSourceFragment::class.java
+    )
   }
 }

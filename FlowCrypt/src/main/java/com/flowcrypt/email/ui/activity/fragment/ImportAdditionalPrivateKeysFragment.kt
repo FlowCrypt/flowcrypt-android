@@ -114,9 +114,14 @@ class ImportAdditionalPrivateKeysFragment :
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = true
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -228,6 +233,7 @@ class ImportAdditionalPrivateKeysFragment :
             }
             countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
           }
+
           else -> {}
         }
       }
@@ -277,6 +283,11 @@ class ImportAdditionalPrivateKeysFragment :
   }
 
   companion object {
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportAdditionalPrivateKeysFragment::class.java
+    )
+
     val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
       ImportAdditionalPrivateKeysFragment::class.java

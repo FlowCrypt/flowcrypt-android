@@ -27,6 +27,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyDialogFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author Denys Bondarenko
@@ -86,6 +87,8 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
     )
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+
   fun initViews() {
     binding?.editTextNewPubKey?.addTextChangedListener {
       binding?.buttonCheck?.isEnabled = !it.isNullOrEmpty()
@@ -100,7 +103,10 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
     }
 
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = false
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -120,5 +126,12 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
         navController?.navigateUp()
       }
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      EditContactFragment::class.java
+    )
   }
 }

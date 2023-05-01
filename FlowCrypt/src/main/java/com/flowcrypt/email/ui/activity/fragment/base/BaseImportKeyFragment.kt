@@ -25,6 +25,7 @@ abstract class BaseImportKeyFragment<T : ViewBinding> : BaseFragment<T>() {
   abstract fun handleSelectedFile(uri: Uri)
   abstract fun handleClipboard(pgpKeysAsString: String?)
   abstract fun handleParsedKeys(keys: List<PgpKeyDetails>)
+  abstract fun getRequestKeyToFindKeysInClipboard(): String
 
   protected var activeUri: Uri? = null
   protected var importSourceType: KeyImportDetails.SourceType =
@@ -50,7 +51,7 @@ abstract class BaseImportKeyFragment<T : ViewBinding> : BaseFragment<T>() {
   }
 
   private fun subscribeToCheckClipboard() {
-    setFragmentResultListener(FindKeysInClipboardDialogFragment.REQUEST_KEY_CLIPBOARD_RESULT) { _, bundle ->
+    setFragmentResultListener(getRequestKeyToFindKeysInClipboard()) { _, bundle ->
       val pgpKeysAsString = bundle.getString(FindKeysInClipboardDialogFragment.KEY_CLIPBOARD_TEXT)
       importSourceType = KeyImportDetails.SourceType.CLIPBOARD
       handleClipboard(pgpKeysAsString)

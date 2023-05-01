@@ -45,7 +45,10 @@ class ImportPrivateKeysDuringSetupFragment :
 
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = true
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -97,6 +100,8 @@ class ImportPrivateKeysDuringSetupFragment :
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+
   private fun subscribeToCheckPrivateKeys() {
     setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
@@ -122,6 +127,11 @@ class ImportPrivateKeysDuringSetupFragment :
   }
 
   companion object {
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportPrivateKeysDuringSetupFragment::class.java
+    )
+
     val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PRIVATE_KEYS",
       ImportPrivateKeysDuringSetupFragment::class.java

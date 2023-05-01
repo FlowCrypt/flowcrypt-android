@@ -97,9 +97,14 @@ class ImportMissingPublicKeyFragment :
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = false
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -135,6 +140,7 @@ class ImportMissingPublicKeyFragment :
             showInfoSnackbar(msgText = errorMsg)
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
           }
+
           else -> {
           }
         }
@@ -143,6 +149,11 @@ class ImportMissingPublicKeyFragment :
   }
 
   companion object {
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportMissingPublicKeyFragment::class.java
+    )
+
     val REQUEST_KEY_RECIPIENT_WITH_PUB_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_RECIPIENT_WITH_PUB_KEY",
       ImportMissingPublicKeyFragment::class.java

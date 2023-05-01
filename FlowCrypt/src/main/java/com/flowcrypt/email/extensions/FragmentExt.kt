@@ -198,12 +198,14 @@ fun androidx.fragment.app.Fragment.showFeedbackFragment() {
 }
 
 fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
+  requestKey: String,
   isPrivateKeyMode: Boolean
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.find_keys_in_clipboard_dialog_graph
       override val arguments = FindKeysInClipboardDialogFragmentArgs(
+        requestKey = requestKey,
         isPrivateKeyMode = isPrivateKeyMode
       ).toBundle()
     }
