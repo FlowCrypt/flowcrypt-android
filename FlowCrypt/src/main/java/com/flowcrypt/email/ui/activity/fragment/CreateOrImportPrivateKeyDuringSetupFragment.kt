@@ -69,7 +69,8 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
         navController?.navigate(
           CreateOrImportPrivateKeyDuringSetupFragmentDirections
             .actionCreateOrImportPrivateKeyDuringSetupFragmentToCreatePrivateKeyFirstFragment(
-              args.accountEntity
+              requestKey = REQUEST_KEY_CREATE_KEY,
+              accountEntity = args.accountEntity
             )
         )
       }
@@ -106,7 +107,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   }
 
   private fun subscribeToCreatePrivateKey() {
-    setFragmentResultListener(CreatePrivateKeyFirstFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CREATE_KEY) { _, bundle ->
       val pgpKeyDetails = bundle.getParcelableViaExt<PgpKeyDetails>(
         CreatePrivateKeyFirstFragment.KEY_CREATED_KEY
       ) ?: return@setFragmentResultListener
@@ -128,6 +129,10 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   }
 
   companion object {
+    private val REQUEST_KEY_CREATE_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSED_KEYS", CreateOrImportPrivateKeyDuringSetupFragment::class.java
+    )
+
     val KEY_STATE = GeneralUtil.generateUniqueExtraKey(
       "KEY_STATE", CreateOrImportPrivateKeyDuringSetupFragment::class.java
     )

@@ -106,6 +106,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeyFirstFragment"
         tools:layout="@layout/fragment_create_private_key_first">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="accountEntity"
             app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
         <action
