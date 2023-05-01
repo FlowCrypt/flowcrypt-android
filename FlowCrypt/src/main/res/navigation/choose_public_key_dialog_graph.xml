@@ -16,9 +16,7 @@
         tools:layout="@layout/fragment_send_user_public_key">
         <argument
             android:name="requestKey"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
+            app:argType="string" />
         <argument
             android:name="email"
             app:argType="string" />

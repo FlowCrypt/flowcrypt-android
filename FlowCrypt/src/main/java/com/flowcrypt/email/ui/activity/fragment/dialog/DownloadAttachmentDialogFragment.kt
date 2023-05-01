@@ -93,16 +93,14 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
           Result.Status.SUCCESS -> {
             navController?.navigateUp()
             it.data?.let { byteArray ->
-              args.requestKey?.let { requestKey ->
-                setFragmentResult(
-                  requestKey,
-                  bundleOf(
-                    KEY_ATTACHMENT to args.attachmentInfo,
-                    KEY_ATTACHMENT_DATA to byteArray,
-                    KEY_REQUEST_CODE to args.requestCode
-                  )
+              setFragmentResult(
+                args.requestKey,
+                bundleOf(
+                  KEY_ATTACHMENT to args.attachmentInfo,
+                  KEY_ATTACHMENT_DATA to byteArray,
+                  KEY_REQUEST_CODE to args.requestCode
                 )
-              }
+              )
             }
             countingIdlingResource?.decrementSafely(this@DownloadAttachmentDialogFragment)
           }

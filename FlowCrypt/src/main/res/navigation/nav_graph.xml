@@ -538,9 +538,7 @@
         tools:layout="@layout/fragment_download_attachment">
         <argument
             android:name="requestKey"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
+            app:argType="string" />
         <argument
             android:name="attachmentInfo"
             app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
@@ -556,9 +554,7 @@
         tools:layout="@layout/fragment_create_private_key_dialog">
         <argument
             android:name="requestKey"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
+            app:argType="string" />
         <argument
             android:name="accountEntity"
             app:argType="com.flowcrypt.email.database.entity.AccountEntity" />

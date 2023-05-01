@@ -96,12 +96,10 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
               handleException(NullPointerException("pgpKeyDetails == null"))
             } else {
               navController?.navigateUp()
-              args.requestKey?.let { requestKey ->
-                setFragmentResult(
-                  requestKey,
-                  bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
-                )
-              }
+              setFragmentResult(
+                args.requestKey,
+                bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
+              )
             }
             countingIdlingResource?.decrementSafely(this@CreatePrivateKeyDialogFragment)
           }

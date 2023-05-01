@@ -191,12 +191,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   private fun sendResult(atts: MutableList<AttachmentInfo>) {
-    args.requestKey?.let {
-      setFragmentResult(
-        it,
-        bundleOf(KEY_ATTACHMENT_INFO_LIST to atts)
-      )
-    }
+    setFragmentResult(
+      args.requestKey,
+      bundleOf(KEY_ATTACHMENT_INFO_LIST to atts)
+    )
   }
 
   /**
