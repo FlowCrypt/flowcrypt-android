@@ -83,8 +83,9 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
     navController?.navigate(
       EditContactFragmentDirections
         .actionEditContactFragmentToUpdateRecipientPublicKeyDialogFragment(
-          args.publicKeyEntity,
-          keys.first()
+          requestKey = REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY,
+          publicKeyEntity = args.publicKeyEntity,
+          pgpKeyDetails = keys.first()
         )
     )
   }
@@ -119,9 +120,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
   }
 
   private fun subscribeUpdateRecipientPublicKey() {
-    setFragmentResultListener(
-      UpdateRecipientPublicKeyDialogFragment.REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY) { _, bundle ->
       val isUpdated =
         bundle.getBoolean(UpdateRecipientPublicKeyDialogFragment.KEY_UPDATE_RECIPIENT_PUBLIC_KEY)
 
@@ -140,6 +139,11 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
 
     private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PARSE_PGP_KEYS",
+      EditContactFragment::class.java
+    )
+
+    val REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY",
       EditContactFragment::class.java
     )
   }

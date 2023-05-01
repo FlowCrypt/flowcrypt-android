@@ -575,6 +575,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyDialogFragment"
         tools:layout="@layout/fragment_update_recipient_public_key">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="publicKeyEntity"
             app:argType="com.flowcrypt.email.database.entity.PublicKeyEntity" />
         <argument
