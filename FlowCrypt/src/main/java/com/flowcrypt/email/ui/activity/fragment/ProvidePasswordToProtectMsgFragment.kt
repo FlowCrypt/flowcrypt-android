@@ -86,7 +86,7 @@ class ProvidePasswordToProtectMsgFragment :
     } else {
       navController?.navigateUp()
       setFragmentResult(
-        REQUEST_KEY_PASSWORD,
+        args.requestKey,
         bundleOf(KEY_PASSWORD to (binding?.eTPassphrase?.text ?: ""))
       )
     }
@@ -152,7 +152,6 @@ class ProvidePasswordToProtectMsgFragment :
   }
 
   companion object {
-    const val REQUEST_KEY_PASSWORD = "REQUEST_KEY_PASSWORD"
     const val KEY_PASSWORD = "KEY_PASSWORD"
   }
 }

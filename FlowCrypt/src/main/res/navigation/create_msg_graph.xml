@@ -59,6 +59,9 @@
         android:label="@string/web_portal_password"
         tools:layout="@layout/fragment_provide_password_to_protect_msg">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="defaultPassword"
             android:defaultValue=""
             app:argType="string" />

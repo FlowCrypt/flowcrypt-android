@@ -783,7 +783,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       navController?.navigate(
         CreateMessageFragmentDirections
           .actionCreateMessageFragmentToProvidePasswordToProtectMsgFragment(
-            composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
+            requestKey = REQUEST_KEY_PASSWORD,
+            defaultPassword = composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
           )
       )
     }
@@ -1528,9 +1529,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToSetWebPortalPassword() {
-    setFragmentResultListener(
-      ProvidePasswordToProtectMsgFragment.REQUEST_KEY_PASSWORD
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_PASSWORD) { _, bundle ->
       val password =
         bundle.getCharSequence(ProvidePasswordToProtectMsgFragment.KEY_PASSWORD) ?: ""
       composeMsgViewModel.setWebPortalPassword(password)
@@ -1748,6 +1747,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     private val REQUEST_KEY_NO_PGP_FOUND = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_NO_PGP_FOUND",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_PASSWORD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PASSWORD",
       CreateMessageFragment::class.java
     )
   }
