@@ -992,6 +992,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun showNoPgpFoundDialog(recipient: RecipientWithPubKeys) {
     navController?.navigate(
       CreateMessageFragmentDirections.actionCreateMessageFragmentToNoPgpFoundDialogFragment(
+        requestKey = REQUEST_KEY_NO_PGP_FOUND,
         recipientWithPubKeys = recipient,
         isRemoveActionEnabled = true
       )
@@ -1587,7 +1588,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToNoPgpFoundDialogFragment() {
-    setFragmentResultListener(NoPgpFoundDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_NO_PGP_FOUND) { _, bundle ->
       val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         NoPgpFoundDialogFragment.KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS
       )
@@ -1736,6 +1737,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      CreateMessageFragment::class.java
+    )
+
+    val REQUEST_KEY_NO_PGP_FOUND = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_NO_PGP_FOUND",
       CreateMessageFragment::class.java
     )
   }
