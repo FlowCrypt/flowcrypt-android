@@ -304,7 +304,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         } else {
           navController?.navigate(
             MainSignInFragmentDirections.actionMainSignInFragmentToAuthorizeAndSearchBackupsFragment(
-              REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS, it
+              requestKey = REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS, account = it
             )
           )
         }
