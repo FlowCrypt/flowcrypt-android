@@ -850,12 +850,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun formatAddresses(addresses: List<InternetAddress>) =
     addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
-      if (index < MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE) {
+      if (index < MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE) {
         builder.append(it.getFormattedString())
         if (index != addresses.size - 1) {
           builder.append("\n")
         }
-      } else if (index == MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE + 1) {
+      } else if (index == MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE + 1) {
         builder.append(getString(R.string.and_others))
       }
       builder
@@ -1303,7 +1303,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         navController?.navigate(
           MessageDetailsFragmentDirections
             .actionMessageDetailsFragmentToImportAdditionalPrivateKeysFragment(
-              accountEntity
+              requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+              accountEntity = accountEntity
             )
         )
       }
@@ -1737,9 +1738,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToImportingAdditionalPrivateKeys() {
-    setFragmentResultListener(
-      ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt<PgpKeyDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
@@ -1752,7 +1751,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   companion object {
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
-    private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
+    private const val MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE = 10
 
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
@@ -1769,6 +1768,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      MessageDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
       MessageDetailsFragment::class.java
     )
   }

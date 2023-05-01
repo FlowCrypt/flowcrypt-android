@@ -208,7 +208,7 @@ class ImportAdditionalPrivateKeysFragment :
             navController?.navigateUp()
             it.data?.let { pair ->
               setFragmentResult(
-                REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+                args.requestKey,
                 bundleOf(KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second))
               )
             }
@@ -293,17 +293,12 @@ class ImportAdditionalPrivateKeysFragment :
       ImportAdditionalPrivateKeysFragment::class.java
     )
 
-    val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
-      ImportAdditionalPrivateKeysFragment::class.java
-    )
-
     private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PARSE_PGP_KEYS",
       ImportAdditionalPrivateKeysFragment::class.java
     )
 
-    val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+    private val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHECK_PRIVATE_KEYS",
       ImportAdditionalPrivateKeysFragment::class.java
     )

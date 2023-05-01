@@ -43,6 +43,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.PrivateKeysRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.selection.PgpKeyDetailsKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.PrivateKeyItemDetailsLookup
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * This [Fragment] shows information about available private keys in the database.
@@ -155,6 +156,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
           toast(it.exception?.message, Toast.LENGTH_SHORT)
           countingIdlingResource?.decrementSafely(this@PrivateKeysListFragment)
         }
+
         else -> {}
       }
     }
@@ -181,7 +183,8 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
         navController?.navigate(
           PrivateKeysListFragmentDirections
             .actionPrivateKeysListFragmentToImportAdditionalPrivateKeysFragment(
-              accountEntity
+              requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+              accountEntity = accountEntity
             )
         )
       }
@@ -242,9 +245,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
   }
 
   private fun subscribeToImportingAdditionalPrivateKeys() {
-    setFragmentResultListener(
-      ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt<PgpKeyDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
@@ -274,5 +275,9 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
 
   companion object {
     private const val REQUEST_CODE_DELETE_KEYS_DIALOG = 100
+    private val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
+      PrivateKeysListFragment::class.java
+    )
   }
 }

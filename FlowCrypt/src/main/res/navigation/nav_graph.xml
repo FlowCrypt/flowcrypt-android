@@ -511,6 +511,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.ImportAdditionalPrivateKeysFragment"
         tools:layout="@layout/fragment_import_additional_private_keys">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="accountEntity"
             app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
         <action
