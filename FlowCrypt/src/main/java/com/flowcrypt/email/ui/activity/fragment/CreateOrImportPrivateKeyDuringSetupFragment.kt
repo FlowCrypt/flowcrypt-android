@@ -88,7 +88,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   ) {
     navController?.navigateUp()
     setFragmentResult(
-      REQUEST_KEY_PRIVATE_KEYS,
+      args.requestKey,
       bundleOf(
         KEY_STATE to result,
         KEY_PRIVATE_KEYS to ArrayList(keys),
@@ -128,11 +128,6 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   }
 
   companion object {
-    val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PRIVATE_KEYS",
-      CreateOrImportPrivateKeyDuringSetupFragment::class.java
-    )
-
     val KEY_STATE = GeneralUtil.generateUniqueExtraKey(
       "KEY_STATE", CreateOrImportPrivateKeyDuringSetupFragment::class.java
     )

@@ -347,7 +347,9 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
             navController?.navigate(
               AddOtherAccountFragmentDirections
                 .actionAddOtherAccountFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
-                  accountEntity = account, isShowAnotherAccountBtnEnabled = true
+                  requestKey = REQUEST_KEY_PRIVATE_KEYS,
+                  accountEntity = account,
+                  isShowAnotherAccountBtnEnabled = true
                 )
             )
             showContent()
@@ -460,7 +462,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
   }
 
   private fun subscribeCreateOrImportPrivateKeyDuringSetup() {
-    setFragmentResultListener(CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
       @CreateOrImportPrivateKeyDuringSetupFragment.Result val result =
         bundle.getInt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_STATE)
 
@@ -869,6 +871,11 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
     val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHECK_PRIVATE_KEYS",
+      AddOtherAccountFragment::class.java
+    )
+
+    val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PRIVATE_KEYS",
       AddOtherAccountFragment::class.java
     )
 

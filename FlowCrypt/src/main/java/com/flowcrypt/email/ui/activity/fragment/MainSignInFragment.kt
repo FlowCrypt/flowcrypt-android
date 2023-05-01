@@ -296,7 +296,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           navController?.navigate(
             MainSignInFragmentDirections
               .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
-                accountEntity = it, isShowAnotherAccountBtnEnabled = true
+                requestKey = REQUEST_KEY_PRIVATE_KEYS,
+                accountEntity = it,
+                isShowAnotherAccountBtnEnabled = true
               )
           )
         } else {
@@ -466,9 +468,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun subscribeCreateOrImportPrivateKeyDuringSetup() {
-    setFragmentResultListener(
-      CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
       @CreateOrImportPrivateKeyDuringSetupFragment.Result val result =
         bundle.getInt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_STATE)
 
@@ -528,6 +528,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         navController?.navigate(
           MainSignInFragmentDirections
             .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
+              requestKey = REQUEST_KEY_PRIVATE_KEYS,
               accountEntity = it, isShowAnotherAccountBtnEnabled = true
             )
         )
@@ -858,6 +859,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
     val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHECK_PRIVATE_KEYS",
+      MainSignInFragment::class.java
+    )
+
+    val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PRIVATE_KEYS",
       MainSignInFragment::class.java
     )
 
