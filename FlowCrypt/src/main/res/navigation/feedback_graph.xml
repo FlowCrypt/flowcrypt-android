@@ -29,6 +29,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.EditScreenshotDialogFragment"
         tools:layout="@layout/fragment_screenshot_editor">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="screenshot"
             app:argType="com.flowcrypt.email.model.Screenshot" />
     </dialog>
