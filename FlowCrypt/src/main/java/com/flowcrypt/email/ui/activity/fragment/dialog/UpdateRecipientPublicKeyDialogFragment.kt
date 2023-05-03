@@ -156,7 +156,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             it.data?.let { isUpdated ->
               setFragmentResult(
-                REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY,
+                args.requestKey,
                 bundleOf(KEY_UPDATE_RECIPIENT_PUBLIC_KEY to isUpdated)
               )
             }
@@ -172,6 +172,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
             toast(errorMsg)
             countingIdlingResource?.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)
           }
+
           else -> {
           }
         }
@@ -180,11 +181,6 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY",
-      UpdateRecipientPublicKeyDialogFragment::class.java
-    )
-
     val KEY_UPDATE_RECIPIENT_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
       "KEY_UPDATE_RECIPIENT_PUBLIC_KEY", UpdateRecipientPublicKeyDialogFragment::class.java
     )

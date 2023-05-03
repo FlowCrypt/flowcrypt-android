@@ -68,7 +68,7 @@ class EditScreenshotDialogFragment : BaseDialogFragment() {
         override fun onBitmapReady(saveBitmap: Bitmap?) {
           navController?.navigateUp()
           setFragmentResult(
-            REQUEST_KEY_EDIT_SCREENSHOT,
+            args.requestKey,
             bundleOf(KEY_SCREENSHOT to UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100))
           )
         }
@@ -130,10 +130,6 @@ class EditScreenshotDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_EDIT_SCREENSHOT = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_EDIT_SCREENSHOT", EditScreenshotDialogFragment::class.java
-    )
-
     val KEY_SCREENSHOT = GeneralUtil.generateUniqueExtraKey(
       "KEY_SCREENSHOT", EditScreenshotDialogFragment::class.java
     )

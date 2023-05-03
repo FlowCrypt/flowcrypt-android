@@ -244,6 +244,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     when (e) {
       is EmptyPassphraseException -> {
         showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
           fingerprints = e.fingerprints,
           logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
         )
@@ -318,6 +319,7 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
     if (fingerprints.isNotEmpty()) {
       showNeedPassphraseDialog(
+        requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
         fingerprints = fingerprints,
         logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
       )
@@ -350,5 +352,12 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
     if (accountEntity?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP) == true) {
       binding?.btBackup?.gone()
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      BackupKeysFragment::class.java
+    )
   }
 }

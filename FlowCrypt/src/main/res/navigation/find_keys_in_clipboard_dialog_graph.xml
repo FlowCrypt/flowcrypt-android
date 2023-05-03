@@ -14,6 +14,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.FindKeysInClipboardDialogFragment"
         tools:layout="@layout/fragment_find_keys_in_clipboard">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="isPrivateKeyMode"
             app:argType="boolean" />
     </dialog>

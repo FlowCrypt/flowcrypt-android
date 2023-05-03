@@ -33,6 +33,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.ui.activity.fragment.SelectRecipientsFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.CustomViewActions.doNothing
 import org.hamcrest.Matchers.allOf
@@ -42,6 +43,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 
 /**
@@ -54,7 +56,10 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
     TestGeneralUtil.genIntentForNavigationComponent(
       navGraphId = R.navigation.create_msg_graph,
       activityClass = CreateMessageActivity::class.java,
-      destinationId = R.id.selectRecipientsFragment
+      destinationId = R.id.selectRecipientsFragment,
+      extras = SelectRecipientsFragmentArgs(
+        requestKey = UUID.randomUUID().toString()
+      ).toBundle()
     )
   )
 

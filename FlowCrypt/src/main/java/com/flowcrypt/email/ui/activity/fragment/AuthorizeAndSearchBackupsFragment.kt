@@ -93,8 +93,11 @@ class AuthorizeAndSearchBackupsFragment :
           else -> {
             navController?.navigateUp()
             setFragmentResult(
-              REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
-              bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
+              args.requestKey,
+              bundleOf(
+                KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it,
+                KEY_RESULT_TYPE to RESULT_TYPE_SETTINGS
+              )
             )
             countingIdlingResource?.decrementSafely(this@AuthorizeAndSearchBackupsFragment)
           }
@@ -116,8 +119,11 @@ class AuthorizeAndSearchBackupsFragment :
         else -> {
           navController?.navigateUp()
           setFragmentResult(
-            REQUEST_KEY_SEARCH_BACKUPS,
-            bundleOf(KEY_PRIVATE_KEY_BACKUPS_RESULT to it)
+            args.requestKey,
+            bundleOf(
+              KEY_PRIVATE_KEY_BACKUPS_RESULT to it,
+              KEY_RESULT_TYPE to RESULT_TYPE_BACKUPS
+            )
           )
           countingIdlingResource?.decrementSafely(this@AuthorizeAndSearchBackupsFragment)
         }
@@ -126,20 +132,20 @@ class AuthorizeAndSearchBackupsFragment :
   }
 
   companion object {
-    val REQUEST_KEY_SEARCH_BACKUPS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_SEARCH_BACKUPS",
-      AuthorizeAndSearchBackupsFragment::class.java
-    )
-    val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS",
-      AuthorizeAndSearchBackupsFragment::class.java
-    )
+    const val RESULT_TYPE_SETTINGS = 0
+    const val RESULT_TYPE_BACKUPS = 1
+
     val KEY_PRIVATE_KEY_BACKUPS_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_PRIVATE_KEY_BACKUPS_RESULT",
       AuthorizeAndSearchBackupsFragment::class.java
     )
     val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_CHECK_ACCOUNT_SETTINGS_RESULT",
+      AuthorizeAndSearchBackupsFragment::class.java
+    )
+
+    val KEY_RESULT_TYPE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_RESULT_TYPE",
       AuthorizeAndSearchBackupsFragment::class.java
     )
   }

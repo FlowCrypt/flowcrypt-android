@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
   get() = activity?.findViewById(R.id.appBarLayout)
 
-val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource
+val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
   get() = FlavorSettings.getCountingIdlingResource()
 
 val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
@@ -175,10 +175,16 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
 }
 
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
+  requestKey: String,
   fingerprints: List<String>,
   logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
 ) {
-  showNeedPassphraseDialog(navController, fingerprints, logicType)
+  showNeedPassphraseDialog(
+    requestKey = requestKey,
+    navController = navController,
+    fingerprints = fingerprints,
+    logicType = logicType
+  )
 }
 
 fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
@@ -198,12 +204,14 @@ fun androidx.fragment.app.Fragment.showFeedbackFragment() {
 }
 
 fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
+  requestKey: String,
   isPrivateKeyMode: Boolean
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.find_keys_in_clipboard_dialog_graph
       override val arguments = FindKeysInClipboardDialogFragmentArgs(
+        requestKey = requestKey,
         isPrivateKeyMode = isPrivateKeyMode
       ).toBundle()
     }
@@ -211,6 +219,7 @@ fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
 }
 
 fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
+  requestKey: String,
   source: String? = null,
   uri: Uri? = null,
   @ParsePgpKeysFromSourceDialogFragment.FilterType filterType: Long
@@ -219,6 +228,7 @@ fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.parse_keys_from_source_dialog_graph
       override val arguments = ParsePgpKeysFromSourceDialogFragmentArgs(
+        requestKey = requestKey,
         source = source,
         uri = uri,
         filterType = filterType
@@ -228,6 +238,7 @@ fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
 }
 
 fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
+  requestKey: String,
   email: String,
   choiceMode: Int,
   titleResourceId: Int,
@@ -237,6 +248,7 @@ fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.choose_public_key_dialog_graph
       override val arguments = ChoosePublicKeyDialogFragmentArgs(
+        requestKey = requestKey,
         email = email,
         choiceMode = choiceMode,
         titleResourceId = titleResourceId,

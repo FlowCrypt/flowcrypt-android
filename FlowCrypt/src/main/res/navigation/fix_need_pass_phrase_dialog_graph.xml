@@ -14,6 +14,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment"
         tools:layout="@layout/fragment_fix_empty_passphrase">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="fingerprints"
             app:argType="string[]"
             app:nullable="true" />

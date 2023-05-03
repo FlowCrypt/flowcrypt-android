@@ -99,6 +99,7 @@ fun LifecycleOwner.showTwoWayDialog(
 }
 
 fun LifecycleOwner.showNeedPassphraseDialog(
+  requestKey: String,
   navController: NavController?,
   fingerprints: List<String>,
   logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
@@ -115,6 +116,7 @@ fun LifecycleOwner.showNeedPassphraseDialog(
     return@showDialogFragment object : NavDirections {
       override val actionId = R.id.fix_need_pass_phrase_dialog_graph
       override val arguments = FixNeedPassphraseIssueDialogFragmentArgs(
+        requestKey = requestKey,
         fingerprints = fingerprints.toTypedArray(),
         logicType = logicType,
         requestCode = requestCode,

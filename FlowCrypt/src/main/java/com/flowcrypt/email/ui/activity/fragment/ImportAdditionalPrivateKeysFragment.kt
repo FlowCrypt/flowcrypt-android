@@ -72,6 +72,7 @@ class ImportAdditionalPrivateKeysFragment :
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
@@ -79,6 +80,7 @@ class ImportAdditionalPrivateKeysFragment :
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
@@ -102,6 +104,7 @@ class ImportAdditionalPrivateKeysFragment :
       navController?.navigate(
         ImportAdditionalPrivateKeysFragmentDirections
           .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
+            requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
             privateKeys = keys.toTypedArray(),
             subTitle = title,
             sourceType = importSourceType,
@@ -114,9 +117,15 @@ class ImportAdditionalPrivateKeysFragment :
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
+
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = true
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -153,6 +162,7 @@ class ImportAdditionalPrivateKeysFragment :
                   navController?.navigate(
                     ImportAdditionalPrivateKeysFragmentDirections
                       .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
+                        requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
                         privateKeys = keys.toTypedArray(),
                         initSubTitlePlurals = R.plurals.found_backup_of_your_account_key,
                         sourceType = importSourceType,
@@ -198,7 +208,7 @@ class ImportAdditionalPrivateKeysFragment :
             navController?.navigateUp()
             it.data?.let { pair ->
               setFragmentResult(
-                REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+                args.requestKey,
                 bundleOf(KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second))
               )
             }
@@ -228,6 +238,7 @@ class ImportAdditionalPrivateKeysFragment :
             }
             countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
           }
+
           else -> {}
         }
       }
@@ -235,7 +246,7 @@ class ImportAdditionalPrivateKeysFragment :
   }
 
   private fun subscribeToCheckPrivateKeys() {
-    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
         bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
@@ -277,8 +288,18 @@ class ImportAdditionalPrivateKeysFragment :
   }
 
   companion object {
-    val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportAdditionalPrivateKeysFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
+      ImportAdditionalPrivateKeysFragment::class.java
+    )
+
+    private val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
       ImportAdditionalPrivateKeysFragment::class.java
     )
 
