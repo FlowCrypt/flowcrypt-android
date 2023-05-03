@@ -27,6 +27,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyDialogFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author Denys Bondarenko
@@ -56,6 +57,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -63,6 +65,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -80,11 +83,15 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
     navController?.navigate(
       EditContactFragmentDirections
         .actionEditContactFragmentToUpdateRecipientPublicKeyDialogFragment(
-          args.publicKeyEntity,
-          keys.first()
+          requestKey = REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY,
+          publicKeyEntity = args.publicKeyEntity,
+          pgpKeyDetails = keys.first()
         )
     )
   }
+
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
 
   fun initViews() {
     binding?.editTextNewPubKey?.addTextChangedListener {
@@ -94,13 +101,17 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
     binding?.buttonCheck?.setOnClickListener {
       importSourceType = KeyImportDetails.SourceType.MANUAL_ENTERING
       showParsePgpKeysFromSourceDialogFragment(
+        requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
         source = binding?.editTextNewPubKey?.text.toString(),
         filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
       )
     }
 
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = false
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -109,9 +120,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
   }
 
   private fun subscribeUpdateRecipientPublicKey() {
-    setFragmentResultListener(
-      UpdateRecipientPublicKeyDialogFragment.REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY) { _, bundle ->
       val isUpdated =
         bundle.getBoolean(UpdateRecipientPublicKeyDialogFragment.KEY_UPDATE_RECIPIENT_PUBLIC_KEY)
 
@@ -120,5 +129,22 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
         navController?.navigateUp()
       }
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      EditContactFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
+      EditContactFragment::class.java
+    )
+
+    val REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY",
+      EditContactFragment::class.java
+    )
   }
 }

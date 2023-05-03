@@ -87,7 +87,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   override fun onClick(dialog: DialogInterface, which: Int) {
     navController?.navigateUp()
     setFragmentResult(
-      REQUEST_KEY_RESULT,
+      args.requestKey,
       bundleOf(
         KEY_REQUEST_RESULT_CODE to dialogItems[which].id,
         KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS to args.recipientWithPubKeys
@@ -96,11 +96,6 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   }
 
   companion object {
-    val REQUEST_KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_RESULT",
-      NoPgpFoundDialogFragment::class.java
-    )
-
     val KEY_REQUEST_RESULT_CODE = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_RESULT_CODE", NoPgpFoundDialogFragment::class.java
     )

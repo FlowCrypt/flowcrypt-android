@@ -124,8 +124,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
 
-    subscribeToCheckAccountSettings()
-    subscribeToAuthorizeAndSearchBackups()
+    subscribeToCheckAccountSettingsAndSearchBackups()
     subscribeToCheckPrivateKeys()
     subscribeToTwoWayDialog()
     subscribeCreateOrImportPrivateKeyDuringSetup()
@@ -297,13 +296,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           navController?.navigate(
             MainSignInFragmentDirections
               .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
-                accountEntity = it, isShowAnotherAccountBtnEnabled = true
+                requestKey = REQUEST_KEY_PRIVATE_KEYS,
+                accountEntity = it,
+                isShowAnotherAccountBtnEnabled = true
               )
           )
         } else {
           navController?.navigate(
             MainSignInFragmentDirections.actionMainSignInFragmentToAuthorizeAndSearchBackupsFragment(
-              it
+              requestKey = REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS, account = it
             )
           )
         }
@@ -319,94 +320,95 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  @Suppress("UNCHECKED_CAST")
-  private fun subscribeToCheckAccountSettings() {
-    setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
-      val result: Result<*>? =
-        bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+  private fun subscribeToCheckAccountSettingsAndSearchBackups() {
+    setFragmentResultListener(REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS) { _, bundle ->
+      when (bundle.getInt(AuthorizeAndSearchBackupsFragment.KEY_RESULT_TYPE)) {
+        AuthorizeAndSearchBackupsFragment.RESULT_TYPE_SETTINGS -> {
+          val result: Result<*>? =
+            bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+          result?.let { handleCheckSettingsResult(it) }
+        }
 
-      if (result != null) {
-        when (result.status) {
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-            val exception = result.exception ?: return@setFragmentResultListener
-            val original = result.exception.cause
-
-            if (original is MailConnectException && !useStartTlsForSmtp) {
-              useStartTlsForSmtp = true
-              onSignSuccess(cachedGoogleSignInAccount)
-              return@setFragmentResultListener
-            }
-
-            val msg: String? = if (exception.message.isNullOrEmpty()) {
-              exception.javaClass.simpleName
-            } else exception.message
-            var title: String? = null
-
-            if (original != null) {
-              if (original is MailConnectException || original is SocketTimeoutException) {
-                title = getString(R.string.network_error)
-              }
-            } else if (exception is AccountAlreadyAddedException) {
-              showInfoSnackbar(view, exception.message, Snackbar.LENGTH_LONG)
-              return@setFragmentResultListener
-            }
-
-            val faqUrl = "https://support.google.com/mail/answer/75725?hl=" + GeneralUtil
-              .getLocaleLanguageCode(requireContext())
-            val dialogMsg = msg + getString(R.string.provider_faq, faqUrl)
-
-            showInfoDialog(
-              dialogTitle = title,
-              dialogMsg = dialogMsg,
-              useLinkify = true
-            )
-          }
-
-          else -> {
-
-          }
+        AuthorizeAndSearchBackupsFragment.RESULT_TYPE_BACKUPS -> {
+          val result: Result<*>? =
+            bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+          result?.let { handleSearchBackupsResult(it) }
         }
       }
     }
   }
 
-  @Suppress("UNCHECKED_CAST")
-  private fun subscribeToAuthorizeAndSearchBackups() {
-    setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS) { _, bundle ->
-      val result: Result<*>? =
-        bundle.getSerializableViaExt(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
+  private fun handleSearchBackupsResult(
+    result: Result<*>
+  ) {
+    when (result.status) {
+      Result.Status.SUCCESS -> {
+        @Suppress("UNCHECKED_CAST")
+        onFetchKeysCompleted(result.data as ArrayList<PgpKeyDetails>?)
+      }
 
-      if (result != null) {
-        when (result.status) {
-          Result.Status.SUCCESS -> {
-            onFetchKeysCompleted(result.data as ArrayList<PgpKeyDetails>?)
-          }
+      Result.Status.ERROR, Result.Status.EXCEPTION -> {
+        showContent()
 
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-
-            if (result.exception is UserRecoverableAuthIOException) {
-              forActivityResultSignInError.launch(result.exception.intent)
-            } else {
-              showInfoSnackbar(
-                msgText =
-                result.exception?.message ?: result.exception?.javaClass?.simpleName
-                ?: getString(R.string.unknown_error)
-              )
-            }
-          }
-
-          else -> {
-
-          }
+        if (result.exception is UserRecoverableAuthIOException) {
+          forActivityResultSignInError.launch(result.exception.intent)
+        } else {
+          showInfoSnackbar(
+            msgText =
+            result.exception?.message ?: result.exception?.javaClass?.simpleName
+            ?: getString(R.string.unknown_error)
+          )
         }
       }
+
+      else -> {}
+    }
+  }
+
+  private fun handleCheckSettingsResult(result: Result<*>) {
+    when (result.status) {
+      Result.Status.ERROR, Result.Status.EXCEPTION -> {
+        showContent()
+        val exception = result.exception ?: return
+        val original = result.exception.cause
+
+        if (original is MailConnectException && !useStartTlsForSmtp) {
+          useStartTlsForSmtp = true
+          onSignSuccess(cachedGoogleSignInAccount)
+          return
+        }
+
+        val msg: String? = if (exception.message.isNullOrEmpty()) {
+          exception.javaClass.simpleName
+        } else exception.message
+        var title: String? = null
+
+        if (original != null) {
+          if (original is MailConnectException || original is SocketTimeoutException) {
+            title = getString(R.string.network_error)
+          }
+        } else if (exception is AccountAlreadyAddedException) {
+          showInfoSnackbar(view, exception.message, Snackbar.LENGTH_LONG)
+          return
+        }
+
+        val faqUrl = "https://support.google.com/mail/answer/75725?hl=" + GeneralUtil
+          .getLocaleLanguageCode(requireContext())
+        val dialogMsg = msg + getString(R.string.provider_faq, faqUrl)
+
+        showInfoDialog(
+          dialogTitle = title,
+          dialogMsg = dialogMsg,
+          useLinkify = true
+        )
+      }
+
+      else -> {}
     }
   }
 
   private fun subscribeToCheckPrivateKeys() {
-    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt(
         CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
       ) ?: emptyList<PgpKeyDetails>()
@@ -466,9 +468,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun subscribeCreateOrImportPrivateKeyDuringSetup() {
-    setFragmentResultListener(
-      CreateOrImportPrivateKeyDuringSetupFragment.REQUEST_KEY_PRIVATE_KEYS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
       @CreateOrImportPrivateKeyDuringSetupFragment.Result val result =
         bundle.getInt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_STATE)
 
@@ -528,6 +528,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         navController?.navigate(
           MainSignInFragmentDirections
             .actionMainSignInFragmentToCreateOrImportPrivateKeyDuringSetupFragment(
+              requestKey = REQUEST_KEY_PRIVATE_KEYS,
               accountEntity = it, isShowAnotherAccountBtnEnabled = true
             )
         )
@@ -536,6 +537,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       navController?.navigate(
         MainSignInFragmentDirections
           .actionMainSignInFragmentToCheckKeysFragment(
+            requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
             privateKeys = keyDetailsList.toTypedArray(),
             sourceType = KeyImportDetails.SourceType.EMAIL,
             positiveBtnTitle = getString(R.string.continue_),
@@ -644,6 +646,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)
         }
+
         else -> {}
       }
     }
@@ -848,6 +851,22 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   companion object {
+    private val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS =
+      GeneralUtil.generateUniqueExtraKey(
+        "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS_AND_SEARCH_BACKUPS",
+        MainSignInFragment::class.java
+      )
+
+    private val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
+      MainSignInFragment::class.java
+    )
+
+    private val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PRIVATE_KEYS",
+      MainSignInFragment::class.java
+    )
+
     private const val REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION = 105
     private const val REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM = 106
     private const val REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY = 107

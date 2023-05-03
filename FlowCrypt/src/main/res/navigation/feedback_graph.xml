@@ -29,6 +29,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.EditScreenshotDialogFragment"
         tools:layout="@layout/fragment_screenshot_editor">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="screenshot"
             app:argType="com.flowcrypt.email.model.Screenshot" />
     </dialog>
@@ -37,6 +40,9 @@
         android:id="@+id/sendFeedbackDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.SendFeedbackDialogFragment"
         tools:layout="@layout/fragment_send_feedback_dialog">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
         <argument
             android:name="accountEntity"
             app:argType="com.flowcrypt.email.database.entity.AccountEntity" />

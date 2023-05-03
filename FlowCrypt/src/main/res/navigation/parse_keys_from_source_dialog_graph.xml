@@ -13,6 +13,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment"
         tools:layout="@layout/fragment_parse_pgp_keys_from_source">
         <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
             android:name="source"
             android:defaultValue="@null"
             app:argType="string"

@@ -81,6 +81,7 @@ class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySeco
         navController?.navigate(
           CreatePrivateKeySecondFragmentDirections
             .actionCreatePrivateKeySecondFragmentToCreatePrivateKeyDialogFragment(
+              requestKey = REQUEST_KEY_CREATE_PRIVATE_KEY,
               accountEntity = args.accountEntity,
               passphrase = requireNotNull(binding?.editTextKeyPasswordSecond?.text?.toString())
             )
@@ -96,7 +97,7 @@ class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySeco
   }
 
   private fun subscribeToCreatePrivateKey() {
-    setFragmentResultListener(CreatePrivateKeyDialogFragment.REQUEST_KEY_CREATE_KEY) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CREATE_PRIVATE_KEY) { _, bundle ->
       val pgpKeyDetails =
         bundle.getParcelableViaExt<PgpKeyDetails>(CreatePrivateKeyDialogFragment.KEY_CREATED_KEY)
       navController?.navigateUp()
@@ -108,6 +109,11 @@ class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySeco
   }
 
   companion object {
+    private val REQUEST_KEY_CREATE_PRIVATE_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CREATE_PRIVATE_KEY",
+      CreatePrivateKeySecondFragment::class.java
+    )
+
     val REQUEST_KEY_CREATE_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PARSED_KEYS", CreatePrivateKeySecondFragment::class.java
     )

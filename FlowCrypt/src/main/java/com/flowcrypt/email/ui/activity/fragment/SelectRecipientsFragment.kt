@@ -58,7 +58,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
         override fun onRecipientClick(recipientEntity: RecipientEntity) {
           navController?.navigateUp()
           setFragmentResult(
-            REQUEST_KEY_SELECT_RECIPIENTS,
+            args.requestKey,
             bundleOf(KEY_RECIPIENTS to ArrayList(listOf(recipientEntity)))
           )
         }
@@ -156,10 +156,6 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
   }
 
   companion object {
-    val REQUEST_KEY_SELECT_RECIPIENTS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_SELECT_RECIPIENTS", SelectRecipientsFragment::class.java
-    )
-
     val KEY_RECIPIENTS = GeneralUtil.generateUniqueExtraKey(
       "KEY_UPDATE_RECIPIENT_PUBLIC_KEY", SelectRecipientsFragment::class.java
     )

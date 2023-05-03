@@ -126,7 +126,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
             } else {
               navController?.navigateUp()
               setFragmentResult(
-                REQUEST_KEY_CLIPBOARD_RESULT,
+                args.requestKey,
                 bundleOf(KEY_CLIPBOARD_TEXT to clipboardText)
               )
             }
@@ -152,7 +152,6 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    const val REQUEST_KEY_CLIPBOARD_RESULT = "REQUEST_KEY_CLIPBOARD_RESULT"
     const val KEY_CLIPBOARD_TEXT = "KEY_CLIPBOARD_TEXT"
   }
 }

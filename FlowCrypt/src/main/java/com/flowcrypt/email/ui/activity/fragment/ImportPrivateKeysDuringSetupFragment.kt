@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportPrivateKeysDuringSetupBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
@@ -33,6 +34,8 @@ class ImportPrivateKeysDuringSetupFragment :
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentImportPrivateKeysDuringSetupBinding.inflate(inflater, container, false)
 
+  private val args by navArgs<ImportPrivateKeysDuringSetupFragmentArgs>()
+
   override val isPrivateKeyMode: Boolean = true
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
@@ -45,7 +48,10 @@ class ImportPrivateKeysDuringSetupFragment :
 
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = true
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -55,6 +61,7 @@ class ImportPrivateKeysDuringSetupFragment :
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
@@ -62,6 +69,7 @@ class ImportPrivateKeysDuringSetupFragment :
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
@@ -85,6 +93,7 @@ class ImportPrivateKeysDuringSetupFragment :
       navController?.navigate(
         ImportPrivateKeysDuringSetupFragmentDirections
           .actionImportPrivateKeysDuringSetupFragmentToCheckKeysFragment(
+            requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
             privateKeys = keys.toTypedArray(),
             subTitle = title,
             sourceType = importSourceType,
@@ -97,15 +106,18 @@ class ImportPrivateKeysDuringSetupFragment :
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
+
   private fun subscribeToCheckPrivateKeys() {
-    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
         bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           navController?.navigateUp()
           setFragmentResult(
-            REQUEST_KEY_PRIVATE_KEYS,
+            args.requestKey,
             bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys?.map {
               it.copy(
                 importSourceType = if (activeUri != null) {
@@ -122,8 +134,18 @@ class ImportPrivateKeysDuringSetupFragment :
   }
 
   companion object {
-    val REQUEST_KEY_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PRIVATE_KEYS",
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportPrivateKeysDuringSetupFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
+      ImportPrivateKeysDuringSetupFragment::class.java
+    )
+
+    private val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
       ImportPrivateKeysDuringSetupFragment::class.java
     )
 

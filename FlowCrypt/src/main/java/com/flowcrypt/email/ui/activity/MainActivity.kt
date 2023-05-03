@@ -452,6 +452,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 when (exception) {
                   is EmptyPassphraseException -> {
                     showNeedPassphraseDialog(
+                      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
                       navController = navController,
                       fingerprints = exception.fingerprints,
                       logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
@@ -488,7 +489,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
     binding.fragmentContainerView.getFragment<Fragment>().childFragmentManager
       .setFragmentResultListener(
-        FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT,
+        REQUEST_KEY_FIX_MISSING_PASSPHRASE,
         this
       ) { _, bundle ->
         val requestCode = bundle.getInt(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE)
@@ -546,6 +547,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   companion object {
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM = 1000
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      MainActivity::class.java
+    )
+
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =

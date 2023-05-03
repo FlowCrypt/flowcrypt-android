@@ -85,7 +85,6 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
@@ -371,7 +370,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                   val fingerprint = openPgpV4Fingerprint.toString()
                   val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
                   if (passphrase?.isEmpty == true) {
-                    showNeedPassphraseDialog(listOf(fingerprint))
+                    showNeedPassphraseDialog(
+                      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+                      fingerprints = listOf(fingerprint)
+                    )
                     return true
                   }
                 } else {
@@ -781,7 +783,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       navController?.navigate(
         CreateMessageFragmentDirections
           .actionCreateMessageFragmentToProvidePasswordToProtectMsgFragment(
-            composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
+            requestKey = REQUEST_KEY_PASSWORD,
+            defaultPassword = composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
           )
       )
     }
@@ -990,6 +993,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun showNoPgpFoundDialog(recipient: RecipientWithPubKeys) {
     navController?.navigate(
       CreateMessageFragmentDirections.actionCreateMessageFragmentToNoPgpFoundDialogFragment(
+        requestKey = REQUEST_KEY_NO_PGP_FOUND,
         recipientWithPubKeys = recipient,
         isRemoveActionEnabled = true
       )
@@ -1081,10 +1085,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun showPubKeyDialog() {
     account?.email?.let {
       showChoosePublicKeyDialogFragment(
-        it,
-        ListView.CHOICE_MODE_SINGLE,
-        R.plurals.choose_pub_key,
-        true
+        requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY,
+        email = it,
+        choiceMode = ListView.CHOICE_MODE_SINGLE,
+        titleResourceId = R.plurals.choose_pub_key,
+        returnResultImmediatelyIfSingle = true
       )
     }
   }
@@ -1524,9 +1529,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToSetWebPortalPassword() {
-    setFragmentResultListener(
-      ProvidePasswordToProtectMsgFragment.REQUEST_KEY_PASSWORD
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_PASSWORD) { _, bundle ->
       val password =
         bundle.getCharSequence(ProvidePasswordToProtectMsgFragment.KEY_PASSWORD) ?: ""
       composeMsgViewModel.setWebPortalPassword(password)
@@ -1534,9 +1537,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToSelectRecipients() {
-    setFragmentResultListener(
-      SelectRecipientsFragment.REQUEST_KEY_SELECT_RECIPIENTS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_SELECT_RECIPIENTS) { _, bundle ->
       val list =
         bundle.getParcelableArrayListViaExt<RecipientEntity>(SelectRecipientsFragment.KEY_RECIPIENTS)
       list?.let { recipients ->
@@ -1559,9 +1560,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToAddMissingRecipientPublicKey() {
-    setFragmentResultListener(
-      ImportMissingPublicKeyFragment.REQUEST_KEY_RECIPIENT_WITH_PUB_KEY
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_RECIPIENT_WITH_PUB_KEY) { _, bundle ->
       val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         ImportMissingPublicKeyFragment.KEY_RECIPIENT_WITH_PUB_KEY
       )
@@ -1578,13 +1577,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
-    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, _ ->
+    setFragmentResultListener(REQUEST_KEY_FIX_MISSING_PASSPHRASE) { _, _ ->
       sendMsg()
     }
   }
 
   private fun subscribeToNoPgpFoundDialogFragment() {
-    setFragmentResultListener(NoPgpFoundDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_NO_PGP_FOUND) { _, bundle ->
       val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         NoPgpFoundDialogFragment.KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS
       )
@@ -1598,7 +1597,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           recipientWithPubKeys?.let {
             navController?.navigate(
               CreateMessageFragmentDirections
-                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
+                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(
+                  requestKey = REQUEST_KEY_RECIPIENT_WITH_PUB_KEY,
+                  recipientWithPubKeys = it
+                )
             )
           }
         }
@@ -1608,6 +1610,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           cachedRecipientWithoutPubKeys?.let {
             navController?.navigate(
               CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
+                requestKey = REQUEST_KEY_SELECT_RECIPIENTS,
                 title = getString(R.string.use_public_key_from)
               )
             )
@@ -1639,7 +1642,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
-    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       ) ?: return@setFragmentResultListener
@@ -1725,5 +1728,34 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   companion object {
     private val TAG = CreateMessageFragment::class.java.simpleName
+
+    private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_RECIPIENT_WITH_PUB_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_RECIPIENT_WITH_PUB_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_NO_PGP_FOUND = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_NO_PGP_FOUND",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_PASSWORD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PASSWORD",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_SELECT_RECIPIENTS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_SELECT_RECIPIENTS", CreateMessageFragment::class.java
+    )
   }
 }

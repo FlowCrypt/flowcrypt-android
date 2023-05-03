@@ -20,6 +20,7 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * This fragment contains actions which related to Security options.
@@ -56,6 +57,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
           val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
           if (fingerprints.isNotEmpty()) {
             showNeedPassphraseDialog(
+              requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
               fingerprints = fingerprints,
               logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
             )
@@ -91,7 +93,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
   }
 
   private fun subscribeFixNeedPassphraseIssueDialogFragment() {
-    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, _ ->
+    setFragmentResultListener(REQUEST_KEY_FIX_MISSING_PASSPHRASE) { _, _ ->
       navigateToCheckPassphraseStrengthFragment()
     }
   }
@@ -104,6 +106,13 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
           title = getString(R.string.change_pass_phrase),
           lostPassphraseTitle = getString(R.string.loss_of_this_pass_phrase_cannot_be_recovered)
         )
+    )
+  }
+
+  companion object {
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      SecuritySettingsFragment::class.java
     )
   }
 }

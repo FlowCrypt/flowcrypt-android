@@ -51,6 +51,7 @@ class ImportMissingPublicKeyFragment :
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -58,6 +59,7 @@ class ImportMissingPublicKeyFragment :
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -97,9 +99,15 @@ class ImportMissingPublicKeyFragment :
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
+
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = false
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -119,8 +127,8 @@ class ImportMissingPublicKeyFragment :
             navController?.navigateUp()
             it.data?.let { recipientWithPubKeys ->
               setFragmentResult(
-                REQUEST_KEY_RECIPIENT_WITH_PUB_KEY,
-                bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
+                requestKey = args.requestKey,
+                result = bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
@@ -135,6 +143,7 @@ class ImportMissingPublicKeyFragment :
             showInfoSnackbar(msgText = errorMsg)
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
           }
+
           else -> {
           }
         }
@@ -143,8 +152,13 @@ class ImportMissingPublicKeyFragment :
   }
 
   companion object {
-    val REQUEST_KEY_RECIPIENT_WITH_PUB_KEY = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_RECIPIENT_WITH_PUB_KEY",
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportMissingPublicKeyFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
       ImportMissingPublicKeyFragment::class.java
     )
 

@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -48,6 +49,7 @@ class CreatePrivateKeyFirstFragmentInIsolationTest : BaseCheckPassphraseOnFirstS
   fun launchFragmentInContainerWithPredefinedArgs() {
     launchFragmentInContainer<CreatePrivateKeyFirstFragment>(
       fragmentArgs = CreatePrivateKeyFirstFragmentArgs(
+        requestKey = UUID.randomUUID().toString(),
         accountEntity = AccountDaoManager.getDefaultAccountDao()
       ).toBundle()
     )
