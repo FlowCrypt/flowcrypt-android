@@ -129,7 +129,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   fun testEmptyUri() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, null))
     registerAllIdlingResources()
-    checkViewsOnScreen(0, null, null, 0)
+    checkViewsOnScreen()
   }
 
   @Test
@@ -141,7 +141,11 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
+    checkViewsOnScreen(
+      to = arrayOf(recipients[0]),
+      subject = ENCODED_SUBJECT,
+      body = ENCODED_BODY
+    )
   }
 
   @Test
@@ -153,7 +157,11 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
+    checkViewsOnScreen(
+      to = arrayOf(recipients[0]),
+      subject = ENCODED_SUBJECT,
+      body = ENCODED_BODY
+    )
   }
 
   @Test
@@ -165,7 +173,11 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
+    checkViewsOnScreen(
+      to = recipients,
+      subject = ENCODED_SUBJECT,
+      body = ENCODED_BODY
+    )
   }
 
   @Test
@@ -177,7 +189,11 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
+    checkViewsOnScreen(
+      to = recipients,
+      subject = ENCODED_SUBJECT,
+      body = ENCODED_BODY
+    )
   }
 
   @Test
@@ -189,7 +205,11 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
+    checkViewsOnScreen(
+      to = recipients,
+      subject = ENCODED_SUBJECT,
+      body = ENCODED_BODY
+    )
   }
 
   @Test
@@ -201,134 +221,159 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
+    checkViewsOnScreen(
+      to = recipients,
+      subject = ENCODED_SUBJECT,
+      body = ENCODED_BODY
+    )
   }
 
   @Test
   fun testEmptyMailToSchema() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, MailTo.MAILTO_SCHEME))
     registerAllIdlingResources()
-    checkViewsOnScreen(0, null, null, 0)
+    checkViewsOnScreen()
   }
 
   @Test
   fun testSendEmptyExtras() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 0))
+    activeActivityRule.launch(generateIntentWithExtras(action = Intent.ACTION_SEND))
     registerAllIdlingResources()
-    checkViewsOnScreen(0, null, null, 0)
+    checkViewsOnScreen()
   }
 
   @Test
   fun testSendExtSubject() {
     activeActivityRule.launch(
-      generateIntentWithExtras(
-        Intent.ACTION_SEND,
-        Intent.EXTRA_SUBJECT,
-        null,
-        0
-      )
+      generateIntentWithExtras(action = Intent.ACTION_SEND, extraSubject = Intent.EXTRA_SUBJECT)
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 0)
+    checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT)
   }
 
   @Test
   fun testSendExtBody() {
     activeActivityRule.launch(
-      generateIntentWithExtras(
-        Intent.ACTION_SEND,
-        null,
-        Intent.EXTRA_TEXT,
-        0
-      )
+      generateIntentWithExtras(action = Intent.ACTION_SEND, extraMsg = Intent.EXTRA_TEXT)
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 0)
+    checkViewsOnScreen(body = Intent.EXTRA_TEXT)
   }
 
   @Test
   fun testSendAtt() {
-    activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 1))
+    activeActivityRule.launch(
+      generateIntentWithExtras(action = Intent.ACTION_SEND, attachmentsCount = 1)
+    )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, null, null, 1)
+    checkViewsOnScreen(attachmentsCount = 1)
   }
 
   @Test
   fun testSendExtSubjectExtBody() {
     activeActivityRule.launch(
       generateIntentWithExtras(
-        Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, 0
+        action = Intent.ACTION_SEND,
+        extraSubject = Intent.EXTRA_SUBJECT,
+        extraMsg = Intent.EXTRA_TEXT
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0)
+    checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, body = Intent.EXTRA_TEXT)
   }
 
   @Test
   fun testSendExtSubjectAtt() {
     activeActivityRule.launch(
       generateIntentWithExtras(
-        Intent.ACTION_SEND,
-        Intent.EXTRA_SUBJECT,
-        null,
-        1
+        action = Intent.ACTION_SEND,
+        extraSubject = Intent.EXTRA_SUBJECT,
+        attachmentsCount = 1
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 1)
+    checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, attachmentsCount = 1)
   }
 
   @Test
   fun testSendExtBodyAtt() {
     activeActivityRule.launch(
       generateIntentWithExtras(
-        Intent.ACTION_SEND,
-        null,
-        Intent.EXTRA_TEXT,
-        1
+        action = Intent.ACTION_SEND,
+        extraMsg = Intent.EXTRA_TEXT,
+        attachmentsCount = 1
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 1)
+    checkViewsOnScreen(body = Intent.EXTRA_TEXT, attachmentsCount = 1)
   }
 
   @Test
   fun testSendExtSubjectExtBodyAtt() {
     activeActivityRule.launch(
       generateIntentWithExtras(
-        Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, 1
+        action = Intent.ACTION_SEND,
+        extraSubject = Intent.EXTRA_SUBJECT,
+        extraMsg = Intent.EXTRA_TEXT,
+        attachmentsCount = 1
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 1)
+    checkViewsOnScreen(
+      subject = Intent.EXTRA_SUBJECT,
+      body = Intent.EXTRA_TEXT,
+      attachmentsCount = 1
+    )
   }
 
   @Test
   fun testSendMultipleMultiAtt() {
     activeActivityRule.launch(
       generateIntentWithExtras(
-        Intent.ACTION_SEND_MULTIPLE,
-        null,
-        null,
-        atts.size
+        action = Intent.ACTION_SEND_MULTIPLE,
+        attachmentsCount = atts.size
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, null, null, atts.size)
+    checkViewsOnScreen(attachmentsCount = atts.size)
   }
 
   @Test
   fun testSendMultipleExtSubjectExtBodyMultiAtt() {
     activeActivityRule.launch(
       generateIntentWithExtras(
-        Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, atts.size
+        action = Intent.ACTION_SEND_MULTIPLE,
+        extraSubject = Intent.EXTRA_SUBJECT,
+        extraMsg = Intent.EXTRA_TEXT, attachmentsCount = atts.size
       )
     )
     registerAllIdlingResources()
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, atts.size)
+    checkViewsOnScreen(
+      subject = Intent.EXTRA_SUBJECT,
+      body = Intent.EXTRA_TEXT,
+      attachmentsCount = atts.size
+    )
+  }
+
+  @Test
+  fun testSendExtToCcBcc() {
+    val to = "to@to.to"
+    val cc = "cc@cc.cc"
+    val bcc = "bcc@bcc.bcc"
+    activeActivityRule.launch(
+      generateIntentWithExtras(
+        action = Intent.ACTION_SEND,
+        to = arrayOf(to),
+        cc = arrayOf(cc),
+        bcc = arrayOf(bcc)
+      )
+    )
+    registerAllIdlingResources()
+    checkViewsOnScreen(
+      to = arrayOf(to),
+      cc = arrayOf(cc),
+      bcc = arrayOf(bcc)
+    )
   }
 
   @Test
@@ -343,7 +388,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         putExtra(Intent.EXTRA_STREAM, atts.first())
       })
     registerAllIdlingResources()
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0)
+    checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, body = Intent.EXTRA_TEXT)
   }
 
   private fun genIntentForUri(action: String?, stringUri: String?): Intent {
@@ -357,13 +402,21 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
 
 
   private fun generateIntentWithExtras(
-    action: String?, extraSubject: String?, extraMsg: CharSequence?,
-    attachmentsCount: Int
+    action: String? = null,
+    extraSubject: String? = null,
+    extraMsg: CharSequence? = null,
+    attachmentsCount: Int = 0,
+    to: Array<String>? = null,
+    cc: Array<String>? = null,
+    bcc: Array<String>? = null
   ): Intent {
     val intent = Intent(getTargetContext(), CreateMessageActivity::class.java)
     intent.action = action
     intent.putExtra(Intent.EXTRA_SUBJECT, extraSubject)
     intent.putExtra(Intent.EXTRA_TEXT, extraMsg)
+    intent.putExtra(Intent.EXTRA_EMAIL, to)
+    intent.putExtra(Intent.EXTRA_CC, cc)
+    intent.putExtra(Intent.EXTRA_BCC, bcc)
 
     if (attachmentsCount > 0) {
       if (attachmentsCount == 1) {
@@ -380,10 +433,12 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   }
 
   private fun checkViewsOnScreen(
-    recipientsCount: Int,
-    subject: String?,
-    body: CharSequence?,
-    attachmentsCount: Int
+    subject: String? = null,
+    body: CharSequence? = null,
+    attachmentsCount: Int = 0,
+    to: Array<String> = arrayOf(),
+    cc: Array<String> = arrayOf(),
+    bcc: Array<String> = arrayOf()
   ) {
     onView(withText(R.string.compose))
       .check(matches(isDisplayed()))
@@ -391,7 +446,14 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       .check(matches(isDisplayed())).check(matches(withText(not(`is`(emptyString())))))
     closeSoftKeyboard()
 
-    checkRecipients(recipientsCount)
+    checkRecipients(R.id.recyclerViewChipsTo, to)
+    if (cc.isNotEmpty()) {
+      checkRecipients(R.id.recyclerViewChipsCc, cc)
+    }
+    if (bcc.isNotEmpty()) {
+      checkRecipients(R.id.recyclerViewChipsBcc, bcc)
+    }
+
     checkSubject(subject)
     checkBody(body)
     checkAtts(attachmentsCount)
@@ -438,18 +500,22 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     }
   }
 
-  private fun checkRecipients(recipientsCount: Int) {
+  private fun checkRecipients(
+    viewId: Int,
+    recipients: Array<String> = arrayOf(),
+  ) {
+    val recipientsCount = recipients.size
     if (recipientsCount > 0) {
-      onView(withId(R.id.recyclerViewChipsTo))
+      onView(withId(viewId))
         .check(matches(isDisplayed()))
         .check(matches(withRecyclerViewItemCount(recipientsCount + 1)))
 
-      for (i in 0 until recipientsCount) {
-        onView(withId(R.id.recyclerViewChipsTo))
-          .perform(scrollTo<RecyclerView.ViewHolder>(withText(recipients[i])))
+      for (recipient in recipients) {
+        onView(withId(viewId))
+          .perform(scrollTo<RecyclerView.ViewHolder>(withText(recipient)))
       }
     } else {
-      onView(withId(R.id.recyclerViewChipsTo))
+      onView(withId(viewId))
         .check(matches(isDisplayed()))
         .check(matches(withRecyclerViewItemCount(1)))
     }

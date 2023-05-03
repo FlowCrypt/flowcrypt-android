@@ -84,14 +84,32 @@ data class ExtraActionInfo(
         ?: intent.getStringExtra(Intent.EXTRA_SUBJECT)
       val finalBody = infoFromRFC6068Parser?.initializationData?.body
         ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+      val finalTo = infoFromRFC6068Parser?.initializationData?.toAddresses
+        ?: ArrayList((intent.getStringArrayExtra(Intent.EXTRA_EMAIL) ?: emptyArray()).toList())
+      val finalCc = infoFromRFC6068Parser?.initializationData?.ccAddresses
+        ?: ArrayList((intent.getStringArrayExtra(Intent.EXTRA_CC) ?: emptyArray()).toList())
+      val finalBcc = infoFromRFC6068Parser?.initializationData?.bccAddresses
+        ?: ArrayList((intent.getStringArrayExtra(Intent.EXTRA_BCC) ?: emptyArray()).toList())
 
       return infoFromRFC6068Parser?.copy(
         atts = attsList,
         initializationData = infoFromRFC6068Parser.initializationData.copy(
           subject = finalSubject,
           body = finalBody,
+          toAddresses = finalTo,
+          ccAddresses = finalCc,
+          bccAddresses = finalBcc
         )
-      ) ?: ExtraActionInfo(attsList, InitializationData(subject = finalSubject, body = finalBody))
+      ) ?: ExtraActionInfo(
+        atts = attsList,
+        initializationData = InitializationData(
+          subject = finalSubject,
+          body = finalBody,
+          toAddresses = finalTo,
+          ccAddresses = finalCc,
+          bccAddresses = finalBcc
+        )
+      )
     }
   }
 }
