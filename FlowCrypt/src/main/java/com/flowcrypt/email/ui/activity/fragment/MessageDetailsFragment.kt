@@ -52,7 +52,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
@@ -206,9 +205,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
           previewAttachment(
             attachmentInfo = attachmentInfo,
-            useContentApp = account?.hasClientConfigurationProperty(
-              ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
-            ) == true
+            useContentApp = account?.isHandlingAttachmentRestricted() == true
           )
         }
       }
@@ -217,9 +214,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
           previewAttachment(
             attachmentInfo = attachmentInfo,
-            useContentApp = account?.hasClientConfigurationProperty(
-              ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
-            ) == true
+            useContentApp = account?.isHandlingAttachmentRestricted() == true
           )
         } else {
           navController?.navigate(
@@ -1611,7 +1606,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       if (attInfo.rawData?.isNotEmpty() == true) {
         downloadInlinedAtt(attInfo)
       } else {
-        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+        if (account?.isHandlingAttachmentRestricted() == true) {
           navController?.navigate(
             MessageDetailsFragmentDirections
               .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
@@ -1720,7 +1715,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             previewAttachment(
               attachmentInfo = it,
               useContentApp =
-              account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
+              account?.isHandlingAttachmentRestricted() == true
             )
           }
         }
