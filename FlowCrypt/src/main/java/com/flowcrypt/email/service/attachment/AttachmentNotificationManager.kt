@@ -98,7 +98,8 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     useContentApp: Boolean = false
   ) {
     val intent = if (useContentApp) {
-      GeneralUtil.genViewAttachmentIntent(uri, attInfo).setPackage(Constants.APP_PACKAGE_CONTENT)
+      GeneralUtil.genViewAttachmentIntent(uri, attInfo)
+        .setPackage(Constants.APP_PACKAGE_CONTENT_LOCKER)
     } else {
       GeneralUtil.genViewAttachmentIntent(uri, attInfo)
     }

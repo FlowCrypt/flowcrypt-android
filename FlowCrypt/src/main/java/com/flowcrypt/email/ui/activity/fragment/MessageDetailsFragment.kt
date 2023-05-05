@@ -203,33 +203,33 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
-          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-            previewAttachment(
-              attachmentInfo = attachmentInfo,
-              useEnterpriseBehaviour = true
-            )
-          }
+        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+          previewAttachment(
+            attachmentInfo = attachmentInfo,
+            useContentApp = account?.hasClientConfigurationProperty(
+              ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
+            ) == true
+          )
         }
       }
 
       override fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo) {
-        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
-          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-            previewAttachment(
-              attachmentInfo = attachmentInfo,
-              useEnterpriseBehaviour = true
-            )
-          } else {
-            navController?.navigate(
-              MessageDetailsFragmentDirections
-                .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                  attachmentInfo = attachmentInfo,
-                  requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
-                  requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT
-                )
-            )
-          }
+        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+          previewAttachment(
+            attachmentInfo = attachmentInfo,
+            useContentApp = account?.hasClientConfigurationProperty(
+              ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
+            ) == true
+          )
+        } else {
+          navController?.navigate(
+            MessageDetailsFragmentDirections
+              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+                attachmentInfo = attachmentInfo,
+                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+                requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT
+              )
+          )
         }
       }
     })
@@ -430,12 +430,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         )
       }
     }
-  }
-
-  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
-    super.onAccountInfoRefreshed(accountEntity)
-    attachmentsRecyclerViewAdapter.isPreviewEnabled =
-      account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
   }
 
   /**
@@ -1635,7 +1629,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun previewAttachment(
     attachmentInfo: AttachmentInfo,
-    useEnterpriseBehaviour: Boolean = false
+    useContentApp: Boolean = false
   ) {
     val intent = if (attachmentInfo.uri != null) {
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
@@ -1644,10 +1638,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
     }
 
-    if (useEnterpriseBehaviour) {
+    if (useContentApp) {
       try {
-        //ask Tom about receiving package as a parameter
-        startActivity(Intent(intent).setPackage("com.airwatch.contentlocker"))
+        startActivity(Intent(intent).setPackage(Constants.APP_PACKAGE_CONTENT_LOCKER))
       } catch (e: ActivityNotFoundException) {
         //We don't have the required app
         showInfoDialog(
@@ -1701,6 +1694,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         bundle.getParcelableViaExt<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
           ?.copy(rawData = data)
 
+      lastClickedAtt = attachmentInfo
+
       val existingList = attachmentsRecyclerViewAdapter.currentList.toMutableList()
       val modifiedList = existingList.map {
         if (it == attachmentInfo) {
@@ -1724,7 +1719,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           attachmentInfo?.let {
             previewAttachment(
               attachmentInfo = it,
-              useEnterpriseBehaviour =
+              useContentApp =
               account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
             )
           }

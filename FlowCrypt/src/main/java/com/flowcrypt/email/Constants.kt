@@ -146,6 +146,6 @@ class Constants {
     const val REQUEST_KEY_BUTTON_CLICK = "REQUEST_KEY_BUTTON_CLICK"
     const val REQUEST_KEY_INFO_BUTTON_CLICK = "REQUEST_KEY_INFO_BUTTON_CLICK"
 
-    const val APP_PACKAGE_CONTENT = "com.airwatch.contentlocker"
+    const val APP_PACKAGE_CONTENT_LOCKER = "com.airwatch.contentlocker"
   }
 }
