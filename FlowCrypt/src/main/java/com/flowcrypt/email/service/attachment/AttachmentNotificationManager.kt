@@ -15,6 +15,7 @@ import android.text.TextUtils
 import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -88,18 +89,18 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param context Interface to global information about an application environment.
    * @param attInfo [AttachmentInfo] object which contains a detail information about an attachment.
    * @param uri     The [Uri] of the downloaded attachment.
-   * @param canBeOpened     A flag that indicates can we open an attachment after downloading.
+   * @param useContentApp     A flag that indicates should we use the Content app as a viewer.
    */
   fun downloadCompleted(
     context: Context,
     attInfo: AttachmentInfo,
     uri: Uri,
-    canBeOpened: Boolean = true
+    useContentApp: Boolean = false
   ) {
-    val intent = if (canBeOpened) {
-      GeneralUtil.genViewAttachmentIntent(uri, attInfo)
+    val intent = if (useContentApp) {
+      GeneralUtil.genViewAttachmentIntent(uri, attInfo).setPackage(Constants.APP_PACKAGE_CONTENT)
     } else {
-      Intent()
+      GeneralUtil.genViewAttachmentIntent(uri, attInfo)
     }
     val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     val builder = genDefBuilder(context, attInfo)
@@ -198,7 +199,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @param attachmentInfo The [AttachmentInfo] object.
    * @return The prepared title.
    */
-  private fun prepareContentTitle(attachmentInfo: AttachmentInfo): String? {
+  private fun prepareContentTitle(attachmentInfo: AttachmentInfo): String {
     var contentTitle = attachmentInfo.getSafeName()
     if (!TextUtils.isEmpty(contentTitle) && contentTitle.length > MAX_CONTENT_TITLE_LENGTH) {
       contentTitle = contentTitle.substring(0, MAX_CONTENT_TITLE_LENGTH) + "..."

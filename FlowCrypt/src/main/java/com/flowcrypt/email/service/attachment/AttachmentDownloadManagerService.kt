@@ -161,7 +161,7 @@ class AttachmentDownloadManagerService : Service() {
   }
 
   private interface OnDownloadAttachmentListener {
-    fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, canBeOpened: Boolean = true)
+    fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, useContentApp: Boolean = false)
 
     fun onCanceled(attInfo: AttachmentInfo)
 
@@ -186,7 +186,7 @@ class AttachmentDownloadManagerService : Service() {
         val attDownloadManagerService = weakRef.get()
         val notificationManager = attDownloadManagerService?.attsNotificationManager
 
-        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast, canBeOpened)
+        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast, useContentApp)
             = message.obj as DownloadAttachmentTaskResult
 
         when (message.what) {
@@ -208,7 +208,7 @@ class AttachmentDownloadManagerService : Service() {
               context = attDownloadManagerService,
               attInfo = attInfo!!,
               uri = uri!!,
-              canBeOpened = canBeOpened
+              useContentApp = useContentApp
             )
             LogsUtil.d(TAG, attInfo?.getSafeName() + " is downloaded")
           }
@@ -373,7 +373,7 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    override fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, canBeOpened: Boolean) {
+    override fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, useContentApp: Boolean) {
       attsInfoMap.remove(attInfo.id)
       futureMap.remove(attInfo.uniqueStringId)
       try {
@@ -381,7 +381,7 @@ class AttachmentDownloadManagerService : Service() {
           attInfo = attInfo,
           uri = uri,
           isLast = isLast,
-          canBeOpened = canBeOpened
+          useContentApp = useContentApp
         )
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_DOWNLOAD, result))
       } catch (remoteException: RemoteException) {
@@ -463,7 +463,7 @@ class AttachmentDownloadManagerService : Service() {
               listener?.onAttDownloaded(
                 attInfo = att.copy(name = finalFileName),
                 uri = uri,
-                canBeOpened = !account.hasClientConfigurationProperty(
+                useContentApp = account.hasClientConfigurationProperty(
                   ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
                 )
               )
@@ -488,7 +488,7 @@ class AttachmentDownloadManagerService : Service() {
               ).use { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(
+                  useContentApp = account.hasClientConfigurationProperty(
                     ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
                   )
                 )
@@ -517,7 +517,7 @@ class AttachmentDownloadManagerService : Service() {
               )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(
+                  useContentApp = account.hasClientConfigurationProperty(
                     ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
                   )
                 )
@@ -534,7 +534,10 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    private fun handleAttachmentInputStream(inputStream: InputStream, canBeOpened: Boolean = true) {
+    private fun handleAttachmentInputStream(
+      inputStream: InputStream,
+      useContentApp: Boolean = false
+    ) {
       downloadFile(attTempFile, inputStream)
 
       if (Thread.currentThread().isInterrupted) {
@@ -548,7 +551,7 @@ class AttachmentDownloadManagerService : Service() {
           listener?.onAttDownloaded(
             attInfo = att.copy(name = finalFileName),
             uri = uri,
-            canBeOpened = canBeOpened
+            useContentApp = useContentApp
           )
         }
       }
