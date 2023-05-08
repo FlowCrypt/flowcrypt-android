@@ -535,7 +535,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
     val session = Session.getInstance(Properties())
     updateLocalContactsIfNeeded(messages = msgs
-      .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+      .filter { it.labelIds?.contains(GmailApiHelper.LABEL_SENT) == true }
       .map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
     )
   }
@@ -809,7 +809,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
     val session = Session.getInstance(Properties())
     updateLocalContactsIfNeeded(messages = msgs
-      .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+      .filter { it.labelIds?.contains(GmailApiHelper.LABEL_SENT) == true }
       .map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
     )
   }
@@ -1035,7 +1035,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       if (folderType === FoldersManager.FolderType.SENT) {
         val session = Session.getInstance(Properties())
         updateLocalContactsIfNeeded(messages = newCandidates
-          .filter { it.labelIds.contains(GmailApiHelper.LABEL_SENT) }
+          .filter { it.labelIds?.contains(GmailApiHelper.LABEL_SENT) == true }
           .map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
         )
       }
