@@ -561,7 +561,7 @@ class AttachmentDownloadManagerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(att.name).lowercase()
+      val fileExtension = FilenameUtils.getExtension(finalFileName).lowercase()
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {
@@ -688,7 +688,7 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      if (!SecurityUtils.isPossiblyEncryptedData(att.name)) {
+      if (!SecurityUtils.isPossiblyEncryptedData(finalFileName)) {
         return file
       }
 
@@ -706,10 +706,8 @@ class AttachmentDownloadManagerService : Service() {
             protector = protector
           )
 
-          finalFileName = FilenameUtils.getBaseName(att.getSafeName())
-          val fileNameFromMessageMetadata = messageMetadata.filename
-          if (att.name == null && fileNameFromMessageMetadata != null) {
-            finalFileName = fileNameFromMessageMetadata
+          finalFileName = FilenameUtils.getBaseName(att.getSafeName()).ifEmpty {
+            messageMetadata.filename ?: ""
           }
 
           return decryptedFile

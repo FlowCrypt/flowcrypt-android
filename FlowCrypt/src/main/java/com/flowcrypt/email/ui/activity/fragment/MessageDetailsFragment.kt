@@ -1667,7 +1667,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun useFileProviderToGenerateUri(attInfo: AttachmentInfo): Pair<File, Uri> {
     val tempDir = CacheManager.getCurrentMsgTempDirectory(requireContext())
-    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
+    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.getSafeName())
     val file = if (fileName.isNullOrEmpty()) {
       File.createTempFile("tmp", null, tempDir)
     } else {
@@ -1684,30 +1684,20 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun subscribeToDownloadAttachmentViaDialog() {
     setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
-      val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
       val attachmentInfo =
         bundle.getParcelableViaExt<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
-          ?.copy(rawData = data)
-
-      lastClickedAtt = attachmentInfo
 
       val existingList = attachmentsRecyclerViewAdapter.currentList.toMutableList()
-      val modifiedList = existingList.map {
-        if (it == attachmentInfo) {
-          it.copy(
-            rawData = data,
-            name = if (SecurityUtils.isPossiblyEncryptedData(it.name)) {
-              FilenameUtils.getBaseName(it.name)
-            } else {
-              it.name
-            }
-          )
+      existingList.replaceAll {
+        if (it.id == attachmentInfo?.id) {
+          attachmentInfo
         } else {
           it
         }
       }
 
-      attachmentsRecyclerViewAdapter.submitList(modifiedList)
+      lastClickedAtt = attachmentInfo
+      attachmentsRecyclerViewAdapter.submitList(existingList.toList())
 
       when (requestCode) {
         REQUEST_CODE_PREVIEW_ATTACHMENT -> {

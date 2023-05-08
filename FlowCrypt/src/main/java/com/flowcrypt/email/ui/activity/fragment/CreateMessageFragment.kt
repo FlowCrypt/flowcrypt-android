@@ -576,8 +576,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       if (hasAbilityToAddAtt(attachmentInfo)) {
 
-        if (attachmentInfo.name.isNullOrEmpty()) {
-          val msg = "attachmentInfo.getName() == null, uri = " + attachmentInfo.uri!!
+        if (attachmentInfo.getSafeName().isEmpty()) {
+          val msg = "attachmentInfo.getName() is empty, uri = " + attachmentInfo.uri!!
           ExceptionUtil.handleError(NullPointerException(msg))
           return
         }

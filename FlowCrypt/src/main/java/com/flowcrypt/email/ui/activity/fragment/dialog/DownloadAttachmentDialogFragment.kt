@@ -28,6 +28,8 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.DownloadAttachmentViewModel
+import com.flowcrypt.email.security.SecurityUtils
+import org.apache.commons.io.FilenameUtils
 
 /**
  * @author Denys Bondarenko
@@ -58,7 +60,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
       false
     )
 
-    binding?.textViewAttachmentName?.text = args.attachmentInfo.name
+    binding?.textViewAttachmentName?.text = args.attachmentInfo.getSafeName()
     binding?.progressBar?.isIndeterminate = true
 
     val builder = AlertDialog.Builder(requireContext()).apply {
@@ -96,8 +98,14 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
               setFragmentResult(
                 args.requestKey,
                 bundleOf(
-                  KEY_ATTACHMENT to args.attachmentInfo,
-                  KEY_ATTACHMENT_DATA to byteArray,
+                  KEY_ATTACHMENT to args.attachmentInfo.copy(
+                    rawData = byteArray,
+                    name = if (SecurityUtils.isPossiblyEncryptedData(args.attachmentInfo.name)) {
+                      FilenameUtils.getBaseName(args.attachmentInfo.name)
+                    } else {
+                      args.attachmentInfo.name
+                    }
+                  ),
                   KEY_REQUEST_CODE to args.requestCode
                 )
               )
@@ -125,7 +133,6 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
 
   companion object {
     const val KEY_ATTACHMENT = "KEY_ATTACHMENT"
-    const val KEY_ATTACHMENT_DATA = "KEY_ATTACHMENT_DATA"
     const val KEY_REQUEST_CODE = "KEY_REQUEST_CODE"
   }
 }
