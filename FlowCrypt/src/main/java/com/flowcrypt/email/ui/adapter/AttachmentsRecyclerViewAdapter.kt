@@ -15,15 +15,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.extensions.visibleOrGone
 
 /**
  * @author Denys Bondarenko
  */
-class AttachmentsRecyclerViewAdapter(
-  private val attachmentActionListener: AttachmentActionListener,
-  var isPreviewEnabled: Boolean = false
-) :
+class AttachmentsRecyclerViewAdapter(private val attachmentActionListener: AttachmentActionListener) :
   ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -45,8 +41,6 @@ class AttachmentsRecyclerViewAdapter(
       attachmentInfo: AttachmentInfo,
       attachmentActionListener: AttachmentActionListener
     ) {
-      imageButtonPreviewAtt.visibleOrGone(isPreviewEnabled)
-
       if (attachmentInfo.isDecrypted) {
         itemView.setBackgroundResource(R.drawable.bg_att_decrypted)
       } else {

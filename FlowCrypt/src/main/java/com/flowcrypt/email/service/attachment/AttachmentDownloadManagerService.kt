@@ -32,7 +32,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
-import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
@@ -161,7 +160,7 @@ class AttachmentDownloadManagerService : Service() {
   }
 
   private interface OnDownloadAttachmentListener {
-    fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, canBeOpened: Boolean = true)
+    fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, useContentApp: Boolean = false)
 
     fun onCanceled(attInfo: AttachmentInfo)
 
@@ -186,7 +185,7 @@ class AttachmentDownloadManagerService : Service() {
         val attDownloadManagerService = weakRef.get()
         val notificationManager = attDownloadManagerService?.attsNotificationManager
 
-        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast, canBeOpened)
+        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast, useContentApp)
             = message.obj as DownloadAttachmentTaskResult
 
         when (message.what) {
@@ -208,7 +207,7 @@ class AttachmentDownloadManagerService : Service() {
               context = attDownloadManagerService,
               attInfo = attInfo!!,
               uri = uri!!,
-              canBeOpened = canBeOpened
+              useContentApp = useContentApp
             )
             LogsUtil.d(TAG, attInfo?.getSafeName() + " is downloaded")
           }
@@ -373,7 +372,7 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    override fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, canBeOpened: Boolean) {
+    override fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, useContentApp: Boolean) {
       attsInfoMap.remove(attInfo.id)
       futureMap.remove(attInfo.uniqueStringId)
       try {
@@ -381,7 +380,7 @@ class AttachmentDownloadManagerService : Service() {
           attInfo = attInfo,
           uri = uri,
           isLast = isLast,
-          canBeOpened = canBeOpened
+          useContentApp = useContentApp
         )
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_DOWNLOAD, result))
       } catch (remoteException: RemoteException) {
@@ -463,9 +462,7 @@ class AttachmentDownloadManagerService : Service() {
               listener?.onAttDownloaded(
                 attInfo = att.copy(name = finalFileName),
                 uri = uri,
-                canBeOpened = !account.hasClientConfigurationProperty(
-                  ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
-                )
+                useContentApp = account.isHandlingAttachmentRestricted()
               )
             }
 
@@ -488,9 +485,7 @@ class AttachmentDownloadManagerService : Service() {
               ).use { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(
-                    ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
-                  )
+                  useContentApp = account.isHandlingAttachmentRestricted()
                 )
               }
             }
@@ -517,9 +512,7 @@ class AttachmentDownloadManagerService : Service() {
               )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(
-                    ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
-                  )
+                  useContentApp = account.isHandlingAttachmentRestricted()
                 )
               } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
             }
@@ -534,7 +527,10 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    private fun handleAttachmentInputStream(inputStream: InputStream, canBeOpened: Boolean = true) {
+    private fun handleAttachmentInputStream(
+      inputStream: InputStream,
+      useContentApp: Boolean = false
+    ) {
       downloadFile(attTempFile, inputStream)
 
       if (Thread.currentThread().isInterrupted) {
@@ -548,7 +544,7 @@ class AttachmentDownloadManagerService : Service() {
           listener?.onAttDownloaded(
             attInfo = att.copy(name = finalFileName),
             uri = uri,
-            canBeOpened = canBeOpened
+            useContentApp = useContentApp
           )
         }
       }
@@ -565,7 +561,7 @@ class AttachmentDownloadManagerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(att.name).lowercase()
+      val fileExtension = FilenameUtils.getExtension(finalFileName).lowercase()
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {
@@ -692,7 +688,7 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      if (!SecurityUtils.isPossiblyEncryptedData(att.name)) {
+      if (!SecurityUtils.isPossiblyEncryptedData(finalFileName)) {
         return file
       }
 
@@ -710,10 +706,8 @@ class AttachmentDownloadManagerService : Service() {
             protector = protector
           )
 
-          finalFileName = FilenameUtils.getBaseName(att.getSafeName())
-          val fileNameFromMessageMetadata = messageMetadata.filename
-          if (att.name == null && fileNameFromMessageMetadata != null) {
-            finalFileName = fileNameFromMessageMetadata
+          finalFileName = FilenameUtils.getBaseName(att.getSafeName()).ifEmpty {
+            messageMetadata.filename ?: ""
           }
 
           return decryptedFile

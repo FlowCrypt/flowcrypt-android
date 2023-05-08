@@ -159,6 +159,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo
       ), simpleAttInfo
     )
+
+    onView(withId(R.id.imageButtonPreviewAtt))
+      .check(matches(isDisplayed()))
   }
 
   @Test

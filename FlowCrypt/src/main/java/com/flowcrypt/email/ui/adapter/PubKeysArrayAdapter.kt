@@ -50,7 +50,7 @@ class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMo
 
   private fun updateView(att: AttachmentInfo?, viewHolder: ViewHolder) {
     viewHolder.textViewEmail?.text = att?.email
-    viewHolder.textViewFingerprint?.text = att?.name
+    viewHolder.textViewFingerprint?.text = att?.getSafeName()
   }
 
   private class ViewHolder {
