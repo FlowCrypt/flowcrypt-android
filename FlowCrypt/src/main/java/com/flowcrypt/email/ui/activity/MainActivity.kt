@@ -69,7 +69,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
-import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
@@ -231,9 +230,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         override fun onAddAccountClick() {
           binding.drawerLayout.closeDrawer(GravityCompat.START)
           binding.navigationView.menu.setGroupVisible(0, true)
-          navController.navigate(
-            MessagesListFragmentDirections.actionMessagesListFragmentToMainSignInFragment()
-          )
+          navController.navigate(NavGraphDirections.actionGlobalMainSignInFragmentBackToList())
         }
 
         override fun onSwitchAccountClick(accountEntity: AccountEntity) {
