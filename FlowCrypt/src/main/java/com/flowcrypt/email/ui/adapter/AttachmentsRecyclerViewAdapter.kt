@@ -15,11 +15,17 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.extensions.visibleOrGone
 
 /**
  * @author Denys Bondarenko
  */
-class AttachmentsRecyclerViewAdapter(private val attachmentActionListener: AttachmentActionListener) :
+class AttachmentsRecyclerViewAdapter(
+  private val isPreviewEnabled: Boolean = true,
+  private val isDownloadEnabled: Boolean = true,
+  private val isDeleteEnabled: Boolean = true,
+  private val attachmentActionListener: AttachmentActionListener
+) :
   ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -36,6 +42,7 @@ class AttachmentsRecyclerViewAdapter(private val attachmentActionListener: Attac
     private val textViewAttSize: TextView = itemView.findViewById(R.id.textViewAttSize)
     private val imageButtonDownloadAtt: View = itemView.findViewById(R.id.imageButtonDownloadAtt)
     private val imageButtonPreviewAtt: View = itemView.findViewById(R.id.imageButtonPreviewAtt)
+    private val imageButtonDeleteAtt: View = itemView.findViewById(R.id.imageButtonDeleteAtt)
 
     fun bindPost(
       attachmentInfo: AttachmentInfo,
@@ -50,12 +57,19 @@ class AttachmentsRecyclerViewAdapter(private val attachmentActionListener: Attac
       textViewAttName.text = attachmentInfo.getSafeName()
       textViewAttSize.text = Formatter.formatFileSize(itemView.context, attachmentInfo.encodedSize)
 
+      imageButtonDownloadAtt.visibleOrGone(isDownloadEnabled)
       imageButtonDownloadAtt.setOnClickListener {
         attachmentActionListener.onDownloadClick(attachmentInfo)
       }
 
+      imageButtonPreviewAtt.visibleOrGone(isPreviewEnabled)
       imageButtonPreviewAtt.setOnClickListener {
-        attachmentActionListener.onAttachmentPreviewClick(attachmentInfo)
+        attachmentActionListener.onPreviewClick(attachmentInfo)
+      }
+
+      imageButtonDeleteAtt.visibleOrGone(isDeleteEnabled && !attachmentInfo.isProtected)
+      imageButtonDeleteAtt.setOnClickListener {
+        attachmentActionListener.onDeleteClick(attachmentInfo)
       }
 
       itemView.setOnClickListener {
@@ -77,6 +91,7 @@ class AttachmentsRecyclerViewAdapter(private val attachmentActionListener: Attac
   interface AttachmentActionListener {
     fun onDownloadClick(attachmentInfo: AttachmentInfo)
     fun onAttachmentClick(attachmentInfo: AttachmentInfo)
-    fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo)
+    fun onPreviewClick(attachmentInfo: AttachmentInfo)
+    fun onDeleteClick(attachmentInfo: AttachmentInfo)
   }
 }

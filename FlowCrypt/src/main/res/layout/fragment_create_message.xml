@@ -250,11 +250,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/default_button_height_small"
                 android:layout_gravity="center"
+                android:autoSizeMaxTextSize="@dimen/default_text_size_medium"
+                android:autoSizeTextType="uniform"
                 android:text="@string/tap_to_protect_with_web_portal_password"
                 android:textAllCaps="false"
                 android:visibility="gone"
-                android:autoSizeMaxTextSize="@dimen/default_text_size_medium"
-                android:autoSizeTextType="uniform"
                 app:icon="@drawable/ic_password_not_protected_white_24" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -302,15 +302,15 @@
                 app:srcCompat="@drawable/ic_more_horiz_black_24dp"
                 tools:visibility="visible" />
 
-            <LinearLayout
-                android:id="@+id/layoutAtts"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rVAttachments"
+                android:layout_marginTop="@dimen/default_margin_content_large"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:animateLayoutChanges="true"
-                android:orientation="vertical"
-                android:paddingTop="@dimen/default_margin_small"
-                android:paddingBottom="@dimen/default_margin_small" />
-
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                tools:itemCount="3"
+                tools:listitem="@layout/attachment_item" />
         </LinearLayout>
     </ScrollView>
 
