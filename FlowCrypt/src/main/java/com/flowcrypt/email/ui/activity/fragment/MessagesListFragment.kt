@@ -43,6 +43,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -323,7 +324,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     if (accountEntity == null) {
-      navController?.navigate(MessagesListFragmentDirections.actionGlobalToMainSignInFragment())
+      navController?.navigate(NavGraphDirections.actionGlobalToMainSignInFragment())
     }
   }
 
