@@ -464,18 +464,16 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     onView(withId(R.id.rVAttachments))
       .check(matches(withRecyclerViewItemCount(attachmentsCount)))
 
-    if (attachmentsCount > 0) {
-      for (i in 0 until attachmentsCount) {
-        onView(withId(R.id.rVAttachments))
-          .perform(
-            scrollTo<ViewHolder>(
-              allOf(
-                hasDescendant(withText(atts[i].name)),
-                hasDescendant(withId(R.id.imageButtonPreviewAtt))
-              )
+    atts.take(attachmentsCount).forEach {
+      onView(withId(R.id.rVAttachments))
+        .perform(
+          scrollTo<ViewHolder>(
+            allOf(
+              hasDescendant(withText(it.name)),
+              hasDescendant(withId(R.id.imageButtonPreviewAtt))
             )
           )
-      }
+        )
     }
   }
 

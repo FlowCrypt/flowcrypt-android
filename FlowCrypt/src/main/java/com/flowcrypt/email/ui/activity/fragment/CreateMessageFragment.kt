@@ -239,14 +239,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
-        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-          val intent = if (attachmentInfo.uri != null) {
-            GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
-          } else {
-            val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
-            GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
-          }
+        val uri = attachmentInfo.uri ?: attachmentInfo.rawData?.let {
+          val (_, generatedUri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
+          generatedUri
+        }
 
+        if (uri != null) {
+          val intent = GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
           try {
             startActivity(intent)
           } catch (e: ActivityNotFoundException) {
