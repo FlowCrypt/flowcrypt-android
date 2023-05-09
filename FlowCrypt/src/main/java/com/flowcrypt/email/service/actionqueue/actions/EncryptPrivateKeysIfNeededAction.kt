@@ -85,8 +85,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
         val keyDetailsWithPgpEncryptedInfo = encryptedKeyDetailsList.first()
         val modifiedKeyEntity = keyEntity.copy(
           privateKey = KeyStoreCryptoManager.encrypt(keyDetailsWithPgpEncryptedInfo.privateKey)
-            .toByteArray(),
-          publicKey = keyDetailsWithPgpEncryptedInfo.publicKey.toByteArray()
+            .toByteArray()
         )
         modifiedKeyEntities.add(modifiedKeyEntity)
       } catch (e: PrivateKeyStrengthException) {

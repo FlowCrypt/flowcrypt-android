@@ -124,7 +124,6 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           keyEntity.copy(
             privateKey = KeyStoreCryptoManager.encryptSuspend(modifiedPgpKeyDetails.privateKey)
               .toByteArray(),
-            publicKey = modifiedPgpKeyDetails.publicKey.toByteArray(),
             storedPassphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.asString)
           )
         }
@@ -309,6 +308,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
               ?: throw IllegalStateException(sourceNotAvailableMsg)
             parseKeyResult = PgpKey.parseKeys(source, false)
           }
+
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.sourceType}")
         }
 

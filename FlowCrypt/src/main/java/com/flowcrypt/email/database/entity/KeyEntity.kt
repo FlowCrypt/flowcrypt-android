@@ -47,7 +47,6 @@ data class KeyEntity(
   val account: String,
   @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
   val source: String,
-  @ColumnInfo(name = "public_key") val publicKey: ByteArray,
   @ColumnInfo(name = "private_key") val privateKey: ByteArray,
   @ColumnInfo(name = "passphrase", defaultValue = "NULL") val storedPassphrase: String?,
   @ColumnInfo(name = "passphrase_type", defaultValue = "0") val passphraseType: PassphraseType
@@ -55,9 +54,6 @@ data class KeyEntity(
 
   @Ignore
   val privateKeyAsString = String(privateKey)
-
-  @Ignore
-  val publicKeyAsString = String(publicKey)
 
   @Ignore
   val passphrase: Passphrase = if (storedPassphrase == null) {
@@ -72,7 +68,6 @@ data class KeyEntity(
         " account='$account'," +
         " account_type='$accountType'," +
         " source='$source'," +
-        " publicKey=${publicKey.contentToString()}," +
         " privateKey=${privateKey.contentToString()}," +
         " storedPassphrase=(hidden))" +
         " passphraseType='$passphraseType',"
@@ -89,7 +84,6 @@ data class KeyEntity(
     if (account != other.account) return false
     if (accountType != other.accountType) return false
     if (source != other.source) return false
-    if (!publicKey.contentEquals(other.publicKey)) return false
     if (!privateKey.contentEquals(other.privateKey)) return false
     if (storedPassphrase != other.storedPassphrase) return false
     if (passphraseType != other.passphraseType) return false
@@ -104,7 +98,6 @@ data class KeyEntity(
     result = 31 * result + account.hashCode()
     result = 31 * result + (accountType?.hashCode() ?: 0)
     result = 31 * result + source.hashCode()
-    result = 31 * result + publicKey.contentHashCode()
     result = 31 * result + privateKey.contentHashCode()
     result = 31 * result + (storedPassphrase?.hashCode() ?: 0)
     result = 31 * result + passphraseType.hashCode()

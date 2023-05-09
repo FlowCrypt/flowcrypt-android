@@ -87,7 +87,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 36
+    const val DB_VERSION = 37
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1262,6 +1262,58 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_36_37 = object : FlowCryptMigration(36, 37) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //ref https://github.com/FlowCrypt/flowcrypt-android/issues/1766
+
+        //create temp table with existing content
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS keys_temp AS SELECT * FROM keys;")
+        //drop old table
+        database.execSQL("DROP TABLE IF EXISTS keys;")
+        //create a new table 'keys' with dropped field 'public_key'
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `keys` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`fingerprint` TEXT NOT NULL, " +
+              "`account` TEXT NOT NULL, " +
+              "`account_type` TEXT DEFAULT NULL, " +
+              "`source` TEXT NOT NULL, " +
+              "`private_key` BLOB NOT NULL, " +
+              "`passphrase` TEXT DEFAULT NULL, " +
+              "`passphrase_type` INTEGER NOT NULL DEFAULT 0, " +
+              "FOREIGN KEY(`account`, `account_type`) " +
+              "REFERENCES `accounts`(`email`, `account_type`) " +
+              "ON UPDATE NO ACTION ON DELETE CASCADE )"
+
+        )
+        //create indices for new table
+        database.execSQL(
+          "CREATE INDEX IF NOT EXISTS `account_account_type_in_keys` " +
+              "ON `keys` (`account`, `account_type`)"
+        )
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS `fingerprint_account_account_type_in_keys` " +
+              "ON `keys` (`fingerprint`, `account`, `account_type`)"
+        )
+        //fill new table with existing data.
+        database.execSQL(
+          "INSERT INTO `keys` SELECT " +
+              "_id, " +
+              "fingerprint, " +
+              "account, " +
+              "account_type, " +
+              "source, " +
+              "private_key, " +
+              "passphrase, " +
+              "passphrase_type " +
+              "FROM keys_temp;"
+        )
+        //drop temp table
+        database.execSQL("DROP TABLE IF EXISTS keys_temp;")
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1312,6 +1364,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_33_34,
           MIGRATION_34_35,
           MIGRATION_35_36,
+          MIGRATION_36_37,
         ).build()
         INSTANCE = instance
         return instance
