@@ -720,7 +720,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   private fun deleteAtt(att: File) {
     onView(
       allOf(
-        withId(R.id.imageButtonClearAtt), withParent(
+        withId(R.id.imageButtonDeleteAtt), withParent(
           allOf(withId(R.id.actionButtons), hasSibling(withText(att.name)))
         )
       )
