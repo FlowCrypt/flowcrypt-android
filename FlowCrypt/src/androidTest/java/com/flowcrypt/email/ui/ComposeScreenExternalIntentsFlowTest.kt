@@ -9,14 +9,14 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.core.net.MailTo
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
-import androidx.test.espresso.matcher.ViewMatchers.hasChildCount
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -39,6 +39,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
@@ -460,21 +461,19 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   }
 
   private fun checkAtts(attachmentsCount: Int) {
-    onView(withId(R.id.layoutAtts))
-      .check(matches(hasChildCount(attachmentsCount)))
+    onView(withId(R.id.rVAttachments))
+      .check(matches(withRecyclerViewItemCount(attachmentsCount)))
 
-    when {
-      attachmentsCount > 0 -> {
-        if (attachmentsCount == 1) {
-          onView(withText(atts.first().name))
-            .check(matches(isDisplayed()))
-        } else {
-          for (att in atts) {
-            onView(withText(att.name))
-              .check(matches(isDisplayed()))
-          }
-        }
-      }
+    atts.take(attachmentsCount).forEach {
+      onView(withId(R.id.rVAttachments))
+        .perform(
+          scrollTo<ViewHolder>(
+            allOf(
+              hasDescendant(withText(it.name)),
+              hasDescendant(withId(R.id.imageButtonPreviewAtt))
+            )
+          )
+        )
     }
   }
 
@@ -512,7 +511,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
 
       for (recipient in recipients) {
         onView(withId(viewId))
-          .perform(scrollTo<RecyclerView.ViewHolder>(withText(recipient)))
+          .perform(scrollTo<ViewHolder>(withText(recipient)))
       }
     } else {
       onView(withId(viewId))

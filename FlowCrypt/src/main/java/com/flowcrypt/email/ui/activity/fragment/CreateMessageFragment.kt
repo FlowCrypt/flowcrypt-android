@@ -6,12 +6,12 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
 import android.view.LayoutInflater
@@ -71,6 +71,7 @@ import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -86,6 +87,7 @@ import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
+import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
@@ -226,6 +228,42 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     AutoCompleteResultRecyclerViewAdapter(Message.RecipientType.CC, onAutoCompleteResultListener)
   private val bccAutoCompleteResultRecyclerViewAdapter =
     AutoCompleteResultRecyclerViewAdapter(Message.RecipientType.BCC, onAutoCompleteResultListener)
+
+  private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
+    isDownloadEnabled = false,
+    attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
+      override fun onDownloadClick(attachmentInfo: AttachmentInfo) {}
+
+      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
+        onPreviewClick(attachmentInfo)
+      }
+
+      override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
+        val uri = attachmentInfo.uri ?: attachmentInfo.rawData?.let {
+          val (_, generatedUri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
+          generatedUri
+        }
+
+        if (uri != null) {
+          val intent = GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+          try {
+            startActivity(intent)
+          } catch (e: ActivityNotFoundException) {
+            toast(getString(R.string.no_apps_that_can_handle_intent))
+          }
+        }
+      }
+
+      override fun onDeleteClick(attachmentInfo: AttachmentInfo) {
+        composeMsgViewModel.removeAttachments(listOf(attachmentInfo))
+
+        //Remove a temp file created by our app
+        val uri = attachmentInfo.uri ?: return
+        if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority, ignoreCase = true)) {
+          context?.contentResolver?.delete(uri, null, null)
+        }
+      }
+    })
 
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
@@ -788,6 +826,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           )
       )
     }
+
+    binding?.rVAttachments?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+        )
+      )
+      adapter = attachmentsRecyclerViewAdapter
+    }
   }
 
   private fun setupChips() {
@@ -1024,59 +1072,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         R.string.no_conn_msg_sent_later
     )
     activity?.finish()
-  }
-
-  /**
-   * Show attachments which were added.
-   */
-  private fun showAtts(attachments: List<AttachmentInfo>) {
-    if (attachments.isNotEmpty()) {
-      binding?.layoutAtts?.removeAllViews()
-      val layoutInflater = LayoutInflater.from(context)
-      for (att in attachments) {
-        val rootView =
-          layoutInflater.inflate(R.layout.attachment_item, binding?.layoutAtts, false)
-
-        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
-        textViewAttName.text = att.name
-
-        val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
-        if (att.encodedSize > 0) {
-          textViewAttSize.visibility = View.VISIBLE
-          textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
-        } else {
-          textViewAttSize.visibility = View.GONE
-        }
-
-        val imageButtonDownloadAtt = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
-        rootView.findViewById<View>(R.id.imageButtonPreviewAtt)?.visibility = View.GONE
-
-        if (!att.isProtected) {
-          imageButtonDownloadAtt.visibility = View.GONE
-          val imageButtonClearAtt = rootView.findViewById<View>(R.id.imageButtonClearAtt)
-          imageButtonClearAtt.visibility = View.VISIBLE
-          imageButtonClearAtt.setOnClickListener {
-            composeMsgViewModel.removeAttachments(listOf(att))
-            binding?.layoutAtts?.removeView(rootView)
-
-            //Remove a temp file which was created by our app
-            val uri = att.uri
-            if (uri != null && Constants.FILE_PROVIDER_AUTHORITY.equals(
-                uri.authority!!,
-                ignoreCase = true
-              )
-            ) {
-              context?.contentResolver?.delete(uri, null, null)
-            }
-          }
-        } else {
-          imageButtonDownloadAtt.visibility = View.INVISIBLE
-        }
-        binding?.layoutAtts?.addView(rootView)
-      }
-    } else {
-      binding?.layoutAtts?.removeAllViews()
-    }
   }
 
   /**
@@ -1357,7 +1352,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           )
         )
 
-        showAtts(allAttachments)
+        attachmentsRecyclerViewAdapter.submitList(allAttachments)
       }
     }
   }

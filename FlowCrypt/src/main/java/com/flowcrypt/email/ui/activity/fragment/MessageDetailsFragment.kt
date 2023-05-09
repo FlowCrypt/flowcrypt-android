@@ -10,7 +10,6 @@ import android.accounts.AuthenticatorException
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -30,7 +29,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -80,6 +78,7 @@ import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -123,9 +122,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.internet.InternetAddress
-import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
-import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
@@ -167,7 +164,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
-    object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
+    isDeleteEnabled = false,
+    attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
         lastClickedAtt =
           attachmentInfo.copy(orderNumber = GeneralUtil.genAttOrderId(requireContext()))
@@ -210,7 +208,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
       }
 
-      override fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo) {
+      override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
           previewAttachment(
             attachmentInfo = attachmentInfo,
@@ -227,6 +225,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           )
         }
       }
+
+      override fun onDeleteClick(attachmentInfo: AttachmentInfo) {}
     })
 
   private var msgInfo: IncomingMessageInfo? = null
@@ -1629,7 +1629,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     val intent = if (attachmentInfo.uri != null) {
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
-      val (_, uri) = useFileProviderToGenerateUri(attachmentInfo)
+      val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
       GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
     }
 
@@ -1653,7 +1653,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
-    val (file, uri) = useFileProviderToGenerateUri(attInfo)
+    val (file, uri) = attInfo.useFileProviderToGenerateUri(requireContext())
     context?.startService(
       AttachmentDownloadManagerService.newIntent(
         context,
@@ -1663,22 +1663,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   } catch (e: Exception) {
     e.printStackTrace()
     ExceptionUtil.handleError(e)
-  }
-
-  private fun useFileProviderToGenerateUri(attInfo: AttachmentInfo): Pair<File, Uri> {
-    val tempDir = CacheManager.getCurrentMsgTempDirectory(requireContext())
-    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.getSafeName())
-    val file = if (fileName.isNullOrEmpty()) {
-      File.createTempFile("tmp", null, tempDir)
-    } else {
-      val fileCandidate = File(tempDir, fileName)
-      if (!fileCandidate.exists()) {
-        FileUtils.writeByteArrayToFile(fileCandidate, attInfo.rawData)
-      }
-      fileCandidate
-    }
-    val uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
-    return Pair(file, uri)
   }
 
   private fun subscribeToDownloadAttachmentViaDialog() {
