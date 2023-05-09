@@ -504,9 +504,6 @@
         <action
             android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"
             app:destination="@id/messageDetailsFragment" />
-        <action
-            android:id="@+id/action_messagesListFragment_to_mainSignInFragment"
-            app:destination="@id/mainSignInFragment" />
     </fragment>
 
     <fragment
@@ -630,4 +627,9 @@
     <action
         android:id="@+id/action_global_mainSettingsFragment"
         app:destination="@id/mainSettingsFragment" />
+    <action
+        android:id="@+id/action_global_mainSignInFragment_back_to_list"
+        app:destination="@id/mainSignInFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/messagesListFragment" />
 </navigation>
