@@ -818,7 +818,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           while (cursor.moveToNext()) {
             val longId = cursor.getString(cursor.getColumnIndexOrThrow("fingerprint"))
             val pubKeyAsByteArray = cursor.getBlob(cursor.getColumnIndexOrThrow("public_key"))
-            val pubKey = PgpKey.parseKeys(pubKeyAsByteArray)
+            val pubKey = PgpKey.parseKeys(source = pubKeyAsByteArray)
               .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
             val fingerprint = OpenPgpV4Fingerprint(pubKey).toString()
             database.execSQL(

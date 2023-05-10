@@ -454,7 +454,8 @@ class GeneralUtil {
 
       for (recipientWithPubKeys in recipientsWithPubKeys) {
         for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
-          val pgpKeyDetailsList = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+          val pgpKeyDetailsList =
+            PgpKey.parseKeys(source = publicKeyEntity.publicKey).pgpKeyDetailsList
           for (pgpKeyDetails in pgpKeyDetailsList) {
             if (!pgpKeyDetails.isExpired && !pgpKeyDetails.isRevoked) {
               mapOfRecipients[recipientWithPubKeys.recipient.email] = true

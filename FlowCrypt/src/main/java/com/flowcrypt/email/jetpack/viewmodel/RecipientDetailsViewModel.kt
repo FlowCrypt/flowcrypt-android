@@ -33,7 +33,10 @@ class RecipientDetailsViewModel(
       fullList.forEach {
         withContext(Dispatchers.IO) {
           it.pgpKeyDetails = try {
-            PgpKey.parseKeys(it.publicKey, false).pgpKeyDetailsList.firstOrNull()
+            PgpKey.parseKeys(
+              source = it.publicKey,
+              throwExceptionIfUnknownSource = false
+            ).pgpKeyDetailsList.firstOrNull()
           } catch (e: Exception) {
             e.printStackTrace()
             null

@@ -314,7 +314,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
         Result.Status.SUCCESS -> {
           val pubKeyString = response.data?.pubkey
           if (pubKeyString?.isNotEmpty() == true) {
-            val parsedResult = PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList
+            val parsedResult = PgpKey.parseKeys(source = pubKeyString).pgpKeyDetailsList
             if (parsedResult.isNotEmpty()) {
               return@withContext parsedResult
             }

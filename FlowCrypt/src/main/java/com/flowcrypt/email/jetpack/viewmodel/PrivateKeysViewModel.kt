@@ -300,13 +300,19 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
             val source = context.contentResolver.openInputStream(keyImportModel.fileUri)
               ?: throw java.lang.IllegalStateException(sourceNotAvailableMsg)
-            parseKeyResult = PgpKey.parseKeys(source, false)
+            parseKeyResult = PgpKey.parseKeys(
+              source = source,
+              throwExceptionIfUnknownSource = false
+            )
           }
 
           KeyImportDetails.SourceType.CLIPBOARD, KeyImportDetails.SourceType.EMAIL, KeyImportDetails.SourceType.MANUAL_ENTERING -> {
             val source = keyImportModel.keyString
               ?: throw IllegalStateException(sourceNotAvailableMsg)
-            parseKeyResult = PgpKey.parseKeys(source, false)
+            parseKeyResult = PgpKey.parseKeys(
+              source = source,
+              throwExceptionIfUnknownSource = false
+            )
           }
 
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.sourceType}")
@@ -494,7 +500,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
 
     val modifiedPgpKeyDetailsList =
-      PgpKey.parseKeys(keyEncryptedWithNewPassphrase.toByteArray()).pgpKeyDetailsList
+      PgpKey.parseKeys(source = keyEncryptedWithNewPassphrase.toByteArray()).pgpKeyDetailsList
     if (modifiedPgpKeyDetailsList.isEmpty() || modifiedPgpKeyDetailsList.size != 1) {
       throw IllegalStateException("Parse keys error")
     }

@@ -73,7 +73,10 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     subscribeToImportAllPubKeysFromSourceResult()
-    importPubKeysFromSourceSharedViewModel.parseKeys(getSourceInputStreamFromArgs())
+    importPubKeysFromSourceSharedViewModel.parseKeys(
+      inputStream = getSourceInputStreamFromArgs(),
+      skipErrors = true
+    )
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
