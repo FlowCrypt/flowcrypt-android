@@ -65,7 +65,7 @@ class PgpKeyTest {
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
       primaryKeyId = 4193120410270338832
     )
-    val actual = PgpKey.parseKeys(TestKeys.KEYS["rsa1"]!!.publicKey)
+    val actual = PgpKey.parseKeys(source = TestKeys.KEYS["rsa1"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
     assertEquals(expected, actual.pgpKeyDetailsList.first())
   }
@@ -96,7 +96,7 @@ class PgpKeyTest {
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
       primaryKeyId = -4691725871015490871
     )
-    val actual = PgpKey.parseKeys(TestKeys.KEYS["expired"]!!.publicKey)
+    val actual = PgpKey.parseKeys(source = TestKeys.KEYS["expired"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
     assertEquals(expected, actual.pgpKeyDetailsList.first())
   }
@@ -115,7 +115,7 @@ class PgpKeyTest {
   @Test
   fun testPublicKey_Issue1358() {
     val keyText = loadResourceAsString("keys/issue-1358.public.gpg-key")
-    val actual = PgpKey.parseKeys(keyText)
+    val actual = PgpKey.parseKeys(source = keyText)
     assertEquals(1, actual.getAllKeys().size)
   }
 

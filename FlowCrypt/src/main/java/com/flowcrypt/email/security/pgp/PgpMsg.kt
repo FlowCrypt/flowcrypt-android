@@ -844,7 +844,7 @@ object PgpMsg {
       )
     } else {
       try {
-        val keyDetails = PgpKey.parseKeys(rawBlock.content).pgpKeyDetailsList.firstOrNull()
+        val keyDetails = PgpKey.parseKeys(source = rawBlock.content).pgpKeyDetailsList.firstOrNull()
         PublicKeyMsgBlock(
           content = rawBlock.content.decodeToString(),
           keyDetails = keyDetails,

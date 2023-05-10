@@ -765,7 +765,7 @@ class GmailApiHelper {
             continue
           }
 
-          list.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList.map {
+          list.addAll(PgpKey.parseKeys(source = backup).pgpKeyDetailsList.map {
             it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
           })
         }

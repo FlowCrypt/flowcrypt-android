@@ -45,7 +45,7 @@ object MsgBlockFactory {
         )
       } else {
         try {
-          val keyDetails = PgpKey.parseKeys(content).pgpKeyDetailsList.firstOrNull()
+          val keyDetails = PgpKey.parseKeys(source = content).pgpKeyDetailsList.firstOrNull()
           PublicKeyMsgBlock(
             content = content,
             keyDetails = keyDetails,

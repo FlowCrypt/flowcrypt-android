@@ -29,5 +29,7 @@ class RecyclerViewItemMatcher(val matcher: Matcher<View>) :
     return false
   }
 
-  override fun describeTo(description: Description) {}
+  override fun describeTo(description: Description) {
+    description.appendDescriptionOf(matcher)
+  }
 }

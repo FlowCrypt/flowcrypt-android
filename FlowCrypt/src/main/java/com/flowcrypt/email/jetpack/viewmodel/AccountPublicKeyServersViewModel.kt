@@ -103,7 +103,7 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
             clientConfiguration = accountEntity.clientConfiguration
           )
           pubResponseResult.data?.pubkey?.let { key ->
-            results.addAll(PgpKey.parseKeys(key).pgpKeyDetailsList.map {
+            results.addAll(PgpKey.parseKeys(source = key).pgpKeyDetailsList.map {
               Pair(normalizedEmail, it)
             })
           }
