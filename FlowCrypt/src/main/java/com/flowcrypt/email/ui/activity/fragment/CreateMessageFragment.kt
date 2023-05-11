@@ -415,7 +415,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                     return true
                   }
                 } else {
-                  showInfoDialog(dialogMsg = getString(R.string.no_private_keys_suitable_for_encryption))
+                  val dialogMsg = GeneralUtil.prepareWarningTextAboutUnusableForEncryptionKeys(
+                    context = requireContext(),
+                    keysStorage = keysStorage
+                  )
+                  showInfoDialog(dialogMsg = dialogMsg, hasHtml = true)
                   return true
                 }
               }
