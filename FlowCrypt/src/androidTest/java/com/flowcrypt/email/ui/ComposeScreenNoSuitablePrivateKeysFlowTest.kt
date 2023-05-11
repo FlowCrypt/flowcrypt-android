@@ -22,10 +22,13 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.util.UIUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -81,7 +84,12 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
 
     isDialogWithTextDisplayed(
       decorView,
-      getResString(R.string.no_private_keys_suitable_for_encryption)
+      UIUtil.getHtmlSpannedFromText(
+        GeneralUtil.prepareWarningTextAboutUnusableForEncryptionKeys(
+          context = getTargetContext(),
+          keysStorage = KeysStorageImpl.getInstance(getTargetContext())
+        )
+      ).toString()
     )
   }
 
