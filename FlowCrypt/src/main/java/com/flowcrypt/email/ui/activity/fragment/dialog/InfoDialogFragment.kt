@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.app.Dialog
 import android.os.Bundle
 import android.webkit.WebView
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
@@ -18,6 +19,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import java.nio.charset.StandardCharsets
+
 
 /**
  * This class can be used to show an info dialog to the user.
@@ -73,6 +75,14 @@ class InfoDialogFragment : BaseDialogFragment() {
       dialog.setView(webView, padding, padding, padding, padding)
     }
     return dialog
+  }
+
+  override fun onResume() {
+    super.onResume()
+    if (!args.useWebViewToRender) {
+      val textView = dialog?.window?.decorView?.findViewById(android.R.id.message) as? TextView
+      textView?.setTextIsSelectable(true)
+    }
   }
 
   companion object {
