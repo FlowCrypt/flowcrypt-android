@@ -31,10 +31,13 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -89,6 +92,12 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
         matches(prepareMatcherForExpiredKey())
       )
 
+    assertTrue(
+      KeysStorageImpl.getInstance(getTargetContext()).getPgpKeyDetailsList().first {
+        it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.fingerprint
+      }.isExpired
+    )
+
     onView(withId(R.id.floatActionButtonAddKey))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -115,6 +124,12 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
 
     onView(withId(R.id.recyclerViewKeys))
       .check(matches(not(prepareMatcherForExpiredKey())))
+
+    assertFalse(
+      KeysStorageImpl.getInstance(getTargetContext()).getPgpKeyDetailsList().first {
+        it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.fingerprint
+      }.isExpired
+    )
   }
 
   private fun prepareMatcherForExpiredKey() = hasItem(
