@@ -189,7 +189,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
 
   companion object {
     private val EKM_KEY_WITH_EXTENDED_EXPIRATION = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-      "pgp/expired_extended@flowcrypt.test_prv_default.asc"
+      "pgp/expired@flowcrypt.test_prv_default_extended.asc"
     )
     private const val EKM_ERROR = "some error"
     private val EKM_API_ERROR =

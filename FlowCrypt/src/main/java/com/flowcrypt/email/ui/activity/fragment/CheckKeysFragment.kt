@@ -269,11 +269,16 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     val keysStorage = KeysStorageImpl.getInstance(requireContext())
 
     for (fingerprint in fingerprints) {
-      if (keysStorage.getPassphraseByFingerprint(fingerprint) != null) {
+      val keyWithGivenFingerprint = keysStorage.getPgpKeyDetailsList().firstOrNull {
+        it.fingerprint.equals(fingerprint, true)
+      }
+
+      if (keyWithGivenFingerprint != null) {
         val iterator = keyDetailsAndFingerprintsMap.entries.iterator()
         while (iterator.hasNext()) {
           val entry = iterator.next()
-          if (fingerprint == entry.value) {
+          val importCandidate = entry.key
+          if (fingerprint == entry.value && keyWithGivenFingerprint.isNewerThan(importCandidate)) {
             iterator.remove()
           }
         }
@@ -325,9 +330,11 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
       R.id.rBStoreLocally -> {
         KeyEntity.PassphraseType.DATABASE
       }
+
       R.id.rBStoreInRAM -> {
         KeyEntity.PassphraseType.RAM
       }
+
       else -> null
     }
   }
