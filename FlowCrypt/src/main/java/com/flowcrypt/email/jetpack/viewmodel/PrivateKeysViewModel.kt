@@ -186,7 +186,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     keys: List<PgpKeyDetails>,
     addAccountIfNotExist: Boolean = false
   ) {
-    requireNotNull(accountEntity)
+    if (accountEntity == null) {
+      savePrivateKeysLiveData.value = Result.exception(NullPointerException("account == null"))
+      return
+    }
 
     viewModelScope.launch {
       val context: Context = getApplication()

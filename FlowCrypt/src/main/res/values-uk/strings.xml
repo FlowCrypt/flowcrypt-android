@@ -577,4 +577,5 @@
     </plurals>
     <string name="error_occurred_with_details_please_try_again">Сталася помилка, спробуйте ще раз\n\nДеталі помилки:\n%1$s</string>
     <string name="end_pass_phrase_session">Завершити сесію ключової фрази</string>
+    <string name="update_private_key">Оновити закритий ключ</string>
 </resources>

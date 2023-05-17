@@ -21,7 +21,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.databinding.FragmentUpdateRecipientPublicKeyBinding
+import com.flowcrypt.email.databinding.FragmentDialogKeyDetailsBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
@@ -38,7 +38,7 @@ import java.util.Date
  * @author Denys Bondarenko
  */
 class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
-  private var binding: FragmentUpdateRecipientPublicKeyBinding? = null
+  private var binding: FragmentDialogKeyDetailsBinding? = null
   private val args by navArgs<UpdateRecipientPublicKeyDialogFragmentArgs>()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
@@ -49,7 +49,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
 
   @SuppressLint("SetTextI18n")
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    binding = FragmentUpdateRecipientPublicKeyBinding.inflate(
+    binding = FragmentDialogKeyDetailsBinding.inflate(
       LayoutInflater.from(context),
       if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null,
       false
@@ -74,7 +74,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseDialogFragment() {
   private fun initViews() {
     var isExpectedEmailFound = false
 
-    if (args.pgpKeyDetails.mimeAddresses.isNullOrEmpty()) {
+    if (args.pgpKeyDetails.mimeAddresses.isEmpty()) {
       args.pgpKeyDetails.users.forEach { user ->
         val userLayout =
           layoutInflater.inflate(R.layout.item_user_with_email, binding?.lUsers, false)
