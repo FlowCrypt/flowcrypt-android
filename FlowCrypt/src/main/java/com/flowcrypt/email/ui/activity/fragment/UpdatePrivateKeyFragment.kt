@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -195,7 +196,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
 
           Result.Status.SUCCESS -> {
             it.data?.let { pair ->
-              toast("updated! + $pair")
+              toast("Key ${args.existingPgpKeyDetails.fingerprint} was updated", Toast.LENGTH_LONG)
               navController?.navigateUp()
             }
             countingIdlingResource?.decrementSafely(this@UpdatePrivateKeyFragment)
