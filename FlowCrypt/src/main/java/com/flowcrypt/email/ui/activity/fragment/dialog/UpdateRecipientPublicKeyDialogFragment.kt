@@ -30,17 +30,18 @@ class UpdateRecipientPublicKeyDialogFragment : BaseUpdateKeyDialogFragment() {
   private val args by navArgs<UpdateRecipientPublicKeyDialogFragmentArgs>()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
 
-  override fun preparePositiveButtonText(): String = getString(R.string.use_this_key)
-
   override fun prepareTitleText(): String = getString(R.string.public_key_details)
 
   override fun onPositiveButtonClicked() {
     recipientsViewModel.updateExistingPubKey(args.publicKeyEntity, args.pgpKeyDetails)
   }
 
-  override fun getOriginalPgpKeyDetails(): PgpKeyDetails = args.pgpKeyDetails
+  override fun getNewPgpKeyDetails(): PgpKeyDetails = args.pgpKeyDetails
 
   override fun getExpectedEmailAddress(): String = args.publicKeyEntity.recipient
+  override fun getAdditionalWarningText(): String = ""
+
+  override fun isNewKeyAcceptable(): Boolean = true
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

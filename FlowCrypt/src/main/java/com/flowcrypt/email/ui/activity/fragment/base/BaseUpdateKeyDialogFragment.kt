@@ -29,12 +29,12 @@ import java.util.Date
  */
 abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
   protected var binding: FragmentDialogKeyDetailsBinding? = null
-
-  abstract fun preparePositiveButtonText(): String
   abstract fun prepareTitleText(): String
   abstract fun onPositiveButtonClicked()
-  abstract fun getOriginalPgpKeyDetails(): PgpKeyDetails
+  abstract fun getNewPgpKeyDetails(): PgpKeyDetails
   abstract fun getExpectedEmailAddress(): String
+  abstract fun getAdditionalWarningText(): String
+  abstract fun isNewKeyAcceptable(): Boolean
 
   @SuppressLint("SetTextI18n")
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -50,8 +50,10 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
       setTitle(prepareTitleText())
       setView(binding?.root)
 
-      setPositiveButton(preparePositiveButtonText()) { _, _ ->
-        onPositiveButtonClicked()
+      if (isNewKeyAcceptable()) {
+        setPositiveButton(R.string.use_this_key) { _, _ ->
+          onPositiveButtonClicked()
+        }
       }
 
       setNegativeButton(R.string.cancel) { _, _ -> }
@@ -59,10 +61,22 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
     return builder.create()
   }
 
+  protected fun isExpectedEmailFound(): Boolean {
+    val pgpKeyDetails = getNewPgpKeyDetails()
+    return if (pgpKeyDetails.mimeAddresses.isEmpty()) {
+      pgpKeyDetails.users.any { user ->
+        user.contains(getExpectedEmailAddress(), ignoreCase = true)
+      }
+    } else {
+      pgpKeyDetails.mimeAddresses.any { address ->
+        address.address.equals(getExpectedEmailAddress(), true)
+      }
+    }
+  }
+
   @SuppressLint("SetTextI18n")
   private fun initViews() {
-    var isExpectedEmailFound = false
-    val pgpKeyDetails = getOriginalPgpKeyDetails()
+    val pgpKeyDetails = getNewPgpKeyDetails()
     if (pgpKeyDetails.mimeAddresses.isEmpty()) {
       pgpKeyDetails.users.forEach { user ->
         val userLayout =
@@ -70,7 +84,6 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
         val tVUserName = userLayout.findViewById<TextView>(R.id.tVUserName)
         tVUserName.text = user
         binding?.lUsers?.addView(userLayout)
-        isExpectedEmailFound = user.contains(getExpectedEmailAddress(), ignoreCase = true)
       }
     } else {
       pgpKeyDetails.mimeAddresses.forEach { address ->
@@ -81,11 +94,10 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
         val tVEmail = userLayout.findViewById<TextView>(R.id.tVEmail)
         tVEmail.text = address.address
         binding?.lUsers?.addView(userLayout)
-        isExpectedEmailFound = address.address.equals(getExpectedEmailAddress(), true)
       }
     }
 
-    if (!isExpectedEmailFound) {
+    if (!isExpectedEmailFound()) {
       binding?.tVWarning?.visible()
       binding?.tVWarning?.text =
         getString(R.string.warning_no_expected_email, getExpectedEmailAddress())
@@ -138,6 +150,14 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
       if (binding?.tVWarning?.text.isNullOrEmpty()) {
         binding?.tVWarning?.text = warningText
       } else binding?.tVWarning?.append("\n\n" + warningText)
+    }
+
+    val additionalWarningText = getAdditionalWarningText()
+    if (additionalWarningText.isNotEmpty()) {
+      binding?.tVWarning?.visible()
+      if (binding?.tVWarning?.text.isNullOrEmpty()) {
+        binding?.tVWarning?.text = additionalWarningText
+      } else binding?.tVWarning?.append("\n\n" + additionalWarningText)
     }
   }
 }

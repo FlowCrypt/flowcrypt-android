@@ -578,4 +578,8 @@
     <string name="error_occurred_with_details_please_try_again">Сталася помилка, спробуйте ще раз\n\nДеталі помилки:\n%1$s</string>
     <string name="end_pass_phrase_session">Завершити сесію ключової фрази</string>
     <string name="update_private_key">Оновити закритий ключ</string>
+    <string name="new_private_key_details">Інформація про новий закритий ключ</string>
+    <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Попередження: Невідповідність відбитків. Ви намагаєтеся імпортувати інший ключ.</string>
+    <string name="you_are_trying_to_import_the_same_key">Попередження: Ви намагаєтеся імпортувати той самий ключ.</string>
+    <string name="warning_existing_key_has_more_recent_signature">Попередження: Ви намагаєтесь замінити існуючий ключ пізнішою версією.</string>
 </resources>

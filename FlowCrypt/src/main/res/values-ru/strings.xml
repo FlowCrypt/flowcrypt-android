@@ -577,4 +577,8 @@
     <string name="error_occurred_with_details_please_try_again">Произошла ошибка, попробуйте еще раз\n\nДетали ошибки:\n%1$s</string>
     <string name="end_pass_phrase_session">Завершить сессию ключевой фразы</string>
     <string name="update_private_key">Обновить закрытый ключ</string>
+    <string name="new_private_key_details">Информация о новым закрытом ключе</string>
+    <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Предупреждение: Несоответствие отпечатков пальцев. Вы пытаетесь импортировать другой ключ.</string>
+    <string name="you_are_trying_to_import_the_same_key">Предупреждение: Вы пытаетесь импортировать тот же ключ.</string>
+    <string name="warning_existing_key_has_more_recent_signature">Предупреждение: Вы пытаетесь заменить существующий ключ более поздней версией.</string>
 </resources>
