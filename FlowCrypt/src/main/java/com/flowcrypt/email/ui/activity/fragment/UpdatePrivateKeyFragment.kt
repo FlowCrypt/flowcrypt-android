@@ -52,7 +52,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
   private val args by navArgs<UpdatePrivateKeyFragmentArgs>()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  override val isPrivateKeyMode = false
+  override val isPrivateKeyMode = true
 
   override val progressView: View?
     get() = binding?.layoutProgress?.root
@@ -66,7 +66,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
     supportActionBar?.subtitle = args.existingPgpKeyDetails.fingerprint
 
     initViews()
-    subscribeUpdatePrivateKey()
+    subscribeToUpdatePrivateKey()
     subscribeToCheckNewPrivateKey()
     observeSavingPrivateKeys()
   }
@@ -91,7 +91,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
     if (keys.size > 1) {
       showInfoDialog(
         dialogTitle = "",
-        dialogMsg = "We\\'ve found more than one private key in the provided source. Please choose a source with a single public key."
+        dialogMsg = getString(R.string.more_than_one_private_key_found)
       )
       return
     }
@@ -135,7 +135,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
     }
   }
 
-  private fun subscribeUpdatePrivateKey() {
+  private fun subscribeToUpdatePrivateKey() {
     setFragmentResultListener(REQUEST_KEY_UPDATE_PRIVATE_KEY) { _, bundle ->
       val newPrivateKey = bundle.getParcelableViaExt<PgpKeyDetails>(
         UpdatePrivateKeyDialogFragment.KEY_NEW_PRIVATE_KEY
@@ -149,7 +149,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
             sourceType = importSourceType,
             positiveBtnTitle = getString(R.string.check),
             negativeBtnTitle = getString(R.string.cancel),
-            subTitle = "Please provide a passphrase for the given key",
+            subTitle = getString(R.string.please_provide_passphrase_for_the_given_key),
             initSubTitlePlurals = 0
           )
       )
@@ -195,8 +195,9 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
           }
 
           Result.Status.SUCCESS -> {
-            it.data?.let { pair ->
-              toast("Key ${args.existingPgpKeyDetails.fingerprint} was updated", Toast.LENGTH_LONG)
+            it.data?.let {
+              val fingerprint = args.existingPgpKeyDetails.fingerprint
+              toast(getString(R.string.key_was_updated, fingerprint), Toast.LENGTH_LONG)
               navController?.navigateUp()
             }
             countingIdlingResource?.decrementSafely(this@UpdatePrivateKeyFragment)

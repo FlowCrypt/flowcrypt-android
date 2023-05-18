@@ -583,4 +583,7 @@
     <string name="warning_existing_key_has_more_recent_signature">Предупреждение: Вы пытаетесь заменить существующий ключ более поздней версией.</string>
     <string name="enter_new_private_key">Введите новый закрытый ключ</string>
     <string name="new_private_key">Новый закрытый ключ</string>
+    <string name="more_than_one_private_key_found">Мы нашли более одного закрытого ключа в предоставленном источнике. Пожалуйста, выберите источник с единственным открытым ключом.</string>
+    <string name="please_provide_passphrase_for_the_given_key">Пожалуйста, предоставьте ключевую фразу для данного ключа</string>
+    <string name="key_was_updated">Ключ %1$s обновлен</string>
 </resources>
