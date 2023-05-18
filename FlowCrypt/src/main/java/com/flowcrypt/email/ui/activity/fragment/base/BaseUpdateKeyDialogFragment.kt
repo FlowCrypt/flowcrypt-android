@@ -97,12 +97,6 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
       }
     }
 
-    if (!isExpectedEmailFound()) {
-      binding?.tVWarning?.visible()
-      binding?.tVWarning?.text =
-        getString(R.string.warning_no_expected_email, getExpectedEmailAddress())
-    }
-
     pgpKeyDetails.ids.forEach { uid ->
       val tVFingerprint = TextView(context)
       tVFingerprint.setTextSize(
@@ -140,6 +134,12 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
       R.string.key_expiration,
       context?.getString(R.string.key_does_not_expire)
     )
+
+    if (!isExpectedEmailFound()) {
+      binding?.tVWarning?.visible()
+      binding?.tVWarning?.text =
+        getString(R.string.warning_no_expected_email, getExpectedEmailAddress())
+    }
 
     if (pgpKeyDetails.isExpired) {
       binding?.tVWarning?.visible()
