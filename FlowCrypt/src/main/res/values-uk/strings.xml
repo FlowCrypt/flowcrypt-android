@@ -582,4 +582,6 @@
     <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Попередження: Невідповідність відбитків. Ви намагаєтеся імпортувати інший ключ.</string>
     <string name="you_are_trying_to_import_the_same_key">Попередження: Ви намагаєтеся імпортувати той самий ключ.</string>
     <string name="warning_existing_key_has_more_recent_signature">Попередження: Ви намагаєтесь замінити існуючий ключ пізнішою версією.</string>
+    <string name="enter_new_private_key">Введіть новий закритий ключ</string>
+    <string name="new_private_key">Новий закритий ключ</string>
 </resources>

@@ -591,4 +591,6 @@
     <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Warning: Fingerprint mismatch. You are trying to import a different key.</string>
     <string name="you_are_trying_to_import_the_same_key">Warning: You are trying to import the same key.</string>
     <string name="warning_existing_key_has_more_recent_signature">Warning: the existing key has a more recent signature on it than the key you are trying to import.</string>
+    <string name="enter_new_private_key">Enter a new private key</string>
+    <string name="new_private_key">New Private Key</string>
 </resources>
