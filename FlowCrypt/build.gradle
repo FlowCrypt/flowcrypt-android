@@ -348,7 +348,7 @@ dependencies {
     //ACRA needs the following dependency to use a custom report sender
     kapt 'com.google.auto.service:auto-service:1.0.1'
 
-    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'
+    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.11'
     //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
     uiTestsImplementation 'androidx.fragment:fragment-testing:1.5.7'
 
@@ -373,7 +373,7 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.11.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.room:room-testing:2.5.1'
-    testImplementation 'org.robolectric:robolectric:4.10.2'
+    testImplementation 'org.robolectric:robolectric:4.10.3'
     testImplementation 'io.github.classgraph:classgraph:4.8.158'
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
@@ -424,7 +424,7 @@ dependencies {
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
     implementation 'com.google.api-client:google-api-client-android:2.2.0'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-    implementation 'com.google.apis:google-api-services-gmail:v1-rev20230424-2.0.0'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev20230515-2.0.0'
 
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
@@ -442,7 +442,7 @@ dependencies {
     implementation('org.pgpainless:pgpainless-core:1.5.1')
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     implementation 'com.nulab-inc:zxcvbn:1.7.0'
-    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'commons-io:commons-io:2.12.0'
     implementation 'com.burhanrashid52:photoeditor:3.0.1'
     implementation 'net.openid:appauth:0.11.1'
     implementation 'org.bitbucket.b_c:jose4j:0.9.3'
