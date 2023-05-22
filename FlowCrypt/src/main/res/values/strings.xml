@@ -594,6 +594,7 @@
     <string name="enter_new_private_key">Enter a new private key</string>
     <string name="new_private_key">New Private Key</string>
     <string name="more_than_one_private_key_found">We\'ve found more than one private key in the provided source. Please choose a source with a single public key.</string>
-    <string name="please_provide_passphrase_for_the_given_key">Please provide a passphrase for the given key</string>
+    <string name="please_provide_passphrase_for_the_given_key">Please provide a pass phrase for the given key</string>
     <string name="key_was_updated">Key %1$s was updated</string>
+    <string name="please_provide_passphrase_to_proceed">Please provide a pass phrase to proceed</string>
 </resources>

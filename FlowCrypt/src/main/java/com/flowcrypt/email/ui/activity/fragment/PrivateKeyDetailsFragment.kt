@@ -233,15 +233,21 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
     binding?.btnUpdatePrivateKey?.setOnClickListener {
       account?.let { accountEntity ->
-        val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails()
-        if (pgpKeyDetails != null) {
-          navController?.navigate(
-            PrivateKeyDetailsFragmentDirections
-              .actionPrivateKeyDetailsFragmentToUpdatePrivateKeyFragment(
-                accountEntity = accountEntity,
-                existingPgpKeyDetails = pgpKeyDetails
-              )
-          )
+        val passPhrase = privateKeyDetailsViewModel.getPassphrase()
+        if (passPhrase == null || passPhrase.isEmpty) {
+          binding?.eTKeyPassword?.requestFocus()
+          toast(getString(R.string.please_provide_passphrase_to_proceed))
+        } else {
+          val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails()
+          if (pgpKeyDetails != null) {
+            navController?.navigate(
+              PrivateKeyDetailsFragmentDirections
+                .actionPrivateKeyDetailsFragmentToUpdatePrivateKeyFragment(
+                  accountEntity = accountEntity,
+                  existingPgpKeyDetails = pgpKeyDetails
+                )
+            )
+          }
         }
       }
     }

@@ -587,4 +587,5 @@
     <string name="more_than_one_private_key_found">Ми знайшли більше ніж один закритий ключ у наданому джерелі. Будь ласка, виберіть джерело з єдиним відкритим ключем.</string>
     <string name="please_provide_passphrase_for_the_given_key">Будь ласка, введіть парольну фразу для даного ключа</string>
     <string name="key_was_updated">Ключ %1$s оновлено</string>
+    <string name="please_provide_passphrase_to_proceed">Щоб продовжити, будь ласка введіть парольну фразу</string>
 </resources>
