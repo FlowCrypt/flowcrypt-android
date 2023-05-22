@@ -30,6 +30,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
@@ -37,6 +38,8 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -52,7 +55,9 @@ import java.util.Date
 @RunWith(AndroidJUnit4::class)
 class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
-  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
+    keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_default_mod_06_17_2022.asc"
+  )
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
@@ -96,7 +101,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
     val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
     val originalKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
     val updatedKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-      "pgp/default@flowcrypt.test_fisrtKey_prv_default_mod_06_17_2022.asc"
+      "pgp/default@flowcrypt.test_fisrtKey_prv_default_mod_05_22_2023.asc"
     )
 
     //check a key before update
@@ -123,19 +128,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
       ).pgpKeyDetailsList.first().lastModified
     )
 
-    //open update screen
-    onView(withId(R.id.btnUpdatePrivateKey))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    //type new private key
-    onView(withId(R.id.editTextNewPrivateKey))
-      .check(matches(isDisplayed()))
-      .perform(replaceText(updatedKeyDetails.privateKey), closeSoftKeyboard())
-
-    onView(withId(R.id.buttonCheck))
-      .check(matches(isDisplayed()))
-      .perform(click())
+    openUpdatePrivateKeyScreenAndTypeKey(updatedKeyDetails.privateKey)
 
     //click on 'use this key'
     onView(withId(android.R.id.button1))
@@ -166,5 +159,96 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
         existingRecipientWithPubKeysAfterUpdate?.publicKeys?.first()?.publicKey ?: byteArrayOf()
       ).pgpKeyDetailsList.first().lastModified
     )
+  }
+
+  @Test
+  fun testUsePublicKeyInsteadOfPrivateKey() {
+    val updatedKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      "pgp/default@flowcrypt.test_fisrtKey_pub.asc"
+    )
+
+    openUpdatePrivateKeyScreenAndTypeKey(updatedKeyDetails.publicKey)
+
+    //check error message
+    isDialogWithTextDisplayed(
+      decorView,
+      getResString(
+        R.string.file_has_wrong_pgp_structure,
+        getResString(R.string.private_)
+      )
+    )
+  }
+
+  @Test
+  fun testMissingExpectedEmailAddress() {
+    checkWarningMessage(
+      pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+        "pgp/denbond7@flowcrypt.test_prv_strong_primary.asc"
+      ),
+      warningMessage = getResString(
+        R.string.warning_no_expected_email,
+        addAccountToDatabaseRule.account.email
+      )
+    )
+  }
+
+  @Test
+  fun testUseTheSamePrivateKey() {
+    checkWarningMessage(
+      pgpKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails,
+      warningMessage = getResString(
+        R.string.you_are_trying_to_import_the_same_key
+      )
+    )
+  }
+
+  @Test
+  fun testFingerprintMismatch() {
+    checkWarningMessage(
+      pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+        "pgp/default@flowcrypt.test_secondKey_prv_default.asc"
+      ),
+      warningMessage = getResString(
+        R.string.fingerprint_mismatch_you_are_trying_to_import_different_key
+      )
+    )
+  }
+
+  @Test
+  fun testUseOlderPrivateKey() {
+    checkWarningMessage(
+      pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+        "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc"
+      ),
+      warningMessage = getResString(R.string.warning_existing_key_has_more_recent_signature)
+    )
+  }
+
+  private fun checkWarningMessage(pgpKeyDetails: PgpKeyDetails, warningMessage: String) {
+    openUpdatePrivateKeyScreenAndTypeKey(pgpKeyDetails.privateKey)
+
+    //check 'use this key' is not visible
+    onView(withId(android.R.id.button1))
+      .check(matches(not(isDisplayed())))
+
+    onView(withId(R.id.tVWarning))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(containsString(warningMessage))))
+  }
+
+  private fun openUpdatePrivateKeyScreenAndTypeKey(key: String?) {
+    //open update screen
+    onView(withId(R.id.btnUpdatePrivateKey))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    //type public key
+    onView(withId(R.id.editTextNewPrivateKey))
+      .check(matches(isDisplayed()))
+      .perform(replaceText(key), closeSoftKeyboard())
+
+    onView(withId(R.id.buttonCheck))
+      .check(matches(isDisplayed()))
+      .perform(click())
   }
 }
