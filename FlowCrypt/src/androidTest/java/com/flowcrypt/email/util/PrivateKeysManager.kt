@@ -14,7 +14,6 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.collection.PGPKeyRingCollection
-import java.util.ArrayList
 
 /**
  * This tool can help manage private keys in the database. For testing purposes only.
@@ -49,7 +48,10 @@ class PrivateKeysManager {
         .copy(
           source = sourceType.toString(),
           privateKey = KeyStoreCryptoManager.encrypt(pgpKeyDetails.privateKey).toByteArray(),
-          storedPassphrase = KeyStoreCryptoManager.encrypt(passphrase)
+          storedPassphrase = when (passphraseType) {
+            KeyEntity.PassphraseType.DATABASE -> KeyStoreCryptoManager.encrypt(passphrase)
+            else -> null
+          }
         )
       val existingKey = roomDatabase.keysDao().getKeyByAccountAndFingerprint(
         accountEntity.email,
