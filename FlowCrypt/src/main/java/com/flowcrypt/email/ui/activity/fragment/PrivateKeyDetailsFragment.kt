@@ -274,6 +274,10 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
         R.string.template_creation_date,
         dateFormat.format(Date(value.created))
       )
+      binding?.textViewModificationDate?.text = getString(
+        R.string.template_modification_date,
+        dateFormat.format(Date(value.lastModified ?: value.created))
+      )
       binding?.textViewExpirationDate?.text = value.expiration?.let {
         getString(R.string.key_expiration, dateFormat.format(Date(it)))
       } ?: getString(R.string.key_expiration, getString(R.string.key_does_not_expire))

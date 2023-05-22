@@ -173,6 +173,7 @@
     <string name="delete_quoted_text">Видалити текст, що цитується</string>
     <string name="delete_message">Видалити повідомлення</string>
     <string name="template_creation_date">Дата створення: %1$s</string>
+    <string name="template_modification_date">Дата модифікації: %1$s</string>
     <string name="date">Дата</string>
     <string name="please_wait_while_key_will_be_created">Створення ключа, будь ласка, зачекайте</string>
     <string name="template_created">Створено: %1$s</string>
