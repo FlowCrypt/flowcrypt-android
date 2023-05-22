@@ -22,6 +22,7 @@ import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
@@ -210,7 +211,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
               showSnackbar(
-                msgText = e.message ?: e.javaClass.simpleName,
+                msgText = it.exceptionMsg,
                 btnName = getString(R.string.retry),
                 duration = Snackbar.LENGTH_INDEFINITE,
                 onClickListener = {
@@ -222,8 +223,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
               )
             } else {
               showInfoSnackbar(
-                msgText = e?.message ?: e?.javaClass?.simpleName
-                ?: getString(R.string.unknown_error)
+                msgText = it.exceptionMsg
               )
             }
             countingIdlingResource?.decrementSafely(this@UpdatePrivateKeyFragment)
