@@ -22,7 +22,7 @@ import java.time.Instant
 /**
  * @author Denys Bondarenko
  */
-class PgpKeyDetailsViewModel(val fingerprint: String?, application: Application) :
+class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Application) :
   AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
 

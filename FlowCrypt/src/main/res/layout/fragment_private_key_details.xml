@@ -118,7 +118,7 @@
                 tools:text="Creation date: Nov 3, 2017" />
 
             <TextView
-                android:id="@+id/textViewExpirationDate"
+                android:id="@+id/textViewModificationDate"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
@@ -126,6 +126,17 @@
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/textViewCreationDate"
+                tools:text="Modification date: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewExpirationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewModificationDate"
                 tools:text="Expiration date: Nov 3, 2017" />
 
             <TextView
@@ -196,6 +207,17 @@
                 app:layout_constraintTop_toBottomOf="@+id/btnUpdatePassphrase" />
 
             <Button
+                android:id="@+id/btnUpdatePrivateKey"
+                style="@style/AppWidget.Button.Big.Red"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/update_private_key"
+                android:textAllCaps="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnForgetPassphrase" />
+
+            <Button
                 android:id="@+id/btnShowPrKey"
                 style="@style/AppWidget.Button.Big.Red"
                 android:layout_width="0dp"
@@ -204,7 +226,7 @@
                 android:textAllCaps="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/btnForgetPassphrase" />
+                app:layout_constraintTop_toBottomOf="@+id/btnUpdatePrivateKey" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guidelineLeft"

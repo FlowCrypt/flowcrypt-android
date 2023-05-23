@@ -43,7 +43,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
-import com.flowcrypt.email.jetpack.viewmodel.PgpKeyDetailsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeyDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -72,11 +72,11 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
-  private val pgpKeyDetailsViewModel: PgpKeyDetailsViewModel by viewModels {
+  private val privateKeyDetailsViewModel: PrivateKeyDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return PgpKeyDetailsViewModel(args.fingerprint, requireActivity().application) as T
+        return PrivateKeyDetailsViewModel(args.fingerprint, requireActivity().application) as T
       }
     }
   }
@@ -144,6 +144,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
     if (account?.clientConfiguration?.usesKeyManager() == true) {
       binding?.btnShowPrKey?.gone()
+      binding?.btnUpdatePrivateKey?.gone()
     }
   }
 
@@ -152,7 +153,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
       GeneralUtil.writeFileFromStringToUri(
         context = requireContext(),
         uri = uri,
-        data = pgpKeyDetailsViewModel.getPgpKeyDetails()!!.publicKey
+        data = requireNotNull(privateKeyDetailsViewModel.getPgpKeyDetails()).publicKey
       )
       toast(R.string.saved, Toast.LENGTH_SHORT)
     } catch (e: Exception) {
@@ -184,7 +185,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
   private fun initViews() {
     binding?.btnForgetPassphrase?.setOnClickListener {
-      pgpKeyDetailsViewModel.forgetPassphrase()
+      privateKeyDetailsViewModel.forgetPassphrase()
       toast(getString(R.string.passphrase_purged_from_memory))
       binding?.eTKeyPassword?.text = null
     }
@@ -198,10 +199,10 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
         snackBar?.dismiss()
         binding?.eTKeyPassword?.let {
           val passPhrase = Passphrase.fromPassword(typedText)
-          val pgpKeyDetails = pgpKeyDetailsViewModel.getPgpKeyDetails() ?: return@let
+          val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails() ?: return@let
           checkPrivateKeysViewModel.checkKeys(
             keys = listOf(
-              pgpKeyDetails.copy(passphraseType = pgpKeyDetailsViewModel.getPassphraseType())
+              pgpKeyDetails.copy(passphraseType = privateKeyDetailsViewModel.getPassphraseType())
             ),
             passphrase = passPhrase
           )
@@ -212,14 +213,14 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     binding?.btnShowPubKey?.setOnClickListener {
       showInfoDialog(
         dialogTitle = "",
-        dialogMsg = pgpKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
+        dialogMsg = privateKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
       )
     }
 
     binding?.btnCopyToClipboard?.setOnClickListener {
       val clipboard = context?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
       clipboard?.setPrimaryClip(
-        ClipData.newPlainText("pubKey", pgpKeyDetailsViewModel.getPgpKeyDetails()?.publicKey)
+        ClipData.newPlainText("pubKey", privateKeyDetailsViewModel.getPgpKeyDetails()?.publicKey)
       )
       toast(R.string.copied, Toast.LENGTH_SHORT)
     }
@@ -229,10 +230,31 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     binding?.btnShowPrKey?.setOnClickListener {
       toast(getString(R.string.see_backups_to_save_your_private_keys), Toast.LENGTH_SHORT)
     }
+
+    binding?.btnUpdatePrivateKey?.setOnClickListener {
+      account?.let { accountEntity ->
+        val passPhrase = privateKeyDetailsViewModel.getPassphrase()
+        if (passPhrase == null || passPhrase.isEmpty) {
+          binding?.eTKeyPassword?.requestFocus()
+          toast(getString(R.string.please_provide_passphrase_to_proceed))
+        } else {
+          val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails()
+          if (pgpKeyDetails != null) {
+            navController?.navigate(
+              PrivateKeyDetailsFragmentDirections
+                .actionPrivateKeyDetailsFragmentToUpdatePrivateKeyFragment(
+                  accountEntity = accountEntity,
+                  existingPgpKeyDetails = pgpKeyDetails
+                )
+            )
+          }
+        }
+      }
+    }
   }
 
   private fun updateViews() {
-    pgpKeyDetailsViewModel.getPgpKeyDetails()?.let { value ->
+    privateKeyDetailsViewModel.getPgpKeyDetails()?.let { value ->
       UIUtil.setHtmlTextToTextView(
         getString(
           R.string.template_fingerprint,
@@ -252,13 +274,17 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
         R.string.template_creation_date,
         dateFormat.format(Date(value.created))
       )
+      binding?.textViewModificationDate?.text = getString(
+        R.string.template_modification_date,
+        dateFormat.format(Date(value.lastModified ?: value.created))
+      )
       binding?.textViewExpirationDate?.text = value.expiration?.let {
         getString(R.string.key_expiration, dateFormat.format(Date(it)))
       } ?: getString(R.string.key_expiration, getString(R.string.key_does_not_expire))
       binding?.tVUsers?.text = getString(R.string.template_users, value.getUserIdsAsSingleString())
 
-      val passPhrase = pgpKeyDetailsViewModel.getPassphrase()
-      val passPhraseType = pgpKeyDetailsViewModel.getPassphraseType()
+      val passPhrase = privateKeyDetailsViewModel.getPassphrase()
+      val passPhraseType = privateKeyDetailsViewModel.getPassphraseType()
       if (passPhrase == null || passPhrase.isEmpty) {
         handlePassphraseNotProvided()
         return
@@ -279,12 +305,12 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
   private fun chooseDest() {
     createDocumentActivityResultLauncher.launch(
-      "0x" + requireNotNull(pgpKeyDetailsViewModel.getPgpKeyDetails()).fingerprint + ".asc"
+      "0x" + requireNotNull(privateKeyDetailsViewModel.getPgpKeyDetails()).fingerprint + ".asc"
     )
   }
 
   private fun setupPgpKeyDetailsViewModel() {
-    pgpKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner) {
+    privateKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@PrivateKeyDetailsFragment)
@@ -307,17 +333,18 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           showContent()
           countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
         }
+
         else -> {}
       }
     }
   }
 
   private fun matchPassphrase(pgpKeyDetails: PgpKeyDetails) {
-    val passPhrase = pgpKeyDetailsViewModel.getPassphrase() ?: return
+    val passPhrase = privateKeyDetailsViewModel.getPassphrase() ?: return
     if (passPhrase.isEmpty) return
     checkPrivateKeysViewModel.checkKeys(
       keys = listOf(
-        pgpKeyDetails.copy(passphraseType = pgpKeyDetailsViewModel.getPassphraseType())
+        pgpKeyDetails.copy(passphraseType = privateKeyDetailsViewModel.getPassphraseType())
       ),
       passphrase = passPhrase
     )
@@ -339,12 +366,13 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           showInfoDialog(
             dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-            ?: "Couldn't delete a key with fingerprint =" +
-            " {${pgpKeyDetailsViewModel.getPgpKeyDetails()?.fingerprint ?: ""}}"
+            ?: ("Couldn't delete a key with fingerprint =" +
+                " {${privateKeyDetailsViewModel.getPgpKeyDetails()?.fingerprint ?: ""}}")
           )
           countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
           privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
+
         else -> {}
       }
     }
@@ -367,10 +395,10 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
                   UIUtil.getColor(requireContext(), R.color.colorPrimaryLight)
                 )
                 verificationMsg = getString(R.string.stored_pass_phrase_matched)
-                if (pgpKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
-                  val existedPassphrase = pgpKeyDetailsViewModel.getPassphrase()
+                if (privateKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
+                  val existedPassphrase = privateKeyDetailsViewModel.getPassphrase()
                   if (existedPassphrase == null || existedPassphrase.isEmpty) {
-                    pgpKeyDetailsViewModel.updatePassphrase(
+                    privateKeyDetailsViewModel.updatePassphrase(
                       Passphrase.fromPassword(checkResult.passphrase)
                     )
                   }
@@ -379,7 +407,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
                   binding?.eTKeyPassword?.text = null
                 }
               } else {
-                if (pgpKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
+                if (privateKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
                   binding?.eTKeyPassword?.requestFocus()
                   toast(R.string.password_is_incorrect)
                   verificationMsg = getString(R.string.pass_phrase_not_provided)
@@ -410,6 +438,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           )
           countingIdlingResource?.decrementSafely(this@PrivateKeyDetailsFragment)
         }
+
         else -> {}
       }
     }
@@ -422,7 +451,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
       when (requestCode) {
         REQUEST_CODE_DELETE_KEY_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          pgpKeyDetailsViewModel.getPgpKeyDetails()?.let {
+          privateKeyDetailsViewModel.getPgpKeyDetails()?.let {
             account?.let { accountEntity ->
               privateKeysViewModel.deleteKeys(
                 accountEntity,

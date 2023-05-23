@@ -292,6 +292,7 @@
     <string name="show_private_key">Show private key</string>
     <string name="template_fingerprint"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
     <string name="template_creation_date">Key creation: %1$s</string>
+    <string name="template_modification_date">Key modification: %1$s</string>
     <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
@@ -586,4 +587,15 @@
     <string name="enterprise_does_not_support_pub_domains">This version of %1$s cannot be used on %2$s domain. If you installed this app by accident, please install non-enterprise FlowCrypt app.</string>
     <string name="error_occurred_with_details_please_try_again">Error occurred, please try again\n\nError details:\n%1$s</string>
     <string name="end_pass_phrase_session">End Pass Phrase Session</string>
+    <string name="update_private_key">Update private key</string>
+    <string name="new_private_key_details">New Private Key details</string>
+    <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Warning: Fingerprint mismatch. You are trying to import a different key.</string>
+    <string name="you_are_trying_to_import_the_same_key">Warning: You are trying to import the same key.</string>
+    <string name="warning_existing_key_has_more_recent_signature">Warning: the existing key has a more recent signature on it than the key you are trying to import.</string>
+    <string name="enter_new_private_key">Enter a new private key</string>
+    <string name="new_private_key">New Private Key</string>
+    <string name="more_than_one_private_key_found">We\'ve found more than one private key in the provided source. Please choose a source with a single public key.</string>
+    <string name="please_provide_passphrase_for_the_given_key">Please provide a pass phrase for the given key</string>
+    <string name="key_was_updated">Key %1$s was updated</string>
+    <string name="please_provide_passphrase_to_proceed">Please provide a pass phrase to proceed</string>
 </resources>

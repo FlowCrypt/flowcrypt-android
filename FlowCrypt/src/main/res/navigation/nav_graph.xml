@@ -320,6 +320,9 @@
         <argument
             android:name="fingerprint"
             app:argType="string" />
+        <action
+            android:id="@+id/action_privateKeyDetailsFragment_to_updatePrivateKeyFragment"
+            app:destination="@id/updatePrivateKeyFragment" />
     </fragment>
 
     <fragment
@@ -536,6 +539,24 @@
             app:destination="@id/updateRecipientPublicKeyDialogFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/updatePrivateKeyFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.UpdatePrivateKeyFragment"
+        tools:layout="@layout/fragment_update_private_key">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="existingPgpKeyDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+        <action
+            android:id="@+id/action_updatePrivateKeyFragment_to_updatePrivateKeyDialogFragment"
+            app:destination="@id/updatePrivateKeyDialogFragment" />
+        <action
+            android:id="@+id/action_updatePrivateKeyFragment_to_checkKeysFragment"
+            app:destination="@id/checkKeysFragment" />
+    </fragment>
+
     <dialog
         android:id="@+id/lookUpPubKeysDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment"
@@ -591,7 +612,7 @@
     <dialog
         android:id="@+id/updateRecipientPublicKeyDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyDialogFragment"
-        tools:layout="@layout/fragment_update_recipient_public_key">
+        tools:layout="@layout/fragment_dialog_key_details">
         <argument
             android:name="requestKey"
             app:argType="string" />
@@ -602,6 +623,22 @@
             android:name="pgpKeyDetails"
             app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
     </dialog>
+
+    <dialog
+        android:id="@+id/updatePrivateKeyDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.UpdatePrivateKeyDialogFragment"
+        tools:layout="@layout/fragment_dialog_key_details">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="existingPgpKeyDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+        <argument
+            android:name="newPgpKeyDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+    </dialog>
+
 
     <action
         android:id="@+id/action_global_lookUpPubKeysDialogFragment"

@@ -186,7 +186,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     keys: List<PgpKeyDetails>,
     addAccountIfNotExist: Boolean = false
   ) {
-    requireNotNull(accountEntity)
+    if (accountEntity == null) {
+      savePrivateKeysLiveData.value = Result.exception(NullPointerException("account == null"))
+      return
+    }
 
     viewModelScope.launch {
       val context: Context = getApplication()
@@ -261,16 +264,22 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
               val address = mimeAddress.address.lowercase()
               val name = mimeAddress.personal
 
-              val existedRecipientWithPubKeys =
+              val existingRecipientWithPubKeys =
                 recipientDao.getRecipientWithPubKeysByEmailSuspend(address)
-              if (existedRecipientWithPubKeys == null) {
+              if (existingRecipientWithPubKeys == null) {
                 recipientDao.insertSuspend(RecipientEntity(email = address, name = name))
               }
 
-              val existedPubKeyEntity =
+              val existingPubKeyEntity =
                 pubKeysDao.getPublicKeyByRecipientAndFingerprint(address, pgpKeyDetails.fingerprint)
-              if (existedPubKeyEntity == null) {
+              if (existingPubKeyEntity == null) {
                 pubKeysDao.insertSuspend(pgpKeyDetails.toPublicKeyEntity(address))
+              } else if (existingKeyEntity != null) {
+                pubKeysDao.updateSuspend(
+                  existingPubKeyEntity.copy(
+                    publicKey = pgpKeyDetails.publicKey.toByteArray()
+                  )
+                )
               }
             }
           }

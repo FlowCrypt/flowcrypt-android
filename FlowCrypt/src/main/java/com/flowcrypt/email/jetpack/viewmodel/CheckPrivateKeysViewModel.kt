@@ -32,7 +32,9 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
 
   fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
-      checkPrvKeysLiveData.value = Result.loading()
+      if (checkPrvKeysLiveData.value?.status != Result.Status.LOADING) {
+        checkPrvKeysLiveData.value = Result.loading()
+      }
       if (passphrase.isEmpty) {
         checkPrvKeysLiveData.value = Result.success(emptyList())
         return@launch
