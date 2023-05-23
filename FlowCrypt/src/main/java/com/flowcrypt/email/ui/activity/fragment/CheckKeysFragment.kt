@@ -277,8 +277,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
         val iterator = keyDetailsAndFingerprintsMap.entries.iterator()
         while (iterator.hasNext()) {
           val entry = iterator.next()
-          val importCandidate = entry.key
-          if (fingerprint == entry.value && keyWithGivenFingerprint.isNewerThan(importCandidate)) {
+          if (fingerprint == entry.value) {
             iterator.remove()
           }
         }
@@ -330,11 +329,9 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
       R.id.rBStoreLocally -> {
         KeyEntity.PassphraseType.DATABASE
       }
-
       R.id.rBStoreInRAM -> {
         KeyEntity.PassphraseType.RAM
       }
-
       else -> null
     }
   }
