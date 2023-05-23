@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
@@ -26,6 +25,7 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
@@ -263,7 +263,7 @@ class ImportAdditionalPrivateKeysFragment :
         }
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
-          toast(R.string.the_key_already_added, Toast.LENGTH_SHORT)
+          showInfoDialog(dialogMsg = getString(R.string.key_already_added))
         }
       }
     }

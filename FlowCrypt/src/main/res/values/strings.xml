@@ -54,7 +54,7 @@
     <string name="licence">Licence</string>
     <string name="sources">Sources</string>
     <string name="the_contact_was_deleted">Contact \"%1$s\" deleted</string>
-    <string name="the_key_already_added">Key already added</string>
+    <string name="key_already_added">Key already added. To update the existing key please go to «Settings» -> «Keys» -> «Key details».</string>
     <string name="help_feedback_or_question">Help, feedback, question</string>
     <string name="feedback_thank_you_for_trying_message">Thank you for trying %1$s! We\'re here to help.</string>
     <string name="your_message">Your message</string>

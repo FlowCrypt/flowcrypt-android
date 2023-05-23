@@ -110,6 +110,8 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
     onView(withId(R.id.editTextKeyPassword))
       .check(doesNotExist())
 
+    isDialogWithTextDisplayed(decorView, getResString(R.string.key_already_added))
+
     assertTrue(
       KeysStorageImpl.getInstance(getTargetContext()).getPgpKeyDetailsList().first {
         it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.fingerprint
