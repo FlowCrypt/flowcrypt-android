@@ -11,7 +11,7 @@
     <string name="contacts">Контакти</string>
     <string name="keys">Ключі</string>
     <string name="help">Підтримка</string>
-    <string name="the_key_already_added">Такий ключ вже добавлено</string>
+    <string name="key_already_added">Такий ключ вже добавлено. Щоб оновити існуючий ключ, будь ласка, перейдіть до «Налаштування» -> «Ключі» -> «Деталі ключа».</string>
     <string name="help_feedback_or_question">Допомога, питання, зворотній зв\'язок</string>
     <string name="feedback_thank_you_for_trying_message">Дякуємо, що користуєтеся %1$s! Ми тут, щоб допомогти Вам.</string>
     <string name="your_message">Ваше повідомлення</string>

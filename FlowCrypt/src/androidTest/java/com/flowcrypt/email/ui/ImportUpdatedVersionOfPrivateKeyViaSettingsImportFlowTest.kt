@@ -7,9 +7,7 @@ package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
-import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -35,8 +33,6 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.not
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -82,7 +78,7 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  fun testNavigationToImportKeyScreen() {
+  fun testDisallowUpdatingPrivateKeyFromSettingsImport() {
 
     onView(withId(R.id.recyclerViewKeys))
       .check(matches(withRecyclerViewItemCount(2)))
@@ -112,20 +108,11 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
       .perform(click())
 
     onView(withId(R.id.editTextKeyPassword))
-      .perform(
-        scrollTo(),
-        typeText(TestConstants.DEFAULT_PASSWORD),
-        closeSoftKeyboard()
-      )
-    onView(withId(R.id.buttonPositiveAction))
-      .perform(scrollTo(), click())
+      .check(doesNotExist())
 
-    Thread.sleep(1000)
+    isDialogWithTextDisplayed(decorView, getResString(R.string.key_already_added))
 
-    onView(withId(R.id.recyclerViewKeys))
-      .check(matches(not(prepareMatcherForExpiredKey())))
-
-    assertFalse(
+    assertTrue(
       KeysStorageImpl.getInstance(getTargetContext()).getPgpKeyDetailsList().first {
         it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.fingerprint
       }.isExpired
