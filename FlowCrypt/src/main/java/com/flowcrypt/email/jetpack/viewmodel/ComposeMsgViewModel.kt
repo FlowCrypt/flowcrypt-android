@@ -250,10 +250,9 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
   fun callLookUpForRecipientIfNeeded(email: String?) {
     viewModelScope.launch {
-      val recipientInfo = allRecipients.firstNotNullOfOrNull {
-        if (it.key == email?.lowercase()) it else null
-      } ?: return@launch
-      recipientLookUpManager.enqueue(recipientInfo.value)
+      allRecipients.entries
+        .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
+        ?.value?.let { recipientLookUpManager.enqueue(it) }
     }
   }
 
