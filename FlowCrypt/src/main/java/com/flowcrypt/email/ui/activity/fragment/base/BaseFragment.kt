@@ -39,7 +39,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
   protected val account: AccountEntity?
     get() = accountViewModel.activeAccountLiveData.value
-  private lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
+  protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
   private val loggingTag: String = javaClass.simpleName
 
   protected abstract fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): T

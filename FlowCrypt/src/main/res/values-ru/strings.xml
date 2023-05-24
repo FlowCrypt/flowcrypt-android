@@ -588,4 +588,5 @@
     <string name="please_provide_passphrase_for_the_given_key">Пожалуйста, предоставьте ключевую фразу для данного ключа</string>
     <string name="key_was_updated">Ключ %1$s обновлен</string>
     <string name="please_provide_passphrase_to_proceed">Пожалуйста, предоставьте ключевую фразу, чтобы продолжить</string>
+    <string name="re_fetch_public_key">Получить открытый ключ</string>
 </resources>

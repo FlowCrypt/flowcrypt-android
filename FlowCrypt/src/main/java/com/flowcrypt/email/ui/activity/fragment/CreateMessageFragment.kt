@@ -331,6 +331,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       composeMsgViewModel.callLookUpForMissedPubKeys()
     }
+
+    connectionLifecycleObserver.connectionLiveData.observe(viewLifecycleOwner) { isConnected ->
+      if (isConnected) {
+        composeMsgViewModel.callLookUpForMissedPubKeys()
+      }
+    }
   }
 
   @OptIn(DelicateCoroutinesApi::class)
@@ -1635,6 +1641,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
         NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
           binding?.btnSetWebPortalPassword?.callOnClick()
+        }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_RE_FETCH_PUBLIC_KEY -> {
+          composeMsgViewModel.callLookUpForRecipientIfNeeded(recipientWithPubKeys?.recipient?.email)
         }
       }
     }

@@ -248,6 +248,14 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
+  fun callLookUpForRecipientIfNeeded(email: String?) {
+    viewModelScope.launch {
+      allRecipients.entries
+        .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
+        ?.value?.let { recipientLookUpManager.enqueue(it) }
+    }
+  }
+
   class RecipientLookUpManager(
     private val application: Application,
     private val roomDatabase: FlowCryptRoomDatabase,
