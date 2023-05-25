@@ -53,13 +53,13 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
       isDeleteEnabled = false,
       onRecipientActionsListener =
       object : RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
-        override fun onDeleteRecipient(recipientEntity: RecipientEntity) {}
+        override fun onDeleteRecipient(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {}
 
-        override fun onRecipientClick(recipientEntity: RecipientEntity) {
+        override fun onRecipientClick(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(KEY_RECIPIENTS to ArrayList(listOf(recipientEntity)))
+            bundleOf(KEY_RECIPIENTS to ArrayList(listOf(recipientEntityWithPgpMarker.toRecipientEntity())))
           )
         }
       })

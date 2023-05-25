@@ -49,7 +49,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
   val allContactsLiveData: LiveData<List<RecipientEntity>> =
     roomDatabase.recipientDao().getAllRecipientsLD()
-  val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity>>> =
+  val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity.WithPgpMarker>>> =
     searchPatternLiveData.switchMap {
       liveData {
         emit(Result.loading())
@@ -58,15 +58,16 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
 
         val recipientEntities = if (searchPattern.isEmpty()) {
           if (onlyWithPgp) {
-            roomDatabase.recipientDao().getAllRecipientsWithPgp()
+            roomDatabase.recipientDao().getAllRecipientsWithPgpAndPgpMarker()
           } else {
-            roomDatabase.recipientDao().getAllRecipients()
+            roomDatabase.recipientDao().getAllRecipientsWithPgpMarker()
           }
         } else {
           if (onlyWithPgp) {
-            roomDatabase.recipientDao().getAllRecipientsWithPgpWhichMatched("%$searchPattern%")
+            roomDatabase.recipientDao()
+              .getAllMatchedRecipientsWithPgpAndPgpMarker("%$searchPattern%")
           } else {
-            roomDatabase.recipientDao().getAllRecipientsWhichMatched("%$searchPattern%")
+            roomDatabase.recipientDao().getAllMatchedRecipientsWithPgpMarker("%$searchPattern%")
           }
         }
         emit(Result.success(recipientEntities))

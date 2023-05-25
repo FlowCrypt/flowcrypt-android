@@ -49,15 +49,17 @@ class RecipientsListFragment : BaseRecipientsListFragment<FragmentRecipientsList
       isDeleteEnabled = true,
       onRecipientActionsListener = object :
         RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
-        override fun onDeleteRecipient(recipientEntity: RecipientEntity) {
-          recipientsViewModel.deleteRecipient(recipientEntity)
-          toast(getString(R.string.the_contact_was_deleted, recipientEntity.email))
+        override fun onDeleteRecipient(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {
+          recipientsViewModel.deleteRecipient(recipientEntityWithPgpMarker.toRecipientEntity())
+          toast(getString(R.string.the_contact_was_deleted, recipientEntityWithPgpMarker.email))
         }
 
-        override fun onRecipientClick(recipientEntity: RecipientEntity) {
+        override fun onRecipientClick(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {
           navController?.navigate(
             RecipientsListFragmentDirections
-              .actionRecipientsListFragmentToRecipientDetailsFragment(recipientEntity)
+              .actionRecipientsListFragmentToRecipientDetailsFragment(
+                recipientEntityWithPgpMarker.toRecipientEntity()
+              )
           )
         }
       })

@@ -24,39 +24,43 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients")
   suspend fun getAllRecipients(): List<RecipientEntity>
 
-  @Query("SELECT * FROM recipients")
-  fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
-
   @Query(
-    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
+    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp " +
+        "FROM recipients LEFT JOIN public_keys " +
         "ON recipients.email = public_keys.recipient " +
         "GROUP BY recipients.email ORDER BY recipients._id"
   )
-  fun getAllRecipientsWithPgpFlow(): Flow<List<RecipientEntity>>
+  suspend fun getAllRecipientsWithPgpMarker(): List<RecipientEntity.WithPgpMarker>
+
+  @Query("SELECT * FROM recipients")
+  fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
 
   @Query("SELECT * FROM recipients")
   fun getAllRecipientsFlow(): Flow<List<RecipientEntity>>
 
   @Query(
-    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
+    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp " +
+        "FROM recipients INNER JOIN public_keys " +
         "ON recipients.email = public_keys.recipient " +
         "GROUP BY recipients.email ORDER BY recipients._id"
   )
-  suspend fun getAllRecipientsWithPgp(): List<RecipientEntity>
+  suspend fun getAllRecipientsWithPgpAndPgpMarker(): List<RecipientEntity.WithPgpMarker>
 
   @Query(
-    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
+    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp FROM recipients INNER JOIN public_keys " +
         "ON recipients.email = public_keys.recipient " +
         "WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) " +
         "GROUP BY recipients.email ORDER BY recipients._id"
   )
-  suspend fun getAllRecipientsWithPgpWhichMatched(searchPattern: String): List<RecipientEntity>
+  suspend fun getAllMatchedRecipientsWithPgpAndPgpMarker(searchPattern: String): List<RecipientEntity.WithPgpMarker>
 
   @Query(
-    "SELECT * FROM recipients WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) " +
+    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp FROM recipients LEFT JOIN public_keys " +
+        "ON recipients.email = public_keys.recipient " +
+        "WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) " +
         "GROUP BY recipients.email ORDER BY recipients._id"
   )
-  suspend fun getAllRecipientsWhichMatched(searchPattern: String): List<RecipientEntity>
+  suspend fun getAllMatchedRecipientsWithPgpMarker(searchPattern: String): List<RecipientEntity.WithPgpMarker>
 
   @Query("SELECT * FROM recipients WHERE email = :email")
   suspend fun getRecipientByEmailSuspend(email: String): RecipientEntity?
