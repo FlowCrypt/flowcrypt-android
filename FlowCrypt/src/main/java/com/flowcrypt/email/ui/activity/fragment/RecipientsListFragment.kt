@@ -111,6 +111,11 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
           }
 
           override fun onQueryTextChange(newText: String?): Boolean {
+            if (!isVisible) {
+              //The fragment was replaced so ignore
+              return true
+            }
+
             searchPattern = newText ?: ""
             recipientsViewModel.filterContacts(
               onlyWithPgp = switchView?.isChecked ?: true,
