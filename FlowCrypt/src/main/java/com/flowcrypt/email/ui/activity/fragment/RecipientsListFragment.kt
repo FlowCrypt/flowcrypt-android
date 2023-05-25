@@ -93,10 +93,17 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
 
       override fun onPrepareMenu(menu: Menu) {
         super.onPrepareMenu(menu)
-        val searchItem = menu.findItem(R.id.menuSearch)
-        val searchView = searchItem.actionView as SearchView
+        setupSearchItem(menu)
+        setupSwitchItem(menu)
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
+
+      private fun setupSearchItem(menu: Menu) {
+        val menuItemSearch = menu.findItem(R.id.menuSearch)
+        val searchView = menuItemSearch.actionView as SearchView
         if (searchPattern.isNotEmpty()) {
-          searchItem.expandActionView()
+          menuItemSearch.expandActionView()
         }
         searchView.setQuery(searchPattern, true)
         searchView.queryHint = getString(R.string.search)
@@ -125,9 +132,11 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
           }
         })
         searchView.clearFocus()
+      }
 
-        val item = menu.findItem(R.id.menuSwitch)
-        switchView = item.actionView?.findViewById(R.id.switchShowOnlyEncryptedMessages)
+      private fun setupSwitchItem(menu: Menu) {
+        val menuItemSwitch = menu.findItem(R.id.menuSwitch)
+        switchView = menuItemSwitch.actionView?.findViewById(R.id.switchView)
         switchView?.isChecked = onlyWithPgp
         switchView?.setOnCheckedChangeListener { _, isChecked ->
           onlyWithPgp = isChecked
@@ -137,8 +146,6 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
           )
         }
       }
-
-      override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
     }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
