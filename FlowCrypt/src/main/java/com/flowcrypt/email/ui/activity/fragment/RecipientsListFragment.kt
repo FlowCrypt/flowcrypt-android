@@ -30,7 +30,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.ui.activity.fragment.base.BaseRecipientsListFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
 
@@ -39,7 +39,7 @@ import com.flowcrypt.email.ui.adapter.RecipientsRecyclerViewAdapter
  *
  * @author Denys Bondarenko
  */
-class RecipientsListFragment : BaseRecipientsListFragment<FragmentRecipientsListBinding>(),
+class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
   ListProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentRecipientsListBinding.inflate(inflater, container, false)
