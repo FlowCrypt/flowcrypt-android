@@ -12,7 +12,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import kotlinx.coroutines.flow.Flow
 
 /**
  * This object describes a logic of work with [RecipientEntity].
@@ -26,9 +25,6 @@ interface RecipientDao : BaseDao<RecipientEntity> {
 
   @Query("SELECT * FROM recipients")
   fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
-
-  @Query("SELECT * FROM recipients")
-  fun getAllRecipientsFlow(): Flow<List<RecipientEntity>>
 
   @Query(
     "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp FROM recipients INNER JOIN public_keys " +
