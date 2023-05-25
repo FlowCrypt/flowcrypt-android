@@ -160,7 +160,7 @@ class RecipientsListFragment : BaseRecipientsListFragment<FragmentRecipientsList
       )
     }
 
-    recipientsViewModel.contactsWithPgpSearchLiveData.observe(viewLifecycleOwner) {
+    recipientsViewModel.contactsWithPgpMarkerSearchLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@RecipientsListFragment)

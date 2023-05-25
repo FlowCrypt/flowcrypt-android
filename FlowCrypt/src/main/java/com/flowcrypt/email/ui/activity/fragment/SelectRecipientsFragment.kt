@@ -131,7 +131,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
       recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
     }
 
-    recipientsViewModel.contactsWithPgpSearchLiveData.observe(viewLifecycleOwner) {
+    recipientsViewModel.contactsWithPgpMarkerSearchLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@SelectRecipientsFragment)

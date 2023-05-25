@@ -44,31 +44,22 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
-  val searchPatternLiveData: MutableLiveData<Pair<Boolean, String>> = MutableLiveData()
+  private val searchPatternLiveData: MutableLiveData<Pair<Boolean, String>> = MutableLiveData()
   private val controlledRunnerForPubKeysFromServer = ControlledRunner<Result<PubResponse?>>()
 
   val allContactsLiveData: LiveData<List<RecipientEntity>> =
     roomDatabase.recipientDao().getAllRecipientsLD()
-  val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity.WithPgpMarker>>> =
+  val contactsWithPgpMarkerSearchLiveData: LiveData<Result<List<RecipientEntity.WithPgpMarker>>> =
     searchPatternLiveData.switchMap {
       liveData {
         emit(Result.loading())
         val onlyWithPgp = it.first
         val searchPattern = it.second
 
-        val recipientEntities = if (searchPattern.isEmpty()) {
-          if (onlyWithPgp) {
-            roomDatabase.recipientDao().getAllRecipientsWithPgpAndPgpMarker()
-          } else {
-            roomDatabase.recipientDao().getAllRecipientsWithPgpMarker()
-          }
+        val recipientEntities = if (onlyWithPgp) {
+          roomDatabase.recipientDao().getAllMatchedRecipientsWithPgpAndPgpMarker("%$searchPattern%")
         } else {
-          if (onlyWithPgp) {
-            roomDatabase.recipientDao()
-              .getAllMatchedRecipientsWithPgpAndPgpMarker("%$searchPattern%")
-          } else {
-            roomDatabase.recipientDao().getAllMatchedRecipientsWithPgpMarker("%$searchPattern%")
-          }
+          roomDatabase.recipientDao().getAllMatchedRecipientsWithPgpMarker("%$searchPattern%")
         }
         emit(Result.success(recipientEntities))
       }

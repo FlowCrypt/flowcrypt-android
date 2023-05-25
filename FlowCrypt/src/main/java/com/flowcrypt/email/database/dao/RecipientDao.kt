@@ -24,27 +24,11 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients")
   suspend fun getAllRecipients(): List<RecipientEntity>
 
-  @Query(
-    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp " +
-        "FROM recipients LEFT JOIN public_keys " +
-        "ON recipients.email = public_keys.recipient " +
-        "GROUP BY recipients.email ORDER BY recipients._id"
-  )
-  suspend fun getAllRecipientsWithPgpMarker(): List<RecipientEntity.WithPgpMarker>
-
   @Query("SELECT * FROM recipients")
   fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
 
   @Query("SELECT * FROM recipients")
   fun getAllRecipientsFlow(): Flow<List<RecipientEntity>>
-
-  @Query(
-    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp " +
-        "FROM recipients INNER JOIN public_keys " +
-        "ON recipients.email = public_keys.recipient " +
-        "GROUP BY recipients.email ORDER BY recipients._id"
-  )
-  suspend fun getAllRecipientsWithPgpAndPgpMarker(): List<RecipientEntity.WithPgpMarker>
 
   @Query(
     "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp FROM recipients INNER JOIN public_keys " +
