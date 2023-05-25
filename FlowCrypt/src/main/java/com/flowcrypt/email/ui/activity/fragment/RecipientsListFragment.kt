@@ -12,8 +12,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.appcompat.widget.SearchView
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
@@ -67,7 +67,7 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
 
   private var onlyWithPgp: Boolean = true
   private var searchPattern: String = ""
-  private var switchView: SwitchCompat? = null
+  private var switchView: CompoundButton? = null
 
   override val emptyView: View?
     get() = binding?.emptyView
