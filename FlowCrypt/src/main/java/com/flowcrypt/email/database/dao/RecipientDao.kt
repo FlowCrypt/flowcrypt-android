@@ -34,6 +34,9 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   )
   fun getAllRecipientsWithPgpFlow(): Flow<List<RecipientEntity>>
 
+  @Query("SELECT * FROM recipients")
+  fun getAllRecipientsFlow(): Flow<List<RecipientEntity>>
+
   @Query(
     "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
         "ON recipients.email = public_keys.recipient " +
@@ -48,6 +51,12 @@ interface RecipientDao : BaseDao<RecipientEntity> {
         "GROUP BY recipients.email ORDER BY recipients._id"
   )
   suspend fun getAllRecipientsWithPgpWhichMatched(searchPattern: String): List<RecipientEntity>
+
+  @Query(
+    "SELECT * FROM recipients WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) " +
+        "GROUP BY recipients.email ORDER BY recipients._id"
+  )
+  suspend fun getAllRecipientsWhichMatched(searchPattern: String): List<RecipientEntity>
 
   @Query("SELECT * FROM recipients WHERE email = :email")
   suspend fun getRecipientByEmailSuspend(email: String): RecipientEntity?

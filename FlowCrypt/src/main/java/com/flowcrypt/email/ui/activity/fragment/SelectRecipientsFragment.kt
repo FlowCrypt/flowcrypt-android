@@ -101,13 +101,13 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
           override fun onQueryTextSubmit(query: String?): Boolean {
             searchPattern = query ?: ""
-            recipientsViewModel.filterContacts(searchPattern)
+            recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
             return true
           }
 
           override fun onQueryTextChange(newText: String?): Boolean {
             searchPattern = newText ?: ""
-            recipientsViewModel.filterContacts(searchPattern)
+            recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
             return true
           }
         })
@@ -128,7 +128,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
 
   private fun setupRecipientsViewModel() {
     recipientsViewModel.allContactsLiveData.observe(viewLifecycleOwner) {
-      recipientsViewModel.filterContacts(searchPattern)
+      recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
     }
 
     recipientsViewModel.contactsWithPgpSearchLiveData.observe(viewLifecycleOwner) {
@@ -152,7 +152,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
       }
     }
 
-    recipientsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
   }
 
   companion object {

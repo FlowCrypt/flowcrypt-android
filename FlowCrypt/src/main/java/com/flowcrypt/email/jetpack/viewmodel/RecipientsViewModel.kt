@@ -44,22 +44,32 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
-  private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
+  val searchPatternLiveData: MutableLiveData<Pair<Boolean, String>> = MutableLiveData()
   private val controlledRunnerForPubKeysFromServer = ControlledRunner<Result<PubResponse?>>()
 
   val allContactsLiveData: LiveData<List<RecipientEntity>> =
     roomDatabase.recipientDao().getAllRecipientsLD()
-  val recipientsWithPgpFlow = roomDatabase.recipientDao().getAllRecipientsWithPgpFlow()
   val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity>>> =
     searchPatternLiveData.switchMap {
       liveData {
         emit(Result.loading())
-        val foundContacts = if (it.isNullOrEmpty()) {
-          roomDatabase.recipientDao().getAllRecipientsWithPgp()
+        val onlyWithPgp = it.first
+        val searchPattern = it.second
+
+        val recipientEntities = if (searchPattern.isEmpty()) {
+          if (onlyWithPgp) {
+            roomDatabase.recipientDao().getAllRecipientsWithPgp()
+          } else {
+            roomDatabase.recipientDao().getAllRecipients()
+          }
         } else {
-          roomDatabase.recipientDao().getAllRecipientsWithPgpWhichMatched("%$it%")
+          if (onlyWithPgp) {
+            roomDatabase.recipientDao().getAllRecipientsWithPgpWhichMatched("%$searchPattern%")
+          } else {
+            roomDatabase.recipientDao().getAllRecipientsWhichMatched("%$searchPattern%")
+          }
         }
-        emit(Result.success(foundContacts))
+        emit(Result.success(recipientEntities))
       }
     }
   val recipientsToLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
@@ -243,8 +253,8 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun filterContacts(searchPattern: String) {
-    searchPatternLiveData.value = searchPattern
+  fun filterContacts(onlyWithPgp: Boolean, searchPattern: String) {
+    searchPatternLiveData.value = Pair(onlyWithPgp, searchPattern)
   }
 
   fun deleteContactByEmail(email: String) {
