@@ -5,9 +5,18 @@
 
 package com.flowcrypt.email.ui.base
 
+import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import org.hamcrest.Matchers.allOf
 import org.junit.Before
 
 /**
@@ -40,6 +49,23 @@ abstract class BaseRecipientsListTest : BaseTest() {
         )
       )
     }
+  }
+
+  protected fun testSomeContact(email: String, pgpIconVisibility: ViewMatchers.Visibility) {
+    onView(withId(R.id.rVRecipients))
+      .perform(
+        scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            hasDescendant(
+              allOf(
+                withId(R.id.imageViewPgp),
+                withEffectiveVisibility(pgpIconVisibility)
+              )
+            ),
+            hasDescendant(ViewMatchers.withText(email)),
+          )
+        )
+      )
   }
 
   companion object {
