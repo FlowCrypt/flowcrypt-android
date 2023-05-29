@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -19,10 +18,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.PublicKeyEntity
-import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -30,10 +25,10 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.RecipientsListFragment
+import com.flowcrypt.email.ui.base.BaseRecipientsListTest
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.AfterClass
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -46,7 +41,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class RecipientsListFragmentInIsolationTest : BaseTest() {
+class RecipientsListFragmentInIsolationTest : BaseRecipientsListTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
@@ -102,38 +97,5 @@ class RecipientsListFragmentInIsolationTest : BaseTest() {
     ).check(doesNotExist())
 
     clearContactsFromDatabase()
-  }
-
-  private fun addContactsToDatabase() {
-    for (email in EMAILS) {
-      roomDatabase.recipientDao().insert(RecipientEntity(email = email))
-      roomDatabase.pubKeyDao().insert(
-        PublicKeyEntity(
-          recipient = email,
-          fingerprint = "FINGER",
-          publicKey = "KEY".toByteArray()
-        )
-      )
-    }
-  }
-
-  companion object {
-    private val EMAILS = arrayOf(
-      "contact_0@flowcrypt.test",
-      "contact_1@flowcrypt.test",
-      "contact_2@flowcrypt.test",
-      "contact_3@flowcrypt.test"
-    )
-
-    @AfterClass
-    fun clearContactsFromDatabase() {
-      for (email in EMAILS) {
-        val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext())
-          .recipientDao()
-
-        val contact = dao.getRecipientByEmail(email) ?: continue
-        dao.delete(contact)
-      }
-    }
   }
 }
