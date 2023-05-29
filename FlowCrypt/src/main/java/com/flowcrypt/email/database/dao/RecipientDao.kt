@@ -12,7 +12,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import kotlinx.coroutines.flow.Flow
 
 /**
  * This object describes a logic of work with [RecipientEntity].
@@ -28,26 +27,20 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   fun getAllRecipientsLD(): LiveData<List<RecipientEntity>>
 
   @Query(
-    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
-        "ON recipients.email = public_keys.recipient " +
-        "GROUP BY recipients.email ORDER BY recipients._id"
-  )
-  fun getAllRecipientsWithPgpFlow(): Flow<List<RecipientEntity>>
-
-  @Query(
-    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
-        "ON recipients.email = public_keys.recipient " +
-        "GROUP BY recipients.email ORDER BY recipients._id"
-  )
-  suspend fun getAllRecipientsWithPgp(): List<RecipientEntity>
-
-  @Query(
-    "SELECT recipients.* FROM recipients INNER JOIN public_keys " +
+    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp FROM recipients INNER JOIN public_keys " +
         "ON recipients.email = public_keys.recipient " +
         "WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) " +
         "GROUP BY recipients.email ORDER BY recipients._id"
   )
-  suspend fun getAllRecipientsWithPgpWhichMatched(searchPattern: String): List<RecipientEntity>
+  suspend fun getAllMatchedRecipientsWithPgpAndPgpMarker(searchPattern: String): List<RecipientEntity.WithPgpMarker>
+
+  @Query(
+    "SELECT recipients.*, public_keys.fingerprint IS NOT NULL AS has_pgp FROM recipients LEFT JOIN public_keys " +
+        "ON recipients.email = public_keys.recipient " +
+        "WHERE (email LIKE :searchPattern OR name LIKE :searchPattern) " +
+        "GROUP BY recipients.email ORDER BY recipients._id"
+  )
+  suspend fun getAllMatchedRecipientsWithPgpMarker(searchPattern: String): List<RecipientEntity.WithPgpMarker>
 
   @Query("SELECT * FROM recipients WHERE email = :email")
   suspend fun getRecipientByEmailSuspend(email: String): RecipientEntity?
