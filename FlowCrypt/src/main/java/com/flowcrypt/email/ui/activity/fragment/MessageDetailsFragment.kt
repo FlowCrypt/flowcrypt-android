@@ -1204,14 +1204,22 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       PgpDecryptAndOrVerify.DecryptionErrorType.OTHER -> {
-        val otherErrorMsg =
-          getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
-              "\n\n" + getString(
+        val otherErrorMsg = when (decryptError.details.message) {
+          "Symmetric-Key algorithm TRIPLE_DES is not acceptable for message decryption." -> {
+            getString(R.string.message_was_not_decrypted_due_to_triple_des, "TRIPLE_DES")
+          }
+
+          else -> getString(
+            R.string.decrypt_error_could_not_open_message,
+            getString(R.string.app_name)
+          ) + "\n\n" + getString(
             R.string.decrypt_error_please_write_me,
             getString(R.string.support_email)
           ) + "\n\n" + decryptError.details.type +
               ": " + decryptError.details.message +
               "\n\n" + decryptError.details.stack
+        }
+
         return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 

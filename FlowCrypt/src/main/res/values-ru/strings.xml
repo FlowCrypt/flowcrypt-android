@@ -589,4 +589,5 @@
     <string name="key_was_updated">Ключ %1$s обновлен</string>
     <string name="please_provide_passphrase_to_proceed">Пожалуйста, предоставьте ключевую фразу, чтобы продолжить</string>
     <string name="re_fetch_public_key">Получить открытый ключ</string>
+    <string name="message_was_not_decrypted_due_to_triple_des">Сообщение не было расшифровано, так как в нем используется слабый алгоритм шифрования %1$s</string>
 </resources>
