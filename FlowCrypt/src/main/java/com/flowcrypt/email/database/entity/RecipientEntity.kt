@@ -35,4 +35,17 @@ data class RecipientEntity(
   fun toInternetAddress(): InternetAddress {
     return InternetAddress(email, name)
   }
+
+  @Parcelize
+  data class WithPgpMarker(
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
+    val email: String,
+    @ColumnInfo(defaultValue = "NULL") val name: String? = null,
+    @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long = 0,
+    @ColumnInfo(name = "has_pgp", defaultValue = "0") val hasPgp: Boolean,
+  ) : Parcelable {
+    fun toRecipientEntity(): RecipientEntity {
+      return RecipientEntity(id = id, email = email, name = name, lastUse = lastUse)
+    }
+  }
 }
