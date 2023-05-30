@@ -453,7 +453,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1'
     implementation 'ch.acra:acra-http:5.9.7'
     //ACRA needs the following dependency to use a custom report sender
-    compileOnly 'com.google.auto.service:auto-service-annotations:1.1.0'
+    implementation 'com.google.auto.service:auto-service-annotations:1.1.0'
 
     constraints {
         //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
