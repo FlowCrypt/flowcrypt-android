@@ -12,6 +12,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.text.Html
 import android.text.SpannableStringBuilder
 import android.text.format.DateUtils
 import android.transition.TransitionManager
@@ -439,7 +440,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
 
-    msgInfo.inlineSubject?.let { binding?.textViewSubject?.text = it }
+    if ("..." == msgInfo.getSubject()) {
+      msgInfo.inlineSubject?.let {
+        binding?.textViewSubject?.text = Html.fromHtml(it, Html.FROM_HTML_MODE_LEGACY)
+      }
+    }
 
     updatePgpBadges()
     updateMsgView()

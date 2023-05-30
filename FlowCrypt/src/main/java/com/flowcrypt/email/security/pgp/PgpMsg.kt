@@ -892,6 +892,7 @@ object PgpMsg {
           //We need to convert inner MsgBlock(s) to decrypted variants
           val innerMimeMessage =
             MimeMessage(Session.getDefaultInstance(Properties()), ByteArrayInputStream(decrypted))
+          innerMimeMessage.subject?.let { blocks.add(EncryptedSubjectBlock(it)) }
           blocks.addAll(
             extractMsgBlocksFromPart(
               part = innerMimeMessage,
