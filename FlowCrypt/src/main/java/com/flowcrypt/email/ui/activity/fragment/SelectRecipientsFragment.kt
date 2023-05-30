@@ -53,13 +53,13 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
       isDeleteEnabled = false,
       onRecipientActionsListener =
       object : RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
-        override fun onDeleteRecipient(recipientEntity: RecipientEntity) {}
+        override fun onDeleteRecipient(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {}
 
-        override fun onRecipientClick(recipientEntity: RecipientEntity) {
+        override fun onRecipientClick(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(KEY_RECIPIENTS to ArrayList(listOf(recipientEntity)))
+            bundleOf(KEY_RECIPIENTS to ArrayList(listOf(recipientEntityWithPgpMarker.toRecipientEntity())))
           )
         }
       })
@@ -101,13 +101,13 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
           override fun onQueryTextSubmit(query: String?): Boolean {
             searchPattern = query ?: ""
-            recipientsViewModel.filterContacts(searchPattern)
+            recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
             return true
           }
 
           override fun onQueryTextChange(newText: String?): Boolean {
             searchPattern = newText ?: ""
-            recipientsViewModel.filterContacts(searchPattern)
+            recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
             return true
           }
         })
@@ -128,10 +128,10 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
 
   private fun setupRecipientsViewModel() {
     recipientsViewModel.allContactsLiveData.observe(viewLifecycleOwner) {
-      recipientsViewModel.filterContacts(searchPattern)
+      recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
     }
 
-    recipientsViewModel.contactsWithPgpSearchLiveData.observe(viewLifecycleOwner) {
+    recipientsViewModel.contactsWithPgpMarkerSearchLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@SelectRecipientsFragment)
@@ -152,7 +152,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
       }
     }
 
-    recipientsViewModel.filterContacts(searchPattern)
+    recipientsViewModel.filterContacts(onlyWithPgp = true, searchPattern = searchPattern)
   }
 
   companion object {

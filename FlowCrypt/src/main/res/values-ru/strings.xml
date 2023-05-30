@@ -589,4 +589,5 @@
     <string name="key_was_updated">Ключ %1$s обновлен</string>
     <string name="please_provide_passphrase_to_proceed">Пожалуйста, предоставьте ключевую фразу, чтобы продолжить</string>
     <string name="re_fetch_public_key">Получить открытый ключ</string>
+    <string name="show_only_contacts_with_public_keys">Показывать только контакты с публичными ключами</string>
 </resources>
