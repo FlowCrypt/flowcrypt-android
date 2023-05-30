@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAndOrSignedContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttLinkMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.EncryptedSubjectBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockError
@@ -253,6 +254,14 @@ object PgpMsg {
           val openPGPMIMESignedContent = ByteArrayOutputStream().apply {
             contentPart.writeTo(this)
           }.toByteArray()
+
+          val mimeMessage = MimeMessage(
+            Session.getDefaultInstance(Properties()),
+            openPGPMIMESignedContent.inputStream()
+          )
+
+          mimeMessage.subject?.let { blocks.add(EncryptedSubjectBlock(it)) }
+
           val signatureInputStream = signaturePart.inputStream
 
           val detachedSignatureVerificationResult = PgpSignature.verifyDetachedSignature(

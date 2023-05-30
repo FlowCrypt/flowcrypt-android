@@ -154,7 +154,7 @@ android {
             dimension "standard"
             versionNameSuffix "_dev"
             minSdkVersion rootProject.ext.minSdkVersion
-            resConfigs 'en', 'xxhdpi'
+            resourceConfigurations += ['en', 'xxhdpi']
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
         }

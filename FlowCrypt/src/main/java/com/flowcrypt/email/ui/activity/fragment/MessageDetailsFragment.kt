@@ -857,6 +857,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
+    var isEncryptedSubjectUsed = false
 
     for (block in msgInfo?.msgBlocks ?: emptyList()) {
       val layoutInflater = LayoutInflater.from(context)
@@ -905,6 +906,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           } else {
             handleOtherBlock(block, layoutInflater)
           }
+        }
+
+        MsgBlock.Type.ENCRYPTED_SUBJECT -> {
+          // we should skip such blocks here
         }
 
         else -> handleOtherBlock(block, layoutInflater)
