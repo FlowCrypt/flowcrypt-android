@@ -20,7 +20,7 @@
         android:layout_height="@dimen/default_button_height"
         android:layout_marginEnd="@dimen/default_margin_content_small"
         android:orientation="vertical"
-        app:layout_constraintEnd_toStartOf="@+id/iBtDeleteContact"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewPgp"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -34,6 +34,8 @@
             android:textSize="@dimen/default_text_size_big"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/tVEmail"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Den Bondarenko" />
@@ -69,12 +71,21 @@
             tools:text="denbond7@gmail.com" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <ImageView
+        android:id="@+id/imageViewPgp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/default_margin_small"
+        android:contentDescription="@string/pub_key"
+        android:src="@drawable/baseline_key_green_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/iBtDeleteContact"
+        app:layout_constraintTop_toTopOf="@+id/cL" />
+
     <ImageButton
         android:id="@+id/iBtDeleteContact"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/default_margin_content_small"
-        android:layout_marginEnd="@dimen/default_margin_content_small"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/delete"
         android:focusable="false"
