@@ -24,7 +24,7 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.jakarta.mail.hasPgpMessage
+import com.flowcrypt.email.extensions.jakarta.mail.hasPgpThings
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
@@ -295,7 +295,7 @@ object PgpMsg {
             if (isAlternativePartUsed) {
               continue
             } else if (subPart.isPlainText()) {
-              if (subPart.hasPgpMessage()) {
+              if (subPart.hasPgpThings()) {
                 isAlternativePartUsed = true
               } else {
                 //we prefer to use HTML part if there are no PGP things
