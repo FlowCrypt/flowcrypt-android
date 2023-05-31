@@ -183,7 +183,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
         matches(
           Matchers.anyOf(
             withText(msgEntity.subject),
-            withText(incomingMsgInfo.inlineSubject)
+            withText(incomingMsgInfo.inlineSubject?.let { getHtmlString(it) })
           )
         )
       )

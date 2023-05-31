@@ -1,0 +1,108 @@
+{
+  "encryptionType": "ENCRYPTED",
+  "inlineSubject": "\u003cfont color\u003d\u0027#31A217\u0027\u003eEncrypted subject:\u003c/font\u003e Encrypted subject + signed + pub key",
+  "msgBlocks": [
+    {
+      "content": "          \u003c!DOCTYPE html\u003e\n          \u003chtml\u003e\n          \u003chead\u003e\n              \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\"/\u003e\n              \u003cstyle\u003e\n                body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n                body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n                body pre { white-space: pre-wrap !important; }\n                body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n              \u003c/style\u003e\n          \u003c/head\u003e\n          \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock GREEN\" style\u003d\"padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: 1px solid #f0f0f0;border-left: 8px solid #31A217;border-right: none;background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4AAAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJdU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3SlrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQWoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC);\"\u003e\u003chtml\u003e\u003chead\u003e\u003c/head\u003e\u003cbody\u003eThis message contains Encrypted subject + signed + pub key\u003c/body\u003e\u003c/html\u003e\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n          \u003c/html\u003e",
+      "isOpenPGPMimeSigned": false,
+      "type": "plainHtml"
+    },
+    {
+      "content": "Encrypted subject + signed + pub key",
+      "isOpenPGPMimeSigned": false,
+      "type": "encryptedSubject"
+    },
+    {
+      "content": "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n\r\nxjMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZ\r\nceAWUq/NF2RlbmJvbmQ3QGZsb3djcnlwdC50ZXN0wngEExYKACAFAmCLnFgCGwMF\r\nFgIDAQAECwkIBwUVCgkICwIeAQIZAQAKCRDDIInNavjWzm3JAQCgFgCEyD58iEa/\r\nRw/DYNoQNoZC1lhw1bxBiOcIbtkdBgEAsDFZu3TBavOMKI7KW+vfMBHtRVbkMNpv\r\nunaAldoabgPOOARgi5xYEgorBgEEAZdVAQUBAQdAB1/Mrq5JGYim4KqGTSK4OESQ\r\nUwPgK56q0yrkiU9WgyYDAQgHwnUEGBYKAB0FAmCLnFgCGwwFFgIDAQAECwkIBwUV\r\nCgkICwIeAQAKCRDDIInNavjWzjMgAQCU+R1fItqdY6lt9jXUqipmXuqVaEFPwNA8\r\nYJ1rIwDwVQEAyUc8162KWzA2iQB5akwLwNr/pLDDtOWwhLUkrBb3mAc\u003d\r\n\u003dyJxA\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n",
+      "existingRecipientWithPubKeys": {
+        "publicKeys": [],
+        "recipient": {
+          "email": "denbond7@flowcrypt.test",
+          "id": 12,
+          "lastUse": 0
+        }
+      },
+      "isOpenPGPMimeSigned": true,
+      "keyDetails": {
+        "algo": {
+          "algorithm": "EDDSA",
+          "algorithmId": 22,
+          "bits": 256,
+          "curve": "ed25519"
+        },
+        "created": 1619762264000,
+        "ids": [
+          {
+            "fingerprint": "C16428D601CB393789CF61D4C32089CD6AF8D6CE"
+          },
+          {
+            "fingerprint": "3163A3A4818DA155F023F0ACD7A3DEDB65CB1EFB"
+          }
+        ],
+        "isFullyDecrypted": true,
+        "isFullyEncrypted": false,
+        "isRevoked": false,
+        "lastModified": 1619762264000,
+        "primaryKeyId": -4386354521702869298,
+        "public": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: FlowCrypt 1.4.4_dev_144__2023_05_30 Gmail Encryption\nComment: Seamlessly send and receive encrypted email\n\nmDMEYIucWBYJKwYBBAHaRw8BAQdAew+8mzMWyf3+Pfy49qa60uKV6e5os7de4TdZ\nceAWUq+0F2RlbmJvbmQ3QGZsb3djcnlwdC50ZXN0iHgEExYKACAFAmCLnFgCGwMF\nFgIDAQAECwkIBwUVCgkICwIeAQIZAQAKCRDDIInNavjWzm3JAQCgFgCEyD58iEa/\nRw/DYNoQNoZC1lhw1bxBiOcIbtkdBgEAsDFZu3TBavOMKI7KW+vfMBHtRVbkMNpv\nunaAldoabgO4OARgi5xYEgorBgEEAZdVAQUBAQdAB1/Mrq5JGYim4KqGTSK4OESQ\nUwPgK56q0yrkiU9WgyYDAQgHiHUEGBYKAB0FAmCLnFgCGwwFFgIDAQAECwkIBwUV\nCgkICwIeAQAKCRDDIInNavjWzjMgAQCU+R1fItqdY6lt9jXUqipmXuqVaEFPwNA8\nYJ1rIwDwVQEAyUc8162KWzA2iQB5akwLwNr/pLDDtOWwhLUkrBb3mAc\u003d\n\u003dpXF6\n-----END PGP PUBLIC KEY BLOCK-----\n",
+        "usableForEncryption": true,
+        "users": [
+          "denbond7@flowcrypt.test"
+        ]
+      },
+      "type": "publicKey"
+    }
+  ],
+  "msgEntity": {
+    "cc": [],
+    "email": "default@flowcrypt.test",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
+    "from": [
+      {
+        "address": "denbond7@flowcrypt.test",
+        "encodedPersonal": "DenBond7",
+        "personal": "DenBond7"
+      }
+    ],
+    "fromAddress": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
+    "hasAttachments": false,
+    "id": 265,
+    "isDraft": false,
+    "isEncrypted": true,
+    "isNew": false,
+    "isOutboxMsg": false,
+    "isPasswordProtected": false,
+    "isSeen": true,
+    "msgState": "NONE",
+    "receivedDate": 1685518857000,
+    "replyTo": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
+    "replyToAddress": [
+      {
+        "address": "denbond7@flowcrypt.test",
+        "encodedPersonal": "DenBond7",
+        "personal": "DenBond7"
+      }
+    ],
+    "sentDate": 1685518857000,
+    "subject": "...",
+    "to": [
+      {
+        "address": "default@flowcrypt.test"
+      }
+    ],
+    "toAddress": "default@flowcrypt.test",
+    "uid": 53,
+    "uidAsHEX": "35"
+  },
+  "text": "This message contains Encrypted subject + signed + pub key",
+  "verificationResult": {
+    "hasBadSignatures": false,
+    "hasEncryptedParts": true,
+    "hasMixedSignatures": false,
+    "hasSignedParts": false,
+    "hasUnverifiedSignatures": false,
+    "isPartialSigned": false,
+    "keyIdOfSigningKeys": []
+  }
+}

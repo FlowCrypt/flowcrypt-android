@@ -1033,4 +1033,24 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     assertEquals(downloadCompleteLabel, downloadCompleteLabelUiObject2.text)
     device.pressHome()
   }
+
+  @Test
+  fun testEncryptedSubjectOpenPgpMIMESigned() {
+    baseCheck(
+      getMsgInfo(
+        "messages/info/encrypted_subject_openpgp_mime_signed.json",
+        "messages/mime/encrypted_subject_openpgp_mime_signed.txt"
+      )
+    )
+  }
+
+  @Test
+  fun testEncryptedSubjectOpenPgpMIMENotSigned() {
+    baseCheck(
+      getMsgInfo(
+        "messages/info/encrypted_subject_openpgp_mime_not_signed.json",
+        "messages/mime/encrypted_subject_openpgp_mime_not_signed.txt"
+      )
+    )
+  }
 }
