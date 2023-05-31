@@ -51,5 +51,5 @@ fun Part.isOpenPGPMimeSigned(): Boolean {
 
 fun Part.hasPgpThings(): Boolean {
   val detectedBlocks = RawBlockParser.detectBlocks(this)
-  return detectedBlocks.any { it.type in RawBlockParser.REPLACEABLE_BLOCK_TYPES }
+  return detectedBlocks.any { it.type in RawBlockParser.PGP_BLOCK_TYPES }
 }
