@@ -27,7 +27,7 @@ object RawBlockParser {
     option = RegexOption.IGNORE_CASE
   )
 
-  val REPLACEABLE_BLOCK_TYPES = setOf(
+  val PGP_BLOCK_TYPES = setOf(
     RawBlockType.PGP_PUBLIC_KEY,
     RawBlockType.PGP_PRIVATE_KEY,
     RawBlockType.PGP_CLEARSIGN_MSG,

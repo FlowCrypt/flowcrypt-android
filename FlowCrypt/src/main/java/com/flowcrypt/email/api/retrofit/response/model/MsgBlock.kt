@@ -74,7 +74,10 @@ interface MsgBlock : Parcelable {
     VERIFIED_MSG,
 
     @SerializedName("decryptedAndOrSignedContent")
-    DECRYPTED_AND_OR_SIGNED_CONTENT;
+    DECRYPTED_AND_OR_SIGNED_CONTENT,
+
+    @SerializedName("encryptedSubject")
+    ENCRYPTED_SUBJECT;
 
     fun isContentBlockType(): Boolean = CONTENT_BLOCK_TYPES.contains(this)
 

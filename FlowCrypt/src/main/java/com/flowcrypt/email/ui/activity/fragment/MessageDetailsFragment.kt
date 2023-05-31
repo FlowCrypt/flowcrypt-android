@@ -12,6 +12,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.text.Html
 import android.text.SpannableStringBuilder
 import android.text.format.DateUtils
 import android.transition.TransitionManager
@@ -439,7 +440,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
 
-    msgInfo.inlineSubject?.let { binding?.textViewSubject?.text = it }
+    if ("..." == msgInfo.getSubject()) {
+      msgInfo.inlineSubject?.let {
+        binding?.textViewSubject?.text = Html.fromHtml(it, Html.FROM_HTML_MODE_LEGACY)
+      }
+    }
 
     updatePgpBadges()
     updateMsgView()
@@ -740,7 +745,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     } else {
       binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
     }
-    binding?.textViewSubject?.text = subject
+    if (binding?.textViewSubject?.text.isNullOrEmpty()) {
+      binding?.textViewSubject?.text = subject
+    }
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
       binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
@@ -906,6 +913,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             handleOtherBlock(block, layoutInflater)
           }
         }
+
+        MsgBlock.Type.ENCRYPTED_SUBJECT -> {}// we should skip such blocks here
 
         else -> handleOtherBlock(block, layoutInflater)
       }
@@ -1204,14 +1213,22 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       PgpDecryptAndOrVerify.DecryptionErrorType.OTHER -> {
-        val otherErrorMsg =
-          getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
-              "\n\n" + getString(
+        val otherErrorMsg = when (decryptError.details.message) {
+          "Symmetric-Key algorithm TRIPLE_DES is not acceptable for message decryption." -> {
+            getString(R.string.message_was_not_decrypted_due_to_triple_des, "TRIPLE_DES")
+          }
+
+          else -> getString(
+            R.string.decrypt_error_could_not_open_message,
+            getString(R.string.app_name)
+          ) + "\n\n" + getString(
             R.string.decrypt_error_please_write_me,
             getString(R.string.support_email)
           ) + "\n\n" + decryptError.details.type +
               ": " + decryptError.details.message +
               "\n\n" + decryptError.details.stack
+        }
+
         return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 

@@ -197,7 +197,11 @@ class MsgDetailsViewModel(
                 val msgInfo = IncomingMessageInfo(
                   msgEntity = mediatorMsgLiveData.value ?: messageEntity,
                   text = processedMimeMessageResult.text,
-                  //subject = parseDecryptedMsgResult.subject,
+                  inlineSubject = processedMimeMessageResult.blocks.firstOrNull {
+                    it.type == MsgBlock.Type.ENCRYPTED_SUBJECT
+                  }?.content?.let {
+                    context.getString(R.string.encrypted_subject_template, it)
+                  },
                   msgBlocks = processedMimeMessageResult.blocks,
                   encryptionType = if (processedMimeMessageResult.verificationResult.hasEncryptedParts) {
                     MessageEncryptionType.ENCRYPTED

@@ -590,5 +590,7 @@
     <string name="key_was_updated">Ключ %1$s оновлено</string>
     <string name="please_provide_passphrase_to_proceed">Щоб продовжити, будь ласка введіть парольну фразу</string>
     <string name="re_fetch_public_key">Отримати відкритий ключ</string>
+    <string name="message_was_not_decrypted_due_to_triple_des">Повідомлення не було розшифровано, оскільки воно використовує слабкий алгоритм шифрування %1$s</string>
     <string name="show_only_contacts_with_public_keys">Показувати лише контакти з відкритими ключами</string>
+    <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Зашифрована тема:</font> %1$s]]></string>
 </resources>

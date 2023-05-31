@@ -49,7 +49,7 @@ fun Part.isOpenPGPMimeSigned(): Boolean {
     ?.lowercase() == "application/pgp-signature"
 }
 
-fun Part.hasPgpMessage(): Boolean {
+fun Part.hasPgpThings(): Boolean {
   val detectedBlocks = RawBlockParser.detectBlocks(this)
-  return detectedBlocks.any { it.type == RawBlockParser.RawBlockType.PGP_MSG }
+  return detectedBlocks.any { it.type in RawBlockParser.PGP_BLOCK_TYPES }
 }

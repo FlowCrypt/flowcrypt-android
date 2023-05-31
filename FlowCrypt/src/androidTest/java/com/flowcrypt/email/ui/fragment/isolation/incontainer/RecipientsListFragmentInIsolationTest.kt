@@ -57,6 +57,8 @@ class RecipientsListFragmentInIsolationTest : BaseRecipientsListTest() {
 
   @Test
   fun testEmptyList() {
+    unregisterCountingIdlingResource()
+    Thread.sleep(2000)
     onView(withId(R.id.rVRecipients))
       .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))
     onView(withId(R.id.emptyView))

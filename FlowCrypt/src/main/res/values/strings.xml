@@ -599,5 +599,7 @@
     <string name="key_was_updated">Key %1$s was updated</string>
     <string name="please_provide_passphrase_to_proceed">Please provide a pass phrase to proceed</string>
     <string name="re_fetch_public_key">Re-fetch Public Key</string>
+    <string name="message_was_not_decrypted_due_to_triple_des">Message was not decrypted because it uses a weak encryption algorithm %1$s</string>
     <string name="show_only_contacts_with_public_keys">Show only contacts with public keys</string>
+    <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Encrypted subject:</font> %1$s]]></string>
 </resources>

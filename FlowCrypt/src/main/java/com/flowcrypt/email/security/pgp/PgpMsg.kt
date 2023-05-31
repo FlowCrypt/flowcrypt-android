@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAndOrSignedContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttLinkMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.EncryptedSubjectBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockError
@@ -24,7 +25,7 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.jakarta.mail.hasPgpMessage
+import com.flowcrypt.email.extensions.jakarta.mail.hasPgpThings
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
@@ -253,6 +254,14 @@ object PgpMsg {
           val openPGPMIMESignedContent = ByteArrayOutputStream().apply {
             contentPart.writeTo(this)
           }.toByteArray()
+
+          val mimeMessage = MimeMessage(
+            Session.getDefaultInstance(Properties()),
+            openPGPMIMESignedContent.inputStream()
+          )
+
+          mimeMessage.subject?.let { blocks.add(EncryptedSubjectBlock(it)) }
+
           val signatureInputStream = signaturePart.inputStream
 
           val detachedSignatureVerificationResult = PgpSignature.verifyDetachedSignature(
@@ -295,7 +304,7 @@ object PgpMsg {
             if (isAlternativePartUsed) {
               continue
             } else if (subPart.isPlainText()) {
-              if (subPart.hasPgpMessage()) {
+              if (subPart.hasPgpThings()) {
                 isAlternativePartUsed = true
               } else {
                 //we prefer to use HTML part if there are no PGP things
@@ -796,7 +805,9 @@ object PgpMsg {
     val fmtRes = prepareFormattedContentBlock(contentBlocks)
     resultBlocks.add(0, fmtRes.contentBlock)
 
-    if (signedBlockCount > 0 && signedBlockCount != msgBlocks.size) {
+    if (signedBlockCount > 0 &&
+      signedBlockCount != msgBlocks.filter { it.type != MsgBlock.Type.ENCRYPTED_SUBJECT }.size
+    ) {
       isPartialSigned = true
     }
 
@@ -883,6 +894,7 @@ object PgpMsg {
           //We need to convert inner MsgBlock(s) to decrypted variants
           val innerMimeMessage =
             MimeMessage(Session.getDefaultInstance(Properties()), ByteArrayInputStream(decrypted))
+          innerMimeMessage.subject?.let { blocks.add(EncryptedSubjectBlock(it)) }
           blocks.addAll(
             extractMsgBlocksFromPart(
               part = innerMimeMessage,
