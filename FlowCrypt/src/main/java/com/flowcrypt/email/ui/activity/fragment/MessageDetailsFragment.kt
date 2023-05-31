@@ -745,7 +745,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     } else {
       binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
     }
-    binding?.textViewSubject?.text = subject
+    if (binding?.textViewSubject?.text.isNullOrEmpty()) {
+      binding?.textViewSubject?.text = subject
+    }
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
       binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
@@ -862,7 +864,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
-    var isEncryptedSubjectUsed = false
 
     for (block in msgInfo?.msgBlocks ?: emptyList()) {
       val layoutInflater = LayoutInflater.from(context)
@@ -913,9 +914,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           }
         }
 
-        MsgBlock.Type.ENCRYPTED_SUBJECT -> {
-          // we should skip such blocks here
-        }
+        MsgBlock.Type.ENCRYPTED_SUBJECT -> {}// we should skip such blocks here
 
         else -> handleOtherBlock(block, layoutInflater)
       }

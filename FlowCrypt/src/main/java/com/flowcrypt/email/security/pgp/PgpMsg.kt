@@ -805,7 +805,9 @@ object PgpMsg {
     val fmtRes = prepareFormattedContentBlock(contentBlocks)
     resultBlocks.add(0, fmtRes.contentBlock)
 
-    if (signedBlockCount > 0 && signedBlockCount != msgBlocks.size) {
+    if (signedBlockCount > 0 &&
+      signedBlockCount != msgBlocks.filter { it.type != MsgBlock.Type.ENCRYPTED_SUBJECT }.size
+    ) {
       isPartialSigned = true
     }
 
