@@ -98,15 +98,16 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     registerAllIdlingResources()
   }
 
-  protected fun testStandardMsgPlaintextInternal() {
-    baseCheck(
-      getMsgInfo(
-        "messages/info/standard_msg_info_plaintext.json",
-        "messages/mime/standard_msg_info_plaintext.txt"
-      )
+  protected fun testStandardMsgPlaintextInternal(): IncomingMessageInfo? {
+    val incomingMessageInfo = getMsgInfo(
+      "messages/info/standard_msg_info_plaintext.json",
+      "messages/mime/standard_msg_info_plaintext.txt"
     )
+    baseCheck(incomingMessageInfo)
     onView(withId(R.id.tVTo))
       .check(matches(withText(getResString(R.string.to_receiver, getResString(R.string.me)))))
+
+    return incomingMessageInfo
   }
 
   protected fun matchReplyButtons(msgEntity: MessageEntity) {
@@ -250,8 +251,8 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     matchReplyButtons(details)
   }
 
-  protected fun testTopReplyAction(title: String) {
-    testStandardMsgPlaintextInternal()
+  protected fun testTopReplyAction(title: String): IncomingMessageInfo? {
+    val incomingMessageInfo = testStandardMsgPlaintextInternal()
 
     onView(withId(R.id.imageButtonMoreOptions))
       .check(matches(isDisplayed()))
@@ -265,6 +266,8 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
 
     onView(withId(R.id.toolbar))
       .check(matches(withToolBarText(title)))
+
+    return incomingMessageInfo
   }
 
   protected fun withHeaderInfo(header: MsgDetailsRecyclerViewAdapter.Header):
