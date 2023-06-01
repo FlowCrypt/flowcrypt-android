@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
@@ -111,25 +112,30 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   fun testReplyButton() {
-    testStandardMsgPlaintextInternal()
+    val incomingMessageInfo = testStandardMsgPlaintextInternal()
     onView(withId(R.id.layoutReplyButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
+
+    checkQuotedFunctionality(incomingMessageInfo)
   }
 
   @Test
   fun testTopReplyButton() {
-    testTopReplyAction(getResString(R.string.reply))
+    val incomingMessageInfo = testTopReplyAction(getResString(R.string.reply))
+    checkQuotedFunctionality(incomingMessageInfo)
   }
 
   @Test
   fun testReplyAllButton() {
-    testStandardMsgPlaintextInternal()
+    val incomingMessageInfo = testStandardMsgPlaintextInternal()
     onView(withId(R.id.layoutReplyAllButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
+
+    checkQuotedFunctionality(incomingMessageInfo)
   }
 
   @Test
@@ -1052,5 +1058,15 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/mime/encrypted_subject_openpgp_mime_not_signed.txt"
       )
     )
+  }
+
+  private fun checkQuotedFunctionality(incomingMessageInfo: IncomingMessageInfo?) {
+    onView(withId(R.id.iBShowQuotedText))
+      .check(matches(isDisplayed()))
+      .perform(scrollTo(), click())
+
+    onView(withId(R.id.editTextEmailMessage))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(EmailUtil.genReplyContent(incomingMessageInfo))))
   }
 }
