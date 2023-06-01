@@ -118,13 +118,13 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
 
-    checkQuotedFunctionality(incomingMessageInfo)
+    checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
   fun testTopReplyButton() {
     val incomingMessageInfo = testTopReplyAction(getResString(R.string.reply))
-    checkQuotedFunctionality(incomingMessageInfo)
+    checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
@@ -135,7 +135,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
 
-    checkQuotedFunctionality(incomingMessageInfo)
+    checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
@@ -1060,7 +1060,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     )
   }
 
-  private fun checkQuotedFunctionality(incomingMessageInfo: IncomingMessageInfo?) {
+  private fun checkQuotesFunctionality(incomingMessageInfo: IncomingMessageInfo?) {
     onView(withId(R.id.iBShowQuotedText))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
