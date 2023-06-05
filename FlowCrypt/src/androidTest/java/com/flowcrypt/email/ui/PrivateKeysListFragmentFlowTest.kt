@@ -85,7 +85,7 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
   }
 
   @Test
-  fun testImportFromFiledUnprotectedKey() {
+  fun testImportFromFileUnprotectedKey() {
     testImportUnprotectedPrivateKey { pgpKeyDetails ->
       val fileWithPublicKey: File = TestGeneralUtil.createFileWithTextContent(
         TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_prv.asc",
