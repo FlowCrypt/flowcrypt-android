@@ -319,8 +319,7 @@ class ImportAdditionalPrivateKeysFragment :
         }
 
         Result.Status.SUCCESS -> {
-          val pgpKeyDetails = it.data?.firstOrNull()
-          if (pgpKeyDetails != null) {
+          it.data?.firstOrNull()?.let { pgpKeyDetails ->
             tryToUnlockKeys(listOf(pgpKeyDetails.copy(tempPassphrase = null)))
           }
 

@@ -602,6 +602,6 @@
     <string name="message_was_not_decrypted_due_to_triple_des">Message was not decrypted because it uses a weak encryption algorithm %1$s</string>
     <string name="show_only_contacts_with_public_keys">Show only contacts with public keys</string>
     <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Encrypted subject:</font> %1$s]]></string>
-    <string name="please_pay_attention_some_keys_were_skipped">Please pay attention some keys were skipped</string>
+    <string name="please_pay_attention_some_keys_were_skipped">Please note that some keys were skipped</string>
     <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">This key is unprotected. Please protect it with a pass phrase before import.</string>
 </resources>
