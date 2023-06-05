@@ -593,4 +593,6 @@
     <string name="message_was_not_decrypted_due_to_triple_des">Повідомлення не було розшифровано, оскільки воно використовує слабкий алгоритм шифрування %1$s</string>
     <string name="show_only_contacts_with_public_keys">Показувати лише контакти з відкритими ключами</string>
     <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Зашифрована тема:</font> %1$s]]></string>
+    <string name="please_pay_attention_some_keys_were_skipped">Зверніть увагу, що деякі ключі були пропущені</string>
+    <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">Цей ключ незахищений. Перед імпортом захистіть його ключовою фразою.</string>
 </resources>
