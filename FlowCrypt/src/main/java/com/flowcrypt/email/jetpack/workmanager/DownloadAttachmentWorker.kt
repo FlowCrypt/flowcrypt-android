@@ -35,18 +35,20 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import java.io.File
+import java.io.FileInputStream
 import java.io.InputStream
 
 /**
@@ -65,27 +67,35 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
     val attachmentEntity = roomDatabase.attachmentDao().getAttachment(email, folder, uid, path)
       ?: return@withContext Result.failure()
 
-    return@withContext DownloadAttachmentTask(
-      context = applicationContext,
-      att = attachmentEntity.toAttInfo()
+    return@withContext AttDownloadRunnable(
+      applicationContext,
+      roomDatabase,
+      attachmentEntity.toAttInfo()
     ).run()
   }
 
-  private class DownloadAttachmentTask(
+  private class AttDownloadRunnable(
     private val context: Context,
+    private val roomDatabase: FlowCryptRoomDatabase,
     private val att: AttachmentInfo
   ) {
-    private val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-    private val notificationManager = AttachmentNotificationManager(context)
-    private var finalFileName = att.getSafeName()
+    val notificationManager = AttachmentNotificationManager(context)
+    var finalFileName = att.getSafeName()
     private var attTempFile: File = File.createTempFile("tmp", null, context.externalCacheDir)
 
-    suspend fun run(): Result = withContext(Dispatchers.IO) {
+    fun run(): Result {
+      if (GeneralUtil.isDebugBuild()) {
+        //need to think about
+        /*Thread.currentThread().name =
+          AttDownloadRunnable::class.java.simpleName + "|" + finalFileName*/
+      }
+
+
       try {
         val email = att.email
         if (email.isNullOrEmpty()) {
           notificationManager.loadingCanceledByUser(att.copy(name = finalFileName))
-          return@withContext Result.failure()
+          return Result.failure()
         }
 
         val account = AccountViewModel.getAccountEntityWithDecryptedInfo(
@@ -93,16 +103,16 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
         )
         if (account == null) {
           notificationManager.loadingCanceledByUser(att.copy(name = finalFileName))
-          return@withContext Result.failure()
+          return Result.failure()
         }
 
         if (att.uri != null) {
-          context.contentResolver.openInputStream(att.uri)?.use { inputStream ->
-            attTempFile.outputStream().use { fileOut ->
-              inputStream.copyTo(fileOut)
-            }
+          val inputStream = context.contentResolver.openInputStream(att.uri)
+          if (inputStream != null) {
+            FileUtils.copyInputStreamToFile(inputStream, attTempFile)
             attTempFile = decryptFileIfNeeded(context, attTempFile)
-            if (!isActive) {
+            //need to think
+            if (!Thread.currentThread().isInterrupted) {
               val uri = storeFileToSharedFolder(context, attTempFile)
               notificationManager.downloadCompleted(
                 context = context,
@@ -113,7 +123,7 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
               LogsUtil.d(TAG, att.getSafeName() + " is downloaded")
             }
 
-            return@withContext Result.success()
+            return Result.success()
           }
         }
 
@@ -125,10 +135,10 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
                 ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
 
               GmailApiHelper.getAttInputStream(
-                context = context,
-                accountEntity = account,
-                msgId = att.uid.toHex(),
-                attId = attPart.body.attachmentId
+                context,
+                account,
+                att.uid.toHex(),
+                attPart.body.attachmentId
               ).use { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
@@ -146,7 +156,7 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
               ?: if (roomDatabase.accountDao().getAccount(email) == null) {
                 notificationManager.loadingCanceledByUser(att.copy(name = finalFileName))
                 store.close()
-                return@withContext Result.failure()
+                return Result.failure()
               } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
 
             store.getFolder(label.name).use { folder ->
@@ -155,8 +165,7 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
                 ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
 
               ImapProtocolUtil.getAttPartByPath(
-                part = msg,
-                neededPath = att.path
+                msg, neededPath = this.att.path
               )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
@@ -170,21 +179,21 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
         e.printStackTrace()
         ExceptionUtil.handleError(e)
         notificationManager.errorHappened(context, att.copy(name = finalFileName), e)
-        return@withContext Result.failure()
+        return Result.failure()
       } finally {
         deleteTempFile(attTempFile)
       }
 
-      return@withContext Result.success()
+      return Result.success()
     }
 
-    private suspend fun handleAttachmentInputStream(
+    private fun handleAttachmentInputStream(
       inputStream: InputStream,
       useContentApp: Boolean = false
-    ) = withContext(Dispatchers.IO) {
+    ) {
       downloadFile(attTempFile, inputStream)
 
-      if (!isActive) {
+      if (Thread.currentThread().isInterrupted) {
         notificationManager.loadingCanceledByUser(att.copy(name = finalFileName))
       } else {
         attTempFile = decryptFileIfNeeded(context, attTempFile)
@@ -273,19 +282,16 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
 
       finalFileName = sharedFile.name
       val srcInputStream = attFile.inputStream()
-      val destOutputStream = sharedFile.outputStream()
+      val destOutputStream = FileUtils.openOutputStream(sharedFile)
       srcInputStream.use { srcStream ->
         destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
       }
       return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
     }
 
-    private suspend fun downloadFile(
-      file: File,
-      inputStream: InputStream
-    ) = withContext(Dispatchers.IO) {
+    private fun downloadFile(attFile: File, inputStream: InputStream) {
       try {
-        file.outputStream().use { outputStream ->
+        FileUtils.openOutputStream(attFile).use { outputStream ->
           val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
           var count = 0.0
           val size = att.encodedSize.toDouble()
@@ -296,7 +302,7 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
           val startTime: Long = System.currentTimeMillis()
           var lastUpdateTime = startTime
           updateProgress(currentPercentage, 0)
-          while (isActive) {
+          while (true) {
             numberOfReadBytes = inputStream.read(buffer)
 
             if (IOUtils.EOF == numberOfReadBytes) {
@@ -334,18 +340,16 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
      * @param file    The downloaded file which can be encrypted.
      * @return The decrypted or the original file.
      */
-    private suspend fun decryptFileIfNeeded(
-      context: Context, file: File
-    ): File = withContext(Dispatchers.IO) {
+    private fun decryptFileIfNeeded(context: Context, file: File): File {
       if (!file.exists()) {
         throw NullPointerException("Error. The file is missing")
       }
 
       if (!SecurityUtils.isPossiblyEncryptedData(finalFileName)) {
-        return@withContext file
+        return file
       }
 
-      file.inputStream().use { inputStream ->
+      FileInputStream(file).use { inputStream ->
         val decryptedFile = File.createTempFile("tmp", null, context.externalCacheDir)
         val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()
         val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(pgpSecretKeyRings)
@@ -363,7 +367,7 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
             messageMetadata.filename ?: ""
           }
 
-          return@withContext decryptedFile
+          return decryptedFile
         } catch (e: Exception) {
           deleteTempFile(decryptedFile)
           throw e
