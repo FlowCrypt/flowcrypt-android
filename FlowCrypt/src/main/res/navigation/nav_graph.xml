@@ -522,6 +522,9 @@
         <action
             android:id="@+id/action_importAdditionalPrivateKeysFragment_to_checkKeysFragment"
             app:destination="@id/checkKeysFragment" />
+        <action
+            android:id="@+id/action_importAdditionalPrivateKeysFragment_to_checkPassphraseStrengthFragment"
+            app:destination="@id/checkPassphraseStrengthFragment" />
     </fragment>
 
     <fragment
