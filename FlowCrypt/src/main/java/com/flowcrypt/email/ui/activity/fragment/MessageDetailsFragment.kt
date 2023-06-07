@@ -86,7 +86,6 @@ import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.jetpack.workmanager.DownloadAttachmentWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
@@ -1634,8 +1633,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               )
           )
         } else {
-          DownloadAttachmentWorker.enqueue(requireContext(), attInfo)
-          //context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+          context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
         }
       }
     }
