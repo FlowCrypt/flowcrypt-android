@@ -16,6 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -41,6 +42,7 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
@@ -65,10 +67,23 @@ class DownloadAttachmentWorker(context: Context, params: WorkerParameters) :
     val attachmentEntity = roomDatabase.attachmentDao().getAttachment(email, folder, uid, path)
       ?: return@withContext Result.failure()
 
+    val attachmentInfo = attachmentEntity.toAttInfo()
+    val notificationInfo = AttachmentNotificationManager(applicationContext)
+      .attachmentAddedToLoadQueue(applicationContext, attachmentInfo)
+    setForeground(ForegroundInfo(notificationInfo.first, notificationInfo.second))
+
+    do {
+      delay(100)
+    } while (isActive && !isNewWorkerAllowed())
+
     return@withContext DownloadAttachmentTask(
       context = applicationContext,
       att = attachmentEntity.toAttInfo()
     ).run()
+  }
+
+  private fun isNewWorkerAllowed(): Boolean {
+    return true
   }
 
   private class DownloadAttachmentTask(

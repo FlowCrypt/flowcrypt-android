@@ -35,13 +35,10 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
   override val groupName: String = GROUP_NAME_ATTACHMENTS
   override val groupId: Int = NOTIFICATIONS_GROUP_ATTACHMENTS
 
-  /**
-   * Show a [android.app.Notification] which notify that a new attachment was added to the loading queue.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param attInfo [AttachmentInfo] object which contains a detail information about an attachment.
-   */
-  fun attachmentAddedToLoadQueue(context: Context, attInfo: AttachmentInfo) {
+  fun prepareNotificationInfo(
+    context: Context,
+    attInfo: AttachmentInfo
+  ): Pair<Int, Notification> {
     val builder = genDefBuilder(context, attInfo)
     builder.setProgress(0, 0, true)
       .addAction(genCancelDownloadAction(context, attInfo))
@@ -49,8 +46,30 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
       .setGroup(GROUP_NAME_ATTACHMENTS)
       .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
-    notify(attInfo.id, attInfo.uid.toInt(), builder.build())
+    val notification = builder.build()
+  }
+
+  /**
+   * Show a [android.app.Notification] which notify that a new attachment was added to the loading queue.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param attInfo [AttachmentInfo] object which contains a detail information about an attachment.
+   */
+  fun attachmentAddedToLoadQueue(
+    context: Context,
+    attInfo: AttachmentInfo
+  ): Pair<Int, Notification> {
+    val builder = genDefBuilder(context, attInfo)
+    builder.setProgress(0, 0, true)
+      .addAction(genCancelDownloadAction(context, attInfo))
+      .setOnlyAlertOnce(true)
+      .setGroup(GROUP_NAME_ATTACHMENTS)
+      .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
+
+    val notification = builder.build()
+    notify(attInfo.id, attInfo.uid.toInt(), notification)
     prepareAndShowNotificationsGroup(context, attInfo, true)
+    return Pair(attInfo.uid.toInt(), notification)
   }
 
   /**
