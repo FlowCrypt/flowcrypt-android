@@ -8,10 +8,14 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.Manifest
 import android.accounts.AuthenticatorException
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.text.Html
 import android.text.SpannableStringBuilder
 import android.text.format.DateUtils
@@ -38,6 +42,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -123,6 +128,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.internet.InternetAddress
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.apache.commons.io.FilenameUtils
 import java.nio.charset.StandardCharsets
 
@@ -243,12 +250,33 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var isMoveToInboxActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
+  private var progressJob: Job? = null
+
+  private val downloadAttachmentsServiceConnection = object : ServiceConnection {
+    override fun onServiceConnected(className: ComponentName, service: IBinder) {
+      val binder = service as AttachmentDownloadManagerService.LocalBinder
+      val attachmentDownloadManagerService = binder.getService()
+
+      progressJob = lifecycleScope.launch {
+        attachmentDownloadManagerService.attachmentDownloadProgressStateFlow.collect { map ->
+          handleLoadingProgress(map)
+        }
+      }
+    }
+
+    override fun onServiceDisconnected(arg0: ComponentName) {}
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     subscribeToDownloadAttachmentViaDialog()
     subscribeToImportingAdditionalPrivateKeys()
     updateActionsVisibility(args.localFolder, null)
+  }
+
+  override fun onStart() {
+    super.onStart()
+    bindToAttachmentDownloadManagerService()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -260,6 +288,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     collectReVerifySignaturesStateFlow()
     subscribeToTwoWayDialog()
     subscribeToChoosePublicKeyDialogFragment()
+  }
+
+  override fun onStop() {
+    super.onStop()
+    context?.unbindService(downloadAttachmentsServiceConnection)
+    progressJob?.cancel()
   }
 
   override fun onDestroy() {
@@ -1725,6 +1759,38 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       )
       if (keys?.isNotEmpty() == true) {
         toast(R.string.key_successfully_imported)
+      }
+    }
+  }
+
+  private fun bindToAttachmentDownloadManagerService() {
+    Intent(requireContext(), AttachmentDownloadManagerService::class.java).also { intent ->
+      context?.bindService(intent, downloadAttachmentsServiceConnection, Context.BIND_AUTO_CREATE)
+    }
+  }
+
+  private fun handleLoadingProgress(
+    map: Map<String, AttachmentDownloadManagerService.DownloadProgress>
+  ) {
+    val toBeUpdated =
+      mutableMapOf<String, AttachmentDownloadManagerService.DownloadProgress>()
+    val existingMap = attachmentsRecyclerViewAdapter.progressMap
+    map.forEach { (key, value) ->
+      val existingProgress = existingMap[key]
+      if (existingProgress != null && existingProgress != value) {
+        toBeUpdated[key] = value
+      }
+    }
+
+    attachmentsRecyclerViewAdapter.progressMap.putAll(map)
+    val currentList = attachmentsRecyclerViewAdapter.currentList
+    toBeUpdated.forEach { (key, _) ->
+      val attachmentInfo = currentList.firstOrNull { it.uniqueStringId == key }
+      if (attachmentInfo != null) {
+        val position = currentList.indexOf(attachmentInfo)
+        if (position != -1) {
+          attachmentsRecyclerViewAdapter.notifyItemChanged(position)
+        }
       }
     }
   }
