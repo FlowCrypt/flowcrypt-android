@@ -69,7 +69,7 @@ To be able to run the app on an emulator please follow these steps:
 
 ### Install and run an emulator
 
-1\. Run AVD Manager from **Tools** &#10153; **AVD Manager** or click on the highlighted icon:
+1\. Run AVD Manager from **Tools** &#10140; **AVD Manager** or click on the highlighted icon:
 ![image](https://user-images.githubusercontent.com/2863246/136424474-3de87e4d-ffac-49d6-82e3-ec9831399721.png)
 2\. Click on `Create Virtual Device`:
 ![image](https://user-images.githubusercontent.com/2863246/136425173-78ee0834-242d-48a6-8ff0-ec40cc9f9d6a.png)
@@ -94,7 +94,7 @@ To be able to run the app on an emulator please follow these steps:
 ![image](https://user-images.githubusercontent.com/2863246/136431329-2b850d9f-6dc3-4849-817c-86ffcc85ec17.png)
 2\. Then we should check that our emulator is selected:
 ![image](https://user-images.githubusercontent.com/2863246/136431790-bd6fd50d-db0f-4a95-bffb-d3bd92e574b3.png)
-3\. Now we can run the app via `Run` -> `Run(Alt+Shift+F10)` or click on the Run button:
+3\. Now we can run the app via **Run** -> **Run(Alt+Shift+F10)** or click on the Run button:
 ![image](https://user-images.githubusercontent.com/2863246/136432060-088641d6-2bc5-44c0-bc58-80c50a49602e.png)
 4\. Then, we'll see the app on the emulator in a few minutes(it depends on the hardware):
 ![image](https://user-images.githubusercontent.com/2863246/136433066-d98cd03b-9db0-47a6-9ac8-7d21d347b6ea.png)
