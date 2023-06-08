@@ -1,6 +1,8 @@
 # FlowCrypt Android App (Encrypt email with PGP)
 
-Download on your Android device from the [FlowCrypt Downloads](https://flowcrypt.com/download) page.
+| &#8678; Prerequisites                                                                                                 |
+|:----------------------------------------------------------------------------------------------------------------------|
+| Download the FlowCrypt app on your Android device from the [FlowCrypt Downloads](https://flowcrypt.com/download) page.
 
 ![Build Status](https://flowcrypt.semaphoreci.com/badges/flowcrypt-android.svg?key=3683eef1-6121-4c12-bcf7-031d0b4a36eb)
 
