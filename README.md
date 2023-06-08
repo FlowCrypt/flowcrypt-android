@@ -69,7 +69,7 @@ To be able to run the app on an emulator please follow these steps:
 
 ### Install and run an emulator
 
-1\. Run AVD Manager from `Tools` &#8680; `AVD Manager` or click on the highlighted icon:
+1\. Run AVD Manager from `Tools` &#10140; `AVD Manager` or click on the highlighted icon:
 ![image](https://user-images.githubusercontent.com/2863246/136424474-3de87e4d-ffac-49d6-82e3-ec9831399721.png)
 2\. Click on `Create Virtual Device`:
 ![image](https://user-images.githubusercontent.com/2863246/136425173-78ee0834-242d-48a6-8ff0-ec40cc9f9d6a.png)
