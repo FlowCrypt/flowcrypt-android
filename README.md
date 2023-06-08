@@ -8,12 +8,14 @@ Download on your Android device from the [FlowCrypt Downloads](https://flowcrypt
 
 This guide follows Google's recommendations for [testing apps on Android](https://developer.android.com/training/testing). Every scenario described in this section has been tested on Ubuntu. There are JUnit and Instrumentation tests. To be able to run tests locally, you should set up your environment.
 
-**Please follow these setup instructions:**
+### Device setup instructions
+
+Please follow these steps to setup your virtual or physical device:
 
 - [Set up your test environment](https://developer.android.com/training/testing/espresso/setup#set-up-environment).
 - Some of the tests use [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver). We run a local mock web server via [FlowCryptMockWebServerRule](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/rules/FlowCryptMockWebServerRule.kt). It uses [TestConstants.MOCK_WEB_SERVER_PORT](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/TestConstants.kt#L19) as a port. Unfortunately, the Android system doesn't allow us to use the `HTTPS 433` port by default
 to run a web server on the `localhost (127.0.0.1)`. That's why we have to run a mock web server on another port (for example, `1212`) and route all traffic from `127.0.0.1:433` to `127.0.0.1:1212`. For that purpose, you can use the [script/ci-wait-for-emulator.sh](https://github.com/FlowCrypt/flowcrypt-android/blob/master/script/ci-wait-for-emulator.sh#L13) script.
-- Also, the test environment should handle all requests to `*.flowcrypt.test`. All traffic to `*.flowcrypt.test` should be routed to `localhost(127.0.0.1)`. To do this, a DNS server can be used. For example:
+- Additionally, the test environment should handle all requests to `*.flowcrypt.test`. All traffic to `*.flowcrypt.test` should be routed to `localhost(127.0.0.1)`. To do this, a DNS server can be used. For example:
 
 ```bash
 1. sudo apt install -y dnsmasq resolvconf
@@ -24,38 +26,41 @@ to run a web server on the `localhost (127.0.0.1)`. That's why we have to run a 
 6. sudo systemctl restart dnsmasq
 ```
 
+### Test types
+
 We have two types of tests:
 
 - Independent tests which don't require any additional dependencies.
 - Tests that depend on an email server. Such tests are marked with the `@DependsOnMailServer` annotation.
 
-Additionally, worth to mention that we have separate tests for the **consumer** and **enterprise** versions. Enterprise tests are marked with the `@EnterpriseTest` annotation. These tests use the [Gmail API](https://developers.google.com/gmail/api/guides) and are independent of the mail server.
+Additionally, we have separate tests for the **consumer** and **enterprise** versions. Enterprise tests are marked with the `@EnterpriseTest` annotation. These tests use the [Gmail API](https://developers.google.com/gmail/api/guides) and are independent of the mail server.
 
-We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To run tests that depend on an email server we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server), which extends [docker-mailserver](https://github.com/tomav/docker-mailserver). This image has predefined settings for local testing. It has accounts and messages which we need for
-testing. You can investigate the [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver) folder to see more details. To be able to run tests that depend on an email server please install `docker-compose` with [these instructions](https://docs.docker.com/compose/install/).
+We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To run tests that depend on an email server we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server), which extends [docker-mailserver](https://github.com/tomav/docker-mailserver). This image has predefined settings for local testing. It has accounts and messages which we need for testing. You can investigate the [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver) folder to see more details. To be able to run tests that depend on an email server, please install `docker-compose` with [these instructions](https://docs.docker.com/compose/install/).
+
+### Run independent tests
 
 Please use the following steps to run **the independent tests** locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
+1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
 2. Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`). You can find more details [here](https://developer.android.com/training/testing/junit-runner#sharding-tests). Sharding the tests helps us run them in pieces on a few emulators at the same time to reduce runtime.
 
 Please use the following steps to run **tests that depend on an email** server locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
+1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
 2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 3. Run `../script/ci-instrumentation-tests-with-mailserver.sh`.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
 Please follow these steps to run **all tests** locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
+1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
 2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 3. Run `./script/run-all-tests.sh` to execute all tests.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
 Please follow these steps to run **enterprise tests** locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#please-follow-these-instructions).
+1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
 2. Run `./script/ci-instrumentation-tests-enterprise.sh` to execute enterprise tests.
 
 ## Running the app in the emulator for the first time
