@@ -109,5 +109,5 @@ To be able to run the app on an emulator please follow these steps:
 3\. Now, you can run the app via **Run** &#10140; **Run(Alt+Shift+F10)** or click on the green **Run** button:
 ![image](https://user-images.githubusercontent.com/2863246/136432060-088641d6-2bc5-44c0-bc58-80c50a49602e.png)
 
-4\. Then, you'll see the app on the emulator in a few minutes (it depends on the hardware):
+4\. You'll see the app on the emulator in a few minutes (it depends on the hardware):
 ![image](https://user-images.githubusercontent.com/2863246/136433066-d98cd03b-9db0-47a6-9ac8-7d21d347b6ea.png)
