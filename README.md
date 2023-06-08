@@ -41,26 +41,26 @@ We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To ru
 
 Please use the following steps to run **the independent tests** locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
+1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`). You can find more details [here](https://developer.android.com/training/testing/junit-runner#sharding-tests). Sharding the tests helps us run them in pieces on a few emulators at the same time to reduce runtime.
 
 Please use the following steps to run **tests that depend on an email** server locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
+1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 3. Run `../script/ci-instrumentation-tests-with-mailserver.sh`.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
 Please follow these steps to run **all tests** locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
+1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
 3. Run `./script/run-all-tests.sh` to execute all tests.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
 Please follow these steps to run **enterprise tests** locally:
 
-1. Setup your device (virtual or physical) via [these instructions](#device-setup-instructions).
+1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `./script/ci-instrumentation-tests-enterprise.sh` to execute enterprise tests.
 
 ## Running the app in the emulator for the first time
