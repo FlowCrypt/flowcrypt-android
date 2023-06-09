@@ -15,8 +15,8 @@ This guide follows Google's recommendations for [testing apps on Android](https:
 Please follow these steps to setup your virtual or physical device:
 
 - [Set up your test environment](https://developer.android.com/training/testing/espresso/setup#set-up-environment).
-- Some of the tests use [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver). We run a local mock web server via [FlowCryptMockWebServerRule](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/rules/FlowCryptMockWebServerRule.kt). It uses [TestConstants.MOCK_WEB_SERVER_PORT](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/TestConstants.kt#L19) as a port. Unfortunately, the Android system doesn't allow us to use the `HTTPS 433` port by default to run a web server on the `localhost` (`127.0.0.1`). That's why we have to run a mock web server on another port (for example, `1212`) and route all traffic from `127.0.0.1:433` to `127.0.0.1:1212`. For that purpose, you can use the [script/ci-wait-for-emulator.sh](https://github.com/FlowCrypt/flowcrypt-android/blob/master/script/ci-wait-for-emulator.sh#L13) script.
-- Additionally, the test environment should handle all requests to `*.flowcrypt.test`. All traffic to `*.flowcrypt.test` should be routed to `localhost(127.0.0.1)`. To do this, a DNS server can be used. For example:
+- Some of the tests use [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver). We run a local mock web server via [FlowCryptMockWebServerRule](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/rules/FlowCryptMockWebServerRule.kt). It uses [TestConstants.MOCK_WEB_SERVER_PORT](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/TestConstants.kt#L19) as a port. Unfortunately, the Android system doesn't allow us to use the `HTTPS 433` port by default to run a web server on the `localhost (127.0.0.1)`. That's why we have to run a mock web server on another port (for example, `1212`) and route all traffic from `127.0.0.1:433` to `127.0.0.1:1212`. For that purpose, you can use the [script/ci-wait-for-emulator.sh](https://github.com/FlowCrypt/flowcrypt-android/blob/master/script/ci-wait-for-emulator.sh#L13) script.
+- Additionally, the test environment should handle all requests to `*.flowcrypt.test`. All traffic to `*.flowcrypt.test` should be routed to `localhost (127.0.0.1)`. You can use a DNS server to do this. For example, using these commands:
 
 ```bash
 1. sudo apt install -y dnsmasq resolvconf
@@ -31,12 +31,12 @@ Please follow these steps to setup your virtual or physical device:
 
 We have two types of tests:
 
-- Independent tests which don't require any additional dependencies.
+- Independent tests that don't require any additional dependencies.
 - Tests that depend on an email server. Such tests are marked with the `@DependsOnMailServer` annotation.
 
 Additionally, we have separate tests for the **consumer** and **enterprise** versions. Enterprise tests are marked with the `@EnterpriseTest` annotation. These tests use the [Gmail API](https://developers.google.com/gmail/api/guides) and are independent of the mail server.
 
-We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To run tests that depend on an email server we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server), which extends [docker-mailserver](https://github.com/tomav/docker-mailserver). This image has predefined settings for local testing. It has accounts and messages which we need for testing. You can investigate the [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver) folder to see more details. To be able to run tests that depend on an email server, please install `docker-compose` with [these instructions](https://docs.docker.com/compose/install/).
+We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To run tests that depend on an email server, we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server), which extends [docker-mailserver](https://github.com/tomav/docker-mailserver). This image has predefined settings for local testing. It has accounts and messages which we need for testing. You can investigate the [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver) folder to see more details. To be able to run tests that depend on an email server, please install `docker-compose` following the [official instructions](https://docs.docker.com/compose/install/).
 
 ### Run independent tests
 
