@@ -68,8 +68,8 @@ Please follow these steps to run **enterprise tests** locally:
 
 This section describes two main steps you need to accomplish to run the app in the emulaor:
 
-- [Install and run the emulator](#install-and-run-the-emulator).
-- [Build and run the app](#build-and-run-the-app).
+- [Install and run the emulator](#install-and-run-the-emulator)
+- [Build and run the app](#build-and-run-the-app)
 
 ### Install and run the emulator
 
