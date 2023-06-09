@@ -40,22 +40,22 @@ We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To ru
 
 ### Run independent tests
 
-Please use the following steps to run **the independent tests** locally:
+Please follow these steps to run **the independent tests** locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`). You can find more details if you read  the guide concerning AndroidX test libraries on [sharding tests](https://developer.android.com/training/testing/junit-runner#sharding-tests). It helps us run them in pieces on a few emulators at the same time to reduce runtime.
 
-Please use the following steps to run **tests that depend on an email** server locally:
+Please follow these steps to run **tests that depend on an email** server locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
-2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
+2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server is started.
 3. Run `../script/ci-instrumentation-tests-with-mailserver.sh`.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
 Please follow these steps to run **all tests** locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
-2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server will be started.
+2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server is started.
 3. Run `./script/run-all-tests.sh` to execute all tests.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
@@ -67,8 +67,6 @@ Please follow these steps to run **enterprise tests** locally:
 ## Running the app in the emulator for the first time
 
 To be able to run the app on an emulator please follow these steps:
-
-### Install and run an emulator
 
 1\. Run AVD Manager from **Tools** &#10140; **AVD Manager** or click on the highlighted icon:
 ![image](https://user-images.githubusercontent.com/2863246/136424474-3de87e4d-ffac-49d6-82e3-ec9831399721.png)
