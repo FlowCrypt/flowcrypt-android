@@ -43,7 +43,7 @@ We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To ru
 Please use the following steps to run **the independent tests** locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
-2. Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`). You can find more details [here](https://developer.android.com/training/testing/junit-runner#sharding-tests). Sharding the tests helps us run them in pieces on a few emulators at the same time to reduce runtime.
+2. Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`). You can find more details if you read  the guide concerning AndroidX test libraries on [sharding tests](https://developer.android.com/training/testing/junit-runner#sharding-tests). It helps us run them in pieces on a few emulators at the same time to reduce runtime.
 
 Please use the following steps to run **tests that depend on an email** server locally:
 
