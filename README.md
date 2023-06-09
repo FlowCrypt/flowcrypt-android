@@ -66,7 +66,14 @@ Please follow these steps to run **enterprise tests** locally:
 
 ## Running the app in the emulator for the first time
 
-To be able to run the app on an emulator please follow these steps:
+This section describes two main steps you need to accomplish to run the app in the emulaor:
+
+- [Install and run the emulator](#install-and-run-the-emulator).
+- [Build and run the app](#build-and-run-the-app).
+
+### Install and run the emulator
+
+Please follow these steps to be able to install and run the emulator:
 
 1\. Run AVD Manager from **Tools** &#10140; **AVD Manager** or click on the highlighted icon:
 ![image](https://user-images.githubusercontent.com/2863246/136424474-3de87e4d-ffac-49d6-82e3-ec9831399721.png)
@@ -83,19 +90,21 @@ To be able to run the app on an emulator please follow these steps:
 5\. Click **Finish**:
 ![image](https://user-images.githubusercontent.com/2863246/136427125-6aa91bef-f052-432f-a314-369d4b6d4825.png)
 
-6\. Select the downloaded image and click on **Next**:
+6\. Select the downloaded image and click **Next**:
 ![image](https://user-images.githubusercontent.com/2863246/136427526-0c0cfc0b-b622-4420-9ea0-14aabff22423.png)
 
-7\. Once clicked **Next**, you'll see the final screen where you should click on **Finish**:
+7\. Once you click **Next**, you'll see the final screen where you should click **Finish**:
 ![image](https://user-images.githubusercontent.com/2863246/136428104-4eba085d-eddf-46e2-b495-87be8d9a2237.png)
 
-8\. AVD Manager will show a new emulator. Click on the green triangle to run an emulator:
+8\. AVD Manager will show a new emulator. Click the green triangle to run the emulator:
 ![image](https://user-images.githubusercontent.com/2863246/136429163-e74b4ccf-360d-49af-a57b-846dd6be23fe.png)
 
-9\. Once running, youwe'll see the home screen of the emulator:
+9\. Once running, you'll see the home screen of the emulator:
 ![image](https://user-images.githubusercontent.com/2863246/136430123-1277b324-4910-4594-9f7c-167314d1ecef.png)
 
 ### Build and run the app
+
+Please follow these steps to be able to build and run the app:
 
 1\. First of all, you should select the correct version of the build variants. Please use `consumerDebug`:
 ![image](https://user-images.githubusercontent.com/2863246/136431329-2b850d9f-6dc3-4849-817c-86ffcc85ec17.png)
