@@ -139,12 +139,6 @@ class AttachmentDownloadManagerService : LifecycleService() {
     return binder
   }
 
-  inner class LocalBinder : Binder() {
-    fun getService(): AttachmentDownloadManagerService = this@AttachmentDownloadManagerService
-  }
-
-  data class DownloadProgress(val progressInPercentage: Int, val timeLeft: Long)
-
   @Synchronized
   private fun update(attInfo: AttachmentInfo?, progressInPercentage: Int, timeLeft: Long) {
     attachmentDownloadProgressMutableStateFlow.update { map ->
@@ -795,6 +789,12 @@ class AttachmentDownloadManagerService : LifecycleService() {
       private const val DEFAULT_BUFFER_SIZE = 1024 * 16
     }
   }
+
+  inner class LocalBinder : Binder() {
+    fun getService(): AttachmentDownloadManagerService = this@AttachmentDownloadManagerService
+  }
+
+  data class DownloadProgress(val progressInPercentage: Int, val timeLeft: Long)
 
   companion object {
     const val ACTION_START_DOWNLOAD_ATTACHMENT =
