@@ -60,6 +60,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
+import java.io.InterruptedIOException
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -144,7 +145,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
     attachmentDownloadProgressMutableStateFlow.update { map ->
       map.toMutableMap().apply {
         attInfo?.uniqueStringId?.let {
-          if (progressInPercentage > 0) {
+          if (progressInPercentage >= 0) {
             put(it, DownloadProgress(progressInPercentage, timeLeft))
           } else {
             remove(it)
@@ -217,11 +218,21 @@ class AttachmentDownloadManagerService : LifecycleService() {
 
         when (message.what) {
           MESSAGE_EXCEPTION_HAPPENED -> {
-            notificationManager?.errorHappened(
-              attDownloadManagerService, attInfo!!,
-              exception!!
-            )
-            attDownloadManagerService?.update(attInfo, 0, 0)
+            when (exception) {
+              is InterruptedIOException, is InterruptedException -> {
+                attInfo?.let { notificationManager?.loadingCanceledByUser(it) }
+              }
+
+              else -> {
+                if (attInfo != null && exception != null)
+                  notificationManager?.errorHappened(
+                    context = attDownloadManagerService,
+                    attInfo = attInfo,
+                    e = exception
+                  )
+              }
+            }
+            attDownloadManagerService?.update(attInfo, -1, -1)
           }
 
           MESSAGE_TASK_ALREADY_EXISTS -> {
@@ -242,8 +253,10 @@ class AttachmentDownloadManagerService : LifecycleService() {
             LogsUtil.d(TAG, attInfo?.getSafeName() + " is downloaded")
           }
 
-          MESSAGE_ATTACHMENT_ADDED_TO_QUEUE ->
+          MESSAGE_ATTACHMENT_ADDED_TO_QUEUE -> {
             notificationManager?.attachmentAddedToLoadQueue(attDownloadManagerService, attInfo!!)
+            attDownloadManagerService?.update(attInfo, 0, 0)
+          }
 
           MESSAGE_PROGRESS -> {
             attDownloadManagerService?.update(
@@ -262,7 +275,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
 
           MESSAGE_DOWNLOAD_CANCELED -> {
             notificationManager?.loadingCanceledByUser(attInfo!!)
-            attDownloadManagerService?.update(attInfo, 0, 0)
+            attDownloadManagerService?.update(attInfo, -1, -1)
             LogsUtil.d(TAG, attInfo?.getSafeName() + " was canceled")
           }
 

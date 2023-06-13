@@ -1774,6 +1774,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   ) {
     val uniqueStringIdSetToBeUpdated = mutableSetOf<String>()
     val existingMap = attachmentsRecyclerViewAdapter.progressMap
+    uniqueStringIdSetToBeUpdated.addAll(
+      mapWithLatestProgress.keys.toMutableSet().apply { removeAll(existingMap.keys) }
+    )
     existingMap.forEach { (attachmentId, existingProgress) ->
       val newProgress = mapWithLatestProgress[attachmentId]
       if (newProgress == null || existingProgress != newProgress) {
