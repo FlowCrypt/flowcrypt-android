@@ -1770,23 +1770,24 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun handleLoadingProgress(
-    map: Map<String, AttachmentDownloadManagerService.DownloadProgress>
+    mapWithLatestProgress: Map<String, AttachmentDownloadManagerService.DownloadProgress>
   ) {
-    val toBeUpdated =
-      mutableMapOf<String, AttachmentDownloadManagerService.DownloadProgress>()
+    val uniqueStringIdSetToBeUpdated = mutableSetOf<String>()
     val existingMap = attachmentsRecyclerViewAdapter.progressMap
-    map.forEach { (key, value) ->
-      val existingProgress = existingMap[key]
-      if (existingProgress != null && existingProgress != value) {
-        toBeUpdated[key] = value
+    existingMap.forEach { (attachmentId, existingProgress) ->
+      val newProgress = mapWithLatestProgress[attachmentId]
+      if (newProgress == null || existingProgress != newProgress) {
+        uniqueStringIdSetToBeUpdated.add(attachmentId)
       }
     }
 
-    attachmentsRecyclerViewAdapter.progressMap.putAll(map)
+    attachmentsRecyclerViewAdapter.progressMap.clear()
+    attachmentsRecyclerViewAdapter.progressMap.putAll(mapWithLatestProgress)
     val currentList = attachmentsRecyclerViewAdapter.currentList
-    toBeUpdated.forEach { (key, _) ->
-      val attachmentInfo = currentList.firstOrNull { it.uniqueStringId == key }
-      if (attachmentInfo != null) {
+    uniqueStringIdSetToBeUpdated.forEach { uniqueStringId ->
+      currentList.firstOrNull {
+        it.uniqueStringId == uniqueStringId
+      }?.let { attachmentInfo ->
         val position = currentList.indexOf(attachmentInfo)
         if (position != -1) {
           attachmentsRecyclerViewAdapter.notifyItemChanged(position)

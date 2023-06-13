@@ -149,7 +149,13 @@ class AttachmentDownloadManagerService : LifecycleService() {
   private fun update(attInfo: AttachmentInfo?, progressInPercentage: Int, timeLeft: Long) {
     attachmentDownloadProgressMutableStateFlow.update { map ->
       map.toMutableMap().apply {
-        attInfo?.uniqueStringId?.let { put(it, DownloadProgress(progressInPercentage, timeLeft)) }
+        attInfo?.uniqueStringId?.let {
+          if (progressInPercentage > 0) {
+            put(it, DownloadProgress(progressInPercentage, timeLeft))
+          } else {
+            remove(it)
+          }
+        }
       }
     }
   }
@@ -216,10 +222,13 @@ class AttachmentDownloadManagerService : LifecycleService() {
             = message.obj as DownloadAttachmentTaskResult
 
         when (message.what) {
-          MESSAGE_EXCEPTION_HAPPENED -> notificationManager?.errorHappened(
-            attDownloadManagerService, attInfo!!,
-            exception!!
-          )
+          MESSAGE_EXCEPTION_HAPPENED -> {
+            notificationManager?.errorHappened(
+              attDownloadManagerService, attInfo!!,
+              exception!!
+            )
+            attDownloadManagerService?.update(attInfo, 0, 0)
+          }
 
           MESSAGE_TASK_ALREADY_EXISTS -> {
             val msg = attDownloadManagerService?.getString(
@@ -255,10 +264,11 @@ class AttachmentDownloadManagerService : LifecycleService() {
             )
           }
 
-          MESSAGE_RELEASE_RESOURCES -> attDownloadManagerService?.looper!!.quit()
+          MESSAGE_RELEASE_RESOURCES -> attDownloadManagerService?.looper?.quit()
 
           MESSAGE_DOWNLOAD_CANCELED -> {
             notificationManager?.loadingCanceledByUser(attInfo!!)
+            attDownloadManagerService?.update(attInfo, 0, 0)
             LogsUtil.d(TAG, attInfo?.getSafeName() + " was canceled")
           }
 
@@ -681,8 +691,6 @@ class AttachmentDownloadManagerService : LifecycleService() {
           var lastUpdateTime = startTime
           updateProgress(currentPercentage, 0)
           while (true) {
-            Thread.sleep(1000)
-
             numberOfReadBytes = inputStream.read(buffer)
 
             if (IOUtils.EOF == numberOfReadBytes) {
