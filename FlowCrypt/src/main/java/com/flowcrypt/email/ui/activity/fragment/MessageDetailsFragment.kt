@@ -250,14 +250,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var isMoveToInboxActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
-  private var progressJob: Job? = null
+  private var downloadAttachmentsProgressJob: Job? = null
 
   private val downloadAttachmentsServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(className: ComponentName, service: IBinder) {
       val binder = service as AttachmentDownloadManagerService.LocalBinder
       val attachmentDownloadManagerService = binder.getService()
 
-      progressJob = lifecycleScope.launch {
+      downloadAttachmentsProgressJob = lifecycleScope.launch {
         attachmentDownloadManagerService.attachmentDownloadProgressStateFlow.collect { map ->
           handleLoadingProgress(map)
         }
@@ -293,7 +293,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   override fun onStop() {
     super.onStop()
     context?.unbindService(downloadAttachmentsServiceConnection)
-    progressJob?.cancel()
+    downloadAttachmentsProgressJob?.cancel()
   }
 
   override fun onDestroy() {
