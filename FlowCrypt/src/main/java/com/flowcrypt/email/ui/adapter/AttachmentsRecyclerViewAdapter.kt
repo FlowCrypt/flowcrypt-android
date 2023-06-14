@@ -5,10 +5,12 @@
 
 package com.flowcrypt.email.ui.adapter
 
+import android.graphics.drawable.AnimationDrawable
 import android.text.format.Formatter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -16,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 
 /**
  * @author Denys Bondarenko
@@ -25,8 +28,8 @@ class AttachmentsRecyclerViewAdapter(
   private val isDownloadEnabled: Boolean = true,
   private val isDeleteEnabled: Boolean = true,
   private val attachmentActionListener: AttachmentActionListener
-) :
-  ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+) : ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+  val progressMap = mutableMapOf<String, AttachmentDownloadManagerService.DownloadProgress>()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     val view = LayoutInflater.from(parent.context).inflate(R.layout.attachment_item, parent, false)
@@ -43,6 +46,7 @@ class AttachmentsRecyclerViewAdapter(
     private val imageButtonDownloadAtt: View = itemView.findViewById(R.id.imageButtonDownloadAtt)
     private val imageButtonPreviewAtt: View = itemView.findViewById(R.id.imageButtonPreviewAtt)
     private val imageButtonDeleteAtt: View = itemView.findViewById(R.id.imageButtonDeleteAtt)
+    private val imageViewAttIcon: ImageView = itemView.findViewById(R.id.imageViewAttIcon)
 
     fun bindPost(
       attachmentInfo: AttachmentInfo,
@@ -74,6 +78,15 @@ class AttachmentsRecyclerViewAdapter(
 
       itemView.setOnClickListener {
         attachmentActionListener.onAttachmentClick(attachmentInfo)
+      }
+
+      val value = progressMap[attachmentInfo.uniqueStringId]
+      if (value?.progressInPercentage in 0..99) {
+        imageViewAttIcon.setImageResource(R.drawable.stat_sys_download_gray)
+        val animationDrawable = imageViewAttIcon.drawable as? AnimationDrawable
+        animationDrawable?.let { animationDrawable.start() }
+      } else {
+        imageViewAttIcon.setImageResource(R.mipmap.ic_attachment)
       }
     }
   }
