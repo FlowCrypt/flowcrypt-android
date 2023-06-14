@@ -259,7 +259,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
       downloadAttachmentsProgressJob = lifecycleScope.launch {
         attachmentDownloadManagerService.attachmentDownloadProgressStateFlow.collect { map ->
-          handleLoadingProgress(map)
+          updateProgress(map)
         }
       }
     }
@@ -1769,32 +1769,25 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
-  private fun handleLoadingProgress(
+  private fun updateProgress(
     mapWithLatestProgress: Map<String, AttachmentDownloadManagerService.DownloadProgress>
   ) {
-    val uniqueStringIdSetToBeUpdated = mutableSetOf<String>()
+    val idsToBeUpdated = mutableSetOf<String>()
     val existingMap = attachmentsRecyclerViewAdapter.progressMap
-    uniqueStringIdSetToBeUpdated.addAll(
-      mapWithLatestProgress.keys.toMutableSet().apply { removeAll(existingMap.keys) }
-    )
+    idsToBeUpdated.addAll(mapWithLatestProgress.keys - existingMap.keys)
     existingMap.forEach { (attachmentId, existingProgress) ->
       val newProgress = mapWithLatestProgress[attachmentId]
       if (newProgress == null || existingProgress != newProgress) {
-        uniqueStringIdSetToBeUpdated.add(attachmentId)
+        idsToBeUpdated.add(attachmentId)
       }
     }
 
     attachmentsRecyclerViewAdapter.progressMap.clear()
     attachmentsRecyclerViewAdapter.progressMap.putAll(mapWithLatestProgress)
     val currentList = attachmentsRecyclerViewAdapter.currentList
-    uniqueStringIdSetToBeUpdated.forEach { uniqueStringId ->
-      currentList.firstOrNull {
-        it.uniqueStringId == uniqueStringId
-      }?.let { attachmentInfo ->
-        val position = currentList.indexOf(attachmentInfo)
-        if (position != -1) {
-          attachmentsRecyclerViewAdapter.notifyItemChanged(position)
-        }
+    idsToBeUpdated.forEach { uniqueStringId ->
+      currentList.firstOrNull { it.uniqueStringId == uniqueStringId }?.let { attachmentInfo ->
+        attachmentsRecyclerViewAdapter.notifyItemChanged(currentList.indexOf(attachmentInfo))
       }
     }
   }
