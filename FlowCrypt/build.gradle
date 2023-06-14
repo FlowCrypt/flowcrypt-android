@@ -350,7 +350,7 @@ dependencies {
 
     devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.11'
     //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
-    uiTestsImplementation 'androidx.fragment:fragment-testing:1.5.7'
+    uiTestsImplementation 'androidx.fragment:fragment-testing:1.6.0'
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
@@ -378,7 +378,7 @@ dependencies {
     testImplementation 'com.flextrade.jfixture:jfixture:2.7.2'
     testImplementation 'com.shazam:shazamcrest:0.11'
     //we need it to test Parcelable
-    testImplementation 'org.jetbrains.kotlin:kotlin-reflect:1.8.21'
+    testImplementation 'org.jetbrains.kotlin:kotlin-reflect:1.8.22'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -409,9 +409,9 @@ dependencies {
     implementation 'androidx.activity:activity-ktx:1.7.2'
     implementation 'androidx.fragment:fragment-ktx:1.5.7'
     implementation 'androidx.work:work-runtime-ktx:2.8.1'
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'
-    implementation 'androidx.navigation:navigation-runtime-ktx:2.5.3'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.6.0'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.6.0'
+    implementation 'androidx.navigation:navigation-runtime-ktx:2.6.0'
     implementation 'androidx.webkit:webkit:1.7.0'
 
     implementation 'com.google.android.gms:play-services-base:18.2.0'
