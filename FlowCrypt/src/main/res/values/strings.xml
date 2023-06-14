@@ -122,7 +122,7 @@
     <string name="cancel">Cancel</string>
     <string name="waiting_to_load">Waiting to load</string>
     <string name="download_complete">Download complete</string>
-    <string name="template_attachment_already_loading">Attachment \"%1$s\" already loading </string>
+    <string name="template_attachment_already_loading">Attachment \"%1$s\" is already loading</string>
     <string name="cannot_save_attachment_without_permission">The attachment cannot be saved without the write external
         storage permission</string>
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
