@@ -87,7 +87,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 37
+    const val DB_VERSION = 38
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1314,6 +1314,18 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_37_38 = object : FlowCryptMigration(37, 38) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2356
+
+        database.execSQL(
+          "ALTER TABLE accounts " +
+              "ADD COLUMN check_pass_phrase_last_time INTEGER NOT NULL DEFAULT 0;"
+        )
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1365,6 +1377,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_34_35,
           MIGRATION_35_36,
           MIGRATION_36_37,
+          MIGRATION_37_38,
         ).build()
         INSTANCE = instance
         return instance

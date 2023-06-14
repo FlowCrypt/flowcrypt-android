@@ -74,7 +74,11 @@ data class AccountEntity constructor(
   @ColumnInfo(
     name = "use_customer_fes_url",
     defaultValue = "0"
-  ) val useCustomerFesUrl: Boolean = false
+  ) val useCustomerFesUrl: Boolean = false,
+  @ColumnInfo(
+    name = "check_pass_phrase_last_time",
+    defaultValue = "0"
+  ) val checkPassPhraseLastTime: Long = 0,
 ) : Parcelable {
 
   @IgnoredOnParcel
