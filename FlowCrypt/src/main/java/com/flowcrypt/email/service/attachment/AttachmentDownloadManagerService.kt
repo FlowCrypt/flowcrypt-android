@@ -5,11 +5,11 @@
 
 package com.flowcrypt.email.service.attachment
 
-import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Binder
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
@@ -25,6 +25,7 @@ import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
+import androidx.lifecycle.LifecycleService
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -48,6 +49,10 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
@@ -55,6 +60,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
+import java.io.InterruptedIOException
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -76,13 +82,19 @@ import java.util.concurrent.Future
  *
  * @author Denys Bondarenko
  */
-class AttachmentDownloadManagerService : Service() {
+class AttachmentDownloadManagerService : LifecycleService() {
 
   @Volatile
   private lateinit var looper: Looper
 
   @Volatile
   private lateinit var workerHandler: ServiceWorkerHandler
+
+  private val binder = LocalBinder()
+  private val attachmentDownloadProgressMutableStateFlow:
+      MutableStateFlow<MutableMap<String, DownloadProgress>> = MutableStateFlow(mutableMapOf())
+  val attachmentDownloadProgressStateFlow: StateFlow<Map<String, DownloadProgress>> =
+    attachmentDownloadProgressMutableStateFlow.asStateFlow()
 
   private val replyMessenger: Messenger = Messenger(ReplyHandler(this))
   private lateinit var attsNotificationManager: AttachmentNotificationManager
@@ -123,8 +135,24 @@ class AttachmentDownloadManagerService : Service() {
     releaseResources()
   }
 
-  override fun onBind(intent: Intent): IBinder? {
-    return null
+  override fun onBind(intent: Intent): IBinder {
+    super.onBind(intent)
+    return binder
+  }
+
+  @Synchronized
+  private fun update(attInfo: AttachmentInfo?, progressInPercentage: Int, timeLeft: Long) {
+    attachmentDownloadProgressMutableStateFlow.update { map ->
+      map.toMutableMap().apply {
+        attInfo?.uniqueStringId?.let {
+          if (progressInPercentage >= 0) {
+            put(it, DownloadProgress(progressInPercentage, timeLeft))
+          } else {
+            remove(it)
+          }
+        }
+      }
+    }
   }
 
   private fun stopService() {
@@ -189,10 +217,23 @@ class AttachmentDownloadManagerService : Service() {
             = message.obj as DownloadAttachmentTaskResult
 
         when (message.what) {
-          MESSAGE_EXCEPTION_HAPPENED -> notificationManager?.errorHappened(
-            attDownloadManagerService, attInfo!!,
-            exception!!
-          )
+          MESSAGE_EXCEPTION_HAPPENED -> {
+            when (exception) {
+              is InterruptedIOException, is InterruptedException -> {
+                attInfo?.let { notificationManager?.loadingCanceledByUser(it) }
+              }
+
+              else -> {
+                if (attInfo != null && exception != null)
+                  notificationManager?.errorHappened(
+                    context = attDownloadManagerService,
+                    attInfo = attInfo,
+                    e = exception
+                  )
+              }
+            }
+            attDownloadManagerService?.update(attInfo, -1, -1)
+          }
 
           MESSAGE_TASK_ALREADY_EXISTS -> {
             val msg = attDownloadManagerService?.getString(
@@ -212,18 +253,29 @@ class AttachmentDownloadManagerService : Service() {
             LogsUtil.d(TAG, attInfo?.getSafeName() + " is downloaded")
           }
 
-          MESSAGE_ATTACHMENT_ADDED_TO_QUEUE ->
+          MESSAGE_ATTACHMENT_ADDED_TO_QUEUE -> {
             notificationManager?.attachmentAddedToLoadQueue(attDownloadManagerService, attInfo!!)
+            attDownloadManagerService?.update(attInfo, 0, 0)
+          }
 
-          MESSAGE_PROGRESS -> notificationManager?.updateLoadingProgress(
-            attDownloadManagerService, attInfo!!,
-            progressInPercentage, timeLeft
-          )
+          MESSAGE_PROGRESS -> {
+            attDownloadManagerService?.update(
+              attInfo,
+              progressInPercentage,
+              timeLeft
+            )
 
-          MESSAGE_RELEASE_RESOURCES -> attDownloadManagerService?.looper!!.quit()
+            notificationManager?.updateLoadingProgress(
+              attDownloadManagerService, attInfo!!,
+              progressInPercentage, timeLeft
+            )
+          }
+
+          MESSAGE_RELEASE_RESOURCES -> attDownloadManagerService?.looper?.quit()
 
           MESSAGE_DOWNLOAD_CANCELED -> {
             notificationManager?.loadingCanceledByUser(attInfo!!)
+            attDownloadManagerService?.update(attInfo, -1, -1)
             LogsUtil.d(TAG, attInfo?.getSafeName() + " was canceled")
           }
 
@@ -750,6 +802,12 @@ class AttachmentDownloadManagerService : Service() {
       private const val DEFAULT_BUFFER_SIZE = 1024 * 16
     }
   }
+
+  inner class LocalBinder : Binder() {
+    fun getService(): AttachmentDownloadManagerService = this@AttachmentDownloadManagerService
+  }
+
+  data class DownloadProgress(val progressInPercentage: Int, val timeLeft: Long)
 
   companion object {
     const val ACTION_START_DOWNLOAD_ATTACHMENT =
