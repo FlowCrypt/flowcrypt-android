@@ -20,6 +20,7 @@ import com.flowcrypt.email.database.converters.ClientConfigurationConverter
 import com.flowcrypt.email.database.converters.PassphraseTypeConverter
 import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
+import com.flowcrypt.email.database.dao.AccountSettingsDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.KeysDao
@@ -29,6 +30,7 @@ import com.flowcrypt.email.database.dao.PubKeyDao
 import com.flowcrypt.email.database.dao.RecipientDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AccountSettingsEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -56,7 +58,8 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
     KeyEntity::class,
     LabelEntity::class,
     MessageEntity::class,
-    PublicKeyEntity::class
+    PublicKeyEntity::class,
+    AccountSettingsEntity::class,
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
@@ -79,6 +82,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun recipientDao(): RecipientDao
 
   abstract fun pubKeyDao(): PubKeyDao
+  abstract fun accountSettingsDao(): AccountSettingsDao
 
   @WorkerThread
   fun forceDatabaseCreationIfNeeded() {
@@ -1319,9 +1323,21 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2356
 
+        val tableName = AccountSettingsEntity.TABLE_NAME
         database.execSQL(
-          "ALTER TABLE accounts " +
-              "ADD COLUMN check_pass_phrase_last_time INTEGER NOT NULL DEFAULT 0;"
+          "CREATE TABLE IF NOT EXISTS `${tableName}` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`account` TEXT NOT NULL, " +
+              "`account_type` TEXT DEFAULT NULL, " +
+              "`check_pass_phrase_attempts_count` INTEGER NOT NULL DEFAULT 0, " +
+              "`pass_phrase_anti_brute_force_protection_start_time` INTEGER NOT NULL DEFAULT 0, " +
+              "FOREIGN KEY(`account`, `account_type`) " +
+              "REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS `account_account_type_in_account_settings` " +
+              "ON `${tableName}` (`account`, `account_type`)"
         )
       }
     }
