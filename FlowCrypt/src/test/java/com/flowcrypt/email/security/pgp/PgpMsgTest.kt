@@ -57,12 +57,12 @@ class PgpMsgTest {
     private val PRIVATE_KEYS = listOf(
       TestKeys.KeyWithPassPhrase(
         passphrase = Passphrase.fromPassword("flowcrypt compatibility tests"),
-        keyRing = loadSecretKey("key0.txt"),
+        keyRing = requireNotNull(loadSecretKey("key0.txt")),
       ),
 
       TestKeys.KeyWithPassPhrase(
         passphrase = Passphrase.fromPassword("flowcrypt compatibility tests 2"),
-        keyRing = loadSecretKey("key1.txt")
+        keyRing = requireNotNull(loadSecretKey("key1.txt"))
       )
     )
 
@@ -142,7 +142,7 @@ class PgpMsgTest {
       )
     }
 
-    private fun loadSecretKey(keyFile: String): PGPSecretKeyRing {
+    private fun loadSecretKey(keyFile: String): PGPSecretKeyRing? {
       return PGPainless.readKeyRing().secretKeyRing(loadResourceAsString("keys/$keyFile"))
     }
   }
