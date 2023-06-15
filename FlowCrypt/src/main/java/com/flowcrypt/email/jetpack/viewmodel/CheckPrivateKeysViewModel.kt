@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.AccountSettingsEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -18,6 +19,12 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.exception.KeyIntegrityException
@@ -26,12 +33,57 @@ import org.pgpainless.util.Passphrase
 /**
  * @author Denys Bondarenko
  */
-class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
+class CheckPrivateKeysViewModel(
+  application: Application,
+  private val useAntiBruteforceProtection: Boolean = false,
+) : AccountViewModel(application) {
   private val controlledRunnerForChecking = ControlledRunner<Result<List<CheckResult>>>()
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
+  val antiBruteforceProtectionCountdownFlow: Flow<Long> = flow {
+    while (useAntiBruteforceProtection && viewModelScope.isActive) {
+      val accountSettings = getActiveAccountSettings() ?: continue
+      val attemptsLimit = AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE
+
+      if (accountSettings.checkPassPhraseAttemptsCount < attemptsLimit) {
+        emit(0)
+
+        //reset the attempts count after 30 minutes of inactivity
+        if (accountSettings.checkPassPhraseAttemptsCount > 0 &&
+          System.currentTimeMillis() - accountSettings.lastUnsuccessfulCheckPassPhraseAttemptTime
+          >= AccountSettingsEntity.RESET_COUNT_TIME_IN_MILLISECONDS
+        ) {
+          roomDatabase.accountSettingsDao()
+            .updateSuspend(accountSettings.copy(checkPassPhraseAttemptsCount = 0))
+        }
+      } else {
+        val endTime = accountSettings.lastUnsuccessfulCheckPassPhraseAttemptTime +
+            AccountSettingsEntity.BLOCKING_TIME_IN_MILLISECONDS
+        val timeLeftToUnblocking = maxOf(0, endTime - System.currentTimeMillis())
+        emit(timeLeftToUnblocking)
+
+        if (timeLeftToUnblocking == 0L && accountSettings.checkPassPhraseAttemptsCount ==
+          attemptsLimit
+        ) {
+          //reset the attempts count after the blocking time
+          roomDatabase.accountSettingsDao()
+            .updateSuspend(accountSettings.copy(checkPassPhraseAttemptsCount = 0))
+        }
+      }
+
+      delay(500)
+    }
+  }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
   fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
+      if (useAntiBruteforceProtection) {
+        if (AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE ==
+          getActiveAccountSettings()?.checkPassPhraseAttemptsCount
+        ) {
+          return@launch
+        }
+      }
+
       if (checkPrvKeysLiveData.value?.status != Result.Status.LOADING) {
         checkPrvKeysLiveData.value = Result.loading()
       }
@@ -97,9 +149,57 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
             e = e
           )
         )
+
+        if (useAntiBruteforceProtection) {
+          val accountSettings = getActiveAccountSettings() ?: return@withContext resultList
+          updateAccountSettingsIfNeeded(resultList, accountSettings)
+        }
       }
       return@withContext resultList
     }
+
+  private suspend fun updateAccountSettingsIfNeeded(
+    resultList: MutableList<CheckResult>,
+    accountSettings: AccountSettingsEntity
+  ): Unit = withContext(Dispatchers.IO) {
+    val hasCorrectPassPhrase = resultList.any { it.e == null }
+    if (hasCorrectPassPhrase) {
+      roomDatabase.accountSettingsDao().updateSuspend(
+        accountSettings.copy(checkPassPhraseAttemptsCount = 0)
+      )
+    } else {
+      val currentCheckPassPhraseAttemptsCount = accountSettings.checkPassPhraseAttemptsCount
+      if (currentCheckPassPhraseAttemptsCount !=
+        AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE
+      ) {
+        roomDatabase.accountSettingsDao().updateSuspend(
+          accountSettings.copy(
+            checkPassPhraseAttemptsCount = currentCheckPassPhraseAttemptsCount + 1,
+            lastUnsuccessfulCheckPassPhraseAttemptTime = System.currentTimeMillis()
+          )
+        )
+      }
+    }
+  }
+
+  private suspend fun getActiveAccountSettings() = withContext(Dispatchers.IO) {
+    val activeAccount = getActiveAccountSuspend() ?: return@withContext null
+    val existingAccountSettings = roomDatabase.accountSettingsDao()
+      .getAccountSettings(
+        account = activeAccount.email,
+        accountType = activeAccount.accountType
+      )
+
+    return@withContext if (existingAccountSettings == null) {
+      val accountSettingsEntity = AccountSettingsEntity(
+        account = activeAccount.email, accountType = activeAccount.accountType
+      )
+      val id = roomDatabase.accountSettingsDao().insertSuspend(accountSettingsEntity)
+      accountSettingsEntity.copy(id = id)
+    } else {
+      existingAccountSettings
+    }
+  }
 
   data class CheckResult(
     val pgpKeyDetails: PgpKeyDetails,
