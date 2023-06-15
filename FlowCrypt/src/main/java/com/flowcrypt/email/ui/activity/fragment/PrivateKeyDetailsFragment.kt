@@ -71,7 +71,14 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
   private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
+  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CheckPrivateKeysViewModel(requireActivity().application, true) as T
+      }
+    }
+  }
   private val privateKeyDetailsViewModel: PrivateKeyDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")

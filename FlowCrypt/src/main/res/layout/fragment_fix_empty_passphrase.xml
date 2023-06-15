@@ -55,7 +55,7 @@
         android:hint="@string/your_passphrase"
         android:visibility="gone"
         app:counterEnabled="false"
-        app:errorEnabled="false"
+        app:errorEnabled="true"
         app:passwordToggleContentDescription="description"
         app:passwordToggleEnabled="true">
 

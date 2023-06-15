@@ -13,6 +13,7 @@ import androidx.annotation.IntDef
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -25,6 +26,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -50,7 +52,14 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     FragmentCheckKeysBinding.inflate(inflater, container, false)
 
   private val args by navArgs<CheckKeysFragmentArgs>()
-  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
+  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CheckPrivateKeysViewModel(requireActivity().application, false) as T
+      }
+    }
+  }
 
   private var originalKeys: MutableList<PgpKeyDetails> = mutableListOf()
   private val unlockedKeys: MutableList<PgpKeyDetails> = mutableListOf()

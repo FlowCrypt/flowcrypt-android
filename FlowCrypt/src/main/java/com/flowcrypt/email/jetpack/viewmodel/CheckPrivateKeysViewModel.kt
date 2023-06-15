@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.util.Passphrase
+import kotlin.math.min
 
 /**
  * @author Denys Bondarenko
@@ -174,7 +175,10 @@ class CheckPrivateKeysViewModel(
       ) {
         roomDatabase.accountSettingsDao().updateSuspend(
           accountSettings.copy(
-            checkPassPhraseAttemptsCount = currentCheckPassPhraseAttemptsCount + 1,
+            checkPassPhraseAttemptsCount = min(
+              currentCheckPassPhraseAttemptsCount + 1,
+              AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE
+            ),
             lastUnsuccessfulCheckPassPhraseAttemptTime = System.currentTimeMillis()
           )
         )
