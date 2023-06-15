@@ -1330,7 +1330,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
               "`account` TEXT NOT NULL, " +
               "`account_type` TEXT DEFAULT NULL, " +
               "`check_pass_phrase_attempts_count` INTEGER NOT NULL DEFAULT 0, " +
-              "`pass_phrase_anti_brute_force_protection_start_time` INTEGER NOT NULL DEFAULT 0, " +
+              "`last_unsuccessful_check_pass_phrase_attempt_time` INTEGER NOT NULL DEFAULT 0, " +
               "FOREIGN KEY(`account`, `account_type`) " +
               "REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )"
         )

@@ -48,13 +48,14 @@ data class AccountSettingsEntity constructor(
     defaultValue = "0"
   ) val checkPassPhraseAttemptsCount: Int = 0,
   @ColumnInfo(
-    name = "pass_phrase_anti_brute_force_protection_start_time",
+    name = "last_unsuccessful_check_pass_phrase_attempt_time",
     defaultValue = "0"
-  ) val passPhraseAntiBruteForceProtectionStartTime: Long = 0,
+  ) val lastUnsuccessfulCheckPassPhraseAttemptTime: Long = 0,
 ) : Parcelable {
   companion object {
     const val TABLE_NAME = "account_settings"
     const val ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE = 5
     val BLOCKING_TIME_IN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5)
+    val RESET_COUNT_TIME_IN_MILLISECONDS = TimeUnit.MINUTES.toMillis(30)
   }
 }
