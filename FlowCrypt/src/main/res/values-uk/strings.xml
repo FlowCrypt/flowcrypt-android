@@ -217,7 +217,7 @@
     <string name="key_has_already_been_added">Цей ключ вже додано</string>
     <string name="passphrase_type_undefined">Тип ключової фрази не визначений</string>
     <string name="your_passphrase">Ваша ключова фраза</string>
-    <string name="check_passphrase">Перевірити ключову фразу</string>
+    <string name="provide_passphrase">Надати ключову фразу</string>
     <string name="remember_pass_phrase_temporarily">Тимчасово запам\'ятати ключову фразу</string>
     <string name="save_pass_phrase">Зберегти ключову фразу</string>
     <string name="and_others">та інші&#8230;</string>

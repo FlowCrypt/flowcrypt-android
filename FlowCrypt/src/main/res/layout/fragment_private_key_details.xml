@@ -162,37 +162,18 @@
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/tVUsers" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tILKeyPassword"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:hint="@string/your_passphrase"
-                app:counterEnabled="false"
-                app:errorEnabled="false"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVPassPhraseVerification"
-                app:passwordToggleContentDescription="description"
-                app:passwordToggleEnabled="true">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/eTKeyPassword"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="textPassword" />
-            </com.google.android.material.textfield.TextInputLayout>
-
             <Button
-                android:id="@+id/btnUpdatePassphrase"
+                android:id="@+id/btnProvidePassphrase"
                 style="@style/AppWidget.Button.Big"
                 android:layout_width="0dp"
                 android:layout_marginTop="@dimen/default_margin_content"
-                android:text="@string/check_passphrase"
+                android:text="@string/provide_passphrase"
                 android:textAllCaps="true"
+                android:visibility="gone"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tILKeyPassword" />
+                app:layout_constraintTop_toBottomOf="@+id/tVPassPhraseVerification"
+                tools:visibility="visible" />
 
             <Button
                 android:id="@+id/btnForgetPassphrase"
@@ -204,7 +185,7 @@
                 android:visibility="gone"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/btnUpdatePassphrase" />
+                app:layout_constraintTop_toBottomOf="@+id/btnProvidePassphrase" />
 
             <Button
                 android:id="@+id/btnUpdatePrivateKey"
@@ -241,14 +222,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 app:layout_constraintGuide_end="@dimen/default_margin_content" />
-
-            <androidx.constraintlayout.widget.Group
-                android:id="@+id/gCheckPassphrase"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:constraint_referenced_ids="btnUpdatePassphrase,tILKeyPassword"
-                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

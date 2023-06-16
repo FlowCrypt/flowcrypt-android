@@ -465,7 +465,7 @@
     <string name="remember_pass_phrase_temporarily">Remember pass phrase temporarily</string>
     <string name="pass_phrase_not_provided">Pass phrase is not provided</string>
     <string name="forget_passphrase">Forget pass phrase</string>
-    <string name="check_passphrase">Check pass phrase</string>
+    <string name="provide_passphrase">Provide pass phrase</string>
     <string name="your_passphrase">Your pass phrase</string>
     <string name="passphrase_purged_from_memory">Pass phrase purged from memory</string>
     <string name="no_details_about_given_key">There are no details about the given key</string>

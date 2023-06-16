@@ -216,7 +216,7 @@
     <string name="key_has_already_been_added">Этот ключ уже добавлен</string>
     <string name="passphrase_type_undefined">Тип ключевой фразы не определен</string>
     <string name="your_passphrase">Ваша ключевая фраза</string>
-    <string name="check_passphrase">Проверить ключевую фразу</string>
+    <string name="provide_passphrase">Предоставить ключевую фразу</string>
     <string name="remember_pass_phrase_temporarily">Времено запомнить ключевую фразу</string>
     <string name="save_pass_phrase">Сохранить ключевую фразу</string>
     <string name="and_others">и другие&#8230;</string>

@@ -302,7 +302,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
         binding?.btnUpdatePassphrase?.isEnabled = it == 0L
         if (it == 0L) {
           binding?.tILKeyPassword?.error = null
-          binding?.btnUpdatePassphrase?.text = getString(R.string.check_passphrase)
+          binding?.btnUpdatePassphrase?.text = getString(R.string.provide_passphrase)
         } else {
           binding?.tILKeyPassword?.error = getString(
             R.string.private_key_passphrase_anti_bruteforce_protection_hint,

@@ -72,7 +72,7 @@
         android:id="@+id/btnUpdatePassphrase"
         style="@style/AppWidget.Button.Big"
         android:layout_width="match_parent"
-        android:text="@string/check_passphrase"
+        android:text="@string/provide_passphrase"
         android:textAllCaps="true"
         android:visibility="gone" />
 </LinearLayout>
