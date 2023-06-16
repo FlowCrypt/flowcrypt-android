@@ -604,5 +604,5 @@
     <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Encrypted subject:</font> %1$s]]></string>
     <string name="please_pay_attention_some_keys_were_skipped">Please note that some keys were skipped</string>
     <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">This key is unprotected. Please protect it with a pass phrase before import.</string>
-    <string name="private_key_passphrase_anti_bruteforce_protection_hint">You had %1$d failed passphrase attempts. For security purposes, we blocked you from entering passphrase for the next %2$d minutes.\n\nPlease wait for the specified duration before attempting to enter your passphrase again.</string>
+    <string name="private_key_passphrase_anti_bruteforce_protection_hint" tools:ignore="PluralsCandidate">You had %1$d failed passphrase attempts. For security purposes, we blocked you from entering passphrase for the next %2$d minutes.\n\nPlease wait for the specified duration before attempting to enter your passphrase again.</string>
 </resources>
