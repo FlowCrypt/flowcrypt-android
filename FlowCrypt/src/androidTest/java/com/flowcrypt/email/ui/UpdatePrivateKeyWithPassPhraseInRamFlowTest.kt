@@ -25,9 +25,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountSettingsEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextInputLayoutError
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -43,12 +45,14 @@ import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -197,5 +201,60 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
         existingRecipientWithPubKeysAfterUpdate?.publicKeys?.first()?.publicKey ?: byteArrayOf()
       ).pgpKeyDetailsList.first().lastModified
     )
+  }
+
+  @Test
+  fun testPrivateKeyPassphraseAntiBruteforceProtection() {
+    onView(withText(R.string.pass_phrase_not_provided))
+      .check(matches(isDisplayed()))
+
+    onView(withId(R.id.btnProvidePassphrase))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    val wrongPassphrase = "wrong pass phrase"
+
+    for (i in 0 until AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE) {
+      onView(withId(R.id.eTKeyPassword))
+        .perform(
+          clearText(),
+          replaceText(wrongPassphrase),
+          closeSoftKeyboard()
+        )
+      onView(withId(R.id.btnUpdatePassphrase))
+        .perform(click())
+      if (i == AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE - 1) {
+        onView(withId(R.id.tILKeyPassword))
+          .check(
+            matches(
+              withTextInputLayoutError(
+                getResString(
+                  R.string.private_key_passphrase_anti_bruteforce_protection_hint,
+                  AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE,
+                  TimeUnit.MILLISECONDS.toMinutes(AccountSettingsEntity.BLOCKING_TIME_IN_MILLISECONDS)
+                    .toInt()
+                )
+              )
+            )
+          )
+      } else {
+        onView(withId(R.id.tILKeyPassword))
+          .check(matches(withTextInputLayoutError(getResString(R.string.password_is_incorrect))))
+      }
+
+      checkPassPhraseAttemptsCount(i + 1)
+    }
+  }
+
+  private fun checkPassPhraseAttemptsCount(expectedValue: Int) {
+    val accountSettings = runBlocking {
+      roomDatabase.accountSettingsDao().getAccountSettings(
+        addAccountToDatabaseRule.account.email,
+        addAccountToDatabaseRule.account.accountType
+      )
+    }
+
+    assertNotNull(accountSettings)
+    assertEquals(expectedValue, accountSettings?.checkPassPhraseAttemptsCount)
   }
 }
