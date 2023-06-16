@@ -14,6 +14,7 @@ import android.view.inputmethod.EditorInfo
 import androidx.annotation.LongDef
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -110,6 +111,12 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
         }
 
         else -> false
+      }
+    }
+
+    binding?.eTKeyPassword?.doAfterTextChanged {
+      if (binding?.btnUpdatePassphrase?.isEnabled == true) {
+        binding?.tILKeyPassword?.error = null
       }
     }
 
@@ -269,7 +276,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             }
 
             isWrongPassphraseExceptionFound -> {
-              toast(R.string.password_is_incorrect)
+              binding?.tILKeyPassword?.error = getString(R.string.password_is_incorrect)
             }
           }
 
