@@ -130,6 +130,10 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
       ).pgpKeyDetailsList.first().lastModified
     )
 
+    //check we have a warning about a missing pass phrase. Provide the pass phrase
+    onView(withText(R.string.pass_phrase_not_provided))
+      .check(matches(isDisplayed()))
+
     //try to open update key screen. At this stage, a user shouldn't be able to move on
     onView(withId(R.id.btnUpdatePrivateKey))
       .check(matches(isDisplayed()))
@@ -137,10 +141,6 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
 
     onView(withId(R.id.editTextNewPrivateKey))
       .check(doesNotExist())
-
-    //check we have a warning about a missing pass phrase. Provide the pass phrase
-    onView(withText(R.string.pass_phrase_not_provided))
-      .check(matches(isDisplayed()))
 
     onView(withId(R.id.eTKeyPassword))
       .perform(
