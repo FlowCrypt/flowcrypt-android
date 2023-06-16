@@ -138,10 +138,10 @@ object PgpEncryptAndOrSign {
     val producerOptions: ProducerOptions =
       if (passphrase == null && pgpSecretKeyRingCollection?.any() == true) {
         ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
-          pgpSecretKeyRingCollection.forEach {
-            addInlineSignature(
-              secretKeyRingProtector, it, DocumentSignatureType.BINARY_DOCUMENT
-            )
+          pgpSecretKeyRingCollection.forEach { pgpSecretKeyRing ->
+            secretKeyRingProtector?.let { protector ->
+              addInlineSignature(protector, pgpSecretKeyRing, DocumentSignatureType.BINARY_DOCUMENT)
+            }
           }
         })
       } else {
