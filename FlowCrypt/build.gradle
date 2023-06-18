@@ -346,7 +346,7 @@ dependencies {
     kapt 'androidx.annotation:annotation:1.6.0'
     kapt 'androidx.room:room-compiler:2.5.1'
     //ACRA needs the following dependency to use a custom report sender
-    kapt 'com.google.auto.service:auto-service:1.1.0'
+    kapt 'com.google.auto.service:auto-service:1.1.1'
 
     devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.11'
     //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
@@ -453,7 +453,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1'
     implementation 'ch.acra:acra-http:5.10.0'
     //ACRA needs the following dependency to use a custom report sender
-    implementation 'com.google.auto.service:auto-service-annotations:1.1.0'
+    implementation 'com.google.auto.service:auto-service-annotations:1.1.1'
 
     constraints {
         //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
