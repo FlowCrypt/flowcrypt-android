@@ -10,7 +10,7 @@
 
 This guide follows Google's recommendations for [testing apps on Android](https://developer.android.com/training/testing). Every scenario described in this section has been tested on Ubuntu. There are JUnit and Instrumentation tests. To be able to run tests locally, you should set up your environment.
 
-### Device setup instructions
+### ✔️ Device setup instructions
 
 Please follow these steps to setup your virtual or physical device:
 
@@ -27,7 +27,7 @@ Please follow these steps to setup your virtual or physical device:
 6. sudo systemctl restart dnsmasq
 ```
 
-### Test types
+### ✔️ Test types
 
 We have two types of tests:
 
@@ -38,7 +38,7 @@ Additionally, we have separate tests for the **consumer** and **enterprise** ver
 
 We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To run tests that depend on an email server, we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server), which extends [docker-mailserver](https://github.com/tomav/docker-mailserver). This image has predefined settings for local testing. It has accounts and messages which we need for testing. You can investigate the [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver) folder to see more details. To be able to run tests that depend on an email server, please install `docker-compose` following the [official instructions](https://docs.docker.com/compose/install/).
 
-### Run independent tests
+### ✔️ Run independent tests
 
 ⬇️ Please follow these steps to run **the independent tests** locally:
 
@@ -71,7 +71,7 @@ This section describes two main steps you need to accomplish to run the app in t
 - [Install and run the emulator](#install-and-run-the-emulator)
 - [Build and run the app](#build-and-run-the-app)
 
-### Install and run the emulator
+### ✔️ Install and run the emulator
 
 Please follow these steps to be able to install and run the emulator:
 
@@ -102,7 +102,7 @@ Please follow these steps to be able to install and run the emulator:
 9\. Once running, you'll see the home screen of the emulator:
 ![image](https://user-images.githubusercontent.com/2863246/136430123-1277b324-4910-4594-9f7c-167314d1ecef.png)
 
-### Build and run the app
+### ✔️ Build and run the app
 
 Please follow these steps to be able to build and run the app:
 
