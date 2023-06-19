@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
+import com.flowcrypt.email.extensions.kotlin.toPGPPublicKeyRingCollection
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -29,7 +30,8 @@ import java.io.OutputStream
 object PgpEncryptAndOrSign {
   fun encryptAndOrSignMsg(
     msg: String,
-    pubKeys: List<String>,
+    pubKeys: List<String>? = null,
+    protectedPubKeys: List<String>? = null,
     prvKeys: List<String>? = null,
     secretKeyRingProtector: SecretKeyRingProtector? = null,
     hideArmorMeta: Boolean = false,
@@ -40,6 +42,7 @@ object PgpEncryptAndOrSign {
       srcInputStream = ByteArrayInputStream(msg.toByteArray()),
       destOutputStream = outputStreamForEncryptedSource,
       pubKeys = pubKeys,
+      protectedPubKeys = protectedPubKeys,
       prvKeys = prvKeys,
       secretKeyRingProtector = secretKeyRingProtector,
       doArmor = true,
@@ -52,7 +55,8 @@ object PgpEncryptAndOrSign {
   fun encryptAndOrSign(
     srcInputStream: InputStream,
     destOutputStream: OutputStream,
-    pubKeys: List<String>,
+    pubKeys: List<String>? = null,
+    protectedPubKeys: List<String>? = null,
     prvKeys: List<String>? = null,
     secretKeyRingProtector: SecretKeyRingProtector? = null,
     doArmor: Boolean = false,
@@ -60,12 +64,8 @@ object PgpEncryptAndOrSign {
     passphrase: Passphrase? = null,
     fileName: String? = null,
   ) {
-    val pubKeysStream = ByteArrayInputStream(pubKeys.joinToString(separator = "\n").toByteArray())
-    val pgpPublicKeyRingCollection = pubKeysStream.use {
-      ArmoredInputStream(it).use { armoredInputStream ->
-        PGPainless.readKeyRing().publicKeyRingCollection(armoredInputStream)
-      }
-    }
+    val pgpPublicKeyRingCollection = pubKeys?.toPGPPublicKeyRingCollection()
+    val protectedPgpPublicKeyRingCollection = protectedPubKeys?.toPGPPublicKeyRingCollection()
 
     var pgpSecretKeyRingCollection: PGPSecretKeyRingCollection? = null
     if (prvKeys?.isNotEmpty() == true) {
@@ -82,6 +82,7 @@ object PgpEncryptAndOrSign {
       srcInputStream = srcInputStream,
       destOutputStream = destOutputStream,
       pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
+      protectedPgpPublicKeyRingCollection = protectedPgpPublicKeyRingCollection,
       pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
       secretKeyRingProtector = secretKeyRingProtector,
       doArmor = doArmor,
@@ -94,7 +95,8 @@ object PgpEncryptAndOrSign {
   @Throws(IOException::class)
   fun encryptAndOrSign(
     srcInputStream: InputStream, destOutputStream: OutputStream,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection? = null,
+    protectedPgpPublicKeyRingCollection: PGPPublicKeyRingCollection? = null,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection? = null,
     secretKeyRingProtector: SecretKeyRingProtector? = null,
     doArmor: Boolean = false,
@@ -106,6 +108,7 @@ object PgpEncryptAndOrSign {
       genEncryptionStream(
         destOutputStream = destOutputStream,
         pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
+        protectedPgpPublicKeyRingCollection = protectedPgpPublicKeyRingCollection,
         pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
         secretKeyRingProtector = secretKeyRingProtector,
         doArmor = doArmor,
@@ -120,7 +123,8 @@ object PgpEncryptAndOrSign {
 
   private fun genEncryptionStream(
     destOutputStream: OutputStream,
-    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection?,
+    protectedPgpPublicKeyRingCollection: PGPPublicKeyRingCollection?,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection?,
     secretKeyRingProtector: SecretKeyRingProtector?,
     doArmor: Boolean,
@@ -130,8 +134,12 @@ object PgpEncryptAndOrSign {
   ): EncryptionStream {
     val encOpt = EncryptionOptions().apply {
       passphrase?.let { addPassphrase(passphrase) }
-      pgpPublicKeyRingCollection.forEach {
+      pgpPublicKeyRingCollection?.forEach {
         addRecipient(it)
+      }
+
+      protectedPgpPublicKeyRingCollection?.forEach {
+        addHiddenRecipient(it)
       }
     }
 

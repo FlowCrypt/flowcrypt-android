@@ -45,9 +45,18 @@ data class OutgoingMessageInfo constructor(
    * @return A list of the all recipients
    */
   fun getAllRecipients(): List<String> {
+    return getPublicRecipients() + getProtectedRecipients()
+  }
+
+  fun getPublicRecipients(): List<String> {
+    val publicRecipients = mutableListOf<String>()
+    toRecipients?.let { publicRecipients.addAll(it.map { address -> address.address }) }
+    ccRecipients?.let { publicRecipients.addAll(it.map { address -> address.address }) }
+    return publicRecipients
+  }
+
+  fun getProtectedRecipients(): List<String> {
     val allRecipients = mutableListOf<String>()
-    toRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
-    ccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
     bccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
     return allRecipients
   }

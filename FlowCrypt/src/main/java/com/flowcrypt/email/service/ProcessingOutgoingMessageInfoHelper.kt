@@ -299,12 +299,10 @@ object ProcessingOutgoingMessageInfoHelper {
                 encryptedTempFile.name
               )
             }
-            requireNotNull(pubKeys)
-
             PgpEncryptAndOrSign.encryptAndOrSign(
               srcInputStream = originalFileInputStream,
               destOutputStream = encryptedTempFile.outputStream(),
-              pubKeys = pubKeys,
+              pubKeys = requireNotNull(pubKeys),
               fileName = originalAttName,
             )
             uri = FileProvider.getUriForFile(
