@@ -1,16 +1,16 @@
-# FlowCrypt Android App (Encrypt email with PGP)
+# 📱 FlowCrypt Android App (Encrypt email with PGP)
 
-| &#8678; Prerequisites                                                                                                 |
-|:----------------------------------------------------------------------------------------------------------------------|
-| Download the FlowCrypt app on your Android device from the [FlowCrypt Downloads](https://flowcrypt.com/download) page.
+| 👋 Try our app                                                                                                   |
+|:-----------------------------------------------------------------------------------------------------------------|
+| ⬇ Download the FlowCrypt app on your device from the [FlowCrypt Downloads](https://flowcrypt.com/download) page. |
 
 ![Build Status](https://flowcrypt.semaphoreci.com/badges/flowcrypt-android.svg?key=3683eef1-6121-4c12-bcf7-031d0b4a36eb)
 
-## Running tests
+## 🔍 Running tests
 
 This guide follows Google's recommendations for [testing apps on Android](https://developer.android.com/training/testing). Every scenario described in this section has been tested on Ubuntu. There are JUnit and Instrumentation tests. To be able to run tests locally, you should set up your environment.
 
-### Device setup instructions
+### ✔️ Device setup instructions
 
 Please follow these steps to setup your virtual or physical device:
 
@@ -27,7 +27,7 @@ Please follow these steps to setup your virtual or physical device:
 6. sudo systemctl restart dnsmasq
 ```
 
-### Test types
+### ✔️ Test types
 
 We have two types of tests:
 
@@ -38,40 +38,40 @@ Additionally, we have separate tests for the **consumer** and **enterprise** ver
 
 We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To run tests that depend on an email server, we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server), which extends [docker-mailserver](https://github.com/tomav/docker-mailserver). This image has predefined settings for local testing. It has accounts and messages which we need for testing. You can investigate the [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver) folder to see more details. To be able to run tests that depend on an email server, please install `docker-compose` following the [official instructions](https://docs.docker.com/compose/install/).
 
-### Run independent tests
+### ✔️ Run independent tests
 
-Please follow these steps to run **the independent tests** locally:
+⬇️ Please follow these steps to run **the independent tests** locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `../script/ci-instrumentation-tests-without-mailserver.sh 1 0` (where `1` is a `numShards` and `0` is a `shardIndex`). You can find more details if you read  the guide concerning AndroidX test libraries on [sharding tests](https://developer.android.com/training/testing/junit-runner#sharding-tests). It helps us run them in pieces on a few emulators at the same time to reduce runtime.
 
-Please follow these steps to run **tests that depend on an email** server locally:
+⬇️ Please follow these steps to run **tests that depend on an email** server locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server is started.
 3. Run `../script/ci-instrumentation-tests-with-mailserver.sh`.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
-Please follow these steps to run **all tests** locally:
+⬇️ Please follow these steps to run **all tests** locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `./docker-mailserver/run_email_server.sh` and wait while the email server is started.
 3. Run `./script/run-all-tests.sh` to execute all tests.
 4. Run `./docker-mailserver/stop_email_server.sh` to stop the email server.
 
-Please follow these steps to run **enterprise tests** locally:
+⬇️ Please follow these steps to run **enterprise tests** locally:
 
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `./script/ci-instrumentation-tests-enterprise.sh` to execute enterprise tests.
 
-## Running the app in the emulator for the first time
+## ⚙️ Running the app in the emulator for the first time
 
 This section describes two main steps you need to accomplish to run the app in the emulaor:
 
 - [Install and run the emulator](#install-and-run-the-emulator)
 - [Build and run the app](#build-and-run-the-app)
 
-### Install and run the emulator
+### ✔️ Install and run the emulator
 
 Please follow these steps to be able to install and run the emulator:
 
@@ -102,7 +102,7 @@ Please follow these steps to be able to install and run the emulator:
 9\. Once running, you'll see the home screen of the emulator:
 ![image](https://user-images.githubusercontent.com/2863246/136430123-1277b324-4910-4594-9f7c-167314d1ecef.png)
 
-### Build and run the app
+### ✔️ Build and run the app
 
 Please follow these steps to be able to build and run the app:
 
