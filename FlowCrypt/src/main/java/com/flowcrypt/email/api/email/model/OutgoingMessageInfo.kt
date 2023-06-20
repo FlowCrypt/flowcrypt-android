@@ -56,9 +56,9 @@ data class OutgoingMessageInfo constructor(
   }
 
   fun getProtectedRecipients(): List<String> {
-    val allRecipients = mutableListOf<String>()
-    bccRecipients?.let { allRecipients.addAll(it.map { address -> address.address }) }
-    return allRecipients
+    val protectedRecipients = mutableListOf<String>()
+    bccRecipients?.let { protectedRecipients.addAll(it.map { address -> address.address }) }
+    return protectedRecipients
   }
 
   override fun equals(other: Any?): Boolean {
