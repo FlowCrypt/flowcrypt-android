@@ -57,6 +57,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
@@ -476,7 +477,37 @@ class SendMsgTest {
         assertEquals(true, messageMetadata.isEncrypted)
         assertEquals(true, messageMetadata.isSigned)
         assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
-        assertEquals(outgoingMessageInfo.msg, messageMetadata.recipientKeyIds)
+        assertArrayEquals(
+          arrayOf(
+            PgpKey.parseKeys(recipientPgpKeyDetails.publicKey)
+              .pgpKeyRingCollection
+              .pgpPublicKeyRingCollection
+              .first()
+              .publicKeys
+              .asSequence()
+              .toList()[1].keyID,
+            PgpKey.parseKeys(addPrivateKeyToDatabaseRule.pgpKeyDetails.publicKey)
+              .pgpKeyRingCollection
+              .pgpPublicKeyRingCollection
+              .first()
+              .publicKeys
+              .asSequence()
+              .toList()[1].keyID,
+            0,
+          ), messageMetadata.recipientKeyIds.toTypedArray()
+        )
+
+        assertFalse(
+          messageMetadata.recipientKeyIds.contains(
+            PgpKey.parseKeys(bccPgpKeyDetails.publicKey)
+              .pgpKeyRingCollection
+              .pgpPublicKeyRingCollection
+              .first()
+              .publicKeys
+              .asSequence()
+              .toList()[1].keyID
+          )
+        )
       }
     }
   }
