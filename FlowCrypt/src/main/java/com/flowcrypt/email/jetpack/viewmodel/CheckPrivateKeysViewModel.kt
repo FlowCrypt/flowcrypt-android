@@ -201,14 +201,14 @@ class CheckPrivateKeysViewModel(
         accountType = activeAccount.accountType
       )
 
-    return@withContext if (existingAccountSettings == null) {
-      val accountSettingsEntity = AccountSettingsEntity(
-        account = activeAccount.email, accountType = activeAccount.accountType
+    return@withContext existingAccountSettings ?: run {
+      val newAccountSettings = AccountSettingsEntity(
+        account = activeAccount.email,
+        accountType = activeAccount.accountType
       )
-      val id = roomDatabase.accountSettingsDao().insertSuspend(accountSettingsEntity)
-      accountSettingsEntity.copy(id = id)
-    } else {
-      existingAccountSettings
+      newAccountSettings.copy(
+        id = roomDatabase.accountSettingsDao().insertSuspend(newAccountSettings)
+      )
     }
   }
 

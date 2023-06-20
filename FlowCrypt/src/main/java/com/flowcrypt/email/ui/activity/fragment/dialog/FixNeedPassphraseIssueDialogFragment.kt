@@ -301,10 +301,9 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     }
 
     launchAndRepeatWithLifecycle {
-      checkPrivateKeysViewModel.antiBruteforceProtectionCountdownStateFlow.collect {
-        val attemptsCount = it.first
-        val timeLeft = it.second
+      checkPrivateKeysViewModel.antiBruteforceProtectionCountdownStateFlow.collect { (attemptsCount, timeLeft) ->
         binding?.btnUpdatePassphrase?.isEnabled = timeLeft == 0L
+
         if (timeLeft == 0L) {
           if (attemptsCount == 0) {
             binding?.tILKeyPassword?.error = null
