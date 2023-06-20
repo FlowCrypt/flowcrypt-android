@@ -605,5 +605,8 @@
     <string name="please_pay_attention_some_keys_were_skipped">Please note that some keys were skipped</string>
     <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">This key is unprotected. Please protect it with a pass phrase before import.</string>
     <string name="private_key_passphrase_anti_bruteforce_protection_hint">To protect you and your data, the next attempt will only be possible after the timer below finishes. Please wait until then before trying again.</string>
-    <string name="next_attempt_warning_about_wrong_pass_phrase">To protect you and your data, you only have %1$d attempts left right now.\nPlease note that if you exhaust your attempts, a mandatory 5-minute countdown period will be imposed before you can make further attempts.</string>
+    <plurals name="next_attempt_warning_about_wrong_pass_phrase">
+        <item quantity="one">For your protection and data security, you currently have only %1$d attempt left.\nPlease note that exceeding these attempts will result in a mandatory 5-minute cooldown period before you can try again.</item>
+        <item quantity="other">For your protection and data security, you currently have only %1$d attempts left.\nPlease note that exceeding these attempts will result in a mandatory 5-minute cooldown period before you can try again.</item>
+    </plurals>
 </resources>

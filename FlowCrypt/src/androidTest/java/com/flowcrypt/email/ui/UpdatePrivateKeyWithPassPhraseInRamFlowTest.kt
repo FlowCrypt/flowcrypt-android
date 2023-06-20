@@ -52,7 +52,6 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -235,11 +234,27 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
             )
           )
       } else {
+        val attemptsLeft =
+          AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE - i - 1
+
         onView(withId(R.id.tILKeyPassword))
-          .check(matches(withTextInputLayoutError(getResString(R.string.password_is_incorrect))))
+          .check(
+            matches(
+              withTextInputLayoutError(
+                getResString(R.string.password_is_incorrect) +
+                    "\n\n" +
+                    getQuantityString(
+                      R.plurals.next_attempt_warning_about_wrong_pass_phrase,
+                      attemptsLeft,
+                      attemptsLeft
+                    )
+              )
+            )
+          )
       }
 
       checkPassPhraseAttemptsCount(i + 1)
+      Thread.sleep(1000)
     }
   }
 

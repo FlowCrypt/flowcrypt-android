@@ -274,9 +274,11 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
               if (attemptsLeft > 0) {
                 binding?.tILKeyPassword?.error = getString(R.string.password_is_incorrect) +
-                    "\n\n" + getString(
-                  R.string.next_attempt_warning_about_wrong_pass_phrase, attemptsLeft
-                )
+                    "\n\n" +
+                    resources.getQuantityString(
+                      R.plurals.next_attempt_warning_about_wrong_pass_phrase,
+                      attemptsLeft, attemptsLeft
+                    )
               }
             }
           }
