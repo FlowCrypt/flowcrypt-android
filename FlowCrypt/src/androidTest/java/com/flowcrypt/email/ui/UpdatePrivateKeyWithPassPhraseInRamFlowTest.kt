@@ -229,10 +229,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
             matches(
               withTextInputLayoutError(
                 getResString(
-                  R.string.private_key_passphrase_anti_bruteforce_protection_hint,
-                  AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE,
-                  TimeUnit.MILLISECONDS.toMinutes(AccountSettingsEntity.BLOCKING_TIME_IN_MILLISECONDS)
-                    .toInt()
+                  R.string.private_key_passphrase_anti_bruteforce_protection_hint
                 )
               )
             )

@@ -20,10 +20,10 @@ import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,40 +40,47 @@ class CheckPrivateKeysViewModel(
 ) : AccountViewModel(application) {
   private val controlledRunnerForChecking = ControlledRunner<Result<List<CheckResult>>>()
   val checkPrvKeysLiveData: MutableLiveData<Result<List<CheckResult>>> = MutableLiveData()
-  val antiBruteforceProtectionCountdownFlow: Flow<Long> = flow {
+
+  val antiBruteforceProtectionCountdownStateFlow = flow {
     while (useAntiBruteforceProtection && viewModelScope.isActive) {
       val accountSettings = getActiveAccountSettings() ?: continue
       val attemptsLimit = AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE
 
       if (accountSettings.checkPassPhraseAttemptsCount < attemptsLimit) {
-        emit(0)
-
-        //reset the attempts count after 30 minutes of inactivity
         if (accountSettings.checkPassPhraseAttemptsCount > 0 &&
           System.currentTimeMillis() - accountSettings.lastUnsuccessfulCheckPassPhraseAttemptTime
           >= AccountSettingsEntity.RESET_COUNT_TIME_IN_MILLISECONDS
         ) {
+          //reset the attempts count after 5 minutes of inactivity
           roomDatabase.accountSettingsDao()
             .updateSuspend(accountSettings.copy(checkPassPhraseAttemptsCount = 0))
+          emit(Pair(0, 0L))
+        } else {
+          emit(Pair(accountSettings.checkPassPhraseAttemptsCount, 0L))
         }
       } else {
         val endTime = accountSettings.lastUnsuccessfulCheckPassPhraseAttemptTime +
             AccountSettingsEntity.BLOCKING_TIME_IN_MILLISECONDS
         val timeLeftToUnblocking = maxOf(0, endTime - System.currentTimeMillis())
-        emit(timeLeftToUnblocking)
-
         if (timeLeftToUnblocking == 0L && accountSettings.checkPassPhraseAttemptsCount ==
           attemptsLimit
         ) {
           //reset the attempts count after the blocking time
           roomDatabase.accountSettingsDao()
             .updateSuspend(accountSettings.copy(checkPassPhraseAttemptsCount = 0))
+          emit(Pair(0, timeLeftToUnblocking))
+        } else {
+          emit(Pair(attemptsLimit, timeLeftToUnblocking))
         }
       }
 
       delay(500)
     }
-  }.distinctUntilChanged().flowOn(Dispatchers.Default)
+  }.distinctUntilChanged().stateIn(
+    scope = viewModelScope,
+    started = SharingStarted.WhileSubscribed(5000),
+    initialValue = Pair(0, 0L)
+  )
 
   fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase) {
     viewModelScope.launch {

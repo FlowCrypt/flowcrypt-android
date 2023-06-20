@@ -595,5 +595,6 @@
     <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Зашифрована тема:</font> %1$s]]></string>
     <string name="please_pay_attention_some_keys_were_skipped">Зверніть увагу, що деякі ключі були пропущені</string>
     <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">Цей ключ незахищений. Перед імпортом захистіть його ключовою фразою.</string>
-    <string name="private_key_passphrase_anti_bruteforce_protection_hint" tools:ignore="PluralsCandidate">У вас було %1$d невдалих спроб ввести парольну фразу. З міркувань безпеки ми заборонили вам вводити парольну фразу протягом наступних %2$d хвилин.\n\nБудь ласка, зачекайте вказаний час, перш ніж спробувати ввести парольну фразу знову.</string>
+    <string name="private_key_passphrase_anti_bruteforce_protection_hint">Щоб захистити Вас і Ваші дані, наступна спроба буде можлива лише після закінчення таймера нижче. Будь ласка, зачекайте до того часу, перш ніж спробувати знову.</string>
+    <string name="next_attempt_warning_about_wrong_pass_phrase">Щоб захистити Вас і Ваші дані, наразі у Вас залишилося лише %1$d спроб.\nЗверніть увагу, що якщо Ви вичерпаєте всі спроби, почнеться обов’язковий 5-хвилинний період зворотного відліку, перш ніж Ви зможете робити подальші спроби.</string>
 </resources>

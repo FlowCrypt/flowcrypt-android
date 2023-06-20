@@ -594,5 +594,6 @@
     <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Зашифрованная тема:</font> %1$s]]></string>
     <string name="please_pay_attention_some_keys_were_skipped">Пожалуйста, обратите внимание, что некоторые ключи были пропущены</string>
     <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">Этот ключ не защищен. Пожалуйста, защитите его ключевой фразой перед импортом.</string>
-    <string name="private_key_passphrase_anti_bruteforce_protection_hint" tools:ignore="PluralsCandidate">У Вас было %1$d неудачных попыток ввода ключевой фразы. В целях безопасности мы заблокировали вам ввод ключевой фразы в течение следующих %2$d минут.\n\nПожалуйста, подождите указанное время, прежде чем пытаться снова ввести свою парольную фразу.</string>
+    <string name="private_key_passphrase_anti_bruteforce_protection_hint">Чтобы защитить Вас и Ваши данные, следующая попытка будет возможна только после того, как таймер ниже истечет. Пожалуйста, подождите до тех пор, прежде чем повторить попытку.</string>
+    <string name="next_attempt_warning_about_wrong_pass_phrase">Чтобы защитить Вас и Ваши данные, сейчас у вас осталось только %1$d попыток.\nОбратите внимание, что если Вы исчерпаете свои попытки, будет установлен обязательный 5-минутный период обратного отсчета, прежде чем Вы сможете предпринять следующие попытки.</string>
 </resources>

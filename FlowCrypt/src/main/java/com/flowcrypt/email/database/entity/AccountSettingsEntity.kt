@@ -56,6 +56,6 @@ data class AccountSettingsEntity constructor(
     const val TABLE_NAME = "account_settings"
     const val ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE = 5
     val BLOCKING_TIME_IN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5)
-    val RESET_COUNT_TIME_IN_MILLISECONDS = TimeUnit.MINUTES.toMillis(30)
+    val RESET_COUNT_TIME_IN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5)
   }
 }

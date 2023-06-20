@@ -14,7 +14,6 @@ import android.view.inputmethod.EditorInfo
 import androidx.annotation.LongDef
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -48,7 +47,6 @@ import org.pgpainless.util.Passphrase
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -111,12 +109,6 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
         }
 
         else -> false
-      }
-    }
-
-    binding?.eTKeyPassword?.doAfterTextChanged {
-      if (binding?.btnUpdatePassphrase?.isEnabled == true) {
-        binding?.tILKeyPassword?.error = null
       }
     }
 
@@ -276,7 +268,16 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             }
 
             isWrongPassphraseExceptionFound -> {
-              binding?.tILKeyPassword?.error = getString(R.string.password_is_incorrect)
+              val attemptsLeft =
+                AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE -
+                    checkPrivateKeysViewModel.antiBruteforceProtectionCountdownStateFlow.value.first - 1
+
+              if (attemptsLeft > 0) {
+                binding?.tILKeyPassword?.error = getString(R.string.password_is_incorrect) +
+                    "\n\n" + getString(
+                  R.string.next_attempt_warning_about_wrong_pass_phrase, attemptsLeft
+                )
+              }
             }
           }
 
@@ -298,20 +299,21 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
     }
 
     launchAndRepeatWithLifecycle {
-      checkPrivateKeysViewModel.antiBruteforceProtectionCountdownFlow.collect {
-        binding?.btnUpdatePassphrase?.isEnabled = it == 0L
-        if (it == 0L) {
-          binding?.tILKeyPassword?.error = null
+      checkPrivateKeysViewModel.antiBruteforceProtectionCountdownStateFlow.collect {
+        val attemptsCount = it.first
+        val timeLeft = it.second
+        binding?.btnUpdatePassphrase?.isEnabled = timeLeft == 0L
+        if (timeLeft == 0L) {
+          if (attemptsCount == 0) {
+            binding?.tILKeyPassword?.error = null
+          }
           binding?.btnUpdatePassphrase?.text = getString(R.string.provide_passphrase)
         } else {
           binding?.tILKeyPassword?.error = getString(
-            R.string.private_key_passphrase_anti_bruteforce_protection_hint,
-            AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE,
-            TimeUnit.MILLISECONDS.toMinutes(AccountSettingsEntity.BLOCKING_TIME_IN_MILLISECONDS)
-              .toInt()
+            R.string.private_key_passphrase_anti_bruteforce_protection_hint
           )
           binding?.btnUpdatePassphrase?.text =
-            SimpleDateFormat("mm:ss", Locale.getDefault()).format(Date(it))
+            SimpleDateFormat("mm:ss", Locale.getDefault()).format(Date(timeLeft))
         }
       }
     }
