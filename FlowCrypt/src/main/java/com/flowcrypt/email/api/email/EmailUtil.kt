@@ -646,14 +646,18 @@ class EmailUtil {
       val session = Session.getInstance(Properties())
       val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
       var pubKeys: List<String>? = null
+      var protectedPubKeys: List<String>? = null
       var prvKeys: List<String>? = null
       var ringProtector: SecretKeyRingProtector? = null
 
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-        val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
-        pubKeys = mutableListOf()
-        pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, recipients))
+        val publicRecipients = outgoingMsgInfo.getPublicRecipients().toMutableList()
+        pubKeys =
+          SecurityUtils.getRecipientsUsablePubKeys(context, publicRecipients).toMutableList()
         pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
+
+        val protectedRecipients = outgoingMsgInfo.getProtectedRecipients().toMutableList()
+        protectedPubKeys = SecurityUtils.getRecipientsUsablePubKeys(context, protectedRecipients)
 
         if (signingRequired) {
           prvKeys = listOf(
@@ -672,6 +676,7 @@ class EmailUtil {
             session = session,
             info = outgoingMsgInfo,
             pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
             prvKeys = prvKeys,
             protector = ringProtector,
             hideArmorMeta = hideArmorMeta
@@ -684,6 +689,7 @@ class EmailUtil {
             session = session,
             info = outgoingMsgInfo,
             pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
             prvKeys = prvKeys,
             protector = ringProtector,
             hideArmorMeta = hideArmorMeta
@@ -989,6 +995,7 @@ class EmailUtil {
       session: Session,
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
+      protectedPubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
@@ -1004,6 +1011,7 @@ class EmailUtil {
           prepareBodyPart(
             info = info,
             pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
             prvKeys = prvKeys,
             protector = protector,
             hideArmorMeta = hideArmorMeta
@@ -1017,6 +1025,7 @@ class EmailUtil {
       replyToMsg: MimeMessage,
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
+      protectedPubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
@@ -1028,6 +1037,7 @@ class EmailUtil {
           prepareBodyPart(
             info = info,
             pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
             prvKeys = prvKeys,
             protector = protector,
             hideArmorMeta = hideArmorMeta
@@ -1143,6 +1153,7 @@ class EmailUtil {
       session: Session,
       info: OutgoingMessageInfo,
       pubKeys: List<String>?,
+      protectedPubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
@@ -1171,6 +1182,7 @@ class EmailUtil {
         replyToMsg = msg,
         info = info,
         pubKeys = pubKeys,
+        protectedPubKeys = protectedPubKeys,
         prvKeys = prvKeys,
         protector = protector,
         hideArmorMeta = hideArmorMeta
@@ -1180,6 +1192,7 @@ class EmailUtil {
     private fun prepareBodyPart(
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
+      protectedPubKeys: List<String>? = null,
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
@@ -1188,6 +1201,7 @@ class EmailUtil {
         val encryptedContent = PgpEncryptAndOrSign.encryptAndOrSignMsg(
           msg = info.msg ?: "",
           pubKeys = pubKeys ?: emptyList(),
+          protectedPubKeys = protectedPubKeys,
           prvKeys = prvKeys,
           secretKeyRingProtector = protector,
           hideArmorMeta = hideArmorMeta,
