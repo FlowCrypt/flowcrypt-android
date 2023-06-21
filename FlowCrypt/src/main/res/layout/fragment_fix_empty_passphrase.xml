@@ -35,7 +35,8 @@
         android:layout_weight="1"
         android:visibility="gone"
         tools:itemCount="3"
-        tools:listitem="@layout/prv_key_item" />
+        tools:listitem="@layout/prv_key_item"
+        tools:visibility="visible" />
 
     <ProgressBar
         android:id="@+id/pBCheckPassphrase"
@@ -46,7 +47,8 @@
         android:indeterminateBehavior="repeat"
         android:indeterminateOnly="true"
         android:indeterminateTint="@color/colorPrimary"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        tools:visibility="visible" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tILKeyPassword"
@@ -55,9 +57,10 @@
         android:hint="@string/your_passphrase"
         android:visibility="gone"
         app:counterEnabled="false"
-        app:errorEnabled="false"
+        app:errorEnabled="true"
         app:passwordToggleContentDescription="description"
-        app:passwordToggleEnabled="true">
+        app:passwordToggleEnabled="true"
+        tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/eTKeyPassword"
@@ -69,10 +72,12 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
+        android:layout_marginTop="@dimen/default_margin_content_small"
         android:id="@+id/btnUpdatePassphrase"
         style="@style/AppWidget.Button.Big"
         android:layout_width="match_parent"
-        android:text="@string/check_passphrase"
+        android:text="@string/provide_passphrase"
         android:textAllCaps="true"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:visibility="visible" />
 </LinearLayout>

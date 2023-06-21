@@ -1,9 +1,9 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
-package com.flowcrypt.email.ui.fragment.isolation.incontainer
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -15,6 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -30,13 +31,11 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.service.PassPhrasesInRAMService
-import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.not
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -48,7 +47,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class PrivateKeyDetailsFragmentPassInRamFlexibleTimeInIsolationTest : BaseTest() {
+class PrivateKeyDetailsFragmentPassInRamFlexibleTimeFlowTest : BaseTest() {
   private val userWithClientConfiguration = AccountDaoManager.getUserWithClientConfiguration(
     ClientConfiguration(
       flags = listOf(
@@ -72,6 +71,18 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeInIsolationTest : BaseTest()
     passphraseType = KeyEntity.PassphraseType.RAM
   )
 
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      destinationId = R.id.privateKeyDetailsFragment,
+      extras = PrivateKeyDetailsFragmentArgs(
+        fingerprint = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+          KEY_PATH
+        ).fingerprint
+      ).toBundle()
+    )
+  )
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
@@ -79,21 +90,17 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeInIsolationTest : BaseTest()
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
+    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
   fun testInMemoryPassPhraseSessionLengthParameter() {
-    launchFragmentInContainer<PrivateKeyDetailsFragment>(
-      fragmentArgs = PrivateKeyDetailsFragmentArgs(
-        fingerprint = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-          KEY_PATH
-        ).fingerprint
-      ).toBundle()
-    )
-
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.pass_phrase_not_provided))))
       .check(matches(hasTextColor(R.color.red)))
+    onView(withId(R.id.btnProvidePassphrase))
+      .check(matches(isDisplayed()))
+      .perform(click())
     onView(withId(R.id.eTKeyPassword))
       .perform(
         clearText(),
@@ -105,16 +112,12 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeInIsolationTest : BaseTest()
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
       .check(matches(hasTextColor(R.color.colorPrimaryLight)))
-    onView(withId(R.id.btnUpdatePassphrase))
-      .check(matches(not(isDisplayed())))
 
     //we need to wait around 1 minute to check that [PassPhrasesInRAMService] works well
     Thread.sleep(PassPhrasesInRAMService.DELAY_TIMEOUT)
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.pass_phrase_not_provided))))
       .check(matches(hasTextColor(R.color.red)))
-    onView(withId(R.id.eTKeyPassword))
-      .check(matches(withText(`is`(emptyString()))))
   }
 
   companion object {
