@@ -48,8 +48,11 @@ data class OutgoingMessageInfo constructor(
     return getPublicRecipients() + getProtectedRecipients()
   }
 
-  fun getPublicRecipients() =
-    ((toRecipients ?: emptyList()) + (ccRecipients ?: emptyList())).map { it.address }
+  fun getPublicRecipients(): List<String> {
+    val toAddresses = toRecipients?.map { it.address } ?: emptyList()
+    val ccAddresses = ccRecipients?.map { it.address } ?: emptyList()
+    return toAddresses + ccAddresses
+  }
 
   fun getProtectedRecipients() = bccRecipients?.map { it.address } ?: emptyList()
 
