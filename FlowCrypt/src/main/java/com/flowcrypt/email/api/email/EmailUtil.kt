@@ -652,18 +652,12 @@ class EmailUtil {
 
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val publicRecipients = outgoingMsgInfo.getPublicRecipients().toMutableList()
-        pubKeys = mutableListOf()
-        pubKeys.addAll(SecurityUtils.getRecipientsUsablePubKeys(context, publicRecipients))
+        pubKeys =
+          SecurityUtils.getRecipientsUsablePubKeys(context, publicRecipients).toMutableList()
         pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
 
         val protectedRecipients = outgoingMsgInfo.getProtectedRecipients().toMutableList()
-        protectedPubKeys = mutableListOf()
-        protectedPubKeys.addAll(
-          SecurityUtils.getRecipientsUsablePubKeys(
-            context,
-            protectedRecipients
-          )
-        )
+        protectedPubKeys = SecurityUtils.getRecipientsUsablePubKeys(context, protectedRecipients)
 
         if (signingRequired) {
           prvKeys = listOf(
