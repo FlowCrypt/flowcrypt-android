@@ -38,6 +38,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
@@ -71,7 +72,14 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
   private val args by navArgs<PrivateKeyDetailsFragmentArgs>()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
+  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CheckPrivateKeysViewModel(requireActivity().application, true) as T
+      }
+    }
+  }
   private val privateKeyDetailsViewModel: PrivateKeyDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -186,28 +194,10 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   private fun initViews() {
     binding?.btnForgetPassphrase?.setOnClickListener {
       privateKeyDetailsViewModel.forgetPassphrase()
-      toast(getString(R.string.passphrase_purged_from_memory))
-      binding?.eTKeyPassword?.text = null
     }
 
-    binding?.btnUpdatePassphrase?.setOnClickListener {
-      UIUtil.hideSoftInput(requireContext(), binding?.eTKeyPassword)
-      val typedText = binding?.eTKeyPassword?.text?.toString()
-      if (typedText.isNullOrEmpty()) {
-        showInfoSnackbar(binding?.eTKeyPassword, getString(R.string.passphrase_must_be_non_empty))
-      } else {
-        snackBar?.dismiss()
-        binding?.eTKeyPassword?.let {
-          val passPhrase = Passphrase.fromPassword(typedText)
-          val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails() ?: return@let
-          checkPrivateKeysViewModel.checkKeys(
-            keys = listOf(
-              pgpKeyDetails.copy(passphraseType = privateKeyDetailsViewModel.getPassphraseType())
-            ),
-            passphrase = passPhrase
-          )
-        }
-      }
+    binding?.btnProvidePassphrase?.setOnClickListener {
+      showNeedPassphraseDialog()
     }
 
     binding?.btnShowPubKey?.setOnClickListener {
@@ -235,8 +225,8 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
       account?.let { accountEntity ->
         val passPhrase = privateKeyDetailsViewModel.getPassphrase()
         if (passPhrase == null || passPhrase.isEmpty) {
-          binding?.eTKeyPassword?.requestFocus()
           toast(getString(R.string.please_provide_passphrase_to_proceed))
+          showNeedPassphraseDialog()
         } else {
           val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails()
           if (pgpKeyDetails != null) {
@@ -251,6 +241,14 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
         }
       }
     }
+  }
+
+  private fun showNeedPassphraseDialog() {
+    val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails() ?: return
+    showNeedPassphraseDialog(
+      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+      fingerprints = listOf(pgpKeyDetails.fingerprint)
+    )
   }
 
   private fun updateViews() {
@@ -300,7 +298,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     binding?.tVPassPhraseVerification?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
     binding?.tVPassPhraseVerification?.text = getString(R.string.pass_phrase_not_provided)
     binding?.btnForgetPassphrase?.gone()
-    binding?.gCheckPassphrase?.visible()
+    binding?.btnProvidePassphrase?.visible()
   }
 
   private fun chooseDest() {
@@ -403,12 +401,10 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
                     )
                   }
                   binding?.btnForgetPassphrase?.visible()
-                  binding?.gCheckPassphrase?.gone()
-                  binding?.eTKeyPassword?.text = null
+                  binding?.btnProvidePassphrase?.gone()
                 }
               } else {
                 if (privateKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
-                  binding?.eTKeyPassword?.requestFocus()
                   toast(R.string.password_is_incorrect)
                   verificationMsg = getString(R.string.pass_phrase_not_provided)
                 } else {
@@ -466,5 +462,9 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
 
   companion object {
     private const val REQUEST_CODE_DELETE_KEY_DIALOG = 100
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      PrivateKeyDetailsFragment::class.java
+    )
   }
 }

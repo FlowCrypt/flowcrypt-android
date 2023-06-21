@@ -3,7 +3,7 @@
  * Contributors: denbond7
  */
 
-package com.flowcrypt.email.ui.fragment.isolation.incontainer
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -15,6 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
@@ -34,15 +35,14 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.PrivateKeysManager
-import org.hamcrest.Matchers.not
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -55,7 +55,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class EndPassPhraseSessionInIsolationTest : BaseTest() {
+class EndPassPhraseSessionFlowTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
@@ -65,6 +65,17 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
     passphraseType = KeyEntity.PassphraseType.RAM
   )
 
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      destinationId = R.id.privateKeyDetailsFragment,
+      extras = PrivateKeyDetailsFragmentArgs(
+        fingerprint = PrivateKeysManager
+          .getPgpKeyDetailsFromAssets(addPrivateKeyToDatabaseRule.keyPath).fingerprint
+      ).toBundle()
+    )
+  )
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
@@ -72,17 +83,8 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
+    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
-
-  @Before
-  fun launchFragmentInContainerWithPredefinedArgs() {
-    launchFragmentInContainer<PrivateKeyDetailsFragment>(
-      fragmentArgs = PrivateKeyDetailsFragmentArgs(
-        fingerprint = PrivateKeysManager
-          .getPgpKeyDetailsFromAssets(addPrivateKeyToDatabaseRule.keyPath).fingerprint
-      ).toBundle()
-    )
-  }
 
   @Test
   fun testEndPassPhraseSessionButton() {
@@ -116,6 +118,8 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
 
     //return back to the app and provide a pass phrase
     device.pressBack()
+    onView(withId(R.id.btnProvidePassphrase))
+      .perform(click())
     onView(withId(R.id.eTKeyPassword))
       .perform(
         clearText(),
@@ -127,8 +131,6 @@ class EndPassPhraseSessionInIsolationTest : BaseTest() {
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
       .check(matches(hasTextColor(R.color.colorPrimaryLight)))
-    onView(withId(R.id.btnUpdatePassphrase))
-      .check(matches(not(isDisplayed())))
     assertTrue(keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM))
 
     //open notification and check we have "End Pass Phrase Session" button
