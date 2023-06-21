@@ -477,24 +477,31 @@ class SendMsgTest {
         assertEquals(true, messageMetadata.isEncrypted)
         assertEquals(true, messageMetadata.isSigned)
         assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
+
+        val expectedIds = arrayOf(
+          PgpKey.parseKeys(recipientPgpKeyDetails.publicKey)
+            .pgpKeyRingCollection
+            .pgpPublicKeyRingCollection
+            .first()
+            .publicKeys
+            .asSequence()
+            .toList()[1].keyID,
+          PgpKey.parseKeys(addPrivateKeyToDatabaseRule.pgpKeyDetails.publicKey)
+            .pgpKeyRingCollection
+            .pgpPublicKeyRingCollection
+            .first()
+            .publicKeys
+            .asSequence()
+            .toList()[1].keyID,
+          0,
+        )
+
+        val actualIds = messageMetadata.recipientKeyIds.toTypedArray()
+
         assertArrayEquals(
-          arrayOf(
-            PgpKey.parseKeys(recipientPgpKeyDetails.publicKey)
-              .pgpKeyRingCollection
-              .pgpPublicKeyRingCollection
-              .first()
-              .publicKeys
-              .asSequence()
-              .toList()[1].keyID,
-            PgpKey.parseKeys(addPrivateKeyToDatabaseRule.pgpKeyDetails.publicKey)
-              .pgpKeyRingCollection
-              .pgpPublicKeyRingCollection
-              .first()
-              .publicKeys
-              .asSequence()
-              .toList()[1].keyID,
-            0,
-          ), messageMetadata.recipientKeyIds.toTypedArray()
+          "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
+          expectedIds,
+          actualIds
         )
 
         assertFalse(
