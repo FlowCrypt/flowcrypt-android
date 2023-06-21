@@ -494,9 +494,9 @@ class SendMsgTest {
             .asSequence()
             .toList()[1].keyID,
           0,
-        )
+        ).sortedArray()
 
-        val actualIds = messageMetadata.recipientKeyIds.toTypedArray()
+        val actualIds = messageMetadata.recipientKeyIds.toTypedArray().sortedArray()
 
         assertArrayEquals(
           "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
