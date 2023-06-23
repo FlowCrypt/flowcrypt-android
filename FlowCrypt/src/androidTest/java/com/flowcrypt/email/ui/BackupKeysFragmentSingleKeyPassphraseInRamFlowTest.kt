@@ -70,6 +70,8 @@ class BackupKeysFragmentSingleKeyPassphraseInRamFlowTest : BaseBackupKeysFragmen
 
     checkSingleFingerprintWithSuccess()
 
+    Thread.sleep(1000)
+
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -90,6 +92,8 @@ class BackupKeysFragmentSingleKeyPassphraseInRamFlowTest : BaseBackupKeysFragmen
       .perform(click())
 
     checkSingleFingerprintWithSuccess()
+
+    Thread.sleep(1000)
 
     onView(withId(R.id.btBackup))
       .check(matches(isDisplayed()))
