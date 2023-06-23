@@ -20,6 +20,7 @@ import com.flowcrypt.email.database.converters.ClientConfigurationConverter
 import com.flowcrypt.email.database.converters.PassphraseTypeConverter
 import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
+import com.flowcrypt.email.database.dao.AccountSettingsDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.KeysDao
@@ -29,6 +30,7 @@ import com.flowcrypt.email.database.dao.PubKeyDao
 import com.flowcrypt.email.database.dao.RecipientDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AccountSettingsEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -56,7 +58,8 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
     KeyEntity::class,
     LabelEntity::class,
     MessageEntity::class,
-    PublicKeyEntity::class
+    PublicKeyEntity::class,
+    AccountSettingsEntity::class,
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
@@ -79,6 +82,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun recipientDao(): RecipientDao
 
   abstract fun pubKeyDao(): PubKeyDao
+  abstract fun accountSettingsDao(): AccountSettingsDao
 
   @WorkerThread
   fun forceDatabaseCreationIfNeeded() {
@@ -87,7 +91,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 37
+    const val DB_VERSION = 38
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1314,6 +1318,30 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_37_38 = object : FlowCryptMigration(37, 38) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2356
+
+        val tableName = AccountSettingsEntity.TABLE_NAME
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `${tableName}` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`account` TEXT NOT NULL, " +
+              "`account_type` TEXT DEFAULT NULL, " +
+              "`check_pass_phrase_attempts_count` INTEGER NOT NULL DEFAULT 0, " +
+              "`last_unsuccessful_check_pass_phrase_attempt_time` INTEGER NOT NULL DEFAULT 0, " +
+              "FOREIGN KEY(`account`, `account_type`) " +
+              "REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS `account_account_type_in_account_settings` " +
+              "ON `${tableName}` (`account`, `account_type`)"
+        )
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1365,6 +1393,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_34_35,
           MIGRATION_35_36,
           MIGRATION_36_37,
+          MIGRATION_37_38,
         ).build()
         INSTANCE = instance
         return instance

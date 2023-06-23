@@ -6,13 +6,16 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -95,6 +98,8 @@ class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Applicat
         passphraseType = KeyEntity.PassphraseType.RAM
       )
     }
+    val context: Context = getApplication()
+    context.toast(context.getString(R.string.passphrase_purged_from_memory))
   }
 
   fun updatePassphrase(passphrase: Passphrase) {
