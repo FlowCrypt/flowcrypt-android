@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -1071,8 +1072,13 @@ class EmailUtil {
     ): MimeMessage = withContext(Dispatchers.IO) {
       val mimeMsg = MimeMessage(sess, msgEntity.rawMessageWithoutAttachments?.toInputStream())
 
-      //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
-      mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
+      val account =
+        FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccountSuspend()
+
+      if (account?.clientConfiguration?.shouldHideArmorMeta() == false) {
+        //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
+        mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
+      }
 
       if (mimeMsg.content is MimeMultipart && atts.isNotEmpty()) {
         val mimeMultipart = mimeMsg.content as MimeMultipart
