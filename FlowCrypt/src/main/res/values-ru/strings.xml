@@ -216,7 +216,7 @@
     <string name="key_has_already_been_added">Этот ключ уже добавлен</string>
     <string name="passphrase_type_undefined">Тип ключевой фразы не определен</string>
     <string name="your_passphrase">Ваша ключевая фраза</string>
-    <string name="check_passphrase">Проверить ключевую фразу</string>
+    <string name="provide_passphrase">Предоставить ключевую фразу</string>
     <string name="remember_pass_phrase_temporarily">Времено запомнить ключевую фразу</string>
     <string name="save_pass_phrase">Сохранить ключевую фразу</string>
     <string name="and_others">и другие&#8230;</string>
@@ -594,4 +594,10 @@
     <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Зашифрованная тема:</font> %1$s]]></string>
     <string name="please_pay_attention_some_keys_were_skipped">Пожалуйста, обратите внимание, что некоторые ключи были пропущены</string>
     <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">Этот ключ не защищен. Пожалуйста, защитите его ключевой фразой перед импортом.</string>
+    <string name="private_key_passphrase_anti_bruteforce_protection_hint">Чтобы защитить Вас и Ваши данные, следующая попытка будет возможна только после того, как таймер ниже истечет. Пожалуйста, подождите до тех пор, прежде чем повторить попытку.</string>
+    <plurals name="next_attempt_warning_about_wrong_pass_phrase">
+        <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
+        <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>
+        <item quantity="many">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попыток, после чего следует 5-минутный период восстановления.</item>
+    </plurals>
 </resources>

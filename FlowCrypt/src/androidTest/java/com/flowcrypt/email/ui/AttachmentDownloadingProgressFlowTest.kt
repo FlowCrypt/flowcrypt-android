@@ -123,7 +123,7 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
           "/gmail/v1/users/me/messages/${simpleAttInfo?.uid?.toHex()}/attachments/$ATTACHMENT_ID?fields=data&prettyPrint=false" -> {
             return MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBodyDelay(10, TimeUnit.SECONDS)
+              .setBodyDelay(4, TimeUnit.SECONDS)
               .setBody(
                 MessagePartBody().apply {
                   factory = GsonFactory.getDefaultInstance()
@@ -149,6 +149,7 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
     .around(ScreenshotTestRule())
 
   @Test
+
   fun testVisibilityOfDownloadingProgressIcon() {
     baseCheckWithAtt(
       getMsgInfo(
@@ -171,7 +172,7 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.imageViewAttIcon))
       .check(matches(withDrawable(R.drawable.stat_sys_download_gray)))
 
-    Thread.sleep(10000)
+    Thread.sleep(5000)
 
     onView(withId(R.id.imageViewAttIcon))
       .check(matches(withDrawable(R.mipmap.ic_attachment)))

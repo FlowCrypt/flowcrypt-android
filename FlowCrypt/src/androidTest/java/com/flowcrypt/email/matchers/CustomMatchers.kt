@@ -111,5 +111,9 @@ class CustomMatchers {
         requireNotNull(ContextCompat.getColorStateList(context, resourceId))
       )
     }
+
+    fun withTextInputLayoutError(expectedHint: String): TextInputLayoutErrorMatcher {
+      return TextInputLayoutErrorMatcher(expectedHint)
+    }
   }
 }
