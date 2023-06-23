@@ -13,8 +13,10 @@ import androidx.core.content.FileProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
@@ -22,8 +24,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -37,17 +42,24 @@ import com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
+import jakarta.mail.Message
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
+import kotlinx.coroutines.runBlocking
 import org.bouncycastle.bcpg.ArmoredInputStream
-import org.hamcrest.CoreMatchers
-import org.hamcrest.Matchers
-import org.hamcrest.core.AllOf
+import org.hamcrest.CoreMatchers.hasItem
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertArrayEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.Properties
 
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/1532
@@ -118,11 +130,11 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
     resultData.data =
       FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
 
-    Intents.intending(
-      AllOf.allOf(
-        IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        IntentMatchers.hasCategories(CoreMatchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
-        IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)
+    intending(
+      allOf(
+        hasAction(Intent.ACTION_CREATE_DOCUMENT),
+        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasType(Constants.MIME_TYPE_PGP_KEY)
       )
     )
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
@@ -134,5 +146,38 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
     val bytes = file.readBytes()
     val armoredInputStream = ArmoredInputStream(bytes.inputStream())
     assertArrayEquals(emptyArray(), armoredInputStream.armorHeaders ?: emptyArray())
+  }
+
+  @Test
+  fun testCreateMimeMessageWithHiddenUserAgentMimeField() {
+    val generatedMimeMsg = runBlocking {
+      val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties())).apply {
+        subject = "Test"
+        setText("Some text")
+        setFrom(InternetAddress(addAccountToDatabaseRule.account.email))
+        setRecipients(Message.RecipientType.TO, arrayOf(InternetAddress("user@flowcrypt.test")))
+      }
+      val rawMimeMessage = ByteArrayOutputStream().apply { mimeMessage.writeTo(this) }.toByteArray()
+      val messageEntity = MessageEntity.genMsgEntity(
+        email = addAccountToDatabaseRule.account.email,
+        label = JavaEmailConstants.FOLDER_OUTBOX,
+        msg = mimeMessage,
+        uid = 1,
+        isNew = true,
+        isEncrypted = false,
+        hasAttachments = false
+      ).copy(
+        rawMessageWithoutAttachments = String(rawMimeMessage)
+      )
+
+      EmailUtil.createMimeMsg(
+        context = getTargetContext(),
+        sess = Session.getDefaultInstance(Properties()),
+        msgEntity = messageEntity,
+        atts = emptyList()
+      )
+    }
+
+    assertArrayEquals(arrayOf(), generatedMimeMsg.getHeader("User-Agent") ?: arrayOf())
   }
 }
