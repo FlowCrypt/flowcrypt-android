@@ -40,7 +40,6 @@ import com.google.api.services.gmail.model.MessagePartHeader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -152,7 +151,6 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
-  @Ignore("fix me")
   fun testVisibilityOfDownloadingProgressIcon() {
     baseCheckWithAtt(
       getMsgInfo(
@@ -170,10 +168,10 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    Thread.sleep(2000)
+    Thread.sleep(1000)
 
     onView(withId(R.id.imageViewAttIcon))
-      .check(matches(withDrawable(R.drawable.stat_sys_download_gray)))
+      .check(matches(withDrawable(R.drawable.stat_sys_download_blue)))
 
     Thread.sleep(5000)
 

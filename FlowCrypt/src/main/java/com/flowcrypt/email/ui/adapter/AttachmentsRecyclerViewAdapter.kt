@@ -82,7 +82,7 @@ class AttachmentsRecyclerViewAdapter(
 
       val value = progressMap[attachmentInfo.uniqueStringId]
       if (value?.progressInPercentage in 0..99) {
-        imageViewAttIcon.setImageResource(R.drawable.stat_sys_download_gray)
+        imageViewAttIcon.setImageResource(R.drawable.stat_sys_download_blue)
         val animationDrawable = imageViewAttIcon.drawable as? AnimationDrawable
         animationDrawable?.let { animationDrawable.start() }
       } else {
