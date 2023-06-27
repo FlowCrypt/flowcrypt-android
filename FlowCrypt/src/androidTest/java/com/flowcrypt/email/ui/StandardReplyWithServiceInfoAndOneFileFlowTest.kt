@@ -28,8 +28,8 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipCloseIconAvailability
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -40,9 +40,9 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.emptyString
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -135,7 +135,7 @@ class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
 
     onView(withId(R.id.recyclerViewChipsTo))
       .check(matches(isDisplayed()))
-      .check(matches(CustomMatchers.withRecyclerViewItemCount(incomingMsgInfo.getFrom().size)))
+      .check(matches(withRecyclerViewItemCount(incomingMsgInfo.getFrom().size)))
   }
 
   @Test

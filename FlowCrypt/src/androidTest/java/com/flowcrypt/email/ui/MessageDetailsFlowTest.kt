@@ -993,9 +993,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     baseCheck(msgInfo)
 
     assertEquals(1, msgInfo?.msgBlocks?.size)
-    MatcherAssert.assertThat(
-      msgInfo?.msgBlocks?.first(), instanceOf(GenericMsgBlock::class.java)
-    )
+    MatcherAssert.assertThat(msgInfo?.msgBlocks?.first(), instanceOf(GenericMsgBlock::class.java))
 
     checkWebViewText(msgInfo?.text)
   }
