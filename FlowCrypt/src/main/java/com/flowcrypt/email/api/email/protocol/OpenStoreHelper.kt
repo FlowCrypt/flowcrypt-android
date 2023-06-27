@@ -72,14 +72,14 @@ class OpenStoreHelper {
       authCredentials: AuthCredentials,
       session: Session
     ): Store {
-      val store = getStore(account, session)
-      store.connect(
-        authCredentials.imapServer,
-        authCredentials.imapPort,
-        authCredentials.username,
-        authCredentials.peekPassword()
-      )
-      return store
+      return getStore(account, session).apply {
+        connect(
+          authCredentials.imapServer,
+          authCredentials.imapPort,
+          authCredentials.username,
+          authCredentials.peekPassword()
+        )
+      }
     }
 
     fun getStore(account: AccountEntity?, session: Session): Store {

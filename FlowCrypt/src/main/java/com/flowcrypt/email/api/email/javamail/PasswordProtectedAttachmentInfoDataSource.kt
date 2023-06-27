@@ -48,7 +48,7 @@ class PasswordProtectedAttachmentInfoDataSource(
           try {
             super.close()
           } catch (e: Exception) {
-            //we don't care about exception here. Can be skipped.
+            //we don't care about an exception here. Can be skipped.
           }
         }
       }

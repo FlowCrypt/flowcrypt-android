@@ -44,7 +44,6 @@ import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
-import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.gms.security.ProviderInstaller
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailRawSearchTerm
@@ -466,15 +465,7 @@ class EmailUtil {
      * @return The first address as a human readable string or email.
      */
     fun getFirstAddressString(addresses: List<InternetAddress>?): String {
-      if (addresses.isNullOrEmpty()) {
-        return ""
-      }
-
-      return if (TextUtils.isEmpty(addresses[0].personal)) {
-        addresses[0].address
-      } else {
-        addresses[0].personal
-      }
+      return addresses?.firstOrNull()?.let { it.personal.ifEmpty { it.address } } ?: ""
     }
 
     /**
@@ -566,7 +557,7 @@ class EmailUtil {
      */
     @Suppress("UNCHECKED_CAST")
     fun getMsgsEncryptionStates(folder: IMAPFolder, uidList: List<Long>): Map<Long, Boolean> {
-      if (CollectionUtils.isEmpty(uidList)) {
+      if (uidList.isEmpty()) {
         return HashMap()
       }
       val uidArray = LongArray(uidList.size)
@@ -708,19 +699,15 @@ class EmailUtil {
      * @return The next [UID] value for the outgoing message.
      */
     fun genOutboxUID(context: Context): Long {
-      var lastUid = SharedPreferencesHelper.getLong(
+      return SharedPreferencesHelper.getLong(
         PreferenceManager.getDefaultSharedPreferences(context),
         Constants.PREF_KEY_LAST_OUTBOX_UID, 0
-      )
-
-      lastUid++
-
-      SharedPreferencesHelper.setLong(
-        PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREF_KEY_LAST_OUTBOX_UID, lastUid
-      )
-
-      return lastUid
+      ).inc().apply {
+        SharedPreferencesHelper.setLong(
+          PreferenceManager.getDefaultSharedPreferences(context),
+          Constants.PREF_KEY_LAST_OUTBOX_UID, this
+        )
+      }
     }
 
     /**
@@ -833,8 +820,11 @@ class EmailUtil {
      */
     @SuppressLint("SimpleDateFormat") // for now we use iso format, regardles of locality
     fun genReplyContent(msgInfo: IncomingMessageInfo?): String {
-      val date =
-        if (msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
+      val date = if (msgInfo != null) {
+        SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate())
+      } else {
+        "unknown date"
+      }
       val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
       val replyText = prepareReplyQuotes(msgInfo?.text)
       return "\n\nOn $date, $sender wrote:\n$replyText"
@@ -925,37 +915,28 @@ class EmailUtil {
      * @return true if the given part is allowed, otherwise - false
      */
     fun isPartAllowed(item: MimeBodyPart): Boolean {
-      var result = true
-      if (Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
-        result = false
+      val isAttachment = Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)
+      val backupsPattern = "(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()
+      val pgpKeysPattern = "(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()
 
-        //match allowed files
-        if (item.fileName in ALLOWED_FILE_NAMES) {
-          result = true
-        }
+      return when {
+        isAttachment && (
+            //match allowed files
+            item.fileName in ALLOWED_FILE_NAMES ||
+                //match private keys(backups)
+                item.fileName?.matches(backupsPattern) == true ||
+                //match PGP keys by name and extension
+                item.fileName?.matches(pgpKeysPattern) == true ||
+                //allow download keys less than 100kb
+                FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 10240 ||
+                //match signature
+                item.isMimeType("application/pgp-signature")
+            ) -> true
 
-        //match private keys
-        if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()) == true) {
-          result = true
-        }
+        isAttachment -> false
 
-        //match public keys
-        if (item.fileName?.matches("(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()) == true) {
-          result = true
-        }
-
-        //allow download keys less than 100kb
-        if (FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 102400) {
-          result = true
-        }
-
-        //match signature
-        if (item.isMimeType("application/pgp-signature")) {
-          result = true
-        }
+        else -> true
       }
-
-      return result
     }
 
     /**
