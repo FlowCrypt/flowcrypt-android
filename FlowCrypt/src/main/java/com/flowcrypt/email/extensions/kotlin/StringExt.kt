@@ -9,9 +9,7 @@ package com.flowcrypt.email.extensions.kotlin
 import com.flowcrypt.email.util.BetterInternetAddress
 import org.json.JSONObject
 import java.io.InputStream
-import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
-import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.Base64
@@ -30,16 +28,6 @@ private const val CHAR_160 = 160.toChar()
 
 fun String.normalize(): String {
   return this.normalizeSpaces().normalizeDashes()
-}
-
-fun String.countOfMatches(needle: String): Int {
-  var result = 0
-  var pos = this.indexOf(needle)
-  while (pos > -1) {
-    ++result
-    pos = this.indexOf(needle, pos + needle.length)
-  }
-  return result
 }
 
 fun String.countOfMatchesZeroOneOrMore(needle: String): Int {
@@ -122,31 +110,8 @@ fun String.decodeBase64(): ByteArray {
   return Base64.getDecoder().decode(this)
 }
 
-// see https://stackoverflow.com/a/611117/1540501
-fun String.encodeUriComponent(): String {
-  return try {
-    URLEncoder.encode(this, "UTF-8")
-      .replace("+", "%20")
-      .replace("%21", "!")
-      .replace("%27", "'")
-      .replace("%28", "(")
-      .replace("%29", ")")
-      .replace("%7E", "~")
-  } catch (e: UnsupportedEncodingException) {
-    // should never happen
-    throw IllegalStateException(e)
-  }
-}
-
 fun String.toInputStream(charset: Charset = StandardCharsets.UTF_8): InputStream {
   return toByteArray(charset).inputStream()
-}
-
-fun String.stripTrailing(ch: Char): String {
-  if (isEmpty()) return this
-  var pos = length - 1
-  while (pos >= 0 && this[pos] == ch) --pos
-  return if (pos != -1) substring(0, pos + 1) else ""
 }
 
 fun String.isValidEmail(): Boolean {
