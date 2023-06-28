@@ -1,6 +1,7 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: denbond7
+ * Contributors:
+ *  Ivan Pizhenko
  */
 
 package com.flowcrypt.email.extensions.jakarta.mail
