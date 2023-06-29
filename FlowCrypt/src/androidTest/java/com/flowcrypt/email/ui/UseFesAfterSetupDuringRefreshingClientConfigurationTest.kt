@@ -29,7 +29,7 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -108,7 +108,7 @@ class UseFesAfterSetupDuringRefreshingClientConfigurationTest : BaseTest() {
         ApplicationProvider.getApplicationContext()
       ).build()
       val result = worker.doWork()
-      assertThat(result, CoreMatchers.`is`(ListenableWorker.Result.success()))
+      assertThat(result, `is`(ListenableWorker.Result.success()))
 
       val accountAfterUpdating = accountDao.getActiveAccountSuspend()
       assertEquals(true, accountAfterUpdating?.useCustomerFesUrl)

@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.os.Bundle
 import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
@@ -16,7 +15,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -38,12 +37,13 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers
 import org.hamcrest.Matchers
-import org.hamcrest.core.AllOf
+import org.hamcrest.Matchers.allOf
 import org.junit.AfterClass
 import org.junit.Rule
 import org.junit.Test
@@ -66,14 +66,13 @@ class PublicKeyDetailsFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.publicKeyDetailsFragment,
-      extras = Bundle().apply {
-        putParcelable(
-          "recipientEntity", RecipientEntity(email = EMAIL_DENBOND7, name = USER_DENBOND7)
-        )
-        putParcelable(
-          "publicKeyEntity", keyDetails.toPublicKeyEntity(EMAIL_DENBOND7).copy(id = 12)
-        )
-      }
+      extras = PublicKeyDetailsFragmentArgs(
+        recipientEntity = RecipientEntity(
+          email = EMAIL_DENBOND7,
+          name = USER_DENBOND7
+        ),
+        publicKeyEntity = keyDetails.toPublicKeyEntity(EMAIL_DENBOND7).copy(id = 12)
+      ).toBundle()
     )
   )
 
@@ -159,8 +158,8 @@ class PublicKeyDetailsFlowTest : BaseTest() {
     resultData.data =
       FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
 
-    Intents.intending(
-      AllOf.allOf(
+    intending(
+      allOf(
         IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
         IntentMatchers.hasCategories(CoreMatchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
         IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)

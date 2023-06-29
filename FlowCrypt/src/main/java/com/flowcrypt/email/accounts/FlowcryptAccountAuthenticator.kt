@@ -128,7 +128,7 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
       }
     }
 
-    if (!authToken.isNullOrEmpty()) {
+    if (authToken.isNotEmpty()) {
       return Bundle().apply {
         putString(AccountManager.KEY_ACCOUNT_NAME, account.name)
         putString(AccountManager.KEY_ACCOUNT_TYPE, account.type)

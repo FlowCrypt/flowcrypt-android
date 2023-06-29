@@ -9,7 +9,6 @@ package com.flowcrypt.email.api.email.gmail
 
 import android.accounts.Account
 import android.content.Context
-import android.text.TextUtils
 import android.util.Base64
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -633,8 +632,6 @@ class GmailApiHelper {
       localFolder: LocalFolder, nextPageToken: String? = null
     ):
         ListMessagesResponse = withContext(Dispatchers.IO) {
-
-
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val list = gmailApiService
         .users()
@@ -668,9 +665,7 @@ class GmailApiHelper {
           .setQ("rfc822msgid:$rfc822msgidValue")
           .execute()
 
-        return@withContext if (response.messages != null && response.messages.size == 1) {
-          response.messages[0].threadId
-        } else null
+        return@withContext response.messages.firstOrNull()?.threadId
       }
 
     suspend fun sendMsg(
@@ -759,11 +754,7 @@ class GmailApiHelper {
 
           val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
           val msg = MimeMessage(Session.getInstance(Properties()), stream)
-          val backup = EmailUtil.getKeyFromMimeMsg(msg)
-
-          if (TextUtils.isEmpty(backup)) {
-            continue
-          }
+          val backup = EmailUtil.getKeyFromMimeMsg(msg).takeIf { it.isNotEmpty() } ?: continue
 
           list.addAll(PgpKey.parseKeys(source = backup).pgpKeyDetailsList.map {
             it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
@@ -969,7 +960,7 @@ class GmailApiHelper {
       }
     }
 
-    suspend fun <T, V> useParallel(
+    private suspend fun <T, V> useParallel(
       list: List<T>,
       stepValue: Int = 10,
       action: suspend (subList: List<T>) -> List<V>

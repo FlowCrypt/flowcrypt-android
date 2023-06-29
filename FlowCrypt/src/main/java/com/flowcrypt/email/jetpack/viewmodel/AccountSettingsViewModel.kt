@@ -35,8 +35,6 @@ open class AccountSettingsViewModel(application: Application) :
   }
 
   fun updateCachedAccountSettings(accountEntity: AccountEntity) {
-    accountSettingsMutableStateFlow.update {
-      accountEntity
-    }
+    accountSettingsMutableStateFlow.update { accountEntity }
   }
 }

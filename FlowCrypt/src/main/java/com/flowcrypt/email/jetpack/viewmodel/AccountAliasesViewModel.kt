@@ -10,7 +10,6 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -43,11 +42,11 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
     }
 
   fun fetchUpdates(lifecycleOwner: LifecycleOwner) {
-    freshAccountAliasesLiveData.observe(lifecycleOwner, Observer { freshAliases ->
+    freshAccountAliasesLiveData.observe(lifecycleOwner) { freshAliases ->
       viewModelScope.launch {
         roomDatabase.accountAliasesDao().updateAliases(activeAccountLiveData.value, freshAliases)
       }
-    })
+    }
   }
 
   private suspend fun fetchAliases(context: Context, account: Account) =
@@ -73,7 +72,7 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
         aliases
       } catch (e: IOException) {
         e.printStackTrace()
-        emptyList<AccountAliasesEntity>()
+        emptyList()
       }
     }
 }

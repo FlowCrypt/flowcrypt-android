@@ -22,7 +22,7 @@ class ClickOnViewInRecyclerViewItem(private val viewId: Int) : ViewAction {
   }
 
   override fun getDescription(): String {
-    return "Click on a child view with id = ${viewId}"
+    return "Click on a child view with id = $viewId"
   }
 
   override fun perform(uiController: UiController, view: View) {
