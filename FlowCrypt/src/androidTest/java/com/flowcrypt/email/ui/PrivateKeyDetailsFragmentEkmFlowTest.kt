@@ -1,14 +1,15 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
-package com.flowcrypt.email.ui.fragment.isolation.incontainer
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -23,10 +24,11 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment
+import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -39,7 +41,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class PrivateKeyDetailsFragmentEkmInIsolationTest : BaseTest() {
+class PrivateKeyDetailsFragmentEkmFlowTest : BaseTest() {
   private val userWithClientConfiguration = AccountDaoManager.getUserWithClientConfiguration(
     ClientConfiguration(
       flags = listOf(
@@ -62,6 +64,18 @@ class PrivateKeyDetailsFragmentEkmInIsolationTest : BaseTest() {
     passphraseType = KeyEntity.PassphraseType.RAM
   )
 
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      destinationId = R.id.privateKeyDetailsFragment,
+      extras = PrivateKeyDetailsFragmentArgs(
+        fingerprint = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+          KEY_PATH
+        ).fingerprint
+      ).toBundle()
+    )
+  )
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
@@ -69,22 +83,13 @@ class PrivateKeyDetailsFragmentEkmInIsolationTest : BaseTest() {
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
+    .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
-  fun testBtnShowPrKeyGone() {
-    launchFragmentInContainer<PrivateKeyDetailsFragment>(
-      fragmentArgs = PrivateKeyDetailsFragmentArgs(
-        fingerprint = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-          KEY_PATH
-        ).fingerprint
-      ).toBundle()
-    )
-
-    Thread.sleep(5000)
-
-    onView(withId(R.id.btnShowPrKey))
-      .check(matches(not(isDisplayed())))
+  fun testActionDeleteDisabled() {
+    onView(withId(R.id.menuActionDeleteKey))
+      .check(matches(not(isEnabled())))
   }
 
   companion object {
