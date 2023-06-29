@@ -465,7 +465,8 @@ class EmailUtil {
      * @return The first address as a human readable string or email.
      */
     fun getFirstAddressString(addresses: List<InternetAddress>?): String {
-      return addresses?.firstOrNull()?.let { it.personal.ifEmpty { it.address } } ?: ""
+      return addresses?.firstOrNull()?.let { it.personal?.ifEmpty { it.address } ?: it.address }
+        ?: ""
     }
 
     /**
