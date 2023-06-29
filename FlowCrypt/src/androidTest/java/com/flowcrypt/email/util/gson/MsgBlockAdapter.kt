@@ -28,18 +28,18 @@ class MsgBlockAdapter : JsonDeserializer<MsgBlock> {
     val type = context.deserialize<MsgBlock.Type>(jsonObject.get("type"), MsgBlock.Type::class.java)
       ?: return null
 
-    when (type) {
-      MsgBlock.Type.PUBLIC_KEY -> return context.deserialize<MsgBlock>(
+    return when (type) {
+      MsgBlock.Type.PUBLIC_KEY -> context.deserialize<MsgBlock>(
         json,
         PublicKeyMsgBlock::class.java
       )
 
-      MsgBlock.Type.DECRYPT_ERROR -> return context.deserialize<MsgBlock>(
+      MsgBlock.Type.DECRYPT_ERROR -> context.deserialize<MsgBlock>(
         json,
         DecryptErrorMsgBlock::class.java
       )
 
-      else -> return context.deserialize<MsgBlock>(json, GenericMsgBlock::class.java)
+      else -> context.deserialize<MsgBlock>(json, GenericMsgBlock::class.java)
     }
   }
 }

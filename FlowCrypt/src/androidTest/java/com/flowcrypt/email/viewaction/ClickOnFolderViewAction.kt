@@ -26,8 +26,8 @@ import org.hamcrest.Matchers.allOf
 /**
  * Based on [NavigationViewActions]
  */
-class ClickOnFolderViewAction(val folderName: String) : ViewAction {
-  override fun getDescription(): String = "click on folder with name"
+class ClickOnFolderViewAction(private val folderName: String) : ViewAction {
+  override fun getDescription(): String = "click on folder with name $folderName"
 
   override fun getConstraints(): Matcher<View> {
     return allOf(

@@ -58,12 +58,10 @@ data class ExtraActionInfo(
       when (intent.action) {
         Intent.ACTION_VIEW, Intent.ACTION_SENDTO, Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
           if (Intent.ACTION_SEND == intent.action) {
-            val stream = intent.getParcelableExtraViaExt<Uri>(Intent.EXTRA_STREAM)
-            if (stream != null) {
-              val attachmentInfo = EmailUtil.getAttInfoFromUri(context, stream)
-              attachmentInfo?.let {
-                attsList.add(attachmentInfo)
-              }
+            val uri = intent.getParcelableExtraViaExt<Uri>(Intent.EXTRA_STREAM)
+            if (uri != null) {
+              val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
+              attachmentInfo?.let { attsList.add(attachmentInfo) }
             }
           } else {
             val uriList = intent.getParcelableArrayListExtraViaExt<Parcelable>(Intent.EXTRA_STREAM)
@@ -71,9 +69,7 @@ data class ExtraActionInfo(
               for (parcelable in uriList) {
                 val uri = parcelable as Uri
                 val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
-                attachmentInfo?.let {
-                  attsList.add(attachmentInfo)
-                }
+                attachmentInfo?.let { attsList.add(attachmentInfo) }
               }
             }
           }

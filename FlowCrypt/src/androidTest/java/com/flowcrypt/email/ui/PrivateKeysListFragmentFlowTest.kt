@@ -105,10 +105,7 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
   @Test
   fun testImportFromClipboardUnprotectedKey() {
     testImportUnprotectedPrivateKey { pgpKeyDetails ->
-      addTextToClipboard(
-        "unprotected private key",
-        requireNotNull(pgpKeyDetails.privateKey)
-      )
+      addTextToClipboard("unprotected private key", requireNotNull(pgpKeyDetails.privateKey))
 
       onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))

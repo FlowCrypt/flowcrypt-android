@@ -5,9 +5,13 @@
 
 package com.flowcrypt.email.ui
 
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.clearText
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -39,20 +43,20 @@ class AddingExistingAccountFlowTest : BaseTest() {
       sourceType = KeyImportDetails.SourceType.EMAIL
     )
 
-    Espresso.onView(ViewMatchers.withId(R.id.editTextEmail))
+    onView(withId(R.id.editTextEmail))
       .perform(
-        ViewActions.clearText(),
-        ViewActions.typeText(existedUser.email),
-        ViewActions.closeSoftKeyboard()
+        clearText(),
+        typeText(existedUser.email),
+        closeSoftKeyboard()
       )
-    Espresso.onView(ViewMatchers.withId(R.id.editTextPassword))
+    onView(withId(R.id.editTextPassword))
       .perform(
-        ViewActions.clearText(),
-        ViewActions.typeText(existedUser.password),
-        ViewActions.closeSoftKeyboard()
+        clearText(),
+        typeText(existedUser.password),
+        closeSoftKeyboard()
       )
-    Espresso.onView(ViewMatchers.withId(R.id.buttonTryToConnect))
-      .perform(ViewActions.scrollTo(), ViewActions.click())
+    onView(withId(R.id.buttonTryToConnect))
+      .perform(scrollTo(), click())
 
     checkIsSnackBarDisplayed(getResString(R.string.template_email_already_added, existedUser.email))
   }

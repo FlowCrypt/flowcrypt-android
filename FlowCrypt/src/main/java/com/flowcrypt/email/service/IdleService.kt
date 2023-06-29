@@ -100,11 +100,11 @@ class IdleService : LifecycleService() {
 
   private fun setupConnectionObserver() {
     lifecycle.addObserver(connectionLifecycleObserver)
-    connectionLifecycleObserver.connectionLiveData.observe(this, { isConnected ->
+    connectionLifecycleObserver.connectionLiveData.observe(this) { isConnected ->
       if (isConnected) {
         cachedAccountEntity?.let { accountEntity -> submitIdle(accountEntity) }
       }
-    })
+    }
   }
 
   private fun observeActiveAccountChanges() {
@@ -116,10 +116,10 @@ class IdleService : LifecycleService() {
         }
       }
 
-    activeAccountLiveData.observe(this, {
+    activeAccountLiveData.observe(this) {
       cachedAccountEntity = it
       cachedAccountEntity?.let { accountEntity -> submitIdle(accountEntity) }
-    })
+    }
   }
 
   private fun submitIdle(accountEntity: AccountEntity) {

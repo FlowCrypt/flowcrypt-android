@@ -53,13 +53,9 @@ data class IncomingMessageInfo constructor(
   fun getCc(): List<InternetAddress> = msgEntity.cc
 
   fun getHtmlMsgBlock(): MsgBlock? {
-    for (part in msgBlocks ?: emptyList()) {
-      if (part.type == MsgBlock.Type.PLAIN_HTML || part.type == MsgBlock.Type.DECRYPTED_HTML) {
-        return part
-      }
+    return msgBlocks?.firstOrNull { part ->
+      part.type == MsgBlock.Type.PLAIN_HTML || part.type == MsgBlock.Type.DECRYPTED_HTML
     }
-
-    return null
   }
 
   fun getUid(): Int = msgEntity.uid.toInt()
@@ -199,12 +195,6 @@ data class IncomingMessageInfo constructor(
   }
 
   private fun hasSomePart(partType: MsgBlock.Type): Boolean {
-    for (part in msgBlocks!!) {
-      if (part.type == partType) {
-        return true
-      }
-    }
-
-    return false
+    return msgBlocks?.any { it.type == partType } ?: false
   }
 }

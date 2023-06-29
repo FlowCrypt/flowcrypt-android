@@ -106,9 +106,6 @@ class MessageDetailsUpdatePubFromPartKeyFlowTest : BaseMessageDetailsFlowTest() 
       requireNotNull(recipientAfterSaving?.publicKeys?.firstOrNull()?.publicKey)
     val pgpKeyDetailsOfDatabaseEntity =
       PgpKey.parseKeys(publicKeyByteArray).pgpKeyDetailsList.firstOrNull()
-    assertEquals(
-      receivedPgpKeyDetails.lastModified,
-      pgpKeyDetailsOfDatabaseEntity?.lastModified
-    )
+    assertEquals(receivedPgpKeyDetails.lastModified, pgpKeyDetailsOfDatabaseEntity?.lastModified)
   }
 }

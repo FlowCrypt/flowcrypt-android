@@ -61,10 +61,7 @@ data class ClientConfiguration constructor(
    * use this method when using for PUB sync
    */
   fun getKeyManagerUrlForPublicKeys(): String? {
-    if (hasProperty(ConfigurationProperty.NO_KEY_MANAGER_PUB_LOOKUP)) {
-      return null
-    }
-    return keyManagerUrl
+    return keyManagerUrl?.takeIf { !hasProperty(ConfigurationProperty.NO_KEY_MANAGER_PUB_LOOKUP) }
   }
 
   /**

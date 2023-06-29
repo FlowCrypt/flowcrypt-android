@@ -35,8 +35,13 @@ open class AttachmentInfoDataSource(private val context: Context, val att: Attac
    * If a content type is unknown we return "application/octet-stream".
    * http://www.rfc-editor.org/rfc/rfc2046.txt (section 4.5.1.  Octet-Stream Subtype)
    */
-  override fun getContentType(): String =
-    if (TextUtils.isEmpty(att.type)) Constants.MIME_TYPE_BINARY_DATA else att.type
+  override fun getContentType(): String {
+    return if (TextUtils.isEmpty(att.type)) {
+      Constants.MIME_TYPE_BINARY_DATA
+    } else {
+      att.type
+    }
+  }
 
   override fun getName(): String = att.getSafeName()
 }

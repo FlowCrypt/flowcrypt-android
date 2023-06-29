@@ -70,7 +70,7 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
-import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Ignore
@@ -663,7 +663,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
         ?: throw IllegalArgumentException("No expiration date")
 
-    Assert.assertTrue(existedKeyExpiration.isBefore(Instant.now()))
+    assertTrue(existedKeyExpiration.isBefore(Instant.now()))
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()

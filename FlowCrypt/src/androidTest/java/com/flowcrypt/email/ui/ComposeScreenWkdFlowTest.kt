@@ -68,23 +68,25 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
   val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        if ("/.well-known/openpgpkey/.*/policy".toRegex().matches(request.path ?: "")) {
-          return handleAdvancedPolicyRequest()
-        }
+        return when {
+          "/.well-known/openpgpkey/.*/policy".toRegex().matches(request.path ?: "") -> {
+            handleAdvancedPolicyRequest()
+          }
 
-        if ("/.well-known/openpgpkey/.*/hu/.*\\?l=.*".toRegex().matches(request.path ?: "")) {
-          return handleAdvancedWkdRequest()
-        }
+          "/.well-known/openpgpkey/.*/hu/.*\\?l=.*".toRegex().matches(request.path ?: "") -> {
+            handleAdvancedWkdRequest()
+          }
 
-        if (request.path == "/.well-known/openpgpkey/policy") {
-          return handleDirectPolicyRequest()
-        }
+          request.path == "/.well-known/openpgpkey/policy" -> {
+            handleDirectPolicyRequest()
+          }
 
-        if ("/.well-known/openpgpkey/hu/.*\\?l=.*".toRegex().matches(request.path ?: "")) {
-          return handleDirectWkdRequest()
-        }
+          "/.well-known/openpgpkey/hu/.*\\?l=.*".toRegex().matches(request.path ?: "") -> {
+            handleDirectWkdRequest()
+          }
 
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+          else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        }
       }
     })
 

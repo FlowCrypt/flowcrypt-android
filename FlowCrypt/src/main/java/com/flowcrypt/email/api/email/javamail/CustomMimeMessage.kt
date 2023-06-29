@@ -22,7 +22,7 @@ class CustomMimeMessage constructor(
   rawHeaders: String?
 ) : MimeMessage(session) {
   init {
-    headers = InternetHeaders(ByteArrayInputStream(rawHeaders?.toByteArray() ?: "".toByteArray()))
+    headers = InternetHeaders(ByteArrayInputStream(rawHeaders?.toByteArray() ?: byteArrayOf()))
   }
 
   fun setMessageId(msgId: String) {

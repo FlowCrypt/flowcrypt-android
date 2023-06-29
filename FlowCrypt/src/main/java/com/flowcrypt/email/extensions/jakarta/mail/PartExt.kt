@@ -1,7 +1,7 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors:
- *    Ivan Pizhenko
+ *  Ivan Pizhenko
  */
 
 package com.flowcrypt.email.extensions.jakarta.mail
@@ -21,10 +21,6 @@ fun Part.isMultipart(): Boolean {
 
 fun Part.isMultipartAlternative(): Boolean {
   return isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART_ALTERNATIVE)
-}
-
-fun Part.isHtmlText(): Boolean {
-  return isMimeType(JavaEmailConstants.MIME_TYPE_TEXT_HTML)
 }
 
 fun Part.isPlainText(): Boolean {

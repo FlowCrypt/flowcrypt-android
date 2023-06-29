@@ -81,8 +81,7 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
     for (i in EMAILS.indices) {
       if (i % 2 == 0) {
         onView(withId(R.id.recyclerViewContacts)).perform(
-          actionOnItem<RecyclerView.ViewHolder>
-            (
+          actionOnItem<RecyclerView.ViewHolder>(
             hasDescendant(allOf(withId(R.id.tVName), withText(getUserName(EMAILS[i])))),
             doNothing()
           )

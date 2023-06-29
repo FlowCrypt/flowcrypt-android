@@ -349,19 +349,15 @@ class GeneralUtil {
      * @return The generated order number.
      */
     fun genAttOrderId(context: Context): Int {
-      var lastId = SharedPreferencesHelper.getInt(
+      return SharedPreferencesHelper.getInt(
         PreferenceManager.getDefaultSharedPreferences(context),
         Constants.PREF_KEY_LAST_ATT_ORDER_ID, 0
-      )
-
-      lastId++
-
-      SharedPreferencesHelper.setInt(
-        PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREF_KEY_LAST_ATT_ORDER_ID, lastId
-      )
-
-      return lastId
+      ).inc().apply {
+        SharedPreferencesHelper.setInt(
+          PreferenceManager.getDefaultSharedPreferences(context),
+          Constants.PREF_KEY_LAST_ATT_ORDER_ID, this
+        )
+      }
     }
 
     /**
@@ -420,10 +416,10 @@ class GeneralUtil {
      * Returns a language code of the current [Locale].
      */
     fun getLocaleLanguageCode(context: Context?): String {
-      context ?: return "en"
-      return if (context.resources.configuration.locales.isEmpty) {
-        "en"
-      } else context.resources.configuration.locales.get(0).language.lowercase()
+      return when {
+        context == null || context.resources.configuration.locales.isEmpty -> "en"
+        else -> context.resources.configuration.locales.get(0).language.lowercase()
+      }
     }
 
     /**

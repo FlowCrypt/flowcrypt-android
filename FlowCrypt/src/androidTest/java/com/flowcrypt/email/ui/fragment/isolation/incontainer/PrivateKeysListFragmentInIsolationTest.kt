@@ -37,7 +37,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
@@ -168,7 +168,7 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
     val expiration = requireNotNull(pgpKeyDetails.expiration)
     val expectedExpirationDate = "Jan 1, 2011"
     val actualExpirationDate = dateFormat.format(Date(expiration))
-    Assert.assertEquals(expectedExpirationDate, actualExpirationDate)
+    assertEquals(expectedExpirationDate, actualExpirationDate)
 
     doBaseCheckingForKey(
       keyOwner = "expired@flowcrypt.test",

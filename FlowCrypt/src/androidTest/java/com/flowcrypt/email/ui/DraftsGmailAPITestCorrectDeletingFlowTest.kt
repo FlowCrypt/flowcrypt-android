@@ -78,12 +78,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
     TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         return when {
-          request.method == "GET" && request.path ==
-              "/gmail/v1/users/me/messages/$MESSAGE_ID_FIRST?" +
-              "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
-              "payload/partId,payload/mimeType,payload/filename,payload/headers," +
-              "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
-              "&format=full" -> {
+          request.method == "GET" && request.path == genPathForGmailMessages(MESSAGE_ID_FIRST) -> {
 
             MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -97,12 +92,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
               )
           }
 
-          request.method == "GET" && request.path ==
-              "/gmail/v1/users/me/messages/$MESSAGE_ID_SECOND?" +
-              "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
-              "payload/partId,payload/mimeType,payload/filename,payload/headers," +
-              "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
-              "&format=full" -> {
+          request.method == "GET" && request.path == genPathForGmailMessages(MESSAGE_ID_SECOND) -> {
 
             MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -249,6 +239,12 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
 
     assertEquals(0, (responseAfterDeletingFirstDraft as ListDraftsResponse).drafts.size)
   }
+
+  private fun genPathForGmailMessages(subPath: String) = "/gmail/v1/users/me/messages/$subPath?" +
+      "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
+      "payload/partId,payload/mimeType,payload/filename,payload/headers," +
+      "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
+      "&format=full"
 
   private fun selectDraft(position: Int = 0) {
     onView(withId(R.id.recyclerViewMsgs))

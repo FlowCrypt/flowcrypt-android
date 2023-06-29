@@ -46,17 +46,10 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   PENDING_DELETING_DRAFT(26);
 
 
-
   companion object {
     @JvmStatic
     fun generate(code: Int): MessageState {
-      for (messageState in values()) {
-        if (messageState.value == code) {
-          return messageState
-        }
-      }
-
-      return NONE
+      return values().firstOrNull { it.value == code } ?: NONE
     }
   }
 }

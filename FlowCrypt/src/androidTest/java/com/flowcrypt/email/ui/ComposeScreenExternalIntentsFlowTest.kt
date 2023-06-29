@@ -113,10 +113,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
 
     for (i in 0 until ATTACHMENTS_COUNT) {
       atts.add(
-        TestGeneralUtil.createFileWithTextContent(
-          "$i.txt",
-          UUID.randomUUID().toString()
-        )
+        TestGeneralUtil.createFileWithTextContent("$i.txt", UUID.randomUUID().toString())
       )
     }
   }
@@ -393,12 +390,10 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   }
 
   private fun genIntentForUri(action: String?, stringUri: String?): Intent {
-    val intent = Intent(getTargetContext(), CreateMessageActivity::class.java)
-    intent.action = action
-    if (stringUri != null) {
-      intent.data = Uri.parse(stringUri)
+    return Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
+      this.action = action
+      stringUri?.let { this.data = Uri.parse(it) }
     }
-    return intent
   }
 
 
@@ -423,11 +418,11 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       if (attachmentsCount == 1) {
         intent.putExtra(Intent.EXTRA_STREAM, genUriFromFile(atts.first()))
       } else {
-        val urisFromAtts = ArrayList<Uri>()
+        val attachmentUris = ArrayList<Uri>()
         for (att in atts) {
-          urisFromAtts.add(genUriFromFile(att))
+          attachmentUris.add(genUriFromFile(att))
         }
-        intent.putExtra(Intent.EXTRA_STREAM, urisFromAtts)
+        intent.putExtra(Intent.EXTRA_STREAM, attachmentUris)
       }
     }
     return intent
