@@ -25,6 +25,7 @@ import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -440,7 +441,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("Temporary disabled due to architecture changes")
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -456,19 +456,24 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
 
-    /*val result = Intent()
-      result.putExtra(
-      SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT,
-      pgpKeyDetails.toRecipientEntity()
-    )
-    intending(hasComponent(ComponentName(getTargetContext(), SelectRecipientsActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, result))*/
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(R.string.copy_from_other_contact))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    onView(withId(R.id.recyclerViewContacts)).perform(
+      RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
+        hasDescendant(
+          allOf(
+            withId(R.id.tVOnlyEmail),
+            withText(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+          )
+        ),
+        click()
+      )
+    )
 
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
