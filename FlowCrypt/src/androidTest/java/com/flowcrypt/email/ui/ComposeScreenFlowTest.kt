@@ -339,7 +339,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("Temporary disabled due to architecture changes")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -369,9 +368,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    roomDatabase.pubKeyDao().insert(
-      pgpKeyDetails.toPublicKeyEntity(email)
-    )
+    addTextToClipboard("public key", pgpKeyDetails.publicKey)
+
+    onView(withId(R.id.buttonLoadFromClipboard))
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
