@@ -74,7 +74,6 @@ import org.hamcrest.Matchers.not
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -650,7 +649,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
@@ -660,16 +658,16 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     roomDatabase.pubKeyDao().insert(
       requireNotNull(keyDetailsFromAssets.toPublicKeyEntity(recipientEntity.email))
     )
-    val existedRecipient =
+    val existingRecipient =
       roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
         ?: throw IllegalArgumentException("Contact not found")
 
-    val existedKeyExpiration =
-      PgpKey.parseKeys(String(existedRecipient.publicKeys.first().publicKey))
+    val existingKeyExpiration =
+      PgpKey.parseKeys(String(existingRecipient.publicKeys.first().publicKey))
         .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
         ?: throw IllegalArgumentException("No expiration date")
 
-    assertTrue(existedKeyExpiration.isBefore(Instant.now()))
+    assertTrue(existingKeyExpiration.isBefore(Instant.now()))
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -808,7 +806,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
                   .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
 
-              "95FC072E853C9C333C68EDD34B9CA2FBCA5B5FE7".equals(lastSegment, true) -> {
+              "expired_fixed@flowcrypt.test".equals(lastSegment, true) -> {
                 return MockResponse()
                   .setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(
