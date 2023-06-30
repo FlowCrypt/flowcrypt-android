@@ -28,7 +28,6 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.MoveToFlowBehaviour
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -45,7 +44,6 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -141,17 +139,6 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
           )
         )
       )
-  }
-
-  @Test
-  @MoveToFlowBehaviour
-  @Ignore("MoveToFlowBehaviour")
-  fun testKeyDetailsShowPubKey() {
-    val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
-    onView(withId(R.id.btnShowPubKey))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(keyDetails.publicKey))
   }
 
   @Test
