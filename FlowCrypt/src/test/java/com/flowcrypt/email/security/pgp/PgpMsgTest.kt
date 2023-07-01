@@ -316,7 +316,6 @@ class PgpMsgTest {
   // -------------------------------------------------------------------------------------------
 
   @Test
-
   @Ignore("Should be reworked after switching to a new logic that uses RawBlockParser")
   fun multipleComplexMessagesTest() {
     val testFiles = listOf(
@@ -342,7 +341,6 @@ class PgpMsgTest {
 
   // Use this one for debugging
   @Test
-
   @Ignore("Should be reworked after switching to a new logic that uses RawBlockParser")
   fun singleComplexMessageTest() {
     val testFile = "verify - Kraken - urldecode signature-0.json"
