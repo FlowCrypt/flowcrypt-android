@@ -348,7 +348,7 @@ dependencies {
     //ACRA needs the following dependency to use a custom report sender
     kapt 'com.google.auto.service:auto-service:1.1.1'
 
-    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.11'
+    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
     //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
     uiTestsImplementation 'androidx.fragment:fragment-testing:1.6.0'
 
