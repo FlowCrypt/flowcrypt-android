@@ -348,7 +348,7 @@ dependencies {
     //ACRA needs the following dependency to use a custom report sender
     kapt 'com.google.auto.service:auto-service:1.1.1'
 
-    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.11'
+    devDebugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
     //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
     uiTestsImplementation 'androidx.fragment:fragment-testing:1.6.0'
 
@@ -439,7 +439,7 @@ dependencies {
         exclude group: 'com.sun.mail'
     }
 
-    implementation('org.pgpainless:pgpainless-core:1.5.4')
+    implementation('org.pgpainless:pgpainless-core:1.5.5')
 
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     implementation 'com.nulab-inc:zxcvbn:1.7.0'
@@ -451,7 +451,7 @@ dependencies {
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1'
     implementation 'org.jsoup:jsoup:1.16.1'
     implementation 'com.sandinh:zbase32-commons-codec_2.12:1.0.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2'
     implementation 'ch.acra:acra-http:5.10.1'
     //ACRA needs the following dependency to use a custom report sender
     implementation 'com.google.auto.service:auto-service-annotations:1.1.1'
