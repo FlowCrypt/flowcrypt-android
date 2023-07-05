@@ -25,6 +25,7 @@ import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -73,7 +74,6 @@ import org.hamcrest.Matchers.not
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -338,7 +338,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("Temporary disabled due to architecture changes")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -368,9 +367,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    roomDatabase.pubKeyDao().insert(
-      pgpKeyDetails.toPublicKeyEntity(email)
-    )
+    addTextToClipboard("public key", pgpKeyDetails.publicKey)
+
+    onView(withId(R.id.buttonLoadFromClipboard))
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
@@ -440,7 +441,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("Temporary disabled due to architecture changes")
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -456,19 +456,24 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
 
-    /*val result = Intent()
-      result.putExtra(
-      SelectRecipientsActivity.KEY_EXTRA_PGP_CONTACT,
-      pgpKeyDetails.toRecipientEntity()
-    )
-    intending(hasComponent(ComponentName(getTargetContext(), SelectRecipientsActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, result))*/
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(R.string.copy_from_other_contact))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    onView(withId(R.id.recyclerViewContacts)).perform(
+      RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
+        hasDescendant(
+          allOf(
+            withId(R.id.tVOnlyEmail),
+            withText(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+          )
+        ),
+        click()
+      )
+    )
 
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
@@ -644,7 +649,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testKeepPublicKeysFresh() {
     val keyDetailsFromAssets =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired_fixed@flowcrypt.test_expired_pub.asc")
@@ -654,16 +658,16 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     roomDatabase.pubKeyDao().insert(
       requireNotNull(keyDetailsFromAssets.toPublicKeyEntity(recipientEntity.email))
     )
-    val existedRecipient =
+    val existingRecipient =
       roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
         ?: throw IllegalArgumentException("Contact not found")
 
-    val existedKeyExpiration =
-      PgpKey.parseKeys(String(existedRecipient.publicKeys.first().publicKey))
+    val existingKeyExpiration =
+      PgpKey.parseKeys(String(existingRecipient.publicKeys.first().publicKey))
         .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
         ?: throw IllegalArgumentException("No expiration date")
 
-    assertTrue(existedKeyExpiration.isBefore(Instant.now()))
+    assertTrue(existingKeyExpiration.isBefore(Instant.now()))
 
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -802,7 +806,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
                   .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
               }
 
-              "95FC072E853C9C333C68EDD34B9CA2FBCA5B5FE7".equals(lastSegment, true) -> {
+              "expired_fixed@flowcrypt.test".equals(lastSegment, true) -> {
                 return MockResponse()
                   .setResponseCode(HttpURLConnection.HTTP_OK)
                   .setBody(

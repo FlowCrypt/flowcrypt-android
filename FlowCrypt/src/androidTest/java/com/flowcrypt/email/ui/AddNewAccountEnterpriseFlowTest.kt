@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.enterprise
+package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -18,8 +18,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -32,7 +30,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -45,8 +42,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Temporary disabled due to architecture changes")
-class AddNewAccountEnterpriseTest : BaseSignTest() {
+class AddNewAccountEnterpriseFlowTest : BaseSignTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
@@ -55,22 +51,19 @@ class AddNewAccountEnterpriseTest : BaseSignTest() {
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
-    .around(AddAccountToDatabaseRule())
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
   @Test
-  @NotReadyForCI
   fun testNoPrvCreateRule() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_WITH_NO_PRV_CREATE_RULE))
-    //intended(hasComponent(CreateOrImportKeyActivity::class.java.name))
 
     onView(withId(R.id.buttonCreateNewKey))
       .check(matches(not(isDisplayed())))
   }
 
   companion object {
-    const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@example.com"
+    const val EMAIL_WITH_NO_PRV_CREATE_RULE = "no_prv_create@flowcrypt.test"
 
     @get:ClassRule
     @JvmStatic
@@ -80,7 +73,7 @@ class AddNewAccountEnterpriseTest : BaseSignTest() {
           val gson =
             ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
 
-          if (request.path.equals("/api/v1/client-configuration?domain=flowcrypt.test")) {
+          if (request.path == "/shared-tenant-fes/api/v1/client-configuration?domain=flowcrypt.test") {
             when (extractEmailFromRecordedRequest(request)) {
               EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(
                 HttpURLConnection.HTTP_OK
