@@ -58,33 +58,33 @@ android {
 
   signingConfigs {
     create("release") {
-      var keyStoreFile = keystoreProperties["storeFile"]
-      var keyStorePass = keystoreProperties["storePassword"] ?: ""
-      var keySignAlias = keystoreProperties["keyAlias"]
-      var keyPass = keystoreProperties["keyPassword"]
+      var keyStoreFile = keystoreProperties["storeFile"]?.toString()
+      var keyStorePass = keystoreProperties["storePassword"]?.toString()
+      var keySignAlias = keystoreProperties["keyAlias"]?.toString()
+      var keyPass = keystoreProperties["keyPassword"]?.toString()
 
       if (project.hasProperty("runtimeSign")) {
         if (project.hasProperty("storeFile")) {
-          keyStoreFile = project.property("storeFile")
+          keyStoreFile = project.property("storeFile") as? String
         }
 
         if (project.hasProperty("storePassword")) {
-          keyStorePass = project.property("storePassword") as String
+          keyStorePass = project.property("storePassword") as? String
         }
 
         if (project.hasProperty("keyAlias")) {
-          keySignAlias = project.property("keyAlias")
+          keySignAlias = project.property("keyAlias") as? String
         }
 
         if (project.hasProperty("keyPassword")) {
-          keyPass = project.property("keyPassword")
+          keyPass = project.property("keyPassword") as? String
         }
       }
-
-      storeFile = if (keyStoreFile != null) file(keyStoreFile) else file("fix me...")
-      storePassword = ""//keyStorePass ?: ""
-      keyAlias = ""//keySignAlias
-      keyPassword = ""//keyPass
+      storeFile = file(keyStoreFile ?: throw IllegalArgumentException("Store file is not defined"))
+      storePassword =
+        keyStorePass ?: throw IllegalArgumentException("Store password is not defined")
+      keyAlias = keySignAlias ?: throw IllegalArgumentException("Key alias is not defined")
+      keyPassword = keyPass ?: throw IllegalArgumentException("Key password is not defined")
     }
 
     getByName("debug") {
@@ -101,26 +101,9 @@ android {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
-
-      buildConfigField("boolean", "IS_ACRA_ENABLED", "true")
-      buildConfigField("boolean", "IS_MAIL_DEBUG_ENABLED", "false")
-      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "false")
-      buildConfigField("String", "HTTP_LOG_LEVEL", "\"NONE\"")
-      buildConfigField("String", "ATTESTER_URL", "\"https://flowcrypt.com/attester/\"")
-      buildConfigField(
-        "String",
-        "SHARED_TENANT_FES_URL",
-        "\"https://flowcrypt.com/shared-tenant-fes/\""
-      )
-      buildConfigField("String", "BACKEND_URL", "\"https://flowcrypt.com/api/\"")
-      resValue("string", "gradle_is_acra_enabled", "true")
-      resValue("string", "gradle_is_mail_debug_enabled", "false")
-      resValue("string", "gradle_is_http_log_enabled", "false")
-      resValue("string", "gradle_http_log_level", "NONE")
     }
 
     getByName("debug") {
-      initWith(getByName("release"))
       isDebuggable = true
       versionNameSuffix =
         "_" + defaultConfig.versionCode + "__" + SimpleDateFormat("yyyy_MM_dd").format(Date())
@@ -146,6 +129,10 @@ android {
         "\"https://flowcrypt.test/shared-tenant-fes/\""
       )
       buildConfigField("String", "BACKEND_URL", "\"https://flowcrypt.test/backend/\"")
+      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "false")
+      buildConfigField("String", "HTTP_LOG_LEVEL", "\"NONE\"")
+      resValue("string", "gradle_is_http_log_enabled", "false")
+      resValue("string", "gradle_http_log_level", "NONE")
     }
   }
 
@@ -158,28 +145,47 @@ android {
   flavorDimensions += "standard"
 
   productFlavors {
+    //This is a consumer flavor. It's a base flavor
+    create("consumer") {
+      dimension = "standard"
+
+      buildConfigField("boolean", "IS_ACRA_ENABLED", "true")
+      buildConfigField("boolean", "IS_MAIL_DEBUG_ENABLED", "false")
+      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "false")
+      buildConfigField("String", "HTTP_LOG_LEVEL", "\"NONE\"")
+      buildConfigField("String", "ATTESTER_URL", "\"https://flowcrypt.com/attester/\"")
+      buildConfigField(
+        "String",
+        "SHARED_TENANT_FES_URL",
+        "\"https://flowcrypt.com/shared-tenant-fes/\""
+      )
+      buildConfigField("String", "BACKEND_URL", "\"https://flowcrypt.com/api/\"")
+      resValue("string", "gradle_is_acra_enabled", "true")
+      resValue("string", "gradle_is_mail_debug_enabled", "false")
+      resValue("string", "gradle_is_http_log_enabled", "false")
+      resValue("string", "gradle_http_log_level", "NONE")
+    }
+
+    //This is an enterprise flavor
+    create("enterprise") {
+      initWith(getByName("consumer"))
+      dimension = "standard"
+      applicationIdSuffix = ".enterprise"
+
+      //https://github.com/FlowCrypt/flowcrypt-android/issues/2174
+      buildConfigField("boolean", "IS_ACRA_ENABLED", "false")
+      resValue("string", "gradle_is_acra_enabled", "false")
+    }
+
     //This flavor must be used only for a development.
     //It has settings for a fast building (some features are disabled or not included).
     create("dev") {
+      initWith(getByName("consumer"))
       dimension = "standard"
       versionNameSuffix = "_dev"
       resourceConfigurations += setOf("en", "xxhdpi")
       buildConfigField("boolean", "IS_MAIL_DEBUG_ENABLED", "true")
       resValue("string", "gradle_is_mail_debug_enabled", "true")
-    }
-
-    //This is a consumer flavor
-    create("consumer") {
-      dimension = "standard"
-    }
-
-    //This is an enterprise flavor
-    create("enterprise") {
-      dimension = "standard"
-      applicationIdSuffix = ".enterprise"
-
-      buildConfigField("boolean", "IS_ACRA_ENABLED", "false")
-      resValue("string", "gradle_is_acra_enabled", "false")
     }
   }
 
@@ -212,13 +218,55 @@ android {
   lint {
     warningsAsErrors = true
   }
+
+  testOptions {
+    animationsDisabled = true
+    execution = "ANDROIDX_TEST_ORCHESTRATOR"
+
+    unitTests.all {
+      it.testLogging {
+        events = setOf(
+          org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
+          org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
+          org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
+          org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_ERROR
+        )
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showStandardStreams = true
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
+      }
+
+      it.addTestListener(object : TestListener {
+        override fun beforeSuite(suite: TestDescriptor) {}
+        override fun beforeTest(testDescriptor: TestDescriptor) {}
+        override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {
+
+        }
+
+        override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+          if (suite.parent == null) {
+            logger.lifecycle("----")
+            logger.lifecycle("Test result: ${result.resultType}")
+            logger.lifecycle(
+              "Test summary: ${result.testCount} tests, " +
+                  "${result.successfulTestCount} succeeded, " +
+                  "${result.failedTestCount} failed, " +
+                  "${result.skippedTestCount} skipped"
+            )
+          }
+        }
+      })
+    }
+  }
 }
 
 androidComponents {
   beforeVariants { variantBuilder ->
     if (variantBuilder.name in listOf("devRelease", "devUiTests")) {
-      println("Excluded \"$variantBuilder.name\" from build variant list as unused")
       // Gradle ignores any variants that satisfy the conditions above.
+      println("Excluded \"${variantBuilder.name}\" from build variant list as unused")
       variantBuilder.enable = false
     }
   }
@@ -282,12 +330,12 @@ dependencies {
   ksp("com.github.bumptech.glide:ksp:4.15.1")
   annotationProcessor("androidx.annotation:annotation:1.6.0")
   ksp("androidx.room:room-compiler:2.5.2")
-  //ACRA needs the following dependency to use a custom report sender
+//ACRA needs the following dependency to use a custom report sender
   annotationProcessor("com.google.auto.service:auto-service:1.1.1")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
-  //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
-  //uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
+//noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
+//uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
@@ -314,13 +362,13 @@ dependencies {
   testImplementation("io.github.classgraph:classgraph:4.8.161")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  //we need it to test Parcelable
+//we need it to test Parcelable
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
 
   implementation(fileTree("libs") { include("*.jar") })
 
-  //it fixed compilation issue https://github.com/FlowCrypt/flowcrypt-android/pull/2064.
-  //Should be reviewed and removed when more dependencies will be updated
+//it fixed compilation issue https://github.com/FlowCrypt/flowcrypt-android/pull/2064.
+//Should be reviewed and removed when more dependencies will be updated
   implementation("androidx.test:monitor:1.6.1")
 
   implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -356,11 +404,11 @@ dependencies {
   implementation("com.google.android.material:material:1.9.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
-  //https://mvnrepository.com/artifact/com.google.code.gson/gson
+//https://mvnrepository.com/artifact/com.google.code.gson/gson
   implementation("com.google.code.gson:gson:2.10.1")
-  //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
+//https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.2.0")
-  //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
+//https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20230612-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -372,7 +420,7 @@ dependencies {
   implementation("com.sun.mail:jakarta.mail:2.0.1")
   implementation("com.sun.activation:jakarta.activation:2.0.1")
   implementation("com.sun.mail:gimap:2.0.1") {
-    //exclude group: "com.sun.mail" to prevent compilation errors
+//exclude group: "com.sun.mail" to prevent compilation errors
     exclude("com.sun.mail")
   }
 
@@ -390,11 +438,11 @@ dependencies {
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("ch.acra:acra-http:5.11.0")
-  //ACRA needs the following dependency to use a custom report sender
+//ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
   constraints {
-    //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
+//due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
     implementation("commons-codec:commons-codec:1.16.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
