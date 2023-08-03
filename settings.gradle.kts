@@ -3,4 +3,18 @@
  * Contributors: DenBond7
  */
 
-include ':FlowCrypt'
+pluginManagement {
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+}
+dependencyResolutionManagement {
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+
+include(":FlowCrypt")
