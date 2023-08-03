@@ -15,45 +15,43 @@ DdmPreferences.setTimeOut(10 * 60 * 1000)
 plugins {
   id("com.android.application")
   id("kotlin-android")
-  id("kotlin-kapt")
   id("androidx.navigation.safeargs.kotlin")
   id("com.starter.easylauncher")
   id("kotlin-parcelize")
+  id("com.google.devtools.ksp")
 }
 
 val keystoreProperties = Properties()
-val propertiesFile = project.file("keystore.properties")
-if (propertiesFile.exists()) {
+val propertiesFile: File? = project.file("keystore.properties")
+if (propertiesFile?.exists() == true) {
   keystoreProperties.load(FileInputStream(propertiesFile))
 }
 
 android {
-  /*if (projects.hasProperty("devBuild")) {
-    splits.density.enable = false
-    aaptOptions.cruncherEnable = false
-  }*/
-
-  compileSdkVersion(33)
-  buildToolsVersion("33")
+  compileSdk = extra["compileSdkVersion"] as Int
+  buildToolsVersion = extra["buildToolsVersion"] as String
   namespace = "com.flowcrypt.email"
 
   defaultConfig {
     applicationId = "com.flowcrypt.email"
-    minSdkVersion(26)
-    targetSdkVersion(33)
-    versionCode = 12
-    versionName = "1212"
+    minSdk = extra["minSdkVersion"] as Int
+    targetSdk = extra["targetSdkVersion"] as Int
+    versionCode = extra["appVersionCode"] as Int
+    versionName = extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    // The following argument makes the Android Test Orchestrator run its
-    // "pm clear" command after each test invocation. This command ensures
-    // that the app"s state is completely cleared between tests.
-    //testInstrumentationRunnerArguments clearPackageData: "true"
+
+    /*
+     The following argument makes the Android Test Orchestrator run its
+     "pm clear" command after each test invocation. This command ensures
+     that the app"s state is completely cleared between tests.
+     */
+    testInstrumentationRunnerArguments += mapOf("clearPackageData" to "true")
     multiDexEnabled = true
 
-    // used by Room, to test migrations
+    //used by Room, to test migrations
     javaCompileOptions {
       annotationProcessorOptions {
-        //arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+        arguments += mapOf("room.schemaLocation" to "$projectDir/schemas")
       }
     }
   }
@@ -101,6 +99,7 @@ android {
     getByName("release") {
       isShrinkResources = false
       isMinifyEnabled = false
+      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
 
       buildConfigField("boolean", "IS_ACRA_ENABLED", "true")
@@ -153,10 +152,10 @@ android {
   testBuildType = "uiTests"
 
   sourceSets {
-    //androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    getByName("androidTest").assets.srcDir("$projectDir/schemas")
   }
 
-  //flavorDimensions = "standard"
+  flavorDimensions += "standard"
 
   productFlavors {
     //This flavor must be used only for a development.
@@ -164,7 +163,7 @@ android {
     create("dev") {
       dimension = "standard"
       versionNameSuffix = "_dev"
-      //resourceConfigurations += ["en", "xxhdpi"]
+      resourceConfigurations += setOf("en", "xxhdpi")
       buildConfigField("boolean", "IS_MAIL_DEBUG_ENABLED", "true")
       resValue("string", "gradle_is_mail_debug_enabled", "true")
     }
@@ -182,19 +181,7 @@ android {
       buildConfigField("boolean", "IS_ACRA_ENABLED", "false")
       resValue("string", "gradle_is_acra_enabled", "false")
     }
-
-    /*applicationVariants.all { variant ->
-      //variant.resValue("string", "application_id", variant.applicationId)
-    }*/
   }
-
-  /*variantFilter { variant ->
-    if (variant?.name in ["devRelease", "devUiTests"]) {
-      println("Excluded \"$variant.name\" from build variant list as unused")
-      // Gradle ignores any variants that satisfy the conditions above.
-      setIgnore(true)
-    }
-  }*/
 
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -208,29 +195,40 @@ android {
 
   kotlinOptions {
     jvmTarget = JavaVersion.VERSION_17.toString()
-    //freeCompilerArgs += ["-opt-in=kotlin.RequiresOptIn"]
+    freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
   }
 
-  packagingOptions {
-    //resources {
-    //excludes += [
-    //  "META-INF/DEPENDENCIES",
-    // "META-INF/LICENSE.md",
-    //  "META-INF/NOTICE.md",
-    // "META-INF/*.SF",
-    //"META-INF/*.DSA",
-    //"META-INF/*.RSA"
-    // ]
+  packaging {
+    resources.excludes += setOf(
+      "META-INF/DEPENDENCIES",
+      "META-INF/LICENSE.md",
+      "META-INF/NOTICE.md",
+      "META-INF/*.SF",
+      "META-INF/*.DSA",
+      "META-INF/*.RSA",
+    )
+  }
+
+  lint {
+    warningsAsErrors = true
   }
 }
 
-//lint {
-// warningsAsErrors = true
-//}
+androidComponents {
+  beforeVariants { variantBuilder ->
+    if (variantBuilder.name in listOf("devRelease", "devUiTests")) {
+      println("Excluded \"$variantBuilder.name\" from build variant list as unused")
+      // Gradle ignores any variants that satisfy the conditions above.
+      variantBuilder.enable = false
+    }
+  }
 
-
-configurations {
-  //devDebugImplementation {}
+  onVariants { variant ->
+    variant.resValues.put(
+      variant.makeResValueKey("string", "application_id"),
+      com.android.build.api.variant.ResValue(variant.applicationId.get())
+    )
+  }
 }
 
 /*easylauncher {
@@ -277,14 +275,17 @@ configurations {
   }
 }*/
 
-dependencies {
-  kapt("com.github.bumptech.glide:compiler:4.15.1")
-  kapt("androidx.annotation:annotation:1.6.0")
-  kapt("androidx.room:room-compiler:2.5.2")
-  //ACRA needs the following dependency to use a custom report sender
-  kapt("com.google.auto.service:auto-service:1.1.1")
+// Initializes a placeholder for the freeDebugRuntimeOnly dependency configuration.
+val devDebugImplementation by configurations.creating
 
-  //devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+dependencies {
+  ksp("com.github.bumptech.glide:ksp:4.15.1")
+  annotationProcessor("androidx.annotation:annotation:1.6.0")
+  ksp("androidx.room:room-compiler:2.5.2")
+  //ACRA needs the following dependency to use a custom report sender
+  annotationProcessor("com.google.auto.service:auto-service:1.1.1")
+
+  devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
   //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
   //uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
 
@@ -316,7 +317,7 @@ dependencies {
   //we need it to test Parcelable
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
 
-  //implementation fileTree (dir: "libs", include: ["*.jar"])
+  implementation(fileTree("libs") { include("*.jar") })
 
   //it fixed compilation issue https://github.com/FlowCrypt/flowcrypt-android/pull/2064.
   //Should be reviewed and removed when more dependencies will be updated
@@ -372,7 +373,7 @@ dependencies {
   implementation("com.sun.activation:jakarta.activation:2.0.1")
   implementation("com.sun.mail:gimap:2.0.1") {
     //exclude group: "com.sun.mail" to prevent compilation errors
-    //exclude group ("com.sun.mail")
+    exclude("com.sun.mail")
   }
 
   implementation("org.pgpainless:pgpainless-core:1.6.1")
