@@ -279,49 +279,49 @@ androidComponents {
   }
 }
 
-/*easylauncher {
+easylauncher {
   buildTypes {
-    debug {
-      filters = [
+    register("debug") {
+      filters(
         chromeLike(
-          ribbonColor: "#6600CC",
-      labelColor: "#FFFFFF",
-      position: "top",
-      overlayHeight: 0.25,
-      textSizeRatio: 0.2
+          ribbonColor = "#6600CC",
+          labelColor = "#FFFFFF",
+          gravity = com.project.starter.easylauncher.filter.ChromeLikeFilter.Gravity.BOTTOM,
+          overlayHeight = 0.25f,
+          textSizeRatio = 0.2f,
+        )
       )
-      ]
     }
 
-    uiTests {
-      filters = [
+    register("uiTests") {
+      filters(
         chromeLike(
-          label: "test",
-      ribbonColor: "#E91E63",
-      labelColor: "#FFFFFF",
-      position: "top",
-      overlayHeight: 0.25,
-      textSizeRatio: 0.2
+          label = "test",
+          ribbonColor = "#E91E63",
+          labelColor = "#FFFFFF",
+          gravity = com.project.starter.easylauncher.filter.ChromeLikeFilter.Gravity.BOTTOM,
+          overlayHeight = 0.25f,
+          textSizeRatio = 0.2f,
+        )
       )
-      ]
     }
   }
 
   variants {
-    devDebug {
-      filters = [
+    register("devDebug") {
+      filters(
         chromeLike(
-          label: "dev",
-      ribbonColor: "#CC5F00",
-      labelColor: "#FFFFFF",
-      position: "top",
-      overlayHeight: 0.25,
-      textSizeRatio: 0.2
+          label = "dev",
+          ribbonColor = "#CC5F00",
+          labelColor = "#FFFFFF",
+          gravity = com.project.starter.easylauncher.filter.ChromeLikeFilter.Gravity.BOTTOM,
+          overlayHeight = 0.25f,
+          textSizeRatio = 0.2f,
+        )
       )
-      ]
     }
   }
-}*/
+}
 
 // Initializes a placeholder for the freeDebugRuntimeOnly dependency configuration.
 val devDebugImplementation by configurations.creating
