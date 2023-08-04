@@ -13,13 +13,13 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.NavHeaderBinding
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.util.GlideApp
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation
 
 class NavigationViewManager(
@@ -56,7 +56,7 @@ class NavigationViewManager(
       R.mipmap.ic_account_default_photo
     }
     navHeaderBinding?.imageViewActiveUserPhoto?.let {
-      GlideApp.with(context)
+      Glide.with(context)
         .load(resource)
         .apply(
           RequestOptions()
@@ -121,7 +121,7 @@ class NavigationViewManager(
     textViewEmail.text = account.email
 
     if (account.photoUrl?.isNotEmpty() == true) {
-      GlideApp.with(context)
+      Glide.with(context)
         .load(account.photoUrl)
         .apply(
           RequestOptions()
