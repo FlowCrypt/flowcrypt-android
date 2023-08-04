@@ -359,10 +359,10 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.15.1")
-  annotationProcessor("androidx.annotation:annotation:1.6.0")
+  ksp("androidx.annotation:annotation:1.6.0")
   ksp("androidx.room:room-compiler:2.5.2")
   //ACRA needs the following dependency to use a custom report sender
-  annotationProcessor("com.google.auto.service:auto-service:1.1.1")
+  ksp("com.google.auto.service:auto-service:1.1.1")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
   //uiTests is the build type for testing.
