@@ -369,6 +369,7 @@ tasks.register("prepareEnterpriseReleaseApk") {
 }
 
 val devDebugImplementation by configurations.creating
+val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.15.1")
@@ -378,8 +379,9 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service:1.1.1")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
-  //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
-  //uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
+  //uiTests is the build type for testing.
+  //noinspection FragmentGradleConfiguration
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
