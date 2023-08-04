@@ -323,6 +323,50 @@ easylauncher {
   }
 }
 
+tasks.register("renameReleaseBuild") {
+  doLast {
+    android.applicationVariants.forEach { applicationVariant ->
+      if (applicationVariant.buildType.name == "release") {
+        applicationVariant.outputs.forEach { variantOutput ->
+          val file = variantOutput.outputFile
+          val newName = file.name.replace(
+            ".apk", "_" + android.defaultConfig.versionCode +
+                "_" + android.defaultConfig.versionName + "_"
+                + SimpleDateFormat("yyyy_MM_dd_HH_mm").format(Date()) + ".apk"
+          )
+          variantOutput.outputFile.renameTo(File(file.parent, newName))
+        }
+      }
+    }
+  }
+}
+
+tasks.register<Copy>("copyReleaseApks") {
+  dependsOn("renameReleaseBuild")
+
+  from("$buildDir") {
+    include("**/*release*.apk")
+  }
+
+  includeEmptyDirs = false
+  into("${rootProject.rootDir}/release")
+
+  eachFile {
+    //replace path to copy only apk file to the destination folder(without subdirectories)
+    path = file.name
+  }
+}
+
+tasks.register("prepareConsumerReleaseApk") {
+  dependsOn("assembleConsumerRelease")
+  finalizedBy("copyReleaseApks")
+}
+
+tasks.register("prepareEnterpriseReleaseApk") {
+  dependsOn("assembleEnterpriseRelease")
+  finalizedBy("copyReleaseApks")
+}
+
 // Initializes a placeholder for the freeDebugRuntimeOnly dependency configuration.
 val devDebugImplementation by configurations.creating
 
@@ -330,12 +374,12 @@ dependencies {
   ksp("com.github.bumptech.glide:ksp:4.15.1")
   annotationProcessor("androidx.annotation:annotation:1.6.0")
   ksp("androidx.room:room-compiler:2.5.2")
-//ACRA needs the following dependency to use a custom report sender
+  //ACRA needs the following dependency to use a custom report sender
   annotationProcessor("com.google.auto.service:auto-service:1.1.1")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
-//noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
-//uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
+  //noinspection FragmentGradleConfiguration. uiTests is the build type for testing.
+  //uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
@@ -362,13 +406,13 @@ dependencies {
   testImplementation("io.github.classgraph:classgraph:4.8.161")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-//we need it to test Parcelable
+  //we need it to test Parcelable
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
 
-  implementation(fileTree("libs") { include("*.jar") })
+  implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
-//it fixed compilation issue https://github.com/FlowCrypt/flowcrypt-android/pull/2064.
-//Should be reviewed and removed when more dependencies will be updated
+  //it fixed compilation issue https://github.com/FlowCrypt/flowcrypt-android/pull/2064.
+  //Should be reviewed and removed when more dependencies will be updated
   implementation("androidx.test:monitor:1.6.1")
 
   implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -404,11 +448,11 @@ dependencies {
   implementation("com.google.android.material:material:1.9.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
-//https://mvnrepository.com/artifact/com.google.code.gson/gson
+  //https://mvnrepository.com/artifact/com.google.code.gson/gson
   implementation("com.google.code.gson:gson:2.10.1")
-//https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
+  //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.2.0")
-//https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
+  //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20230612-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -420,7 +464,7 @@ dependencies {
   implementation("com.sun.mail:jakarta.mail:2.0.1")
   implementation("com.sun.activation:jakarta.activation:2.0.1")
   implementation("com.sun.mail:gimap:2.0.1") {
-//exclude group: "com.sun.mail" to prevent compilation errors
+    //exclude group: "com.sun.mail" to prevent compilation errors
     exclude("com.sun.mail")
   }
 
@@ -438,11 +482,11 @@ dependencies {
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("ch.acra:acra-http:5.11.0")
-//ACRA needs the following dependency to use a custom report sender
+  //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
   constraints {
-//due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
+    //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
     implementation("commons-codec:commons-codec:1.16.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
