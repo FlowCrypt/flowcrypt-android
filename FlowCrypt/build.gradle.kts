@@ -47,13 +47,6 @@ android {
      */
     testInstrumentationRunnerArguments += mapOf("clearPackageData" to "true")
     multiDexEnabled = true
-
-    //used by Room, to test migrations
-    javaCompileOptions {
-      annotationProcessorOptions {
-        arguments += mapOf("room.schemaLocation" to "$projectDir/schemas")
-      }
-    }
   }
 
   signingConfigs {
@@ -262,11 +255,16 @@ android {
   }
 }
 
+ksp {
+  //used by Room, to test migrations
+  arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 androidComponents {
   beforeVariants { variantBuilder ->
     if (variantBuilder.name in listOf("devRelease", "devUiTests")) {
       // Gradle ignores any variants that satisfy the conditions above.
-      println("Excluded \"${variantBuilder.name}\" from build variant list as unused")
+      println("INFO: Excluded \"${variantBuilder.name}\" from build variant list as unused")
       variantBuilder.enable = false
     }
   }
@@ -324,7 +322,7 @@ easylauncher {
   }
 }
 
-tasks.register("renameReleaseBuild") {
+tasks.register("renameReleaseBuilds") {
   doLast {
     android.applicationVariants.forEach { applicationVariant ->
       if (applicationVariant.buildType.name == "release") {
@@ -343,8 +341,6 @@ tasks.register("renameReleaseBuild") {
 }
 
 tasks.register<Copy>("copyReleaseApks") {
-  dependsOn("renameReleaseBuild")
-
   from("$buildDir") {
     include("**/*release*.apk")
   }
@@ -356,16 +352,6 @@ tasks.register<Copy>("copyReleaseApks") {
     //replace path to copy only apk file to the destination folder(without subdirectories)
     path = file.name
   }
-}
-
-tasks.register("prepareConsumerReleaseApk") {
-  dependsOn("assembleConsumerRelease")
-  finalizedBy("copyReleaseApks")
-}
-
-tasks.register("prepareEnterpriseReleaseApk") {
-  dependsOn("assembleEnterpriseRelease")
-  finalizedBy("copyReleaseApks")
 }
 
 val devDebugImplementation by configurations.creating
@@ -433,6 +419,8 @@ dependencies {
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
   implementation("androidx.room:room-runtime:2.5.2")
   implementation("androidx.room:room-ktx:2.5.2")
+  //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
+  //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.0")
   implementation("androidx.core:core-ktx:1.10.1")

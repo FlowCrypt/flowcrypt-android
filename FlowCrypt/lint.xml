@@ -26,4 +26,6 @@
         <!-- This file is needed for debug purposes -->
         <ignore path="res/raw/debug_certificate.crt" />
     </issue>
+
+    <issue id="FragmentGradleConfiguration" severity="ignore" />
 </lint>
