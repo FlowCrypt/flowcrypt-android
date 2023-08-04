@@ -272,6 +272,7 @@ androidComponents {
   }
 
   onVariants { variant ->
+    //we share applicationId as a res value
     variant.resValues.put(
       variant.makeResValueKey("string", "application_id"),
       com.android.build.api.variant.ResValue(variant.applicationId.get())
@@ -367,7 +368,6 @@ tasks.register("prepareEnterpriseReleaseApk") {
   finalizedBy("copyReleaseApks")
 }
 
-// Initializes a placeholder for the freeDebugRuntimeOnly dependency configuration.
 val devDebugImplementation by configurations.creating
 
 dependencies {
