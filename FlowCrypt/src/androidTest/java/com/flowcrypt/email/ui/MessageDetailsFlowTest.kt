@@ -10,7 +10,9 @@ import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollToHolder
 import androidx.test.espresso.intent.Intents.intended
@@ -37,7 +39,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
@@ -66,7 +67,6 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -190,12 +190,11 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       )
     ) {
       //we need additional time to decrypt a message
-      Thread.sleep(10000)
+      Thread.sleep(30000)
     }
   }
 
   @Test
-  @Ignore("Temporary disabled due to architecture changes")
   fun testDecryptionError_KEY_MISMATCH_MissingKeyErrorImportKey() {
     testMissingKey(
       getMsgInfo(
@@ -204,19 +203,23 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       )
     )
 
-    /*intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))*/
-
+    val privateKey =
+      TestGeneralUtil.readFileFromAssetsAsString(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
+    addTextToClipboard("private key", privateKey)
     onView(withId(R.id.buttonImportPrivateKey))
       .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withId(R.id.buttonLoadFromClipboard))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withId(R.id.editTextKeyPassword))
+      .perform(
+        scrollTo(),
+        typeText(TestConstants.DEFAULT_STRONG_PASSWORD),
+        closeSoftKeyboard()
+      )
+    onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
-
-    PrivateKeysManager.saveKeyFromAssetsToDatabase(
-      accountEntity = addAccountToDatabaseRule.account,
-      keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
-      passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-      sourceType = KeyImportDetails.SourceType.EMAIL
-    )
 
     val incomingMsgInfoFixed =
       TestGeneralUtil.getObjectFromJson(
@@ -224,11 +227,6 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         IncomingMessageInfo::class.java
       )
     checkWebViewText(incomingMsgInfoFixed?.text)
-
-    PrivateKeysManager.deleteKey(
-      addAccountToDatabaseRule.account,
-      TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG
-    )
   }
 
   @Test
