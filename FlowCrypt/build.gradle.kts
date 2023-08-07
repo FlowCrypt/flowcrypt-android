@@ -73,11 +73,10 @@ android {
           keyPass = project.property("keyPassword") as? String
         }
       }
-      storeFile = file(keyStoreFile ?: throw IllegalArgumentException("Store file is not defined"))
-      storePassword =
-        keyStorePass ?: throw IllegalArgumentException("Store password is not defined")
-      keyAlias = keySignAlias ?: throw IllegalArgumentException("Key alias is not defined")
-      keyPassword = keyPass ?: throw IllegalArgumentException("Key password is not defined")
+      storeFile = file(keyStoreFile ?: "Store file is not defined")
+      storePassword = keyStorePass
+      keyAlias = keySignAlias
+      keyPassword = keyPass
     }
 
     getByName("debug") {
