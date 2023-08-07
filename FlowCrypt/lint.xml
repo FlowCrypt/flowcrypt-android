@@ -26,4 +26,7 @@
         <!-- This file is needed for debug purposes -->
         <ignore path="res/raw/debug_certificate.crt" />
     </issue>
+
+    <!-- As we use uiTest build type for testing we need to ignore FragmentGradleConfiguration warnings -->
+    <issue id="FragmentGradleConfiguration" severity="ignore" />
 </lint>
