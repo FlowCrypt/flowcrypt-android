@@ -5,6 +5,10 @@
 
 
 import com.android.ddmlib.DdmPreferences
+import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Properties
 
 //Setting global timeout for apk installation to 10 minutes. We need it for CI
 DdmPreferences.setTimeOut(10 * 60 * 1000)
