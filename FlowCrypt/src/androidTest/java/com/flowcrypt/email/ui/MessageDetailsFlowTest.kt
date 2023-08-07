@@ -181,8 +181,6 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @NotReadyForCI
-  @Ignore("don't enable this one on CI. It takes too long")
   fun testEncryptedBigInlineAtt() {
     IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
     baseCheck(
@@ -190,7 +188,10 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/info/encrypted_msg_big_inline_att.json",
         "messages/mime/encrypted_msg_big_inline_att.txt"
       )
-    )
+    ) {
+      //we need additional time to decrypt a message
+      Thread.sleep(10000)
+    }
   }
 
   @Test

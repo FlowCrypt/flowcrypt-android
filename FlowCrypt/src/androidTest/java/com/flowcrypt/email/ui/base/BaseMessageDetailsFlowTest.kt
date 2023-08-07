@@ -240,7 +240,10 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .check(matches(not(isDisplayed())))
   }
 
-  protected fun baseCheck(incomingMsgInfo: IncomingMessageInfo?) {
+  protected fun baseCheck(
+    incomingMsgInfo: IncomingMessageInfo?,
+    actionBeforeMatchingReplyButtons: () -> Unit = {}
+  ) {
     assertThat(incomingMsgInfo, notNullValue())
 
     val details = incomingMsgInfo!!.msgEntity
@@ -248,6 +251,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     matchHeader(incomingMsgInfo)
 
     //checkWebViewText(incomingMsgInfo.text)
+    actionBeforeMatchingReplyButtons.invoke()
     matchReplyButtons(details)
   }
 
