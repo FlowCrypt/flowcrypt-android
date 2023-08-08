@@ -14,10 +14,9 @@ import com.google.gson.annotations.Expose
 data class CrashReportModel(
   @Expose val name: String? = null,
   @Expose val message: String? = null,
-  @Expose val url: String? = null,
   @Expose val line: Int? = null,
   @Expose val col: Int? = null,
-  @Expose val trace: String? = null,
+  @Expose val trace: String? = null
 ) : RequestModel {
   @Expose
   val version: String = BuildConfig.VERSION_CODE.toString()
@@ -30,4 +29,10 @@ data class CrashReportModel(
 
   @Expose
   val buildType: String = BuildConfig.FLAVOR
+
+  @Expose
+  val count: Long = 1
+
+  @Expose
+  val url: String = "android"
 }

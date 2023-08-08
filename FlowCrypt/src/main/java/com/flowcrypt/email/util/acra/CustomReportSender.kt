@@ -6,13 +6,17 @@
 package com.flowcrypt.email.util.acra
 
 import android.content.Context
+import android.net.Uri
 import com.flowcrypt.email.api.retrofit.request.model.CrashReportModel
+import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.gson.GsonBuilder
 import org.acra.ReportField
 import org.acra.config.CoreConfiguration
 import org.acra.data.CrashReportData
 import org.acra.data.StringFormat
 import org.acra.sender.HttpSender
+import java.net.URL
 
 /**
  * It's a custom realization of [HttpSender]. Here we can filter data which will be sent to a server
@@ -32,17 +36,65 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
   }
 
   override fun convertToString(report: CrashReportData?, format: StringFormat): String {
-    val stackTrace = report?.getString(ReportField.STACK_TRACE)
+    val stackTrace = report?.getString(ReportField.STACK_TRACE) ?: ""
+    val name = "name".toRegex().matchEntire(stackTrace)?.value ?: ""
+    val message = "message".toRegex().matchEntire(stackTrace)?.value ?: ""
+    val line = "line".toRegex().matchEntire(stackTrace)?.value?.toInt() ?: 0
+    val col = "col".toRegex().matchEntire(stackTrace)?.value?.toInt() ?: 0
 
     val crashReportModel = CrashReportModel(
-      name = null,
-      message = null,
-      url = null,
-      line = null,
-      col = null,
+      name = name,
+      message = message,
+      line = line,
+      col = col,
       trace = stackTrace
     )
     return GsonBuilder().create().toJson(crashReportModel)
+  }
+
+  override fun sendHttpRequests(
+    configuration: CoreConfiguration,
+    context: Context,
+    method: Method,
+    contentType: String,
+    login: String?,
+    password: String?,
+    connectionTimeOut: Int,
+    socketTimeOut: Int,
+    headers: Map<String, String>?,
+    content: String,
+    url: URL,
+    attachments: List<Uri>
+  ) {
+    //add Authorization
+    val finalHeaders = (headers ?: emptyMap()).toMutableMap().apply {
+      val googleSignInClient = GoogleSignIn.getClient(
+        context,
+        GoogleApiClientHelper.generateGoogleSignInOptions()
+      )
+      val silentSignIn = googleSignInClient.silentSignIn()
+      if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
+        throw IllegalStateException("Could not receive idToken")
+      }
+
+      val idToken = silentSignIn.result.idToken
+      put("Authorization", "Bearer $idToken")
+    }
+
+    super.sendHttpRequests(
+      configuration,
+      context,
+      method,
+      contentType,
+      login,
+      password,
+      connectionTimeOut,
+      socketTimeOut,
+      finalHeaders,
+      content,
+      url,
+      attachments
+    )
   }
 
   /**
