@@ -23,9 +23,9 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.base.BaseMessageDetailsFlowTest
 import com.flowcrypt.email.util.PrivateKeysManager
-import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.not
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
@@ -106,9 +106,6 @@ class MessageDetailsUpdatePubFromPartKeyFlowTest : BaseMessageDetailsFlowTest() 
       requireNotNull(recipientAfterSaving?.publicKeys?.firstOrNull()?.publicKey)
     val pgpKeyDetailsOfDatabaseEntity =
       PgpKey.parseKeys(publicKeyByteArray).pgpKeyDetailsList.firstOrNull()
-    assertEquals(
-      receivedPgpKeyDetails.lastModified,
-      pgpKeyDetailsOfDatabaseEntity?.lastModified
-    )
+    assertEquals(receivedPgpKeyDetails.lastModified, pgpKeyDetailsOfDatabaseEntity?.lastModified)
   }
 }

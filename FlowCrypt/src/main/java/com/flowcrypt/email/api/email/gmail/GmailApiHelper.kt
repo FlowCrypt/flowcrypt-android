@@ -9,7 +9,6 @@ package com.flowcrypt.email.api.email.gmail
 
 import android.accounts.Account
 import android.content.Context
-import android.text.TextUtils
 import android.util.Base64
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -89,8 +88,6 @@ class GmailApiHelper {
     const val PATTERN_SEARCH_ENCRYPTED_MESSAGES =
       "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg"
 
-    const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
-    const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
     const val MESSAGE_RESPONSE_FORMAT_METADATA = "metadata"
 
     const val FOLDER_TYPE_USER = "user"
@@ -112,6 +109,8 @@ class GmailApiHelper {
     )
     private const val COUNT_OF_LOADED_EMAILS_BY_STEP =
       JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
+    private const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
+    private const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -377,15 +376,17 @@ class GmailApiHelper {
     suspend fun deleteMsgsPermanently(
       context: Context, accountEntity: AccountEntity,
       ids: List<String>
-    ) = withContext(Dispatchers.IO) {
-      val gmailApiService = generateGmailApiService(context, accountEntity)
-      gmailApiService
-        .users()
-        .messages()
-        .batchDelete(DEFAULT_USER_ID, BatchDeleteMessagesRequest().apply {
-          this.ids = ids
-        })
-        .execute()
+    ) {
+      withContext(Dispatchers.IO) {
+        val gmailApiService = generateGmailApiService(context, accountEntity)
+        gmailApiService
+          .users()
+          .messages()
+          .batchDelete(DEFAULT_USER_ID, BatchDeleteMessagesRequest().apply {
+            this.ids = ids
+          })
+          .execute()
+      }
     }
 
     suspend fun deleteDrafts(
@@ -540,7 +541,7 @@ class GmailApiHelper {
 
         history.messagesAdded?.let { messagesAdded ->
           for (historyMsgAdded in messagesAdded) {
-            if (LABEL_DRAFT in historyMsgAdded.message.labelIds && !isDrafts) {
+            if (LABEL_DRAFT in (historyMsgAdded.message.labelIds ?: emptyList()) && !isDrafts) {
               //skip adding drafts to non-Drafts folder
               continue
             }
@@ -552,16 +553,16 @@ class GmailApiHelper {
 
         history.labelsRemoved?.let { labelsRemoved ->
           for (historyLabelRemoved in labelsRemoved) {
-            if (localFolder.fullName in historyLabelRemoved.labelIds) {
+            if (localFolder.fullName in (historyLabelRemoved.labelIds ?: emptyList())) {
               newCandidatesMap.remove(historyLabelRemoved.message.uid)
               updateCandidates.remove(historyLabelRemoved.message.uid)
               deleteCandidatesUIDs.add(historyLabelRemoved.message.uid)
               continue
             }
 
-            if (LABEL_TRASH in historyLabelRemoved.labelIds) {
+            if (LABEL_TRASH in (historyLabelRemoved.labelIds ?: emptyList())) {
               val msg = historyLabelRemoved.message
-              if (localFolder.fullName in msg.labelIds) {
+              if (localFolder.fullName in (msg.labelIds ?: emptyList())) {
                 deleteCandidatesUIDs.remove(msg.uid)
                 updateCandidates.remove(msg.uid)
                 newCandidatesMap[msg.uid] = msg
@@ -569,28 +570,29 @@ class GmailApiHelper {
               }
             }
 
-            val existedFlags = labelsToImapFlags(historyLabelRemoved.message.labelIds)
+            val existedFlags =
+              labelsToImapFlags(historyLabelRemoved.message.labelIds ?: emptyList())
             updateCandidates[historyLabelRemoved.message.uid] = existedFlags
           }
         }
 
         history.labelsAdded?.let { labelsAdded ->
           for (historyLabelAdded in labelsAdded) {
-            if (localFolder.fullName in historyLabelAdded.labelIds) {
+            if (localFolder.fullName in (historyLabelAdded.labelIds ?: emptyList())) {
               deleteCandidatesUIDs.remove(historyLabelAdded.message.uid)
               updateCandidates.remove(historyLabelAdded.message.uid)
               newCandidatesMap[historyLabelAdded.message.uid] = historyLabelAdded.message
               continue
             }
 
-            if (historyLabelAdded.labelIds.contains(LABEL_TRASH)) {
+            if ((historyLabelAdded.labelIds ?: emptyList()).contains(LABEL_TRASH)) {
               newCandidatesMap.remove(historyLabelAdded.message.uid)
               updateCandidates.remove(historyLabelAdded.message.uid)
               deleteCandidatesUIDs.add(historyLabelAdded.message.uid)
               continue
             }
 
-            val existedFlags = labelsToImapFlags(historyLabelAdded.message.labelIds)
+            val existedFlags = labelsToImapFlags(historyLabelAdded.message.labelIds ?: emptyList())
             updateCandidates[historyLabelAdded.message.uid] = existedFlags
           }
         }
@@ -607,12 +609,14 @@ class GmailApiHelper {
       for (msg in msgs) {
         try {
           if (msg.uid in savedMsgUIDsSet) {
-            attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull {
-              AttachmentEntity.fromAttInfo(it.apply {
-                this.email = account.email
-                this.folder = localFolder.fullName
-                this.uid = msg.uid
-              })
+            attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+              AttachmentEntity.fromAttInfo(
+                attachmentInfo.copy(
+                  email = account.email,
+                  folder = localFolder.fullName,
+                  uid = msg.uid
+                )
+              )
             })
           }
         } catch (e: Exception) {
@@ -628,8 +632,6 @@ class GmailApiHelper {
       localFolder: LocalFolder, nextPageToken: String? = null
     ):
         ListMessagesResponse = withContext(Dispatchers.IO) {
-
-
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val list = gmailApiService
         .users()
@@ -663,9 +665,7 @@ class GmailApiHelper {
           .setQ("rfc822msgid:$rfc822msgidValue")
           .execute()
 
-        return@withContext if (response.messages != null && response.messages.size == 1) {
-          response.messages[0].threadId
-        } else null
+        return@withContext response.messages.firstOrNull()?.threadId
       }
 
     suspend fun sendMsg(
@@ -754,13 +754,9 @@ class GmailApiHelper {
 
           val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
           val msg = MimeMessage(Session.getInstance(Properties()), stream)
-          val backup = EmailUtil.getKeyFromMimeMsg(msg)
+          val backup = EmailUtil.getKeyFromMimeMsg(msg).takeIf { it.isNotEmpty() } ?: continue
 
-          if (TextUtils.isEmpty(backup)) {
-            continue
-          }
-
-          list.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList.map {
+          list.addAll(PgpKey.parseKeys(source = backup).pgpKeyDetailsList.map {
             it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
           })
         }
@@ -814,14 +810,14 @@ class GmailApiHelper {
           )
         }
       } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
-        val attachmentInfo = AttachmentInfo()
-        attachmentInfo.name = messagePart.filename ?: depth
-        attachmentInfo.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
-        attachmentInfo.type = messagePart.mimeType ?: ""
-        attachmentInfo.id = messagePart.contentId()
+        val attachmentInfoBuilder = AttachmentInfo.Builder()
+        attachmentInfoBuilder.name = messagePart.filename ?: depth
+        attachmentInfoBuilder.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
+        attachmentInfoBuilder.type = messagePart.mimeType ?: ""
+        attachmentInfoBuilder.id = messagePart.contentId()
           ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
-        attachmentInfo.path = depth
-        attachmentInfoList.add(attachmentInfo)
+        attachmentInfoBuilder.path = depth
+        attachmentInfoList.add(attachmentInfoBuilder.build())
       }
 
       return attachmentInfoList
@@ -964,7 +960,7 @@ class GmailApiHelper {
       }
     }
 
-    suspend fun <T, V> useParallel(
+    private suspend fun <T, V> useParallel(
       list: List<T>,
       stepValue: Int = 10,
       action: suspend (subList: List<T>) -> List<V>
@@ -1017,7 +1013,7 @@ class GmailApiHelper {
         request.fields = fields.joinToString(separator = ",")
       }
 
-      return@withContext request.execute().drafts
+      return@withContext request.execute().drafts ?: emptyList()
     }
 
     /**
@@ -1035,7 +1031,7 @@ class GmailApiHelper {
         .setSelectedAccount(account)
     }
 
-    private fun labelsToImapFlags(labelIds: MutableList<String>): Flags {
+    private fun labelsToImapFlags(labelIds: List<String>): Flags {
       val flags = Flags()
       labelIds.forEach {
         when (it) {

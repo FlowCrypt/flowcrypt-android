@@ -32,6 +32,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -52,7 +53,9 @@ class ProvidePasswordToProtectMsgFragmentInIsolationTest : BaseTest() {
   @Test
   fun testPasswordStrength() {
     launchFragmentInContainer<ProvidePasswordToProtectMsgFragment>(
-      fragmentArgs = ProvidePasswordToProtectMsgFragmentArgs().toBundle()
+      fragmentArgs = ProvidePasswordToProtectMsgFragmentArgs(
+        requestKey = UUID.randomUUID().toString()
+      ).toBundle()
     )
 
     onView(withId(R.id.btSetPassword))

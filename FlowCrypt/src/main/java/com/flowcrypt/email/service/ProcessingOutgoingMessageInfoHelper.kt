@@ -6,6 +6,7 @@
 package com.flowcrypt.email.service
 
 import android.content.Context
+import android.net.Uri
 import android.text.TextUtils
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
@@ -260,34 +261,33 @@ object ProcessingOutgoingMessageInfoHelper {
     }
 
     if (outgoingMsgInfo.atts?.isNotEmpty() == true) {
-      val outgoingAtts = outgoingMsgInfo.atts.map {
-        it.apply {
-          this.email = accountEntity.email
-          this.folder = JavaEmailConstants.FOLDER_OUTBOX
-          this.uid = uid
-        }
+      val outgoingAttachmentInfoList = outgoingMsgInfo.atts.map { attachmentInfo ->
+        attachmentInfo.copy(
+          email = accountEntity.email,
+          folder = JavaEmailConstants.FOLDER_OUTBOX,
+          uid = uid
+        )
       }
 
-      for (att in outgoingAtts) {
-        if (TextUtils.isEmpty(att.type)) {
-          att.type = Constants.MIME_TYPE_BINARY_DATA
-        }
+      for (attachmentInfo in outgoingAttachmentInfoList) {
+        var uri: Uri?
+        var name: String? = null
 
         try {
-          val origFileUri = att.uri
+          val origFileUri = attachmentInfo.uri
           var originalFileInputStream: InputStream? = null
           if (origFileUri != null) {
             originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
-          } else if (att.rawData?.isNotEmpty() == true) {
-            originalFileInputStream = ByteArrayInputStream(att.rawData)
+          } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
+            originalFileInputStream = ByteArrayInputStream(attachmentInfo.rawData)
           }
 
           if (originalFileInputStream == null) {
             continue
           }
 
-          val originalAttName = att.getSafeName()
-          if (att.isEncryptionAllowed &&
+          val originalAttName = attachmentInfo.getSafeName()
+          if (attachmentInfo.isEncryptionAllowed &&
             outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
           ) {
             val fileName = originalAttName + "." + Constants.PGP_FILE_EXT
@@ -299,22 +299,18 @@ object ProcessingOutgoingMessageInfoHelper {
                 encryptedTempFile.name
               )
             }
-            requireNotNull(pubKeys)
-
             PgpEncryptAndOrSign.encryptAndOrSign(
               srcInputStream = originalFileInputStream,
               destOutputStream = encryptedTempFile.outputStream(),
-              pubKeys = pubKeys,
+              pubKeys = requireNotNull(pubKeys),
               fileName = originalAttName,
             )
-            val uri =
-              FileProvider.getUriForFile(
-                context,
-                Constants.FILE_PROVIDER_AUTHORITY,
-                encryptedTempFile
-              )
-            att.uri = uri
-            att.name = encryptedTempFile.name
+            uri = FileProvider.getUriForFile(
+              context,
+              Constants.FILE_PROVIDER_AUTHORITY,
+              encryptedTempFile
+            )
+            name = encryptedTempFile.name
           } else {
             var cachedAtt = File(attsCacheDir, originalAttName)
             if (cachedAtt.exists()) {
@@ -323,12 +319,16 @@ object ProcessingOutgoingMessageInfoHelper {
             }
 
             FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
-            val uri =
-              FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
-            att.uri = uri
+            uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
           }
 
-          cachedAtts.add(att)
+          cachedAtts.add(
+            attachmentInfo.copy(
+              type = attachmentInfo.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA },
+              uri = uri,
+              name = name ?: attachmentInfo.name
+            )
+          )
           if (origFileUri != null) {
             if (Constants.FILE_PROVIDER_AUTHORITY.equals(origFileUri.authority, true)) {
               context.contentResolver.delete(origFileUri, null, null)
@@ -342,17 +342,21 @@ object ProcessingOutgoingMessageInfoHelper {
     }
 
     if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
-      for (att in outgoingMsgInfo.forwardedAtts) {
-        if (att.type.isEmpty()) {
-          att.type = Constants.MIME_TYPE_BINARY_DATA
-        }
-
-        if (att.isEncryptionAllowed && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid)
-          encryptedAtt.name = encryptedAtt.name + "." + Constants.PGP_FILE_EXT
-          cachedAtts.add(encryptedAtt)
+      for (attachmentInfo in outgoingMsgInfo.forwardedAtts) {
+        val candidate = attachmentInfo.copy(
+          folder = JavaEmailConstants.FOLDER_OUTBOX,
+          uid = uid,
+          fwdFolder = attachmentInfo.folder,
+          fwdUid = attachmentInfo.uid,
+          type = attachmentInfo.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA },
+          orderNumber = 0
+        )
+        if (attachmentInfo.isEncryptionAllowed
+          && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
+        ) {
+          cachedAtts.add(candidate.copy(name = candidate.name + "." + Constants.PGP_FILE_EXT))
         } else {
-          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid))
+          cachedAtts.add(candidate)
         }
       }
     }

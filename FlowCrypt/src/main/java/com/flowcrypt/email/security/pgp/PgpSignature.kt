@@ -9,7 +9,7 @@ package com.flowcrypt.email.security.pgp
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
-import org.pgpainless.decryption_verification.OpenPgpMetadata
+import org.pgpainless.decryption_verification.MessageMetadata
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
@@ -60,7 +60,7 @@ object PgpSignature {
 
         verificationStream.use { it.copyTo(outStream) }
         ClearTextVerificationResult(
-          openPgpMetadata = verificationStream.result,
+          messageMetadata = verificationStream.metadata,
           clearText = String(outStream.toByteArray())
         )
       } catch (e: Exception) {
@@ -87,7 +87,7 @@ object PgpSignature {
 
         verificationStream.use { it.copyTo(outStream) }
         DetachedSignatureVerificationResult(
-          openPgpMetadata = verificationStream.result
+          messageMetadata = verificationStream.metadata
         )
       } catch (e: Exception) {
         e.printStackTrace()
@@ -97,18 +97,18 @@ object PgpSignature {
   }
 
   data class ClearTextVerificationResult(
-    override val openPgpMetadata: OpenPgpMetadata? = null,
+    override val messageMetadata: MessageMetadata? = null,
     override val exception: Exception? = null,
     val clearText: String? = null,
   ) : VerificationResult
 
   data class DetachedSignatureVerificationResult(
-    override val openPgpMetadata: OpenPgpMetadata? = null,
+    override val messageMetadata: MessageMetadata? = null,
     override val exception: Exception? = null
   ) : VerificationResult
 
   interface VerificationResult {
-    val openPgpMetadata: OpenPgpMetadata?
+    val messageMetadata: MessageMetadata?
     val exception: Exception?
   }
 }

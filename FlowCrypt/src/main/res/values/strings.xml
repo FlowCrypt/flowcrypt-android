@@ -54,7 +54,7 @@
     <string name="licence">Licence</string>
     <string name="sources">Sources</string>
     <string name="the_contact_was_deleted">Contact \"%1$s\" deleted</string>
-    <string name="the_key_already_added">Key already added</string>
+    <string name="key_already_added">Key already added. To update the existing key please go to «Settings» -> «Keys» -> «Key details».</string>
     <string name="help_feedback_or_question">Help, feedback, question</string>
     <string name="feedback_thank_you_for_trying_message">Thank you for trying %1$s! We\'re here to help.</string>
     <string name="your_message">Your message</string>
@@ -122,7 +122,7 @@
     <string name="cancel">Cancel</string>
     <string name="waiting_to_load">Waiting to load</string>
     <string name="download_complete">Download complete</string>
-    <string name="template_attachment_already_loading">Attachment \"%1$s\" already loading </string>
+    <string name="template_attachment_already_loading">Attachment \"%1$s\" is already loading</string>
     <string name="cannot_save_attachment_without_permission">The attachment cannot be saved without the write external
         storage permission</string>
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
@@ -292,6 +292,7 @@
     <string name="show_private_key">Show private key</string>
     <string name="template_fingerprint"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
     <string name="template_creation_date">Key creation: %1$s</string>
+    <string name="template_modification_date">Key modification: %1$s</string>
     <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
@@ -464,7 +465,7 @@
     <string name="remember_pass_phrase_temporarily">Remember pass phrase temporarily</string>
     <string name="pass_phrase_not_provided">Pass phrase is not provided</string>
     <string name="forget_passphrase">Forget pass phrase</string>
-    <string name="check_passphrase">Check pass phrase</string>
+    <string name="provide_passphrase">Provide pass phrase</string>
     <string name="your_passphrase">Your pass phrase</string>
     <string name="passphrase_purged_from_memory">Pass phrase purged from memory</string>
     <string name="no_details_about_given_key">There are no details about the given key</string>
@@ -586,4 +587,26 @@
     <string name="enterprise_does_not_support_pub_domains">This version of %1$s cannot be used on %2$s domain. If you installed this app by accident, please install non-enterprise FlowCrypt app.</string>
     <string name="error_occurred_with_details_please_try_again">Error occurred, please try again\n\nError details:\n%1$s</string>
     <string name="end_pass_phrase_session">End Pass Phrase Session</string>
+    <string name="update_private_key">Update private key</string>
+    <string name="new_private_key_details">New Private Key details</string>
+    <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Warning: Fingerprint mismatch. You are trying to import a different key.</string>
+    <string name="you_are_trying_to_import_the_same_key">Warning: You are trying to import the same key.</string>
+    <string name="warning_existing_key_has_more_recent_signature">Warning: the existing key has a more recent signature on it than the key you are trying to import.</string>
+    <string name="enter_new_private_key">Enter a new private key</string>
+    <string name="new_private_key">New Private Key</string>
+    <string name="more_than_one_private_key_found">We\'ve found more than one private key in the provided source. Please choose a source with a single public key.</string>
+    <string name="please_provide_passphrase_for_the_given_key">Please provide a pass phrase for the given key</string>
+    <string name="key_was_updated">Key %1$s was updated</string>
+    <string name="please_provide_passphrase_to_proceed">Please provide a pass phrase to proceed</string>
+    <string name="re_fetch_public_key">Re-fetch Public Key</string>
+    <string name="message_was_not_decrypted_due_to_triple_des">Message was not decrypted because it uses a weak encryption algorithm %1$s</string>
+    <string name="show_only_contacts_with_public_keys">Show only contacts with public keys</string>
+    <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Encrypted subject:</font> %1$s]]></string>
+    <string name="please_pay_attention_some_keys_were_skipped">Please note that some keys were skipped</string>
+    <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">This key is unprotected. Please protect it with a pass phrase before import.</string>
+    <string name="private_key_passphrase_anti_bruteforce_protection_hint">To protect you and your data, the next attempt will only be possible after the timer below finishes. Please wait until then before trying again.</string>
+    <plurals name="next_attempt_warning_about_wrong_pass_phrase">
+        <item quantity="one">For your protection and data security, there are currently only %1$d attempt left, followed by a 5-minute cooldown period.</item>
+        <item quantity="other">For your protection and data security, there are currently only %1$d attempts left, followed by a 5-minute cooldown period.</item>
+    </plurals>
 </resources>

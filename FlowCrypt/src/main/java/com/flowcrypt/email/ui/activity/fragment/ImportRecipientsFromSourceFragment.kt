@@ -23,6 +23,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author Denys Bondarenko
@@ -59,6 +60,9 @@ class ImportRecipientsFromSourceFragment :
     // nothing to do here
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
+
   private fun initViews() {
     binding?.eTKeyIdOrEmail?.setOnEditorActionListener { _, actionId, _ ->
       if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -72,7 +76,10 @@ class ImportRecipientsFromSourceFragment :
     }
 
     binding?.btLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = false
+      )
     }
 
     binding?.btLoadFromFile?.setOnClickListener {
@@ -91,18 +98,38 @@ class ImportRecipientsFromSourceFragment :
 
     binding?.eTKeyIdOrEmail?.text?.let {
       navController?.navigate(
-        NavGraphDirections.actionGlobalLookUpPubKeysDialogFragment(it.toString())
+        NavGraphDirections.actionGlobalLookUpPubKeysDialogFragment(
+          requestKey = REQUEST_KEY_LOOK_UP_PUB_KEYS,
+          email = it.toString()
+        )
       )
     }
   }
 
   private fun subscribeToFetchPubKeysViaLookUp() {
-    setFragmentResultListener(LookUpPubKeysDialogFragment.REQUEST_KEY_PUB_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_LOOK_UP_PUB_KEYS) { _, bundle ->
       val pubKeysAsString = bundle.getString(LookUpPubKeysDialogFragment.KEY_PUB_KEYS)
       navController?.navigate(
         ImportRecipientsFromSourceFragmentDirections
           .actionImportRecipientsFromSourceFragmentToParseAndSavePubKeysFragment(pubKeysAsString)
       )
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportRecipientsFromSourceFragment::class.java
+    )
+
+    private val REQUEST_KEY_LOOK_UP_PUB_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_LOOK_UP_PUB_KEYS",
+      ImportRecipientsFromSourceFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
+      ImportRecipientsFromSourceFragment::class.java
+    )
   }
 }

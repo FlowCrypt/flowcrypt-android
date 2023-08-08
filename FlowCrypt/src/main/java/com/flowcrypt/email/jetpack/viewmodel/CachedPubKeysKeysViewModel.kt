@@ -45,7 +45,10 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
         }
         filteredList.forEach {
           withContext(Dispatchers.IO) {
-            val result = PgpKey.parseKeys(it.publicKey, false).pgpKeyDetailsList
+            val result = PgpKey.parseKeys(
+              source = it.publicKey,
+              throwExceptionIfUnknownSource = false
+            ).pgpKeyDetailsList
             it.pgpKeyDetails = result.firstOrNull()
           }
         }
@@ -67,7 +70,10 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
           }
           filteredList.forEach {
             withContext(Dispatchers.IO) {
-              val result = PgpKey.parseKeys(it.publicKey, false).pgpKeyDetailsList
+              val result = PgpKey.parseKeys(
+                source = it.publicKey,
+                throwExceptionIfUnknownSource = false
+              ).pgpKeyDetailsList
               it.pgpKeyDetails = result.firstOrNull()
             }
           }
@@ -246,7 +252,10 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
             }
           } else {
             val existingPgpKeyDetails = withContext(Dispatchers.IO) {
-              val result = PgpKey.parseKeys(pgpKeyDetails.publicKey, false).pgpKeyDetailsList
+              val result = PgpKey.parseKeys(
+                source = pgpKeyDetails.publicKey,
+                throwExceptionIfUnknownSource = false
+              ).pgpKeyDetailsList
               result.firstOrNull()
             } ?: continue
             val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked

@@ -63,7 +63,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     msgs: List<MessageEntity>?
   ) {
 
-    if (account == null || msgs == null || msgs.isEmpty()) {
+    if (account == null || msgs.isNullOrEmpty()) {
       notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES)
       return
     }

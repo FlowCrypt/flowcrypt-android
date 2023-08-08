@@ -124,7 +124,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                   continue
                 }
 
-                details.addAll(PgpKey.parseKeys(backup).pgpKeyDetailsList.map {
+                details.addAll(PgpKey.parseKeys(source = backup).pgpKeyDetailsList.map {
                   it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
                 })
               }

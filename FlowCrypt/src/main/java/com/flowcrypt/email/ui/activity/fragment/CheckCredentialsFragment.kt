@@ -66,7 +66,7 @@ class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>()
           else -> {
             navController?.navigateUp()
             setFragmentResult(
-              REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
+              args.requestKey,
               bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
             )
             countingIdlingResource?.decrementSafely(this@CheckCredentialsFragment)
@@ -77,11 +77,6 @@ class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>()
   }
 
   companion object {
-    val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS",
-      CheckCredentialsFragment::class.java
-    )
-
     val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_CHECK_ACCOUNT_SETTINGS_RESULT",
       CheckCredentialsFragment::class.java

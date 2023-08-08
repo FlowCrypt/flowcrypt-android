@@ -8,11 +8,15 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.Manifest
 import android.accounts.AuthenticatorException
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
+import android.text.Html
 import android.text.SpannableStringBuilder
 import android.text.format.DateUtils
 import android.transition.TransitionManager
@@ -30,7 +34,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.text.toSpannable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -53,7 +56,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
@@ -73,6 +75,7 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
@@ -81,6 +84,7 @@ import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -124,9 +128,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.internet.InternetAddress
-import org.apache.commons.io.FileUtils
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.apache.commons.io.FilenameUtils
-import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
@@ -168,10 +172,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
 
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
-    object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
+    isDeleteEnabled = false,
+    attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
-        lastClickedAtt = attachmentInfo
-        lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+        lastClickedAtt =
+          attachmentInfo.copy(orderNumber = GeneralUtil.genAttOrderId(requireContext()))
 
         if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
           for (block in msgInfo?.msgBlocks ?: emptyList()) {
@@ -181,7 +186,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
-                  fingerprints
+                  requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+                  fingerprints = fingerprints
                 )
                 return
               }
@@ -202,33 +208,33 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
-          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-            previewAttachment(
-              attachmentInfo = attachmentInfo,
-              useEnterpriseBehaviour = true
-            )
-          }
+        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+          previewAttachment(
+            attachmentInfo = attachmentInfo,
+            useContentApp = account?.isHandlingAttachmentRestricted() == true
+          )
         }
       }
 
-      override fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo) {
-        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
-          if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-            previewAttachment(
-              attachmentInfo = attachmentInfo,
-              useEnterpriseBehaviour = true
-            )
-          } else {
-            navController?.navigate(
-              MessageDetailsFragmentDirections
-                .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                  attachmentInfo, REQUEST_CODE_PREVIEW_ATTACHMENT
-                )
-            )
-          }
+      override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
+        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
+          previewAttachment(
+            attachmentInfo = attachmentInfo,
+            useContentApp = account?.isHandlingAttachmentRestricted() == true
+          )
+        } else {
+          navController?.navigate(
+            MessageDetailsFragmentDirections
+              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+                attachmentInfo = attachmentInfo,
+                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+                requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT
+              )
+          )
         }
       }
+
+      override fun onDeleteClick(attachmentInfo: AttachmentInfo) {}
     })
 
   private var msgInfo: IncomingMessageInfo? = null
@@ -244,12 +250,33 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var isMoveToInboxActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
+  private var downloadAttachmentsProgressJob: Job? = null
+
+  private val downloadAttachmentsServiceConnection = object : ServiceConnection {
+    override fun onServiceConnected(className: ComponentName, service: IBinder) {
+      val binder = service as AttachmentDownloadManagerService.LocalBinder
+      val attachmentDownloadManagerService = binder.getService()
+
+      downloadAttachmentsProgressJob = lifecycleScope.launch {
+        attachmentDownloadManagerService.attachmentDownloadProgressStateFlow.collect { map ->
+          updateProgress(map)
+        }
+      }
+    }
+
+    override fun onServiceDisconnected(arg0: ComponentName) {}
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     subscribeToDownloadAttachmentViaDialog()
     subscribeToImportingAdditionalPrivateKeys()
     updateActionsVisibility(args.localFolder, null)
+  }
+
+  override fun onStart() {
+    super.onStart()
+    bindToAttachmentDownloadManagerService()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -261,6 +288,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     collectReVerifySignaturesStateFlow()
     subscribeToTwoWayDialog()
     subscribeToChoosePublicKeyDialogFragment()
+  }
+
+  override fun onStop() {
+    super.onStop()
+    context?.unbindService(downloadAttachmentsServiceConnection)
+    downloadAttachmentsProgressJob?.cancel()
   }
 
   override fun onDestroy() {
@@ -394,6 +427,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               binding?.layoutReplyButtons?.layoutFwdButton?.let { view -> onClick(view) }
               true
             }
+
             else -> {
               true
             }
@@ -428,12 +462,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
-  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
-    super.onAccountInfoRefreshed(accountEntity)
-    attachmentsRecyclerViewAdapter.isPreviewEnabled =
-      account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
-  }
-
   /**
    * Show an incoming message info.
    *
@@ -446,7 +474,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = args.localFolder
 
-    msgInfo.inlineSubject?.let { binding?.textViewSubject?.text = it }
+    if ("..." == msgInfo.getSubject()) {
+      msgInfo.inlineSubject?.let {
+        binding?.textViewSubject?.text = Html.fromHtml(it, Html.FROM_HTML_MODE_LEGACY)
+      }
+    }
 
     updatePgpBadges()
     updateMsgView()
@@ -522,19 +554,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
-  private fun makeAttsProtected(atts: List<AttachmentInfo>) {
-    for (att in atts) {
-      att.isProtected = true
-    }
-  }
-
   /**
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private fun showSendersPublicKeyDialog() {
     showChoosePublicKeyDialogFragment(
-      args.messageEntity.email,
-      ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings
+      requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY,
+      email = args.messageEntity.email,
+      choiceMode = ListView.CHOICE_MODE_SINGLE,
+      titleResourceId = R.plurals.tell_sender_to_update_their_settings
     )
   }
 
@@ -547,8 +575,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     var atts: MutableList<AttachmentInfo>? = null
     if (att != null) {
       atts = ArrayList()
-      att.isProtected = true
-      atts.add(att)
+      atts.add(att.copy(isProtected = true))
     }
 
     startActivity(
@@ -699,7 +726,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     binding?.imageButtonEditDraft?.setOnClickListener {
       val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
       if (fingerprintList?.isNotEmpty() == true) {
-        showNeedPassphraseDialog(fingerprintList)
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+          fingerprints = fingerprintList
+        )
       } else {
         startActivity(
           CreateMessageActivity.generateIntent(
@@ -749,7 +779,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     } else {
       binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
     }
-    binding?.textViewSubject?.text = subject
+    if (binding?.textViewSubject?.text.isNullOrEmpty()) {
+      binding?.textViewSubject?.text = subject
+    }
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
       binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
@@ -848,12 +880,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun formatAddresses(addresses: List<InternetAddress>) =
     addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
-      if (index < MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE) {
+      if (index < MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE) {
         builder.append(it.getFormattedString())
         if (index != addresses.size - 1) {
           builder.append("\n")
         }
-      } else if (index == MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE + 1) {
+      } else if (index == MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE + 1) {
         builder.append(getString(R.string.and_others))
       }
       builder
@@ -915,6 +947,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             handleOtherBlock(block, layoutInflater)
           }
         }
+
+        MsgBlock.Type.ENCRYPTED_SUBJECT -> {}// we should skip such blocks here
 
         else -> handleOtherBlock(block, layoutInflater)
       }
@@ -1213,14 +1247,22 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       PgpDecryptAndOrVerify.DecryptionErrorType.OTHER -> {
-        val otherErrorMsg =
-          getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
-              "\n\n" + getString(
+        val otherErrorMsg = when (decryptError.details.message) {
+          "Symmetric-Key algorithm TRIPLE_DES is not acceptable for message decryption." -> {
+            getString(R.string.message_was_not_decrypted_due_to_triple_des, "TRIPLE_DES")
+          }
+
+          else -> getString(
+            R.string.decrypt_error_could_not_open_message,
+            getString(R.string.app_name)
+          ) + "\n\n" + getString(
             R.string.decrypt_error_please_write_me,
             getString(R.string.support_email)
           ) + "\n\n" + decryptError.details.type +
               ": " + decryptError.details.message +
               "\n\n" + decryptError.details.stack
+        }
+
         return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
       }
 
@@ -1231,7 +1273,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           btText = getString(R.string.fix)
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.fingerprints ?: return@OnClickListener
-            showNeedPassphraseDialog(fingerprints)
+            showNeedPassphraseDialog(
+              requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+              fingerprints = fingerprints
+            )
           }
         }
 
@@ -1298,7 +1343,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         navController?.navigate(
           MessageDetailsFragmentDirections
             .actionMessageDetailsFragmentToImportAdditionalPrivateKeysFragment(
-              accountEntity
+              requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+              accountEntity = accountEntity
             )
         )
       }
@@ -1522,12 +1568,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )
+
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_READ -> {
           UpdateMsgsSeenStateWorker.enqueue(requireContext())
           navigateUp = false
         }
+
         else -> {}
       }
 
@@ -1540,13 +1588,16 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun observerPassphraseNeededLiveData() {
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
-        showNeedPassphraseDialog(fingerprintList)
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+          fingerprints = fingerprintList
+        )
       }
     }
   }
 
   private fun collectReVerifySignaturesStateFlow() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       msgDetailsViewModel.reVerifySignaturesStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -1588,13 +1639,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
-    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
-      ) ?: return@setFragmentResultListener
+      )?.map { attachmentInfo ->
+        attachmentInfo.copy(isProtected = true)
+      } ?: return@setFragmentResultListener
 
       if (keyList.isNotEmpty()) {
-        makeAttsProtected(keyList)
         sendTemplateMsgWithPublicKey(keyList[0])
       }
     }
@@ -1605,11 +1657,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       if (attInfo.rawData?.isNotEmpty() == true) {
         downloadInlinedAtt(attInfo)
       } else {
-        if (account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true) {
+        if (account?.isHandlingAttachmentRestricted() == true) {
           navController?.navigate(
             MessageDetailsFragmentDirections
               .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                attInfo, REQUEST_CODE_SAVE_ATTACHMENT
+                attachmentInfo = attInfo,
+                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+                requestCode = REQUEST_CODE_SAVE_ATTACHMENT
               )
           )
         } else {
@@ -1621,19 +1675,18 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun previewAttachment(
     attachmentInfo: AttachmentInfo,
-    useEnterpriseBehaviour: Boolean = false
+    useContentApp: Boolean = false
   ) {
     val intent = if (attachmentInfo.uri != null) {
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
-      val (_, uri) = useFileProviderToGenerateUri(attachmentInfo)
+      val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
       GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
     }
 
-    if (useEnterpriseBehaviour) {
+    if (useContentApp) {
       try {
-        //ask Tom about receiving package as a parameter
-        startActivity(Intent(intent).setPackage("com.airwatch.contentlocker"))
+        startActivity(Intent(intent).setPackage(Constants.APP_PACKAGE_CONTENT_LOCKER))
       } catch (e: ActivityNotFoundException) {
         //We don't have the required app
         showInfoDialog(
@@ -1651,68 +1704,43 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
-    val (file, uri) = useFileProviderToGenerateUri(attInfo)
-    context?.let {
-      attInfo.uri = uri
-      it.startService(
-        AttachmentDownloadManagerService.newIntent(
-          context,
-          attInfo.copy(rawData = null, name = file.name)
-        )
+    val (file, uri) = attInfo.useFileProviderToGenerateUri(requireContext())
+    context?.startService(
+      AttachmentDownloadManagerService.newIntent(
+        context,
+        attInfo.copy(rawData = null, name = file.name, uri = uri)
       )
-    }
+    )
   } catch (e: Exception) {
     e.printStackTrace()
     ExceptionUtil.handleError(e)
   }
 
-  private fun useFileProviderToGenerateUri(attInfo: AttachmentInfo): Pair<File, Uri> {
-    val tempDir = CacheManager.getCurrentMsgTempDirectory(requireContext())
-    val fileName = FileAndDirectoryUtils.normalizeFileName(attInfo.name)
-    val file = if (fileName.isNullOrEmpty()) {
-      File.createTempFile("tmp", null, tempDir)
-    } else {
-      val fileCandidate = File(tempDir, fileName)
-      if (!fileCandidate.exists()) {
-        FileUtils.writeByteArrayToFile(fileCandidate, attInfo.rawData)
-      }
-      fileCandidate
-    }
-    val uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
-    return Pair(file, uri)
-  }
-
   private fun subscribeToDownloadAttachmentViaDialog() {
-    setFragmentResultListener(DownloadAttachmentDialogFragment.REQUEST_KEY_ATTACHMENT_DATA) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
       val attachmentInfo =
         bundle.getParcelableViaExt<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
-      val data = bundle.getByteArray(DownloadAttachmentDialogFragment.KEY_ATTACHMENT_DATA)
-      attachmentInfo?.rawData = data
 
-      for (att in attachmentsRecyclerViewAdapter.currentList) {
-        if (attachmentInfo == att) {
-          att.rawData = data
-          att.name = if (SecurityUtils.isPossiblyEncryptedData(att.name)) {
-            FilenameUtils.getBaseName(att.name)
-          } else {
-            att.name
-          }
-          attachmentsRecyclerViewAdapter.notifyItemRangeChanged(
-            0,
-            attachmentsRecyclerViewAdapter.currentList.size
-          )
-          break
+      val existingList = attachmentsRecyclerViewAdapter.currentList.toMutableList()
+      existingList.replaceAll {
+        if (it.id == attachmentInfo?.id) {
+          attachmentInfo
+        } else {
+          it
         }
       }
+
+      lastClickedAtt = attachmentInfo
+      attachmentsRecyclerViewAdapter.submitList(existingList.toList())
 
       when (requestCode) {
         REQUEST_CODE_PREVIEW_ATTACHMENT -> {
           attachmentInfo?.let {
             previewAttachment(
               attachmentInfo = it,
-              useEnterpriseBehaviour =
-              account?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING) == true
+              useContentApp =
+              account?.isHandlingAttachmentRestricted() == true
             )
           }
         }
@@ -1725,9 +1753,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToImportingAdditionalPrivateKeys() {
-    setFragmentResultListener(
-      ImportAdditionalPrivateKeysFragment.REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt<PgpKeyDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
@@ -1737,12 +1763,61 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  private fun bindToAttachmentDownloadManagerService() {
+    Intent(requireContext(), AttachmentDownloadManagerService::class.java).also { intent ->
+      context?.bindService(intent, downloadAttachmentsServiceConnection, Context.BIND_AUTO_CREATE)
+    }
+  }
+
+  private fun updateProgress(
+    mapWithLatestProgress: Map<String, AttachmentDownloadManagerService.DownloadProgress>
+  ) {
+    val idsToBeUpdated = mutableSetOf<String>()
+    val existingMap = attachmentsRecyclerViewAdapter.progressMap
+    idsToBeUpdated.addAll(mapWithLatestProgress.keys - existingMap.keys)
+    existingMap.forEach { (attachmentId, existingProgress) ->
+      val newProgress = mapWithLatestProgress[attachmentId]
+      if (newProgress == null || existingProgress != newProgress) {
+        idsToBeUpdated.add(attachmentId)
+      }
+    }
+
+    attachmentsRecyclerViewAdapter.progressMap.clear()
+    attachmentsRecyclerViewAdapter.progressMap.putAll(mapWithLatestProgress)
+    val currentList = attachmentsRecyclerViewAdapter.currentList
+    idsToBeUpdated.forEach { uniqueStringId ->
+      currentList.firstOrNull { it.uniqueStringId == uniqueStringId }?.let { attachmentInfo ->
+        attachmentsRecyclerViewAdapter.notifyItemChanged(currentList.indexOf(attachmentInfo))
+      }
+    }
+  }
+
   companion object {
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
-    private const val MAX_ALLOWED_RECEPIENTS_IN_HEADER_VALUE = 10
+    private const val MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE = 10
 
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
+
+    private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      MessageDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_DOWNLOAD_ATTACHMENT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_DOWNLOAD_ATTACHMENT",
+      MessageDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      MessageDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
+      MessageDetailsFragment::class.java
+    )
   }
 }

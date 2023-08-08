@@ -102,7 +102,6 @@ data class PgpKeyDetails constructor(
       account = accountEntity.email.lowercase(),
       accountType = accountEntity.accountType,
       source = PrivateKeySourceType.BACKUP.toString(),
-      publicKey = publicKey.toByteArray(),
       privateKey = privateKey?.toByteArray()
         ?: throw NullPointerException("pgpKeyDetails.privateKey == null"),
       storedPassphrase = tempPassphrase?.let { String(it) },

@@ -15,6 +15,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
@@ -38,6 +39,7 @@ import com.flowcrypt.email.api.retrofit.RetrofitApiServiceInterface
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
+import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -347,19 +349,15 @@ class GeneralUtil {
      * @return The generated order number.
      */
     fun genAttOrderId(context: Context): Int {
-      var lastId = SharedPreferencesHelper.getInt(
+      return SharedPreferencesHelper.getInt(
         PreferenceManager.getDefaultSharedPreferences(context),
         Constants.PREF_KEY_LAST_ATT_ORDER_ID, 0
-      )
-
-      lastId++
-
-      SharedPreferencesHelper.setInt(
-        PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREF_KEY_LAST_ATT_ORDER_ID, lastId
-      )
-
-      return lastId
+      ).inc().apply {
+        SharedPreferencesHelper.setInt(
+          PreferenceManager.getDefaultSharedPreferences(context),
+          Constants.PREF_KEY_LAST_ATT_ORDER_ID, this
+        )
+      }
     }
 
     /**
@@ -418,10 +416,10 @@ class GeneralUtil {
      * Returns a language code of the current [Locale].
      */
     fun getLocaleLanguageCode(context: Context?): String {
-      context ?: return "en"
-      return if (context.resources.configuration.locales.isEmpty) {
-        "en"
-      } else context.resources.configuration.locales.get(0).language.lowercase()
+      return when {
+        context == null || context.resources.configuration.locales.isEmpty -> "en"
+        else -> context.resources.configuration.locales.get(0).language.lowercase()
+      }
     }
 
     /**
@@ -454,7 +452,8 @@ class GeneralUtil {
 
       for (recipientWithPubKeys in recipientsWithPubKeys) {
         for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
-          val pgpKeyDetailsList = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+          val pgpKeyDetailsList =
+            PgpKey.parseKeys(source = publicKeyEntity.publicKey).pgpKeyDetailsList
           for (pgpKeyDetails in pgpKeyDetailsList) {
             if (!pgpKeyDetails.isExpired && !pgpKeyDetails.isRevoked) {
               mapOfRecipients[recipientWithPubKeys.recipient.email] = true
@@ -528,6 +527,37 @@ class GeneralUtil {
 
         else -> causedException
       }
+    }
+
+
+    fun prepareWarningTextAboutUnusableForEncryptionKeys(
+      context: Context,
+      keysStorage: KeysStorage
+    ): String {
+      val stringBuilder = StringBuilder()
+      stringBuilder.append("<ul>")
+
+      keysStorage.getPgpKeyDetailsList().forEach { pgpKeyDetails ->
+        stringBuilder.append("<li>")
+        val fingerprint = doSectionsInText(
+          originalString = pgpKeyDetails.fingerprint, groupSize = 4
+        )
+        stringBuilder.append("<b>$fingerprint</b> - ")
+        val status = pgpKeyDetails.getStatusText(context)
+        val colorStateList = pgpKeyDetails.getColorStateListDependsOnStatus(context)
+        val backgroundColor = colorStateList?.defaultColor ?: Color.BLACK
+        val backgroundColorHex = String.format("#%06X", 0xFFFFFF and backgroundColor)
+        stringBuilder.append(
+          "<span style=\"background-color:$backgroundColorHex\">&nbsp;" +
+              "<font color=\"#ffffff\">$status</font>&nbsp;</span>"
+        )
+        stringBuilder.append("</li>")
+      }
+
+      stringBuilder.append("</ul>")
+
+      val preamble = context.getString(R.string.no_private_keys_suitable_for_encryption)
+      return "$preamble <br><br> $stringBuilder"
     }
   }
 }

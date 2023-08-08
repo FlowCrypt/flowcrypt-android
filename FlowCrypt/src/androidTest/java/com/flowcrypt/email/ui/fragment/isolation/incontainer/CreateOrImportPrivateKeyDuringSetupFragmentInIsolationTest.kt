@@ -27,6 +27,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -45,6 +46,7 @@ class CreateOrImportPrivateKeyDuringSetupFragmentInIsolationTest : BaseTest() {
   fun testButtonCreateNewKeyVisibilityForMissedRule() {
     launchFragmentInContainer<CreateOrImportPrivateKeyDuringSetupFragment>(
       fragmentArgs = CreateOrImportPrivateKeyDuringSetupFragmentArgs(
+        requestKey = UUID.randomUUID().toString(),
         accountEntity = AccountDaoManager.getDefaultAccountDao()
       ).toBundle()
     )
@@ -57,6 +59,7 @@ class CreateOrImportPrivateKeyDuringSetupFragmentInIsolationTest : BaseTest() {
   fun testButtonCreateNewKeyVisibilityForExistingRule() {
     launchFragmentInContainer<CreateOrImportPrivateKeyDuringSetupFragment>(
       fragmentArgs = CreateOrImportPrivateKeyDuringSetupFragmentArgs(
+        requestKey = UUID.randomUUID().toString(),
         accountEntity = AccountDaoManager.getUserWithClientConfiguration(
           ClientConfiguration(
             flags = listOf(

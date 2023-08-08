@@ -14,7 +14,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -24,6 +23,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
@@ -92,7 +92,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupParseKeysViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithLifecycle {
       parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -117,7 +117,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
               } else {
                 navController?.navigateUp()
                 setFragmentResult(
-                  REQUEST_KEY_PARSED_KEYS,
+                  args.requestKey,
                   bundleOf(KEY_PARSED_KEYS to keys)
                 )
               }
@@ -176,10 +176,6 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_PARSED_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PARSED_KEYS", ParsePgpKeysFromSourceDialogFragment::class.java
-    )
-
     val KEY_PARSED_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_PARSED_KEYS", ParsePgpKeysFromSourceDialogFragment::class.java
     )

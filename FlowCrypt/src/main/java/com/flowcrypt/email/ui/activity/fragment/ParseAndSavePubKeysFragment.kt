@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
@@ -22,6 +21,7 @@ import com.flowcrypt.email.databinding.FragmentParseAndSavePubKeysBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.toast
@@ -32,6 +32,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment
 import com.flowcrypt.email.ui.adapter.ImportOrUpdatePubKeysRecyclerViewAdapter
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author Denys Bondarenko
@@ -72,7 +73,10 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     subscribeToImportAllPubKeysFromSourceResult()
-    importPubKeysFromSourceSharedViewModel.parseKeys(getSourceInputStreamFromArgs())
+    importPubKeysFromSourceSharedViewModel.parseKeys(
+      inputStream = getSourceInputStreamFromArgs(),
+      skipErrors = true
+    )
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -87,7 +91,9 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
     binding?.btImportAll?.setOnClickListener {
       navController?.navigate(
         ParseAndSavePubKeysFragmentDirections
-          .actionParseAndSavePubKeysFragmentToImportAllPubKeysFromSourceDialogFragment()
+          .actionParseAndSavePubKeysFragmentToImportAllPubKeysFromSourceDialogFragment(
+            requestKey = REQUEST_KEY_IMPORT_PUB_KEYS
+          )
       )
     }
 
@@ -97,7 +103,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   }
 
   private fun setupImportPubKeysFromSourceSharedViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -133,13 +139,13 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   }
 
   private fun setupCachedPubKeysKeysViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       cachedPubKeysKeysViewModel.filteredPubKeysStateFlow.collect {
         pubKeysAdapter.swap(it)
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       cachedPubKeysKeysViewModel.addPubKeysStateFlow.collect {
         when (it.status) {
           Result.Status.SUCCESS -> {
@@ -156,7 +162,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       cachedPubKeysKeysViewModel.updateExistingPubKeyStateFlow.collect {
         when (it.status) {
           Result.Status.SUCCESS -> {
@@ -194,9 +200,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
   }
 
   private fun subscribeToImportAllPubKeysFromSourceResult() {
-    setFragmentResultListener(
-      ImportAllPubKeysFromSourceDialogFragment.REQUEST_KEY_IMPORT_PUB_KEYS_RESULT
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_IMPORT_PUB_KEYS) { _, bundle ->
       val result =
         bundle.getBoolean(ImportAllPubKeysFromSourceDialogFragment.KEY_IMPORT_PUB_KEYS_RESULT)
       if (result) {
@@ -204,5 +208,12 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
         navController?.popBackStack(R.id.recipientsListFragment, false)
       }
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_IMPORT_PUB_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_PUB_KEYS",
+      ParseAndSavePubKeysFragment::class.java
+    )
   }
 }

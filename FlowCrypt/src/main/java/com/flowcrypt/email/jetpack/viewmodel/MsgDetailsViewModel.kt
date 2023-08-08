@@ -197,7 +197,11 @@ class MsgDetailsViewModel(
                 val msgInfo = IncomingMessageInfo(
                   msgEntity = mediatorMsgLiveData.value ?: messageEntity,
                   text = processedMimeMessageResult.text,
-                  //subject = parseDecryptedMsgResult.subject,
+                  inlineSubject = processedMimeMessageResult.blocks.firstOrNull {
+                    it.type == MsgBlock.Type.ENCRYPTED_SUBJECT
+                  }?.content?.let {
+                    context.getString(R.string.encrypted_subject_template, it)
+                  },
                   msgBlocks = processedMimeMessageResult.blocks,
                   encryptionType = if (processedMimeMessageResult.verificationResult.hasEncryptedParts) {
                     MessageEncryptionType.ENCRYPTED
@@ -439,7 +443,8 @@ class MsgDetailsViewModel(
             roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(recipient)
           try {
             block.existingRecipientWithPubKeys?.publicKeys?.forEach {
-              it.pgpKeyDetails = PgpKey.parseKeys(it.publicKey).pgpKeyDetailsList.firstOrNull()
+              it.pgpKeyDetails =
+                PgpKey.parseKeys(source = it.publicKey).pgpKeyDetailsList.firstOrNull()
             }
           } catch (e: Exception) {
             e.printStackTrace()
@@ -711,13 +716,18 @@ class MsgDetailsViewModel(
           imapFolder.fetch(arrayOf(msg), fetchProfile)
 
           val msgUid = messageEntity.uid
-          val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
-            AttachmentEntity.fromAttInfo(it.apply {
-              email = accountEntity.email
-              this.folder =
-                if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else JavaEmailConstants.FOLDER_SEARCH
-              uid = msgUid
-            })
+          val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull { attachmentInfo ->
+            AttachmentEntity.fromAttInfo(
+              attachmentInfo.copy(
+                email = accountEntity.email,
+                folder = if (localFolder.searchQuery.isNullOrEmpty()) {
+                  localFolder.fullName
+                } else {
+                  JavaEmailConstants.FOLDER_SEARCH
+                },
+                uid = msgUid
+              )
+            )
           }
 
           FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()
@@ -736,13 +746,16 @@ class MsgDetailsViewModel(
           accountEntity,
           messageEntity.uidAsHEX
         )
-        val attachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull {
-          AttachmentEntity.fromAttInfo(it.apply {
-            this.email = accountEntity.email
-            this.folder = localFolder.fullName
-            this.uid = msg.uid
-          })
-        }
+        val attachments =
+          GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+            AttachmentEntity.fromAttInfo(
+              attachmentInfo.copy(
+                email = accountEntity.email,
+                folder = localFolder.fullName,
+                uid = msg.uid
+              )
+            )
+          }
         FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()
           .insertWithReplaceSuspend(attachments)
       } catch (e: Exception) {

@@ -33,6 +33,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -433,6 +434,7 @@ class CheckKeysFragmentMultiBackupsInIsolationTest : BaseTest() {
 
     launchFragmentInContainer<CheckKeysFragment>(
       fragmentArgs = CheckKeysFragmentArgs(
+        requestKey = UUID.randomUUID().toString(),
         privateKeys = keyDetailsList.toTypedArray(),
         positiveBtnTitle = getTargetContext().getString(R.string.continue_),
         negativeBtnTitle = getTargetContext().getString(R.string.choose_another_key),

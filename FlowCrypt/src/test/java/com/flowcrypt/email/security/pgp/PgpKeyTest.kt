@@ -30,12 +30,12 @@ class PgpKeyTest {
     ): String = TestUtil.readResourceAsString("${PgpKeyTest::class.simpleName}/$path", charset)
 
     @Suppress("SameParameterValue")
-    private fun loadSecretKey(keyFile: String): PGPSecretKeyRing {
+    private fun loadSecretKey(keyFile: String): PGPSecretKeyRing? {
       return PGPainless.readKeyRing().secretKeyRing(loadResourceAsString("keys/$keyFile"))
     }
 
     @Suppress("SameParameterValue")
-    private fun loadPublicKey(keyFile: String): PGPPublicKeyRing {
+    private fun loadPublicKey(keyFile: String): PGPPublicKeyRing? {
       return PGPainless.readKeyRing().publicKeyRing(loadResourceAsString("keys/$keyFile"))
     }
   }
@@ -65,7 +65,7 @@ class PgpKeyTest {
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
       primaryKeyId = 4193120410270338832
     )
-    val actual = PgpKey.parseKeys(TestKeys.KEYS["rsa1"]!!.publicKey)
+    val actual = PgpKey.parseKeys(source = TestKeys.KEYS["rsa1"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
     assertEquals(expected, actual.pgpKeyDetailsList.first())
   }
@@ -96,7 +96,7 @@ class PgpKeyTest {
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
       primaryKeyId = -4691725871015490871
     )
-    val actual = PgpKey.parseKeys(TestKeys.KEYS["expired"]!!.publicKey)
+    val actual = PgpKey.parseKeys(source = TestKeys.KEYS["expired"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
     assertEquals(expected, actual.pgpKeyDetailsList.first())
   }
@@ -104,18 +104,21 @@ class PgpKeyTest {
   @Test
   fun testParseAndDecryptKey_Issue1296() {
     val publicKeyRing = loadPublicKey("issue-1296-0xA96B4C55A800DB83.public.gpg-key")
-    val expectedFingerprint = OpenPgpV4Fingerprint(publicKeyRing)
+    val expectedFingerprint = OpenPgpV4Fingerprint(requireNotNull(publicKeyRing))
     val secretKeyRing = loadSecretKey("issue-1296-0xA96B4C55A800DB83.secret-subkeys.gpg-key")
-    assertEquals(expectedFingerprint, OpenPgpV4Fingerprint(secretKeyRing.publicKey))
+    assertEquals(
+      expectedFingerprint,
+      OpenPgpV4Fingerprint(requireNotNull(secretKeyRing?.publicKey))
+    )
     val passphrase = Passphrase.fromPassword("password12345678")
-    val decryptedSecretKeyRing = PgpKey.decryptKey(secretKeyRing, passphrase)
+    val decryptedSecretKeyRing = PgpKey.decryptKey(requireNotNull(secretKeyRing), passphrase)
     assertEquals(expectedFingerprint, OpenPgpV4Fingerprint(decryptedSecretKeyRing.publicKey))
   }
 
   @Test
   fun testPublicKey_Issue1358() {
     val keyText = loadResourceAsString("keys/issue-1358.public.gpg-key")
-    val actual = PgpKey.parseKeys(keyText)
+    val actual = PgpKey.parseKeys(source = keyText)
     assertEquals(1, actual.getAllKeys().size)
   }
 

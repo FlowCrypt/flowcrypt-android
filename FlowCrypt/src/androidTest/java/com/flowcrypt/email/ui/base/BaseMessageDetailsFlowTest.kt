@@ -98,15 +98,16 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     registerAllIdlingResources()
   }
 
-  protected fun testStandardMsgPlaintextInternal() {
-    baseCheck(
-      getMsgInfo(
-        "messages/info/standard_msg_info_plaintext.json",
-        "messages/mime/standard_msg_info_plaintext.txt"
-      )
+  protected fun testStandardMsgPlaintextInternal(): IncomingMessageInfo? {
+    val incomingMessageInfo = getMsgInfo(
+      "messages/info/standard_msg_info_plaintext.json",
+      "messages/mime/standard_msg_info_plaintext.txt"
     )
+    baseCheck(incomingMessageInfo)
     onView(withId(R.id.tVTo))
       .check(matches(withText(getResString(R.string.to_receiver, getResString(R.string.me)))))
+
+    return incomingMessageInfo
   }
 
   protected fun matchReplyButtons(msgEntity: MessageEntity) {
@@ -183,7 +184,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
         matches(
           Matchers.anyOf(
             withText(msgEntity.subject),
-            withText(incomingMsgInfo.inlineSubject)
+            withText(incomingMsgInfo.inlineSubject?.let { getHtmlString(it) })
           )
         )
       )
@@ -239,7 +240,10 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .check(matches(not(isDisplayed())))
   }
 
-  protected fun baseCheck(incomingMsgInfo: IncomingMessageInfo?) {
+  protected fun baseCheck(
+    incomingMsgInfo: IncomingMessageInfo?,
+    actionBeforeMatchingReplyButtons: () -> Unit = {}
+  ) {
     assertThat(incomingMsgInfo, notNullValue())
 
     val details = incomingMsgInfo!!.msgEntity
@@ -247,11 +251,12 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     matchHeader(incomingMsgInfo)
 
     //checkWebViewText(incomingMsgInfo.text)
+    actionBeforeMatchingReplyButtons.invoke()
     matchReplyButtons(details)
   }
 
-  protected fun testTopReplyAction(title: String) {
-    testStandardMsgPlaintextInternal()
+  protected fun testTopReplyAction(title: String): IncomingMessageInfo? {
+    val incomingMessageInfo = testStandardMsgPlaintextInternal()
 
     onView(withId(R.id.imageButtonMoreOptions))
       .check(matches(isDisplayed()))
@@ -265,6 +270,8 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
 
     onView(withId(R.id.toolbar))
       .check(matches(withToolBarText(title)))
+
+    return incomingMessageInfo
   }
 
   protected fun withHeaderInfo(header: MsgDetailsRecyclerViewAdapter.Header):

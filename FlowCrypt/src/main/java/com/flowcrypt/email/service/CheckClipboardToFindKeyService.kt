@@ -148,7 +148,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
         MESSAGE_WHAT -> {
           val clipboardText = msg.obj as String
           try {
-            val pgpKeyDetails = PgpKey.parseKeys(clipboardText).pgpKeyDetailsList
+            val pgpKeyDetails = PgpKey.parseKeys(source = clipboardText).pgpKeyDetailsList
             if (!CollectionUtils.isEmpty(pgpKeyDetails)) {
               sendReply(msg)
             }

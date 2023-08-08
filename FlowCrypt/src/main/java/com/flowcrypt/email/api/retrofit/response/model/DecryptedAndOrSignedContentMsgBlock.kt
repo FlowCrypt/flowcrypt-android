@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 import com.google.gson.annotations.Expose
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import org.pgpainless.decryption_verification.OpenPgpMetadata
+import org.pgpainless.decryption_verification.MessageMetadata
 
 /**
  * @author Denys Bondarenko
@@ -28,5 +28,5 @@ data class DecryptedAndOrSignedContentMsgBlock(
   override val type: MsgBlock.Type = MsgBlock.Type.DECRYPTED_AND_OR_SIGNED_CONTENT
 
   @IgnoredOnParcel
-  var openPgpMetadata: OpenPgpMetadata? = null
+  var messageMetadata: MessageMetadata? = null
 }

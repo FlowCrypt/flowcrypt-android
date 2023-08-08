@@ -30,9 +30,11 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
@@ -67,7 +69,6 @@ import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
-import com.flowcrypt.email.ui.activity.fragment.MessagesListFragmentDirections
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
@@ -229,9 +230,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         override fun onAddAccountClick() {
           binding.drawerLayout.closeDrawer(GravityCompat.START)
           binding.navigationView.menu.setGroupVisible(0, true)
-          navController.navigate(
-            MessagesListFragmentDirections.actionMessagesListFragmentToMainSignInFragment()
-          )
+          navController.navigate(NavGraphDirections.actionGlobalMainSignInFragmentBackToList())
         }
 
         override fun onSwitchAccountClick(accountEntity: AccountEntity) {
@@ -433,49 +432,52 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun subscribeToCollectRefreshPrivateKeysFromEkm() {
-    lifecycleScope.launchWhenStarted {
-      refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
-          }
+    lifecycleScope.launch {
+      repeatOnLifecycle(Lifecycle.State.STARTED) {
+        refreshPrivateKeysFromEkmViewModel.refreshPrivateKeysFromEkmStateFlow.collect {
+          when (it.status) {
+            Result.Status.LOADING -> {
+              FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
+            }
 
-          Result.Status.SUCCESS -> {
-            FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
-          }
+            Result.Status.SUCCESS -> {
+              FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
+            }
 
-          Result.Status.EXCEPTION -> {
-            it.exception?.let { exception ->
-              when (exception) {
-                is EmptyPassphraseException -> {
-                  showNeedPassphraseDialog(
-                    navController = navController,
-                    fingerprints = exception.fingerprints,
-                    logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
-                    requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM,
-                    customTitle = getString(
-                      R.string.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
-                    ),
-                    showKeys = false
-                  )
-                }
+            Result.Status.EXCEPTION -> {
+              it.exception?.let { exception ->
+                when (exception) {
+                  is EmptyPassphraseException -> {
+                    showNeedPassphraseDialog(
+                      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+                      navController = navController,
+                      fingerprints = exception.fingerprints,
+                      logicType = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
+                      requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM,
+                      customTitle = getString(
+                        R.string.please_provide_passphrase_for_following_keys_to_keep_keys_up_to_date
+                      ),
+                      showKeys = false
+                    )
+                  }
 
-                !is CommonConnectionException -> {
-                  showInfoDialog(
-                    requestKey = GeneralUtil.generateUniqueExtraKey(
-                      Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
-                      this::class.java
-                    ),
-                    dialogMsg = it.exceptionMsg,
-                    dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
-                  )
+                  !is CommonConnectionException -> {
+                    showInfoDialog(
+                      requestKey = GeneralUtil.generateUniqueExtraKey(
+                        Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
+                        this::class.java
+                      ),
+                      dialogMsg = it.exceptionMsg,
+                      dialogTitle = getString(R.string.refreshing_keys_from_ekm_failed)
+                    )
+                  }
                 }
               }
+              FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
             }
-            FlavorSettings.getCountingIdlingResource().decrementSafely(this@MainActivity)
-          }
 
-          else -> {}
+            else -> {}
+          }
         }
       }
     }
@@ -484,7 +486,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
     binding.fragmentContainerView.getFragment<Fragment>().childFragmentManager
       .setFragmentResultListener(
-        FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT,
+        REQUEST_KEY_FIX_MISSING_PASSPHRASE,
         this
       ) { _, bundle ->
         val requestCode = bundle.getInt(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE)
@@ -542,6 +544,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   companion object {
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM = 1000
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      MainActivity::class.java
+    )
+
     const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS =
       BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
     const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS =

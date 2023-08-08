@@ -6,8 +6,10 @@
 package com.flowcrypt.email.security.pgp
 
 import android.os.Parcelable
+import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.util.exception.DecryptionException
 import kotlinx.parcelize.Parcelize
+import org.bouncycastle.bcpg.ArmoredInputException
 import org.bouncycastle.openpgp.PGPDataValidationException
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
@@ -15,8 +17,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.decryption_verification.DecryptionStream
+import org.pgpainless.decryption_verification.MessageMetadata
 import org.pgpainless.decryption_verification.MissingKeyPassphraseStrategy
-import org.pgpainless.decryption_verification.OpenPgpMetadata
 import org.pgpainless.exception.MessageNotIntegrityProtectedException
 import org.pgpainless.exception.MissingDecryptionMethodException
 import org.pgpainless.exception.MissingPassphraseException
@@ -39,7 +41,7 @@ object PgpDecryptAndOrVerify {
     secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector,
     passphrase: Passphrase? = null,
-  ): OpenPgpMetadata {
+  ): MessageMetadata {
     srcInputStream.use { srcStream ->
       destOutputStream.use { outStream ->
         try {
@@ -50,7 +52,7 @@ object PgpDecryptAndOrVerify {
             passphrase = passphrase
           )
           decryptionStream.use { it.copyTo(outStream) }
-          return decryptionStream.result
+          return decryptionStream.metadata
         } catch (e: Exception) {
           throw processDecryptionException(e)
         }
@@ -58,19 +60,13 @@ object PgpDecryptAndOrVerify {
     }
   }
 
-  /**
-   * Note: we have to use 'additionalRetryCount' to prevent randomly errors.
-   * I hope it will be a temporary solution.
-   * More details here: https://github.com/pgpainless/pgpainless/issues/365
-   */
   fun decryptAndOrVerifyWithResult(
     srcInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection? = null,
     secretKeys: PGPSecretKeyRingCollection? = null,
     protector: SecretKeyRingProtector? = null,
     passphrase: Passphrase? = null,
-    ignoreMdcErrors: Boolean = false,
-    additionalRetryCount: Int = 0
+    ignoreMdcErrors: Boolean = false
   ): DecryptionResult {
     srcInputStream.use { srcStream ->
       val destOutputStream = ByteArrayOutputStream()
@@ -87,27 +83,13 @@ object PgpDecryptAndOrVerify {
 
           decryptionStream.use { it.copyTo(outStream) }
           return DecryptionResult(
-            openPgpMetadata = decryptionStream.result,
+            messageMetadata = decryptionStream.metadata,
             content = destOutputStream
           )
         } catch (e: Exception) {
-          if (additionalRetryCount > 0 && srcStream.markSupported()) {
-            srcStream.reset()
-            return decryptAndOrVerifyWithResult(
-              srcInputStream,
-              publicKeys,
-              secretKeys,
-              protector,
-              passphrase,
-              ignoreMdcErrors,
-              additionalRetryCount - 1
-            )
-          } else {
-            e.printStackTrace()
-            return DecryptionResult.withError(
-              processDecryptionException(e)
-            )
-          }
+          return DecryptionResult.withError(
+            processDecryptionException(e)
+          )
         }
       }
     }
@@ -170,8 +152,8 @@ object PgpDecryptAndOrVerify {
         val exception = e.cause ?: e
 
         when {
-          exception is IOException && exception.message.equals(
-            "crc check failed in armored message.",
+          exception is ArmoredInputException && exception.message.equals(
+            "crc check failed in armored message",
             true
           ) -> {
             DecryptionException(DecryptionErrorType.FORMAT, e)
@@ -191,7 +173,7 @@ object PgpDecryptAndOrVerify {
   }
 
   data class DecryptionResult(
-    val openPgpMetadata: OpenPgpMetadata? = null,
+    val messageMetadata: MessageMetadata? = null,
     // provided if decryption was successful
     val content: ByteArrayOutputStream? = null,
 
@@ -206,11 +188,11 @@ object PgpDecryptAndOrVerify {
      * Alternatively false (because it could have also been plaintext signed, or wrapped in
      * PGP armor as plaintext packet without encrypting). Also false when error happens.
      */
-    val isEncrypted: Boolean = openPgpMetadata?.isEncrypted ?: false
-    val isSigned = openPgpMetadata?.isSigned ?: false
+    val isEncrypted: Boolean = messageMetadata?.isEncrypted ?: false
+    val isSigned = messageMetadata?.isSigned ?: false
 
     // pgp messages may include original filename in them
-    val filename = openPgpMetadata?.fileName
+    val filename = messageMetadata?.filename
 
     companion object {
       fun withError(exception: DecryptionException): DecryptionResult {

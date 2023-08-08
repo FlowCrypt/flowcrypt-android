@@ -61,8 +61,8 @@ class AddOtherAccountFlowTest : AddOtherAccountBaseTest() {
   @Test
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()
-    val creds = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")
-    fillAllFields(creds)
+    val credentials = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")
+    fillAllFields(credentials)
     val someFailTextToChangeRightValue = "123"
 
     val fieldIdentifiersWithIncorrectData = intArrayOf(
@@ -77,18 +77,18 @@ class AddOtherAccountFlowTest : AddOtherAccountBaseTest() {
     )
 
     val correctData = arrayOf(
-      creds.email,
-      creds.username,
-      creds.password,
-      creds.imapServer,
-      creds.imapPort.toString(),
-      creds.smtpServer,
-      creds.smtpPort.toString(),
-      creds.smtpSigInUsername,
-      creds.smtpSignInPassword
+      credentials.email,
+      credentials.username,
+      credentials.password,
+      credentials.imapServer,
+      credentials.imapPort.toString(),
+      credentials.smtpServer,
+      credentials.smtpPort.toString(),
+      credentials.smtpSigInUsername,
+      credentials.smtpSignInPassword
     )
 
-    val numberOfChecks = if (creds.hasCustomSignInForSmtp) {
+    val numberOfChecks = if (credentials.hasCustomSignInForSmtp) {
       fieldIdentifiersWithIncorrectData.size
     } else {
       fieldIdentifiersWithIncorrectData.size - 2

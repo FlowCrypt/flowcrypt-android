@@ -124,7 +124,6 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           keyEntity.copy(
             privateKey = KeyStoreCryptoManager.encryptSuspend(modifiedPgpKeyDetails.privateKey)
               .toByteArray(),
-            publicKey = modifiedPgpKeyDetails.publicKey.toByteArray(),
             storedPassphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase.asString)
           )
         }
@@ -187,77 +186,100 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     keys: List<PgpKeyDetails>,
     addAccountIfNotExist: Boolean = false
   ) {
-    requireNotNull(accountEntity)
+    if (accountEntity == null) {
+      savePrivateKeysLiveData.value = Result.exception(NullPointerException("account == null"))
+      return
+    }
 
     viewModelScope.launch {
       val context: Context = getApplication()
       savePrivateKeysLiveData.value = Result.loading()
       try {
-        for (keyDetails in keys) {
-          val fingerprint = keyDetails.fingerprint
-          if (!keyDetails.isFullyEncrypted) {
+        for (pgpKeyDetails in keys) {
+          val fingerprint = pgpKeyDetails.fingerprint
+          if (!pgpKeyDetails.isFullyEncrypted) {
             throw IllegalStateException(
               context.getString(R.string.found_not_fully_encrypted_key, fingerprint)
             )
           }
 
-          if (roomDatabase.keysDao().getKeyByAccountAndFingerprintSuspend(
-              accountEntity.email.lowercase(), fingerprint
-            ) == null
-          ) {
-            if (addAccountIfNotExist) {
-              val existedAccount = roomDatabase.accountDao()
-                .getAccountSuspend(accountEntity.email.lowercase())
-              if (existedAccount == null) {
-                roomDatabase.accountDao().addAccountSuspend(accountEntity)
-              }
+          val existingKeyEntity = roomDatabase.keysDao().getKeyByAccountAndFingerprintSuspend(
+            accountEntity.email.lowercase(), fingerprint
+          )
+
+          if (existingKeyEntity != null) {
+            val decryptedPrivateKey =
+              KeyStoreCryptoManager.decryptSuspend(String(existingKeyEntity.privateKey))
+            val existingPgpKeyDetails =
+              PgpKey.parseKeys(decryptedPrivateKey).pgpKeyDetailsList.firstOrNull()
+
+            if (existingPgpKeyDetails?.isNewerThan(pgpKeyDetails) == true) {
+              continue
+            }
+          }
+
+          if (addAccountIfNotExist) {
+            val existedAccount = roomDatabase.accountDao()
+              .getAccountSuspend(accountEntity.email.lowercase())
+            if (existedAccount == null) {
+              roomDatabase.accountDao().addAccountSuspend(accountEntity)
+            }
+          }
+
+          val encryptedPassphrase =
+            if (pgpKeyDetails.passphraseType == KeyEntity.PassphraseType.DATABASE) {
+              KeyStoreCryptoManager.encryptSuspend(
+                String(requireNotNull(pgpKeyDetails.tempPassphrase))
+              )
+            } else null
+
+          val encryptedPrvKey =
+            KeyStoreCryptoManager.encryptSuspend(pgpKeyDetails.privateKey).toByteArray()
+
+          val keyEntity = (existingKeyEntity ?: pgpKeyDetails.toKeyEntity(accountEntity)).copy(
+            source = requireNotNull(pgpKeyDetails.importSourceType?.toPrivateKeySourceTypeString()),
+            privateKey = encryptedPrvKey,
+            storedPassphrase = encryptedPassphrase
+          )
+          val isAddedOrUpdated = if (existingKeyEntity != null) {
+            roomDatabase.keysDao().updateSuspend(keyEntity) > 0
+          } else {
+            roomDatabase.keysDao().insertSuspend(keyEntity) > 0
+          }
+
+          if (isAddedOrUpdated) {
+            if (pgpKeyDetails.passphraseType == KeyEntity.PassphraseType.RAM) {
+              keysStorage.putPassphraseToCache(
+                fingerprint = fingerprint,
+                passphrase = Passphrase(pgpKeyDetails.tempPassphrase),
+                validUntil = keysStorage.calculateLifeTimeForPassphrase(),
+                passphraseType = KeyEntity.PassphraseType.RAM
+              )
             }
 
-            val encryptedPassphrase =
-              if (keyDetails.passphraseType == KeyEntity.PassphraseType.DATABASE) {
-                KeyStoreCryptoManager.encryptSuspend(
-                  String(requireNotNull(keyDetails.tempPassphrase))
-                )
-              } else null
+            //update pub keys
+            val recipientDao = roomDatabase.recipientDao()
+            val pubKeysDao = roomDatabase.pubKeyDao()
+            for (mimeAddress in pgpKeyDetails.mimeAddresses) {
+              val address = mimeAddress.address.lowercase()
+              val name = mimeAddress.personal
 
-            val encryptedPrvKey =
-              KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray()
-
-            val keyEntity = keyDetails.toKeyEntity(accountEntity).copy(
-              source = requireNotNull(keyDetails.importSourceType?.toPrivateKeySourceTypeString()),
-              privateKey = encryptedPrvKey,
-              storedPassphrase = encryptedPassphrase
-            )
-            val isAdded = roomDatabase.keysDao().insertSuspend(keyEntity) > 0
-
-            if (isAdded) {
-              if (keyDetails.passphraseType == KeyEntity.PassphraseType.RAM) {
-                keysStorage.putPassphraseToCache(
-                  fingerprint = fingerprint,
-                  passphrase = Passphrase(keyDetails.tempPassphrase),
-                  validUntil = keysStorage.calculateLifeTimeForPassphrase(),
-                  passphraseType = KeyEntity.PassphraseType.RAM
-                )
+              val existingRecipientWithPubKeys =
+                recipientDao.getRecipientWithPubKeysByEmailSuspend(address)
+              if (existingRecipientWithPubKeys == null) {
+                recipientDao.insertSuspend(RecipientEntity(email = address, name = name))
               }
 
-              //update pub keys
-              val recipientDao = roomDatabase.recipientDao()
-              val pubKeysDao = roomDatabase.pubKeyDao()
-              for (mimeAddress in keyDetails.mimeAddresses) {
-                val address = mimeAddress.address.lowercase()
-                val name = mimeAddress.personal
-
-                val existedRecipientWithPubKeys =
-                  recipientDao.getRecipientWithPubKeysByEmailSuspend(address)
-                if (existedRecipientWithPubKeys == null) {
-                  recipientDao.insertSuspend(RecipientEntity(email = address, name = name))
-                }
-
-                val existedPubKeyEntity =
-                  pubKeysDao.getPublicKeyByRecipientAndFingerprint(address, keyDetails.fingerprint)
-                if (existedPubKeyEntity == null) {
-                  pubKeysDao.insertSuspend(keyDetails.toPublicKeyEntity(address))
-                }
+              val existingPubKeyEntity =
+                pubKeysDao.getPublicKeyByRecipientAndFingerprint(address, pgpKeyDetails.fingerprint)
+              if (existingPubKeyEntity == null) {
+                pubKeysDao.insertSuspend(pgpKeyDetails.toPublicKeyEntity(address))
+              } else if (existingKeyEntity != null) {
+                pubKeysDao.updateSuspend(
+                  existingPubKeyEntity.copy(
+                    publicKey = pgpKeyDetails.publicKey.toByteArray()
+                  )
+                )
               }
             }
           }
@@ -301,14 +323,21 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
             val source = context.contentResolver.openInputStream(keyImportModel.fileUri)
               ?: throw java.lang.IllegalStateException(sourceNotAvailableMsg)
-            parseKeyResult = PgpKey.parseKeys(source, false)
+            parseKeyResult = PgpKey.parseKeys(
+              source = source,
+              throwExceptionIfUnknownSource = false
+            )
           }
 
           KeyImportDetails.SourceType.CLIPBOARD, KeyImportDetails.SourceType.EMAIL, KeyImportDetails.SourceType.MANUAL_ENTERING -> {
             val source = keyImportModel.keyString
               ?: throw IllegalStateException(sourceNotAvailableMsg)
-            parseKeyResult = PgpKey.parseKeys(source, false)
+            parseKeyResult = PgpKey.parseKeys(
+              source = source,
+              throwExceptionIfUnknownSource = false
+            )
           }
+
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.sourceType}")
         }
 
@@ -494,7 +523,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
 
     val modifiedPgpKeyDetailsList =
-      PgpKey.parseKeys(keyEncryptedWithNewPassphrase.toByteArray()).pgpKeyDetailsList
+      PgpKey.parseKeys(source = keyEncryptedWithNewPassphrase.toByteArray()).pgpKeyDetailsList
     if (modifiedPgpKeyDetailsList.isEmpty() || modifiedPgpKeyDetailsList.size != 1) {
       throw IllegalStateException("Parse keys error")
     }

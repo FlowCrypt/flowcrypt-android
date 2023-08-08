@@ -11,7 +11,7 @@
     <string name="contacts">Контакти</string>
     <string name="keys">Ключі</string>
     <string name="help">Підтримка</string>
-    <string name="the_key_already_added">Такий ключ вже добавлено</string>
+    <string name="key_already_added">Такий ключ вже добавлено. Щоб оновити існуючий ключ, будь ласка, перейдіть до «Налаштування» -> «Ключі» -> «Деталі ключа».</string>
     <string name="help_feedback_or_question">Допомога, питання, зворотній зв\'язок</string>
     <string name="feedback_thank_you_for_trying_message">Дякуємо, що користуєтеся %1$s! Ми тут, щоб допомогти Вам.</string>
     <string name="your_message">Ваше повідомлення</string>
@@ -173,6 +173,7 @@
     <string name="delete_quoted_text">Видалити текст, що цитується</string>
     <string name="delete_message">Видалити повідомлення</string>
     <string name="template_creation_date">Дата створення: %1$s</string>
+    <string name="template_modification_date">Дата модифікації: %1$s</string>
     <string name="date">Дата</string>
     <string name="please_wait_while_key_will_be_created">Створення ключа, будь ласка, зачекайте</string>
     <string name="template_created">Створено: %1$s</string>
@@ -216,7 +217,7 @@
     <string name="key_has_already_been_added">Цей ключ вже додано</string>
     <string name="passphrase_type_undefined">Тип ключової фрази не визначений</string>
     <string name="your_passphrase">Ваша ключова фраза</string>
-    <string name="check_passphrase">Перевірити ключову фразу</string>
+    <string name="provide_passphrase">Надати ключову фразу</string>
     <string name="remember_pass_phrase_temporarily">Тимчасово запам\'ятати ключову фразу</string>
     <string name="save_pass_phrase">Зберегти ключову фразу</string>
     <string name="and_others">та інші&#8230;</string>
@@ -577,4 +578,27 @@
     </plurals>
     <string name="error_occurred_with_details_please_try_again">Сталася помилка, спробуйте ще раз\n\nДеталі помилки:\n%1$s</string>
     <string name="end_pass_phrase_session">Завершити сесію ключової фрази</string>
+    <string name="update_private_key">Оновити закритий ключ</string>
+    <string name="new_private_key_details">Інформація про новий закритий ключ</string>
+    <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Попередження: Невідповідність відбитків. Ви намагаєтеся імпортувати інший ключ.</string>
+    <string name="you_are_trying_to_import_the_same_key">Попередження: Ви намагаєтеся імпортувати той самий ключ.</string>
+    <string name="warning_existing_key_has_more_recent_signature">Попередження: Ви намагаєтесь замінити існуючий ключ пізнішою версією.</string>
+    <string name="enter_new_private_key">Введіть новий закритий ключ</string>
+    <string name="new_private_key">Новий закритий ключ</string>
+    <string name="more_than_one_private_key_found">Ми знайшли більше ніж один закритий ключ у наданому джерелі. Будь ласка, виберіть джерело з єдиним відкритим ключем.</string>
+    <string name="please_provide_passphrase_for_the_given_key">Будь ласка, введіть парольну фразу для даного ключа</string>
+    <string name="key_was_updated">Ключ %1$s оновлено</string>
+    <string name="please_provide_passphrase_to_proceed">Щоб продовжити, будь ласка введіть парольну фразу</string>
+    <string name="re_fetch_public_key">Отримати відкритий ключ</string>
+    <string name="message_was_not_decrypted_due_to_triple_des">Повідомлення не було розшифровано, оскільки воно використовує слабкий алгоритм шифрування %1$s</string>
+    <string name="show_only_contacts_with_public_keys">Показувати лише контакти з відкритими ключами</string>
+    <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Зашифрована тема:</font> %1$s]]></string>
+    <string name="please_pay_attention_some_keys_were_skipped">Зверніть увагу, що деякі ключі були пропущені</string>
+    <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">Цей ключ незахищений. Перед імпортом захистіть його ключовою фразою.</string>
+    <string name="private_key_passphrase_anti_bruteforce_protection_hint">Щоб захистити Вас і Ваші дані, наступна спроба буде можлива лише після закінчення таймера нижче. Будь ласка, зачекайте до того часу, перш ніж спробувати знову.</string>
+    <plurals name="next_attempt_warning_about_wrong_pass_phrase">
+        <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
+        <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>
+        <item quantity="many">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроб, а потім 5-хвилинний період відновлення.</item>
+    </plurals>
 </resources>

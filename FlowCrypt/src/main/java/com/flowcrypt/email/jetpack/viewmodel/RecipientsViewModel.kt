@@ -44,22 +44,24 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class RecipientsViewModel(application: Application) : AccountViewModel(application) {
-  private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
+  private val searchPatternLiveData: MutableLiveData<Pair<Boolean, String>> = MutableLiveData()
   private val controlledRunnerForPubKeysFromServer = ControlledRunner<Result<PubResponse?>>()
 
   val allContactsLiveData: LiveData<List<RecipientEntity>> =
     roomDatabase.recipientDao().getAllRecipientsLD()
-  val recipientsWithPgpFlow = roomDatabase.recipientDao().getAllRecipientsWithPgpFlow()
-  val contactsWithPgpSearchLiveData: LiveData<Result<List<RecipientEntity>>> =
+  val contactsWithPgpMarkerSearchLiveData: LiveData<Result<List<RecipientEntity.WithPgpMarker>>> =
     searchPatternLiveData.switchMap {
       liveData {
         emit(Result.loading())
-        val foundContacts = if (it.isNullOrEmpty()) {
-          roomDatabase.recipientDao().getAllRecipientsWithPgp()
+        val onlyWithPgp = it.first
+        val searchPattern = it.second
+
+        val recipientEntities = if (onlyWithPgp) {
+          roomDatabase.recipientDao().getAllMatchedRecipientsWithPgpAndPgpMarker("%$searchPattern%")
         } else {
-          roomDatabase.recipientDao().getAllRecipientsWithPgpWhichMatched("%$it%")
+          roomDatabase.recipientDao().getAllMatchedRecipientsWithPgpMarker("%$searchPattern%")
         }
-        emit(Result.success(foundContacts))
+        emit(Result.success(recipientEntities))
       }
     }
   val recipientsToLiveData: MutableLiveData<Result<List<RecipientWithPubKeys>>> = MutableLiveData()
@@ -243,8 +245,8 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun filterContacts(searchPattern: String) {
-    searchPatternLiveData.value = searchPattern
+  fun filterContacts(onlyWithPgp: Boolean, searchPattern: String) {
+    searchPatternLiveData.value = Pair(onlyWithPgp, searchPattern)
   }
 
   fun deleteContactByEmail(email: String) {
@@ -314,7 +316,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
         Result.Status.SUCCESS -> {
           val pubKeyString = response.data?.pubkey
           if (pubKeyString?.isNotEmpty() == true) {
-            val parsedResult = PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList
+            val parsedResult = PgpKey.parseKeys(source = pubKeyString).pgpKeyDetailsList
             if (parsedResult.isNotEmpty()) {
               return@withContext parsedResult
             }

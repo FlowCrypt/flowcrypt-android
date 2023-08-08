@@ -10,7 +10,7 @@
     <string name="contacts">Контакты</string>
     <string name="keys">Ключи</string>
     <string name="help">Поддержка</string>
-    <string name="the_key_already_added">Такой ключ уже добавлен</string>
+    <string name="key_already_added">Такой ключ уже добавлен. Чтобы обновить существующий ключ, перейдите в «Настройки» -> «Ключи» -> «Информация о ключе».</string>
     <string name="help_feedback_or_question">Помощь, вопросы, обратная связь</string>
     <string name="feedback_thank_you_for_trying_message">Спасибо, что используете %1$s! Мы здесь, чтобы помочь Вам.</string>
     <string name="your_message">Ваше сообщение</string>
@@ -172,6 +172,7 @@
     <string name="delete_quoted_text">Удалить цитируемый текст</string>
     <string name="delete_message">Удалить сообщение</string>
     <string name="template_creation_date">Дата создания: %1$s</string>
+    <string name="template_modification_date">Дата изменения: %1$s</string>
     <string name="date">Дата</string>
     <string name="please_wait_while_key_will_be_created">Создание ключа, пожалуйста, подождите</string>
     <string name="template_created">Создано: %1$s</string>
@@ -215,7 +216,7 @@
     <string name="key_has_already_been_added">Этот ключ уже добавлен</string>
     <string name="passphrase_type_undefined">Тип ключевой фразы не определен</string>
     <string name="your_passphrase">Ваша ключевая фраза</string>
-    <string name="check_passphrase">Проверить ключевую фразу</string>
+    <string name="provide_passphrase">Предоставить ключевую фразу</string>
     <string name="remember_pass_phrase_temporarily">Времено запомнить ключевую фразу</string>
     <string name="save_pass_phrase">Сохранить ключевую фразу</string>
     <string name="and_others">и другие&#8230;</string>
@@ -576,4 +577,27 @@
     </plurals>
     <string name="error_occurred_with_details_please_try_again">Произошла ошибка, попробуйте еще раз\n\nДетали ошибки:\n%1$s</string>
     <string name="end_pass_phrase_session">Завершить сессию ключевой фразы</string>
+    <string name="update_private_key">Обновить закрытый ключ</string>
+    <string name="new_private_key_details">Информация о новым закрытом ключе</string>
+    <string name="fingerprint_mismatch_you_are_trying_to_import_different_key">Предупреждение: Несоответствие отпечатков пальцев. Вы пытаетесь импортировать другой ключ.</string>
+    <string name="you_are_trying_to_import_the_same_key">Предупреждение: Вы пытаетесь импортировать тот же ключ.</string>
+    <string name="warning_existing_key_has_more_recent_signature">Предупреждение: Вы пытаетесь заменить существующий ключ более поздней версией.</string>
+    <string name="enter_new_private_key">Введите новый закрытый ключ</string>
+    <string name="new_private_key">Новый закрытый ключ</string>
+    <string name="more_than_one_private_key_found">Мы нашли более одного закрытого ключа в предоставленном источнике. Пожалуйста, выберите источник с единственным открытым ключом.</string>
+    <string name="please_provide_passphrase_for_the_given_key">Пожалуйста, предоставьте ключевую фразу для данного ключа</string>
+    <string name="key_was_updated">Ключ %1$s обновлен</string>
+    <string name="please_provide_passphrase_to_proceed">Пожалуйста, предоставьте ключевую фразу, чтобы продолжить</string>
+    <string name="re_fetch_public_key">Получить открытый ключ</string>
+    <string name="message_was_not_decrypted_due_to_triple_des">Сообщение не было расшифровано, так как в нем используется слабый алгоритм шифрования %1$s</string>
+    <string name="show_only_contacts_with_public_keys">Показывать только контакты с публичными ключами</string>
+    <string name="encrypted_subject_template"><![CDATA[<font color=\'#31A217\'>Зашифрованная тема:</font> %1$s]]></string>
+    <string name="please_pay_attention_some_keys_were_skipped">Пожалуйста, обратите внимание, что некоторые ключи были пропущены</string>
+    <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">Этот ключ не защищен. Пожалуйста, защитите его ключевой фразой перед импортом.</string>
+    <string name="private_key_passphrase_anti_bruteforce_protection_hint">Чтобы защитить Вас и Ваши данные, следующая попытка будет возможна только после того, как таймер ниже истечет. Пожалуйста, подождите до тех пор, прежде чем повторить попытку.</string>
+    <plurals name="next_attempt_warning_about_wrong_pass_phrase">
+        <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
+        <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>
+        <item quantity="many">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попыток, после чего следует 5-минутный период восстановления.</item>
+    </plurals>
 </resources>

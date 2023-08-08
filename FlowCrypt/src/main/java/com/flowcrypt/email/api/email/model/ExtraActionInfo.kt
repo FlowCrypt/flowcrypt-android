@@ -58,12 +58,10 @@ data class ExtraActionInfo(
       when (intent.action) {
         Intent.ACTION_VIEW, Intent.ACTION_SENDTO, Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
           if (Intent.ACTION_SEND == intent.action) {
-            val stream = intent.getParcelableExtraViaExt<Uri>(Intent.EXTRA_STREAM)
-            if (stream != null) {
-              val attachmentInfo = EmailUtil.getAttInfoFromUri(context, stream)
-              attachmentInfo?.let {
-                attsList.add(attachmentInfo)
-              }
+            val uri = intent.getParcelableExtraViaExt<Uri>(Intent.EXTRA_STREAM)
+            if (uri != null) {
+              val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
+              attachmentInfo?.let { attsList.add(attachmentInfo) }
             }
           } else {
             val uriList = intent.getParcelableArrayListExtraViaExt<Parcelable>(Intent.EXTRA_STREAM)
@@ -71,27 +69,45 @@ data class ExtraActionInfo(
               for (parcelable in uriList) {
                 val uri = parcelable as Uri
                 val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
-                attachmentInfo?.let {
-                  attsList.add(attachmentInfo)
-                }
+                attachmentInfo?.let { attsList.add(attachmentInfo) }
               }
             }
           }
         }
       }
 
-      val finalSubject = infoFromRFC6068Parser?.initializationData?.subject
-        ?: intent.getStringExtra(Intent.EXTRA_SUBJECT)
-      val finalBody = infoFromRFC6068Parser?.initializationData?.body
-        ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+      val initializationData = infoFromRFC6068Parser?.initializationData
+
+      val finalSubject = initializationData?.subject ?: intent.getStringExtra(Intent.EXTRA_SUBJECT)
+      val finalBody = initializationData?.body ?: intent.getStringExtra(Intent.EXTRA_TEXT)
+
+      val getEmailList = { key: String ->
+        ArrayList((intent.getStringArrayExtra(key) ?: emptyArray()).toList())
+      }
+
+      val finalTo = initializationData?.toAddresses ?: getEmailList(Intent.EXTRA_EMAIL)
+      val finalCc = initializationData?.ccAddresses ?: getEmailList(Intent.EXTRA_CC)
+      val finalBcc = initializationData?.bccAddresses ?: getEmailList(Intent.EXTRA_BCC)
 
       return infoFromRFC6068Parser?.copy(
         atts = attsList,
         initializationData = infoFromRFC6068Parser.initializationData.copy(
           subject = finalSubject,
           body = finalBody,
+          toAddresses = finalTo,
+          ccAddresses = finalCc,
+          bccAddresses = finalBcc
         )
-      ) ?: ExtraActionInfo(attsList, InitializationData(subject = finalSubject, body = finalBody))
+      ) ?: ExtraActionInfo(
+        atts = attsList,
+        initializationData = InitializationData(
+          subject = finalSubject,
+          body = finalBody,
+          toAddresses = finalTo,
+          ccAddresses = finalCc,
+          bccAddresses = finalBcc
+        )
+      )
     }
   }
 }

@@ -10,7 +10,9 @@ import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollToHolder
 import androidx.test.espresso.intent.Intents.intended
@@ -31,12 +33,12 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
@@ -65,7 +67,6 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -111,25 +112,30 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   fun testReplyButton() {
-    testStandardMsgPlaintextInternal()
+    val incomingMessageInfo = testStandardMsgPlaintextInternal()
     onView(withId(R.id.layoutReplyButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
+
+    checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
   fun testTopReplyButton() {
-    testTopReplyAction(getResString(R.string.reply))
+    val incomingMessageInfo = testTopReplyAction(getResString(R.string.reply))
+    checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
   fun testReplyAllButton() {
-    testStandardMsgPlaintextInternal()
+    val incomingMessageInfo = testStandardMsgPlaintextInternal()
     onView(withId(R.id.layoutReplyAllButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
+
+    checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
@@ -159,6 +165,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo
       ), simpleAttInfo
     )
+
+    onView(withId(R.id.imageButtonPreviewAtt))
+      .check(matches(isDisplayed()))
   }
 
   @Test
@@ -172,8 +181,6 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @NotReadyForCI
-  @Ignore("don't enable this one on CI. It takes too long")
   fun testEncryptedBigInlineAtt() {
     IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
     baseCheck(
@@ -181,11 +188,13 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/info/encrypted_msg_big_inline_att.json",
         "messages/mime/encrypted_msg_big_inline_att.txt"
       )
-    )
+    ) {
+      //we need additional time to decrypt a message
+      Thread.sleep(30000)
+    }
   }
 
   @Test
-  @Ignore("Temporary disabled due to architecture changes")
   fun testDecryptionError_KEY_MISMATCH_MissingKeyErrorImportKey() {
     testMissingKey(
       getMsgInfo(
@@ -194,19 +203,23 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       )
     )
 
-    /*intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))*/
-
+    val privateKey =
+      TestGeneralUtil.readFileFromAssetsAsString(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
+    addTextToClipboard("private key", privateKey)
     onView(withId(R.id.buttonImportPrivateKey))
       .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withId(R.id.buttonLoadFromClipboard))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withId(R.id.editTextKeyPassword))
+      .perform(
+        scrollTo(),
+        typeText(TestConstants.DEFAULT_STRONG_PASSWORD),
+        closeSoftKeyboard()
+      )
+    onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
-
-    PrivateKeysManager.saveKeyFromAssetsToDatabase(
-      accountEntity = addAccountToDatabaseRule.account,
-      keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
-      passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
-      sourceType = KeyImportDetails.SourceType.EMAIL
-    )
 
     val incomingMsgInfoFixed =
       TestGeneralUtil.getObjectFromJson(
@@ -214,11 +227,6 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         IncomingMessageInfo::class.java
       )
     checkWebViewText(incomingMsgInfoFixed?.text)
-
-    PrivateKeysManager.deleteKey(
-      addAccountToDatabaseRule.account,
-      TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG
-    )
   }
 
   @Test
@@ -984,9 +992,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     baseCheck(msgInfo)
 
     assertEquals(1, msgInfo?.msgBlocks?.size)
-    MatcherAssert.assertThat(
-      msgInfo?.msgBlocks?.first(), instanceOf(GenericMsgBlock::class.java)
-    )
+    MatcherAssert.assertThat(msgInfo?.msgBlocks?.first(), instanceOf(GenericMsgBlock::class.java))
 
     checkWebViewText(msgInfo?.text)
   }
@@ -1029,5 +1035,35 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     assertEquals(attachmentName, attachmentNameUiObject2.text)
     assertEquals(downloadCompleteLabel, downloadCompleteLabelUiObject2.text)
     device.pressHome()
+  }
+
+  @Test
+  fun testEncryptedSubjectOpenPgpMIMESigned() {
+    baseCheck(
+      getMsgInfo(
+        "messages/info/encrypted_subject_openpgp_mime_signed.json",
+        "messages/mime/encrypted_subject_openpgp_mime_signed.txt"
+      )
+    )
+  }
+
+  @Test
+  fun testEncryptedSubjectOpenPgpMIMENotSigned() {
+    baseCheck(
+      getMsgInfo(
+        "messages/info/encrypted_subject_openpgp_mime_not_signed.json",
+        "messages/mime/encrypted_subject_openpgp_mime_not_signed.txt"
+      )
+    )
+  }
+
+  private fun checkQuotesFunctionality(incomingMessageInfo: IncomingMessageInfo?) {
+    onView(withId(R.id.iBShowQuotedText))
+      .check(matches(isDisplayed()))
+      .perform(scrollTo(), click())
+
+    onView(withId(R.id.editTextEmailMessage))
+      .check(matches(isDisplayed()))
+      .check(matches(withText(EmailUtil.genReplyContent(incomingMessageInfo))))
   }
 }

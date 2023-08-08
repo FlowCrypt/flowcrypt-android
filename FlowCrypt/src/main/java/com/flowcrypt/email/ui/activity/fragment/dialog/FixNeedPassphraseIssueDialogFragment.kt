@@ -16,20 +16,24 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.AccountSettingsEntity
 import com.flowcrypt.email.databinding.FragmentFixEmptyPassphraseBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.KeysWithEmptyPassphraseViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -40,6 +44,9 @@ import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDeco
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.WrongPassPhraseException
 import org.pgpainless.util.Passphrase
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * @author Denys Bondarenko
@@ -49,7 +56,14 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
   private val args by navArgs<FixNeedPassphraseIssueDialogFragmentArgs>()
 
   private val prvKeysRecyclerViewAdapter = PrvKeysRecyclerViewAdapter()
-  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels()
+  private val checkPrivateKeysViewModel: CheckPrivateKeysViewModel by viewModels {
+    object : CustomAndroidViewModelFactory(requireActivity().application) {
+      @Suppress("UNCHECKED_CAST")
+      override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CheckPrivateKeysViewModel(requireActivity().application, true) as T
+      }
+    }
+  }
 
   private val keysWithEmptyPassphraseViewModel: KeysWithEmptyPassphraseViewModel by viewModels()
   private val fingerprintList = mutableListOf<String>()
@@ -93,6 +107,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           checkPassphrase()
           true
         }
+
         else -> false
       }
     }
@@ -166,6 +181,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                     matchingKeys.size
                   )
                 }
+
                 AT_LEAST_ONE -> {
                   if (checkPrivateKeysViewModel.checkPrvKeysLiveData.value == null) {
                     binding?.tVStatusMessage?.text = resources.getQuantityString(
@@ -187,6 +203,7 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           binding?.tVStatusMessage?.text = it.exception?.message
           countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
+
         else -> {
         }
       }
@@ -234,15 +251,16 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                   if (countOfMatchedPassphrases == checkResults.size) {
                     navController?.navigateUp()
                     setFragmentResult(
-                      REQUEST_KEY_RESULT,
+                      args.requestKey,
                       bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                     )
                   }
                 }
+
                 AT_LEAST_ONE -> {
                   navController?.navigateUp()
                   setFragmentResult(
-                    REQUEST_KEY_RESULT,
+                    args.requestKey,
                     bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
                   )
                 }
@@ -250,7 +268,18 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             }
 
             isWrongPassphraseExceptionFound -> {
-              toast(R.string.password_is_incorrect)
+              val attemptsLeft =
+                AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE -
+                    checkPrivateKeysViewModel.antiBruteforceProtectionCountdownStateFlow.value.first - 1
+
+              if (attemptsLeft > 0) {
+                binding?.tILKeyPassword?.error = getString(R.string.password_is_incorrect) +
+                    "\n\n" +
+                    resources.getQuantityString(
+                      R.plurals.next_attempt_warning_about_wrong_pass_phrase,
+                      attemptsLeft, attemptsLeft
+                    )
+              }
             }
           }
 
@@ -266,7 +295,27 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           )
           countingIdlingResource?.decrementSafely(this@FixNeedPassphraseIssueDialogFragment)
         }
+
         else -> {}
+      }
+    }
+
+    launchAndRepeatWithLifecycle {
+      checkPrivateKeysViewModel.antiBruteforceProtectionCountdownStateFlow.collect { (attemptsCount, timeLeft) ->
+        binding?.btnUpdatePassphrase?.isEnabled = timeLeft == 0L
+
+        if (timeLeft == 0L) {
+          if (attemptsCount == 0) {
+            binding?.tILKeyPassword?.error = null
+          }
+          binding?.btnUpdatePassphrase?.text = getString(R.string.provide_passphrase)
+        } else {
+          binding?.tILKeyPassword?.error = getString(
+            R.string.private_key_passphrase_anti_bruteforce_protection_hint
+          )
+          binding?.btnUpdatePassphrase?.text =
+            SimpleDateFormat("mm:ss", Locale.getDefault()).format(Date(timeLeft))
+        }
       }
     }
   }
@@ -281,11 +330,6 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    val REQUEST_KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_UPDATE_BUTTON_CLICK",
-      FixNeedPassphraseIssueDialogFragment::class.java
-    )
-
     val KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_RESULT", FixNeedPassphraseIssueDialogFragment::class.java
     )

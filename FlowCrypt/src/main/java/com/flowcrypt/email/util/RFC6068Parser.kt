@@ -9,7 +9,6 @@ import android.net.Uri
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.InitializationData
-import java.util.Arrays
 
 /**
  * This class defines the parser of 'mailto' URIs.
@@ -55,7 +54,7 @@ class RFC6068Parser {
       val recipient = Uri.decode(schemaSpecific.substring(0, end))
 
       var toList = params.getQueryParameters(TO)
-      if (recipient.length != 0) {
+      if (recipient.isNotEmpty()) {
         toList.add(0, recipient)
       }
 
@@ -81,13 +80,12 @@ class RFC6068Parser {
 
     private fun checkToList(toList: ArrayList<String>): ArrayList<String> {
       val newToList = ArrayList<String>()
-      if (!toList.isEmpty()) {
+      if (toList.isNotEmpty()) {
         for (section in toList) {
           if (!TextUtils.isEmpty(section)) {
             if (section.indexOf(',') != -1) {
-              val arraysRecipients =
-                section.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-              newToList.addAll(ArrayList(Arrays.asList(*arraysRecipients)))
+              val arraysRecipients = section.split(",".toRegex()).dropLastWhile { it.isEmpty() }
+              newToList.addAll(arraysRecipients)
             } else {
               newToList.add(section)
             }

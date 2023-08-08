@@ -60,11 +60,11 @@ class ProcessMimeMessageTest {
 
   companion object {
     private val VERIFICATION_PUBLIC_KEYS = PgpKey.parseKeys(
-      TestUtil.readResourceAsByteArray("pgp/keys/default@flowcrypt.test_fisrtKey_pub.asc")
+      source = TestUtil.readResourceAsByteArray("pgp/keys/default@flowcrypt.test_fisrtKey_pub.asc")
     ).pgpKeyRingCollection.pgpPublicKeyRingCollection
 
     private val SECRET_KEYS = PgpKey.parseKeys(
-      TestUtil.readResourceAsByteArray("pgp/keys/default@flowcrypt.test_fisrtKey_prv_default.asc")
+      source = TestUtil.readResourceAsByteArray("pgp/keys/default@flowcrypt.test_fisrtKey_prv_default.asc")
     ).pgpKeyRingCollection.pgpSecretKeyRingCollection
 
     private val protector = PasswordBasedSecretKeyRingProtector.forKey(

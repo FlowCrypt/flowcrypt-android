@@ -5,20 +5,30 @@
 
 package com.flowcrypt.email.ui
 
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.clearText
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
-import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.PrivateKeysManager
-import org.junit.Ignore
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.util.TestGeneralUtil
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
@@ -27,32 +37,43 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class AddingExistingAccountFlowTest : BaseTest() {
-  @Test
-  @Ignore("fix me")
-  fun testAddingExistingAccount() {
-    val existedUser = AccountDaoManager.getDefaultAccountDao()
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(existedUser)
-    PrivateKeysManager.saveKeyFromAssetsToDatabase(
-      accountEntity = existedUser,
-      keyPath = "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc",
-      passphrase = TestConstants.DEFAULT_PASSWORD,
-      sourceType = KeyImportDetails.SourceType.EMAIL
-    )
 
-    Espresso.onView(ViewMatchers.withId(R.id.editTextEmail))
+  override val activeActivityRule = activityScenarioRule<MainActivity>(
+    TestGeneralUtil.genIntentForNavigationComponent(
+      destinationId = R.id.addOtherAccountFragment
+    )
+  )
+
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+
+  @get:Rule
+  val ruleChain: TestRule = RuleChain
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(addAccountToDatabaseRule)
+    .around(AddPrivateKeyToDatabaseRule())
+    .around(activeActivityRule)
+    .around(ScreenshotTestRule())
+
+  @Test
+  fun testAddingExistingAccount() {
+    val existedUser = addAccountToDatabaseRule.account
+
+    onView(withId(R.id.editTextEmail))
       .perform(
-        ViewActions.clearText(),
-        ViewActions.typeText(existedUser.email),
-        ViewActions.closeSoftKeyboard()
+        clearText(),
+        typeText(existedUser.email),
+        closeSoftKeyboard()
       )
-    Espresso.onView(ViewMatchers.withId(R.id.editTextPassword))
+    onView(withId(R.id.editTextPassword))
       .perform(
-        ViewActions.clearText(),
-        ViewActions.typeText(existedUser.password),
-        ViewActions.closeSoftKeyboard()
+        clearText(),
+        typeText(existedUser.password),
+        closeSoftKeyboard()
       )
-    Espresso.onView(ViewMatchers.withId(R.id.buttonTryToConnect))
-      .perform(ViewActions.scrollTo(), ViewActions.click())
+    onView(withId(R.id.buttonTryToConnect))
+      .perform(scrollTo(), click())
 
     checkIsSnackBarDisplayed(getResString(R.string.template_email_already_added, existedUser.email))
   }

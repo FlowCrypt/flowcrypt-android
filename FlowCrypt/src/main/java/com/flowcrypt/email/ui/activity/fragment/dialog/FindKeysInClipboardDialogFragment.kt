@@ -15,7 +15,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -24,6 +23,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
@@ -106,7 +106,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
   }
 
   private fun setupParseKeysViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithLifecycle {
       parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -126,7 +126,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
             } else {
               navController?.navigateUp()
               setFragmentResult(
-                REQUEST_KEY_CLIPBOARD_RESULT,
+                args.requestKey,
                 bundleOf(KEY_CLIPBOARD_TEXT to clipboardText)
               )
             }
@@ -152,7 +152,6 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    const val REQUEST_KEY_CLIPBOARD_RESULT = "REQUEST_KEY_CLIPBOARD_RESULT"
     const val KEY_CLIPBOARD_TEXT = "KEY_CLIPBOARD_TEXT"
   }
 }

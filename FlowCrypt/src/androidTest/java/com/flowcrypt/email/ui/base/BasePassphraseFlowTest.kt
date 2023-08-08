@@ -15,7 +15,8 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
-import org.hamcrest.Matchers.isEmptyString
+import org.hamcrest.Matchers.emptyString
+import org.hamcrest.Matchers.`is`
 import org.junit.Test
 
 /**
@@ -101,6 +102,6 @@ abstract class BasePassphraseFlowTest : BaseCheckPassphraseOnFirstScreenFlowTest
 
     testShowRepeatingPassPhraseScreen()
     onView(withId(R.id.editTextKeyPasswordSecond))
-      .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+      .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
   }
 }

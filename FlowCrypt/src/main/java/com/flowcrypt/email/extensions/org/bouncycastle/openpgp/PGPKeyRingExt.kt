@@ -49,10 +49,7 @@ fun PGPKeyRing.toPgpKeyDetails(hideArmorMeta: Boolean = false): PgpKeyDetails {
 
   val keyIdList = publicKeys.iterator().asSequence().toList()
     .map {
-      val fingerprint = OpenPgpV4Fingerprint(it)
-      KeyId(
-        fingerprint = fingerprint.toString()
-      )
+      KeyId(fingerprint = OpenPgpV4Fingerprint(it).toString())
     }
 
   if (keyIdList.isEmpty()) {
@@ -76,7 +73,7 @@ fun PGPKeyRing.toPgpKeyDetails(hideArmorMeta: Boolean = false): PgpKeyDetails {
     users = keyRingInfo.userIds,
     ids = keyIdList,
     created = keyRingInfo.creationDate.time,
-    lastModified = keyRingInfo.lastModified?.time,
+    lastModified = keyRingInfo.lastModified.time,
     expiration = keyRingInfo.primaryKeyExpirationDate?.time,
     algo = algo,
     primaryKeyId = keyRingInfo.keyId

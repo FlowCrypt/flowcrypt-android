@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.fragment.isolation.incontainer
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -17,7 +16,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.junit.annotations.MoveToFlowBehaviour
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -30,7 +28,6 @@ import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -88,14 +85,6 @@ class PrivateKeyDetailsFragmentEkmInIsolationTest : BaseTest() {
 
     onView(withId(R.id.btnShowPrKey))
       .check(matches(not(isDisplayed())))
-  }
-
-  @Test
-  @MoveToFlowBehaviour
-  @Ignore("MoveToFlowBehaviour")
-  fun testActionDeleteDisabled() {
-    onView(withId(R.id.menuActionDeleteKey))
-      .check(matches(not(isEnabled())))
   }
 
   companion object {

@@ -6,12 +6,12 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.format.Formatter
 import android.util.Log
 import android.view.ContextMenu
 import android.view.LayoutInflater
@@ -38,8 +38,6 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -64,6 +62,7 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
@@ -72,6 +71,7 @@ import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -86,8 +86,8 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
+import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
@@ -105,7 +105,6 @@ import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
@@ -230,6 +229,42 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private val bccAutoCompleteResultRecyclerViewAdapter =
     AutoCompleteResultRecyclerViewAdapter(Message.RecipientType.BCC, onAutoCompleteResultListener)
 
+  private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
+    isDownloadEnabled = false,
+    attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
+      override fun onDownloadClick(attachmentInfo: AttachmentInfo) {}
+
+      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
+        onPreviewClick(attachmentInfo)
+      }
+
+      override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
+        val uri = attachmentInfo.uri ?: attachmentInfo.rawData?.let {
+          val (_, generatedUri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
+          generatedUri
+        }
+
+        if (uri != null) {
+          val intent = GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+          try {
+            startActivity(intent)
+          } catch (e: ActivityNotFoundException) {
+            toast(getString(R.string.no_apps_that_can_handle_intent))
+          }
+        }
+      }
+
+      override fun onDeleteClick(attachmentInfo: AttachmentInfo) {
+        composeMsgViewModel.removeAttachments(listOf(attachmentInfo))
+
+        //Remove a temp file created by our app
+        val uri = attachmentInfo.uri ?: return
+        if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority, ignoreCase = true)) {
+          context?.contentResolver?.delete(uri, null, null)
+        }
+      }
+    })
+
   private var folderType: FoldersManager.FolderType? = null
   private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
   private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
@@ -295,6 +330,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (args.incomingMessageInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       composeMsgViewModel.callLookUpForMissedPubKeys()
+    }
+
+    connectionLifecycleObserver.connectionLiveData.observe(viewLifecycleOwner) { isConnected ->
+      if (isConnected) {
+        composeMsgViewModel.callLookUpForMissedPubKeys()
+      }
     }
   }
 
@@ -373,11 +414,18 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                   val fingerprint = openPgpV4Fingerprint.toString()
                   val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
                   if (passphrase?.isEmpty == true) {
-                    showNeedPassphraseDialog(listOf(fingerprint))
+                    showNeedPassphraseDialog(
+                      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+                      fingerprints = listOf(fingerprint)
+                    )
                     return true
                   }
                 } else {
-                  showInfoDialog(dialogMsg = getString(R.string.no_private_keys_suitable_for_encryption))
+                  val dialogMsg = GeneralUtil.prepareWarningTextAboutUnusableForEncryptionKeys(
+                    context = requireContext(),
+                    keysStorage = keysStorage
+                  )
+                  showInfoDialog(dialogMsg = dialogMsg, hasHtml = true)
                   return true
                 }
               }
@@ -403,6 +451,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               MessageEncryptionType.ENCRYPTED -> composeMsgViewModel.switchMessageEncryptionType(
                 MessageEncryptionType.STANDARD
               )
+
               MessageEncryptionType.STANDARD -> composeMsgViewModel.switchMessageEncryptionType(
                 MessageEncryptionType.ENCRYPTED
               )
@@ -575,8 +624,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       if (hasAbilityToAddAtt(attachmentInfo)) {
 
-        if (attachmentInfo.name.isNullOrEmpty()) {
-          val msg = "attachmentInfo.getName() == null, uri = " + attachmentInfo.uri!!
+        if (attachmentInfo.getSafeName().isEmpty()) {
+          val msg = "attachmentInfo.getName() is empty, uri = " + attachmentInfo.uri!!
           ExceptionUtil.handleError(NullPointerException(msg))
           return
         }
@@ -600,8 +649,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               Constants.FILE_PROVIDER_AUTHORITY,
               draftAtt
             )
-            attachmentInfo.uri = uri
-            composeMsgViewModel.addAttachments(listOf(attachmentInfo))
+            composeMsgViewModel.addAttachments(listOf(attachmentInfo.copy(uri = uri)))
           }
         } catch (e: IOException) {
           e.printStackTrace()
@@ -783,9 +831,20 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       navController?.navigate(
         CreateMessageFragmentDirections
           .actionCreateMessageFragmentToProvidePasswordToProtectMsgFragment(
-            composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
+            requestKey = REQUEST_KEY_PASSWORD,
+            defaultPassword = composeMsgViewModel.webPortalPasswordStateFlow.value.toString()
           )
       )
+    }
+
+    binding?.rVAttachments?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+        )
+      )
+      adapter = attachmentsRecyclerViewAdapter
     }
   }
 
@@ -943,6 +1002,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       MessageType.REPLY_ALL -> {
         binding?.chipLayoutCc?.visibleOrGone(initializationData.ccAddresses.isNotEmpty())
       }
+
       MessageType.FORWARD -> updateViewsIfFwdMode(initializationData)
     }
   }
@@ -991,6 +1051,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun showNoPgpFoundDialog(recipient: RecipientWithPubKeys) {
     navController?.navigate(
       CreateMessageFragmentDirections.actionCreateMessageFragmentToNoPgpFoundDialogFragment(
+        requestKey = REQUEST_KEY_NO_PGP_FOUND,
         recipientWithPubKeys = recipient,
         isRemoveActionEnabled = true
       )
@@ -1024,68 +1085,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   /**
-   * Show attachments which were added.
-   */
-  private fun showAtts(attachments: List<AttachmentInfo>) {
-    if (attachments.isNotEmpty()) {
-      binding?.layoutAtts?.removeAllViews()
-      val layoutInflater = LayoutInflater.from(context)
-      for (att in attachments) {
-        val rootView =
-          layoutInflater.inflate(R.layout.attachment_item, binding?.layoutAtts, false)
-
-        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
-        textViewAttName.text = att.name
-
-        val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
-        if (att.encodedSize > 0) {
-          textViewAttSize.visibility = View.VISIBLE
-          textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
-        } else {
-          textViewAttSize.visibility = View.GONE
-        }
-
-        val imageButtonDownloadAtt = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
-        rootView.findViewById<View>(R.id.imageButtonPreviewAtt)?.visibility = View.GONE
-
-        if (!att.isProtected) {
-          imageButtonDownloadAtt.visibility = View.GONE
-          val imageButtonClearAtt = rootView.findViewById<View>(R.id.imageButtonClearAtt)
-          imageButtonClearAtt.visibility = View.VISIBLE
-          imageButtonClearAtt.setOnClickListener {
-            composeMsgViewModel.removeAttachments(listOf(att))
-            binding?.layoutAtts?.removeView(rootView)
-
-            //Remove a temp file which was created by our app
-            val uri = att.uri
-            if (uri != null && Constants.FILE_PROVIDER_AUTHORITY.equals(
-                uri.authority!!,
-                ignoreCase = true
-              )
-            ) {
-              context?.contentResolver?.delete(uri, null, null)
-            }
-          }
-        } else {
-          imageButtonDownloadAtt.visibility = View.INVISIBLE
-        }
-        binding?.layoutAtts?.addView(rootView)
-      }
-    } else {
-      binding?.layoutAtts?.removeAllViews()
-    }
-  }
-
-  /**
    * Show a dialog where the user can select a public key which will be attached to a message.
    */
   private fun showPubKeyDialog() {
     account?.email?.let {
       showChoosePublicKeyDialogFragment(
-        it,
-        ListView.CHOICE_MODE_SINGLE,
-        R.plurals.choose_pub_key,
-        true
+        requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY,
+        email = it,
+        choiceMode = ListView.CHOICE_MODE_SINGLE,
+        titleResourceId = R.plurals.choose_pub_key,
+        returnResultImmediatelyIfSingle = true
       )
     }
   }
@@ -1194,7 +1203,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupComposeMsgViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.messageEncryptionTypeStateFlow.collect {
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1223,7 +1232,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsStateFlow.collect { recipients ->
         if (recipients.any { it.value.isUpdating } && !updatingRecipientsMarker) {
           updatingRecipientsMarker = true
@@ -1248,7 +1257,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsToStateFlow.collect { recipients ->
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1266,7 +1275,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsCcStateFlow.collect { recipients ->
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1286,7 +1295,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.recipientsBccStateFlow.collect { recipients ->
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1306,7 +1315,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.webPortalPasswordStateFlow.collect { webPortalPassword ->
         binding?.btnSetWebPortalPassword?.apply {
           if (webPortalPassword.isEmpty()) {
@@ -1338,13 +1347,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.attachmentsStateFlow.collect { allAttachments ->
         val forwardedAttachments = allAttachments.filter { it.id != null && it.isForwarded }
-        val addedAttachments = allAttachments - forwardedAttachments.toSet()
-        addedAttachments.forEachIndexed { index, attachmentInfo ->
-          attachmentInfo.path = index.toString()
-        }
+        val addedAttachments = (allAttachments - forwardedAttachments.toSet())
+          .mapIndexed { index, attachmentInfo ->
+            attachmentInfo.copy(path = index.toString())
+          }
 
         composeMsgViewModel.updateOutgoingMessageInfo(
           composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
@@ -1353,24 +1362,22 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           )
         )
 
-        showAtts(allAttachments)
+        attachmentsRecyclerViewAdapter.submitList(allAttachments)
       }
     }
   }
 
   private fun setupDraftViewModel() {
-    viewLifecycleOwner.lifecycleScope.launch {
-      viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-        draftViewModel.draftRepeatableCheckingFlow.collect {
-          draftViewModel.processDraft(
-            currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
-            timeToCompare = startOfSessionInMilliseconds
-          )
-        }
+    launchAndRepeatWithViewLifecycle {
+      draftViewModel.draftRepeatableCheckingFlow.collect {
+        draftViewModel.processDraft(
+          currentOutgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value,
+          timeToCompare = startOfSessionInMilliseconds
+        )
       }
     }
 
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       draftViewModel.savingDraftStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -1410,6 +1417,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         recipients,
         args.serviceInfo?.isToFieldEditable ?: true
       )
+
       Message.RecipientType.CC -> ccRecipientsChipRecyclerViewAdapter.submitList(recipients)
       Message.RecipientType.BCC -> bccRecipientsChipRecyclerViewAdapter.submitList(recipients)
     }
@@ -1526,9 +1534,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToSetWebPortalPassword() {
-    setFragmentResultListener(
-      ProvidePasswordToProtectMsgFragment.REQUEST_KEY_PASSWORD
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_PASSWORD) { _, bundle ->
       val password =
         bundle.getCharSequence(ProvidePasswordToProtectMsgFragment.KEY_PASSWORD) ?: ""
       composeMsgViewModel.setWebPortalPassword(password)
@@ -1536,9 +1542,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToSelectRecipients() {
-    setFragmentResultListener(
-      SelectRecipientsFragment.REQUEST_KEY_SELECT_RECIPIENTS
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_SELECT_RECIPIENTS) { _, bundle ->
       val list =
         bundle.getParcelableArrayListViaExt<RecipientEntity>(SelectRecipientsFragment.KEY_RECIPIENTS)
       list?.let { recipients ->
@@ -1561,9 +1565,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToAddMissingRecipientPublicKey() {
-    setFragmentResultListener(
-      ImportMissingPublicKeyFragment.REQUEST_KEY_RECIPIENT_WITH_PUB_KEY
-    ) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_RECIPIENT_WITH_PUB_KEY) { _, bundle ->
       val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         ImportMissingPublicKeyFragment.KEY_RECIPIENT_WITH_PUB_KEY
       )
@@ -1580,13 +1582,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
-    setFragmentResultListener(FixNeedPassphraseIssueDialogFragment.REQUEST_KEY_RESULT) { _, _ ->
+    setFragmentResultListener(REQUEST_KEY_FIX_MISSING_PASSPHRASE) { _, _ ->
       sendMsg()
     }
   }
 
   private fun subscribeToNoPgpFoundDialogFragment() {
-    setFragmentResultListener(NoPgpFoundDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_NO_PGP_FOUND) { _, bundle ->
       val recipientWithPubKeys = bundle.getParcelableViaExt<RecipientWithPubKeys>(
         NoPgpFoundDialogFragment.KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS
       )
@@ -1600,7 +1602,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           recipientWithPubKeys?.let {
             navController?.navigate(
               CreateMessageFragmentDirections
-                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(it)
+                .actionCreateMessageFragmentToImportMissingPublicKeyFragment(
+                  requestKey = REQUEST_KEY_RECIPIENT_WITH_PUB_KEY,
+                  recipientWithPubKeys = it
+                )
             )
           }
         }
@@ -1610,6 +1615,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           cachedRecipientWithoutPubKeys?.let {
             navController?.navigate(
               CreateMessageFragmentDirections.actionCreateMessageFragmentToSelectRecipientsFragment(
+                requestKey = REQUEST_KEY_SELECT_RECIPIENTS,
                 title = getString(R.string.use_public_key_from)
               )
             )
@@ -1636,12 +1642,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         NoPgpFoundDialogFragment.RESULT_CODE_PROTECT_WITH_PASSWORD -> {
           binding?.btnSetWebPortalPassword?.callOnClick()
         }
+
+        NoPgpFoundDialogFragment.RESULT_CODE_RE_FETCH_PUBLIC_KEY -> {
+          composeMsgViewModel.callLookUpForRecipientIfNeeded(recipientWithPubKeys?.recipient?.email)
+        }
       }
     }
   }
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
-    setFragmentResultListener(ChoosePublicKeyDialogFragment.REQUEST_KEY_RESULT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       ) ?: return@setFragmentResultListener
@@ -1656,7 +1666,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupRecipientsAutoCompleteViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -1718,6 +1728,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             adapter.submitList(finalList)
             countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
           }
+
           else -> {}
         }
       }
@@ -1726,5 +1737,34 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   companion object {
     private val TAG = CreateMessageFragment::class.java.simpleName
+
+    private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_RECIPIENT_WITH_PUB_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_RECIPIENT_WITH_PUB_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_NO_PGP_FOUND = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_NO_PGP_FOUND",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_PASSWORD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PASSWORD",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_SELECT_RECIPIENTS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_SELECT_RECIPIENTS", CreateMessageFragment::class.java
+    )
   }
 }

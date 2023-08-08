@@ -5,11 +5,11 @@
 
 package com.flowcrypt.email.service.attachment
 
-import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Binder
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
@@ -25,6 +25,7 @@ import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
+import androidx.lifecycle.LifecycleService
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -32,7 +33,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
-import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
@@ -49,6 +49,10 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
@@ -56,6 +60,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
+import java.io.InterruptedIOException
 import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -77,13 +82,19 @@ import java.util.concurrent.Future
  *
  * @author Denys Bondarenko
  */
-class AttachmentDownloadManagerService : Service() {
+class AttachmentDownloadManagerService : LifecycleService() {
 
   @Volatile
   private lateinit var looper: Looper
 
   @Volatile
   private lateinit var workerHandler: ServiceWorkerHandler
+
+  private val binder = LocalBinder()
+  private val attachmentDownloadProgressMutableStateFlow:
+      MutableStateFlow<MutableMap<String, DownloadProgress>> = MutableStateFlow(mutableMapOf())
+  val attachmentDownloadProgressStateFlow: StateFlow<Map<String, DownloadProgress>> =
+    attachmentDownloadProgressMutableStateFlow.asStateFlow()
 
   private val replyMessenger: Messenger = Messenger(ReplyHandler(this))
   private lateinit var attsNotificationManager: AttachmentNotificationManager
@@ -124,8 +135,24 @@ class AttachmentDownloadManagerService : Service() {
     releaseResources()
   }
 
-  override fun onBind(intent: Intent): IBinder? {
-    return null
+  override fun onBind(intent: Intent): IBinder {
+    super.onBind(intent)
+    return binder
+  }
+
+  @Synchronized
+  private fun update(attInfo: AttachmentInfo?, progressInPercentage: Int, timeLeft: Long) {
+    attachmentDownloadProgressMutableStateFlow.update { map ->
+      map.toMutableMap().apply {
+        attInfo?.uniqueStringId?.let {
+          if (progressInPercentage >= 0) {
+            put(it, DownloadProgress(progressInPercentage, timeLeft))
+          } else {
+            remove(it)
+          }
+        }
+      }
+    }
   }
 
   private fun stopService() {
@@ -161,7 +188,7 @@ class AttachmentDownloadManagerService : Service() {
   }
 
   private interface OnDownloadAttachmentListener {
-    fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, canBeOpened: Boolean = true)
+    fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, useContentApp: Boolean = false)
 
     fun onCanceled(attInfo: AttachmentInfo)
 
@@ -186,14 +213,27 @@ class AttachmentDownloadManagerService : Service() {
         val attDownloadManagerService = weakRef.get()
         val notificationManager = attDownloadManagerService?.attsNotificationManager
 
-        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast, canBeOpened)
+        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast, useContentApp)
             = message.obj as DownloadAttachmentTaskResult
 
         when (message.what) {
-          MESSAGE_EXCEPTION_HAPPENED -> notificationManager?.errorHappened(
-            attDownloadManagerService, attInfo!!,
-            exception!!
-          )
+          MESSAGE_EXCEPTION_HAPPENED -> {
+            when (exception) {
+              is InterruptedIOException, is InterruptedException -> {
+                attInfo?.let { notificationManager?.loadingCanceledByUser(it) }
+              }
+
+              else -> {
+                if (attInfo != null && exception != null)
+                  notificationManager?.errorHappened(
+                    context = attDownloadManagerService,
+                    attInfo = attInfo,
+                    e = exception
+                  )
+              }
+            }
+            attDownloadManagerService?.update(attInfo, -1, -1)
+          }
 
           MESSAGE_TASK_ALREADY_EXISTS -> {
             val msg = attDownloadManagerService?.getString(
@@ -208,23 +248,34 @@ class AttachmentDownloadManagerService : Service() {
               context = attDownloadManagerService,
               attInfo = attInfo!!,
               uri = uri!!,
-              canBeOpened = canBeOpened
+              useContentApp = useContentApp
             )
             LogsUtil.d(TAG, attInfo?.getSafeName() + " is downloaded")
           }
 
-          MESSAGE_ATTACHMENT_ADDED_TO_QUEUE ->
+          MESSAGE_ATTACHMENT_ADDED_TO_QUEUE -> {
             notificationManager?.attachmentAddedToLoadQueue(attDownloadManagerService, attInfo!!)
+            attDownloadManagerService?.update(attInfo, 0, 0)
+          }
 
-          MESSAGE_PROGRESS -> notificationManager?.updateLoadingProgress(
-            attDownloadManagerService, attInfo!!,
-            progressInPercentage, timeLeft
-          )
+          MESSAGE_PROGRESS -> {
+            attDownloadManagerService?.update(
+              attInfo,
+              progressInPercentage,
+              timeLeft
+            )
 
-          MESSAGE_RELEASE_RESOURCES -> attDownloadManagerService?.looper!!.quit()
+            notificationManager?.updateLoadingProgress(
+              attDownloadManagerService, attInfo!!,
+              progressInPercentage, timeLeft
+            )
+          }
+
+          MESSAGE_RELEASE_RESOURCES -> attDownloadManagerService?.looper?.quit()
 
           MESSAGE_DOWNLOAD_CANCELED -> {
             notificationManager?.loadingCanceledByUser(attInfo!!)
+            attDownloadManagerService?.update(attInfo, -1, -1)
             LogsUtil.d(TAG, attInfo?.getSafeName() + " was canceled")
           }
 
@@ -373,7 +424,7 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    override fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, canBeOpened: Boolean) {
+    override fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri, useContentApp: Boolean) {
       attsInfoMap.remove(attInfo.id)
       futureMap.remove(attInfo.uniqueStringId)
       try {
@@ -381,7 +432,7 @@ class AttachmentDownloadManagerService : Service() {
           attInfo = attInfo,
           uri = uri,
           isLast = isLast,
-          canBeOpened = canBeOpened
+          useContentApp = useContentApp
         )
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_ATTACHMENT_DOWNLOAD, result))
       } catch (remoteException: RemoteException) {
@@ -427,20 +478,21 @@ class AttachmentDownloadManagerService : Service() {
     private val context: Context,
     private val att: AttachmentInfo
   ) : Runnable {
+    var finalFileName = att.getSafeName()
     private var listener: OnDownloadAttachmentListener? = null
     private var attTempFile: File = File.createTempFile("tmp", null, context.externalCacheDir)
 
     override fun run() {
       if (GeneralUtil.isDebugBuild()) {
         Thread.currentThread().name =
-          AttDownloadRunnable::class.java.simpleName + "|" + att.getSafeName()
+          AttDownloadRunnable::class.java.simpleName + "|" + finalFileName
       }
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       try {
         val email = att.email
         if (email == null) {
-          listener?.onCanceled(att)
+          listener?.onCanceled(att.copy(name = finalFileName))
           return
         }
 
@@ -448,21 +500,21 @@ class AttachmentDownloadManagerService : Service() {
           roomDatabase.accountDao().getAccount(email)
         )
         if (account == null) {
-          listener?.onCanceled(att)
+          listener?.onCanceled(att.copy(name = finalFileName))
           return
         }
 
         if (att.uri != null) {
-          val inputStream = context.contentResolver.openInputStream(att.uri!!)
+          val inputStream = context.contentResolver.openInputStream(att.uri)
           if (inputStream != null) {
             FileUtils.copyInputStreamToFile(inputStream, attTempFile)
             attTempFile = decryptFileIfNeeded(context, attTempFile)
             if (!Thread.currentThread().isInterrupted) {
               val uri = storeFileToSharedFolder(context, attTempFile)
               listener?.onAttDownloaded(
-                attInfo = att,
+                attInfo = att.copy(name = finalFileName),
                 uri = uri,
-                canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                useContentApp = account.isHandlingAttachmentRestricted()
               )
             }
 
@@ -485,7 +537,7 @@ class AttachmentDownloadManagerService : Service() {
               ).use { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  useContentApp = account.isHandlingAttachmentRestricted()
                 )
               }
             }
@@ -497,7 +549,7 @@ class AttachmentDownloadManagerService : Service() {
           OpenStoreHelper.openStore(context, account, session).use { store ->
             val label = roomDatabase.labelDao().getLabel(email, account.accountType, att.folder!!)
               ?: if (roomDatabase.accountDao().getAccount(email) == null) {
-                listener?.onCanceled(this.att)
+                listener?.onCanceled(att.copy(name = finalFileName))
                 store.close()
                 return
               } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
@@ -512,7 +564,7 @@ class AttachmentDownloadManagerService : Service() {
               )?.inputStream?.let { inputStream ->
                 handleAttachmentInputStream(
                   inputStream = inputStream,
-                  canBeOpened = !account.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING)
+                  useContentApp = account.isHandlingAttachmentRestricted()
                 )
               } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
             }
@@ -521,24 +573,31 @@ class AttachmentDownloadManagerService : Service() {
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
-        listener?.onError(att, e)
+        listener?.onError(attInfo = att.copy(name = finalFileName), e = e)
       } finally {
         deleteTempFile(attTempFile)
       }
     }
 
-    private fun handleAttachmentInputStream(inputStream: InputStream, canBeOpened: Boolean = true) {
+    private fun handleAttachmentInputStream(
+      inputStream: InputStream,
+      useContentApp: Boolean = false
+    ) {
       downloadFile(attTempFile, inputStream)
 
       if (Thread.currentThread().isInterrupted) {
-        listener?.onCanceled(this.att)
+        listener?.onCanceled(att.copy(name = finalFileName))
       } else {
         attTempFile = decryptFileIfNeeded(context, attTempFile)
         if (Thread.currentThread().isInterrupted) {
-          listener?.onCanceled(this.att)
+          listener?.onCanceled(att.copy(name = finalFileName))
         } else {
           val uri = storeFileToSharedFolder(context, attTempFile)
-          listener?.onAttDownloaded(this.att, uri, canBeOpened)
+          listener?.onAttDownloaded(
+            attInfo = att.copy(name = finalFileName),
+            uri = uri,
+            useContentApp = useContentApp
+          )
         }
       }
     }
@@ -554,11 +613,11 @@ class AttachmentDownloadManagerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(att.name).lowercase()
+      val fileExtension = FilenameUtils.getExtension(finalFileName).lowercase()
       val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
       val contentValues = ContentValues().apply {
-        put(MediaStore.DownloadColumns.DISPLAY_NAME, att.getSafeName())
+        put(MediaStore.DownloadColumns.DISPLAY_NAME, finalFileName)
         put(MediaStore.DownloadColumns.SIZE, attFile.length())
         put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
         put(MediaStore.Downloads.IS_PENDING, 1)
@@ -576,8 +635,8 @@ class AttachmentDownloadManagerService : Service() {
           val nameIndex = it.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
           if (nameIndex != -1) {
             val nameFromSystem = it.getString(nameIndex)
-            if (nameFromSystem != att.getSafeName()) {
-              att.name = nameFromSystem
+            if (nameFromSystem != finalFileName) {
+              finalFileName = nameFromSystem
             }
           }
         }
@@ -602,9 +661,8 @@ class AttachmentDownloadManagerService : Service() {
     /**
      * We use this method to support saving files on Android 9 and less which uses an old approach.
      */
-    @Suppress("DEPRECATION")
     private fun storeLegacy(attFile: File, context: Context): Uri {
-      val fileName = att.getSafeName()
+      val fileName = finalFileName
       val fileDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
       var sharedFile = File(fileDir, fileName)
       sharedFile = if (sharedFile.exists()) {
@@ -613,7 +671,7 @@ class AttachmentDownloadManagerService : Service() {
         sharedFile
       }
 
-      att.name = sharedFile.name
+      finalFileName = sharedFile.name
       val srcInputStream = attFile.inputStream()
       val destOutputStream = FileUtils.openOutputStream(sharedFile)
       srcInputStream.use { srcStream ->
@@ -631,7 +689,7 @@ class AttachmentDownloadManagerService : Service() {
         FileUtils.openOutputStream(attFile).use { outputStream ->
           val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
           var count = 0.0
-          val size = this.att.encodedSize.toDouble()
+          val size = att.encodedSize.toDouble()
           var numberOfReadBytes: Int
           var lastPercentage = 0
           var currentPercentage = 0
@@ -682,7 +740,7 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      if (!SecurityUtils.isPossiblyEncryptedData(att.name)) {
+      if (!SecurityUtils.isPossiblyEncryptedData(finalFileName)) {
         return file
       }
 
@@ -693,15 +751,16 @@ class AttachmentDownloadManagerService : Service() {
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
 
         try {
-          val result = PgpDecryptAndOrVerify.decrypt(
+          val messageMetadata = PgpDecryptAndOrVerify.decrypt(
             srcInputStream = inputStream,
             destOutputStream = decryptedFile.outputStream(),
             secretKeys = pgpSecretKeyRingCollection,
             protector = protector
           )
 
-          att.name = FilenameUtils.getBaseName(att.name)
-          if (att.name == null && result.fileName != null) att.name = result.fileName
+          finalFileName = FilenameUtils.getBaseName(att.getSafeName()).ifEmpty {
+            messageMetadata.filename ?: ""
+          }
 
           return decryptedFile
         } catch (e: Exception) {
@@ -730,7 +789,11 @@ class AttachmentDownloadManagerService : Service() {
 
     private fun updateProgress(currentPercentage: Int, timeLeft: Long) {
       if (!Thread.currentThread().isInterrupted) {
-        listener?.onProgress(att, currentPercentage, timeLeft)
+        listener?.onProgress(
+          attInfo = att.copy(name = finalFileName),
+          progressInPercentage = currentPercentage,
+          timeLeft = timeLeft
+        )
       }
     }
 
@@ -739,6 +802,12 @@ class AttachmentDownloadManagerService : Service() {
       private const val DEFAULT_BUFFER_SIZE = 1024 * 16
     }
   }
+
+  inner class LocalBinder : Binder() {
+    fun getService(): AttachmentDownloadManagerService = this@AttachmentDownloadManagerService
+  }
+
+  data class DownloadProgress(val progressInPercentage: Int, val timeLeft: Long)
 
   companion object {
     const val ACTION_START_DOWNLOAD_ATTACHMENT =

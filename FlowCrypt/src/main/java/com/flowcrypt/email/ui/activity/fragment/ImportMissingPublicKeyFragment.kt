@@ -13,7 +13,6 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -21,6 +20,7 @@ import com.flowcrypt.email.databinding.FragmentImportMissingPublicKeyBinding
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
@@ -51,6 +51,7 @@ class ImportMissingPublicKeyFragment :
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -58,6 +59,7 @@ class ImportMissingPublicKeyFragment :
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PUBLIC_ONLY
     )
@@ -97,9 +99,15 @@ class ImportMissingPublicKeyFragment :
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
+
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = false)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = false
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -108,7 +116,7 @@ class ImportMissingPublicKeyFragment :
   }
 
   private fun collectAddPublicKeyToRecipient() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       recipientsViewModel.addPublicKeyToRecipientStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -119,8 +127,8 @@ class ImportMissingPublicKeyFragment :
             navController?.navigateUp()
             it.data?.let { recipientWithPubKeys ->
               setFragmentResult(
-                REQUEST_KEY_RECIPIENT_WITH_PUB_KEY,
-                bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
+                requestKey = args.requestKey,
+                result = bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
@@ -135,6 +143,7 @@ class ImportMissingPublicKeyFragment :
             showInfoSnackbar(msgText = errorMsg)
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)
           }
+
           else -> {
           }
         }
@@ -143,8 +152,13 @@ class ImportMissingPublicKeyFragment :
   }
 
   companion object {
-    val REQUEST_KEY_RECIPIENT_WITH_PUB_KEY = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_RECIPIENT_WITH_PUB_KEY",
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportMissingPublicKeyFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
       ImportMissingPublicKeyFragment::class.java
     )
 

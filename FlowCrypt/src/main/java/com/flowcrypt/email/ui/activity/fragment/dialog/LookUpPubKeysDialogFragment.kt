@@ -13,7 +13,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -22,6 +21,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
@@ -62,7 +62,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
   }
 
   private fun collectLookUpPubKeysStateFlow() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithLifecycle {
       recipientsViewModel.lookUpPubKeysStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -76,7 +76,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             it.data?.pubkey.let { pubKeys ->
               setFragmentResult(
-                REQUEST_KEY_PUB_KEYS,
+                args.requestKey,
                 bundleOf(KEY_PUB_KEYS to pubKeys)
               )
             }
@@ -102,7 +102,6 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
   }
 
   companion object {
-    const val REQUEST_KEY_PUB_KEYS = "REQUEST_KEY_PUB_KEYS"
     const val KEY_PUB_KEYS = "KEY_PUB_KEYS"
   }
 }

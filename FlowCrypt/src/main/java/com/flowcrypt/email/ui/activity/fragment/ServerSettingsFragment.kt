@@ -27,6 +27,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentServerSettingsBinding
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.hideKeyboard
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
@@ -39,6 +40,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
@@ -135,7 +137,8 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
       accountSettingsViewModel.cachedAccountEntity?.let { accountEntity ->
         navController?.navigate(
           ServerSettingsFragmentDirections.actionServerSettingsFragmentToCheckCredentialsFragment(
-            accountEntity
+            requestKey = REQUEST_KEY_CHECK_ACCOUNT_SETTINGS,
+            accountEntity = accountEntity
           )
         )
       }
@@ -259,6 +262,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
           )
           binding?.editTextSmtpPassword?.requestFocus()
         }
+
         else -> return true
       }
 
@@ -303,7 +307,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   }
 
   private fun observeOnResultLiveData() {
-    setFragmentResultListener(CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
       val result =
         bundle.getSerializableViaExt(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
       when (result?.status) {
@@ -390,7 +394,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   }
 
   private fun setupAccountSettingsViewModel() {
-    lifecycleScope.launchWhenStarted {
+    launchAndRepeatWithViewLifecycle {
       accountSettingsViewModel.accountSettingsStateFlow.collect {
         updateViews(it)
       }
@@ -411,6 +415,10 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
   }
 
   companion object {
+    private val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_ACCOUNT_SETTINGS",
+      ServerSettingsFragment::class.java
+    )
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 10
   }
 }

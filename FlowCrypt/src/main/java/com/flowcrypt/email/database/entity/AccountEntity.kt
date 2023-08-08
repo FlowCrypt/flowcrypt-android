@@ -227,6 +227,12 @@ data class AccountEntity constructor(
     return clientConfiguration?.hasProperty(configurationProperty) ?: false
   }
 
+  fun isHandlingAttachmentRestricted(): Boolean {
+    return hasClientConfigurationProperty(
+      ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
+    )
+  }
+
   companion object {
     const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"

@@ -17,7 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
+import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -26,7 +26,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -55,8 +54,7 @@ class MainSettingsFragmentNavigationToSubMenuFlowTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @NotReadyForCI
-  @Ignore("need to change this test")
+  @DependsOnMailServer
   fun testShowBackupsScreen() {
     checkIsScreenDisplaying(getResString(R.string.backups))
   }

@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.model.KeyImportDetails
@@ -56,6 +57,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
@@ -87,6 +89,8 @@ class SendMsgTest {
   )
   private val recipientPgpKeyDetails =
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+  private val bccPgpKeyDetails =
+    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/default@flowcrypt.test_fisrtKey_pub.asc")
 
   private val sentFolder = LocalFolder(
     account = addAccountToDatabaseRule.account.email,
@@ -117,18 +121,29 @@ class SendMsgTest {
           .toPublicKeyEntity(recipientPgpKeyDetails.getUserIdsAsSingleString())
           .copy(id = 2)
       )
+    ),
+    RecipientWithPubKeys(
+      RecipientEntity(
+        email = bccPgpKeyDetails.getUserIdsAsSingleString(),
+        name = "bcc"
+      ),
+      listOf(
+        bccPgpKeyDetails
+          .toPublicKeyEntity(bccPgpKeyDetails.getUserIdsAsSingleString())
+          .copy(id = 3)
+      )
     )
   )
 
-  private val attachmentInfo = AttachmentInfo().apply {
-    val content = "Some text"
-    name = ATTACHMENT_NAME
-    encodedSize = content.length.toLong()
-    rawData = content.toByteArray()
-    type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
-    email = addAccountToDatabaseRule.account.email
+  private val attachmentContent = "Some text"
+  private val attachmentInfo = AttachmentInfo(
+    name = ATTACHMENT_NAME,
+    encodedSize = attachmentContent.length.toLong(),
+    rawData = attachmentContent.toByteArray(),
+    type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN,
+    email = addAccountToDatabaseRule.account.email,
     id = EmailUtil.generateContentId()
-  }
+  )
 
   @Before
   fun cleanFolderBeforeStart() {
@@ -276,13 +291,13 @@ class SendMsgTest {
           requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
         )
 
-        val openPgpMetadata = getOpenPgpMetadata(
+        val messageMetadata = getMessageMetadata(
           inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
           outputStream = buffer,
           pgpSecretKeyRing = pgpSecretKeyRing
         )
-        assertEquals(true, openPgpMetadata.isEncrypted)
-        assertEquals(true, openPgpMetadata.isSigned)
+        assertEquals(true, messageMetadata.isEncrypted)
+        assertEquals(true, messageMetadata.isSigned)
         assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
       }
     }
@@ -316,7 +331,7 @@ class SendMsgTest {
         //check content
         val encryptedTextContent = multipart.getBodyPart(0).content as String
         val messageOutputStream = ByteArrayOutputStream()
-        val messageOpenPgpMetadata = getOpenPgpMetadata(
+        val messageOpenPgpMetadata = getMessageMetadata(
           inputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
           outputStream = messageOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
@@ -332,14 +347,14 @@ class SendMsgTest {
         assertEquals(ATTACHMENT_NAME + "." + Constants.PGP_FILE_EXT, attachmentPart.fileName)
 
         val attachmentOutputStream = ByteArrayOutputStream()
-        val attachmentOpenPgpMetadata = getOpenPgpMetadata(
+        val attachmentMessageMetadata = getMessageMetadata(
           inputStream = attachmentPart.inputStream,
           outputStream = attachmentOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
         )
 
-        assertEquals(ATTACHMENT_NAME, attachmentOpenPgpMetadata.fileName)
-        assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
+        assertEquals(ATTACHMENT_NAME, attachmentMessageMetadata.filename)
+        assertEquals(true, attachmentMessageMetadata.isEncrypted)
         assertEquals(
           String(requireNotNull(attachmentInfo.rawData)),
           String(attachmentOutputStream.toByteArray())
@@ -395,7 +410,7 @@ class SendMsgTest {
         //check content
         val encryptedTextContent = multipart.getBodyPart(0).content as String
         val messageOutputStream = ByteArrayOutputStream()
-        val messageOpenPgpMetadata = getOpenPgpMetadata(
+        val messageOpenPgpMetadata = getMessageMetadata(
           inputStream = ByteArrayInputStream(encryptedTextContent.toByteArray()),
           outputStream = messageOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
@@ -415,14 +430,91 @@ class SendMsgTest {
 
         //try to decrypt the forwarded attachment
         val attachmentOutputStream = ByteArrayOutputStream()
-        val attachmentOpenPgpMetadata = getOpenPgpMetadata(
+        val attachmentMessageMetadata = getMessageMetadata(
           inputStream = attachmentPart.inputStream,
           outputStream = attachmentOutputStream,
           pgpSecretKeyRing = pgpSecretKeyRing
         )
 
-        assertEquals(encryptedForwardedAttachmentInfo.name, attachmentOpenPgpMetadata.fileName)
-        assertEquals(true, attachmentOpenPgpMetadata.isEncrypted)
+        assertEquals(encryptedForwardedAttachmentInfo.name, attachmentMessageMetadata.filename)
+        assertEquals(true, attachmentMessageMetadata.isEncrypted)
+      }
+    }
+  }
+
+  @Test
+  fun testHideKeyIdsWhenSendingEncryptedEmailWithBccRecipients() {
+    val outgoingMessageInfo = OutgoingMessageInfo(
+      account = addAccountToDatabaseRule.account.email,
+      subject = "Encrypted Message",
+      msg = "Encrypted Message",
+      toRecipients = listOf(InternetAddress(recipientPgpKeyDetails.getUserIdsAsSingleString())),
+      bccRecipients = listOf(InternetAddress(bccPgpKeyDetails.getUserIdsAsSingleString())),
+      from = InternetAddress(addAccountToDatabaseRule.account.email),
+      encryptionType = MessageEncryptionType.ENCRYPTED,
+      messageType = MessageType.NEW,
+      uid = EmailUtil.genOutboxUID(context)
+    )
+
+    processOutgoingMessageInfo(outgoingMessageInfo)
+
+    runBlocking {
+      delay(3000)
+      checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
+        val encryptedContent =
+          (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
+        val buffer = ByteArrayOutputStream()
+
+        val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
+          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
+        )
+
+        val messageMetadata = getMessageMetadata(
+          inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
+          outputStream = buffer,
+          pgpSecretKeyRing = pgpSecretKeyRing
+        )
+        assertEquals(true, messageMetadata.isEncrypted)
+        assertEquals(true, messageMetadata.isSigned)
+        assertEquals(outgoingMessageInfo.msg, String(buffer.toByteArray()))
+
+        val expectedIds = arrayOf(
+          PgpKey.parseKeys(recipientPgpKeyDetails.publicKey)
+            .pgpKeyRingCollection
+            .pgpPublicKeyRingCollection
+            .first()
+            .publicKeys
+            .asSequence()
+            .toList()[1].keyID,
+          PgpKey.parseKeys(addPrivateKeyToDatabaseRule.pgpKeyDetails.publicKey)
+            .pgpKeyRingCollection
+            .pgpPublicKeyRingCollection
+            .first()
+            .publicKeys
+            .asSequence()
+            .toList()[1].keyID,
+          0,
+        ).sortedArray()
+
+        val actualIds = messageMetadata.recipientKeyIds.toTypedArray().sortedArray()
+
+        assertArrayEquals(
+          "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
+          expectedIds,
+          actualIds
+        )
+
+        assertFalse(
+          messageMetadata.recipientKeyIds.contains(
+            PgpKey.parseKeys(bccPgpKeyDetails.publicKey)
+              .pgpKeyRingCollection
+              .pgpPublicKeyRingCollection
+              .first()
+              .publicKeys
+              .asSequence()
+              .toList()[1].keyID
+          )
+        )
       }
     }
   }
@@ -522,7 +614,7 @@ class SendMsgTest {
       }
     }
 
-  private fun getOpenPgpMetadata(
+  private fun getMessageMetadata(
     inputStream: InputStream,
     outputStream: ByteArrayOutputStream,
     pgpSecretKeyRing: PGPSecretKeyRing

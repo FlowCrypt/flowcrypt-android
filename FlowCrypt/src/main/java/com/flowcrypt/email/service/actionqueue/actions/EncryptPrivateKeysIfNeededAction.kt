@@ -53,8 +53,10 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
     for (keyEntity in keyEntities) {
       val passphrase = keyEntity.passphrase
 
-      val keyDetailsList =
-        PgpKey.parseKeys(keyEntity.privateKeyAsString.toByteArray(), false).pgpKeyDetailsList
+      val keyDetailsList = PgpKey.parseKeys(
+        source = keyEntity.privateKeyAsString.toByteArray(),
+        throwExceptionIfUnknownSource = false
+      ).pgpKeyDetailsList
       if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
           IllegalArgumentException(
@@ -75,8 +77,10 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
         PgpPwd.checkForWeakPassphrase(passphrase)
         val encryptedKey = PgpKey.encryptKey(keyDetails.privateKey!!, passphrase)
 
-        val encryptedKeyDetailsList =
-          PgpKey.parseKeys(encryptedKey.toByteArray(), false).pgpKeyDetailsList
+        val encryptedKeyDetailsList = PgpKey.parseKeys(
+          source = encryptedKey.toByteArray(),
+          throwExceptionIfUnknownSource = false
+        ).pgpKeyDetailsList
         if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue
@@ -85,8 +89,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
         val keyDetailsWithPgpEncryptedInfo = encryptedKeyDetailsList.first()
         val modifiedKeyEntity = keyEntity.copy(
           privateKey = KeyStoreCryptoManager.encrypt(keyDetailsWithPgpEncryptedInfo.privateKey)
-            .toByteArray(),
-          publicKey = keyDetailsWithPgpEncryptedInfo.publicKey.toByteArray()
+            .toByteArray()
         )
         modifiedKeyEntities.add(modifiedKeyEntity)
       } catch (e: PrivateKeyStrengthException) {

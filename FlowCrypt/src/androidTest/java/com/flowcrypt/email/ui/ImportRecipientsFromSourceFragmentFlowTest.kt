@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.ui
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
@@ -15,10 +12,6 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -39,12 +32,9 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
-import org.hamcrest.CoreMatchers.`is`
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -173,23 +163,10 @@ class ImportRecipientsFromSourceFragmentFlowTest : BaseTest() {
   }
 
   @Test
-  @Ignore("temporary disabled due to arhitecture changes")
-  //https://developer.android.com/training/basics/intents/result#test
   fun testImportKeyFromFile() {
     val resultData = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(fileWithPublicKey)
-    intending(
-      allOf(
-        hasAction(Intent.ACTION_CHOOSER),
-        hasExtra(
-          `is`(Intent.EXTRA_INTENT),
-          allOf(
-            hasAction(Intent.ACTION_GET_CONTENT),
-            hasType("*/*")
-          )
-        )
-      )
-    ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
-    onView(withId(R.id.buttonLoadFromFile))
+    intendingActivityResultContractsGetContent(resultData = resultData)
+    onView(withId(R.id.btLoadFromFile))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(containsString(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)))

@@ -25,7 +25,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.pgpainless.decryption_verification.OpenPgpMetadata
+import org.pgpainless.decryption_verification.MessageMetadata
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -47,7 +47,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       GenericMsgBlock::class.java,
       GenericMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", null, false)
     )
-    fixture.customise().sameInstance(OpenPgpMetadata::class.java, null)
+    fixture.customise().sameInstance(MessageMetadata::class.java, null)
     //todo-denbond7 improve that
     fixture.customise().sameInstance(
       OutgoingMessageInfo::class.java,

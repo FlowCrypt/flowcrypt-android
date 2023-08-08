@@ -26,6 +26,7 @@ global_job_config:
   prologue:
     commands:
       # fix DNS to ping *.localhost and *.flowcrypt.test
+      - sudo apt-get update
       - sudo apt install -y dnsmasq resolvconf
       - echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
       - echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
@@ -43,7 +44,7 @@ global_job_config:
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
       # init environment variables
-      - export SUM=$(checksum build.gradle)-$(checksum FlowCrypt/build.gradle)-$(checksum ./script/ci-install-android-sdk.sh)
+      - export SUM=$(checksum build.gradle.kts)-$(checksum FlowCrypt/build.gradle.kts)-$(checksum ./script/ci-install-android-sdk.sh)
       - export APP_GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
       - export ANDROID_SDK_CACHE=android-sdk-$SUM # per conf files hash
       - export BUILD_CXX_CACHE=build-cxx-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash

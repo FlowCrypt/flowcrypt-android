@@ -32,17 +32,22 @@ open class ParseKeysViewModel(application: Application) : AccountViewModel(appli
     pgpKeyDetailsListMutableStateFlow.asStateFlow()
   private val controlledRunnerForParseKeys = ControlledRunner<Result<List<PgpKeyDetails>>>()
 
-  fun parseKeys(source: ByteArray?) {
-    source?.let { parseKeys(it.inputStream()) }
+  fun parseKeys(source: ByteArray?, skipErrors: Boolean = false) {
+    source?.let { parseKeys(inputStream = it.inputStream(), skipErrors = skipErrors) }
   }
 
-  fun parseKeys(inputStream: InputStream) {
+  fun parseKeys(inputStream: InputStream, skipErrors: Boolean = false) {
     viewModelScope.launch {
       pgpKeyDetailsListMutableStateFlow.value = Result.loading()
       pgpKeyDetailsListMutableStateFlow.value = controlledRunnerForParseKeys.cancelPreviousThenRun {
         return@cancelPreviousThenRun withContext(Dispatchers.IO) {
           try {
-            Result.success(PgpKey.parseKeys(inputStream).pgpKeyDetailsList)
+            Result.success(
+              PgpKey.parseKeys(
+                source = inputStream,
+                skipErrors = skipErrors
+              ).pgpKeyDetailsList
+            )
           } catch (e: Exception) {
             Result.exception(e)
           }

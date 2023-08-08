@@ -69,19 +69,29 @@ object PgpKey {
     return changeKeyPassphrase(extractSecretKeyRing(armored), oldPassphrase, newPassphrase).armor()
   }
 
-  fun parseKeys(source: String, throwExceptionIfUnknownSource: Boolean = true): ParseKeyResult {
-    return parseKeys(source.toInputStream(), throwExceptionIfUnknownSource)
+  fun parseKeys(
+    source: String,
+    throwExceptionIfUnknownSource: Boolean = true,
+    skipErrors: Boolean = false
+  ): ParseKeyResult {
+    return parseKeys(
+      source = source.toInputStream(),
+      throwExceptionIfUnknownSource = throwExceptionIfUnknownSource,
+      skipErrors = skipErrors
+    )
   }
 
   fun parseKeys(
     source: ByteArray,
     throwExceptionIfUnknownSource: Boolean = true,
-    hideArmorMeta: Boolean = false
+    hideArmorMeta: Boolean = false,
+    skipErrors: Boolean = false
   ): ParseKeyResult {
     return parseKeys(
       source = source.inputStream(),
       throwExceptionIfUnknownSource = throwExceptionIfUnknownSource,
-      hideArmorMeta = hideArmorMeta
+      hideArmorMeta = hideArmorMeta,
+      skipErrors = skipErrors
     )
   }
 
@@ -95,11 +105,13 @@ object PgpKey {
   fun parseKeys(
     source: InputStream,
     throwExceptionIfUnknownSource: Boolean = true,
-    hideArmorMeta: Boolean = false
+    hideArmorMeta: Boolean = false,
+    skipErrors: Boolean = false
   ): ParseKeyResult {
     return ParseKeyResult(
       pgpKeyRingCollection = parseKeysRaw(source, throwExceptionIfUnknownSource),
       hideArmorMeta = hideArmorMeta,
+      skipErrors = skipErrors
     )
   }
 
@@ -147,7 +159,7 @@ object PgpKey {
   }
 
   suspend fun parsePrivateKeys(source: String): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
-    parseKeys(source, false).pgpKeyRingCollection
+    parseKeys(source = source, throwExceptionIfUnknownSource = false).pgpKeyRingCollection
       .pgpSecretKeyRingCollection.map { it.toPgpKeyDetails() }
   }
 
@@ -172,7 +184,7 @@ object PgpKey {
   }
 
   fun extractSecretKeyRing(armored: String): PGPSecretKeyRing {
-    val parseKeyResult = parseKeys(armored)
+    val parseKeyResult = parseKeys(source = armored)
     if (parseKeyResult.getAllKeys().isEmpty()) {
       throw IllegalArgumentException("Keys not found")
     }
@@ -184,19 +196,34 @@ object PgpKey {
 
   data class ParseKeyResult(
     val pgpKeyRingCollection: PGPKeyRingCollection,
-    val hideArmorMeta: Boolean = false
+    val hideArmorMeta: Boolean = false,
+    val skipErrors: Boolean = false
   ) {
     fun getAllKeys(): List<PGPKeyRing> =
       pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList() +
           pgpKeyRingCollection.pgpPublicKeyRingCollection.keyRings.asSequence().toList()
 
-    val pgpKeyDetailsList = getAllKeys().map { it.toPgpKeyDetails(hideArmorMeta = hideArmorMeta) }
+    val pgpKeyDetailsList =
+      getAllKeys().mapNotNull {
+        try {
+          it.toPgpKeyDetails(hideArmorMeta = hideArmorMeta)
+        } catch (e: Exception) {
+          e.printStackTrace()
+          if (skipErrors) {
+            null
+          } else {
+            throw e
+          }
+        }
+      }
   }
 
   // Restored here some previous code. Not sure if PGPainless can help with this.
   fun parseAndNormalizeKeyRings(armored: String): List<PGPKeyRing> {
     val normalizedArmored = PgpArmor.normalize(armored, RawBlockParser.RawBlockType.UNKNOWN)
-    val keys = parseKeys(normalizedArmored, false).getAllKeys().toMutableList()
+    val keys = parseKeys(source = normalizedArmored, throwExceptionIfUnknownSource = false)
+      .getAllKeys()
+      .toMutableList()
 
     // Prevent key bloat by removing all non-self certifications
     for ((keyRingIndex, keyRing) in keys.withIndex()) {

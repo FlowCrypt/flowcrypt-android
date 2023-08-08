@@ -94,6 +94,7 @@ class CreatePrivateKeyFirstFragment :
           UIUtil.hideSoftInput(requireContext(), v)
           true
         }
+
         else -> false
       }
     }
@@ -109,17 +110,13 @@ class CreatePrivateKeyFirstFragment :
         bundle.getParcelableViaExt<PgpKeyDetails>(CreatePrivateKeySecondFragment.KEY_CREATED_KEY)
       navController?.navigateUp()
       setFragmentResult(
-        REQUEST_KEY_CREATE_KEY,
+        args.requestKey,
         bundleOf(KEY_CREATED_KEY to pgpKeyDetails, KEY_ACCOUNT to args.accountEntity)
       )
     }
   }
 
   companion object {
-    val REQUEST_KEY_CREATE_KEY = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_PARSED_KEYS", CreatePrivateKeyFirstFragment::class.java
-    )
-
     val KEY_CREATED_KEY = GeneralUtil.generateUniqueExtraKey(
       "KEY_PARSED_KEYS", CreatePrivateKeyFirstFragment::class.java
     )

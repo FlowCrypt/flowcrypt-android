@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
@@ -22,11 +21,16 @@ import com.flowcrypt.email.databinding.FragmentImportAdditionalPrivateKeysBindin
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.getNavigationResult
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -36,9 +40,11 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
+import org.pgpainless.util.Passphrase
 
 /**
  * @author Denys Bondarenko
@@ -56,6 +62,8 @@ class ImportAdditionalPrivateKeysFragment :
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
+  private var cachedUnprotectedKey: PgpKeyDetails? = null
+
   override val progressView: View?
     get() = binding?.layoutProgress?.root
   override val contentView: View?
@@ -65,13 +73,19 @@ class ImportAdditionalPrivateKeysFragment :
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
+
+    observeOnResultLiveData()
+
     initSearchBackupsInEmailViewModel()
     initPrivateKeysViewModel()
+    initProtectPrivateKeysLiveData()
     subscribeToCheckPrivateKeys()
+    subscribeToTwoWayDialog()
   }
 
   override fun handleSelectedFile(uri: Uri) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       uri = uri,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
@@ -79,44 +93,48 @@ class ImportAdditionalPrivateKeysFragment :
 
   override fun handleClipboard(pgpKeysAsString: String?) {
     showParsePgpKeysFromSourceDialogFragment(
+      requestKey = REQUEST_KEY_PARSE_PGP_KEYS,
       source = pgpKeysAsString,
       filterType = ParsePgpKeysFromSourceDialogFragment.FilterType.PRIVATE_ONLY
     )
   }
 
   override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
-    if (keys.isNotEmpty()) {
-      val title = if (activeUri != null) {
-        val fileName = GeneralUtil.getFileNameFromUri(requireContext(), activeUri)
-        resources.getQuantityString(
-          R.plurals.file_contains_some_amount_of_keys,
-          keys.size, fileName, keys.size
-        )
-      } else {
-        resources.getQuantityString(
-          R.plurals.loaded_private_keys_from_clipboard,
-          keys.size, keys.size
-        )
-      }
-
-      navController?.navigate(
-        ImportAdditionalPrivateKeysFragmentDirections
-          .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
-            privateKeys = keys.toTypedArray(),
-            subTitle = title,
-            sourceType = importSourceType,
-            positiveBtnTitle = getString(R.string.continue_),
-            negativeBtnTitle = getString(R.string.choose_another_key),
-            initSubTitlePlurals = 0,
-            skipImportedKeys = true
-          )
+    if (keys.size == 1 && !keys.first().isFullyEncrypted) {
+      cachedUnprotectedKey = keys.first()
+      showTwoWayDialog(
+        requestCode = REQUEST_CODE_PROTECT_KEY_WITH_PASS_PHRASE,
+        dialogTitle = "",
+        dialogMsg = getString(
+          R.string.this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import
+        ),
+        positiveButtonTitle = getString(R.string.continue_),
+        negativeButtonTitle = getString(R.string.cancel),
+        isCancelable = true
       )
+      return
+    }
+
+    val filteredKeys = keys.filter { it.isFullyEncrypted }
+
+    if (filteredKeys.size != keys.size) {
+      toast(getString(R.string.please_pay_attention_some_keys_were_skipped))
+    }
+
+    if (filteredKeys.isNotEmpty()) {
+      tryToUnlockKeys(filteredKeys)
     }
   }
 
+  override fun getRequestKeyToFindKeysInClipboard(): String = REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD
+  override fun getRequestKeyToParsePgpKeys(): String = REQUEST_KEY_PARSE_PGP_KEYS
+
   private fun initViews() {
     binding?.buttonLoadFromClipboard?.setOnClickListener {
-      showFindKeysInClipboardDialogFragment(isPrivateKeyMode = true)
+      showFindKeysInClipboardDialogFragment(
+        requestKey = getRequestKeyToFindKeysInClipboard(),
+        isPrivateKeyMode = true
+      )
     }
 
     binding?.buttonLoadFromFile?.setOnClickListener {
@@ -153,6 +171,7 @@ class ImportAdditionalPrivateKeysFragment :
                   navController?.navigate(
                     ImportAdditionalPrivateKeysFragmentDirections
                       .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
+                        requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
                         privateKeys = keys.toTypedArray(),
                         initSubTitlePlurals = R.plurals.found_backup_of_your_account_key,
                         sourceType = importSourceType,
@@ -198,7 +217,7 @@ class ImportAdditionalPrivateKeysFragment :
             navController?.navigateUp()
             it.data?.let { pair ->
               setFragmentResult(
-                REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+                args.requestKey,
                 bundleOf(KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second))
               )
             }
@@ -228,6 +247,7 @@ class ImportAdditionalPrivateKeysFragment :
             }
             countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
           }
+
           else -> {}
         }
       }
@@ -235,7 +255,7 @@ class ImportAdditionalPrivateKeysFragment :
   }
 
   private fun subscribeToCheckPrivateKeys() {
-    setFragmentResultListener(CheckKeysFragment.REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
         bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
@@ -252,8 +272,72 @@ class ImportAdditionalPrivateKeysFragment :
         }
 
         CheckKeysFragment.CheckingState.NO_NEW_KEYS -> {
-          toast(R.string.the_key_already_added, Toast.LENGTH_SHORT)
+          showInfoDialog(dialogMsg = getString(R.string.key_already_added))
         }
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListenerForTwoWayDialog { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_PROTECT_KEY_WITH_PASS_PHRASE -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          navController?.navigate(
+            ImportAdditionalPrivateKeysFragmentDirections
+              .actionImportAdditionalPrivateKeysFragmentToCheckPassphraseStrengthFragment(
+                popBackStackIdIfSuccess = R.id.importAdditionalPrivateKeysFragment,
+                title = getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
+              )
+          )
+        }
+      }
+    }
+  }
+
+  private fun observeOnResultLiveData() {
+    getNavigationResult<kotlin.Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
+      val pgpKeyDetails = cachedUnprotectedKey ?: return@getNavigationResult
+      if (it.isSuccess) {
+        val passphrase = it.getOrNull() as? CharArray ?: return@getNavigationResult
+        privateKeysViewModel.protectPrivateKeys(
+          listOf(pgpKeyDetails),
+          Passphrase(passphrase)
+        )
+      }
+    }
+  }
+
+  private fun initProtectPrivateKeysLiveData() {
+    privateKeysViewModel.protectPrivateKeysLiveData.observe(viewLifecycleOwner) {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          countingIdlingResource?.incrementSafely(this@ImportAdditionalPrivateKeysFragment)
+          showProgress(getString(R.string.processing))
+        }
+
+        Result.Status.SUCCESS -> {
+          it.data?.firstOrNull()?.let { pgpKeyDetails ->
+            tryToUnlockKeys(listOf(pgpKeyDetails.copy(tempPassphrase = null)))
+          }
+
+          privateKeysViewModel.protectPrivateKeysLiveData.value = Result.none()
+          countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          showInfoDialog(
+            dialogTitle = "",
+            dialogMsg = it.exceptionMsg,
+            isCancelable = true
+          )
+          countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
+        }
+
+        else -> {}
       }
     }
   }
@@ -276,9 +360,49 @@ class ImportAdditionalPrivateKeysFragment :
     return Pair(uniqueKeysFingerprints, filteredList)
   }
 
+  private fun tryToUnlockKeys(filteredKeys: List<PgpKeyDetails>) {
+    val title = if (activeUri != null) {
+      val fileName = GeneralUtil.getFileNameFromUri(requireContext(), activeUri)
+      resources.getQuantityString(
+        R.plurals.file_contains_some_amount_of_keys,
+        filteredKeys.size, fileName, filteredKeys.size
+      )
+    } else {
+      resources.getQuantityString(
+        R.plurals.loaded_private_keys_from_clipboard,
+        filteredKeys.size, filteredKeys.size
+      )
+    }
+
+    navController?.navigate(
+      ImportAdditionalPrivateKeysFragmentDirections
+        .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
+          requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
+          privateKeys = filteredKeys.toTypedArray(),
+          subTitle = title,
+          sourceType = importSourceType,
+          positiveBtnTitle = getString(R.string.continue_),
+          negativeBtnTitle = getString(R.string.choose_another_key),
+          initSubTitlePlurals = 0,
+          skipImportedKeys = true
+        )
+    )
+  }
+
   companion object {
-    val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
+    private const val REQUEST_CODE_PROTECT_KEY_WITH_PASS_PHRASE = 100
+    private val REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIND_KEYS_IN_CLIPBOARD",
+      ImportAdditionalPrivateKeysFragment::class.java
+    )
+
+    private val REQUEST_KEY_PARSE_PGP_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PARSE_PGP_KEYS",
+      ImportAdditionalPrivateKeysFragment::class.java
+    )
+
+    private val REQUEST_KEY_CHECK_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHECK_PRIVATE_KEYS",
       ImportAdditionalPrivateKeysFragment::class.java
     )
 

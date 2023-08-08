@@ -20,5 +20,5 @@ data class DownloadAttachmentTaskResult constructor(
   val progressInPercentage: Int = 0,
   val timeLeft: Long = 0,
   val isLast: Boolean = false,
-  val canBeOpened: Boolean = true
+  val useContentApp: Boolean = false
 )

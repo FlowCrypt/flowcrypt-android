@@ -7,17 +7,28 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.CompoundButton
+import androidx.appcompat.widget.SearchView
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.databinding.FragmentRecipientsListBinding
+import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -35,24 +46,28 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
 
   private val recipientsRecyclerViewAdapter: RecipientsRecyclerViewAdapter =
     RecipientsRecyclerViewAdapter(
-      true,
-      object : RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
-        override fun onDeleteRecipient(recipientEntity: RecipientEntity) {
-          recipientsViewModel.deleteRecipient(recipientEntity)
-          Toast.makeText(
-            context, getString(R.string.the_contact_was_deleted, recipientEntity.email),
-            Toast.LENGTH_SHORT
-          ).show()
+      isDeleteEnabled = true,
+      onRecipientActionsListener = object :
+        RecipientsRecyclerViewAdapter.OnRecipientActionsListener {
+        override fun onDeleteRecipient(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {
+          recipientsViewModel.deleteRecipient(recipientEntityWithPgpMarker.toRecipientEntity())
+          toast(getString(R.string.the_contact_was_deleted, recipientEntityWithPgpMarker.email))
         }
 
-        override fun onRecipientClick(recipientEntity: RecipientEntity) {
+        override fun onRecipientClick(recipientEntityWithPgpMarker: RecipientEntity.WithPgpMarker) {
           navController?.navigate(
             RecipientsListFragmentDirections
-              .actionRecipientsListFragmentToRecipientDetailsFragment(recipientEntity)
+              .actionRecipientsListFragmentToRecipientDetailsFragment(
+                recipientEntityWithPgpMarker.toRecipientEntity()
+              )
           )
         }
       })
   private val recipientsViewModel: RecipientsViewModel by viewModels()
+
+  private var onlyWithPgp: Boolean = true
+  private var searchPattern: String = ""
+  private var switchView: CompoundButton? = null
 
   override val emptyView: View?
     get() = binding?.emptyView
@@ -67,6 +82,71 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
     super.onViewCreated(view, savedInstanceState)
     initViews()
     setupRecipientsViewModel()
+  }
+
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.fragment_recipients_list, menu)
+      }
+
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        setupSearchItem(menu)
+        setupSwitchItem(menu)
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false
+
+      private fun setupSearchItem(menu: Menu) {
+        val menuItemSearch = menu.findItem(R.id.menuSearch)
+        val searchView = menuItemSearch.actionView as SearchView
+        if (searchPattern.isNotEmpty()) {
+          menuItemSearch.expandActionView()
+        }
+        searchView.setQuery(searchPattern, true)
+        searchView.queryHint = getString(R.string.search)
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+          override fun onQueryTextSubmit(query: String?): Boolean {
+            searchPattern = query ?: ""
+            recipientsViewModel.filterContacts(
+              onlyWithPgp = switchView?.isChecked ?: true,
+              searchPattern = searchPattern
+            )
+            return true
+          }
+
+          override fun onQueryTextChange(newText: String?): Boolean {
+            if (!isVisible) {
+              //The fragment was replaced so ignore
+              return true
+            }
+
+            searchPattern = newText ?: ""
+            recipientsViewModel.filterContacts(
+              onlyWithPgp = switchView?.isChecked ?: true,
+              searchPattern = searchPattern
+            )
+            return true
+          }
+        })
+        searchView.clearFocus()
+      }
+
+      private fun setupSwitchItem(menu: Menu) {
+        val menuItemSwitch = menu.findItem(R.id.menuSwitch)
+        switchView = menuItemSwitch.actionView?.findViewById(R.id.switchView)
+        switchView?.isChecked = onlyWithPgp
+        switchView?.setOnCheckedChangeListener { _, isChecked ->
+          onlyWithPgp = isChecked
+          recipientsViewModel.filterContacts(
+            onlyWithPgp = onlyWithPgp,
+            searchPattern = searchPattern
+          )
+        }
+      }
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   private fun initViews() {
@@ -85,15 +165,37 @@ class RecipientsListFragment : BaseFragment<FragmentRecipientsListBinding>(),
   }
 
   private fun setupRecipientsViewModel() {
-    lifecycleScope.launchWhenStarted {
-      recipientsViewModel.recipientsWithPgpFlow.collect {
-        if (it.isNullOrEmpty()) {
-          showEmptyView()
-        } else {
-          recipientsRecyclerViewAdapter.submitList(it)
-          showContent()
+    recipientsViewModel.allContactsLiveData.observe(viewLifecycleOwner) {
+      recipientsViewModel.filterContacts(
+        onlyWithPgp = switchView?.isChecked ?: true,
+        searchPattern = searchPattern
+      )
+    }
+
+    recipientsViewModel.contactsWithPgpMarkerSearchLiveData.observe(viewLifecycleOwner) {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          countingIdlingResource?.incrementSafely(this@RecipientsListFragment)
+          showProgress()
         }
+
+        Result.Status.SUCCESS -> {
+          if (it.data.isNullOrEmpty()) {
+            showEmptyView()
+          } else {
+            recipientsRecyclerViewAdapter.submitList(it.data)
+            showContent()
+          }
+          countingIdlingResource?.decrementSafely(this@RecipientsListFragment)
+        }
+
+        else -> {}
       }
     }
+
+    recipientsViewModel.filterContacts(
+      onlyWithPgp = switchView?.isChecked ?: true,
+      searchPattern = searchPattern
+    )
   }
 }

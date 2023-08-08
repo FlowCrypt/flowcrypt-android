@@ -5,10 +5,12 @@
 
 package com.flowcrypt.email.ui.adapter
 
+import android.graphics.drawable.AnimationDrawable
 import android.text.format.Formatter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -16,15 +18,18 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 
 /**
  * @author Denys Bondarenko
  */
 class AttachmentsRecyclerViewAdapter(
-  private val attachmentActionListener: AttachmentActionListener,
-  var isPreviewEnabled: Boolean = false
-) :
-  ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+  private val isPreviewEnabled: Boolean = true,
+  private val isDownloadEnabled: Boolean = true,
+  private val isDeleteEnabled: Boolean = true,
+  private val attachmentActionListener: AttachmentActionListener
+) : ListAdapter<AttachmentInfo, AttachmentsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+  val progressMap = mutableMapOf<String, AttachmentDownloadManagerService.DownloadProgress>()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     val view = LayoutInflater.from(parent.context).inflate(R.layout.attachment_item, parent, false)
@@ -40,13 +45,13 @@ class AttachmentsRecyclerViewAdapter(
     private val textViewAttSize: TextView = itemView.findViewById(R.id.textViewAttSize)
     private val imageButtonDownloadAtt: View = itemView.findViewById(R.id.imageButtonDownloadAtt)
     private val imageButtonPreviewAtt: View = itemView.findViewById(R.id.imageButtonPreviewAtt)
+    private val imageButtonDeleteAtt: View = itemView.findViewById(R.id.imageButtonDeleteAtt)
+    private val imageViewAttIcon: ImageView = itemView.findViewById(R.id.imageViewAttIcon)
 
     fun bindPost(
       attachmentInfo: AttachmentInfo,
       attachmentActionListener: AttachmentActionListener
     ) {
-      imageButtonPreviewAtt.visibleOrGone(isPreviewEnabled)
-
       if (attachmentInfo.isDecrypted) {
         itemView.setBackgroundResource(R.drawable.bg_att_decrypted)
       } else {
@@ -56,16 +61,32 @@ class AttachmentsRecyclerViewAdapter(
       textViewAttName.text = attachmentInfo.getSafeName()
       textViewAttSize.text = Formatter.formatFileSize(itemView.context, attachmentInfo.encodedSize)
 
+      imageButtonDownloadAtt.visibleOrGone(isDownloadEnabled)
       imageButtonDownloadAtt.setOnClickListener {
         attachmentActionListener.onDownloadClick(attachmentInfo)
       }
 
+      imageButtonPreviewAtt.visibleOrGone(isPreviewEnabled)
       imageButtonPreviewAtt.setOnClickListener {
-        attachmentActionListener.onAttachmentPreviewClick(attachmentInfo)
+        attachmentActionListener.onPreviewClick(attachmentInfo)
+      }
+
+      imageButtonDeleteAtt.visibleOrGone(isDeleteEnabled && !attachmentInfo.isProtected)
+      imageButtonDeleteAtt.setOnClickListener {
+        attachmentActionListener.onDeleteClick(attachmentInfo)
       }
 
       itemView.setOnClickListener {
         attachmentActionListener.onAttachmentClick(attachmentInfo)
+      }
+
+      val value = progressMap[attachmentInfo.uniqueStringId]
+      if (value?.progressInPercentage in 0..99) {
+        imageViewAttIcon.setImageResource(R.drawable.stat_sys_download_blue)
+        val animationDrawable = imageViewAttIcon.drawable as? AnimationDrawable
+        animationDrawable?.let { animationDrawable.start() }
+      } else {
+        imageViewAttIcon.setImageResource(R.mipmap.ic_attachment)
       }
     }
   }
@@ -83,6 +104,7 @@ class AttachmentsRecyclerViewAdapter(
   interface AttachmentActionListener {
     fun onDownloadClick(attachmentInfo: AttachmentInfo)
     fun onAttachmentClick(attachmentInfo: AttachmentInfo)
-    fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo)
+    fun onPreviewClick(attachmentInfo: AttachmentInfo)
+    fun onDeleteClick(attachmentInfo: AttachmentInfo)
   }
 }

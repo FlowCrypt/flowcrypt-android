@@ -248,6 +248,14 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
+  fun callLookUpForRecipientIfNeeded(email: String?) {
+    viewModelScope.launch {
+      allRecipients.entries
+        .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
+        ?.value?.let { recipientLookUpManager.enqueue(it) }
+    }
+  }
+
   class RecipientLookUpManager(
     private val application: Application,
     private val roomDatabase: FlowCryptRoomDatabase,
@@ -330,7 +338,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
         for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
           try {
-            val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
+            val result = PgpKey.parseKeys(source = publicKeyEntity.publicKey).pgpKeyDetailsList
             publicKeyEntity.pgpKeyDetails = result.firstOrNull()
           } catch (e: Exception) {
             e.printStackTrace()
@@ -353,7 +361,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
           Result.Status.SUCCESS -> {
             val pubKeyString = response.data?.pubkey
             if (pubKeyString?.isNotEmpty() == true) {
-              val parsedResult = PgpKey.parseKeys(pubKeyString).pgpKeyDetailsList
+              val parsedResult = PgpKey.parseKeys(source = pubKeyString).pgpKeyDetailsList
               if (parsedResult.isNotEmpty()) {
                 return@withContext parsedResult
               }

@@ -99,7 +99,7 @@ object PgpArmor {
   @JvmStatic
   fun normalize(armored: String, blockType: RawBlockParser.RawBlockType): String {
     if (blockType != RawBlockParser.RawBlockType.UNKNOWN
-      && !RawBlockParser.REPLACEABLE_BLOCK_TYPES.contains(blockType)
+      && !RawBlockParser.PGP_BLOCK_TYPES.contains(blockType)
     ) {
       throw IllegalArgumentException("Can't normalize block of type '$blockType'")
     }

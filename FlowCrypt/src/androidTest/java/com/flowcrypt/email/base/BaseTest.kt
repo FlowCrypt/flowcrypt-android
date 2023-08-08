@@ -132,8 +132,13 @@ abstract class BaseTest : BaseActivityTestImplementation {
    * we need to have some timeout between checking.
    */
   //todo-denbond7 https://github.com/android/android-test/issues/803
-  @Deprecated("Toast message assertions not working with android 11 and target sdk 30")
+  @Suppress("UNUSED_PARAMETER")
   protected fun isToastDisplayed(message: String, delay: Long? = null) {
+    toastWrapperToHaveDeprecationInOnePlace()
+  }
+
+  @Deprecated("Toast message assertions not working with android 11 and target sdk 30")
+  private fun toastWrapperToHaveDeprecationInOnePlace() {
     /*onView(withText(message))
       .inRoot(isToast())
       .check(matches(isDisplayed()))

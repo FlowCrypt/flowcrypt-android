@@ -24,6 +24,7 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.protection.KeyRingProtectionSettings
@@ -66,8 +67,9 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   val secretKeyRingsLiveData = keysLiveData.switchMap {
     liveData {
-      val combinedSource =
-        it.joinToString(separator = "\n") { keyEntity -> keyEntity.privateKeyAsString }
+      val combinedSource = it.joinToString(separator = "\n") { keyEntity ->
+        keyEntity.privateKeyAsString
+      }
       val pgpKeyRingCollection = PgpKey.parseKeysRaw(combinedSource)
       val keys = pgpKeyRingCollection.pgpSecretKeyRingCollection.keyRings.asSequence().toList()
       emit(keys)
@@ -87,7 +89,15 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   }
 
   override fun getPGPSecretKeyRings(): List<PGPSecretKeyRing> {
-    return secretKeyRingsLiveData.value ?: emptyList()
+    /*
+    due to https://github.com/bcgit/bc-java/issues/1379 we can't use
+    the same PGPSecretKeyRing objects in different threads.
+    So we have to make a copy of each PGPSecretKeyRing.
+    */
+
+    return secretKeyRingsLiveData.value?.map {
+      PGPSecretKeyRing(it.encoded, BcKeyFingerprintCalculator())
+    } ?: emptyList()
   }
 
   override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
@@ -97,13 +107,11 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   @WorkerThread
   @Synchronized
   fun getPgpKeyDetailsList(rings: List<PGPSecretKeyRing>): List<PgpKeyDetails> {
-    val list = mutableListOf<PgpKeyDetails>()
-    for (secretKey in rings) {
-      val pgpKeyDetails = secretKey.toPgpKeyDetails()
+    return rings.map {
+      val pgpKeyDetails = it.toPgpKeyDetails()
       val passphrase = getPassphraseByFingerprint(pgpKeyDetails.fingerprint)
-      list.add(pgpKeyDetails.copy(tempPassphrase = passphrase?.chars))
+      pgpKeyDetails.copy(tempPassphrase = passphrase?.chars)
     }
-    return list
   }
 
   override fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing? {
@@ -115,15 +123,10 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
   override fun getPGPSecretKeyRingsByFingerprints(fingerprints: Collection<String>):
       List<PGPSecretKeyRing> {
-    val list = mutableListOf<PGPSecretKeyRing>()
     val set = fingerprints.map { it.uppercase() }.toSet()
-    for (secretKey in getPGPSecretKeyRings()) {
-      val openPgpV4Fingerprint = OpenPgpV4Fingerprint(secretKey)
-      if (openPgpV4Fingerprint.toString() in set) {
-        list.add(secretKey)
-      }
+    return getPGPSecretKeyRings().filter {
+      OpenPgpV4Fingerprint(it).toString() in set
     }
-    return list
   }
 
   override fun getPGPSecretKeyRingsByUserId(user: String): List<PGPSecretKeyRing> {

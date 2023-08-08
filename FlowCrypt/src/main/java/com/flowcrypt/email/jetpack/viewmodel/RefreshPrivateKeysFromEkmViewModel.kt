@@ -191,10 +191,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
 
         val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
         roomDatabase.keysDao().updateSuspend(
-          existingKeyEntity.copy(
-            privateKey = safeVersionOfPrvKey,
-            publicKey = pgpKeyDetails.publicKey.toByteArray()
-          )
+          existingKeyEntity.copy(privateKey = safeVersionOfPrvKey)
         )
       }
 

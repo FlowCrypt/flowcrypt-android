@@ -33,6 +33,14 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
 
     dialogItems.add(
       DialogItem(
+        iconResourceId = R.drawable.ic_refresh_gray_48,
+        title = getString(R.string.re_fetch_public_key),
+        id = RESULT_CODE_RE_FETCH_PUBLIC_KEY
+      )
+    )
+
+    dialogItems.add(
+      DialogItem(
         iconResourceId = R.drawable.ic_password_protected_gray_48,
         title = getString(R.string.protect_with_password),
         id = RESULT_CODE_PROTECT_WITH_PASSWORD
@@ -87,7 +95,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   override fun onClick(dialog: DialogInterface, which: Int) {
     navController?.navigateUp()
     setFragmentResult(
-      REQUEST_KEY_RESULT,
+      args.requestKey,
       bundleOf(
         KEY_REQUEST_RESULT_CODE to dialogItems[which].id,
         KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS to args.recipientWithPubKeys
@@ -96,11 +104,6 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   }
 
   companion object {
-    val REQUEST_KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_RESULT",
-      NoPgpFoundDialogFragment::class.java
-    )
-
     val KEY_REQUEST_RESULT_CODE = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_RESULT_CODE", NoPgpFoundDialogFragment::class.java
     )
@@ -114,5 +117,6 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
     const val RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY = 12
     const val RESULT_CODE_COPY_FROM_OTHER_CONTACT = 13
     const val RESULT_CODE_REMOVE_CONTACT = 14
+    const val RESULT_CODE_RE_FETCH_PUBLIC_KEY = 15
   }
 }
