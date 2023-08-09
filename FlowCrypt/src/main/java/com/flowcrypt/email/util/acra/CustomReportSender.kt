@@ -8,6 +8,7 @@ package com.flowcrypt.email.util.acra
 import android.content.Context
 import android.net.Uri
 import com.flowcrypt.email.api.retrofit.request.model.CrashReportModel
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.gson.GsonBuilder
@@ -15,6 +16,7 @@ import org.acra.ReportField
 import org.acra.config.CoreConfiguration
 import org.acra.data.CrashReportData
 import org.acra.data.StringFormat
+import org.acra.log.debug
 import org.acra.sender.HttpSender
 import java.net.URL
 
@@ -32,7 +34,12 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
       }
     }
 
-    super.send(context, errorContent)
+    val activeAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
+    if (activeAccount?.isGoogleSignInAccount == true) {
+      super.send(context, errorContent)
+    } else {
+      debug { "Sending reports is disabled for non-Google accounts" }
+    }
   }
 
   override fun convertToString(report: CrashReportData?, format: StringFormat): String {
