@@ -161,8 +161,10 @@ class FlowCryptApplication : Application(), Configuration.Provider {
       )
 
       httpSender {
-        uri = BuildConfig.BACKEND_URL + "help/acra"
+        uri = BuildConfig.SHARED_TENANT_FES_URL + "api/v1/log-collector/exception"
         httpMethod = HttpSender.Method.POST
+        //need to disable the default http sender as we use a custom one
+        enabled = false
       }
     }
 

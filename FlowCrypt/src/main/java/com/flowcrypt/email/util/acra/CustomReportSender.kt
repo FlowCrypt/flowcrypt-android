@@ -6,10 +6,19 @@
 package com.flowcrypt.email.util.acra
 
 import android.content.Context
+import android.net.Uri
+import com.flowcrypt.email.api.retrofit.request.model.CrashReportModel
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.gson.GsonBuilder
 import org.acra.ReportField
 import org.acra.config.CoreConfiguration
 import org.acra.data.CrashReportData
+import org.acra.data.StringFormat
+import org.acra.log.debug
 import org.acra.sender.HttpSender
+import java.net.URL
 
 /**
  * It's a custom realization of [HttpSender]. Here we can filter data which will be sent to a server
@@ -25,7 +34,88 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
       }
     }
 
-    super.send(context, errorContent)
+    val activeAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
+    if (activeAccount?.isGoogleSignInAccount == true) {
+      super.send(context, errorContent)
+    } else {
+      debug { "Sending reports is disabled for non-Google accounts" }
+    }
+  }
+
+  override fun convertToString(report: CrashReportData?, format: StringFormat): String {
+    val stackTrace = report?.getString(ReportField.STACK_TRACE) ?: ""
+    val firstLinePattern = "(^.*)(: )(.*)\$".toRegex(RegexOption.MULTILINE)
+    val secondLinePattern = "( )(.*)(:)(\\d*)(\\))\$".toRegex(RegexOption.MULTILINE)
+    val name = findByGroupPosition(
+      pattern = firstLinePattern,
+      input = stackTrace,
+      position = 1,
+      defaultValue = "NO NAME"
+    )
+    val message = findByGroupPosition(
+      pattern = firstLinePattern,
+      input = stackTrace,
+      position = 3,
+      defaultValue = "NO MESSAGE"
+    )
+    val line = secondLinePattern.find(stackTrace)?.groups?.get(4)?.value?.toIntOrNull()
+    val col = if (line == null) null else 1
+    val url = secondLinePattern.find(stackTrace)?.groups?.get(0)?.value?.trim() ?: "-"
+
+    val crashReportModel = CrashReportModel(
+      name = name,
+      message = message,
+      line = line,
+      col = col,
+      trace = stackTrace,
+      url = url
+    )
+    return GsonBuilder().create().toJson(crashReportModel)
+  }
+
+  override fun sendHttpRequests(
+    configuration: CoreConfiguration,
+    context: Context,
+    method: Method,
+    contentType: String,
+    login: String?,
+    password: String?,
+    connectionTimeOut: Int,
+    socketTimeOut: Int,
+    headers: Map<String, String>?,
+    content: String,
+    url: URL,
+    attachments: List<Uri>
+  ) {
+    //add Authorization
+    val finalHeaders = (headers ?: emptyMap()).toMutableMap().apply {
+      val googleSignInClient = GoogleSignIn.getClient(
+        context,
+        GoogleApiClientHelper.generateGoogleSignInOptions()
+      )
+      val silentSignIn = googleSignInClient.silentSignIn()
+      if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
+        throw IllegalStateException("Could not receive idToken")
+      }
+
+      val idToken = silentSignIn.result.idToken
+      put("Authorization", "Bearer $idToken")
+    }
+
+    super.sendHttpRequests(
+      configuration,
+      context,
+      method,
+      contentType,
+      login,
+      password,
+      connectionTimeOut,
+      socketTimeOut,
+      finalHeaders,
+      content,
+      url,
+      attachments
+    )
   }
 
   /**
@@ -36,6 +126,17 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
   private fun filterFileNames(text: String?): String {
     val regex = ("(?i)\\b([^\\s:.-]+)[.](" + listOfExtensions.joinToString("|") + ")\\b").toRegex()
     return text?.replace(regex, "example.file") ?: ""
+  }
+
+  private fun findByGroupPosition(
+    pattern: Regex,
+    input: String,
+    position: Int,
+    defaultValue: String
+  ) = try {
+    pattern.find(input)?.groups?.get(position)?.value ?: defaultValue
+  } catch (e: Exception) {
+    defaultValue
   }
 
   companion object {

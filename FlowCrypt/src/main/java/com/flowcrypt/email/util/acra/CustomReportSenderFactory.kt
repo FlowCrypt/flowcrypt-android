@@ -24,4 +24,6 @@ class CustomReportSenderFactory :
   override fun create(context: Context, config: CoreConfiguration): ReportSender {
     return CustomReportSender(config)
   }
+
+  override fun enabled(config: CoreConfiguration): Boolean = true
 }
