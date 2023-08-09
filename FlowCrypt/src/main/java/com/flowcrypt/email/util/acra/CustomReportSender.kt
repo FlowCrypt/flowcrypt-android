@@ -37,17 +37,31 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
 
   override fun convertToString(report: CrashReportData?, format: StringFormat): String {
     val stackTrace = report?.getString(ReportField.STACK_TRACE) ?: ""
-    val name = "name".toRegex().matchEntire(stackTrace)?.value ?: ""
-    val message = "message".toRegex().matchEntire(stackTrace)?.value ?: ""
-    val line = "line".toRegex().matchEntire(stackTrace)?.value?.toInt() ?: 0
-    val col = "col".toRegex().matchEntire(stackTrace)?.value?.toInt() ?: 0
+    val firstLinePattern = "(^.*)(: )(.*)\$".toRegex(RegexOption.MULTILINE)
+    val secondLinePattern = "( )(.*)(:)(\\d*)(\\))\$".toRegex(RegexOption.MULTILINE)
+    val name = findByGroupPosition(
+      pattern = firstLinePattern,
+      input = stackTrace,
+      position = 1,
+      defaultValue = "NO NAME"
+    )
+    val message = findByGroupPosition(
+      pattern = firstLinePattern,
+      input = stackTrace,
+      position = 3,
+      defaultValue = "NO MESSAGE"
+    )
+    val line = secondLinePattern.find(stackTrace)?.groups?.get(4)?.value?.toIntOrNull()
+    val col = if (line == null) null else 1
+    val url = secondLinePattern.find(stackTrace)?.groups?.get(0)?.value?.trim() ?: "-"
 
     val crashReportModel = CrashReportModel(
       name = name,
       message = message,
       line = line,
       col = col,
-      trace = stackTrace
+      trace = stackTrace,
+      url = url
     )
     return GsonBuilder().create().toJson(crashReportModel)
   }
@@ -105,6 +119,17 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
   private fun filterFileNames(text: String?): String {
     val regex = ("(?i)\\b([^\\s:.-]+)[.](" + listOfExtensions.joinToString("|") + ")\\b").toRegex()
     return text?.replace(regex, "example.file") ?: ""
+  }
+
+  private fun findByGroupPosition(
+    pattern: Regex,
+    input: String,
+    position: Int,
+    defaultValue: String
+  ) = try {
+    pattern.find(input)?.groups?.get(position)?.value ?: defaultValue
+  } catch (e: Exception) {
+    defaultValue
   }
 
   companion object {
