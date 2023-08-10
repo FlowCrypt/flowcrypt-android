@@ -38,7 +38,7 @@ class EmailUtilTest {
         """ (subject:"Your FlowCrypt Backup" """ +
         """OR subject: "Your CryptUp Backup" """ +
         """OR subject: "All you need to know about CryptUP (contains a backup)" """ +
-        """OR subject: "CryptUP Account Backup") -is:spam"""
+        """OR subject: "CryptUP Account Backup") -is:spam -is:sent -is:trash"""
     val gotString = EmailUtil.getGmailBackupSearchQuery(email)
     assertEquals(expectedString, gotString)
   }
