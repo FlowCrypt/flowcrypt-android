@@ -210,6 +210,8 @@ android {
 
   lint {
     warningsAsErrors = true
+    //we have to disable lint for 'GradleDependency' checks as we use dependabot for dependencies
+    disable += "GradleDependency"
   }
 
   testOptions {

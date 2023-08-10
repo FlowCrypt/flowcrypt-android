@@ -18,6 +18,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.com.sun.mail.imap.canBeUsedToSearchBackups
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ManualHandledException
@@ -163,7 +164,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
     val folders = store.defaultFolder.list("*")
 
     for (folder in folders) {
-      if (!EmailUtil.containsNoSelectAttr(folder as IMAPFolder)) {
+      if ((folder as IMAPFolder).canBeUsedToSearchBackups()) {
         folder.open(Folder.READ_ONLY)
 
         try {
