@@ -960,7 +960,9 @@ class EmailUtil {
         "from:${email}",
         "to:${email}",
         """(subject:"${subjects.joinToString(separator = """" OR subject: """")}")""",
-        "-is:spam"
+        "-is:spam",
+        "-is:sent",
+        "-is:trash",
       )
 
       return parameters.joinToString(separator = " ")

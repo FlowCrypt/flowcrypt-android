@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.com.sun.mail.imap.canBeUsedToSearchBackups
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyDetails
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -27,12 +28,10 @@ import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.MessagingException
-import jakarta.mail.Session
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.util.*
 
 /**
  * This loader finds and returns a user backup of private keys from the mail.
@@ -84,7 +83,6 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
   /**
    * Get a list of [PgpKeyDetails] using the standard JavaMail API
    *
-   * @param session A [Session] object.
    * @return A list of [PgpKeyDetails]
    * @throws MessagingException
    * @throws IOException
@@ -111,8 +109,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
           )
 
           for ((index, folder) in folders.withIndex()) {
-            val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
-            if (!containsNoSelectAttr) {
+            if ((folder as IMAPFolder).canBeUsedToSearchBackups()) {
               folder.open(Folder.READ_ONLY)
 
               val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountEntity.email))
