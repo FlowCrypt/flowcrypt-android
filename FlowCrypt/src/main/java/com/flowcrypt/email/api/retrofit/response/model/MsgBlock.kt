@@ -46,6 +46,9 @@ interface MsgBlock : Parcelable {
     @SerializedName("plainAtt")
     PLAIN_ATT,
 
+    @SerializedName("inlinePlainAtt")
+    INLINE_PLAIN_ATT,
+
     @SerializedName("encryptedAtt")
     ENCRYPTED_ATT,
 

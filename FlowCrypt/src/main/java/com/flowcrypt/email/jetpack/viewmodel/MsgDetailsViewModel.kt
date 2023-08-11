@@ -602,8 +602,8 @@ class MsgDetailsViewModel(
 
       if (item is IMAPBodyPart) {
         if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          val innerMutlipart = item.content as Multipart
-          val innerPart = getPart(innerMutlipart) ?: continue
+          val innerMultipart = item.content as Multipart
+          val innerPart = getPart(innerMultipart) ?: continue
           candidates.add(innerPart)
         } else {
           if (EmailUtil.isPartAllowed(item)) {

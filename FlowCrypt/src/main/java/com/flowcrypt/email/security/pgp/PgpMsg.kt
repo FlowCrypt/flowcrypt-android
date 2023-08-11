@@ -329,10 +329,12 @@ object PgpMsg {
       else -> {
         try {
           val detectedRawBlocks = RawBlockParser.detectBlocks(part, isOpenPGPMimeSigned)
-          val attachmentRawBlocks =
-            detectedRawBlocks.filter { it.type == RawBlockParser.RawBlockType.ATTACHMENT }
+          val attachmentRawBlock =
+            detectedRawBlocks.firstOrNull { it.type == RawBlockParser.RawBlockType.ATTACHMENT }
+          val inlineAttachmentRawBlock =
+            detectedRawBlocks.firstOrNull { it.type == RawBlockParser.RawBlockType.INLINE_ATTACHMENT }
 
-          for (rawBlock in attachmentRawBlocks) {
+          attachmentRawBlock?.let {
             blocks.add(
               MsgBlockFactory.fromAttachment(
                 type = MsgBlock.Type.PLAIN_ATT,
@@ -342,8 +344,21 @@ object PgpMsg {
             )
           }
 
+          inlineAttachmentRawBlock?.let {
+            blocks.add(
+              MsgBlockFactory.fromAttachment(
+                type = MsgBlock.Type.INLINE_PLAIN_ATT,
+                attachment = part as MimePart,
+                isOpenPGPMimeSigned = isOpenPGPMimeSigned
+              )
+            )
+          }
+
           val msgBlocks = processRawBlocks(
-            rawBlocks = detectedRawBlocks - attachmentRawBlocks.toSet(),
+            rawBlocks = detectedRawBlocks.toMutableList().apply {
+              inlineAttachmentRawBlock?.let { remove(it) }
+              inlineAttachmentRawBlock?.let { remove(it) }
+            },
             verificationPublicKeys = verificationPublicKeys,
             secretKeys = secretKeys,
             protector = protector
@@ -1032,8 +1047,9 @@ object PgpMsg {
     }
   }
 
-  private fun prepareFormattedContentBlock(allContentBlocks: List<MsgBlock>):
-      FormattedContentBlockResult {
+  private fun prepareFormattedContentBlock(
+    allContentBlocks: List<MsgBlock>
+  ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
     for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
@@ -1115,8 +1131,13 @@ object PgpMsg {
       val imageName = inlineImg.attMeta.name ?: "(unnamed image)"
       val imageLengthKb = inlineImg.attMeta.length / 1024
       val alt = "$imageName - $imageLengthKb Kb"
-      val inlineImgTag = "<img src=\"data:${inlineImg.attMeta.type ?: ""};base64," +
-          "${inlineImg.attMeta.data ?: ""}\" alt=\"${alt.escapeHtmlAttr()}\" />"
+      val base64data = String(inlineImg.attMeta.data!!).replace("-", "+").replace(
+        "_",
+        "/"
+      )//java.util.Base64.getMimeEncoder().encodeToString(inlineImg.attMeta.data ?: byteArrayOf())
+      val inlineImgTag =
+        "<img src=\"data:${inlineImg.attMeta.type?.replace("\"".toRegex(), "") ?: ""};base64," +
+            "$base64data\" alt=\"${alt.escapeHtmlAttr()}\" />"
       msgContentAsHtml.append(fmtMsgContentBlockAsHtml(inlineImgTag, FrameColor.PLAIN))
       msgContentAsText.append("[image: ${alt}]\n")
     }

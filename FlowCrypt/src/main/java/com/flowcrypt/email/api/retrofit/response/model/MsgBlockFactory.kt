@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import com.flowcrypt.email.security.pgp.PgpKey
+import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimePart
 
 object MsgBlockFactory {
@@ -61,16 +62,19 @@ object MsgBlockFactory {
           )
         }
       }
+
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(
         content = content,
         decryptErr = null,
         isOpenPGPMimeSigned = isOpenPGPMimeSigned
       )
+
       MsgBlock.Type.SIGNED_CONTENT -> SignedMsgBlock(
         content = content,
         signature = signature,
         isOpenPGPMimeSigned = isOpenPGPMimeSigned
       )
+
       else -> GenericMsgBlock(
         type = type,
         content = content,
@@ -86,7 +90,7 @@ object MsgBlockFactory {
   ): MsgBlock {
     try {
       val attContent = attachment.content
-      val data = attachment.inputStream.readBytes()
+      val data = (attachment as MimeBodyPart).rawInputStream.readBytes()
       val attMeta = AttMeta(
         name = attachment.fileName,
         data = data,
@@ -102,16 +106,25 @@ object MsgBlockFactory {
           decryptErr = null,
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
         )
+
         MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(
           content = content,
           attMeta = attMeta,
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
         )
+
         MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(
           content = content,
           attMeta = attMeta,
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
         )
+
+        MsgBlock.Type.INLINE_PLAIN_ATT -> InlinePlaneAttMsgBlock(
+          content = content,
+          attMeta = attMeta,
+          isOpenPGPMimeSigned = isOpenPGPMimeSigned
+        )
+
         else ->
           throw IllegalArgumentException("Can't create block of type ${type.name} from attachment")
       }

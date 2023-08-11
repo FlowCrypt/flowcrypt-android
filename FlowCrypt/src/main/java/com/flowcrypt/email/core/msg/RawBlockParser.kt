@@ -8,11 +8,13 @@ package com.flowcrypt.email.core.msg
 
 import com.flowcrypt.email.core.msg.RawBlockParser.RawBlock
 import com.flowcrypt.email.extensions.jakarta.mail.baseContentType
+import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
 import com.flowcrypt.email.extensions.jakarta.mail.isInline
 import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
 import jakarta.mail.Part
+import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimePart
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -65,61 +67,83 @@ object RawBlockParser {
 
   fun detectBlocks(part: Part, isOpenPGPMimeSigned: Boolean = false): Collection<RawBlock> {
     val mimePart = (part as? MimePart) ?: return emptyList()
-    return if (Part.ATTACHMENT.equals(mimePart.disposition, ignoreCase = true)) {
-      when (treatAs(part)) {
-        TreatAs.HIDDEN -> {
-          // ignore
-          emptyList()
-        }
+    return when {
+      mimePart.isAttachment() -> {
+        when (treatAs(mimePart)) {
+          TreatAs.HIDDEN -> {
+            // ignore
+            emptyList()
+          }
 
-        TreatAs.PGP_MSG -> {
-          listOf(RawBlock(RawBlockType.PGP_MSG, part.inputStream.readBytes(), isOpenPGPMimeSigned))
-        }
+          TreatAs.PGP_MSG -> {
+            listOf(
+              RawBlock(
+                RawBlockType.PGP_MSG,
+                mimePart.inputStream.readBytes(),
+                isOpenPGPMimeSigned
+              )
+            )
+          }
 
-        TreatAs.PUBLIC_KEY -> {
-          listOf(
+          TreatAs.PUBLIC_KEY -> {
+            listOf(
+              RawBlock(
+                RawBlockType.PGP_PUBLIC_KEY,
+                mimePart.inputStream.readBytes(),
+                isOpenPGPMimeSigned
+              )
+            )
+          }
+
+          TreatAs.PRIVATE_KEY -> {
+            listOf(
+              RawBlock(
+                RawBlockType.PGP_PRIVATE_KEY,
+                mimePart.inputStream.readBytes(),
+                isOpenPGPMimeSigned
+              )
+            )
+          }
+
+          else -> listOf(
             RawBlock(
-              RawBlockType.PGP_PUBLIC_KEY,
-              part.inputStream.readBytes(),
+              RawBlockType.ATTACHMENT,
+              mimePart.inputStream.readBytes(),
               isOpenPGPMimeSigned
             )
           )
         }
+      }
 
-        TreatAs.PRIVATE_KEY -> {
-          listOf(
-            RawBlock(
-              RawBlockType.PGP_PRIVATE_KEY,
-              part.inputStream.readBytes(),
-              isOpenPGPMimeSigned
-            )
-          )
-        }
-
-        else -> listOf(
+      mimePart.isInline() && mimePart.contentID != null -> {
+        listOf(
           RawBlock(
-            RawBlockType.ATTACHMENT,
-            part.inputStream.readBytes(),
+            RawBlockType.INLINE_ATTACHMENT,
+            (mimePart as MimeBodyPart).rawInputStream.readBytes(),
             isOpenPGPMimeSigned
           )
         )
       }
-    } else when {
-      "text/rfc822-headers" == part.baseContentType() ||
-          ("application/pgp-encrypted" == part.baseContentType() && part.description == "PGP/MIME version identification")
-      -> {
-        emptyList() //we skip this type of content
-      }
 
-      "text/html" == part.baseContentType() -> listOf(
-        RawBlock(
-          RawBlockType.HTML_TEXT,
-          part.inputStream.readBytes(),
-          isOpenPGPMimeSigned
+      else -> when {
+        "text/rfc822-headers" == mimePart.baseContentType() ||
+            ("application/pgp-encrypted" == mimePart.baseContentType()
+                && mimePart.description == "PGP/MIME version identification")
+        -> {
+          emptyList() //we skip this type of content
+        }
+
+        "text/html" == mimePart.baseContentType() -> listOf(
+          RawBlock(
+            RawBlockType.HTML_TEXT,
+            mimePart.inputStream.readBytes(),
+            isOpenPGPMimeSigned
+          )
         )
-      )
-      else -> detectBlocks(part.inputStream.readText()).map {
-        it.copy(isOpenPGPMimeSigned = isOpenPGPMimeSigned)
+
+        else -> detectBlocks(mimePart.inputStream.readText()).map {
+          it.copy(isOpenPGPMimeSigned = isOpenPGPMimeSigned)
+        }
       }
     }
   }
@@ -307,7 +331,8 @@ object RawBlockParser {
     PGP_CLEARSIGN_MSG,
     PGP_PRIVATE_KEY,
     CERTIFICATE,
-    SIGNATURE;
+    SIGNATURE,
+    INLINE_ATTACHMENT;
   }
 
   enum class TreatAs {
