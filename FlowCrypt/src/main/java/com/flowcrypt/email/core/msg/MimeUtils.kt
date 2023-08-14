@@ -43,10 +43,6 @@ object MimeUtils {
     return MimeMessage(Session.getInstance(Properties()), mimeText.toInputStream())
   }
 
-  private val imageContentTypes = setOf(
-    "image/jpeg", "image/jpg", "image/bmp", "image/png", "image/svg+xml"
-  )
-
   private val CONTENT_TYPE_REGEX = Regex("content-type: +[0-9a-z\\-/]+")
   private val CONTENT_TRANSFER_ENCODING_REGEX = Regex("content-transfer-encoding: +[0-9a-z\\-/]+")
   private val CONTENT_DISPOSITION_REGEX = Regex("content-disposition: +[0-9a-z\\-/]+")
