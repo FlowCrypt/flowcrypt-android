@@ -339,7 +339,8 @@ object PgpMsg {
             blocks.add(
               MsgBlockFactory.fromAttachment(
                 type = MsgBlock.Type.PLAIN_ATT,
-                attachment = part as MimePart,
+                rawBlock = it,
+                mimePart = part as MimePart,
                 isOpenPGPMimeSigned = isOpenPGPMimeSigned
               )
             )
@@ -349,7 +350,8 @@ object PgpMsg {
             blocks.add(
               MsgBlockFactory.fromAttachment(
                 type = MsgBlock.Type.INLINE_PLAIN_ATT,
-                attachment = part as MimePart,
+                rawBlock = it,
+                mimePart = part as MimePart,
                 isOpenPGPMimeSigned = isOpenPGPMimeSigned
               )
             )

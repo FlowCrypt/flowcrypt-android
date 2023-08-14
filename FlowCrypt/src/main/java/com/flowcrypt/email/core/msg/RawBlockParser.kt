@@ -13,8 +13,11 @@ import com.flowcrypt.email.extensions.jakarta.mail.isInline
 import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
+import com.sun.mail.util.BASE64DecoderStream
 import jakarta.mail.Part
+import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimePart
+import java.io.FilterInputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 
@@ -115,10 +118,36 @@ object RawBlockParser {
       }
 
       mimePart.isInline() && mimePart.contentID != null -> {
+        val inputStream = if (part.encoding == "base64") {
+          //We have to use FilterInputStream to replace '-' with '+' and '_' with '/' as Gmail API
+          //uses URL-safe implementation of Base64 encoding.
+          //https://datatracker.ietf.org/doc/html/rfc4648#section-5
+          val filterInputStream =
+            object : FilterInputStream((mimePart as MimeBodyPart).rawInputStream) {
+              override fun read(b: ByteArray?): Int {
+                val byteArray = ByteArray(b?.size ?: 0)
+                val count = super.read(byteArray)
+                byteArray.withIndex().forEach { (index, b) ->
+                  if (b.toInt().toChar() == '-') {
+                    byteArray[index] = '+'.code.toByte()
+                  }
+
+                  if (b.toInt().toChar() == '_') {
+                    byteArray[index] = '/'.code.toByte()
+                  }
+                }
+                b?.let { byteArray.copyInto(it) }
+                return count
+              }
+            }
+
+          BASE64DecoderStream(filterInputStream)
+        } else mimePart.inputStream
+
         listOf(
           RawBlock(
             RawBlockType.INLINE_ATTACHMENT,
-            mimePart.inputStream.readBytes(),
+            inputStream.readBytes(),
             isOpenPGPMimeSigned
           )
         )
