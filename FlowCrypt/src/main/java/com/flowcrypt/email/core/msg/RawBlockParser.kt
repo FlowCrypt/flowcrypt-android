@@ -14,7 +14,6 @@ import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
 import jakarta.mail.Part
-import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimePart
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -119,7 +118,7 @@ object RawBlockParser {
         listOf(
           RawBlock(
             RawBlockType.INLINE_ATTACHMENT,
-            (mimePart as MimeBodyPart).rawInputStream.readBytes(),
+            mimePart.inputStream.readBytes(),
             isOpenPGPMimeSigned
           )
         )

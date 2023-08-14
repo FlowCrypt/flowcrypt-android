@@ -7,6 +7,7 @@
 package com.flowcrypt.email.security.pgp
 
 import android.content.Context
+import android.util.Base64
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
@@ -1131,10 +1132,10 @@ object PgpMsg {
       val imageName = inlineImg.attMeta.name ?: "(unnamed image)"
       val imageLengthKb = inlineImg.attMeta.length / 1024
       val alt = "$imageName - $imageLengthKb Kb"
-      val base64data = String(inlineImg.attMeta.data!!).replace("-", "+").replace(
-        "_",
-        "/"
-      )//java.util.Base64.getMimeEncoder().encodeToString(inlineImg.attMeta.data ?: byteArrayOf())
+      val base64data = Base64.encodeToString(
+        inlineImg.attMeta.data ?: byteArrayOf(),
+        Base64.DEFAULT
+      )
       val inlineImgTag =
         "<img src=\"data:${inlineImg.attMeta.type?.replace("\"".toRegex(), "") ?: ""};base64," +
             "$base64data\" alt=\"${alt.escapeHtmlAttr()}\" />"

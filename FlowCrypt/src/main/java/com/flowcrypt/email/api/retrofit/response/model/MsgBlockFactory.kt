@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
 import com.flowcrypt.email.security.pgp.PgpKey
-import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimePart
 
 object MsgBlockFactory {
@@ -90,7 +89,7 @@ object MsgBlockFactory {
   ): MsgBlock {
     try {
       val attContent = attachment.content
-      val data = (attachment as MimeBodyPart).rawInputStream.readBytes()
+      val data = attachment.inputStream.readBytes()
       val attMeta = AttMeta(
         name = attachment.fileName,
         data = data,
