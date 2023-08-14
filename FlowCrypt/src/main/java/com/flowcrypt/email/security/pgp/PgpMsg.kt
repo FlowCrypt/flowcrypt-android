@@ -1187,14 +1187,14 @@ object PgpMsg {
       if (match.range.first > startPos) {
         result.append(htmlContent.substring(startPos, match.range.first))
       }
-      val cid = match.groupValues[0]
+      val cid = match.groupValues[1]
       val img = inlineImagesByCid[cid]
       if (img != null) {
         img as AttMsgBlock
-        // Typescript comment:
-        // in current usage, as used by `endpoints.ts`: `block.attMeta!.data`
-        // actually contains base64 encoded data, not Uint8Array as the type claims
-        result.append("src=\"data:${img.attMeta.type ?: ""};base64,${img.attMeta.data ?: ""}\"")
+        val base64 = Base64.encodeToString(img.attMeta.data ?: byteArrayOf(), Base64.DEFAULT)
+        result.append(
+          "src=\"data:${img.attMeta.type?.replace("\"".toRegex(), "") ?: ""};base64,$base64\""
+        )
         // Typescript comment:
         // Delete to find out if any imgs were unused. Later we can add the unused ones
         // at the bottom (though as implemented will cause issues if the same cid is reused
