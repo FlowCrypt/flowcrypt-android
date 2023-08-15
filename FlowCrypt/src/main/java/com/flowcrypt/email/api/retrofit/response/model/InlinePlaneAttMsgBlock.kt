@@ -17,7 +17,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-class InlinePlaneAttMsgBlock(
+data class InlinePlaneAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val attMeta: AttMeta,
   @Expose override val error: MsgBlockError? = null,
