@@ -115,5 +115,9 @@ class CustomMatchers {
     fun withTextInputLayoutError(expectedHint: String): TextInputLayoutErrorMatcher {
       return TextInputLayoutErrorMatcher(expectedHint)
     }
+
+    fun withTextContentMatcher(matcher: Matcher<String>): CustomWithTextContentMatcher {
+      return CustomWithTextContentMatcher(matcher)
+    }
   }
 }

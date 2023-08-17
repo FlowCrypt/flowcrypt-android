@@ -24,6 +24,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.model.KeyImportDetails
@@ -287,7 +288,9 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
     //todo-denbond7 improve that in the future
     //we need that to wait while webview rendered content
     Thread.sleep(2000)
-    checkWebViewText(decryptedInfo?.text)
+    decryptedInfo?.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
+      checkWebViewText(it.content)
+    }
   }
 
   private fun prepareAndCheckBaseInfoForMultiplyKeys() {

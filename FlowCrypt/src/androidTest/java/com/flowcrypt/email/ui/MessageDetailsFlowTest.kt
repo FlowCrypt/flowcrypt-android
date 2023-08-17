@@ -43,6 +43,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
@@ -232,7 +233,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/info/encrypted_msg_info_text_with_missing_key_fixed.json",
         IncomingMessageInfo::class.java
       )
-    checkWebViewText(incomingMsgInfoFixed?.text)
+    incomingMsgInfoFixed?.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
+      checkWebViewText(it.content)
+    }
   }
 
   @Test
@@ -1000,7 +1003,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     assertEquals(1, msgInfo?.msgBlocks?.size)
     MatcherAssert.assertThat(msgInfo?.msgBlocks?.first(), instanceOf(GenericMsgBlock::class.java))
 
-    checkWebViewText(msgInfo?.text)
+    msgInfo?.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
+      checkWebViewText(it.content)
+    }
   }
 
   @Test
