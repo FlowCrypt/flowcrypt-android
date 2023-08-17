@@ -395,7 +395,7 @@ dependencies {
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.5.2")
   testImplementation("org.robolectric:robolectric:4.10.3")
-  testImplementation("io.github.classgraph:classgraph:4.8.161")
+  testImplementation("io.github.classgraph:classgraph:4.8.162")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable
@@ -447,7 +447,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.2.0")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20230612-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20230703-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -475,7 +475,7 @@ dependencies {
   implementation("org.jsoup:jsoup:1.16.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-  implementation("ch.acra:acra-http:5.11.0")
+  implementation("ch.acra:acra-http:5.11.1")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
