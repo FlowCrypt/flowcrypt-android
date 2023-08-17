@@ -194,7 +194,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       getMsgInfo(
         "messages/info/encrypted_msg_big_inline_att.json",
         "messages/mime/encrypted_msg_big_inline_att.txt"
-      )
+      ),
+      false
     ) {
       //we need additional time to decrypt a message
       Thread.sleep(30000)

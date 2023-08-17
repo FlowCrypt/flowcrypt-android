@@ -58,6 +58,7 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
+import org.w3c.dom.Node
 
 /**
  * @author Denys Bondarenko
@@ -202,7 +203,17 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
   protected fun checkWebViewText(html: String?) {
     val document = TagSoupDocumentParser.newInstance().parse(html)
     val bodyElements = document.getElementsByTagName("body")
-    val content = (bodyElements.item(1) ?: bodyElements.item(0))?.textContent?.trim()
+
+    val elementList = mutableListOf<Node>()
+    for (position in 0 until bodyElements.length) {
+      elementList.add(bodyElements.item(position))
+    }
+    val content = elementList.joinToString(separator = "") {
+      if (it.textContent.isNotEmpty()) {
+        it.textContent + "\n"
+      } else ""
+    }.trim()
+
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
       .check(webContent(elementByXPath("/html/body", withTextContentMatcher(`is`(content)))))
@@ -246,6 +257,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
 
   protected fun baseCheck(
     incomingMsgInfo: IncomingMessageInfo?,
+    checkWebContent: Boolean = true,
     actionBeforeMatchingReplyButtons: () -> Unit = {}
   ) {
     assertThat(incomingMsgInfo, notNullValue())
@@ -254,8 +266,10 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     launchActivity(details)
     matchHeader(incomingMsgInfo)
 
-    incomingMsgInfo.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
-      checkWebViewText(it.content)
+    if (checkWebContent) {
+      incomingMsgInfo.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
+        checkWebViewText(it.content)
+      }
     }
 
     actionBeforeMatchingReplyButtons.invoke()
