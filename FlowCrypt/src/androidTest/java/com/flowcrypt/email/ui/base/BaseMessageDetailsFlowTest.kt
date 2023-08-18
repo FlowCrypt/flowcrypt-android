@@ -58,7 +58,6 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
-import org.w3c.dom.Node
 
 /**
  * @author Denys Bondarenko
@@ -204,15 +203,12 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     val document = TagSoupDocumentParser.newInstance().parse(html)
     val bodyElements = document.getElementsByTagName("body")
 
-    val elementList = mutableListOf<Node>()
-    for (position in 0 until bodyElements.length) {
-      elementList.add(bodyElements.item(position))
-    }
-    val content = elementList.joinToString(separator = "") {
-      if (it.textContent.isNotEmpty()) {
-        it.textContent + "\n"
-      } else ""
-    }.trim()
+    val content = (0 until bodyElements.length)
+      .asSequence()
+      .map { bodyElements.item(it) }
+      .filter { it.textContent.isNotEmpty() }
+      .joinToString(separator = "\n") { it.textContent }
+      .trim()
 
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
