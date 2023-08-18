@@ -127,13 +127,10 @@ object RawBlockParser {
               override fun read(b: ByteArray?): Int {
                 val byteArray = ByteArray(b?.size ?: 0)
                 val count = super.read(byteArray)
-                byteArray.withIndex().forEach { (index, b) ->
-                  if (b.toInt().toChar() == '-') {
-                    byteArray[index] = '+'.code.toByte()
-                  }
-
-                  if (b.toInt().toChar() == '_') {
-                    byteArray[index] = '/'.code.toByte()
+                byteArray.forEachIndexed { index, byte ->
+                  when (byte.toInt().toChar()) {
+                    '-' -> byteArray[index] = '+'.code.toByte()
+                    '_' -> byteArray[index] = '/'.code.toByte()
                   }
                 }
                 b?.let { byteArray.copyInto(it) }

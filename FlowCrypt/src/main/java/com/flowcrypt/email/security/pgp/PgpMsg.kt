@@ -359,7 +359,7 @@ object PgpMsg {
 
           val msgBlocks = processRawBlocks(
             rawBlocks = detectedRawBlocks.toMutableList().apply {
-              inlineAttachmentRawBlock?.let { remove(it) }
+              attachmentRawBlock?.let { remove(it) }
               inlineAttachmentRawBlock?.let { remove(it) }
             },
             verificationPublicKeys = verificationPublicKeys,
