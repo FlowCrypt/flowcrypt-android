@@ -263,6 +263,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     matchHeader(incomingMsgInfo)
 
     if (checkWebContent) {
+      Thread.sleep(2000)//need to wait while the content will be displayed in WebView
       incomingMsgInfo.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
         checkWebViewText(it.content)
       }
