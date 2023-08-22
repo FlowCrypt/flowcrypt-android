@@ -128,7 +128,7 @@ blocks:
             # wait until ready
             - ./script/ci-wait-for-emulator.sh
             # Run logging
-            - adb logcat --buffer=crash > ~/logcat_log.txt &
+            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
