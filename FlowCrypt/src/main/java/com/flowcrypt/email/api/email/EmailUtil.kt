@@ -961,7 +961,6 @@ class EmailUtil {
         "to:${email}",
         """(subject:"${subjects.joinToString(separator = """" OR subject: """")}")""",
         "-is:spam",
-        "-is:sent",
         "-is:trash",
       )
 
