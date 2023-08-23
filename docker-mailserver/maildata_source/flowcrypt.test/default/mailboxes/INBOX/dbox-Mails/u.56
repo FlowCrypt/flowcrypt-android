@@ -1,0 +1,97 @@
+2 M1e C64db6eae
+N          0000000000000EC6
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id P2EyJK5u22Q+BAAAc/RpdQ
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Tue, 15 Aug 2023 12:25:18 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 900691879B0
+	for <default@flowcrypt.test>; Tue, 15 Aug 2023 12:25:18 +0000 (UTC)
+Content-Type: multipart/alternative;
+ boundary="------------CQCaI3udGV6cWq6VK1FXchIb"
+Message-ID: <562afe7c-a999-0fd9-6d69-46e6a43c370b@flowcrypt.test>
+Date: Tue, 15 Aug 2023 15:25:18 +0300
+Mime-Version: 1.0
+Content-Language: en-US
+To: default@flowcrypt.test
+From: DenBond7 <denbond7@flowcrypt.test>
+Subject: tiny inline img plain
+
+This is a multi-part message in MIME format.
+--------------CQCaI3udGV6cWq6VK1FXchIb
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Below
+Above
+
+--------------CQCaI3udGV6cWq6VK1FXchIb
+Content-Type: multipart/related;
+ boundary="------------r0y5woZ54RgWoLriTiuZ0Qhs"
+
+--------------r0y5woZ54RgWoLriTiuZ0Qhs
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <div style="color: rgb(34, 34, 34); font-family: Arial, Helvetica,
+      sans-serif; font-size: small; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space:
+      normal; background-color: rgb(255, 255, 255);
+      text-decoration-thickness: initial; text-decoration-style:
+      initial; text-decoration-color: initial;">Below</div>
+    <div style="color: rgb(34, 34, 34); font-family: Arial, Helvetica,
+      sans-serif; font-size: small; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space:
+      normal; background-color: rgb(255, 255, 255);
+      text-decoration-thickness: initial; text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <div><img src="cid:part1.G5s51i70.t6TALKOp@flowcrypt.test" alt=""></div>
+    </div>
+    <div style="color: rgb(34, 34, 34); font-family: Arial, Helvetica,
+      sans-serif; font-size: small; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space:
+      normal; background-color: rgb(255, 255, 255);
+      text-decoration-thickness: initial; text-decoration-style:
+      initial; text-decoration-color: initial;">Above</div>
+    <p></p>
+  </body>
+</html>
+--------------r0y5woZ54RgWoLriTiuZ0Qhs
+Content-Type: image/png; name="usvT7OBFN5Dir6yr.png"
+Content-Disposition: inline; filename="usvT7OBFN5Dir6yr.png"
+Content-Id: <part1.G5s51i70.t6TALKOp@flowcrypt.test>
+Content-Transfer-Encoding: base64
+
+iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAA3NCSVQICAjb4U/gAAAAm0lE
+QVQokZVSwRHDIAyTcizVNzN0hWYmWCEz8M5YyqNpMIaQq18+SbZlAyUBIFY8hZAAhK/6zXwR
+mz5Wd1EUhES09GOEmsZ0JmWdgEvjsrSimHqwKWD0E1Q8aCyVwaH6FuOltWe+xsdYhugkBgXa
+cw96S2IGwJs3sWzdQZw2/smCZ6ROSzu57nCiJEir7kZJ7qs6b7a9kPjv9z4ApO9C8yTEUZ4A
+AAAASUVORK5CYII=
+
+--------------r0y5woZ54RgWoLriTiuZ0Qhs--
+
+--------------CQCaI3udGV6cWq6VK1FXchIb--
+
+
+R64db6eae
+Vf1f
+G096e4724ae6edb643e04000073f46975
+

@@ -11,6 +11,10 @@ import com.flowcrypt.email.core.msg.RawBlockParser
 import jakarta.mail.Part
 import jakarta.mail.internet.ContentType
 
+fun Part.isAttachment(): Boolean {
+  return (this.disposition?.lowercase() ?: "") == Part.ATTACHMENT
+}
+
 fun Part.isInline(): Boolean {
   return (this.disposition?.lowercase() ?: "") == Part.INLINE
 }

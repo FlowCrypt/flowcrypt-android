@@ -65,6 +65,7 @@ class EmailWebView : WebView {
     webSettings.loadsImagesAutomatically = true
     webSettings.blockNetworkLoads = true
     webSettings.javaScriptEnabled = false
+    webSettings.allowFileAccess = false
 
     setupDayNight()
   }

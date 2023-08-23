@@ -7,6 +7,7 @@
 package com.flowcrypt.email.security.pgp
 
 import android.content.Context
+import android.util.Base64
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
@@ -329,21 +330,38 @@ object PgpMsg {
       else -> {
         try {
           val detectedRawBlocks = RawBlockParser.detectBlocks(part, isOpenPGPMimeSigned)
-          val attachmentRawBlocks =
-            detectedRawBlocks.filter { it.type == RawBlockParser.RawBlockType.ATTACHMENT }
+          val attachmentRawBlock =
+            detectedRawBlocks.firstOrNull { it.type == RawBlockParser.RawBlockType.ATTACHMENT }
+          val inlineAttachmentRawBlock =
+            detectedRawBlocks.firstOrNull { it.type == RawBlockParser.RawBlockType.INLINE_ATTACHMENT }
 
-          for (rawBlock in attachmentRawBlocks) {
+          attachmentRawBlock?.let {
             blocks.add(
               MsgBlockFactory.fromAttachment(
                 type = MsgBlock.Type.PLAIN_ATT,
-                attachment = part as MimePart,
+                rawBlock = it,
+                mimePart = part as MimePart,
+                isOpenPGPMimeSigned = isOpenPGPMimeSigned
+              )
+            )
+          }
+
+          inlineAttachmentRawBlock?.let {
+            blocks.add(
+              MsgBlockFactory.fromAttachment(
+                type = MsgBlock.Type.INLINE_PLAIN_ATT,
+                rawBlock = it,
+                mimePart = part as MimePart,
                 isOpenPGPMimeSigned = isOpenPGPMimeSigned
               )
             )
           }
 
           val msgBlocks = processRawBlocks(
-            rawBlocks = detectedRawBlocks - attachmentRawBlocks.toSet(),
+            rawBlocks = detectedRawBlocks.toMutableList().apply {
+              attachmentRawBlock?.let { remove(it) }
+              inlineAttachmentRawBlock?.let { remove(it) }
+            },
             verificationPublicKeys = verificationPublicKeys,
             secretKeys = secretKeys,
             protector = protector
@@ -1032,8 +1050,9 @@ object PgpMsg {
     }
   }
 
-  private fun prepareFormattedContentBlock(allContentBlocks: List<MsgBlock>):
-      FormattedContentBlockResult {
+  private fun prepareFormattedContentBlock(
+    allContentBlocks: List<MsgBlock>
+  ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
     for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
@@ -1115,8 +1134,13 @@ object PgpMsg {
       val imageName = inlineImg.attMeta.name ?: "(unnamed image)"
       val imageLengthKb = inlineImg.attMeta.length / 1024
       val alt = "$imageName - $imageLengthKb Kb"
-      val inlineImgTag = "<img src=\"data:${inlineImg.attMeta.type ?: ""};base64," +
-          "${inlineImg.attMeta.data ?: ""}\" alt=\"${alt.escapeHtmlAttr()}\" />"
+      val base64data = Base64.encodeToString(
+        inlineImg.attMeta.data ?: byteArrayOf(),
+        Base64.DEFAULT
+      )
+      val inlineImgTag =
+        "<img src=\"data:${inlineImg.attMeta.type?.replace("\"".toRegex(), "") ?: ""};base64," +
+            "$base64data\" alt=\"${alt.escapeHtmlAttr()}\" />"
       msgContentAsHtml.append(fmtMsgContentBlockAsHtml(inlineImgTag, FrameColor.PLAIN))
       msgContentAsText.append("[image: ${alt}]\n")
     }
@@ -1163,14 +1187,14 @@ object PgpMsg {
       if (match.range.first > startPos) {
         result.append(htmlContent.substring(startPos, match.range.first))
       }
-      val cid = match.groupValues[0]
+      val cid = match.groupValues[1]
       val img = inlineImagesByCid[cid]
       if (img != null) {
         img as AttMsgBlock
-        // Typescript comment:
-        // in current usage, as used by `endpoints.ts`: `block.attMeta!.data`
-        // actually contains base64 encoded data, not Uint8Array as the type claims
-        result.append("src=\"data:${img.attMeta.type ?: ""};base64,${img.attMeta.data ?: ""}\"")
+        val base64 = Base64.encodeToString(img.attMeta.data ?: byteArrayOf(), Base64.DEFAULT)
+        result.append(
+          "src=\"data:${img.attMeta.type?.replace("\"".toRegex(), "") ?: ""};base64,$base64\""
+        )
         // Typescript comment:
         // Delete to find out if any imgs were unused. Later we can add the unused ones
         // at the bottom (though as implemented will cause issues if the same cid is reused

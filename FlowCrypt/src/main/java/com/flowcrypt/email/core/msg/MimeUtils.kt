@@ -6,10 +6,11 @@
 
 package com.flowcrypt.email.core.msg
 
+import com.flowcrypt.email.api.retrofit.response.model.InlinePlaneAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.PlainAttMsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import jakarta.mail.Session
+import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.MimeMessage
 import java.nio.charset.StandardCharsets
 import java.util.Properties
@@ -22,25 +23,25 @@ object MimeUtils {
       .lowercase()
     val contentType = CONTENT_TYPE_REGEX.find(firstChars) ?: return false
     return CONTENT_TRANSFER_ENCODING_REGEX.containsMatchIn(firstChars)
-      || CONTENT_DISPOSITION_REGEX.containsMatchIn(firstChars)
-      || firstChars.contains(BOUNDARY_1)
-      || firstChars.contains(CHARSET)
-      || (contentType.range.first == 0 && firstChars.contains(BOUNDARY_2))
+        || CONTENT_DISPOSITION_REGEX.containsMatchIn(firstChars)
+        || firstChars.contains(BOUNDARY_1)
+        || firstChars.contains(CHARSET)
+        || (contentType.range.first == 0 && firstChars.contains(BOUNDARY_2))
   }
 
   fun isPlainImgAtt(block: MsgBlock): Boolean {
-    return (block is PlainAttMsgBlock)
-        && block.attMeta.type != null
-        && imageContentTypes.contains(block.attMeta.type)
+    return try {
+      ((block is InlinePlaneAttMsgBlock)
+          && ContentType(block.attMeta.type ?: "").match("image/*"))
+    } catch (e: Exception) {
+      e.printStackTrace()
+      false
+    }
   }
 
-  fun mimeTextToMimeMessage(mimeText: String) : MimeMessage {
+  fun mimeTextToMimeMessage(mimeText: String): MimeMessage {
     return MimeMessage(Session.getInstance(Properties()), mimeText.toInputStream())
   }
-
-  private val imageContentTypes = setOf(
-    "image/jpeg", "image/jpg", "image/bmp", "image/png", "image/svg+xml"
-  )
 
   private val CONTENT_TYPE_REGEX = Regex("content-type: +[0-9a-z\\-/]+")
   private val CONTENT_TRANSFER_ENCODING_REGEX = Regex("content-transfer-encoding: +[0-9a-z\\-/]+")

@@ -7,6 +7,7 @@
 package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
+import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.security.pgp.PgpKey
 import jakarta.mail.internet.MimePart
 
@@ -61,16 +62,19 @@ object MsgBlockFactory {
           )
         }
       }
+
       MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(
         content = content,
         decryptErr = null,
         isOpenPGPMimeSigned = isOpenPGPMimeSigned
       )
+
       MsgBlock.Type.SIGNED_CONTENT -> SignedMsgBlock(
         content = content,
         signature = signature,
         isOpenPGPMimeSigned = isOpenPGPMimeSigned
       )
+
       else -> GenericMsgBlock(
         type = type,
         content = content,
@@ -81,20 +85,21 @@ object MsgBlockFactory {
 
   fun fromAttachment(
     type: MsgBlock.Type,
-    attachment: MimePart,
+    rawBlock: RawBlockParser.RawBlock,
+    mimePart: MimePart,
     isOpenPGPMimeSigned: Boolean
   ): MsgBlock {
     try {
-      val attContent = attachment.content
-      val data = attachment.inputStream.readBytes()
+      val attContent = mimePart.content
+      val data = rawBlock.content
       val attMeta = AttMeta(
-        name = attachment.fileName,
+        name = mimePart.fileName,
         data = data,
         length = data.size.toLong(),
-        type = attachment.contentType,
-        contentId = attachment.contentID
+        type = mimePart.contentType,
+        contentId = mimePart.contentID
       )
-      val content = if (attContent is String) attachment.content as String else null
+      val content = if (attContent is String) mimePart.content as String else null
       return when (type) {
         MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(
           content = null,
@@ -102,16 +107,25 @@ object MsgBlockFactory {
           decryptErr = null,
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
         )
+
         MsgBlock.Type.ENCRYPTED_ATT -> EncryptedAttMsgBlock(
           content = content,
           attMeta = attMeta,
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
         )
+
         MsgBlock.Type.PLAIN_ATT -> PlainAttMsgBlock(
           content = content,
           attMeta = attMeta,
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
         )
+
+        MsgBlock.Type.INLINE_PLAIN_ATT -> InlinePlaneAttMsgBlock(
+          content = content,
+          attMeta = attMeta,
+          isOpenPGPMimeSigned = isOpenPGPMimeSigned
+        )
+
         else ->
           throw IllegalArgumentException("Can't create block of type ${type.name} from attachment")
       }

@@ -24,6 +24,11 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.web.assertion.WebViewAssertions.webMatches
+import androidx.test.espresso.web.model.Atoms
+import androidx.test.espresso.web.sugar.Web.onWebView
+import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
+import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
@@ -38,6 +43,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
@@ -60,6 +66,7 @@ import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
@@ -187,7 +194,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       getMsgInfo(
         "messages/info/encrypted_msg_big_inline_att.json",
         "messages/mime/encrypted_msg_big_inline_att.txt"
-      )
+      ),
+      false
     ) {
       //we need additional time to decrypt a message
       Thread.sleep(30000)
@@ -226,7 +234,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/info/encrypted_msg_info_text_with_missing_key_fixed.json",
         IncomingMessageInfo::class.java
       )
-    checkWebViewText(incomingMsgInfoFixed?.text)
+    incomingMsgInfoFixed?.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
+      checkWebViewText(it.content)
+    }
   }
 
   @Test
@@ -994,7 +1004,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     assertEquals(1, msgInfo?.msgBlocks?.size)
     MatcherAssert.assertThat(msgInfo?.msgBlocks?.first(), instanceOf(GenericMsgBlock::class.java))
 
-    checkWebViewText(msgInfo?.text)
+    msgInfo?.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
+      checkWebViewText(it.content)
+    }
   }
 
   @Test
@@ -1055,6 +1067,36 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
         "messages/mime/encrypted_subject_openpgp_mime_not_signed.txt"
       )
     )
+  }
+
+  @Test
+  fun testDisplayingTinyInlineAttachment() {
+    val imgSrc = "data:image/png;%20name=usvT7OBFN5Dir6yr.png;base64,iVBORw0KGgoAAAANSUhEUg" +
+        "AAABAAAAAQCAIAAACQkWg2AAAAA3NCSVQICAjb4U/gAAAAm0lEQVQo%0akZVSwRHDIAyTcizVNzN0hWYmW" +
+        "CEz8M5YyqNpMIaQq18+SbZlAyUBIFY8hZAAhK/6zXwRmz5Wd1EU%0ahES09GOEmsZ0JmWdgEvjsrSimHqw" +
+        "KWD0E1Q8aCyVwaH6FuOltWe+xsdYhugkBgXacw96S2IGwJs3%0asWzdQZw2/smCZ6ROSzu57nCiJEir7kZ" +
+        "J7qs6b7a9kPjv9z4ApO9C8yTEUZ4AAAAASUVORK5CYII="
+    val xpath = "/html/body/div/div[2]/div/img"
+
+    baseCheck(
+      getMsgInfo(
+        "messages/info/tiny_inline_attachment.json",
+        "messages/mime/tiny_inline_attachment.txt"
+      )
+    )
+
+    Thread.sleep(2000)
+
+    val imgSrcViaJavaScript = Atoms.script(
+      "function getCurrentUrl() {return document.evaluate('$xpath', document, null," +
+          " XPathResult.ANY_TYPE, null).iterateNext().getAttribute('src');}",
+      Atoms.castOrDie(String::class.java)
+    )
+
+    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.emailWebView))
+      .withElement(findElement(Locator.XPATH, xpath))
+      .check(webMatches(imgSrcViaJavaScript, equalTo(imgSrc)))
   }
 
   private fun checkQuotesFunctionality(incomingMessageInfo: IncomingMessageInfo?) {

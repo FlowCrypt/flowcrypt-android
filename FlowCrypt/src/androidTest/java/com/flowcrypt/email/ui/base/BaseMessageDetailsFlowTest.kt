@@ -24,22 +24,23 @@ import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.web.assertion.WebViewAssertions.webMatches
+import androidx.test.espresso.web.assertion.TagSoupDocumentParser
+import androidx.test.espresso.web.assertion.WebViewAssertions.webContent
+import androidx.test.espresso.web.matcher.DomMatchers.elementByXPath
 import androidx.test.espresso.web.sugar.Web.onWebView
-import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
-import androidx.test.espresso.web.webdriver.DriverAtoms.getText
-import androidx.test.espresso.web.webdriver.Locator
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextContentMatcher
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withToolBarText
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
@@ -50,10 +51,10 @@ import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
@@ -198,11 +199,21 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .check(matches(withText(Formatter.formatFileSize(getContext(), att.encodedSize))))
   }
 
-  protected fun checkWebViewText(text: String?) {
+  protected fun checkWebViewText(html: String?) {
+    val document = TagSoupDocumentParser.newInstance().parse(html)
+    val bodyElements = document.getElementsByTagName("body")
+
+    val content = (0 until bodyElements.length)
+      .asSequence()
+      .map { bodyElements.item(it) }
+      .filter { it.textContent.isNotEmpty() }
+      .joinToString(separator = "\n") { it.textContent }
+      .trim()
+
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
-      .withElement(findElement(Locator.XPATH, "/html/body"))
-      .check(webMatches(getText(), equalTo(text)))
+      .check(webContent(elementByXPath("/html/body", withTextContentMatcher(`is`(content)))))
+    //.check(webContent(withBody(withTextContentMatcher(`is`(content)))))
   }
 
   protected fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
@@ -242,6 +253,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
 
   protected fun baseCheck(
     incomingMsgInfo: IncomingMessageInfo?,
+    checkWebContent: Boolean = true,
     actionBeforeMatchingReplyButtons: () -> Unit = {}
   ) {
     assertThat(incomingMsgInfo, notNullValue())
@@ -250,7 +262,13 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     launchActivity(details)
     matchHeader(incomingMsgInfo)
 
-    //checkWebViewText(incomingMsgInfo.text)
+    if (checkWebContent) {
+      Thread.sleep(2000)//need to wait while the content will be displayed in WebView
+      incomingMsgInfo.msgBlocks?.firstOrNull { it.type == MsgBlock.Type.PLAIN_HTML }?.let {
+        checkWebViewText(it.content)
+      }
+    }
+
     actionBeforeMatchingReplyButtons.invoke()
     matchReplyButtons(details)
   }
