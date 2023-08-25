@@ -24,7 +24,10 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.web.assertion.WebViewAssertions.webContent
 import androidx.test.espresso.web.assertion.WebViewAssertions.webMatches
+import androidx.test.espresso.web.matcher.DomMatchers.elementByXPath
+import androidx.test.espresso.web.matcher.DomMatchers.withTextContent
 import androidx.test.espresso.web.model.Atoms
 import androidx.test.espresso.web.sugar.Web.onWebView
 import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
@@ -1097,6 +1100,33 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onWebView(withId(R.id.emailWebView))
       .withElement(findElement(Locator.XPATH, xpath))
       .check(webMatches(imgSrcViaJavaScript, equalTo(imgSrc)))
+  }
+
+  @Test
+  fun testCorrectHandlingOfOpenPGPMIME() {
+    val msgInfo = getMsgInfo(
+      "messages/info/open_pgp_mime_with_inlined_attachments.json",
+      "messages/mime/open_pgp_mime_with_inlined_attachments.txt"
+    )
+
+    assertEquals(4, msgInfo?.msgBlocks?.size)
+    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo?.msgBlocks?.get(0)?.type)
+    assertEquals(MsgBlock.Type.ENCRYPTED_SUBJECT, msgInfo?.msgBlocks?.get(1)?.type)
+    assertEquals(MsgBlock.Type.DECRYPTED_ATT, msgInfo?.msgBlocks?.get(2)?.type)
+    assertEquals(MsgBlock.Type.PUBLIC_KEY, msgInfo?.msgBlocks?.get(3)?.type)
+
+    baseCheck(msgInfo)
+
+    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.emailWebView))
+      .check(
+        webContent(
+          elementByXPath(
+            "/html/body",
+            withTextContent(not(containsString("Version: 1")))
+          )
+        )
+      )
   }
 
   private fun checkQuotesFunctionality(incomingMessageInfo: IncomingMessageInfo?) {

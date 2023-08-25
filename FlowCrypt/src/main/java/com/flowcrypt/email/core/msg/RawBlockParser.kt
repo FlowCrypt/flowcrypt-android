@@ -160,7 +160,8 @@ object RawBlockParser {
         "application/pgp-encrypted" == mimePart.baseContentType() &&
             "multipart/encrypted" == ((mimePart as? MimeBodyPart)?.parent as? MimeMultipart)?.baseContentType()
         -> {
-          emptyList() //we skip this type of content
+          //we skip part with content type "application/pgp-encrypted" as not informative for a user
+          emptyList()
         }
 
         "text/html" == mimePart.baseContentType() -> listOf(

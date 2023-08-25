@@ -1,10 +1,16 @@
 {
   "encryptionType": "ENCRYPTED",
+  "inlineSubject": "\u003cfont color\u003d\u0027#31A217\u0027\u003eEncrypted subject:\u003c/font\u003e OpenPGP/MIME with inlined attachment",
   "msgBlocks": [
     {
       "content": "          \u003c!DOCTYPE html\u003e\n          \u003chtml\u003e\n          \u003chead\u003e\n              \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\"/\u003e\n              \u003cstyle\u003e\n                body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n                body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n                body pre { white-space: pre-wrap !important; }\n                body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n              \u003c/style\u003e\n          \u003c/head\u003e\n          \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock GREEN\" style\u003d\"padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: 1px solid #f0f0f0;border-left: 8px solid #31A217;border-right: none;background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4AAAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJdU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3SlrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQWoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC);\"\u003e\u003chtml\u003e\u003chead\u003e\u003c/head\u003e\u003cbody\u003eOpenPGP/MIME with inlined attachment\u003c/body\u003e\u003c/html\u003e\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n          \u003c/html\u003e",
       "isOpenPGPMimeSigned": false,
       "type": "plainHtml"
+    },
+    {
+      "content": "OpenPGP/MIME with inlined attachment",
+      "isOpenPGPMimeSigned": false,
+      "type": "encryptedSubject"
     },
     {
       "attMeta": {
@@ -3747,6 +3753,7 @@
     "hasAttachments": false,
     "id": 204,
     "isDraft": false,
+    "isEncrypted": true,
     "isOutboxMsg": false,
     "isPasswordProtected": false,
     "isSeen": true,
@@ -3769,8 +3776,7 @@
     ],
     "toAddress": "default@flowcrypt.test",
     "uid": 52,
-    "uidAsHEX": "34",
-    "isEncrypted": true
+    "uidAsHEX": "34"
   },
   "text": "OpenPGP/MIME with inlined attachment",
   "verificationResult": {
