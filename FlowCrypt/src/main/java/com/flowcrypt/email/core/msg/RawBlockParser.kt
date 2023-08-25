@@ -16,6 +16,7 @@ import com.flowcrypt.email.security.pgp.PgpArmor
 import com.sun.mail.util.BASE64DecoderStream
 import jakarta.mail.Part
 import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMultipart
 import jakarta.mail.internet.MimePart
 import java.io.FilterInputStream
 import java.io.InputStream
@@ -151,9 +152,13 @@ object RawBlockParser {
       }
 
       else -> when {
-        "text/rfc822-headers" == mimePart.baseContentType() ||
-            ("application/pgp-encrypted" == mimePart.baseContentType()
-                && mimePart.description == "PGP/MIME version identification")
+        "text/rfc822-headers" == mimePart.baseContentType() -> {
+          emptyList() //we skip this type of content
+        }
+
+        //https://github.com/FlowCrypt/flowcrypt-android/issues/2402
+        "application/pgp-encrypted" == mimePart.baseContentType() &&
+            "multipart/encrypted" == ((mimePart as? MimeBodyPart)?.parent as? MimeMultipart)?.baseContentType()
         -> {
           emptyList() //we skip this type of content
         }
