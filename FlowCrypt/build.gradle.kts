@@ -388,7 +388,7 @@ dependencies {
   androidTestImplementation("androidx.work:work-testing:2.8.1")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.11.0")
-  androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.5.2")
+  androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
   androidTestUtil("androidx.test:orchestrator:1.4.2")
 
   testImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
