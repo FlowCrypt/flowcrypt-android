@@ -942,7 +942,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
-            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            val isAttachmentAlreadyAdded = attachmentsRecyclerViewAdapter.currentList.any {
+              it.type == decryptAtt.attMeta.type
+                  && it.name == FileAndDirectoryUtils.normalizeFileName(decryptAtt.attMeta.name)
+                  && it.encodedSize == decryptAtt.attMeta.length
+                  && it.isDecrypted
+                  && it.email == account?.email
+            }
+
+            if (!isAttachmentAlreadyAdded) {
+              inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            }
           } else {
             handleOtherBlock(block, layoutInflater)
           }
@@ -960,8 +970,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
 
     if (inlineEncryptedAtts.isNotEmpty()) {
-      inlineEncryptedAtts.addAll(attachmentsRecyclerViewAdapter.currentList)
-      attachmentsRecyclerViewAdapter.submitList(inlineEncryptedAtts)
+      attachmentsRecyclerViewAdapter.submitList(
+        attachmentsRecyclerViewAdapter.currentList + inlineEncryptedAtts
+      )
     }
   }
 
@@ -1551,7 +1562,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
       }.filterNot { it.isHidden() }.toMutableList()
 
-      attachmentsRecyclerViewAdapter.submitList(attachmentInfoList)
+      val existingInlinedAttachments =
+        attachmentsRecyclerViewAdapter.currentList.filter { it.rawData != null }
+
+      attachmentsRecyclerViewAdapter.submitList(attachmentInfoList + existingInlinedAttachments)
       if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
         msgDetailsViewModel.fetchAttachments()
       }
