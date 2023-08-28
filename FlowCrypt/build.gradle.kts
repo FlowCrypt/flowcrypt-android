@@ -360,7 +360,7 @@ val devDebugImplementation by configurations.creating
 val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
-  ksp("com.github.bumptech.glide:ksp:4.15.1")
+  ksp("com.github.bumptech.glide:ksp:4.16.0")
   ksp("androidx.annotation:annotation:1.6.0")
   ksp("androidx.room:room-compiler:2.5.2")
   //ACRA needs the following dependency to use a custom report sender
@@ -399,7 +399,7 @@ dependencies {
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.10")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -464,8 +464,8 @@ dependencies {
 
   implementation("org.pgpainless:pgpainless-core:1.6.1")
 
-  implementation("com.github.bumptech.glide:glide:4.15.1")
-  implementation("com.nulab-inc:zxcvbn:1.8.1")
+  implementation("com.github.bumptech.glide:glide:4.16.0")
+  implementation("com.nulab-inc:zxcvbn:1.8.2")
   implementation("commons-io:commons-io:2.13.0")
   implementation("com.burhanrashid52:photoeditor:3.0.1")
   implementation("net.openid:appauth:0.11.1")
