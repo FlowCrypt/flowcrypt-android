@@ -5,10 +5,10 @@
 
 package com.flowcrypt.email.database.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import com.flowcrypt.email.database.entity.AttachmentEntity
+import kotlinx.coroutines.flow.Flow
 
 /**
  * @author Denys Bondarenko
@@ -30,7 +30,7 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
   ): List<AttachmentEntity>
 
   @Query("SELECT * FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
-  fun getAttachmentsLD(account: String, label: String, uid: Long): LiveData<List<AttachmentEntity>>
+  fun getAttachmentsFlow(account: String, label: String, uid: Long): Flow<List<AttachmentEntity>>
 
   @Query("DELETE FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
   fun deleteAtt(account: String, label: String, uid: Long): Int

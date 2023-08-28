@@ -942,17 +942,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
-            val isAttachmentAlreadyAdded = attachmentsRecyclerViewAdapter.currentList.any {
-              it.type == decryptAtt.attMeta.type
-                  && it.name == FileAndDirectoryUtils.normalizeFileName(decryptAtt.attMeta.name)
-                  && it.encodedSize == decryptAtt.attMeta.length
-                  && it.isDecrypted
-                  && it.email == account?.email
-            }
-
-            if (!isAttachmentAlreadyAdded) {
-              inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
-            }
+            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
           } else {
             handleOtherBlock(block, layoutInflater)
           }
@@ -970,9 +960,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
 
     if (inlineEncryptedAtts.isNotEmpty()) {
-      attachmentsRecyclerViewAdapter.submitList(
-        attachmentsRecyclerViewAdapter.currentList + inlineEncryptedAtts
-      )
+      msgDetailsViewModel.updateInlinedAttachments(inlineEncryptedAtts)
     }
   }
 
@@ -1421,7 +1409,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun setupMsgDetailsViewModel() {
     observeFreshMsgLiveData()
     observerIncomingMessageInfoLiveData()
-    observeAttsLiveData()
+    collectAttachmentsFlow()
     observerMsgStatesLiveData()
     observerPassphraseNeededLiveData()
   }
@@ -1552,22 +1540,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
-  private fun observeAttsLiveData() {
-    msgDetailsViewModel.attsLiveData.observe(viewLifecycleOwner) { list ->
-      val attachmentInfoList = list.map {
-        if (args.localFolder.searchQuery.isNullOrEmpty()) {
-          it.toAttInfo()
-        } else {
-          it.toAttInfo().copy(folder = args.localFolder.fullName)
+  private fun collectAttachmentsFlow() {
+    launchAndRepeatWithViewLifecycle {
+      msgDetailsViewModel.attachmentsFlow.collect { attachmentInfoList ->
+        attachmentsRecyclerViewAdapter.submitList(attachmentInfoList)
+        if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
+          msgDetailsViewModel.fetchAttachments()
         }
-      }.filterNot { it.isHidden() }.toMutableList()
-
-      val existingInlinedAttachments =
-        attachmentsRecyclerViewAdapter.currentList.filter { it.rawData != null }
-
-      attachmentsRecyclerViewAdapter.submitList(attachmentInfoList + existingInlinedAttachments)
-      if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
-        msgDetailsViewModel.fetchAttachments()
       }
     }
   }
