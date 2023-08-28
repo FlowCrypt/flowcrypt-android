@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.protocol
 
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.BodyPart
 import jakarta.mail.MessagingException
@@ -61,7 +62,7 @@ class ImapProtocolUtil {
 
           if (partsCount > position) {
             val bodyPart = multiPart.getBodyPart(position)
-            if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
+            if (bodyPart.isAttachment()) {
               return bodyPart
             }
           }
