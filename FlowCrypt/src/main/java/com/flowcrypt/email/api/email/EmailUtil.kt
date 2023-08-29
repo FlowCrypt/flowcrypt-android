@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -342,7 +343,7 @@ class EmailUtil {
         for (partCount in 0 until partsCount) {
           val part = multipart.getBodyPart(partCount)
           if (part is MimeBodyPart) {
-            if (Part.ATTACHMENT.equals(part.disposition, ignoreCase = true)) {
+            if (part.isAttachment()) {
               return IOUtils.toString(part.inputStream, StandardCharsets.UTF_8)
             }
           }
@@ -761,7 +762,7 @@ class EmailUtil {
             )
           )
         }
-      } else if (Part.ATTACHMENT.equals(part.disposition, ignoreCase = true)) {
+      } else if (part.isAttachment()) {
         val attachmentInfoBuilder = AttachmentInfo.Builder()
         attachmentInfoBuilder.name = part.fileName ?: depth
         attachmentInfoBuilder.encodedSize = part.size.toLong()
@@ -797,7 +798,7 @@ class EmailUtil {
               if (hasAtt) {
                 return true
               }
-            } else if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
+            } else if (bodyPart.isAttachment()) {
               return true
             }
           }
@@ -916,20 +917,26 @@ class EmailUtil {
      * @return true if the given part is allowed, otherwise - false
      */
     fun isPartAllowed(item: MimeBodyPart): Boolean {
-      val isAttachment = Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)
+      val isAttachment = item.isAttachment()
+      val fileName = try {
+        item.fileName
+      } catch (e: Exception) {
+        //return empty file name if we can not recognize it
+        ""
+      }
       val backupsPattern = "(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()
       val pgpKeysPattern = "(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()
 
       return when {
         isAttachment && (
             //match allowed files
-            item.fileName in ALLOWED_FILE_NAMES ||
+            fileName in ALLOWED_FILE_NAMES ||
                 //match private keys(backups)
-                item.fileName?.matches(backupsPattern) == true ||
+                fileName?.matches(backupsPattern) == true ||
                 //match PGP keys by name and extension
-                item.fileName?.matches(pgpKeysPattern) == true ||
+                fileName?.matches(pgpKeysPattern) == true ||
                 //allow download keys less than 100kb
-                FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 10240 ||
+                FilenameUtils.getExtension(fileName) in KEYS_EXTENSIONS && item.size < 10240 ||
                 //match signature
                 item.isMimeType("application/pgp-signature")
             ) -> true

@@ -12,7 +12,13 @@ import jakarta.mail.Part
 import jakarta.mail.internet.ContentType
 
 fun Part.isAttachment(): Boolean {
-  return (this.disposition?.lowercase() ?: "") == Part.ATTACHMENT
+  return try {
+    Part.ATTACHMENT.equals(disposition, ignoreCase = true)
+  } catch (e: Exception) {
+    //https://github.com/FlowCrypt/flowcrypt-android/issues/2425
+    val contentHeader = allHeaders.toList().first { it.name.equals("Content-Disposition", true) }
+    contentHeader.value.matches("(?i)(^attachment.*)".toRegex())
+  }
 }
 
 fun Part.isInline(): Boolean {
