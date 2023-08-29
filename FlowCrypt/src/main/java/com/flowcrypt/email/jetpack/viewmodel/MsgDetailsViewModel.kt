@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.javamail.CustomMimeMessage
 import com.flowcrypt.email.api.email.javamail.CustomMimeMultipart
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -63,9 +64,13 @@ import jakarta.mail.Store
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -246,11 +251,29 @@ class MsgDetailsViewModel(
     }
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
-  val attsLiveData = roomDatabase.attachmentDao().getAttachmentsLD(
+  private val inlinedAttachmentsMutableStateFlow: MutableStateFlow<List<AttachmentInfo>> =
+    MutableStateFlow(emptyList())
+  private val inlinedAttachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
+    inlinedAttachmentsMutableStateFlow.asStateFlow()
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val separatedAttachmentsFlow = roomDatabase.attachmentDao().getAttachmentsFlow(
     account = messageEntity.email,
     label = messageEntity.folder,
     uid = messageEntity.uid
-  )
+  ).mapLatest { list ->
+    list.map {
+      if (localFolder.searchQuery.isNullOrEmpty()) {
+        it.toAttInfo()
+      } else {
+        it.toAttInfo().copy(folder = localFolder.fullName)
+      }
+    }.filterNot { it.isHidden() }.toMutableList()
+  }
+
+  val attachmentsFlow = combine(separatedAttachmentsFlow, inlinedAttachmentsStateFlow) { a, b ->
+    a + b
+  }
 
   private val controlledRunnerForSignaturesReverification =
     ControlledRunner<Result<VerificationResult>>()
@@ -290,6 +313,10 @@ class MsgDetailsViewModel(
     processingMsgLiveData.addSource(processingNonOutgoingMsgLiveData) {
       processingMsgLiveData.value = it
     }
+  }
+
+  fun updateInlinedAttachments(attachments: List<AttachmentInfo>) {
+    inlinedAttachmentsMutableStateFlow.update { attachments }
   }
 
   fun changeMsgState(newMsgState: MessageState) {
