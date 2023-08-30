@@ -8,6 +8,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:filterTouchesWhenObscured="true"
     tools:context="com.flowcrypt.email.ui.activity.CreateMessageActivity">
 
     <com.google.android.material.appbar.AppBarLayout
