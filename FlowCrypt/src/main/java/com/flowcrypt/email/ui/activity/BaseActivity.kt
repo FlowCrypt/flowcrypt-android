@@ -6,12 +6,14 @@
 package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -51,6 +53,10 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    //https://github.com/FlowCrypt/flowcrypt-android/issues/2442
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      setRecentsScreenshotEnabled(false)
+    }
     LogsUtil.d(tag, "onCreate")
 
     addMenuProvider(object : MenuProvider {
@@ -115,6 +121,20 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   override fun onDestroy() {
     super.onDestroy()
     LogsUtil.d(tag, "onDestroy")
+  }
+
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    super.onWindowFocusChanged(hasFocus)
+    if (hasFocus) {
+      // allow screenshots when activity is focused
+      window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    } else {
+      // hide information (blank view) on app switcher
+      window.setFlags(
+        WindowManager.LayoutParams.FLAG_SECURE,
+        WindowManager.LayoutParams.FLAG_SECURE
+      )
+    }
   }
 
   protected open fun initViews() {
