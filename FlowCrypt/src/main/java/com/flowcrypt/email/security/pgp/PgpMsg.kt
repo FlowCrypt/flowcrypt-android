@@ -70,18 +70,28 @@ import kotlin.random.Random
 object PgpMsg {
   private const val GENERAL_CSS =
     "padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;"
-  private const val SEAMLESS_LOCK_BG = "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw" +
-      "8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD" +
-      "w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8P" +
-      "Dw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4A" +
-      "AAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d" +
-      "84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+" +
-      "Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJ" +
-      "dU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9" +
-      "Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3S" +
-      "lrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctD" +
-      "CVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQ" +
-      "WoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC"
+  private const val SEAMLESS_LOCK_BG_LIGHT =
+    "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw" +
+        "8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD" +
+        "w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8P" +
+        "Dw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4A" +
+        "AAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d" +
+        "84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+" +
+        "Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJ" +
+        "dU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9" +
+        "Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3S" +
+        "lrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctD" +
+        "CVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQ" +
+        "WoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC"
+  private const val SEAMLESS_LOCK_BG_DARK = "iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAB" +
+      "GdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAACxMAAAsTAQCanBgAAABCUExURUdwTAAAAAAAAAAA" +
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHPTtPsAAAAWdFJ" +
+      "OUwAQbDIRQwiFQnQhUxl9SilkOzpLa2NiUIRSAAABRElEQVRYw+3ZTXOEMAgGYIwhEExstx///6/2sJ09roBy6J" +
+      "b34MXhGZ1dCUYAXZgeYbg2Sb8EPdZHBmQyfzlre37+zS0jPa8VQre8Ht2V00ZFs/DZqGpDHw4blQ2OzTaqW6fVR" +
+      "kNTttloavcWG40Lid5G8xKltdGx+Onsm2tZ1dirc8FmugXJAHzQceTEkMEkQR34XG0mc232oL+j7ED0GSFvRDDK" +
+      "4bjhmbuoDAChLeKiBwDUGHoB4J0Ky8U/IRfaGSLe1+5vgkm/Bi0iIvVauoqICGQymROP0fsSVVt799qHpW5bUei" +
+      "0VWUuW1nksJu2pPbebHJRX0ztpcXIRtskm2yjbLDNstp2yErbJavsVqZvd7/OI3ub3u8GYz4fU2T6v0i0k+czmX" +
+      "8+/8y5LSFyp69v6hFP4E78e4jZhwjZhrjvQ1joHzaDDNBRxE1iAAAAAElFTkSuQmCC"
   private const val FC_INNER_TEXT_TYPE_ATTR = "data-fc-inner-text-type"
   private const val FC_FROM_IMAGE_ATTR = "data-fc-is-from-image"
 
@@ -104,7 +114,7 @@ object PgpMsg {
 
   private val FRAME_CSS_MAP = mapOf(
     FrameColor.GREEN to "border: 1px solid #f0f0f0;border-left: 8px solid #31A217;" +
-        "border-right: none;background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG});",
+        "border-right: none;",
     FrameColor.GRAY to "border: 1px solid #f0f0f0;border-left: 8px solid #989898;" +
         "border-right: none;",
     FrameColor.RED to "border: 1px solid #f0f0f0;border-left: 8px solid #d14836;" +
@@ -1159,6 +1169,13 @@ object PgpMsg {
                 body img { display: inline !important; height: auto !important; max-width: 95% !important; }
                 body pre { white-space: pre-wrap !important; }
                 body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
+                @media (prefers-color-scheme: dark) {
+                  .MsgBlock.GREEN   { background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG_DARK}); }
+                }
+
+                @media (prefers-color-scheme: light) {
+                  .MsgBlock.GREEN   { background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG_LIGHT}); }
+                }
               </style>
           </head>
           <body>$msgContentAsHtml</body>
