@@ -318,15 +318,30 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels)
       mailLabels?.subMenu?.clear()
 
-      it?.getSortedNames()?.forEach { name ->
-        mailLabels?.subMenu?.add(name)
-        if (JavaEmailConstants.FOLDER_OUTBOX == name) {
-          addOutboxLabel(it, mailLabels, name)
+      it?.getSortedServerFolders()?.forEach { localFolder ->
+        mailLabels?.subMenu?.add(localFolder.folderAlias)?.apply {
+          setIcon(
+            FoldersManager.getFolderIcon(
+              localFolder = localFolder,
+              isGoogleSignInAccount = activeAccount?.isGoogleSignInAccount ?: false
+            )
+          )
+        }
+
+        if (JavaEmailConstants.FOLDER_OUTBOX == localFolder.folderAlias) {
+          addOutboxLabel(it, mailLabels, localFolder.folderAlias ?: "")
         }
       }
 
       for (localFolder in it?.customLabels ?: emptyList()) {
-        mailLabels?.subMenu?.add(localFolder.folderAlias)
+        mailLabels?.subMenu?.add(localFolder.folderAlias)?.apply {
+          setIcon(
+            FoldersManager.getFolderIcon(
+              localFolder = localFolder,
+              isGoogleSignInAccount = activeAccount?.isGoogleSignInAccount ?: false
+            )
+          )
+        }
       }
     }
   }

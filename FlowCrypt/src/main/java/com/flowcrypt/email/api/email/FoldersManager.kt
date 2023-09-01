@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email
 import android.content.Context
 import android.text.TextUtils
 import androidx.annotation.WorkerThread
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -230,20 +231,20 @@ class FoldersManager constructor(val account: String) {
   /**
    * Sort the server folders for a better user experience.
    *
-   * @return The sorted labels list.
+   * @return The server folders.
    */
-  fun getSortedNames(): Collection<String> {
+  fun getSortedServerFolders(): Collection<LocalFolder> {
     val localFolders = serverFolders.toMutableList()
-    val sortedList = arrayOfNulls<String>(localFolders.size)
+    val sortedList = arrayOfNulls<LocalFolder>(localFolders.size)
 
     val inbox = folderInbox?.let {
-      sortedList[0] = it.folderAlias
+      sortedList[0] = it
       localFolders.remove(it)
       it
     }
 
     val moveFolder = fun(localFolder: LocalFolder) {
-      sortedList[localFolders.size] = localFolder.folderAlias
+      sortedList[localFolders.size] = localFolder
       localFolders.remove(localFolder)
     }
 
@@ -254,13 +255,13 @@ class FoldersManager constructor(val account: String) {
     for (i in localFolders.indices) {
       val localFolder = localFolders[i]
       if (inbox == null) {
-        sortedList[i] = localFolder.folderAlias
+        sortedList[i] = localFolder
       } else {
-        sortedList[i + 1] = localFolder.folderAlias
+        sortedList[i + 1] = localFolder
       }
     }
 
-    return sortedList.filterNotNull()
+    return sortedList.filterNotNull().toList()
   }
 
   private fun prepareFolderKey(imapFolder: IMAPFolder): String {
@@ -421,35 +422,73 @@ class FoldersManager constructor(val account: String) {
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.INBOX
+
+        JavaEmailConstants.FOLDER_ALL_MAIL.equals(
+          localFolder?.fullName,
+          ignoreCase = true
+        ) -> FolderType.All
+
         JavaEmailConstants.FOLDER_OUTBOX.equals(
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.OUTBOX
+
         JavaEmailConstants.FOLDER_SENT.equals(
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.SENT
+
         JavaEmailConstants.FOLDER_TRASH.equals(
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.TRASH
+
         JavaEmailConstants.FOLDER_DRAFT.equals(
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.DRAFTS
+
         JavaEmailConstants.FOLDER_STARRED.equals(
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.STARRED
+
         JavaEmailConstants.FOLDER_IMPORTANT.equals(
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.IMPORTANT
+
         JavaEmailConstants.FOLDER_SPAM.equals(
           localFolder?.fullName,
           ignoreCase = true
         ) -> FolderType.SPAM
+
         else -> null
+      }
+    }
+
+    fun getFolderIcon(localFolder: LocalFolder?, isGoogleSignInAccount: Boolean): Int {
+      return when (localFolder?.getFolderType()) {
+        FolderType.INBOX -> R.drawable.ic_mail_24dp
+        FolderType.All -> R.drawable.ic_mails_24dp
+        FolderType.ARCHIVE -> R.drawable.ic_mails_24dp
+        FolderType.SENT -> R.drawable.ic_send_24dp
+        FolderType.IMPORTANT -> R.drawable.ic_important_24dp
+        FolderType.TRASH -> R.drawable.ic_trash_24dp
+        FolderType.DRAFTS -> R.drawable.ic_drafts_24dp
+        FolderType.SPAM, FolderType.JUNK -> R.drawable.ic_spam_24dp
+        FolderType.STARRED -> R.drawable.ic_star_24dp
+        FolderType.OUTBOX -> R.drawable.ic_outgoing_24dp
+
+        else -> when {
+          //handle Gmail variants which IMAP doesn't have
+          isGoogleSignInAccount && "UNREAD".equals(
+            localFolder?.fullName,
+            ignoreCase = true
+          ) -> R.drawable.ic_email_unread_24dp
+
+          else -> R.drawable.ic_label_24dp
+        }
       }
     }
 
