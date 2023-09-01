@@ -318,7 +318,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels)
       mailLabels?.subMenu?.clear()
 
-      it?.getSortedServerFolders()?.forEach { localFolder ->
+      val sortedServerFolders = it?.getSortedServerFolders() ?: emptyList()
+      val customFolders = it?.customLabels ?: emptyList()
+
+      (sortedServerFolders + customFolders).forEach { localFolder ->
         mailLabels?.subMenu?.add(localFolder.folderAlias)?.apply {
           setIcon(
             FoldersManager.getFolderIcon(
@@ -330,17 +333,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         if (JavaEmailConstants.FOLDER_OUTBOX == localFolder.folderAlias) {
           addOutboxLabel(it, mailLabels, localFolder.folderAlias ?: "")
-        }
-      }
-
-      for (localFolder in it?.customLabels ?: emptyList()) {
-        mailLabels?.subMenu?.add(localFolder.folderAlias)?.apply {
-          setIcon(
-            FoldersManager.getFolderIcon(
-              localFolder = localFolder,
-              isGoogleSignInAccount = activeAccount?.isGoogleSignInAccount ?: false
-            )
-          )
         }
       }
     }
