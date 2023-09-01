@@ -314,25 +314,22 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(this) {
+    labelsViewModel.foldersManagerLiveData.observe(this) { foldersManager ->
       val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels)
       mailLabels?.subMenu?.clear()
 
-      val sortedServerFolders = it?.getSortedServerFolders() ?: emptyList()
-      val customFolders = it?.customLabels ?: emptyList()
+      foldersManager?.run {
+        val folders = getSortedServerFolders() + customLabels
+        val isGoogleAccount = activeAccount?.isGoogleSignInAccount ?: false
 
-      (sortedServerFolders + customFolders).forEach { localFolder ->
-        mailLabels?.subMenu?.add(localFolder.folderAlias)?.apply {
-          setIcon(
-            FoldersManager.getFolderIcon(
-              localFolder = localFolder,
-              isGoogleSignInAccount = activeAccount?.isGoogleSignInAccount ?: false
-            )
+        folders.forEach { localFolder ->
+          mailLabels?.subMenu?.add(localFolder.folderAlias)?.setIcon(
+            FoldersManager.getFolderIcon(localFolder, isGoogleAccount)
           )
-        }
 
-        if (JavaEmailConstants.FOLDER_OUTBOX == localFolder.folderAlias) {
-          addOutboxLabel(it, mailLabels, localFolder.folderAlias ?: "")
+          if (JavaEmailConstants.FOLDER_OUTBOX == localFolder.folderAlias) {
+            addOutboxLabel(foldersManager, mailLabels, localFolder.folderAlias ?: "")
+          }
         }
       }
     }
