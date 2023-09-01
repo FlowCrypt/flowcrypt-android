@@ -3,8 +3,8 @@
  * Contributors: DenBond7
  */
 
-extra["appVersionCode"] = 145
-extra["appVersionName"] = "1.4.5"
+extra["appVersionCode"] = 146
+extra["appVersionName"] = "1.4.6"
 extra["buildToolsVersion"] = "33.0.2"
 extra["compileSdkVersion"] = 33
 extra["targetSdkVersion"] = 33
