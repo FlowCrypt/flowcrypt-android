@@ -475,7 +475,7 @@ dependencies {
   implementation("org.jsoup:jsoup:1.16.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-  implementation("ch.acra:acra-http:5.11.1")
+  implementation("ch.acra:acra-http:5.11.2")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
