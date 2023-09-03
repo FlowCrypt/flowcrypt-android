@@ -462,7 +462,7 @@ dependencies {
     exclude("com.sun.mail")
   }
 
-  implementation("org.pgpainless:pgpainless-core:1.6.1")
+  implementation("org.pgpainless:pgpainless-core:1.6.2")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
