@@ -13,6 +13,7 @@ import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,6 +35,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.MessagesListItemBinding
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.util.AvatarGenerator
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.GlideUtil
 import com.google.android.material.color.MaterialColors
@@ -355,10 +357,18 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
 
     private fun updateAvatar(senderAddress: CharSequence? = null) {
-      GlideUtil.setCircleImage(
-        R.mipmap.ic_account_default_photo,
-        R.mipmap.ic_account_default_photo,
-        binding.imageViewAvatar
+      val avatarSize = itemView.context.resources.getDimensionPixelSize(R.dimen.avatar_size)
+      val fontSize = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_PX,
+        itemView.context.resources.getDimension(R.dimen.default_text_size_very_big),
+        itemView.context.resources.displayMetrics
+      )
+
+      GlideUtil.setImage(
+        source = senderAddress?.let {
+          AvatarGenerator.generate(it.toString(), avatarSize, avatarSize, fontSize)
+        } ?: R.mipmap.ic_account_default_photo,
+        imageView = binding.imageViewAvatar
       )
     }
 
