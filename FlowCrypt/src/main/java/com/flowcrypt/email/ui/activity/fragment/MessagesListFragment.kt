@@ -560,7 +560,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       if (currentFolder == null) {
         labelsViewModel.loadLabels()
       } else {
-        adapter.changeProgress(true)
         msgsViewModel.loadMsgsFromRemoteServer()
       }
     } else {
@@ -1306,7 +1305,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         getString(R.string.progress_message, progress, message)
     } else {
       binding?.textViewActionProgress?.text = null
-      adapter.changeProgress(false)
     }
   }
 
