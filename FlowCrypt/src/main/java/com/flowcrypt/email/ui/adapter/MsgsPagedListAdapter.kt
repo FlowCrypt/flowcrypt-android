@@ -152,17 +152,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         }
 
         val folderType = FoldersManager.getFolderType(currentFolder)
-        val senderAddress = when (folderType) {
-          FoldersManager.FolderType.SENT -> generateAddresses(messageEntity.to)
-
-          FoldersManager.FolderType.DRAFTS -> generateAddresses(messageEntity.to).ifEmpty {
-            context.getString(R.string.no_recipients)
-          }
-
-          FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
-
-          else -> generateAddresses(messageEntity.from)
-        }
+        val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
         binding.textViewSenderAddress.text = senderAddress
 
         updateAvatar(senderAddress)
@@ -205,50 +195,69 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         binding.imageViewAtts.visibleOrGone(messageEntity.hasAttachments == true)
         binding.viewIsEncrypted.visibleOrGone(messageEntity.isEncrypted == true)
 
-        when (messageEntity.msgState) {
-          MessageState.PENDING_ARCHIVING -> {
-            with(binding.imageViewStatus) {
-              visibility = View.VISIBLE
-              setBackgroundResource(R.drawable.ic_archive_blue_16dp)
-            }
-          }
-
-          MessageState.PENDING_MARK_UNREAD -> {
-            with(binding.imageViewStatus) {
-              visibility = View.VISIBLE
-              setBackgroundResource(R.drawable.ic_markunread_blue_16dp)
-            }
-          }
-
-          MessageState.PENDING_DELETING,
-          MessageState.PENDING_DELETING_PERMANENTLY,
-          MessageState.PENDING_DELETING_DRAFT,
-          MessageState.PENDING_EMPTY_TRASH -> {
-            with(binding.imageViewStatus) {
-              visibility = View.VISIBLE
-              setBackgroundResource(R.drawable.ic_delete_blue_16dp)
-            }
-          }
-
-          MessageState.PENDING_MOVE_TO_INBOX -> {
-            with(binding.imageViewStatus) {
-              visibility = View.VISIBLE
-              setBackgroundResource(R.drawable.ic_move_to_inbox_blue_16dp)
-            }
-          }
-
-          MessageState.PENDING_UPLOADING_DRAFT -> {
-            with(binding.imageViewStatus) {
-              visibility = View.VISIBLE
-              setBackgroundResource(R.drawable.ic_baseline_pending_actions_blue_24)
-            }
-          }
-
-          else -> binding.imageViewStatus.gone()
-        }
-
+        changeStatusView(messageEntity)
       } else {
         clearData()
+      }
+    }
+
+    private fun prepareSenderAddress(
+      folderType: FoldersManager.FolderType?,
+      messageEntity: MessageEntity,
+      context: Context
+    ) = when (folderType) {
+      FoldersManager.FolderType.SENT -> generateAddresses(messageEntity.to)
+
+      FoldersManager.FolderType.DRAFTS -> generateAddresses(messageEntity.to).ifEmpty {
+        context.getString(R.string.no_recipients)
+      }
+
+      FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
+
+      else -> generateAddresses(messageEntity.from)
+    }
+
+    private fun changeStatusView(messageEntity: MessageEntity) {
+      when (messageEntity.msgState) {
+        MessageState.PENDING_ARCHIVING -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_archive_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_MARK_UNREAD -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_markunread_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_DELETING,
+        MessageState.PENDING_DELETING_PERMANENTLY,
+        MessageState.PENDING_DELETING_DRAFT,
+        MessageState.PENDING_EMPTY_TRASH -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_delete_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_MOVE_TO_INBOX -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_move_to_inbox_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_UPLOADING_DRAFT -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_baseline_pending_actions_blue_24)
+          }
+        }
+
+        else -> binding.imageViewStatus.gone()
       }
     }
 
