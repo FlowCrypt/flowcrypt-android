@@ -11,6 +11,7 @@ import android.net.Uri
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.request.RequestOptions
@@ -20,7 +21,13 @@ import java.io.File
  * @author Denys Bondarenko
  */
 object GlideUtil {
-  fun setImage(source: Any, placeholderId: Int? = null, imageView: ImageView?) {
+  fun setImage(
+    source: Any,
+    placeholderId: Int? = null,
+    imageView: ImageView?,
+    diskCacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
+    skipMemoryCache: Boolean = false,
+  ) {
     imageView ?: return
 
     val castedSource = when (source) {
@@ -35,11 +42,15 @@ object GlideUtil {
     if (placeholderId == null) {
       Glide.with(imageView.context)
         .load(castedSource)
+        .skipMemoryCache(skipMemoryCache)
+        .diskCacheStrategy(diskCacheStrategy)
         .apply(RequestOptions().transform(CenterCrop()))
         .into(imageView)
     } else {
       Glide.with(imageView.context)
         .load(castedSource)
+        .skipMemoryCache(skipMemoryCache)
+        .diskCacheStrategy(diskCacheStrategy)
         .apply(
           RequestOptions().transform(CenterCrop()).placeholder(placeholderId).error(placeholderId)
         )
@@ -48,7 +59,13 @@ object GlideUtil {
     }
   }
 
-  fun setCircleImage(source: Any, placeholderId: Int? = null, imageView: ImageView?) {
+  fun setCircleImage(
+    source: Any,
+    placeholderId: Int? = null,
+    imageView: ImageView?,
+    diskCacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
+    skipMemoryCache: Boolean = false,
+  ) {
     imageView ?: return
 
     val castedSource = when (source) {
@@ -64,11 +81,15 @@ object GlideUtil {
     if (placeholderId == null) {
       Glide.with(imageView.context)
         .load(castedSource)
+        .skipMemoryCache(skipMemoryCache)
+        .diskCacheStrategy(diskCacheStrategy)
         .apply(RequestOptions().transform(MultiTransformation(CenterCrop(), CircleCrop())))
         .into(imageView)
     } else {
       Glide.with(imageView.context)
         .load(castedSource)
+        .skipMemoryCache(skipMemoryCache)
+        .diskCacheStrategy(diskCacheStrategy)
         .apply(
           RequestOptions().transform(MultiTransformation(CenterCrop(), CircleCrop()))
             .placeholder(placeholderId).error(placeholderId)

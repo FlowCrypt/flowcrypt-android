@@ -26,6 +26,7 @@ import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -368,7 +369,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         source = senderAddress?.let {
           AvatarGenerator.generate(it.toString(), avatarSize, avatarSize, fontSize)
         } ?: R.mipmap.ic_account_default_photo,
-        imageView = binding.imageViewAvatar
+        imageView = binding.imageViewAvatar,
+        //we have to disable cache. Glide's cache doesn't work well with this bitmaps
+        diskCacheStrategy = DiskCacheStrategy.NONE
       )
     }
 

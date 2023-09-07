@@ -11,7 +11,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import kotlin.math.abs
 
-
 /**
  * @author Denys Bondarenko
  */
@@ -24,6 +23,28 @@ object AvatarGenerator {
     textAlign = Paint.Align.CENTER
   }
 
+  private val COLORS = listOf(
+    0xFF1ABC9C,
+    0xFF2ECC71,
+    0xFF3498DB,
+    0xFF9B59B6,
+    0xFF34495E,
+    0xFF16A085,
+    0xFF27AE60,
+    0xFF2980B9,
+    0xFF8E44AD,
+    0xFF2C3E50,
+    0xFFF1C40F,
+    0xFFE67E22,
+    0xFFE74C3C,
+    0xFF95A5A6,
+    0xFFF39C12,
+    0xFFD35400,
+    0xFFC0392B,
+    0xFFBDC3C7,
+    0xFF7F8C8D,
+  )
+
   fun generate(text: String, bitmapWidth: Int, bitmapHeight: Int, fontSize: Float): Bitmap {
     val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
@@ -32,7 +53,7 @@ object AvatarGenerator {
       bitmapWidth / 2F,
       bitmapHeight / 2F,
       minOf(bitmapWidth, bitmapHeight) / 2F,
-      Paint().apply { color = ColorGenerator.DEFAULT.getColor(text) }
+      Paint().apply { color = getColor(text) }
     )
 
     //draw a text
@@ -45,37 +66,7 @@ object AvatarGenerator {
     return bitmap
   }
 
-  private class ColorGenerator private constructor(private val colors: List<Int>) {
-    fun getColor(key: Any): Int {
-      return colors[abs(key.hashCode()) % colors.size]
-    }
-
-    companion object {
-      var DEFAULT = create(
-        listOf(
-          -0x1a8c8d,
-          -0xf9d6e,
-          -0x459738,
-          -0x6a8a33,
-          -0x867935,
-          -0x9b4a0a,
-          -0xb03c09,
-          -0xb22f1f,
-          -0xb24954,
-          -0x7e387c,
-          -0x512a7f,
-          -0x759b,
-          -0x2b1ea9,
-          -0x2ab1,
-          -0x48b3,
-          -0x5e7781,
-          -0x6f5b52
-        )
-      )
-
-      fun create(colorList: List<Int>): ColorGenerator {
-        return ColorGenerator(colorList)
-      }
-    }
+  private fun getColor(key: Any): Int {
+    return COLORS[abs(key.hashCode()) % COLORS.size].toInt()
   }
 }
