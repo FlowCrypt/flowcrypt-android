@@ -13,7 +13,6 @@ import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,7 +25,6 @@ import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -36,8 +34,8 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.MessagesListItemBinding
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.util.AvatarGenerator
 import com.flowcrypt.email.util.DateTimeUtil
+import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.flowcrypt.email.util.graphics.glide.GlideUtil
 import com.google.android.material.color.MaterialColors
 import jakarta.mail.internet.InternetAddress
@@ -358,20 +356,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
 
     private fun updateAvatar(senderAddress: CharSequence? = null) {
-      val avatarSize = itemView.context.resources.getDimensionPixelSize(R.dimen.avatar_size)
-      val fontSize = TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_PX,
-        itemView.context.resources.getDimension(R.dimen.default_text_size_very_big),
-        itemView.context.resources.displayMetrics
-      )
-
       GlideUtil.setImage(
         source = senderAddress?.let {
-          AvatarGenerator.generate(it.toString(), avatarSize, avatarSize, fontSize)
+          AvatarModelLoader.SCHEMA_AVATAR + it
         } ?: R.mipmap.ic_account_default_photo,
-        imageView = binding.imageViewAvatar,
-        //we have to disable cache. Glide's cache doesn't work well with this bitmaps
-        diskCacheStrategy = DiskCacheStrategy.NONE
+        imageView = binding.imageViewAvatar
       )
     }
 
