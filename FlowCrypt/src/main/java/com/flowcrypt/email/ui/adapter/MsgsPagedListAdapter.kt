@@ -32,11 +32,11 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.MessagesListItemBinding
+import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
-import com.flowcrypt.email.util.graphics.glide.GlideUtil
 import com.google.android.material.color.MaterialColors
 import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
@@ -356,11 +356,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
 
     private fun updateAvatar(senderAddress: CharSequence? = null) {
-      GlideUtil.setImage(
+      binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = senderAddress?.let {
           AvatarModelLoader.SCHEMA_AVATAR + it
-        } ?: R.mipmap.ic_account_default_photo,
-        imageView = binding.imageViewAvatar
+        } ?: R.mipmap.ic_account_default_photo
       )
     }
 

@@ -16,9 +16,9 @@ import android.widget.TextView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.NavHeaderBinding
+import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.util.graphics.glide.GlideUtil
 
 class NavigationViewManager(
   activity: Activity,
@@ -53,13 +53,11 @@ class NavigationViewManager(
     } else {
       R.mipmap.ic_account_default_photo
     }
-    navHeaderBinding?.imageViewActiveUserPhoto?.let {
-      GlideUtil.setCircleImage(
-        resource,
-        R.mipmap.ic_account_default_photo,
-        it
-      )
-    }
+    navHeaderBinding?.imageViewActiveUserPhoto?.useGlideToApplyImageFromSource(
+      source = resource,
+      placeholderId = R.mipmap.ic_account_default_photo,
+      applyCircleTransformation = true
+    )
 
     navHeaderBinding?.layoutUserDetails?.setOnClickListener(object :
       View.OnClickListener {
@@ -115,10 +113,10 @@ class NavigationViewManager(
     textViewEmail.text = account.email
 
     if (account.photoUrl?.isNotEmpty() == true) {
-      GlideUtil.setCircleImage(
-        account.photoUrl,
-        R.mipmap.ic_account_default_photo,
-        imageViewActiveUserPhoto
+      imageViewActiveUserPhoto.useGlideToApplyImageFromSource(
+        source = account.photoUrl,
+        placeholderId = R.mipmap.ic_account_default_photo,
+        applyCircleTransformation = true
       )
     }
 
