@@ -21,6 +21,8 @@ import com.flowcrypt.email.util.AvatarGenerator
 
 
 /**
+ * ref https://bumptech.github.io/glide/tut/custom-modelloader.html
+ *
  * @author Denys Bondarenko
  */
 class AvatarModelLoader(private val fontSize: Float) : ModelLoader<String, Bitmap> {
