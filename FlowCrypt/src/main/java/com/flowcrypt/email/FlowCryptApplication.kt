@@ -12,6 +12,7 @@ import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.bumptech.glide.Glide
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -24,6 +25,11 @@ import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.acra.ACRA
 import org.acra.ReportField
 import org.acra.config.httpSender
@@ -54,6 +60,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     SyncInboxWorker.enqueuePeriodic(this)
     enqueueMsgsCacheCleanerWorker()
     FlavorSettings.configure(this)
+    clearGlideDiskCache()
   }
 
   private fun setupPGPainless() {
@@ -213,5 +220,17 @@ class FlowCryptApplication : Application(), Configuration.Provider {
       MsgsCacheCleanerWorker.NAME,
       ExistingPeriodicWorkPolicy.UPDATE, workRequest
     )
+  }
+
+  /**
+   * To prevent after session issues we clear images local cache
+   */
+  @OptIn(DelicateCoroutinesApi::class)
+  private fun clearGlideDiskCache() {
+    GlobalScope.launch {
+      withContext(Dispatchers.IO) {
+        Glide.get(this@FlowCryptApplication).clearDiskCache()
+      }
+    }
   }
 }

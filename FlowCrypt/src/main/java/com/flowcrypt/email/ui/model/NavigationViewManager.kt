@@ -13,14 +13,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.NavHeaderBinding
+import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation
 
 class NavigationViewManager(
   activity: Activity,
@@ -50,22 +48,11 @@ class NavigationViewManager(
     }
     navHeaderBinding?.textViewActiveUserEmail?.text = accountEntity.email
 
-    val resource = if (accountEntity.photoUrl?.isNotEmpty() == true) {
-      accountEntity.photoUrl
-    } else {
-      R.mipmap.ic_account_default_photo
-    }
-    navHeaderBinding?.imageViewActiveUserPhoto?.let {
-      Glide.with(context)
-        .load(resource)
-        .apply(
-          RequestOptions()
-            .centerCrop()
-            .transform(CircleTransformation())
-            .error(R.mipmap.ic_account_default_photo)
-        )
-        .into(it)
-    }
+    navHeaderBinding?.imageViewActiveUserPhoto?.useGlideToApplyImageFromSource(
+      source = accountEntity.avatarResource,
+      placeholderId = R.mipmap.ic_account_default_photo,
+      applyCircleTransformation = true
+    )
 
     navHeaderBinding?.layoutUserDetails?.setOnClickListener(object :
       View.OnClickListener {
@@ -120,17 +107,11 @@ class NavigationViewManager(
     }
     textViewEmail.text = account.email
 
-    if (account.photoUrl?.isNotEmpty() == true) {
-      Glide.with(context)
-        .load(account.photoUrl)
-        .apply(
-          RequestOptions()
-            .centerCrop()
-            .transform(CircleTransformation())
-            .error(R.mipmap.ic_account_default_photo)
-        )
-        .into(imageViewActiveUserPhoto)
-    }
+    imageViewActiveUserPhoto.useGlideToApplyImageFromSource(
+      source = account.avatarResource,
+      placeholderId = R.mipmap.ic_account_default_photo,
+      applyCircleTransformation = true
+    )
 
     view.setOnClickListener {
       navHeaderBinding?.layoutUserDetails?.performClick()

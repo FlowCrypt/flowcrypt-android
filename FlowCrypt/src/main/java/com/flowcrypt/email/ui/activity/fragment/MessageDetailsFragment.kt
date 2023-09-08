@@ -67,6 +67,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
+import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
@@ -123,6 +124,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
@@ -462,6 +464,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    if (folderType == FoldersManager.FolderType.SENT) {
+      val senderAddress = EmailUtil.getFirstAddressString(args.messageEntity.from)
+      binding?.imageViewAvatar?.useGlideToApplyImageFromSource(
+        account?.avatarResource ?: (AvatarModelLoader.SCHEMA_AVATAR + senderAddress),
+        applyCircleTransformation = account?.avatarResource != null
+      )
+    }
+  }
+
   /**
    * Show an incoming message info.
    *
@@ -772,16 +785,23 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     )
     updateMsgDetails(messageEntity)
 
-    val subject = messageEntity.subject?.ifEmpty { getString(R.string.no_subject) }
+    val senderAddress = EmailUtil.getFirstAddressString(messageEntity.from)
+    binding?.textViewSenderAddress?.text = senderAddress
+    binding?.imageViewAvatar?.useGlideToApplyImageFromSource(
+      source = when (folderType) {
+        FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+        FoldersManager.FolderType.SENT -> account?.avatarResource
+          ?: (AvatarModelLoader.SCHEMA_AVATAR + senderAddress)
 
-    if (folderType === FoldersManager.FolderType.SENT) {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.to)
-    } else {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
-    }
+        else -> AvatarModelLoader.SCHEMA_AVATAR + senderAddress
+      }
+    )
+
     if (binding?.textViewSubject?.text.isNullOrEmpty()) {
-      binding?.textViewSubject?.text = subject
+      binding?.textViewSubject?.text =
+        (messageEntity.subject ?: "").ifEmpty { getString(R.string.no_subject) }
     }
+
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
       binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)

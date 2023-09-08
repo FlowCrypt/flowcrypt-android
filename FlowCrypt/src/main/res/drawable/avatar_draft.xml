@@ -1,0 +1,19 @@
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="1920"
+    android:viewportHeight="1920">
+    <path
+        android:fillColor="@color/colorPrimary"
+        android:pathData="M960,960m-960,0a960,960 0,1 1,1920 0a960,960 0,1 1,-1920 0"
+        android:strokeWidth="53.3333" />
+
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="m960,560 l362,216q18,11 28,30 10,19 10,40v434q0,33 -23.5,56.5Q1313,1360 1280,1360L640,1360Q607,1360 583.5,1336.5 560,1313 560,1280v-434q0,-21 10,-40 10,-19 28,-30zM960,1026 L1272,840 960,654 648,840zM960,1120 L640,928v352h640L1280,928ZM960,1280h320,-640z" />
+</vector>
