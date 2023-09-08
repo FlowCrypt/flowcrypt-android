@@ -48,13 +48,8 @@ class NavigationViewManager(
     }
     navHeaderBinding?.textViewActiveUserEmail?.text = accountEntity.email
 
-    val resource = if (accountEntity.photoUrl?.isNotEmpty() == true) {
-      accountEntity.photoUrl
-    } else {
-      R.mipmap.ic_account_default_photo
-    }
     navHeaderBinding?.imageViewActiveUserPhoto?.useGlideToApplyImageFromSource(
-      source = resource,
+      source = accountEntity.avatarResource,
       placeholderId = R.mipmap.ic_account_default_photo,
       applyCircleTransformation = true
     )
@@ -112,13 +107,11 @@ class NavigationViewManager(
     }
     textViewEmail.text = account.email
 
-    if (account.photoUrl?.isNotEmpty() == true) {
-      imageViewActiveUserPhoto.useGlideToApplyImageFromSource(
-        source = account.photoUrl,
-        placeholderId = R.mipmap.ic_account_default_photo,
-        applyCircleTransformation = true
-      )
-    }
+    imageViewActiveUserPhoto.useGlideToApplyImageFromSource(
+      source = account.avatarResource,
+      placeholderId = R.mipmap.ic_account_default_photo,
+      applyCircleTransformation = true
+    )
 
     view.setOnClickListener {
       navHeaderBinding?.layoutUserDetails?.performClick()

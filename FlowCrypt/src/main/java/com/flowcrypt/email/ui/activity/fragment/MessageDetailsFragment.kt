@@ -464,6 +464,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    if (folderType == FoldersManager.FolderType.SENT) {
+      val senderAddress = EmailUtil.getFirstAddressString(args.messageEntity.from)
+      binding?.imageViewAvatar?.useGlideToApplyImageFromSource(
+        account?.avatarResource ?: (AvatarModelLoader.SCHEMA_AVATAR + senderAddress),
+        applyCircleTransformation = account?.avatarResource != null
+      )
+    }
+  }
+
   /**
    * Show an incoming message info.
    *
@@ -779,6 +790,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     binding?.imageViewAvatar?.useGlideToApplyImageFromSource(
       source = when (folderType) {
         FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+        FoldersManager.FolderType.SENT -> account?.avatarResource
+          ?: (AvatarModelLoader.SCHEMA_AVATAR + senderAddress)
+
         else -> AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       }
     )
