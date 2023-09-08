@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.extensions.android.widget
 
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
@@ -15,7 +12,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.request.RequestOptions
-import java.io.File
 
 /**
  * @author Denys Bondarenko
@@ -29,49 +25,23 @@ fun ImageView?.useGlideToApplyImageFromSource(
 ) {
   this ?: return
 
-  val castedSource = when (source) {
-    is Bitmap -> source
-    is Drawable -> source
-    is String -> source
-    is Uri -> source
-    is File -> source
-    is Int -> source
-    else -> source
-  }
-
-  var requestBuilder = Glide.with(this.context)
-    .load(castedSource)
+  var requestOptions = RequestOptions()
     .skipMemoryCache(skipMemoryCache)
     .diskCacheStrategy(diskCacheStrategy)
 
-  requestBuilder = if (placeholderId == null) {
-    if (applyCircleTransformation) {
-      requestBuilder.apply(
-        RequestOptions().transform(
-          MultiTransformation(
-            CenterCrop(),
-            CircleCrop()
-          )
-        )
-      )
-    } else {
-      requestBuilder.apply(RequestOptions().transform(CenterCrop()))
-    }
+  requestOptions = if (applyCircleTransformation) {
+    requestOptions.transform(MultiTransformation(CenterCrop(), CircleCrop()))
   } else {
-    if (applyCircleTransformation) {
-      requestBuilder
-        .apply(
-          RequestOptions().transform(MultiTransformation(CenterCrop(), CircleCrop()))
-            .placeholder(placeholderId)
-            .error(placeholderId)
-        ).apply(RequestOptions().transform(MultiTransformation(CenterCrop(), CircleCrop())))
-    } else {
-      requestBuilder
-        .apply(
-          RequestOptions().transform(CenterCrop()).placeholder(placeholderId).error(placeholderId)
-        ).apply(RequestOptions().transform(CenterCrop()))
-    }
+    requestOptions.transform(CenterCrop())
   }
 
-  requestBuilder.into(this)
+  placeholderId?.let {
+    //https://bumptech.github.io/glide/doc/placeholders.html#are-transformations-applied-to-placeholders
+    requestOptions = requestOptions.placeholder(it).error(it)
+  }
+
+  Glide.with(context)
+    .load(source)
+    .apply(requestOptions)
+    .into(this)
 }
