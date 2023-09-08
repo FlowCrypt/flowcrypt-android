@@ -67,6 +67,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
+import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
@@ -123,6 +124,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
@@ -772,14 +774,24 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     )
     updateMsgDetails(messageEntity)
 
-    val subject = messageEntity.subject?.ifEmpty { getString(R.string.no_subject) }
+    val subject = (messageEntity.subject ?: "").ifEmpty { getString(R.string.no_subject) }
 
-    if (folderType === FoldersManager.FolderType.SENT) {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.to)
-    } else {
-      binding?.textViewSenderAddress?.text = EmailUtil.getFirstAddressString(messageEntity.from)
-    }
-    if (binding?.textViewSubject?.text.isNullOrEmpty()) {
+    val senderAddress = EmailUtil.getFirstAddressString(
+      if (folderType === FoldersManager.FolderType.SENT) {
+        messageEntity.to
+      } else {
+        messageEntity.from
+      }
+    )
+    binding?.textViewSenderAddress?.text = senderAddress
+    binding?.imageViewAvatar?.useGlideToApplyImageFromSource(
+      source = when (folderType) {
+        FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+        else -> AvatarModelLoader.SCHEMA_AVATAR + senderAddress
+      }
+    )
+
+    if (binding?.textViewSubject?.text?.isEmpty() == true) {
       binding?.textViewSubject?.text = subject
     }
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {

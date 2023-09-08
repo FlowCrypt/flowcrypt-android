@@ -68,5 +68,5 @@
     <dimen name="height_screenshot">150dp</dimen>
     <dimen name="width_screenshot">100dp</dimen>
     <dimen name="max_width_field_to">200dp</dimen>
-    <dimen name="avatar_size">56dp</dimen>
+    <dimen name="avatar_size">48dp</dimen>
 </resources>

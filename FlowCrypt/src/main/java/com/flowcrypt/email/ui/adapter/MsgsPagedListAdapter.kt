@@ -51,6 +51,12 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
   var tracker: SelectionTracker<Long>? = null
   var currentFolder: LocalFolder? = null
+    set(value) {
+      field = value
+      folderType = value?.let { FoldersManager.getFolderType(it) }
+    }
+
+  private var folderType: FoldersManager.FolderType? = null
 
   init {
     setHasStableIds(true)
@@ -82,7 +88,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     when (holder.itemType) {
       MESSAGE -> {
         val messageEntity = getItem(position)
-        (holder as? MessageViewHolder)?.bind(messageEntity, currentFolder)
+        (holder as? MessageViewHolder)?.bind(messageEntity, folderType)
         holder.itemView.setOnClickListener {
           messageEntity?.let { onMessageClickListener?.onMsgClick(it) }
         }
@@ -142,7 +148,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     private val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
     override val itemType = MESSAGE
 
-    fun bind(messageEntity: MessageEntity?, currentFolder: LocalFolder?) {
+    fun bind(messageEntity: MessageEntity?, folderType: FoldersManager.FolderType?) {
       val context = itemView.context
       if (messageEntity != null) {
         val subject = if (TextUtils.isEmpty(messageEntity.subject)) {
@@ -151,11 +157,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           messageEntity.subject
         }
 
-        val folderType = FoldersManager.getFolderType(currentFolder)
         val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
         binding.textViewSenderAddress.text = senderAddress
 
-        updateAvatar(senderAddress)
+        updateAvatar(senderAddress, folderType)
 
         binding.textViewSubject.text = subject
         if (folderType in listOf(
@@ -364,11 +369,18 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       binding.textViewDate.setTypeface(null, typeface)
     }
 
-    private fun updateAvatar(senderAddress: CharSequence? = null) {
+    private fun updateAvatar(
+      senderAddress: CharSequence? = null,
+      folderType: FoldersManager.FolderType? = null
+    ) {
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
-        source = senderAddress?.let {
-          AvatarModelLoader.SCHEMA_AVATAR + it
-        } ?: R.mipmap.ic_account_default_photo
+        source = when (folderType) {
+          FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+
+          else -> senderAddress?.let {
+            AvatarModelLoader.SCHEMA_AVATAR + it
+          } ?: R.mipmap.ic_account_default_photo
+        }
       )
     }
 

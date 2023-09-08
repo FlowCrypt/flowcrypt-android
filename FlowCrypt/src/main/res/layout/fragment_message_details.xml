@@ -31,10 +31,22 @@
                 android:layout_marginEnd="@dimen/default_margin_medium"
                 android:animateLayoutChanges="true">
 
+                <ImageView
+                    android:id="@+id/imageViewAvatar"
+                    android:layout_width="@dimen/avatar_size"
+                    android:layout_height="@dimen/avatar_size"
+                    android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:layout_marginBottom="@dimen/default_margin_content_small"
+                    android:contentDescription="@string/avatar"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/view"
+                    app:srcCompat="@mipmap/ic_account_default_photo" />
+
                 <TextView
                     android:id="@+id/textViewSenderAddress"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/default_margin_content_small"
                     android:layout_marginTop="@dimen/default_margin_content_small"
                     android:layout_marginEnd="@dimen/default_margin_small"
                     android:ellipsize="middle"
@@ -42,7 +54,7 @@
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="@dimen/default_text_size_big"
                     app:layout_constraintEnd_toStartOf="@+id/imageButtonReplyAll"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
                     app:layout_constraintTop_toBottomOf="@+id/view"
                     app:layout_goneMarginLeft="@dimen/default_margin_medium"
                     tools:text="sender@flowcrypt.com" />
@@ -145,11 +157,12 @@
                     android:id="@+id/tVTo"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/default_margin_content_small"
                     android:layout_marginTop="@dimen/default_margin_content_small"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAlignment="textStart"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
                     app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
                     app:layout_constraintWidth_max="@dimen/max_width_field_to"
                     tools:text="To me" />
