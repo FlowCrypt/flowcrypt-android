@@ -774,15 +774,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     )
     updateMsgDetails(messageEntity)
 
-    val subject = (messageEntity.subject ?: "").ifEmpty { getString(R.string.no_subject) }
-
-    val senderAddress = EmailUtil.getFirstAddressString(
-      if (folderType === FoldersManager.FolderType.SENT) {
-        messageEntity.to
-      } else {
-        messageEntity.from
-      }
-    )
+    val senderAddress = EmailUtil.getFirstAddressString(messageEntity.from)
     binding?.textViewSenderAddress?.text = senderAddress
     binding?.imageViewAvatar?.useGlideToApplyImageFromSource(
       source = when (folderType) {
@@ -791,9 +783,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
     )
 
-    if (binding?.textViewSubject?.text?.isEmpty() == true) {
-      binding?.textViewSubject?.text = subject
+    if (binding?.textViewSubject?.text.isNullOrEmpty()) {
+      binding?.textViewSubject?.text =
+        (messageEntity.subject ?: "").ifEmpty { getString(R.string.no_subject) }
     }
+
     if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
       binding?.textViewDate?.text =
         DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
