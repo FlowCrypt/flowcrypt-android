@@ -58,6 +58,12 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
   private var folderType: FoldersManager.FolderType? = null
 
+  private val onAvatarClickListener = object : MessageViewHolder.OnAvatarClickListener {
+    override fun onAvatarClick(msgEntity: MessageEntity) {
+      msgEntity.id?.let { tracker?.select(it) }
+    }
+  }
+
   init {
     setHasStableIds(true)
   }
@@ -73,7 +79,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
       MESSAGE -> MessageViewHolder(
         LayoutInflater.from(parent.context)
-          .inflate(R.layout.messages_list_item, parent, false)
+          .inflate(R.layout.messages_list_item, parent, false),
+        onAvatarClickListener
       )
 
       else -> object : BaseViewHolder(ProgressBar(parent.context)) {
@@ -144,11 +151,17 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
   }
 
-  class MessageViewHolder(itemView: View) : BaseViewHolder(itemView) {
+  class MessageViewHolder(
+    itemView: View,
+    private val onAvatarClickListener: OnAvatarClickListener
+  ) : BaseViewHolder(itemView) {
     private val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
     override val itemType = MESSAGE
 
-    fun bind(messageEntity: MessageEntity?, folderType: FoldersManager.FolderType?) {
+    fun bind(
+      messageEntity: MessageEntity?,
+      folderType: FoldersManager.FolderType?
+    ) {
       val context = itemView.context
       if (messageEntity != null) {
         val subject = if (TextUtils.isEmpty(messageEntity.subject)) {
@@ -161,6 +174,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         binding.textViewSenderAddress.text = senderAddress
 
         updateAvatar(senderAddress, folderType)
+        binding.imageViewAvatar.setOnClickListener {
+          onAvatarClickListener.onAvatarClick(messageEntity)
+        }
 
         binding.textViewSubject.text = subject
         if (folderType in listOf(
@@ -374,8 +390,13 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       folderType: FoldersManager.FolderType? = null
     ) {
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
-        source = when (folderType) {
-          FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+        source = when {
+          itemView.isActivated -> ContextCompat.getDrawable(
+            itemView.context,
+            R.drawable.ic_selected
+          ) ?: R.drawable.ic_selected
+
+          folderType == FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
 
           else -> senderAddress?.let {
             AvatarModelLoader.SCHEMA_AVATAR + it
@@ -460,6 +481,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
           append(")$")
         }.toString(), Pattern.CASE_INSENSITIVE)
+    }
+
+    interface OnAvatarClickListener {
+      fun onAvatarClick(msgEntity: MessageEntity)
     }
   }
 
