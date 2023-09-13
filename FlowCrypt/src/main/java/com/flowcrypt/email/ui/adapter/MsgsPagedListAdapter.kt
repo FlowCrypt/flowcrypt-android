@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.adapter
 
 import android.content.Context
+import android.graphics.Camera
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.SpannableString
@@ -16,15 +17,20 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.Transformation
 import android.widget.ProgressBar
 import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.transition.ViewAnimationFactory
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -58,6 +64,12 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
   private var folderType: FoldersManager.FolderType? = null
 
+  private val onAvatarClickListener = object : MessageViewHolder.OnAvatarClickListener {
+    override fun onAvatarClick(msgEntity: MessageEntity) {
+      msgEntity.id?.let { tracker?.select(it) }
+    }
+  }
+
   init {
     setHasStableIds(true)
   }
@@ -73,7 +85,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
       MESSAGE -> MessageViewHolder(
         LayoutInflater.from(parent.context)
-          .inflate(R.layout.messages_list_item, parent, false)
+          .inflate(R.layout.messages_list_item, parent, false),
+        onAvatarClickListener
       )
 
       else -> object : BaseViewHolder(ProgressBar(parent.context)) {
@@ -144,11 +157,18 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
   }
 
-  class MessageViewHolder(itemView: View) : BaseViewHolder(itemView) {
+  class MessageViewHolder(
+    itemView: View,
+    private val onAvatarClickListener: OnAvatarClickListener
+  ) : BaseViewHolder(itemView) {
     private val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
     override val itemType = MESSAGE
+    private var lastDataId: Long? = null
 
-    fun bind(messageEntity: MessageEntity?, folderType: FoldersManager.FolderType?) {
+    fun bind(
+      messageEntity: MessageEntity?,
+      folderType: FoldersManager.FolderType?
+    ) {
       val context = itemView.context
       if (messageEntity != null) {
         val subject = if (TextUtils.isEmpty(messageEntity.subject)) {
@@ -160,7 +180,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
         binding.textViewSenderAddress.text = senderAddress
 
-        updateAvatar(senderAddress, folderType)
+        updateAvatar(senderAddress, folderType, lastDataId == messageEntity.id)
+        binding.imageViewAvatar.setOnClickListener {
+          onAvatarClickListener.onAvatarClick(messageEntity)
+        }
 
         binding.textViewSubject.text = subject
         if (folderType in listOf(
@@ -204,6 +227,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       } else {
         clearData()
       }
+
+      lastDataId = messageEntity?.id
     }
 
     private fun prepareSenderAddress(
@@ -371,16 +396,29 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
     private fun updateAvatar(
       senderAddress: CharSequence? = null,
-      folderType: FoldersManager.FolderType? = null
+      folderType: FoldersManager.FolderType? = null,
+      useAnimationForCheckedState: Boolean = false
     ) {
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
-        source = when (folderType) {
-          FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+        source = when {
+          itemView.isActivated -> ContextCompat.getDrawable(
+            itemView.context,
+            R.drawable.ic_selected
+          ) ?: R.drawable.ic_selected
+
+          folderType == FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
 
           else -> senderAddress?.let {
             AvatarModelLoader.SCHEMA_AVATAR + it
           } ?: R.mipmap.ic_account_default_photo
-        }
+        },
+        transitionOptions = if (itemView.isActivated && useAnimationForCheckedState) {
+          DrawableTransitionOptions.with(
+            ViewAnimationFactory(Rotate3dAnimation.createAnimation {
+              binding.imageViewAvatar.width * 0.5f
+            })
+          )
+        } else null
       )
     }
 
@@ -460,6 +498,47 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
           append(")$")
         }.toString(), Pattern.CASE_INSENSITIVE)
+    }
+
+    interface OnAvatarClickListener {
+      fun onAvatarClick(msgEntity: MessageEntity)
+    }
+
+    /**
+    Based on https://android.googlesource.com/platform/development/+/master/samples/ApiDemos/
+    src/com/example/android/apis/animation/Rotate3dAnimation.java#
+     */
+    private class Rotate3dAnimation(private val calculateCenterX: () -> Float) : Animation() {
+      private val camera = Camera()
+
+      override fun applyTransformation(interpolatedTime: Float, transformation: Transformation) {
+        val rotation = 0f..180f
+        val degrees = rotation.start + (rotation.endInclusive - rotation.start) * interpolatedTime
+
+        val matrix = transformation.matrix
+        val centerX = calculateCenterX()
+        camera.save()
+        camera.translate(0.0f, 0.0f, 0.9F * (1.0f - interpolatedTime))
+        camera.rotateY(degrees)
+        camera.getMatrix(matrix)
+        camera.restore()
+
+        matrix.preTranslate(-centerX, 0f)
+        matrix.postTranslate(centerX, 0f)
+      }
+
+      companion object {
+        private const val DURATION_IN_MILLISECONDS = 300L
+
+        fun createAnimation(
+          calculateCenterX: () -> Float
+        ): Animation {
+          return Rotate3dAnimation(calculateCenterX).apply {
+            duration = DURATION_IN_MILLISECONDS
+            interpolator = FastOutSlowInInterpolator()
+          }
+        }
+      }
     }
   }
 

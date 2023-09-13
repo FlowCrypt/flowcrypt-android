@@ -43,7 +43,12 @@
     </style>
 
     <style name="AppWidget.ActionMode" parent="Widget.Material3.ActionMode">
-        <item name="background">@color/gray</item>
+        <item name="background">@color/colorPrimary</item>
+        <item name="titleTextStyle">@style/AppTextAppearance.Toolbar.Title</item>
+    </style>
+
+    <style name="AppWidget.ActionButton.CloseMode" parent="Widget.AppCompat.ActionButton.CloseMode">
+        <item name="android:tint">@color/white</item>
     </style>
 
     <!-- Theme Overlay -->

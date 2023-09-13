@@ -5,8 +5,10 @@
 
 package com.flowcrypt.email.extensions.android.widget
 
+import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.TransitionOptions
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
@@ -19,6 +21,7 @@ import com.bumptech.glide.request.RequestOptions
 fun ImageView?.useGlideToApplyImageFromSource(
   source: Any,
   placeholderId: Int? = null,
+  transitionOptions: TransitionOptions<*, in Drawable>? = null,
   diskCacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
   skipMemoryCache: Boolean = false,
   applyCircleTransformation: Boolean = false,
@@ -40,8 +43,11 @@ fun ImageView?.useGlideToApplyImageFromSource(
     requestOptions = requestOptions.placeholder(it).error(it)
   }
 
-  Glide.with(context)
+  var requestBuilder = Glide.with(context)
     .load(source)
     .apply(requestOptions)
-    .into(this)
+  transitionOptions?.let {
+    requestBuilder = requestBuilder.transition(it)
+  }
+  requestBuilder.into(this)
 }
