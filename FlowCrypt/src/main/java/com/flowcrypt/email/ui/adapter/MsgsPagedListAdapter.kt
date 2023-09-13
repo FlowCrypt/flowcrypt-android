@@ -163,7 +163,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   ) : BaseViewHolder(itemView) {
     private val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
     override val itemType = MESSAGE
-    var lastDataId: Long? = null
+    private var lastDataId: Long? = null
 
     fun bind(
       messageEntity: MessageEntity?,

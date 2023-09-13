@@ -9,11 +9,9 @@
     android:viewportWidth="32"
     android:viewportHeight="32">
     <path
-        android:fillColor="?attr/colorOnSurface"
+        android:fillColor="@color/colorPrimary"
         android:fillType="evenOdd"
-        android:pathData="M16,16m-15.5,0a15.5,15.5 0,1 1,31 0a15.5,15.5 0,1 1,-31 0"
-        android:strokeWidth="1"
-        android:strokeColor="?attr/colorOnSurface" />
+        android:pathData="M16,16m-15.5,0a15.5,15.5 0,1 1,31 0a15.5,15.5 0,1 1,-31 0" />
     <path
         android:fillColor="#00000000"
         android:fillType="evenOdd"
