@@ -372,7 +372,9 @@ class FoldersManager constructor(val account: String) {
         attributes = emptyList(),
         isCustom = label.type == GmailApiHelper.FOLDER_TYPE_USER,
         msgCount = 0,
-        searchQuery = ""
+        searchQuery = "",
+        labelColor = label.color?.backgroundColor,
+        textColor = label.color?.textColor
       )
     }
 

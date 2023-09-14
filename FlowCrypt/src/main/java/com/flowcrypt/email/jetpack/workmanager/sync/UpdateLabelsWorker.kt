@@ -68,8 +68,13 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) :
           when (account.accountType) {
             AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
               executeGMailAPICall(context) {
-                GmailApiHelper.getLabels(context, account).map {
-                  FoldersManager.generateFolder(account.email, it)
+                GmailApiHelper.getLabels(context, account).mapNotNull {
+                  if (it.labelListVisibility != "labelHide") {
+                    FoldersManager.generateFolder(
+                      account.email,
+                      it
+                    )
+                  } else null
                 }
               }
             }
