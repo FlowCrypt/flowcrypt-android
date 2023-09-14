@@ -370,7 +370,7 @@ class FoldersManager constructor(val account: String) {
         fullName = label.id,
         folderAlias = label.name,
         attributes = emptyList(),
-        isCustom = label.type == GmailApiHelper.FOLDER_TYPE_USER,
+        isCustom = label.type.equals(GmailApiHelper.FOLDER_TYPE_USER, true),
         msgCount = 0,
         searchQuery = "",
         labelColor = label.color?.backgroundColor,
@@ -469,7 +469,7 @@ class FoldersManager constructor(val account: String) {
       }
     }
 
-    fun getFolderIcon(localFolder: LocalFolder?, isGoogleSignInAccount: Boolean): Int {
+    fun getFolderIconResources(localFolder: LocalFolder?, isGoogleSignInAccount: Boolean): Int {
       return when (localFolder?.getFolderType()) {
         FolderType.INBOX -> R.drawable.ic_mail_24dp
         FolderType.All -> R.drawable.ic_mails_24dp

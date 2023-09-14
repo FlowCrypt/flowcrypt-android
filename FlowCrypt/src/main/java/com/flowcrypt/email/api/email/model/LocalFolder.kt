@@ -36,7 +36,9 @@ data class LocalFolder constructor(
     source.attributesList,
     source.isCustom,
     source.messagesTotal,
-    null
+    null,
+    source.labelColor,
+    source.textColor,
   )
 
   @IgnoredOnParcel
