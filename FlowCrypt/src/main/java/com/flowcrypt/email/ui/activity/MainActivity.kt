@@ -327,15 +327,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       mailLabels?.subMenu?.clear()
 
       foldersManager?.run {
-        val folders = getSortedServerFolders() + customLabels
+        val folders =
+          getSortedServerFolders() + customLabels.sortedBy { it.folderAlias?.lowercase() }
         val isGoogleAccount = activeAccount?.isGoogleSignInAccount ?: false
 
         folders.forEach { localFolder ->
-          val folderIconResource =
-            FoldersManager.getFolderIconResources(localFolder, isGoogleAccount)
+          val folderIconResourceId =
+            FoldersManager.getFolderIconResourceId(localFolder, isGoogleAccount)
           val addedItem = mailLabels?.subMenu?.add(localFolder.folderAlias)
           if (localFolder.isCustom && localFolder.labelColor != null) {
-            val drawable = ContextCompat.getDrawable(this@MainActivity, folderIconResource)
+            val drawable = ContextCompat.getDrawable(this@MainActivity, folderIconResourceId)
             val color = try {
               Color.parseColor(localFolder.labelColor)
             } catch (e: Exception) {
@@ -358,7 +359,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             )
             addedItem?.icon = drawable
           } else {
-            addedItem?.setIcon(folderIconResource)
+            addedItem?.setIcon(folderIconResourceId)
           }
 
           if (JavaEmailConstants.FOLDER_OUTBOX == localFolder.folderAlias) {

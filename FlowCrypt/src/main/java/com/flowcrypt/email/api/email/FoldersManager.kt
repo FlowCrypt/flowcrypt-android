@@ -469,7 +469,7 @@ class FoldersManager constructor(val account: String) {
       }
     }
 
-    fun getFolderIconResources(localFolder: LocalFolder?, isGoogleSignInAccount: Boolean): Int {
+    fun getFolderIconResourceId(localFolder: LocalFolder?, isGoogleSignInAccount: Boolean): Int {
       return when (localFolder?.getFolderType()) {
         FolderType.INBOX -> R.drawable.ic_mail_24dp
         FolderType.All -> R.drawable.ic_mails_24dp
