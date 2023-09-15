@@ -43,7 +43,8 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   NEW_PASSWORD_PROTECTED(23),
   ERROR_PASSWORD_PROTECTED(24),
   PENDING_UPLOADING_DRAFT(25),
-  PENDING_DELETING_DRAFT(26);
+  PENDING_DELETING_DRAFT(26),
+  PENDING_MOVE_TO_SPAM(26);
 
 
   companion object {
