@@ -52,6 +52,8 @@
         android:id="@+id/navigationView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:paddingTop="@dimen/default_margin_content"
+        android:paddingBottom="@dimen/default_margin_content"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header"

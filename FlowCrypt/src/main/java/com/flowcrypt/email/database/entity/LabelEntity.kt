@@ -45,7 +45,9 @@ data class LabelEntity(
   @ColumnInfo(name = "message_unread", defaultValue = "0") val messagesUnread: Int = 0,
   @ColumnInfo(name = "attributes", defaultValue = "NULL") val attributes: String? = null,
   @ColumnInfo(name = "next_page_token", defaultValue = "NULL") val nextPageToken: String? = null,
-  @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null
+  @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
+  @ColumnInfo(name = "label_color", defaultValue = "NULL") val labelColor: String? = null,
+  @ColumnInfo(name = "text_color", defaultValue = "NULL") val textColor: String? = null,
 ) {
 
   @Ignore
@@ -62,7 +64,9 @@ data class LabelEntity(
           isCustom = isCustom,
           alias = folderAlias,
           messagesTotal = msgCount,
-          attributes = convertAttributesToString(localFolder.attributes)
+          attributes = convertAttributesToString(localFolder.attributes),
+          labelColor = labelColor,
+          textColor = textColor,
         )
       }
     }

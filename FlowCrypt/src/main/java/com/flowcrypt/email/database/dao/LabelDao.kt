@@ -46,20 +46,20 @@ interface LabelDao : BaseDao<LabelEntity> {
 
   @Transaction
   suspend fun update(accountEntity: AccountEntity, freshLabels: Collection<LabelEntity>) {
-    val existedLabels = getLabelsSuspend(accountEntity.email, accountEntity.accountType)
+    val existingLabels = getLabelsSuspend(accountEntity.email, accountEntity.accountType)
 
     val deleteCandidates = mutableListOf<LabelEntity>()
-    for (existedLabel in existedLabels) {
+    for (existingLabel in existingLabels) {
       var isFolderFound = false
       for (freshLabel in freshLabels) {
-        if (freshLabel.name == existedLabel.name) {
+        if (freshLabel.name == existingLabel.name) {
           isFolderFound = true
           break
         }
       }
 
       if (!isFolderFound) {
-        deleteCandidates.add(existedLabel)
+        deleteCandidates.add(existingLabel)
       }
     }
 
@@ -68,20 +68,21 @@ interface LabelDao : BaseDao<LabelEntity> {
 
     for (freshLabel in freshLabels) {
       var isFolderFound = false
-      for (existedLabel in existedLabels) {
+      for (existedLabel in existingLabels) {
         if (existedLabel.name == freshLabel.name) {
           isFolderFound = true
-          if (existedLabel.alias != freshLabel.alias) {
-            if (existedLabel.attributes == freshLabel.attributes) {
-              updateCandidates.add(existedLabel.copy(alias = freshLabel.alias))
-            } else {
-              updateCandidates.add(
-                existedLabel.copy(
-                  alias = freshLabel.alias,
-                  attributes = freshLabel.attributes
-                )
+          if (existedLabel.alias != freshLabel.alias
+            || existedLabel.labelColor != freshLabel.labelColor
+            || existedLabel.textColor != freshLabel.textColor
+          ) {
+            updateCandidates.add(
+              existedLabel.copy(
+                alias = freshLabel.alias,
+                labelColor = freshLabel.labelColor,
+                textColor = freshLabel.textColor,
+                attributes = freshLabel.attributes
               )
-            }
+            )
           }
           break
         }

@@ -11,8 +11,10 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -25,6 +27,9 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -73,6 +78,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDia
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
@@ -267,10 +273,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           }
         }
       }
-
       binding.drawerLayout.closeDrawer(GravityCompat.START)
       return@setNavigationItemSelectedListener true
     }
+
+    //disable the default icon tint to be able to use different colors for labels
+    binding.navigationView.itemIconTintList = null
   }
 
   private fun setupDrawerLayout() {
@@ -319,13 +327,40 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       mailLabels?.subMenu?.clear()
 
       foldersManager?.run {
-        val folders = getSortedServerFolders() + customLabels
+        val folders =
+          getSortedServerFolders() + customLabels.sortedBy { it.folderAlias?.lowercase() }
         val isGoogleAccount = activeAccount?.isGoogleSignInAccount ?: false
 
         folders.forEach { localFolder ->
-          mailLabels?.subMenu?.add(localFolder.folderAlias)?.setIcon(
-            FoldersManager.getFolderIcon(localFolder, isGoogleAccount)
-          )
+          val folderIconResourceId =
+            FoldersManager.getFolderIconResourceId(localFolder, isGoogleAccount)
+          val addedItem = mailLabels?.subMenu?.add(localFolder.folderAlias)
+          if (localFolder.isCustom && localFolder.labelColor != null) {
+            val drawable = ContextCompat.getDrawable(this@MainActivity, folderIconResourceId)
+            val color = try {
+              Color.parseColor(localFolder.labelColor)
+            } catch (e: Exception) {
+              /*
+              if can not recognize a received color
+              we will try to use a default color from the active theme
+              */
+              val typedValue = TypedValue()
+              theme.resolveAttribute(android.R.attr.colorControlNormal, typedValue, true)
+              try {
+                ContextCompat.getColor(this@MainActivity, typedValue.resourceId)
+              } catch (e: Exception) {
+                //otherwise we will use a predefined color
+                UIUtil.getColor(this@MainActivity, R.color.gray)
+              }
+            }
+            drawable?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+              color,
+              BlendModeCompat.SRC_IN
+            )
+            addedItem?.icon = drawable
+          } else {
+            addedItem?.setIcon(folderIconResourceId)
+          }
 
           if (JavaEmailConstants.FOLDER_OUTBOX == localFolder.folderAlias) {
             addOutboxLabel(foldersManager, mailLabels, localFolder.folderAlias ?: "")
