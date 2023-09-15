@@ -46,7 +46,6 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   PENDING_DELETING_DRAFT(26),
   PENDING_MOVE_TO_SPAM(26);
 
-
   companion object {
     @JvmStatic
     fun generate(code: Int): MessageState {

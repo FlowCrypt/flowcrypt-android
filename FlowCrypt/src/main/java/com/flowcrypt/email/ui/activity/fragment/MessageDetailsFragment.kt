@@ -97,6 +97,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -388,6 +389,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
           R.id.menuActionMarkUnread -> {
             msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_UNREAD)
+            true
+          }
+
+          R.id.menuActionMoveToSpam -> {
+            msgDetailsViewModel.changeMsgState(MessageState.PENDING_MOVE_TO_SPAM)
             true
           }
 
@@ -1583,6 +1589,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         )
 
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
+        MessageState.PENDING_MOVE_TO_SPAM -> MovingToSpamWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_READ -> {
           UpdateMsgsSeenStateWorker.enqueue(requireContext())

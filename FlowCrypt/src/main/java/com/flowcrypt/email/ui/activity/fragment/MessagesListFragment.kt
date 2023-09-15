@@ -77,6 +77,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWor
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.MessagesNotificationManager
@@ -1017,7 +1018,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )
+
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
+        MessageState.PENDING_MOVE_TO_SPAM -> MovingToSpamWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> UpdateMsgsSeenStateWorker.enqueue(
           requireContext()
         )

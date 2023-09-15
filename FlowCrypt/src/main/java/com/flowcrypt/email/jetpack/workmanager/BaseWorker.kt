@@ -6,10 +6,17 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.ListenableWorker
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -30,4 +37,26 @@ abstract class BaseWorker(context: Context, params: WorkerParameters) :
         return@withContext Result.retry()
       }
     }
+
+  companion object {
+    inline fun <reified W : ListenableWorker> enqueueWithDefaultParameters(
+      context: Context,
+      uniqueWorkName: String
+    ) {
+      val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+
+      WorkManager
+        .getInstance(context.applicationContext)
+        .enqueueUniqueWork(
+          uniqueWorkName,
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<W>()
+            .addTag(BaseSyncWorker.TAG_SYNC)
+            .setConstraints(constraints)
+            .build()
+        )
+    }
+  }
 }
