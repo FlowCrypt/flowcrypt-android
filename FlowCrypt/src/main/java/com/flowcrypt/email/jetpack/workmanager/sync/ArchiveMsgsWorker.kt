@@ -14,7 +14,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.Message
@@ -93,7 +92,7 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) :
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".ARCHIVE_MESSAGES"
 
     fun enqueue(context: Context) {
-      enqueueWithDefaultParameters<ForwardedAttachmentsDownloaderWorker>(
+      enqueueWithDefaultParameters<ArchiveMsgsWorker>(
         context = context,
         uniqueWorkName = GROUP_UNIQUE_TAG,
         existingWorkPolicy = ExistingWorkPolicy.REPLACE
