@@ -94,8 +94,8 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
       } else {
         val setOfFolders = candidatesForMoving.map { it.folder }.toSet()
         for (srcFolder in setOfFolders) {
-          val filteredMsgs = candidatesForMoving.filter { it.folder == srcFolder }
-          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(
+          val filteredMessages = candidatesForMoving.filter { it.folder == srcFolder }
+          if (filteredMessages.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(
               srcFolder,
               ignoreCase = true
             )
@@ -103,7 +103,7 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
             continue
           }
 
-          val uidList = filteredMsgs.map { it.uid }
+          val uidList = filteredMessages.map { it.uid }
           action.invoke(srcFolder, uidList)
           val movedMessages = candidatesForMoving.filter { it.uid in uidList }
             .map { it.copy(state = MessageState.NONE.value) }
