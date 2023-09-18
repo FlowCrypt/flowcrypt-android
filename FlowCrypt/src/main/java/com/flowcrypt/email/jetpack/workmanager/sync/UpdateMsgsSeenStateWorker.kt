@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Folder
@@ -116,7 +115,7 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
       BuildConfig.APPLICATION_ID + ".UPDATE_MESSAGES_SEEN_STATE_ON_SERVER"
 
     fun enqueue(context: Context) {
-      enqueueWithDefaultParameters<ForwardedAttachmentsDownloaderWorker>(
+      enqueueWithDefaultParameters<UpdateMsgsSeenStateWorker>(
         context = context,
         uniqueWorkName = GROUP_UNIQUE_TAG,
         existingWorkPolicy = ExistingWorkPolicy.REPLACE
