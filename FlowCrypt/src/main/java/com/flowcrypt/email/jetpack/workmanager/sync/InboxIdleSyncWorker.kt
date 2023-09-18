@@ -6,11 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
@@ -183,20 +179,11 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".IDLE_SYNC_INBOX"
 
     fun enqueue(context: Context, policy: ExistingWorkPolicy = ExistingWorkPolicy.REPLACE) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          GROUP_UNIQUE_TAG,
-          policy,
-          OneTimeWorkRequestBuilder<InboxIdleSyncWorker>()
-            .addTag(TAG_SYNC)
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<InboxIdleSyncWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = policy
+      )
     }
   }
 }

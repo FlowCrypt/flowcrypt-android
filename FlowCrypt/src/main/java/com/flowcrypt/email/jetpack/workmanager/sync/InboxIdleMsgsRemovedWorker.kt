@@ -6,11 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
@@ -65,20 +61,11 @@ class InboxIdleMsgsRemovedWorker(context: Context, params: WorkerParameters) : B
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".INBOX_IDLE_MESSAGES_REMOVED"
 
     fun enqueue(context: Context) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.REPLACE,
-          OneTimeWorkRequestBuilder<InboxIdleMsgsRemovedWorker>()
-            .addTag(TAG_SYNC)
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<InboxIdleMsgsRemovedWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.REPLACE
+      )
     }
   }
 }

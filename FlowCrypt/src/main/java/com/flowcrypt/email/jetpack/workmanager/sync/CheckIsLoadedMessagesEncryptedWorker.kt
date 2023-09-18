@@ -6,12 +6,8 @@
 package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
@@ -83,25 +79,14 @@ class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParam
     private const val KEY_FOLDER_FULL_NAME = "KEY_FOLDER"
 
     fun enqueue(context: Context, localFolder: LocalFolder) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      val inputData = Data.Builder()
-        .putString(KEY_FOLDER_FULL_NAME, localFolder.fullName)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.REPLACE,
-          OneTimeWorkRequestBuilder<CheckIsLoadedMessagesEncryptedWorker>()
-            .setInputData(inputData)
-            .addTag(TAG_SYNC)
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<CheckIsLoadedMessagesEncryptedWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.REPLACE,
+        inputData = Data.Builder()
+          .putString(KEY_FOLDER_FULL_NAME, localFolder.fullName)
+          .build()
+      )
     }
   }
 }

@@ -6,11 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -87,22 +83,14 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
   companion object {
     private val TAG = RefreshClientConfigurationWorker::class.java.simpleName
-    val NAME = RefreshClientConfigurationWorker::class.java.simpleName
+    val GROUP_UNIQUE_TAG = RefreshClientConfigurationWorker::class.java.simpleName
 
     fun enqueue(context: Context) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          NAME,
-          ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<RefreshClientConfigurationWorker>()
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<RefreshClientConfigurationWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.KEEP
+      )
     }
   }
 }

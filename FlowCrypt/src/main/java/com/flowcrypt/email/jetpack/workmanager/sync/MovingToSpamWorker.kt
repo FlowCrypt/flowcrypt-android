@@ -6,6 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
+import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -36,7 +37,11 @@ class MovingToSpamWorker(context: Context, params: WorkerParameters) :
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVING_MESSAGES_TO_SPAM"
 
     fun enqueue(context: Context) {
-      enqueueWithDefaultParameters<MovingToSpamWorker>(context, GROUP_UNIQUE_TAG)
+      enqueueWithDefaultParameters<MovingToSpamWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.REPLACE
+      )
     }
   }
 }

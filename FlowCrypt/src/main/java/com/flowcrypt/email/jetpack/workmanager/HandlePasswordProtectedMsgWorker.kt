@@ -6,11 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -442,25 +438,17 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   companion object {
     private val TAG = HandlePasswordProtectedMsgWorker::class.java.simpleName
     private const val RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN = 6
-    val NAME = HandlePasswordProtectedMsgWorker::class.java.simpleName
+    val GROUP_UNIQUE_TAG = HandlePasswordProtectedMsgWorker::class.java.simpleName
 
     fun genInfoDiv(replyInfo: String?) =
       "<div style=\"display: none\" class=\"cryptup_reply\" cryptup-data=\"$replyInfo\"></div>"
 
     fun enqueue(context: Context) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          NAME,
-          ExistingWorkPolicy.REPLACE,
-          OneTimeWorkRequestBuilder<HandlePasswordProtectedMsgWorker>()
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<HandlePasswordProtectedMsgWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.REPLACE
+      )
     }
   }
 }

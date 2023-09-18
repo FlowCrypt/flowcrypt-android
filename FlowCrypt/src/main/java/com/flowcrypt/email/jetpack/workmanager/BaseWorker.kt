@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.workmanager
 import android.content.Context
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
 import androidx.work.NetworkType
@@ -41,7 +42,9 @@ abstract class BaseWorker(context: Context, params: WorkerParameters) :
   companion object {
     inline fun <reified W : ListenableWorker> enqueueWithDefaultParameters(
       context: Context,
-      uniqueWorkName: String
+      uniqueWorkName: String,
+      existingWorkPolicy: ExistingWorkPolicy,
+      inputData: Data = Data.EMPTY
     ) {
       val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -51,9 +54,10 @@ abstract class BaseWorker(context: Context, params: WorkerParameters) :
         .getInstance(context.applicationContext)
         .enqueueUniqueWork(
           uniqueWorkName,
-          ExistingWorkPolicy.REPLACE,
+          existingWorkPolicy,
           OneTimeWorkRequestBuilder<W>()
             .addTag(BaseSyncWorker.TAG_SYNC)
+            .setInputData(inputData)
             .setConstraints(constraints)
             .build()
         )
