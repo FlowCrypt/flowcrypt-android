@@ -596,7 +596,7 @@
     <string name="this_key_is_unprotected_please_protect_it_with_pass_phrase_before_import">Этот ключ не защищен. Пожалуйста, защитите его ключевой фразой перед импортом.</string>
     <string name="private_key_passphrase_anti_bruteforce_protection_hint">Чтобы защитить Вас и Ваши данные, следующая попытка будет возможна только после того, как таймер ниже истечет. Пожалуйста, подождите до тех пор, прежде чем повторить попытку.</string>
     <string name="avatar">Аватар</string>
-    <string name="move_to_spam">Move to Spam</string>
+    <string name="move_to_spam">Переместить в спам</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

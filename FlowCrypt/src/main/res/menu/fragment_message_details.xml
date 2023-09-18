@@ -32,7 +32,7 @@
 
     <item
         android:id="@+id/menuActionMoveToSpam"
-        android:icon="@drawable/selector_ic_move_to_inbox_white"
+        android:icon="@drawable/selector_ic_move_to_spam_white"
         android:title="@string/move_to_spam"
         app:showAsAction="ifRoom" />
 </menu>
