@@ -11,6 +11,7 @@ import androidx.core.content.FileProvider
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -277,7 +278,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
   companion object {
     private val TAG = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
-    val GROUP_UNIQUE_TAG: String = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".DOWNLOAD_FORWARDED_ATTACHMENTS"
 
     fun enqueue(context: Context) {
       enqueueWithDefaultParameters<ForwardedAttachmentsDownloaderWorker>(

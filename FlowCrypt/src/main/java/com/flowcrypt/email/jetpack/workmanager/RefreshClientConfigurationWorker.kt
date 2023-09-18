@@ -83,7 +83,7 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
 
   companion object {
     private val TAG = RefreshClientConfigurationWorker::class.java.simpleName
-    val GROUP_UNIQUE_TAG = RefreshClientConfigurationWorker::class.java.simpleName
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".REFRESH_CLIENT_CONFIGURATION"
 
     fun enqueue(context: Context) {
       enqueueWithDefaultParameters<RefreshClientConfigurationWorker>(

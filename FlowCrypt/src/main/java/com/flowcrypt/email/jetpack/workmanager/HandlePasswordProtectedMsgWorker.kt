@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.workmanager
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -438,7 +439,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   companion object {
     private val TAG = HandlePasswordProtectedMsgWorker::class.java.simpleName
     private const val RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN = 6
-    val GROUP_UNIQUE_TAG = HandlePasswordProtectedMsgWorker::class.java.simpleName
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".HANDLE_PASSWORD_PROTECTED_MESSAGES"
 
     fun genInfoDiv(replyInfo: String?) =
       "<div style=\"display: none\" class=\"cryptup_reply\" cryptup-data=\"$replyInfo\"></div>"
