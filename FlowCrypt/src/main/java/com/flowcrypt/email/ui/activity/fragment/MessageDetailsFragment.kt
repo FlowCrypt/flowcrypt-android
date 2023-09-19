@@ -251,6 +251,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var isDeleteActionEnabled: Boolean = false
   private var isArchiveActionEnabled: Boolean = false
   private var isMoveToInboxActionEnabled: Boolean = false
+  private var isMoveToSpamActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var downloadAttachmentsProgressJob: Job? = null
@@ -317,23 +318,27 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
         val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
         val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
+        val menuActionMoveToSpam = menu.findItem(R.id.menuActionMoveToSpam)
 
         menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
         menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
         menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
         menuActionMarkUnread?.isVisible =
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
+        menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
 
         menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
         menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
         menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
         menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
+        menuActionMoveToSpam?.isEnabled = isAdditionalActionEnabled
 
         args.localFolder.searchQuery?.let {
           menuItemArchiveMsg?.isVisible = false
           menuItemDeleteMsg?.isVisible = false
           menuActionMoveToInbox?.isVisible = false
           menuActionMarkUnread?.isVisible = false
+          menuActionMoveToSpam?.isVisible = false
         }
       }
 
@@ -629,17 +634,32 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             isArchiveActionEnabled = true
           }
           isDeleteActionEnabled = true
+          isMoveToSpamActionEnabled = true
         }
 
-        FoldersManager.FolderType.SENT -> isDeleteActionEnabled = true
+        FoldersManager.FolderType.SENT -> {
+          isDeleteActionEnabled = true
+          isMoveToSpamActionEnabled = AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+        }
 
         FoldersManager.FolderType.TRASH -> {
           isMoveToInboxActionEnabled = true
           isDeleteActionEnabled = true
+          isMoveToSpamActionEnabled = true
         }
 
         FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
           isMoveToInboxActionEnabled = false
+          isMoveToSpamActionEnabled = false
+          isArchiveActionEnabled = false
+          isDeleteActionEnabled = true
+        }
+
+        FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM -> {
+          if (AccountEntity.ACCOUNT_TYPE_GOOGLE != account?.accountType) {
+            isArchiveActionEnabled = false
+          }
+          isMoveToSpamActionEnabled = false
           isArchiveActionEnabled = false
           isDeleteActionEnabled = true
         }
@@ -648,11 +668,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           isMoveToInboxActionEnabled = true
           isArchiveActionEnabled = false
           isDeleteActionEnabled = true
+          isMoveToSpamActionEnabled = true
         }
       }
     } else {
       isArchiveActionEnabled = false
       isMoveToInboxActionEnabled = false
+      isMoveToSpamActionEnabled = false
       isDeleteActionEnabled = true
     }
 

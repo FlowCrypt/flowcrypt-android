@@ -414,6 +414,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           ) ?: R.drawable.ic_selected
 
           folderType == FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+          folderType in listOf(
+            FoldersManager.FolderType.SPAM,
+            FoldersManager.FolderType.JUNK
+          ) -> R.drawable.ic_spam_48dp
 
           else -> senderAddress?.let {
             AvatarModelLoader.SCHEMA_AVATAR + it
