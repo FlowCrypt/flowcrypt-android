@@ -1282,7 +1282,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   private fun isSpamActionEnabled(): Boolean {
     return FoldersManager.getFolderType(currentFolder) !in listOf(
       FoldersManager.FolderType.SPAM,
-      FoldersManager.FolderType.JUNK
+      FoldersManager.FolderType.JUNK,
+      FoldersManager.FolderType.DRAFTS
     )
   }
 
