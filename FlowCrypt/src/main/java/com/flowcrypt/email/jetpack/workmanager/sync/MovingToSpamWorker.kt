@@ -9,11 +9,14 @@ import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMoveMessagesWorker
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * @author Denys Bondarenko
@@ -21,10 +24,11 @@ import com.flowcrypt.email.jetpack.workmanager.base.BaseMoveMessagesWorker
 class MovingToSpamWorker(context: Context, params: WorkerParameters) :
   BaseMoveMessagesWorker(context, params) {
   override val queryMessageState: MessageState = MessageState.PENDING_MOVE_TO_SPAM
-
-  override suspend fun getDestinationFolderForIMAP(account: AccountEntity): LocalFolder? {
-    TODO("Not yet implemented")
-  }
+  override suspend fun getDestinationFolderForIMAP(account: AccountEntity): LocalFolder? =
+    withContext(Dispatchers.IO) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      return@withContext foldersManager.folderSpam
+    }
 
   override fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): Pair<List<String>?, List<String>?> {
     return Pair(

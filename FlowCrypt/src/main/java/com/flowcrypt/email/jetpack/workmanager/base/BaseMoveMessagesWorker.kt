@@ -80,7 +80,7 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
     action: suspend (folderName: String, uidList: List<Long>) -> Unit
   ) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-    val folderTrash = foldersManager.folderTrash
+    val folderAll = foldersManager.folderAll
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
@@ -107,10 +107,10 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
           action.invoke(srcFolder, uidList)
           val movedMessages = candidatesForMoving.filter { it.uid in uidList }
             .map { it.copy(state = MessageState.NONE.value) }
-          if (srcFolder.equals(folderTrash?.fullName, true)) {
-            roomDatabase.msgDao().deleteSuspend(movedMessages)
-          } else {
+          if (srcFolder.equals(folderAll?.fullName, true)) {
             roomDatabase.msgDao().updateSuspend(movedMessages)
+          } else {
+            roomDatabase.msgDao().deleteSuspend(movedMessages)
           }
         }
       }

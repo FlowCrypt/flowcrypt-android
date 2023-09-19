@@ -859,6 +859,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               true
             }
 
+            R.id.menuActionMoveToSpam -> {
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MOVE_TO_SPAM)
+              mode?.finish()
+              true
+            }
+
             else -> false
           }
         }
