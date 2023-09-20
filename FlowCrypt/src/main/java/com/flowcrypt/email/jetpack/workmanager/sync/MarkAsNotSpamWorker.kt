@@ -29,10 +29,10 @@ class MarkAsNotSpamWorker(context: Context, params: WorkerParameters) :
       return@withContext null
     }
 
-  override fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): Pair<List<String>?, List<String>?> {
-    return Pair(
-      listOf(GmailApiHelper.LABEL_INBOX),
-      listOf(GmailApiHelper.LABEL_SPAM)
+  override fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): GmailApiLabelsData {
+    return GmailApiLabelsData(
+      addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
+      removeLabelIds = listOf(GmailApiHelper.LABEL_SPAM)
     )
   }
 

@@ -31,7 +31,7 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
 
   abstract val queryMessageState: MessageState
   abstract suspend fun getDestinationFolderForIMAP(account: AccountEntity): LocalFolder?
-  abstract fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): Pair<List<String>?, List<String>?>
+  abstract fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): GmailApiLabelsData
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     moveMessages(accountEntity, store)
   }
@@ -61,13 +61,13 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
   private suspend fun moveMessages(account: AccountEntity) = withContext(Dispatchers.IO) {
     moveMessagesInternal(account) { folderName, uidList ->
       executeGMailAPICall(applicationContext) {
-        val addAndRemoveLabelsPair = getAddAndRemoveLabelIdsForGmailAPI(folderName)
+        val gmailApiLabelsData = getAddAndRemoveLabelIdsForGmailAPI(folderName)
         GmailApiHelper.changeLabels(
           context = applicationContext,
           accountEntity = account,
           ids = uidList.map { java.lang.Long.toHexString(it).lowercase() },
-          addLabelIds = addAndRemoveLabelsPair.first,
-          removeLabelIds = addAndRemoveLabelsPair.second
+          addLabelIds = gmailApiLabelsData.addLabelIds,
+          removeLabelIds = gmailApiLabelsData.removeLabelIds
         )
       }
 
@@ -84,36 +84,41 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
-      val candidatesForMoving = roomDatabase.msgDao().getMsgsWithStateSuspend(
+      val messagesToMove = roomDatabase.msgDao().getMsgsWithStateSuspend(
         account.email,
         queryMessageState.value
       )
 
-      if (candidatesForMoving.isEmpty()) {
+      if (messagesToMove.isEmpty()) {
         break
-      } else {
-        val setOfFolders = candidatesForMoving.map { it.folder }.toSet()
-        for (srcFolder in setOfFolders) {
-          val filteredMessages = candidatesForMoving.filter { it.folder == srcFolder }
-          if (filteredMessages.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(
-              srcFolder,
-              ignoreCase = true
-            )
-          ) {
-            continue
-          }
+      }
 
-          val uidList = filteredMessages.map { it.uid }
-          action.invoke(srcFolder, uidList)
-          val movedMessages = candidatesForMoving.filter { it.uid in uidList }
-            .map { it.copy(state = MessageState.NONE.value) }
-          if (srcFolder.equals(folderAll?.fullName, true)) {
-            roomDatabase.msgDao().updateSuspend(movedMessages)
-          } else {
-            roomDatabase.msgDao().deleteSuspend(movedMessages)
-          }
+      val setOfFolders = messagesToMove.map { it.folder }.toSet()
+      for (srcFolder in setOfFolders) {
+        val filteredMessages = messagesToMove.filter { it.folder == srcFolder }
+        if (filteredMessages.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(
+            srcFolder,
+            ignoreCase = true
+          )
+        ) {
+          continue
+        }
+
+        val uidList = filteredMessages.map { it.uid }
+        action.invoke(srcFolder, uidList)
+        val movedMessages = messagesToMove.filter { it.uid in uidList }
+          .map { it.copy(state = MessageState.NONE.value) }
+        if (srcFolder.equals(folderAll?.fullName, true)) {
+          roomDatabase.msgDao().updateSuspend(movedMessages)
+        } else {
+          roomDatabase.msgDao().deleteSuspend(movedMessages)
         }
       }
     }
   }
+
+  data class GmailApiLabelsData(
+    val addLabelIds: List<String>? = null,
+    val removeLabelIds: List<String>? = null
+  )
 }

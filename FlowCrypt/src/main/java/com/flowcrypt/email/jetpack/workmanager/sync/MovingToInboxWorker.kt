@@ -34,10 +34,10 @@ class MovingToInboxWorker(context: Context, params: WorkerParameters) :
       return@withContext foldersManager.findInboxFolder()
     }
 
-  override fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): Pair<List<String>?, List<String>?> {
-    return Pair(
-      listOf(GmailApiHelper.LABEL_INBOX),
-      if (GmailApiHelper.LABEL_TRASH.equals(srcFolder, true)) listOf(
+  override fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): GmailApiLabelsData {
+    return GmailApiLabelsData(
+      addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
+      removeLabelIds = if (GmailApiHelper.LABEL_TRASH.equals(srcFolder, true)) listOf(
         GmailApiHelper.LABEL_TRASH
       ) else null
     )
