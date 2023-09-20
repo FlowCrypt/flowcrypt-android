@@ -76,6 +76,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
@@ -866,6 +867,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               true
             }
 
+            R.id.menuActionMarkAsNotSpam -> {
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_AS_NOT_SPAM)
+              mode?.finish()
+              true
+            }
+
             else -> false
           }
         }
@@ -1028,6 +1035,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
         MessageState.PENDING_MOVE_TO_SPAM -> MovingToSpamWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_AS_NOT_SPAM -> MarkAsNotSpamWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> UpdateMsgsSeenStateWorker.enqueue(
           requireContext()
         )

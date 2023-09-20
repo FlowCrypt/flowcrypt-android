@@ -5,7 +5,7 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Disabled state -->
-    <item android:drawable="@drawable/ic_move_to_spam_white_24dp_50_opacity" android:state_enabled="false" />
+    <item android:drawable="@drawable/ic_to_spam_white_24dp_50_opacity" android:state_enabled="false" />
     <!-- Default state -->
-    <item android:drawable="@drawable/ic_move_to_spam_white_24dp" />
+    <item android:drawable="@drawable/ic_to_spam_white_24dp" />
 </selector>

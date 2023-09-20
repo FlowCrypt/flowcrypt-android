@@ -283,7 +283,14 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         MessageState.PENDING_MOVE_TO_SPAM -> {
           with(binding.imageViewStatus) {
             visibility = View.VISIBLE
-            setBackgroundResource(R.drawable.ic_spam_blue_16dp)
+            setBackgroundResource(R.drawable.ic_to_spam_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_MARK_AS_NOT_SPAM -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_from_spam_blue_16dp)
           }
         }
 

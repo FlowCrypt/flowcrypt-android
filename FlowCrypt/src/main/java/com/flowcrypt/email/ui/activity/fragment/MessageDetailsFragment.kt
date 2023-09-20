@@ -96,6 +96,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
@@ -252,6 +253,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var isArchiveActionEnabled: Boolean = false
   private var isMoveToInboxActionEnabled: Boolean = false
   private var isMoveToSpamActionEnabled: Boolean = false
+  private var isMarkAsNotSpamActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var downloadAttachmentsProgressJob: Job? = null
@@ -319,6 +321,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
         val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
         val menuActionMoveToSpam = menu.findItem(R.id.menuActionMoveToSpam)
+        val menuActionMarkAsNotSpam = menu.findItem(R.id.menuActionMarkAsNotSpam)
 
         menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
         menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
@@ -326,12 +329,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         menuActionMarkUnread?.isVisible =
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
         menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
+        menuActionMarkAsNotSpam?.isVisible = isMarkAsNotSpamActionEnabled
 
         menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
         menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
         menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
         menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
         menuActionMoveToSpam?.isEnabled = isAdditionalActionEnabled
+        menuActionMarkAsNotSpam?.isEnabled = isAdditionalActionEnabled
 
         args.localFolder.searchQuery?.let {
           menuItemArchiveMsg?.isVisible = false
@@ -339,6 +344,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           menuActionMoveToInbox?.isVisible = false
           menuActionMarkUnread?.isVisible = false
           menuActionMoveToSpam?.isVisible = false
+          menuActionMarkAsNotSpam?.isVisible = false
         }
       }
 
@@ -399,6 +405,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
           R.id.menuActionMoveToSpam -> {
             msgDetailsViewModel.changeMsgState(MessageState.PENDING_MOVE_TO_SPAM)
+            true
+          }
+
+          R.id.menuActionMarkAsNotSpam -> {
+            msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_AS_NOT_SPAM)
             true
           }
 
@@ -658,6 +669,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM -> {
           if (AccountEntity.ACCOUNT_TYPE_GOOGLE != account?.accountType) {
             isArchiveActionEnabled = false
+          } else {
+            isMarkAsNotSpamActionEnabled = true
           }
           isMoveToSpamActionEnabled = false
           isArchiveActionEnabled = false
@@ -1612,6 +1625,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
         MessageState.PENDING_MOVE_TO_SPAM -> MovingToSpamWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_AS_NOT_SPAM -> MarkAsNotSpamWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_READ -> {
           UpdateMsgsSeenStateWorker.enqueue(requireContext())
