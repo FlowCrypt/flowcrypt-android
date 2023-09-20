@@ -26,7 +26,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -39,6 +38,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class MainSettingsFragmentNavigationToSubMenuFlowTest : BaseTest() {
+  override val useCommonIdling: Boolean = false
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.mainSettingsFragment
@@ -66,7 +66,6 @@ class MainSettingsFragmentNavigationToSubMenuFlowTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testShowContactsScreen() {
     checkIsScreenDisplaying(getResString(R.string.contacts))
   }

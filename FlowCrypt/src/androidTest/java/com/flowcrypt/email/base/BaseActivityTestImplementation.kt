@@ -24,4 +24,7 @@ interface BaseActivityTestImplementation {
 
   val useIntents: Boolean
     get() = false
+
+  val useCommonIdling: Boolean
+    get() = true
 }

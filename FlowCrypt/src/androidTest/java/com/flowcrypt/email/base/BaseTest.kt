@@ -99,8 +99,10 @@ abstract class BaseTest : BaseActivityTestImplementation {
   @Before
   fun registerCountingIdlingResource() {
     countingIdlingResource = FlavorSettings.getCountingIdlingResource()
-    (countingIdlingResource as? CountingIdlingResource)?.shutdown()
-    countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    if (useCommonIdling) {
+      (countingIdlingResource as? CountingIdlingResource)?.shutdown()
+      countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    }
   }
 
   @After
