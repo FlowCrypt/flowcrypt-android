@@ -888,6 +888,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
         menu?.findItem(R.id.menuActionArchiveMessage)?.isVisible = isArchiveActionEnabled()
         menu?.findItem(R.id.menuActionMoveToSpam)?.isVisible = isSpamActionEnabled()
+        menu?.findItem(R.id.menuActionMarkAsNotSpam)?.isVisible = isMarkNotSpamActionEnabled()
 
         val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
         menuActionMarkRead?.isVisible = isChangeSeenStateActionEnabled()
@@ -1291,8 +1292,15 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     return FoldersManager.getFolderType(currentFolder) !in listOf(
       FoldersManager.FolderType.SPAM,
       FoldersManager.FolderType.JUNK,
-      FoldersManager.FolderType.DRAFTS
+      FoldersManager.FolderType.DRAFTS,
     )
+  }
+
+  private fun isMarkNotSpamActionEnabled(): Boolean {
+    return FoldersManager.getFolderType(currentFolder) in listOf(
+      FoldersManager.FolderType.SPAM,
+      FoldersManager.FolderType.JUNK,
+    ) && (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType)
   }
 
   private fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
