@@ -312,7 +312,7 @@ class MsgDetailsViewModel(
             labelEntity.labelColor,
             labelEntity.textColor
           )
-        } ?: emptyList()
+        }?.sortedBy { label -> label.name } ?: emptyList()
       } else {
         emptyList()
       }
