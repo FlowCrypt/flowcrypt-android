@@ -41,11 +41,16 @@ import com.flowcrypt.email.databinding.MessagesListItemBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
 import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
+import kotlin.random.Random
 
 /**
  * This class is responsible for displaying the message in the list.
@@ -164,6 +169,24 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     private val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
     override val itemType = MESSAGE
     private var lastDataId: Long? = null
+    private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter()
+
+    init {
+      binding.recyclerViewLabels.apply {
+        layoutManager = FlexboxLayoutManager(itemView.context).apply {
+          flexDirection = FlexDirection.ROW
+          justifyContent = JustifyContent.FLEX_START
+          maxLine = 1
+        }
+        addItemDecoration(
+          MarginItemDecoration(
+            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+            marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+          )
+        )
+        adapter = gmailApiLabelsListAdapter
+      }
+    }
 
     fun bind(
       messageEntity: MessageEntity?,
@@ -176,6 +199,16 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         } else {
           messageEntity.subject
         }
+
+        gmailApiLabelsListAdapter.submitList(
+          listOf(
+            GmailApiLabelsListAdapter.Label("Test"),
+            GmailApiLabelsListAdapter.Label("Hoho"),
+            GmailApiLabelsListAdapter.Label("Rikasds"),
+            GmailApiLabelsListAdapter.Label("EE"),
+            GmailApiLabelsListAdapter.Label("eqweqweqweq"),
+          ).subList(0, Random.nextInt(0, 5))
+        )
 
         val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
         binding.textViewSenderAddress.text = senderAddress

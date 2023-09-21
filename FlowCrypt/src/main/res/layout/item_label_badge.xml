@@ -16,7 +16,7 @@
         android:id="@+id/textViewLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ellipsize="middle"
+        android:ellipsize="none"
         android:paddingStart="@dimen/default_twice_dip"
         android:paddingEnd="@dimen/default_twice_dip"
         android:singleLine="true"
