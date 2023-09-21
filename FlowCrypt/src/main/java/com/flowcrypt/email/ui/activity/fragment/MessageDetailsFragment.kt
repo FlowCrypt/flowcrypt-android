@@ -113,6 +113,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFrag
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
@@ -127,6 +128,9 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
@@ -247,6 +251,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
   private val pgpBadgeListAdapter = PgpBadgeListAdapter()
+  private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter()
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
@@ -772,6 +777,20 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         )
       )
       adapter = pgpBadgeListAdapter
+    }
+
+    binding?.recyclerViewLabels?.apply {
+      layoutManager = FlexboxLayoutManager(context).apply {
+        flexDirection = FlexDirection.ROW
+        justifyContent = JustifyContent.FLEX_START
+      }
+      addItemDecoration(
+        MarginItemDecoration(
+          marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+          marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+        )
+      )
+      adapter = gmailApiLabelsListAdapter
     }
 
     binding?.imageButtonReplyAll?.setOnClickListener(this)

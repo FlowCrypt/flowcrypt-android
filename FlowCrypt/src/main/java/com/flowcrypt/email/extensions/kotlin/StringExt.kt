@@ -6,7 +6,13 @@
 
 package com.flowcrypt.email.extensions.kotlin
 
+import android.content.Context
+import android.graphics.Color
+import android.util.TypedValue
+import androidx.core.content.ContextCompat
+import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
+import com.flowcrypt.email.util.UIUtil
 import org.json.JSONObject
 import java.io.InputStream
 import java.net.URLDecoder
@@ -120,4 +126,26 @@ fun String.isValidEmail(): Boolean {
 
 fun String.urlDecoded(): String {
   return URLDecoder.decode(this, StandardCharsets.UTF_8.name())
+}
+
+fun String.parseAsColorBasedOnDefaultSettings(
+  context: Context,
+  defaultColorResourceId: Int = android.R.attr.colorControlNormal
+): Int {
+  return try {
+    Color.parseColor(this)
+  } catch (e: Exception) {
+    /*
+    if can not recognize a received color
+    we will try to use a default color from the active theme
+    */
+    val typedValue = TypedValue()
+    context.theme.resolveAttribute(defaultColorResourceId, typedValue, true)
+    try {
+      ContextCompat.getColor(context, typedValue.resourceId)
+    } catch (e: Exception) {
+      //otherwise we will use a predefined color
+      UIUtil.getColor(context, R.color.gray)
+    }
+  }
 }

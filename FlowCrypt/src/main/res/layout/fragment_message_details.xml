@@ -105,6 +105,21 @@
                     app:layout_goneMarginLeft="@dimen/default_margin_medium"
                     tools:text="[FlowCrypt/flowcrypt-security] Unlimited unauthenticated file storage via password protected attachments (#126)" />
 
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewLabels"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewSubject"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/item_label_badge"
+                    tools:orientation="horizontal" />
+
                 <ImageButton
                     android:id="@+id/imageButtonEditDraft"
                     android:layout_width="wrap_content"
@@ -129,7 +144,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewSubject" />
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewLabels" />
 
                 <TextView
                     android:id="@+id/textViewDate"

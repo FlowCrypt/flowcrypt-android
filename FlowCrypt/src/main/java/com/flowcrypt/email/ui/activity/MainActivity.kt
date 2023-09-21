@@ -11,10 +11,8 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -61,6 +59,7 @@ import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.kotlin.parseAsColorBasedOnDefaultSettings
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -78,7 +77,6 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDia
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
@@ -337,22 +335,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           val addedItem = mailLabels?.subMenu?.add(localFolder.folderAlias)
           if (localFolder.isCustom && localFolder.labelColor != null) {
             val drawable = ContextCompat.getDrawable(this@MainActivity, folderIconResourceId)
-            val color = try {
-              Color.parseColor(localFolder.labelColor)
-            } catch (e: Exception) {
-              /*
-              if can not recognize a received color
-              we will try to use a default color from the active theme
-              */
-              val typedValue = TypedValue()
-              theme.resolveAttribute(android.R.attr.colorControlNormal, typedValue, true)
-              try {
-                ContextCompat.getColor(this@MainActivity, typedValue.resourceId)
-              } catch (e: Exception) {
-                //otherwise we will use a predefined color
-                UIUtil.getColor(this@MainActivity, R.color.gray)
-              }
-            }
+            val color = localFolder.labelColor.parseAsColorBasedOnDefaultSettings(this@MainActivity)
             drawable?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
               color,
               BlendModeCompat.SRC_IN
