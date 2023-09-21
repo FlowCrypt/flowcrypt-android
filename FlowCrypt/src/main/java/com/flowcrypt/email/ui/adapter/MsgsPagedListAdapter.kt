@@ -280,6 +280,20 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
         }
 
+        MessageState.PENDING_MOVE_TO_SPAM -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_to_spam_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_MARK_AS_NOT_SPAM -> {
+          with(binding.imageViewStatus) {
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.ic_from_spam_blue_16dp)
+          }
+        }
+
         MessageState.PENDING_UPLOADING_DRAFT -> {
           with(binding.imageViewStatus) {
             visibility = View.VISIBLE
@@ -407,6 +421,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           ) ?: R.drawable.ic_selected
 
           folderType == FoldersManager.FolderType.DRAFTS -> R.drawable.avatar_draft
+          folderType in listOf(
+            FoldersManager.FolderType.SPAM,
+            FoldersManager.FolderType.JUNK
+          ) -> R.drawable.ic_spam_48dp
 
           else -> senderAddress?.let {
             AvatarModelLoader.SCHEMA_AVATAR + it

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -19,35 +19,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * This task moves messages back to INBOX
- *
  * @author Denys Bondarenko
  */
-class MovingToInboxWorker(context: Context, params: WorkerParameters) :
+class MovingToSpamWorker(context: Context, params: WorkerParameters) :
   BaseMoveMessagesWorker(context, params) {
-
-  override val queryMessageState: MessageState = MessageState.PENDING_MOVE_TO_INBOX
-
+  override val queryMessageState: MessageState = MessageState.PENDING_MOVE_TO_SPAM
   override suspend fun getDestinationFolderForIMAP(account: AccountEntity): LocalFolder? =
     withContext(Dispatchers.IO) {
       val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      return@withContext foldersManager.findInboxFolder()
+      return@withContext foldersManager.folderSpam
     }
 
   override fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): GmailApiLabelsData {
-    return GmailApiLabelsData(
-      addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
-      removeLabelIds = if (GmailApiHelper.LABEL_TRASH.equals(srcFolder, true)) listOf(
-        GmailApiHelper.LABEL_TRASH
-      ) else null
-    )
+    return GmailApiLabelsData(addLabelIds = listOf(GmailApiHelper.LABEL_SPAM))
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVING_MESSAGES_TO_INBOX"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVING_MESSAGES_TO_SPAM"
 
     fun enqueue(context: Context) {
-      enqueueWithDefaultParameters<MovingToInboxWorker>(
+      enqueueWithDefaultParameters<MovingToSpamWorker>(
         context = context,
         uniqueWorkName = GROUP_UNIQUE_TAG,
         existingWorkPolicy = ExistingWorkPolicy.REPLACE

@@ -29,4 +29,16 @@
         android:icon="@drawable/selector_ic_mark_read_white"
         android:title="@string/mark_read"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionMoveToSpam"
+        android:icon="@drawable/selector_ic_to_spam_white"
+        android:title="@string/move_to_spam"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionMarkAsNotSpam"
+        android:icon="@drawable/selector_ic_from_spam_white"
+        android:title="@string/mark_as_not_spam"
+        app:showAsAction="ifRoom" />
 </menu>

@@ -41,10 +41,7 @@ class FoldersManager constructor(val account: String) {
     get() = folders[FolderType.STARRED.value]
 
   val folderSpam: LocalFolder?
-    get() {
-      val spam = folders[FolderType.JUNK.value]
-      return spam ?: folders[FolderType.SPAM.value]
-    }
+    get() = folders[FolderType.JUNK.value] ?: folders[FolderType.SPAM.value]
 
   val folderSent: LocalFolder?
     get() = folders[FolderType.SENT.value]

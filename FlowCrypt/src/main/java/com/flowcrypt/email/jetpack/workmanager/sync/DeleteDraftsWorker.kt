@@ -6,11 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
@@ -95,20 +91,11 @@ class DeleteDraftsWorker(context: Context, params: WorkerParameters) :
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".DELETE_DRAFTS"
 
     fun enqueue(context: Context) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<DeleteDraftsWorker>()
-            .addTag(TAG_SYNC)
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<DeleteDraftsWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.KEEP
+      )
     }
   }
 }

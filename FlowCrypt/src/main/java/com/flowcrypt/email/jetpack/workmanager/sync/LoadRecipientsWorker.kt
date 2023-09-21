@@ -7,12 +7,8 @@ package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
 import android.text.TextUtils
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
@@ -238,20 +234,11 @@ class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
     private const val MAX_MSGS_COUNT = 200
 
     fun enqueue(context: Context) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<LoadRecipientsWorker>()
-            .addTag(TAG_SYNC)
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<LoadRecipientsWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.KEEP
+      )
     }
   }
 }

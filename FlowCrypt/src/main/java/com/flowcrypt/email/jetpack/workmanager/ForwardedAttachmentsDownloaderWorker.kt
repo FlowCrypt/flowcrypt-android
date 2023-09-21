@@ -8,13 +8,10 @@ package com.flowcrypt.email.jetpack.workmanager
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -281,22 +278,14 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
   companion object {
     private val TAG = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
-    val NAME = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".DOWNLOAD_FORWARDED_ATTACHMENTS"
 
     fun enqueue(context: Context) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          NAME,
-          ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<ForwardedAttachmentsDownloaderWorker>()
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<ForwardedAttachmentsDownloaderWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.KEEP
+      )
     }
   }
 }

@@ -47,6 +47,10 @@
         <item name="titleTextStyle">@style/AppTextAppearance.Toolbar.Title</item>
     </style>
 
+    <style name="AppWidget.ActionOverflowButton" parent="Widget.AppCompat.ActionButton.Overflow">
+        <item name="android:tint">@color/white</item>
+    </style>
+
     <style name="AppWidget.ActionButton.CloseMode" parent="Widget.AppCompat.ActionButton.CloseMode">
         <item name="android:tint">@color/white</item>
     </style>

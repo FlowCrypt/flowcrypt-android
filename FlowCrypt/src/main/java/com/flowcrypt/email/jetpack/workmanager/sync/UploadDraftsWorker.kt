@@ -6,11 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -170,20 +166,11 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     const val MAX_ATTEMPTS_COUNT = 10
 
     fun enqueue(context: Context) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
-
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.KEEP,
-          OneTimeWorkRequestBuilder<UploadDraftsWorker>()
-            .addTag(TAG_SYNC)
-            .setConstraints(constraints)
-            .build()
-        )
+      enqueueWithDefaultParameters<UploadDraftsWorker>(
+        context = context,
+        uniqueWorkName = GROUP_UNIQUE_TAG,
+        existingWorkPolicy = ExistingWorkPolicy.KEEP
+      )
     }
   }
 }

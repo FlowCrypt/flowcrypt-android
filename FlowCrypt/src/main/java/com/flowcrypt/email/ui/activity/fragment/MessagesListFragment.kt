@@ -76,7 +76,9 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.MessagesNotificationManager
@@ -394,6 +396,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         MessageState.ERROR_PASSWORD_PROTECTED -> handleOutgoingMsgWhichHasSomeError(
           msgEntity
         )
+
         else -> {
           if (isOutbox && !isRawMsgAvailable) {
             showTwoWayDialog(
@@ -858,6 +861,18 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               true
             }
 
+            R.id.menuActionMoveToSpam -> {
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MOVE_TO_SPAM)
+              mode?.finish()
+              true
+            }
+
+            R.id.menuActionMarkAsNotSpam -> {
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_AS_NOT_SPAM)
+              mode?.finish()
+              true
+            }
+
             else -> false
           }
         }
@@ -871,8 +886,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        val menuItemArchiveMsg = menu?.findItem(R.id.menuActionArchiveMessage)
-        menuItemArchiveMsg?.isVisible = isArchiveActionEnabled()
+        menu?.findItem(R.id.menuActionArchiveMessage)?.isVisible = isArchiveActionEnabled()
+        menu?.findItem(R.id.menuActionMoveToSpam)?.isVisible = isSpamActionEnabled()
+        menu?.findItem(R.id.menuActionMarkAsNotSpam)?.isVisible = isMarkNotSpamActionEnabled()
 
         val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
         menuActionMarkRead?.isVisible = isChangeSeenStateActionEnabled()
@@ -1017,15 +1033,20 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
           requireContext()
         )
+
         MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
+        MessageState.PENDING_MOVE_TO_SPAM -> MovingToSpamWorker.enqueue(requireContext())
+        MessageState.PENDING_MARK_AS_NOT_SPAM -> MarkAsNotSpamWorker.enqueue(requireContext())
         MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> UpdateMsgsSeenStateWorker.enqueue(
           requireContext()
         )
+
         MessageState.QUEUED -> context?.let { nonNullContext ->
           MessagesSenderWorker.enqueue(
             nonNullContext
           )
         }
+
         else -> {
         }
       }
@@ -1140,6 +1161,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               val newMsgState = when (oldState) {
                 MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER ->
                   MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
+
                 MessageState.ERROR_PASSWORD_PROTECTED -> MessageState.NEW_PASSWORD_PROTECTED
 
                 else -> MessageState.QUEUED
@@ -1264,6 +1286,21 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         true
       }
     }
+  }
+
+  private fun isSpamActionEnabled(): Boolean {
+    return FoldersManager.getFolderType(currentFolder) !in listOf(
+      FoldersManager.FolderType.SPAM,
+      FoldersManager.FolderType.JUNK,
+      FoldersManager.FolderType.DRAFTS,
+    )
+  }
+
+  private fun isMarkNotSpamActionEnabled(): Boolean {
+    return FoldersManager.getFolderType(currentFolder) in listOf(
+      FoldersManager.FolderType.SPAM,
+      FoldersManager.FolderType.JUNK,
+    ) && (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType)
   }
 
   private fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {

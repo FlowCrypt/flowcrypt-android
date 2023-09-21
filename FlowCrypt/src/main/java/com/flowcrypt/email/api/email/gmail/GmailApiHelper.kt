@@ -97,6 +97,7 @@ class GmailApiHelper {
     const val LABEL_DRAFT = JavaEmailConstants.FOLDER_DRAFT
     const val LABEL_SENT = JavaEmailConstants.FOLDER_SENT
     const val LABEL_TRASH = JavaEmailConstants.FOLDER_TRASH
+    const val LABEL_SPAM = JavaEmailConstants.FOLDER_SPAM
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
     private val HIDDEN_LABEL_IDS = arrayOf(

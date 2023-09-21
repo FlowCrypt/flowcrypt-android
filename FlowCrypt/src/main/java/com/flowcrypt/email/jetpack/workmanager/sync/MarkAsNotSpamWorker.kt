@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -9,7 +9,6 @@ import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
@@ -19,35 +18,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * This task moves messages back to INBOX
- *
  * @author Denys Bondarenko
  */
-class MovingToInboxWorker(context: Context, params: WorkerParameters) :
+class MarkAsNotSpamWorker(context: Context, params: WorkerParameters) :
   BaseMoveMessagesWorker(context, params) {
-
-  override val queryMessageState: MessageState = MessageState.PENDING_MOVE_TO_INBOX
-
+  override val queryMessageState: MessageState = MessageState.PENDING_MARK_AS_NOT_SPAM
   override suspend fun getDestinationFolderForIMAP(account: AccountEntity): LocalFolder? =
     withContext(Dispatchers.IO) {
-      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-      return@withContext foldersManager.findInboxFolder()
+      //we don't have the IMAP realization
+      return@withContext null
     }
 
   override fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): GmailApiLabelsData {
     return GmailApiLabelsData(
       addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
-      removeLabelIds = if (GmailApiHelper.LABEL_TRASH.equals(srcFolder, true)) listOf(
-        GmailApiHelper.LABEL_TRASH
-      ) else null
+      removeLabelIds = listOf(GmailApiHelper.LABEL_SPAM)
     )
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVING_MESSAGES_TO_INBOX"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MARK_MESSAGES_AS_NOT_SPAM"
 
     fun enqueue(context: Context) {
-      enqueueWithDefaultParameters<MovingToInboxWorker>(
+      enqueueWithDefaultParameters<MarkAsNotSpamWorker>(
         context = context,
         uniqueWorkName = GROUP_UNIQUE_TAG,
         existingWorkPolicy = ExistingWorkPolicy.REPLACE
