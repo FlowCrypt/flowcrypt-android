@@ -19,6 +19,7 @@ import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.util.Locale
 
 fun String.normalizeDashes(): String {
   return this.replace(DASHES_REGEX, "-----")
@@ -147,5 +148,13 @@ fun String.parseAsColorBasedOnDefaultSettings(
       //otherwise we will use a predefined color
       UIUtil.getColor(context, R.color.gray)
     }
+  }
+}
+
+fun String.capitalize(): String {
+  return replaceFirstChar {
+    if (it.isLowerCase()) it.titlecase(
+      Locale.ROOT
+    ) else it.toString()
   }
 }

@@ -110,8 +110,9 @@ class GmailApiHelper {
     )
     private const val COUNT_OF_LOADED_EMAILS_BY_STEP =
       JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
-    private const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
-    private const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
+    const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
+    const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
+    const val MESSAGE_RESPONSE_FORMAT_MINIMAL = "minimal"
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -694,11 +695,21 @@ class GmailApiHelper {
       return@withContext sentMsg.id == null
     }
 
-    suspend fun loadMsgFullInfoSuspend(
-      context: Context, accountEntity: AccountEntity, msgId:
-      String, fields: List<String>? = FULL_INFO_WITHOUT_DATA
+    suspend fun loadMsgInfoSuspend(
+      context: Context,
+      accountEntity: AccountEntity,
+      msgId:
+      String,
+      fields: List<String>? = FULL_INFO_WITHOUT_DATA,
+      format: String
     ): Message = withContext(Dispatchers.IO) {
-      return@withContext loadMsgFullInfo(context, accountEntity, msgId, fields)
+      return@withContext loadMsgInfo(
+        context = context,
+        accountEntity = accountEntity,
+        msgId = msgId,
+        fields = fields,
+        format = format
+      )
     }
 
     /**
@@ -772,11 +783,12 @@ class GmailApiHelper {
       }
     }
 
-    fun loadMsgFullInfo(
+    fun loadMsgInfo(
       context: Context,
       accountEntity: AccountEntity,
       msgId: String,
-      fields: List<String>? = FULL_INFO_WITHOUT_DATA
+      fields: List<String>? = FULL_INFO_WITHOUT_DATA,
+      format: String
     ): Message {
       val gmailApiService = generateGmailApiService(context, accountEntity)
 
@@ -784,7 +796,7 @@ class GmailApiHelper {
         .users()
         .messages()
         .get(DEFAULT_USER_ID, msgId)
-        .setFormat(MESSAGE_RESPONSE_FORMAT_FULL)
+        .setFormat(format)
         .setFields(fields?.joinToString(separator = ","))
         .execute()
     }

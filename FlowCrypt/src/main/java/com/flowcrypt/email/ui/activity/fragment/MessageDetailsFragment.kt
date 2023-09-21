@@ -1492,6 +1492,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     collectAttachmentsFlow()
     observerMsgStatesLiveData()
     observerPassphraseNeededLiveData()
+
+    launchAndRepeatWithViewLifecycle {
+      msgDetailsViewModel.messageGmailApiLabelsFlow.collect {
+        gmailApiLabelsListAdapter.submitList(it)
+      }
+    }
   }
 
   private fun setupRecipientsViewModel() {
