@@ -287,18 +287,23 @@ class MsgDetailsViewModel(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =
-    activeAccountLiveData.asFlow().mapLatest {
-      if (it?.isGoogleSignInAccount == true) {
-        val message = GmailApiHelper.loadMsgInfoSuspend(
-          context = getApplication(),
-          accountEntity = it,
-          msgId = messageEntity.uidAsHEX,
-          fields = null,
-          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
-        )
+    activeAccountLiveData.asFlow().mapLatest { account ->
+      if (account?.isGoogleSignInAccount == true) {
+        val labelEntities =
+          roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+        try {
+          val message = GmailApiHelper.loadMsgInfoSuspend(
+            context = getApplication(),
+            accountEntity = account,
+            msgId = messageEntity.uidAsHEX,
+            fields = null,
+            format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
+          )
 
-        val labelEntities = roomDatabase.labelDao().getLabelsSuspend(it.email, it.accountType)
-        MessageEntity.generateColoredLabels(message.labelIds, labelEntities)
+          MessageEntity.generateColoredLabels(message.labelIds, labelEntities)
+        } catch (e: Exception) {
+          MessageEntity.generateColoredLabels(messageEntity.labelIds?.split(" "), labelEntities)
+        }
       } else {
         emptyList()
       }
