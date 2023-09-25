@@ -783,7 +783,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       layoutManager = FlexboxLayoutManager(context).apply {
         flexDirection = FlexDirection.ROW
         justifyContent = JustifyContent.FLEX_START
-        maxLine = 1
       }
       addItemDecoration(
         MarginItemDecoration(
