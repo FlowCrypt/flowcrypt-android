@@ -301,6 +301,8 @@ class MsgDetailsViewModel(
         if (account?.isGoogleSignInAccount == true) {
           val labelEntities =
             roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+          val freshestMessageEntity = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
+          val cachedLabelIds = freshestMessageEntity?.labelIds?.split(" ")
           try {
             val message = GmailApiHelper.loadMsgInfoSuspend(
               context = getApplication(),
@@ -310,10 +312,18 @@ class MsgDetailsViewModel(
               format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
             )
 
-            MessageEntity.generateColoredLabels(message.labelIds, labelEntities)
-            //todo-denbond7. Think to update labels locally.
+            val latestLabelIds = message.labelIds
+            if (cachedLabelIds == null
+              || !(latestLabelIds.containsAll(cachedLabelIds)
+                  && cachedLabelIds.containsAll(latestLabelIds))
+            ) {
+              freshestMessageEntity?.copy(
+                labelIds = latestLabelIds.joinToString(" ")
+              )?.let { roomDatabase.msgDao().updateSuspend(it) }
+            }
+            MessageEntity.generateColoredLabels(latestLabelIds, labelEntities)
           } catch (e: Exception) {
-            MessageEntity.generateColoredLabels(messageEntity.labelIds?.split(" "), labelEntities)
+            MessageEntity.generateColoredLabels(cachedLabelIds, labelEntities)
           }
         } else {
           emptyList()
