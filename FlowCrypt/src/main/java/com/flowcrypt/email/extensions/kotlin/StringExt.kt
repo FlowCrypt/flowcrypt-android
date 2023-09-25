@@ -129,9 +129,10 @@ fun String.urlDecoded(): String {
   return URLDecoder.decode(this, StandardCharsets.UTF_8.name())
 }
 
-fun String.parseAsColorBasedOnDefaultSettings(
+fun String?.parseAsColorBasedOnDefaultSettings(
   context: Context,
-  defaultColorResourceId: Int = android.R.attr.colorControlNormal
+  defaultColorResourceId: Int = android.R.attr.colorControlNormal,
+  secondDefaultColorResourceId: Int = R.color.gray
 ): Int {
   return try {
     Color.parseColor(this)
@@ -146,7 +147,7 @@ fun String.parseAsColorBasedOnDefaultSettings(
       ContextCompat.getColor(context, typedValue.resourceId)
     } catch (e: Exception) {
       //otherwise we will use a predefined color
-      UIUtil.getColor(context, R.color.gray)
+      UIUtil.getColor(context, secondDefaultColorResourceId)
     }
   }
 }

@@ -37,12 +37,16 @@ class GmailApiLabelsListAdapter : ListAdapter<GmailApiLabelsListAdapter.Label,
 
     fun bindTo(item: Label) {
       binding.textViewLabel.text = item.name
-      item.textColor?.parseAsColorBasedOnDefaultSettings(itemView.context)?.let {
-        binding.textViewLabel.setTextColor(it)
-      }
-      item.backgroundColor?.parseAsColorBasedOnDefaultSettings(itemView.context)?.let {
-        itemView.backgroundTintList = ColorStateList.valueOf(it)
-      }
+      binding.textViewLabel.setTextColor(
+        item.textColor.parseAsColorBasedOnDefaultSettings(
+          context = itemView.context,
+          defaultColorResourceId = R.color.white,
+          secondDefaultColorResourceId = R.color.white
+        )
+      )
+      itemView.backgroundTintList = ColorStateList.valueOf(
+        item.backgroundColor.parseAsColorBasedOnDefaultSettings(context = itemView.context)
+      )
     }
   }
 

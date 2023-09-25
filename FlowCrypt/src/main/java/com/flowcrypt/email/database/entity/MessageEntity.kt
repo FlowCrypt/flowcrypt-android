@@ -23,9 +23,11 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
+import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
@@ -52,7 +54,7 @@ import java.util.Properties
   ]
 )
 @Parcelize
-data class MessageEntity(
+data class MessageEntity constructor(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
   val folder: String,
@@ -81,7 +83,8 @@ data class MessageEntity(
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
-  @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null
+  @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
+  @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -349,7 +352,8 @@ data class MessageEntity(
             ).copy(
               threadId = msg.threadId,
               historyId = msg.historyId.toString(),
-              draftId = draftIdsMap[msg.id]
+              draftId = draftIdsMap[msg.id],
+              labelIds = msg.labelIds?.joinToString(separator = " ")
             )
           )
         } catch (e: MessageRemovedException) {
@@ -417,6 +421,29 @@ data class MessageEntity(
         flags = MessageFlag.flagsToString(flags),
         hasAttachments = !CollectionUtils.isEmpty(info.atts) || !CollectionUtils.isEmpty(info.forwardedAtts)
       )
+    }
+
+    fun generateColoredLabels(
+      labelIds: List<String>?,
+      labelEntities: List<LabelEntity>?,
+      skippedLabels: List<String> = emptyList()
+    ): List<GmailApiLabelsListAdapter.Label> {
+      return labelIds?.mapNotNull { labelId ->
+        val labelEntity = labelEntities?.firstOrNull { labelEntity ->
+          (JavaEmailConstants.FOLDER_INBOX == labelId || labelEntity.isCustom)
+              && labelId !in skippedLabels
+              && labelEntity.name == labelId
+        } ?: return@mapNotNull null
+        val finalLabelName = when (labelEntity.alias) {
+          JavaEmailConstants.FOLDER_INBOX -> labelEntity.alias.lowercase().capitalize()
+          else -> labelEntity.alias ?: ""
+        }
+        GmailApiLabelsListAdapter.Label(
+          finalLabelName,
+          labelEntity.labelColor,
+          labelEntity.textColor
+        )
+      }?.sortedBy { label -> label.name } ?: emptyList()
     }
   }
 }

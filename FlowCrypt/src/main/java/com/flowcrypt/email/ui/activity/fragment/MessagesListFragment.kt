@@ -1145,6 +1145,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       if (it.isEmpty()) {
         labelsViewModel.loadLabels()
       }
+      adapter.labelsEntities = it
     }
   }
 

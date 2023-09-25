@@ -40,7 +40,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
-import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -299,20 +298,7 @@ class MsgDetailsViewModel(
         )
 
         val labelEntities = roomDatabase.labelDao().getLabelsSuspend(it.email, it.accountType)
-        message.labelIds?.mapNotNull { labelId ->
-          val labelEntity = labelEntities.firstOrNull { labelEntity ->
-            (JavaEmailConstants.FOLDER_INBOX == labelId || labelEntity.isCustom) && labelEntity.name == labelId
-          } ?: return@mapNotNull null
-          val finalLabelName = when (labelEntity.alias) {
-            JavaEmailConstants.FOLDER_INBOX -> labelEntity.alias.lowercase().capitalize()
-            else -> labelEntity.alias ?: ""
-          }
-          GmailApiLabelsListAdapter.Label(
-            finalLabelName,
-            labelEntity.labelColor,
-            labelEntity.textColor
-          )
-        }?.sortedBy { label -> label.name } ?: emptyList()
+        MessageEntity.generateColoredLabels(message.labelIds, labelEntities)
       } else {
         emptyList()
       }
