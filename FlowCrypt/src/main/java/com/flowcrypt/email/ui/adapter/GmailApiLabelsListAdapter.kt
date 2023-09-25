@@ -9,7 +9,6 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.ColorLong
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -49,9 +48,7 @@ class GmailApiLabelsListAdapter : ListAdapter<GmailApiLabelsListAdapter.Label,
 
   data class Label(
     val name: String,
-    @ColorLong
     val backgroundColor: String? = null,
-    @ColorLong
     val textColor: String? = null
   )
 
