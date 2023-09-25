@@ -73,6 +73,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -287,27 +288,38 @@ class MsgDetailsViewModel(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =
-    activeAccountLiveData.asFlow().mapLatest { account ->
-      if (account?.isGoogleSignInAccount == true) {
-        val labelEntities =
-          roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
-        try {
-          val message = GmailApiHelper.loadMsgInfoSuspend(
-            context = getApplication(),
-            accountEntity = account,
-            msgId = messageEntity.uidAsHEX,
-            fields = null,
-            format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
-          )
-
-          MessageEntity.generateColoredLabels(message.labelIds, labelEntities)
-        } catch (e: Exception) {
+    merge(
+      activeAccountLiveData.asFlow().mapLatest { account ->
+        if (account?.isGoogleSignInAccount == true) {
+          val labelEntities =
+            roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
           MessageEntity.generateColoredLabels(messageEntity.labelIds?.split(" "), labelEntities)
+        } else {
+          emptyList()
         }
-      } else {
-        emptyList()
-      }
-    }
+      }, activeAccountLiveData.asFlow().mapLatest { account ->
+        if (account?.isGoogleSignInAccount == true) {
+          val labelEntities =
+            roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+          try {
+            val message = GmailApiHelper.loadMsgInfoSuspend(
+              context = getApplication(),
+              accountEntity = account,
+              msgId = messageEntity.uidAsHEX,
+              fields = null,
+              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
+            )
+
+            MessageEntity.generateColoredLabels(message.labelIds, labelEntities)
+            //todo-denbond7. Think to update labels locally.
+          } catch (e: Exception) {
+            MessageEntity.generateColoredLabels(messageEntity.labelIds?.split(" "), labelEntities)
+          }
+        } else {
+          emptyList()
+        }
+      })
+
 
   init {
     afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
