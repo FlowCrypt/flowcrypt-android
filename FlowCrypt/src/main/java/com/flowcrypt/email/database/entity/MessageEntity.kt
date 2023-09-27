@@ -54,7 +54,7 @@ import java.util.Properties
   ]
 )
 @Parcelize
-data class MessageEntity constructor(
+data class MessageEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
   val folder: String,
@@ -84,7 +84,7 @@ data class MessageEntity constructor(
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
   @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
-  @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null
+  @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
