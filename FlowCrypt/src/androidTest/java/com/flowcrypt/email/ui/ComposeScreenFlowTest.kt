@@ -443,7 +443,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/attested_user@flowcrypt.test_prv_default_strong.asc"
@@ -455,6 +454,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     }
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
+
+    Thread.sleep(2000)
 
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -477,6 +478,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click())
+
+    Thread.sleep(2000)
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
