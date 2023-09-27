@@ -134,20 +134,17 @@ fun String?.parseAsColorBasedOnDefaultSettings(
   defaultColorResourceId: Int = android.R.attr.colorControlNormal,
   secondDefaultColorResourceId: Int = R.color.gray
 ): Int {
-  return try {
+  return runCatching {
     Color.parseColor(this)
-  } catch (e: Exception) {
-    /*
-    if can not recognize a received color
-    we will try to use a default color from the active theme
-    */
-    val typedValue = TypedValue()
-    context.theme.resolveAttribute(defaultColorResourceId, typedValue, true)
-    try {
-      ContextCompat.getColor(context, typedValue.resourceId)
-    } catch (e: Exception) {
-      //otherwise we will use a predefined color
-      UIUtil.getColor(context, secondDefaultColorResourceId)
+  }.getOrElse {
+    TypedValue().also {
+      context.theme.resolveAttribute(defaultColorResourceId, it, true)
+    }.let { typedValue ->
+      runCatching {
+        ContextCompat.getColor(context, typedValue.resourceId)
+      }.getOrElse {
+        UIUtil.getColor(context, secondDefaultColorResourceId)
+      }
     }
   }
 }

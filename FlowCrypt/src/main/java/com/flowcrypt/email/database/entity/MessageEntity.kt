@@ -430,22 +430,15 @@ data class MessageEntity(
       labelEntities: List<LabelEntity>?,
       skippedLabels: List<String> = emptyList()
     ): List<GmailApiLabelsListAdapter.Label> {
-      return labelIds?.mapNotNull { labelId ->
-        val labelEntity = labelEntities?.firstOrNull { labelEntity ->
-          (JavaEmailConstants.FOLDER_INBOX == labelId || labelEntity.isCustom)
-              && labelId !in skippedLabels
-              && labelEntity.name == labelId
-        } ?: return@mapNotNull null
-        val finalLabelName = when (labelEntity.alias) {
-          JavaEmailConstants.FOLDER_INBOX -> labelEntity.alias.lowercase().capitalize()
-          else -> labelEntity.alias ?: ""
+      return labelIds.orEmpty().mapNotNull { id ->
+        labelEntities?.find {
+          it.name == id && (id !in skippedLabels) && (it.isCustom || JavaEmailConstants.FOLDER_INBOX == id)
+        }?.let { entity ->
+          val name = entity.alias.takeIf { it == JavaEmailConstants.FOLDER_INBOX }?.capitalize()
+            ?: entity.alias.orEmpty()
+          GmailApiLabelsListAdapter.Label(name, entity.labelColor, entity.textColor)
         }
-        GmailApiLabelsListAdapter.Label(
-          finalLabelName,
-          labelEntity.labelColor,
-          labelEntity.textColor
-        )
-      }?.sortedBy { label -> label.name } ?: emptyList()
+      }.sortedBy { it.name }
     }
   }
 }
