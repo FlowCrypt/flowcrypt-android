@@ -1346,16 +1346,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     val MIGRATION_38_39 = object : FlowCryptMigration(38, 39) {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2448
-
-        database.execSQL(
-          "ALTER TABLE labels " +
-              "ADD COLUMN label_color TEXT DEFAULT NULL;"
-        )
-
-        database.execSQL(
-          "ALTER TABLE labels " +
-              "ADD COLUMN text_color TEXT DEFAULT NULL;"
-        )
+        database.execSQL("ALTER TABLE labels ADD COLUMN label_color TEXT DEFAULT NULL;")
+        database.execSQL("ALTER TABLE labels ADD COLUMN text_color TEXT DEFAULT NULL;")
       }
     }
 
@@ -1366,6 +1358,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         //need to delete all messages where folder = 'INBOX' to reload messages and save labelIds
         database.execSQL("DELETE FROM messages WHERE folder = 'INBOX'")
+        database.execSQL("ALTER TABLE messages ADD COLUMN label_ids TEXT DEFAULT NULL;")
       }
     }
 

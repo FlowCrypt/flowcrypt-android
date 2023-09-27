@@ -183,6 +183,7 @@ data class MessageEntity constructor(
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
     if (draftId != other.draftId) return false
+    if (labelIds != other.labelIds) return false
     if (from != other.from) return false
     if (replyToAddress != other.replyToAddress) return false
     if (to != other.to) return false
@@ -221,6 +222,7 @@ data class MessageEntity constructor(
     result = 31 * result + (historyId?.hashCode() ?: 0)
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + (draftId?.hashCode() ?: 0)
+    result = 31 * result + (labelIds?.hashCode() ?: 0)
     result = 31 * result + from.hashCode()
     result = 31 * result + replyToAddress.hashCode()
     result = 31 * result + to.hashCode()

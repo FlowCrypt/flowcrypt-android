@@ -192,6 +192,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           )
         )
         adapter = gmailApiLabelsListAdapter
+        itemAnimator = null
       }
     }
 
