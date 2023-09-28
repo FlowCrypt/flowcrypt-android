@@ -55,6 +55,7 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
+  override val useCommonIdling: Boolean = false
   private val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
 
   override val mockWebServerRule: FlowCryptMockWebServerRule = FlowCryptMockWebServerRule(
