@@ -251,7 +251,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
   private val pgpBadgeListAdapter = PgpBadgeListAdapter()
-  private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter()
+  private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
+    object : GmailApiLabelsListAdapter.OnLabelClickListener {
+      override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
+        changeGmailLabels()
+      }
+    })
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
@@ -327,6 +332,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
         val menuActionMoveToSpam = menu.findItem(R.id.menuActionMoveToSpam)
         val menuActionMarkAsNotSpam = menu.findItem(R.id.menuActionMarkAsNotSpam)
+        val menuActionChangeLabels = menu.findItem(R.id.menuActionChangeLabels)
 
         menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
         menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
@@ -335,6 +341,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
         menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
         menuActionMarkAsNotSpam?.isVisible = isMarkAsNotSpamActionEnabled
+        menuActionChangeLabels?.isVisible =
+          AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
 
         menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
         menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
@@ -342,6 +350,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
         menuActionMoveToSpam?.isEnabled = isAdditionalActionEnabled
         menuActionMarkAsNotSpam?.isEnabled = isAdditionalActionEnabled
+        menuActionChangeLabels?.isEnabled = isAdditionalActionEnabled
 
         args.localFolder.searchQuery?.let {
           menuItemArchiveMsg?.isVisible = false
@@ -350,6 +359,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           menuActionMarkUnread?.isVisible = false
           menuActionMoveToSpam?.isVisible = false
           menuActionMarkAsNotSpam?.isVisible = false
+          menuActionChangeLabels?.isVisible = false
         }
       }
 
@@ -415,6 +425,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
           R.id.menuActionMarkAsNotSpam -> {
             msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_AS_NOT_SPAM)
+            true
+          }
+
+          R.id.menuActionChangeLabels -> {
+            changeGmailLabels()
             true
           }
 
@@ -1870,6 +1885,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       currentList.firstOrNull { it.uniqueStringId == uniqueStringId }?.let { attachmentInfo ->
         attachmentsRecyclerViewAdapter.notifyItemChanged(currentList.indexOf(attachmentInfo))
       }
+    }
+  }
+
+  private fun changeGmailLabels() {
+    if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
+      toast("hello")
     }
   }
 

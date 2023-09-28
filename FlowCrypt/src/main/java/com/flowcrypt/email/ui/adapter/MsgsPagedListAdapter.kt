@@ -176,7 +176,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     private val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
     override val itemType = MESSAGE
     private var lastDataId: Long? = null
-    private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter()
+    private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
+      object : GmailApiLabelsListAdapter.OnLabelClickListener {
+        override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {}
+      }
+    )
 
     init {
       binding.recyclerViewLabels.apply {
