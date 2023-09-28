@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.database.entity
 
+import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -14,6 +15,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.google.android.gms.common.util.CollectionUtils
+import kotlinx.parcelize.Parcelize
 
 /**
  * @author Denys Bondarenko
@@ -48,6 +50,10 @@ data class LabelEntity(
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "label_color", defaultValue = "NULL") val labelColor: String? = null,
   @ColumnInfo(name = "text_color", defaultValue = "NULL") val textColor: String? = null,
+  @ColumnInfo(
+    name = "label_list_visibility",
+    defaultValue = "labelShow"
+  ) val labelListVisibility: LabelListVisibility,
 ) {
 
   @Ignore
@@ -67,6 +73,7 @@ data class LabelEntity(
           attributes = convertAttributesToString(localFolder.attributes),
           labelColor = labelColor,
           textColor = textColor,
+          labelListVisibility = labelListVisibility,
         )
       }
     }
@@ -88,6 +95,20 @@ data class LabelEntity(
       val nonNullString = attributesAsString ?: return emptyList()
       return listOf(*nonNullString.split("\t".toRegex()).dropLastWhile { it.isEmpty() }
         .toTypedArray())
+    }
+  }
+
+  @Parcelize
+  enum class LabelListVisibility constructor(val value: String) : Parcelable {
+    SHOW("labelShow"),
+    SHOW_IF_UNREAD("labelShowIfUnread"),
+    HIDE("labelHide");
+
+    companion object {
+      fun findByValue(value: String): LabelListVisibility {
+        return LabelListVisibility.values().firstOrNull { it.value == value }
+          ?: throw IllegalArgumentException("Unsupported type")
+      }
     }
   }
 }

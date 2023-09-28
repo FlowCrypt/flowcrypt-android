@@ -17,6 +17,7 @@ import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.converters.ClientConfigurationConverter
+import com.flowcrypt.email.database.converters.LabelListVisibilityConverter
 import com.flowcrypt.email.database.converters.PassphraseTypeConverter
 import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
@@ -63,7 +64,11 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
-@TypeConverters(PassphraseTypeConverter::class, ClientConfigurationConverter::class)
+@TypeConverters(
+  PassphraseTypeConverter::class,
+  ClientConfigurationConverter::class,
+  LabelListVisibilityConverter::class,
+)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun msgDao(): MessageDao
 
@@ -1358,7 +1363,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         //need to delete all messages where folder = 'INBOX' to reload messages and save labelIds
         database.execSQL("DELETE FROM messages WHERE folder = 'INBOX'")
-        database.execSQL("ALTER TABLE messages ADD COLUMN label_ids TEXT DEFAULT NULL;")
+        database.execSQL("ALTER TABLE messages ADD COLUMN `label_ids` TEXT DEFAULT NULL;")
+        database.execSQL("ALTER TABLE labels ADD COLUMN `label_list_visibility` TEXT NOT NULL DEFAULT 'labelShow';")
       }
     }
 

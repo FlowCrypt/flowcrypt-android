@@ -68,19 +68,21 @@ interface LabelDao : BaseDao<LabelEntity> {
 
     for (freshLabel in freshLabels) {
       var isFolderFound = false
-      for (existedLabel in existingLabels) {
-        if (existedLabel.name == freshLabel.name) {
+      for (existingLabel in existingLabels) {
+        if (existingLabel.name == freshLabel.name) {
           isFolderFound = true
-          if (existedLabel.alias != freshLabel.alias
-            || existedLabel.labelColor != freshLabel.labelColor
-            || existedLabel.textColor != freshLabel.textColor
+          if (existingLabel.alias != freshLabel.alias
+            || existingLabel.labelColor != freshLabel.labelColor
+            || existingLabel.textColor != freshLabel.textColor
+            || existingLabel.labelListVisibility != freshLabel.labelListVisibility
           ) {
             updateCandidates.add(
-              existedLabel.copy(
+              existingLabel.copy(
                 alias = freshLabel.alias,
                 labelColor = freshLabel.labelColor,
                 textColor = freshLabel.textColor,
-                attributes = freshLabel.attributes
+                attributes = freshLabel.attributes,
+                labelListVisibility = freshLabel.labelListVisibility,
               )
             )
           }

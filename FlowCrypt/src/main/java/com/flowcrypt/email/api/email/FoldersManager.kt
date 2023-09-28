@@ -371,7 +371,10 @@ class FoldersManager constructor(val account: String) {
         msgCount = 0,
         searchQuery = "",
         labelColor = label.color?.backgroundColor,
-        textColor = label.color?.textColor
+        textColor = label.color?.textColor,
+        labelListVisibility = runCatching {
+          LabelEntity.LabelListVisibility.findByValue(label.labelListVisibility)
+        }.getOrDefault(LabelEntity.LabelListVisibility.SHOW)
       )
     }
 
