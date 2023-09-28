@@ -38,7 +38,8 @@
     "folderAlias": "INBOX",
     "fullName": "INBOX",
     "isCustom": false,
-    "msgCount": 25
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
   },
   "msgBlocks": [
     {
