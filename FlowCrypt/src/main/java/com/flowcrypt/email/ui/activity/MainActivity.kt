@@ -54,6 +54,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.databinding.ActivityMainBinding
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.extensions.decrementSafely
@@ -330,6 +331,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val isGoogleAccount = activeAccount?.isGoogleSignInAccount ?: false
 
         folders.forEach { localFolder ->
+          if (localFolder.isCustom
+            && localFolder.labelListVisibility == LabelEntity.LabelListVisibility.HIDE
+          ) {
+            return@forEach
+          }
+
           val folderIconResourceId =
             FoldersManager.getFolderIconResourceId(localFolder, isGoogleAccount)
           val addedItem = mailLabels?.subMenu?.add(localFolder.folderAlias)

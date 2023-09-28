@@ -28,6 +28,7 @@ data class LocalFolder constructor(
   var searchQuery: String? = null,
   val labelColor: String? = null,
   val textColor: String? = null,
+  val labelListVisibility: LabelEntity.LabelListVisibility = LabelEntity.LabelListVisibility.SHOW,
 ) : Parcelable {
   constructor(source: LabelEntity) : this(
     source.email,
@@ -39,6 +40,7 @@ data class LocalFolder constructor(
     null,
     source.labelColor,
     source.textColor,
+    source.labelListVisibility,
   )
 
   @IgnoredOnParcel

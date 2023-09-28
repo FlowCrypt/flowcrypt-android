@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 40,
-    "identityHash": "df758f7866f01e7b79bf36fe927486ae",
+    "identityHash": "c5b1d7d328ad58717e08bbf227c807b0",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -652,7 +652,7 @@
       },
       {
         "tableName": "labels",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, `next_page_token` TEXT DEFAULT NULL, `history_id` TEXT DEFAULT NULL, `label_color` TEXT DEFAULT NULL, `text_color` TEXT DEFAULT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `name` TEXT NOT NULL, `alias` TEXT DEFAULT NULL, `is_custom` INTEGER NOT NULL DEFAULT 0, `messages_total` INTEGER NOT NULL DEFAULT 0, `message_unread` INTEGER NOT NULL DEFAULT 0, `attributes` TEXT DEFAULT NULL, `next_page_token` TEXT DEFAULT NULL, `history_id` TEXT DEFAULT NULL, `label_color` TEXT DEFAULT NULL, `text_color` TEXT DEFAULT NULL, `label_list_visibility` TEXT NOT NULL DEFAULT 'labelShow', FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -741,6 +741,13 @@
             "affinity": "TEXT",
             "notNull": false,
             "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "labelListVisibility",
+            "columnName": "label_list_visibility",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'labelShow'"
           }
         ],
         "primaryKey": {
@@ -1131,7 +1138,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'df758f7866f01e7b79bf36fe927486ae')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c5b1d7d328ad58717e08bbf227c807b0')"
     ]
   }
 }
