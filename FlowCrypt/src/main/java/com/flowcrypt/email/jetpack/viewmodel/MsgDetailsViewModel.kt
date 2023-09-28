@@ -12,6 +12,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -47,6 +48,7 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
+import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -65,11 +67,13 @@ import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -281,6 +285,51 @@ class MsgDetailsViewModel(
     MutableStateFlow(Result.none())
   val reVerifySignaturesStateFlow: StateFlow<Result<VerificationResult>> =
     reVerifySignaturesMutableStateFlow.asStateFlow()
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =
+    merge(
+      activeAccountLiveData.asFlow().mapLatest { account ->
+        if (account?.isGoogleSignInAccount == true) {
+          val labelEntities =
+            roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+          MessageEntity.generateColoredLabels(messageEntity.labelIds?.split(" "), labelEntities)
+        } else {
+          emptyList()
+        }
+      }, activeAccountLiveData.asFlow().mapLatest { account ->
+        if (account?.isGoogleSignInAccount == true) {
+          val labelEntities =
+            roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+          val freshestMessageEntity = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
+          val cachedLabelIds = freshestMessageEntity?.labelIds?.split(" ")
+          try {
+            val message = GmailApiHelper.loadMsgInfoSuspend(
+              context = getApplication(),
+              accountEntity = account,
+              msgId = messageEntity.uidAsHEX,
+              fields = null,
+              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
+            )
+
+            val latestLabelIds = message.labelIds
+            if (cachedLabelIds == null
+              || !(latestLabelIds.containsAll(cachedLabelIds)
+                  && cachedLabelIds.containsAll(latestLabelIds))
+            ) {
+              freshestMessageEntity?.copy(
+                labelIds = latestLabelIds.joinToString(" ")
+              )?.let { roomDatabase.msgDao().updateSuspend(it) }
+            }
+            MessageEntity.generateColoredLabels(latestLabelIds, labelEntities)
+          } catch (e: Exception) {
+            MessageEntity.generateColoredLabels(cachedLabelIds, labelEntities)
+          }
+        } else {
+          emptyList()
+        }
+      })
+
 
   init {
     afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
@@ -500,9 +549,12 @@ class MsgDetailsViewModel(
       if (accountEntity.useAPI) {
         if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
           val result = GmailApiHelper.executeWithResult {
-            val msgFullInfo = GmailApiHelper.loadMsgFullInfoSuspend(
-              getApplication(),
-              accountEntity, messageEntity.uidAsHEX, null
+            val msgFullInfo = GmailApiHelper.loadMsgInfoSuspend(
+              context = getApplication(),
+              accountEntity = accountEntity,
+              msgId = messageEntity.uidAsHEX,
+              fields = null,
+              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
             )
             msgSize = msgFullInfo.sizeEstimate
             val originalMsg = GmaiAPIMimeMessage(
@@ -768,10 +820,11 @@ class MsgDetailsViewModel(
   private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity) =
     withContext(Dispatchers.IO) {
       try {
-        val msg = GmailApiHelper.loadMsgFullInfoSuspend(
-          getApplication(),
-          accountEntity,
-          messageEntity.uidAsHEX
+        val msg = GmailApiHelper.loadMsgInfoSuspend(
+          context = getApplication(),
+          accountEntity = accountEntity,
+          msgId = messageEntity.uidAsHEX,
+          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
         )
         val attachments =
           GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->

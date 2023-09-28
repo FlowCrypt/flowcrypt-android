@@ -36,16 +36,22 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.MessagesListItemBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
 import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
+import kotlin.math.min
 
 /**
  * This class is responsible for displaying the message in the list.
@@ -56,6 +62,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
 
   var tracker: SelectionTracker<Long>? = null
+  var labelsEntities: List<LabelEntity>? = null
   var currentFolder: LocalFolder? = null
     set(value) {
       field = value
@@ -101,7 +108,12 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     when (holder.itemType) {
       MESSAGE -> {
         val messageEntity = getItem(position)
-        (holder as? MessageViewHolder)?.bind(messageEntity, folderType)
+        (holder as? MessageViewHolder)?.bind(
+          messageEntity,
+          currentFolder?.fullName,
+          folderType,
+          labelsEntities
+        )
         holder.itemView.setOnClickListener {
           messageEntity?.let { onMessageClickListener?.onMsgClick(it) }
         }
@@ -164,10 +176,31 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     private val binding: MessagesListItemBinding = MessagesListItemBinding.bind(itemView)
     override val itemType = MESSAGE
     private var lastDataId: Long? = null
+    private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter()
+
+    init {
+      binding.recyclerViewLabels.apply {
+        layoutManager = FlexboxLayoutManager(itemView.context).apply {
+          flexDirection = FlexDirection.ROW
+          justifyContent = JustifyContent.FLEX_START
+          maxLine = 1
+        }
+        addItemDecoration(
+          MarginItemDecoration(
+            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+            marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+          )
+        )
+        adapter = gmailApiLabelsListAdapter
+        itemAnimator = null
+      }
+    }
 
     fun bind(
       messageEntity: MessageEntity?,
-      folderType: FoldersManager.FolderType?
+      folderName: String?,
+      folderType: FoldersManager.FolderType?,
+      labelsEntities: List<LabelEntity>?
     ) {
       val context = itemView.context
       if (messageEntity != null) {
@@ -176,6 +209,15 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         } else {
           messageEntity.subject
         }
+
+        val coloredLabels = MessageEntity.generateColoredLabels(
+          labelIds = messageEntity.labelIds?.split(" "),
+          labelEntities = labelsEntities,
+          skippedLabels = listOf(folderName ?: "")
+        )
+        gmailApiLabelsListAdapter.submitList(
+          coloredLabels.subList(0, min(4, coloredLabels.size))
+        )
 
         val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
         binding.textViewSenderAddress.text = senderAddress

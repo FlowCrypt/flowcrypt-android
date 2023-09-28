@@ -6,13 +6,20 @@
 
 package com.flowcrypt.email.extensions.kotlin
 
+import android.content.Context
+import android.graphics.Color
+import android.util.TypedValue
+import androidx.core.content.ContextCompat
+import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
+import com.flowcrypt.email.util.UIUtil
 import org.json.JSONObject
 import java.io.InputStream
 import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.util.Locale
 
 fun String.normalizeDashes(): String {
   return this.replace(DASHES_REGEX, "-----")
@@ -120,4 +127,32 @@ fun String.isValidEmail(): Boolean {
 
 fun String.urlDecoded(): String {
   return URLDecoder.decode(this, StandardCharsets.UTF_8.name())
+}
+
+fun String?.parseAsColorBasedOnDefaultSettings(
+  context: Context,
+  defaultColorResourceId: Int = android.R.attr.colorControlNormal,
+  secondDefaultColorResourceId: Int = R.color.gray
+): Int {
+  return runCatching {
+    Color.parseColor(this)
+  }.getOrElse {
+    TypedValue().also {
+      context.theme.resolveAttribute(defaultColorResourceId, it, true)
+    }.let { typedValue ->
+      runCatching {
+        ContextCompat.getColor(context, typedValue.resourceId)
+      }.getOrElse {
+        UIUtil.getColor(context, secondDefaultColorResourceId)
+      }
+    }
+  }
+}
+
+fun String.capitalize(): String {
+  return replaceFirstChar {
+    if (it.isLowerCase()) it.titlecase(
+      Locale.ROOT
+    ) else it.toString()
+  }
 }

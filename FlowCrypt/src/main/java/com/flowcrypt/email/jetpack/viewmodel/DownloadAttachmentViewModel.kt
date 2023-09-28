@@ -98,7 +98,12 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
     context: Context,
     account: AccountEntity
   ): ByteArray = withContext(Dispatchers.IO) {
-    val msg = GmailApiHelper.loadMsgFullInfo(context, account, attachmentInfo.uid.toHex())
+    val msg = GmailApiHelper.loadMsgInfo(
+      context = context,
+      accountEntity = account,
+      msgId = attachmentInfo.uid.toHex(),
+      format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+    )
     val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = attachmentInfo.path)
       ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
 

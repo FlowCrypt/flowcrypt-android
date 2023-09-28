@@ -69,7 +69,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           threadId = messageEntity.threadId
         )
 
-        val message = GmailApiHelper.loadMsgFullInfoSuspend(
+        val message = GmailApiHelper.loadMsgInfoSuspend(
           context = applicationContext,
           accountEntity = account,
           msgId = draft.message.id,
@@ -77,7 +77,8 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
             "id",
             "threadId",
             "historyId"
-          )
+          ),
+          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
         )
 
         val freshestMessageEntity =

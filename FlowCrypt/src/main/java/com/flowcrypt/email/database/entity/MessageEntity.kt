@@ -23,9 +23,11 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
+import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
@@ -81,7 +83,8 @@ data class MessageEntity(
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
-  @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null
+  @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
+  @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -180,6 +183,7 @@ data class MessageEntity(
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
     if (draftId != other.draftId) return false
+    if (labelIds != other.labelIds) return false
     if (from != other.from) return false
     if (replyToAddress != other.replyToAddress) return false
     if (to != other.to) return false
@@ -218,6 +222,7 @@ data class MessageEntity(
     result = 31 * result + (historyId?.hashCode() ?: 0)
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + (draftId?.hashCode() ?: 0)
+    result = 31 * result + (labelIds?.hashCode() ?: 0)
     result = 31 * result + from.hashCode()
     result = 31 * result + replyToAddress.hashCode()
     result = 31 * result + to.hashCode()
@@ -349,7 +354,8 @@ data class MessageEntity(
             ).copy(
               threadId = msg.threadId,
               historyId = msg.historyId.toString(),
-              draftId = draftIdsMap[msg.id]
+              draftId = draftIdsMap[msg.id],
+              labelIds = msg.labelIds?.joinToString(separator = " ")
             )
           )
         } catch (e: MessageRemovedException) {
@@ -417,6 +423,22 @@ data class MessageEntity(
         flags = MessageFlag.flagsToString(flags),
         hasAttachments = !CollectionUtils.isEmpty(info.atts) || !CollectionUtils.isEmpty(info.forwardedAtts)
       )
+    }
+
+    fun generateColoredLabels(
+      labelIds: List<String>?,
+      labelEntities: List<LabelEntity>?,
+      skippedLabels: List<String> = emptyList()
+    ): List<GmailApiLabelsListAdapter.Label> {
+      return labelIds.orEmpty().mapNotNull { id ->
+        labelEntities?.find {
+          it.name == id && (id !in skippedLabels) && (it.isCustom || JavaEmailConstants.FOLDER_INBOX == id)
+        }?.let { entity ->
+          val name = entity.alias.takeIf { it == JavaEmailConstants.FOLDER_INBOX }?.capitalize()
+            ?: entity.alias.orEmpty()
+          GmailApiLabelsListAdapter.Label(name, entity.labelColor, entity.textColor)
+        }
+      }.sortedBy { it.name }
     }
   }
 }
