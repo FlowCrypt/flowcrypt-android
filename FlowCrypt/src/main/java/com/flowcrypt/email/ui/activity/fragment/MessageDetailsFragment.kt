@@ -140,6 +140,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FilenameUtils
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 /**
  * This fragment describe msgEntity of some message.
@@ -1890,7 +1891,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun changeGmailLabels() {
     if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
-      toast("hello")
+      navController?.navigate(
+        MessageDetailsFragmentDirections
+          .actionMessageDetailsFragmentToChangeGmailLabelsForSingleMessageDialogFragment(
+            requestKey = UUID.randomUUID().toString(),
+            messageEntity = args.messageEntity
+          )
+      )
     }
   }
 
