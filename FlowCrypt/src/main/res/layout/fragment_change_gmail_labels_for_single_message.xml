@@ -18,46 +18,57 @@
         android:gravity="center"
         android:paddingLeft="@dimen/default_margin_content_small"
         android:paddingRight="@dimen/default_margin_content_small"
-        android:text="@string/loading"
-        app:layout_constraintBottom_toTopOf="@+id/progressBar"
+        android:text="@string/preparing"
+        app:layout_constraintBottom_toTopOf="@+id/layoutProgress"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
+    <include
+        android:id="@+id/layoutProgress"
+        layout="@layout/progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewStatus" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
+        tools:visibility="visible" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewLabels"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintHeight_max="400dp"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:scrollbars="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/buttonOk"
+        app:layout_constraintBottom_toTopOf="@+id/buttonApplyChanges"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="400dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar"
+        app:layout_constraintTop_toBottomOf="@+id/layoutProgress"
         tools:itemCount="3"
         tools:listitem="@layout/item_gmail_label_with_checkbox" />
 
     <Button
-        android:id="@+id/buttonOk"
+        android:id="@+id/buttonApplyChanges"
         style="@style/AppWidget.Button.Big"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
-        android:text="@string/apply_changes"
+        android:text="@string/change_labels"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/recyclerViewLabels" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="recyclerViewLabels,buttonApplyChanges"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -600,8 +600,6 @@
     <string name="mark_as_not_spam">Исключить из спама</string>
     <string name="change_labels">Изменить ярлык</string>
     <string name="label">Ярлык</string>
-    <string name="apply_changes">Применить изменения</string>
-    <string name="manage_labels">Управление ярлыками</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

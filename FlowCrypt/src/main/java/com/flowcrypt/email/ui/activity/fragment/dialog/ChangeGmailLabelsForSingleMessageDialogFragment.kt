@@ -42,11 +42,11 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
   private val gmailApiLabelsWithChoiceListAdapter = GmailApiLabelsWithChoiceListAdapter()
 
   override val emptyView: View?
-    get() = binding?.textViewStatus
+    get() = null
   override val progressView: View?
-    get() = binding?.progressBar
+    get() = binding?.layoutProgress?.root
   override val contentView: View?
-    get() = binding?.recyclerViewLabels
+    get() = binding?.groupContent
   override val statusView: View?
     get() = binding?.textViewStatus
 
@@ -67,9 +67,12 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
       adapter = gmailApiLabelsWithChoiceListAdapter
     }
 
+    binding?.buttonApplyChanges?.setOnClickListener {
+      showProgress(progressMsg = getString(R.string.processing_please_wait))
+    }
+
     val builder = AlertDialog.Builder(requireContext()).apply {
       setView(binding?.root)
-      setTitle(getString(R.string.manage_labels))
 
       setNegativeButton(R.string.cancel) { _, _ ->
         navController?.navigateUp()

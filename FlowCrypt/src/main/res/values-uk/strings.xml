@@ -601,8 +601,6 @@
     <string name="mark_as_not_spam">Виключити зі спаму</string>
     <string name="change_labels">Змінити ярлик</string>
     <string name="label">Ярлик</string>
-    <string name="apply_changes">Застосувати зміни</string>
-    <string name="manage_labels">Керування мітками</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>
