@@ -38,6 +38,7 @@
         android:id="@+id/recyclerViewLabels"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        app:layout_constraintHeight_max="400dp"
         android:layout_marginTop="@dimen/default_margin_content_small"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toTopOf="@+id/buttonOk"

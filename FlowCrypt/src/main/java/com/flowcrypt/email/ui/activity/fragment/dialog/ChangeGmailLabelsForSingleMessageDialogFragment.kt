@@ -23,7 +23,6 @@ import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.GmailLabelsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsWithChoiceListAdapter
-import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 
 /**
  * @author Denys Bondarenko
@@ -65,11 +64,6 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
 
     binding?.recyclerViewLabels?.apply {
       layoutManager = LinearLayoutManager(context)
-      addItemDecoration(
-        MarginItemDecoration(
-          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_small)
-        )
-      )
       adapter = gmailApiLabelsWithChoiceListAdapter
     }
 
