@@ -22,6 +22,8 @@ import android.view.animation.Transformation
 import android.widget.ProgressBar
 import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
@@ -190,8 +192,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         }
         addItemDecoration(
           MarginItemDecoration(
-            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
-            marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+            marginLeft = resources.getDimensionPixelSize(R.dimen.default_margin_small)
           )
         )
         adapter = gmailApiLabelsListAdapter
@@ -278,6 +279,19 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         changeStatusView(messageEntity)
       } else {
         clearData()
+      }
+
+      binding.recyclerViewLabels.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+        setMargins(
+          0,
+          0,
+          if (binding.viewIsEncrypted.isVisible || binding.imageViewStatus.isVisible) {
+            itemView.context.resources.getDimension(R.dimen.default_margin_small).toInt()
+          } else {
+            0
+          },
+          0
+        )
       }
 
       lastDataId = messageEntity?.id
