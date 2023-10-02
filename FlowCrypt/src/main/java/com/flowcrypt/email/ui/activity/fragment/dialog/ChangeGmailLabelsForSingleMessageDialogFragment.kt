@@ -19,8 +19,10 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentChangeGmailLabelsForSingleMessageBinding
 import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.GmailLabelsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -50,7 +52,7 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
   override val contentView: View?
     get() = binding?.groupContent
   override val statusView: View?
-    get() = binding?.textViewStatus
+    get() = binding?.status?.root
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -113,6 +115,15 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
 
           Result.Status.EXCEPTION -> {
             showStatus(msg = it.exceptionMsg)
+            (dialog as AlertDialog).getButton(
+              AlertDialog.BUTTON_POSITIVE
+            ).apply {
+              setText(R.string.retry)
+              setOnClickListener {
+                binding?.buttonApplyChanges?.callOnClick()
+                this.gone()
+              }
+            }.visible()
           }
 
           else -> {}
