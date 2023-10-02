@@ -71,23 +71,37 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
       adapter = gmailApiLabelsWithChoiceListAdapter
     }
 
-    binding?.buttonApplyChanges?.setOnClickListener {
-      val newLabels = gmailApiLabelsWithChoiceListAdapter.currentList
-        .filter { it.isChecked }
-        .map { it.id }
-        .toSet()
-      gmailLabelsViewModel.changeLabels(newLabels)
-    }
-
     val builder = AlertDialog.Builder(requireContext()).apply {
       setView(binding?.root)
 
       setNegativeButton(R.string.cancel) { _, _ ->
         navController?.navigateUp()
       }
+
+      setPositiveButton(R.string.change_labels) { _, _ -> }
     }
 
     return builder.create()
+  }
+
+  override fun onStart() {
+    super.onStart()
+    overridePositiveButtonDefaultBehavior()
+  }
+
+  private fun overridePositiveButtonDefaultBehavior() {
+    (dialog as? AlertDialog)?.getButton(
+      AlertDialog.BUTTON_POSITIVE
+    )?.apply {
+      setOnClickListener {
+        val newLabels = gmailApiLabelsWithChoiceListAdapter.currentList
+          .filter { it.isChecked }
+          .map { it.id }
+          .toSet()
+        gmailLabelsViewModel.changeLabels(newLabels)
+        this.gone()
+      }
+    }
   }
 
   private fun setupGmailLabelsViewModel() {
@@ -115,15 +129,11 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
 
           Result.Status.EXCEPTION -> {
             showStatus(msg = it.exceptionMsg)
-            (dialog as AlertDialog).getButton(
+            (dialog as? AlertDialog)?.getButton(
               AlertDialog.BUTTON_POSITIVE
-            ).apply {
+            )?.apply {
               setText(R.string.retry)
-              setOnClickListener {
-                binding?.buttonApplyChanges?.callOnClick()
-                this.gone()
-              }
-            }.visible()
+            }?.visible()
           }
 
           else -> {}
