@@ -43,7 +43,9 @@ class GmailLabelsViewModel(
         val labelEntities =
           roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
             .filter { it.isCustom || it.name == GmailApiHelper.LABEL_INBOX }
-        val labelIds = messageEntity.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
+        val latestMessageEntityRecord = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
+        val labelIds =
+          latestMessageEntityRecord?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
         val initialList = labelEntities.map { entity ->
           LabelWithChoice(
             name = entity.alias.orEmpty(),
@@ -87,10 +89,10 @@ class GmailLabelsViewModel(
               IllegalStateException("Account is not defined")
             )
 
-          val freshestMessageEntity = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
+          val latestMessageEntityRecord = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
             ?: return@cancelPreviousThenRun Result.success(true)
 
-          val cachedLabelIds = freshestMessageEntity.labelIds.orEmpty()
+          val cachedLabelIds = latestMessageEntityRecord.labelIds.orEmpty()
             .split(MessageEntity.LABEL_IDS_SEPARATOR).toSet()
 
           GmailApiHelper.changeLabels(
@@ -103,7 +105,7 @@ class GmailLabelsViewModel(
 
           //update the local cache
           roomDatabase.msgDao()
-            .updateSuspend(freshestMessageEntity.copy(labelIds = labelIds.joinToString(" ")))
+            .updateSuspend(latestMessageEntityRecord.copy(labelIds = labelIds.joinToString(" ")))
 
           Result.success(true)
         } catch (e: Exception) {

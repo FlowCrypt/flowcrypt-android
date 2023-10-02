@@ -289,18 +289,20 @@ class MsgDetailsViewModel(
   @OptIn(ExperimentalCoroutinesApi::class)
   val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =
     merge(
-      activeAccountLiveData.asFlow().mapLatest { account ->
-        if (account?.isGoogleSignInAccount == true) {
+      freshMsgLiveData.asFlow().mapLatest { latestMessageEntityRecord ->
+        val activeAccount = getActiveAccountSuspend()
+        if (activeAccount?.isGoogleSignInAccount == true) {
           val labelEntities =
-            roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+            roomDatabase.labelDao().getLabelsSuspend(activeAccount.email, activeAccount.accountType)
           MessageEntity.generateColoredLabels(
-            messageEntity.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR),
+            latestMessageEntityRecord?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR),
             labelEntities
           )
         } else {
           emptyList()
         }
-      }, activeAccountLiveData.asFlow().mapLatest { account ->
+      },
+      activeAccountLiveData.asFlow().mapLatest { account ->
         if (account?.isGoogleSignInAccount == true) {
           val labelEntities =
             roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
@@ -333,7 +335,6 @@ class MsgDetailsViewModel(
           emptyList()
         }
       })
-
 
   init {
     afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
