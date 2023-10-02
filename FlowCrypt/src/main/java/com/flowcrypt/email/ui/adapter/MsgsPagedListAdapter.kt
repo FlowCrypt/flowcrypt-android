@@ -51,7 +51,6 @@ import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
 import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
-import kotlin.math.min
 
 /**
  * This class is responsible for displaying the message in the list.
@@ -220,7 +219,14 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           skippedLabels = listOf(folderName ?: "")
         )
         gmailApiLabelsListAdapter.submitList(
-          coloredLabels.subList(0, min(4, coloredLabels.size))
+          if (coloredLabels.size > MAX_LABELS_COUNT_BE_VISIBLE) {
+            coloredLabels.subList(
+              0,
+              MAX_LABELS_COUNT_BE_VISIBLE
+            ) + listOf(GmailApiLabelsListAdapter.Label("..."))
+          } else {
+            coloredLabels
+          }
         )
 
         val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
@@ -618,6 +624,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       override fun areContentsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) =
         oldMsg == newMsg
     }
+
+    private const val MAX_LABELS_COUNT_BE_VISIBLE = 2
 
     @IntDef(NONE, FOOTER, MESSAGE)
     @Retention(AnnotationRetention.SOURCE)
