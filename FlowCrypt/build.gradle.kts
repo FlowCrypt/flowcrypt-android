@@ -447,7 +447,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.2.0")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20230918-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20230925-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -466,7 +466,7 @@ dependencies {
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
-  implementation("commons-io:commons-io:2.13.0")
+  implementation("commons-io:commons-io:2.14.0")
   implementation("com.burhanrashid52:photoeditor:3.0.1")
   implementation("net.openid:appauth:0.11.1")
   implementation("org.bitbucket.b_c:jose4j:0.9.3")
