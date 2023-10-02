@@ -16,7 +16,9 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentChangeGmailLabelsForSingleMessageBinding
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -68,7 +70,11 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
     }
 
     binding?.buttonApplyChanges?.setOnClickListener {
-      showProgress(progressMsg = getString(R.string.processing_please_wait))
+      val newLabels = gmailApiLabelsWithChoiceListAdapter.currentList
+        .filter { it.isChecked }
+        .map { it.id }
+        .toSet()
+      gmailLabelsViewModel.changeLabels(newLabels)
     }
 
     val builder = AlertDialog.Builder(requireContext()).apply {
@@ -90,6 +96,26 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
           showEmptyView()
         } else {
           showContent()
+        }
+      }
+    }
+
+    launchAndRepeatWithLifecycle {
+      gmailLabelsViewModel.changeLabelsStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            showProgress(progressMsg = getString(R.string.processing_please_wait))
+          }
+
+          Result.Status.SUCCESS -> {
+            navController?.navigateUp()
+          }
+
+          Result.Status.EXCEPTION -> {
+            showStatus(msg = it.exceptionMsg)
+          }
+
+          else -> {}
         }
       }
     }

@@ -28,6 +28,19 @@ class GmailApiLabelsWithChoiceListAdapter :
     DiffUtilCallBack()
   ) {
 
+  private val onLabelCheckedListener = object : OnLabelCheckedListener {
+    override fun onLabelChecked(labelWithChoice: LabelWithChoice) {
+      val theSameItemInCurrentList =
+        currentList.firstOrNull { it.id == labelWithChoice.id } ?: return
+      val position = currentList.indexOf(theSameItemInCurrentList)
+      if (position != -1) {
+        submitList(currentList.toMutableList().apply {
+          this[position] = labelWithChoice
+        })
+      }
+    }
+  }
+
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
       LayoutInflater.from(parent.context)
@@ -36,17 +49,20 @@ class GmailApiLabelsWithChoiceListAdapter :
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    holder.bindTo(getItem(position))
+    holder.bindTo(getItem(position), onLabelCheckedListener)
   }
 
   inner class ViewHolder(itemView: View) :
     RecyclerView.ViewHolder(itemView) {
     val binding = ItemGmailLabelWithCheckboxBinding.bind(itemView)
 
-    fun bindTo(item: LabelWithChoice) {
+    fun bindTo(item: LabelWithChoice, onLabelCheckedListener: OnLabelCheckedListener) {
       itemView.setOnClickListener { binding.checkBox.toggle() }
       binding.textViewLabel.text = item.name
       binding.checkBox.isChecked = item.isChecked
+      binding.checkBox.setOnCheckedChangeListener { _, isChecked ->
+        onLabelCheckedListener.onLabelChecked(labelWithChoice = item.copy(isChecked = isChecked))
+      }
 
       val folderIconResourceId = R.drawable.ic_label_24dp
       when {
@@ -69,6 +85,10 @@ class GmailApiLabelsWithChoiceListAdapter :
         }
       }
     }
+  }
+
+  interface OnLabelCheckedListener {
+    fun onLabelChecked(labelWithChoice: LabelWithChoice)
   }
 
   class DiffUtilCallBack : DiffUtil.ItemCallback<LabelWithChoice>() {

@@ -293,7 +293,10 @@ class MsgDetailsViewModel(
         if (account?.isGoogleSignInAccount == true) {
           val labelEntities =
             roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
-          MessageEntity.generateColoredLabels(messageEntity.labelIds?.split(" "), labelEntities)
+          MessageEntity.generateColoredLabels(
+            messageEntity.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR),
+            labelEntities
+          )
         } else {
           emptyList()
         }
@@ -302,7 +305,8 @@ class MsgDetailsViewModel(
           val labelEntities =
             roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
           val freshestMessageEntity = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
-          val cachedLabelIds = freshestMessageEntity?.labelIds?.split(" ")
+          val cachedLabelIds =
+            freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
           try {
             val message = GmailApiHelper.loadMsgInfoSuspend(
               context = getApplication(),

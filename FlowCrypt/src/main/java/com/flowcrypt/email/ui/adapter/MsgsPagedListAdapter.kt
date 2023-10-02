@@ -215,7 +215,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         }
 
         val coloredLabels = MessageEntity.generateColoredLabels(
-          labelIds = messageEntity.labelIds?.split(" "),
+          labelIds = messageEntity.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR),
           labelEntities = labelsEntities,
           skippedLabels = listOf(folderName ?: "")
         )
