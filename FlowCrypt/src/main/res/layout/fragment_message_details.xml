@@ -98,6 +98,7 @@
                     android:textColor="@color/dark"
                     android:textSize="@dimen/default_text_size_very_big"
                     android:textStyle="italic"
+                    android:textIsSelectable="true"
                     app:layout_constraintEnd_toStartOf="@+id/imageButtonEditDraft"
                     app:layout_constraintHorizontal_bias="0.487"
                     app:layout_constraintStart_toStartOf="parent"
