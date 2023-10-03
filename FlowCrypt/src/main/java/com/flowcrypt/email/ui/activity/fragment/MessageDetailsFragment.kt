@@ -256,7 +256,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
     object : GmailApiLabelsListAdapter.OnLabelClickListener {
       override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
-        changeGmailLabels()
+        if (args.localFolder.searchQuery == null) {
+          changeGmailLabels()
+        }
       }
     })
 
