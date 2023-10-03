@@ -524,12 +524,18 @@ class GmailApiHelper {
     suspend fun processHistory(
       localFolder: LocalFolder,
       historyList: List<History>,
-      action: suspend (deleteCandidatesUIDs: Set<Long>, newCandidatesMap: Map<Long, Message>, updateCandidatesMap: Map<Long, Flags>) -> Unit
+      action: suspend (
+        deleteCandidatesUIDs: Set<Long>,
+        newCandidatesMap: Map<Long, Message>,
+        updateCandidatesMap: Map<Long, Flags>,
+        labelsToBeUpdatedMap: Map<Long, String>
+      ) -> Unit
     ) = withContext(Dispatchers.IO)
     {
       val deleteCandidatesUIDs = mutableSetOf<Long>()
       val newCandidatesMap = mutableMapOf<Long, Message>()
       val updateCandidates = mutableMapOf<Long, Flags>()
+      val labelsToBeUpdatedMap = mutableMapOf<Long, String>()
       val isDrafts = localFolder.isDrafts
 
       for (history in historyList) {
@@ -555,6 +561,8 @@ class GmailApiHelper {
 
         history.labelsRemoved?.let { labelsRemoved ->
           for (historyLabelRemoved in labelsRemoved) {
+            labelsToBeUpdatedMap[historyLabelRemoved.message.uid] = historyLabelRemoved.message
+              .labelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
             if (localFolder.fullName in (historyLabelRemoved.labelIds ?: emptyList())) {
               newCandidatesMap.remove(historyLabelRemoved.message.uid)
               updateCandidates.remove(historyLabelRemoved.message.uid)
@@ -580,6 +588,8 @@ class GmailApiHelper {
 
         history.labelsAdded?.let { labelsAdded ->
           for (historyLabelAdded in labelsAdded) {
+            labelsToBeUpdatedMap[historyLabelAdded.message.uid] = historyLabelAdded.message
+              .labelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
             if (localFolder.fullName in (historyLabelAdded.labelIds ?: emptyList())) {
               deleteCandidatesUIDs.remove(historyLabelAdded.message.uid)
               updateCandidates.remove(historyLabelAdded.message.uid)
@@ -599,7 +609,12 @@ class GmailApiHelper {
           }
         }
       }
-      action.invoke(deleteCandidatesUIDs, newCandidatesMap, updateCandidates)
+      action.invoke(
+        deleteCandidatesUIDs,
+        newCandidatesMap,
+        updateCandidates,
+        labelsToBeUpdatedMap
+      )
     }
 
     suspend fun identifyAttachments(

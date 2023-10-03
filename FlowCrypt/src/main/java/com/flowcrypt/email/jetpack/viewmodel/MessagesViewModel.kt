@@ -974,7 +974,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
     GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
                                                               newCandidatesMap,
-                                                              updateCandidatesMap ->
+                                                              updateCandidatesMap,
+                                                              labelsToBeUpdatedMap ->
       roomDatabase.msgDao()
         .deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs)
 
@@ -1031,6 +1032,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       roomDatabase.msgDao()
         .updateFlagsSuspend(accountEntity.email, localFolder.fullName, updateCandidatesMap)
+
+      roomDatabase.msgDao()
+        .updateGmailLabels(accountEntity.email, localFolder.fullName, labelsToBeUpdatedMap)
 
       if (folderType === FoldersManager.FolderType.SENT) {
         val session = Session.getInstance(Properties())

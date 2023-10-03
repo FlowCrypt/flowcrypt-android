@@ -506,6 +506,25 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     }
   }
 
+  open suspend fun updateGmailLabels(
+    email: String?,
+    label: String?,
+    labelsToBeUpdatedMap: Map<Long, String>
+  ) =
+    withContext(Dispatchers.IO) {
+      if (email == null || label == null) {
+        return@withContext
+      }
+
+      val messagesToBeUpdated = mutableListOf<MessageEntity>()
+      val entities = getMsgsByUIDs(email, label, labelsToBeUpdatedMap.keys.toList())
+      for (entity in entities) {
+        messagesToBeUpdated.add(entity.copy(labelIds = labelsToBeUpdatedMap[entity.uid]))
+      }
+
+      updateSuspend(messagesToBeUpdated)
+    }
+
   private suspend fun updateFlagsByUIDsSuspend(
     email: String?, label: String?, flagsMap: Map<Long, Flags>,
     uids: Collection<Long>?
