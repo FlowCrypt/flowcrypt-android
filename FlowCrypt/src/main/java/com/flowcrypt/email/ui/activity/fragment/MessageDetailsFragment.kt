@@ -88,6 +88,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.extensions.visibleOrInvisible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
@@ -836,7 +837,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     binding?.iBShowDetails?.setOnClickListener {
       binding?.rVMsgDetails?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
-      binding?.textViewDate?.visibleOrGone(!(binding?.rVMsgDetails?.isVisible ?: false))
+      binding?.textViewDate?.visibleOrInvisible(!(binding?.rVMsgDetails?.isVisible ?: false))
     }
 
     binding?.rVAttachments?.apply {

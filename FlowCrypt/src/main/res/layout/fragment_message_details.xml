@@ -151,10 +151,14 @@
                     android:id="@+id/textViewDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:textColor="@color/gray"
                     android:textSize="@dimen/default_text_size_medium"
+                    app:layout_constrainedWidth="true"
                     app:layout_constraintBottom_toBottomOf="@+id/tVTo"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/textViewSenderAddress"
                     app:layout_constraintTop_toTopOf="@+id/tVTo"
                     tools:text="1:05 PM" />
 
@@ -162,25 +166,31 @@
                     android:id="@+id/iBShowDetails"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/default_margin_small"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/details"
                     android:src="@mipmap/ic_arrow_drop_down_grey"
                     app:layout_constraintBottom_toBottomOf="@+id/tVTo"
+                    app:layout_constraintEnd_toEndOf="@+id/textViewSenderAddress"
+                    app:layout_constraintEnd_toStartOf="@+id/textViewDate"
                     app:layout_constraintStart_toEndOf="@+id/tVTo"
                     app:layout_constraintTop_toTopOf="@+id/tVTo" />
 
                 <TextView
                     android:id="@+id/tVTo"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/default_margin_content_small"
+                    android:layout_width="wrap_content"
                     android:layout_marginTop="@dimen/default_margin_content_small"
+                    android:layout_height="wrap_content"
+                    app:layout_constrainedWidth="true"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAlignment="textStart"
+                    app:layout_constraintEnd_toStartOf="@+id/iBShowDetails"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
+                    app:layout_constraintStart_toStartOf="@+id/textViewSenderAddress"
                     app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
-                    app:layout_constraintWidth_max="@dimen/max_width_field_to"
                     tools:text="To me" />
 
                 <androidx.recyclerview.widget.RecyclerView
