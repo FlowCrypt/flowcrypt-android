@@ -516,10 +516,12 @@ abstract class MessageDao : BaseDao<MessageEntity> {
         return@withContext
       }
 
-      val messagesToBeUpdated = mutableListOf<MessageEntity>()
-      val entities = getMsgsByUIDs(email, label, labelsToBeUpdatedMap.keys.toList())
-      for (entity in entities) {
-        messagesToBeUpdated.add(entity.copy(labelIds = labelsToBeUpdatedMap[entity.uid]))
+      val messagesToBeUpdated = getMsgsByUIDs(
+        email = email,
+        label = label,
+        uidList = labelsToBeUpdatedMap.keys.toList()
+      ).map { entity ->
+        entity.copy(labelIds = labelsToBeUpdatedMap[entity.uid])
       }
 
       updateSuspend(messagesToBeUpdated)

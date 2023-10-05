@@ -39,9 +39,9 @@ class GmailLabelsViewModel(
   @OptIn(ExperimentalCoroutinesApi::class)
   val labelsInfoFlow: Flow<List<LabelWithChoice>> =
     activeAccountLiveData.asFlow().mapLatest { account ->
-      if (account?.isGoogleSignInAccount == true) {
+      account.takeIf { account?.isGoogleSignInAccount == true }?.let { accountEntity ->
         val labelEntities =
-          roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+          roomDatabase.labelDao().getLabelsSuspend(accountEntity.email, accountEntity.accountType)
             .filter { it.isCustom || it.name == GmailApiHelper.LABEL_INBOX }
         val latestMessageEntityRecord = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
         val labelIds =
@@ -74,9 +74,7 @@ class GmailLabelsViewModel(
         } else {
           checkedLabels + listOf(inbox) + uncheckedLabels
         }
-      } else {
-        emptyList()
-      }
+      } ?: emptyList()
     }
 
   fun changeLabels(labelIds: Set<String>) {
