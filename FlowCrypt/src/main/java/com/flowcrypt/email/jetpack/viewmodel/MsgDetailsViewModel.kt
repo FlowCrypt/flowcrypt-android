@@ -289,20 +289,26 @@ class MsgDetailsViewModel(
   @OptIn(ExperimentalCoroutinesApi::class)
   val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =
     merge(
+      freshMsgLiveData.asFlow().mapLatest { latestMessageEntityRecord ->
+        val activeAccount = getActiveAccountSuspend()
+        if (activeAccount?.isGoogleSignInAccount == true) {
+          val labelEntities =
+            roomDatabase.labelDao().getLabelsSuspend(activeAccount.email, activeAccount.accountType)
+          MessageEntity.generateColoredLabels(
+            latestMessageEntityRecord?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR),
+            labelEntities
+          )
+        } else {
+          emptyList()
+        }
+      },
       activeAccountLiveData.asFlow().mapLatest { account ->
         if (account?.isGoogleSignInAccount == true) {
           val labelEntities =
             roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
-          MessageEntity.generateColoredLabels(messageEntity.labelIds?.split(" "), labelEntities)
-        } else {
-          emptyList()
-        }
-      }, activeAccountLiveData.asFlow().mapLatest { account ->
-        if (account?.isGoogleSignInAccount == true) {
-          val labelEntities =
-            roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
           val freshestMessageEntity = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
-          val cachedLabelIds = freshestMessageEntity?.labelIds?.split(" ")
+          val cachedLabelIds =
+            freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
           try {
             val message = GmailApiHelper.loadMsgInfoSuspend(
               context = getApplication(),
@@ -329,7 +335,6 @@ class MsgDetailsViewModel(
           emptyList()
         }
       })
-
 
   init {
     afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {

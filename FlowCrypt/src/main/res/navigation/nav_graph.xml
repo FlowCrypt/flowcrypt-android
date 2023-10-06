@@ -379,6 +379,9 @@
         <action
             android:id="@+id/action_messageDetailsFragment_to_importAdditionalPrivateKeysFragment"
             app:destination="@id/importAdditionalPrivateKeysFragment" />
+        <action
+            android:id="@+id/action_messageDetailsFragment_to_changeGmailLabelsForSingleMessageDialogFragment"
+            app:destination="@id/changeGmailLabelsForSingleMessageDialogFragment" />
     </fragment>
 
     <fragment
@@ -640,6 +643,19 @@
         <argument
             android:name="newPgpKeyDetails"
             app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/changeGmailLabelsForSingleMessageDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragment"
+        android:label="ChangeGmailLabelsForSingleMessageDialogFragment"
+        tools:layout="@layout/fragment_change_gmail_labels_for_single_message">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="messageEntity"
+            app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
     </dialog>
 
 

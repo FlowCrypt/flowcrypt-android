@@ -19,7 +19,9 @@ import com.flowcrypt.email.extensions.kotlin.parseAsColorBasedOnDefaultSettings
 /**
  * @author Denys Bondarenko
  */
-class GmailApiLabelsListAdapter : ListAdapter<GmailApiLabelsListAdapter.Label,
+class GmailApiLabelsListAdapter(
+  private val onLabelClickListener: OnLabelClickListener
+) : ListAdapter<GmailApiLabelsListAdapter.Label,
     GmailApiLabelsListAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -29,13 +31,15 @@ class GmailApiLabelsListAdapter : ListAdapter<GmailApiLabelsListAdapter.Label,
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    holder.bindTo(getItem(position))
+    holder.bindTo(getItem(position), onLabelClickListener)
   }
 
-  inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+  inner class ViewHolder(itemView: View) :
+    RecyclerView.ViewHolder(itemView) {
     val binding = ItemLabelBadgeBinding.bind(itemView)
 
-    fun bindTo(item: Label) {
+    fun bindTo(item: Label, onLabelClickListener: OnLabelClickListener) {
+      itemView.setOnClickListener { onLabelClickListener.onLabelClick(item) }
       binding.textViewLabel.text = item.name
       binding.textViewLabel.setTextColor(
         item.textColor.parseAsColorBasedOnDefaultSettings(
@@ -64,5 +68,9 @@ class GmailApiLabelsListAdapter : ListAdapter<GmailApiLabelsListAdapter.Label,
     override fun areContentsTheSame(oldItem: Label, newItem: Label): Boolean {
       return oldItem == newItem
     }
+  }
+
+  interface OnLabelClickListener {
+    fun onLabelClick(label: Label)
   }
 }

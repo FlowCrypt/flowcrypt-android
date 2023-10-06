@@ -89,6 +89,7 @@
     <string name="terms">Умови використання</string>
     <string name="file_is_too_big">Файл занадто великий</string>
     <string name="message_was_deleted">Повідомлення видалене</string>
+    <string name="message_was_deleted_or_labels_changed">Повідомлення видалене чи змінено мітки</string>
     <string name="create_a_new_key">Створити новий ключ</string>
     <string name="import_my_key">Імпортувати мій ключ</string>
     <string name="use_another_account">Використати інший обліковий запис</string>
@@ -599,6 +600,8 @@
     <string name="avatar">Аватар</string>
     <string name="move_to_spam">Перемістити до спаму</string>
     <string name="mark_as_not_spam">Виключити зі спаму</string>
+    <string name="change_labels">Змінити ярлик</string>
+    <string name="label">Ярлик</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

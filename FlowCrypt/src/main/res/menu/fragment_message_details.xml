@@ -41,4 +41,11 @@
         android:icon="@drawable/selector_ic_from_spam_white"
         android:title="@string/mark_as_not_spam"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionChangeLabels"
+        android:icon="@drawable/ic_label_24dp"
+        android:title="@string/change_labels"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
 </menu>

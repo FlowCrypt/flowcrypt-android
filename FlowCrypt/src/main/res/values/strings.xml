@@ -73,6 +73,7 @@
     <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
     <string name="message_was_deleted">The message was deleted</string>
+    <string name="message_was_deleted_or_labels_changed">The message was deleted or labels changed</string>
     <string name="retry">Retry</string>
     <string name="warning">Warning</string>
     <string name="no_connection">No connection</string>
@@ -608,6 +609,8 @@
     <string name="avatar">Avatar</string>
     <string name="move_to_spam">Move to Spam</string>
     <string name="mark_as_not_spam">Mark as not spam</string>
+    <string name="change_labels">Change labels</string>
+    <string name="label">Label</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">For your protection and data security, there are currently only %1$d attempt left, followed by a 5-minute cooldown period.</item>
         <item quantity="other">For your protection and data security, there are currently only %1$d attempts left, followed by a 5-minute cooldown period.</item>

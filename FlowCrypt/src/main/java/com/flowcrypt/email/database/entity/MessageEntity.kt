@@ -238,6 +238,7 @@ data class MessageEntity(
 
   companion object {
     const val TABLE_NAME = "messages"
+    const val LABEL_IDS_SEPARATOR = " "
 
     fun genMessageEntities(
       context: Context, email: String, label: String, folder: IMAPFolder,

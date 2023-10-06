@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_warning_red_24dp" />
+        tools:srcCompat="@drawable/ic_warning_red_24dp" />
 
     <TextView
         android:id="@id/tVStatusMsg"

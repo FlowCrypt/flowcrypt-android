@@ -38,7 +38,7 @@ interface ProgressBehaviour {
     contentView?.visibility = View.VISIBLE
   }
 
-  fun showStatus(msg: String? = null, resourcesId: Int = 0) {
+  fun showStatus(msg: String? = null, resourcesId: Int = R.drawable.ic_warning_red_24dp) {
     goneProgressView()
     contentView?.visibility = View.GONE
 

@@ -96,7 +96,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 40
+    const val DB_VERSION = 41
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1360,10 +1360,16 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     val MIGRATION_39_40 = object : FlowCryptMigration(39, 40) {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2020
-
         //need to delete all messages where folder = 'INBOX' to reload messages and save labelIds
         database.execSQL("DELETE FROM messages WHERE folder = 'INBOX'")
         database.execSQL("ALTER TABLE messages ADD COLUMN `label_ids` TEXT DEFAULT NULL;")
+      }
+    }
+
+    @VisibleForTesting
+    val MIGRATION_40_41 = object : FlowCryptMigration(40, 41) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //ref https://github.com/FlowCrypt/flowcrypt-android/pull/2460
         database.execSQL("ALTER TABLE labels ADD COLUMN `label_list_visibility` TEXT NOT NULL DEFAULT 'labelShow';")
       }
     }
@@ -1422,6 +1428,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_37_38,
           MIGRATION_38_39,
           MIGRATION_39_40,
+          MIGRATION_40_41,
         ).build()
         INSTANCE = instance
         return instance
