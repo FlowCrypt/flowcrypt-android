@@ -89,6 +89,7 @@
     <string name="terms">Умови використання</string>
     <string name="file_is_too_big">Файл занадто великий</string>
     <string name="message_was_deleted">Повідомлення видалене</string>
+    <string name="message_was_deleted_or_labels_changed">Повідомлення видалене чи змінено мітки</string>
     <string name="create_a_new_key">Створити новий ключ</string>
     <string name="import_my_key">Імпортувати мій ключ</string>
     <string name="use_another_account">Використати інший обліковий запис</string>

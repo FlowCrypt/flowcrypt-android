@@ -73,6 +73,7 @@
     <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
     <string name="message_was_deleted">The message was deleted</string>
+    <string name="message_was_deleted_or_labels_changed">The message was deleted or labels changed</string>
     <string name="retry">Retry</string>
     <string name="warning">Warning</string>
     <string name="no_connection">No connection</string>

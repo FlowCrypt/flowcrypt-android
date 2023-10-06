@@ -102,8 +102,14 @@ class GmailLabelsViewModel(
           )
 
           //update the local cache
-          roomDatabase.msgDao()
-            .updateSuspend(latestMessageEntityRecord.copy(labelIds = labelIds.joinToString(" ")))
+          val folderLabel = messageEntity.folder
+          if (labelIds.contains(folderLabel)) {
+            roomDatabase.msgDao().updateSuspend(
+              latestMessageEntityRecord.copy(labelIds = labelIds.joinToString(" "))
+            )
+          } else {
+            roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+          }
 
           Result.success(true)
         } catch (e: Exception) {

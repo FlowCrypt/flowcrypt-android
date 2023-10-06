@@ -88,6 +88,7 @@
     <string name="terms">Условия использования</string>
     <string name="file_is_too_big">Файл слишком большой</string>
     <string name="message_was_deleted">Сообщение удалено</string>
+    <string name="message_was_deleted_or_labels_changed">Сообщение удалено или метки были изменены</string>
     <string name="create_a_new_key">Создать новый ключ</string>
     <string name="import_my_key">Импортировать мой ключ</string>
     <string name="use_another_account">Использовать другую учетную запись</string>
