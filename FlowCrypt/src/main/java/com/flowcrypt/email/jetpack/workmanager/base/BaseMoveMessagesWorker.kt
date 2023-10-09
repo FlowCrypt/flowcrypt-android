@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
@@ -109,7 +110,20 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
         val movedMessages = messagesToMove.filter { it.uid in uidList }
           .map { it.copy(state = MessageState.NONE.value) }
         if (srcFolder.equals(folderAll?.fullName, true)) {
-          roomDatabase.msgDao().updateSuspend(movedMessages)
+          if (account.isGoogleSignInAccount) {
+            val addLabelIds = getAddAndRemoveLabelIdsForGmailAPI("").addLabelIds
+            roomDatabase.msgDao().updateSuspend(movedMessages.map {
+              it.copy(
+                labelIds = it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+                  ?.toMutableSet()
+                  ?.apply {
+                    addLabelIds?.let { labelIds -> addAll(labelIds) }
+                  }?.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+              )
+            })
+          } else {
+            roomDatabase.msgDao().updateSuspend(movedMessages)
+          }
         } else {
           roomDatabase.msgDao().deleteSuspend(movedMessages)
         }

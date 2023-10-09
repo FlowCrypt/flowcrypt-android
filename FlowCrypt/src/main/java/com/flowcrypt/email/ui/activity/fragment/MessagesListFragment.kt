@@ -823,6 +823,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               true
             }
 
+            R.id.menuActionMoveToInbox -> {
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MOVE_TO_INBOX)
+              mode?.finish()
+              true
+            }
+
             R.id.menuActionDeleteMessage -> {
               if (it.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
