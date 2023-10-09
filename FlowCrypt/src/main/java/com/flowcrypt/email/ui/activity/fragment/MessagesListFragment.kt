@@ -162,6 +162,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               ?.startSupportActionMode(genActionModeForMsgs())
           }
           actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
+          actionMode?.invalidate()
         }
 
         tracker?.hasSelection() == false -> {
@@ -886,7 +887,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        menu?.findItem(R.id.menuActionArchiveMessage)?.isVisible = isArchiveActionEnabled()
+        val isArchiveActionEnabled = isArchiveActionEnabled()
+        val isMoveToInboxActionEnabled = isMoveToInboxActionEnabled()
+        menu?.findItem(R.id.menuActionArchiveMessage)?.isVisible =
+          isArchiveActionEnabled && !isMoveToInboxActionEnabled
+        menu?.findItem(R.id.menuActionMoveToInbox)?.isVisible =
+          isMoveToInboxActionEnabled && !isArchiveActionEnabled
         menu?.findItem(R.id.menuActionMoveToSpam)?.isVisible = isSpamActionEnabled()
         menu?.findItem(R.id.menuActionMarkAsNotSpam)?.isVisible = isMarkNotSpamActionEnabled()
 
@@ -1257,24 +1263,43 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
+  /**
+   * "archive" action is enabled only for GMAIL and if at least one
+   * message has INBOX label.
+   */
   private fun isArchiveActionEnabled(): Boolean {
-    var isEnabled = false
+    return if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
+      val selection = tracker?.selection?.map { it }
+        ?.mapNotNull { adapter.getMsgEntity(keyProvider?.getPosition(it)) }
+        ?: emptyList()
+      selection.any {
+        it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+          ?.contains(JavaEmailConstants.FOLDER_INBOX) == true
+      }
+    } else false
+  }
 
-    when (FoldersManager.getFolderType(currentFolder)) {
-      //archive action is enabled only in INBOX folder for GMAIL. While we don't support GMail
-      // labels we can't use the archive action in other folders.
-      FoldersManager.FolderType.INBOX -> {
+
+  /**
+   * "move to inbox" action is enabled only in 'ALL MAIL' folder for GMAIL and if at least one
+   * message doesn't have INBOX label
+   */
+  private fun isMoveToInboxActionEnabled(): Boolean {
+    return when (FoldersManager.getFolderType(currentFolder)) {
+      FoldersManager.FolderType.All -> {
         if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
-          isEnabled = true
-        }
+          val selection = tracker?.selection?.map { it }
+            ?.mapNotNull { adapter.getMsgEntity(keyProvider?.getPosition(it)) }
+            ?: emptyList()
+          selection.any {
+            it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+              ?.contains(JavaEmailConstants.FOLDER_INBOX) == false
+          }
+        } else false
       }
 
-      else -> {
-        isEnabled = false
-      }
+      else -> false
     }
-
-    return isEnabled
   }
 
   private fun isChangeSeenStateActionEnabled(): Boolean {
