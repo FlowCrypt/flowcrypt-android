@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -87,11 +88,20 @@ class GmailLabelsViewModel(
               IllegalStateException("Account is not defined")
             )
 
+          val labelsEntities = roomDatabase.labelDao().getLabelsSuspend(
+            account = activeAccount.email,
+            accountType = activeAccount.accountType
+          )
+
+          val protectedLabelIds = labelsEntities
+            .filter { !it.isCustom && it.name != GmailApiHelper.LABEL_INBOX }
+            .map { it.name }
+
           val latestMessageEntityRecord = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
             ?: return@cancelPreviousThenRun Result.success(true)
 
           val cachedLabelIds = latestMessageEntityRecord.labelIds.orEmpty()
-            .split(MessageEntity.LABEL_IDS_SEPARATOR).toSet()
+            .split(MessageEntity.LABEL_IDS_SEPARATOR).filter { it !in protectedLabelIds }.toSet()
 
           GmailApiHelper.changeLabels(
             context = getApplication(),
@@ -103,7 +113,13 @@ class GmailLabelsViewModel(
 
           //update the local cache
           val folderLabel = messageEntity.folder
-          if (labelIds.contains(folderLabel)) {
+          val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
+          val folderType = foldersManager.getFolderByFullName(messageEntity.folder)?.getFolderType()
+          if (labelIds.contains(folderLabel) || folderType in setOf(
+              FoldersManager.FolderType.DRAFTS,
+              FoldersManager.FolderType.All
+            )
+          ) {
             roomDatabase.msgDao().updateSuspend(
               latestMessageEntityRecord.copy(labelIds = labelIds.joinToString(" "))
             )

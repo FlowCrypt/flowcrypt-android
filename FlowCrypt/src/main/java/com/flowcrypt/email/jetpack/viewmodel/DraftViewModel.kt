@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.InitializationData
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
@@ -262,7 +263,8 @@ class DraftViewModel(
         flags = listOf(MessageFlag.DRAFT, MessageFlag.SEEN)
       ).copy(
         state = MessageState.PENDING_UPLOADING_DRAFT.value,
-        threadId = gmailThreadId
+        threadId = gmailThreadId,
+        labelIds = GmailApiHelper.LABEL_DRAFT
       )
       val id = roomDatabase.msgDao().insertSuspend(newDraftMessageEntity)
       return@withContext newDraftMessageEntity.copy(
