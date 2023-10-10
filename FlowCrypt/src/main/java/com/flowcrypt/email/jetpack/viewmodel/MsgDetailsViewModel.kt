@@ -18,6 +18,7 @@ import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
@@ -342,10 +343,22 @@ class MsgDetailsViewModel(
   val messageActionsAvailabilityStateFlow =
     freshMsgLiveData.asFlow().mapLatest { entity ->
       val activeAccount = getActiveAccountSuspend()
+        ?: return@mapLatest MessageAction.entries.associateBy({ it }, { false })
+      val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
       MessageAction.entries.associateBy({ it }, { false }).toMutableMap().apply {
-        if (activeAccount?.isGoogleSignInAccount == true) {
+        val folderType = foldersManager.getFolderByFullName(entity?.folder)?.getFolderType()
+        if (activeAccount.isGoogleSignInAccount) {
           val labelIds = entity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR).orEmpty()
           this[MessageAction.ARCHIVE] = labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+          this[MessageAction.MOVE_TO_INBOX] = folderType != FoldersManager.FolderType.OUTBOX
+              && !labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+          this[MessageAction.CHANGE_LABELS] = folderType != FoldersManager.FolderType.OUTBOX
+        } else {
+          this[MessageAction.MOVE_TO_INBOX] = folderType !in listOf(
+            FoldersManager.FolderType.TRASH,
+            FoldersManager.FolderType.DRAFTS,
+            FoldersManager.FolderType.OUTBOX,
+          )
         }
       }
     }.stateIn(
@@ -875,7 +888,8 @@ class MsgDetailsViewModel(
     ARCHIVE,
     MOVE_TO_INBOX,
     MOVE_TO_SPAM,
-    MARK_AS_NOT_SPAM
+    MARK_AS_NOT_SPAM,
+    CHANGE_LABELS
   }
 
   /**

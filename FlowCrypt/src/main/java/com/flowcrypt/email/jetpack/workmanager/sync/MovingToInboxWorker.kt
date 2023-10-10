@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMoveMessagesWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -41,6 +42,34 @@ class MovingToInboxWorker(context: Context, params: WorkerParameters) :
         GmailApiHelper.LABEL_TRASH
       ) else null
     )
+  }
+
+  override suspend fun onMessagesMovedOnServer(
+    account: AccountEntity,
+    srcFolder: String,
+    messageEntities: List<MessageEntity>
+  ) {
+    if (account.isGoogleSignInAccount && account.useAPI) {
+      val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
+      val folderTrash = foldersManager.folderTrash
+
+      if (srcFolder == folderTrash?.fullName) {
+        roomDatabase.msgDao().deleteSuspend(messageEntities)
+      } else {
+        val addLabelIds = getAddAndRemoveLabelIdsForGmailAPI("").addLabelIds
+        roomDatabase.msgDao().updateSuspend(messageEntities.map {
+          it.copy(
+            labelIds = it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+              ?.toMutableSet()
+              ?.apply {
+                addLabelIds?.let { labelIds -> addAll(labelIds) }
+              }?.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+          )
+        })
+      }
+    } else {
+      roomDatabase.msgDao().deleteSuspend(messageEntities)
+    }
   }
 
   companion object {

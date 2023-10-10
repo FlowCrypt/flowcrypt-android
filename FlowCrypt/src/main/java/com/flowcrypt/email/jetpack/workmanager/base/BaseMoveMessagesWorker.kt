@@ -7,7 +7,6 @@ package com.flowcrypt.email.jetpack.workmanager.base
 
 import android.content.Context
 import androidx.work.WorkerParameters
-import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -33,6 +32,13 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
   abstract val queryMessageState: MessageState
   abstract suspend fun getDestinationFolderForIMAP(account: AccountEntity): LocalFolder?
   abstract fun getAddAndRemoveLabelIdsForGmailAPI(srcFolder: String): GmailApiLabelsData
+
+  abstract suspend fun onMessagesMovedOnServer(
+    account: AccountEntity,
+    srcFolder: String,
+    messageEntities: List<MessageEntity>
+  )
+
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
     moveMessages(accountEntity, store)
   }
@@ -80,8 +86,6 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
     account: AccountEntity,
     action: suspend (folderName: String, uidList: List<Long>) -> Unit
   ) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
-    val folderAll = foldersManager.folderAll
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
@@ -109,24 +113,7 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
         action.invoke(srcFolder, uidList)
         val movedMessages = messagesToMove.filter { it.uid in uidList }
           .map { it.copy(state = MessageState.NONE.value) }
-        if (srcFolder.equals(folderAll?.fullName, true)) {
-          if (account.isGoogleSignInAccount) {
-            val addLabelIds = getAddAndRemoveLabelIdsForGmailAPI("").addLabelIds
-            roomDatabase.msgDao().updateSuspend(movedMessages.map {
-              it.copy(
-                labelIds = it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
-                  ?.toMutableSet()
-                  ?.apply {
-                    addLabelIds?.let { labelIds -> addAll(labelIds) }
-                  }?.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
-              )
-            })
-          } else {
-            roomDatabase.msgDao().updateSuspend(movedMessages)
-          }
-        } else {
-          roomDatabase.msgDao().deleteSuspend(movedMessages)
-        }
+        onMessagesMovedOnServer(account, srcFolder, movedMessages)
       }
     }
   }

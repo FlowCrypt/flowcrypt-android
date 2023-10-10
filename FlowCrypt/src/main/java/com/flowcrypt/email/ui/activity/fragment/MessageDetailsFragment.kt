@@ -264,7 +264,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
-  private var isMoveToInboxActionEnabled: Boolean = false
   private var isMoveToSpamActionEnabled: Boolean = false
   private var isMarkAsNotSpamActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
@@ -338,16 +337,20 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         val menuActionMarkAsNotSpam = menu.findItem(R.id.menuActionMarkAsNotSpam)
         val menuActionChangeLabels = menu.findItem(R.id.menuActionChangeLabels)
 
-        menuItemArchiveMsg?.isVisible =
-          msgDetailsViewModel.getMessageActionAvailability(MsgDetailsViewModel.MessageAction.ARCHIVE)
+        menuItemArchiveMsg?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.ARCHIVE
+        )
         menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
-        menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
+        menuActionMoveToInbox?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.MOVE_TO_INBOX
+        )
         menuActionMarkUnread?.isVisible =
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
         menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
         menuActionMarkAsNotSpam?.isVisible = isMarkAsNotSpamActionEnabled
-        menuActionChangeLabels?.isVisible =
-          AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+        menuActionChangeLabels?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.CHANGE_LABELS
+        )
 
         menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
         menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
@@ -676,21 +679,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         FoldersManager.FolderType.TRASH -> {
-          isMoveToInboxActionEnabled = true
           isDeleteActionEnabled = true
           isMoveToSpamActionEnabled = true
         }
 
         FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
-          isMoveToInboxActionEnabled = false
           isMoveToSpamActionEnabled = false
           isDeleteActionEnabled = true
         }
 
         FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM -> {
-          if (AccountEntity.ACCOUNT_TYPE_GOOGLE != account?.accountType) {
-
-          } else {
+          if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
             isMarkAsNotSpamActionEnabled = true
           }
           isMoveToSpamActionEnabled = false
@@ -698,13 +697,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         else -> {
-          isMoveToInboxActionEnabled = true
           isDeleteActionEnabled = true
           isMoveToSpamActionEnabled = true
         }
       }
     } else {
-      isMoveToInboxActionEnabled = false
       isMoveToSpamActionEnabled = false
       isDeleteActionEnabled = true
     }

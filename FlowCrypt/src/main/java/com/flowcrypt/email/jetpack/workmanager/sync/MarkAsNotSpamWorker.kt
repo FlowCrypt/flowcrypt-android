@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMoveMessagesWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -34,6 +35,14 @@ class MarkAsNotSpamWorker(context: Context, params: WorkerParameters) :
       addLabelIds = listOf(GmailApiHelper.LABEL_INBOX),
       removeLabelIds = listOf(GmailApiHelper.LABEL_SPAM)
     )
+  }
+
+  override suspend fun onMessagesMovedOnServer(
+    account: AccountEntity,
+    srcFolder: String,
+    messageEntities: List<MessageEntity>
+  ) {
+    roomDatabase.msgDao().deleteSuspend(messageEntities)
   }
 
   companion object {
