@@ -69,11 +69,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -336,6 +338,22 @@ class MsgDetailsViewModel(
         }
       })
 
+  @OptIn(ExperimentalCoroutinesApi::class)
+  val messageActionsAvailabilityStateFlow =
+    freshMsgLiveData.asFlow().mapLatest { entity ->
+      val activeAccount = getActiveAccountSuspend()
+      MessageAction.entries.associateBy({ it }, { false }).toMutableMap().apply {
+        if (activeAccount?.isGoogleSignInAccount == true) {
+          val labelIds = entity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR).orEmpty()
+          this[MessageAction.ARCHIVE] = labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+        }
+      }
+    }.stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = MessageAction.entries.associateBy({ it }, { false })
+    )
+
   init {
     afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
       afterKeysStorageUpdatedMsgLiveData.value = it
@@ -454,6 +472,10 @@ class MsgDetailsViewModel(
           return@cancelPreviousThenRun reVerifySignaturesInternal()
         }
     }
+  }
+
+  fun getMessageActionAvailability(messageAction: MessageAction): Boolean {
+    return messageActionsAvailabilityStateFlow.value[messageAction] ?: false
   }
 
   private suspend fun reVerifySignaturesInternal(): Result<VerificationResult> =
@@ -847,6 +869,14 @@ class MsgDetailsViewModel(
         e.printStackTrace()
       }
     }
+
+  enum class MessageAction {
+    DELETE,
+    ARCHIVE,
+    MOVE_TO_INBOX,
+    MOVE_TO_SPAM,
+    MARK_AS_NOT_SPAM
+  }
 
   /**
    * This class will be used to identify the fetching progress.
