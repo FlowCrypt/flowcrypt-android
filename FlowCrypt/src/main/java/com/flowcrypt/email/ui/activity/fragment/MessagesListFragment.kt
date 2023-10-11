@@ -1286,25 +1286,19 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
 
-  /**
-   * "move to inbox" action is enabled only in 'ALL MAIL' folder for GMAIL and if at least one
-   * message doesn't have INBOX label
-   */
   private fun isMoveToInboxActionEnabled(): Boolean {
     return when (FoldersManager.getFolderType(currentFolder)) {
-      FoldersManager.FolderType.All -> {
-        if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
-          val selection = tracker?.selection?.map { it }
-            ?.mapNotNull { adapter.getMsgEntity(keyProvider?.getPosition(it)) }
-            ?: emptyList()
-          selection.any {
-            it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
-              ?.contains(JavaEmailConstants.FOLDER_INBOX) == false
-          }
-        } else false
-      }
+      FoldersManager.FolderType.OUTBOX -> false
 
-      else -> false
+      else -> if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
+        val selection = tracker?.selection?.map { it }
+          ?.mapNotNull { adapter.getMsgEntity(keyProvider?.getPosition(it)) }
+          ?: emptyList()
+        selection.any {
+          it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+            ?.contains(JavaEmailConstants.FOLDER_INBOX) == false
+        }
+      } else false
     }
   }
 
