@@ -101,30 +101,46 @@ class GmailLabelsViewModel(
             ?: return@cancelPreviousThenRun Result.success(true)
 
           val cachedLabelIds = latestMessageEntityRecord.labelIds.orEmpty()
-            .split(MessageEntity.LABEL_IDS_SEPARATOR).filter { it !in protectedLabelIds }.toSet()
+            .split(MessageEntity.LABEL_IDS_SEPARATOR).toSet()
+
+          val allowedToChangeLabelIds = cachedLabelIds.filter { it !in protectedLabelIds }.toSet()
+          val addLabelIds = labelIds - allowedToChangeLabelIds
+          val removeLabelIds = allowedToChangeLabelIds - labelIds
 
           GmailApiHelper.changeLabels(
             context = getApplication(),
             accountEntity = activeAccount,
             ids = listOf(messageEntity.uidAsHEX),
-            addLabelIds = (labelIds - cachedLabelIds).toList(),
-            removeLabelIds = (cachedLabelIds - labelIds).toList()
+            addLabelIds = addLabelIds.toList(),
+            removeLabelIds = removeLabelIds.toList()
           )
 
           //update the local cache
+          val finalLabelIds = cachedLabelIds + addLabelIds - removeLabelIds
           val folderLabel = messageEntity.folder
           val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
           val folderType = foldersManager.getFolderByFullName(messageEntity.folder)?.getFolderType()
-          if (labelIds.contains(folderLabel) || folderType in setOf(
+
+          when {
+            folderType == FoldersManager.FolderType.TRASH
+                && finalLabelIds.contains(GmailApiHelper.LABEL_INBOX) -> {
+              roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+            }
+
+            finalLabelIds.contains(folderLabel) || folderType in setOf(
               FoldersManager.FolderType.DRAFTS,
               FoldersManager.FolderType.All
-            )
-          ) {
-            roomDatabase.msgDao().updateSuspend(
-              latestMessageEntityRecord.copy(labelIds = labelIds.joinToString(" "))
-            )
-          } else {
-            roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+            ) -> {
+              roomDatabase.msgDao().updateSuspend(
+                latestMessageEntityRecord.copy(
+                  labelIds = finalLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+                )
+              )
+            }
+
+            else -> {
+              roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+            }
           }
 
           Result.success(true)

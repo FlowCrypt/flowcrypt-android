@@ -327,7 +327,7 @@ class MsgDetailsViewModel(
                   && cachedLabelIds.containsAll(latestLabelIds))
             ) {
               freshestMessageEntity?.copy(
-                labelIds = latestLabelIds.joinToString(" ")
+                labelIds = latestLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
               )?.let { roomDatabase.msgDao().updateSuspend(it) }
             }
             MessageEntity.generateColoredLabels(latestLabelIds, labelEntities)

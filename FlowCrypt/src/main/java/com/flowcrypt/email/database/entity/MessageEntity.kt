@@ -356,7 +356,7 @@ data class MessageEntity(
               threadId = msg.threadId,
               historyId = msg.historyId.toString(),
               draftId = draftIdsMap[msg.id],
-              labelIds = msg.labelIds?.joinToString(separator = " ")
+              labelIds = msg.labelIds?.joinToString(separator = LABEL_IDS_SEPARATOR)
             )
           )
         } catch (e: MessageRemovedException) {
