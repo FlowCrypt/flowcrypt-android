@@ -836,10 +836,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun updateViews(messageEntity: MessageEntity) {
     updateActionBar(messageEntity)
 
-    binding?.imageButtonReplyAll?.visibleOrGone(
+    binding?.imageButtonReplyAll?.visibleOrInvisible(
       !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )
-    binding?.imageButtonMoreOptions?.visibleOrGone(
+    binding?.imageButtonMoreOptions?.visibleOrInvisible(
       !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )
     updateMsgDetails(messageEntity)
