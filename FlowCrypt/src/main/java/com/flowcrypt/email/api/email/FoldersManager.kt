@@ -17,7 +17,7 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.google.api.services.gmail.model.Label
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.MessagingException
-import java.util.*
+import java.util.LinkedList
 
 /**
  * The [FoldersManager] describes a logic of work with remote folders. This class helps as
@@ -25,7 +25,7 @@ import java.util.*
  *
  * @author Denys Bondarenko
  */
-class FoldersManager constructor(val account: String) {
+class FoldersManager constructor(val accountEntity: AccountEntity) {
   private var folders: LinkedHashMap<String, LocalFolder> = LinkedHashMap()
 
   val folderInbox: LocalFolder?
@@ -109,7 +109,6 @@ class FoldersManager constructor(val account: String) {
    *
    * @param imapFolder  The [IMAPFolder] object which contains information about a
    * remote folder.
-   * @param folderAlias The folder alias.
    * @throws MessagingException
    */
   fun addFolder(imapFolder: IMAPFolder?) {
@@ -118,7 +117,7 @@ class FoldersManager constructor(val account: String) {
           it.fullName
         )
       ) {
-        this.folders[prepareFolderKey(it)] = generateFolder(account, it)
+        this.folders[prepareFolderKey(it)] = generateFolder(accountEntity.email, it)
       }
     }
   }
@@ -131,7 +130,7 @@ class FoldersManager constructor(val account: String) {
   fun addFolder(gMailLabel: Label?) {
     gMailLabel?.let {
       if (it.id.isNotEmpty() && !folders.containsKey(it.id)) {
-        this.folders[prepareFolderKey(it)] = generateFolder(account, it)
+        this.folders[prepareFolderKey(it)] = generateFolder(accountEntity.email, it)
       }
     }
   }
@@ -262,12 +261,12 @@ class FoldersManager constructor(val account: String) {
   }
 
   private fun prepareFolderKey(imapFolder: IMAPFolder): String {
-    val folderType = getFolderType(generateFolder(account, imapFolder))
+    val folderType = getFolderType(generateFolder(accountEntity.email, imapFolder))
     return folderType?.value ?: imapFolder.fullName
   }
 
   private fun prepareFolderKey(label: Label): String {
-    val folderType = getFolderType(generateFolder(account, label))
+    val folderType = getFolderType(generateFolder(accountEntity.email, label))
     return folderType?.value ?: label.id
   }
 
@@ -307,7 +306,7 @@ class FoldersManager constructor(val account: String) {
     fun fromDatabase(context: Context, accountEntity: AccountEntity): FoldersManager {
       val appContext = context.applicationContext
       return build(
-        accountEntity.email,
+        accountEntity,
         FlowCryptRoomDatabase.getDatabase(appContext).labelDao()
           .getLabels(accountEntity.email, accountEntity.accountType)
       )
@@ -318,7 +317,7 @@ class FoldersManager constructor(val account: String) {
      * called from a background thread only.
      *
      * @param context     Interface to global information about an application environment.
-     * @param accountName The name of an account.
+     * @param accountEntity An account.
      * @return The new [FoldersManager].
      */
     @WorkerThread
@@ -328,7 +327,7 @@ class FoldersManager constructor(val account: String) {
     ): FoldersManager {
       val appContext = context.applicationContext
       return build(
-        accountEntity.email, FlowCryptRoomDatabase.getDatabase(appContext).labelDao()
+        accountEntity, FlowCryptRoomDatabase.getDatabase(appContext).labelDao()
           .getLabelsSuspend(accountEntity.email, accountEntity.accountType)
       )
     }
@@ -338,7 +337,6 @@ class FoldersManager constructor(val account: String) {
      *
      * @param imapFolder  The [IMAPFolder] object which contains information about a
      * remote folder.
-     * @param folderAlias The folder alias.
      * @return
      * @throws MessagingException
      */
@@ -359,7 +357,6 @@ class FoldersManager constructor(val account: String) {
      * Generate a new [LocalFolder]
      *
      * @param label  The [Label] object which contains information about a remote folder.
-     * @param folderAlias The folder alias.
      */
     fun generateFolder(account: String, label: Label): LocalFolder {
       return LocalFolder(
@@ -386,7 +383,7 @@ class FoldersManager constructor(val account: String) {
      * @return true if this label is a custom, false otherwise.
      * @throws MessagingException
      */
-    fun isCustom(folder: IMAPFolder): Boolean {
+    private fun isCustom(folder: IMAPFolder): Boolean {
       val attr = folder.attributes
       val folderTypes = FolderType.values()
 
@@ -497,11 +494,11 @@ class FoldersManager constructor(val account: String) {
     /**
      * Generate a new [FoldersManager] using information from the local database.
      *
-     * @param accountName The name of an account.
+     * @param accountEntity An account.
      * @return a new [FoldersManager].
      */
-    fun build(accountName: String, labels: List<LabelEntity>): FoldersManager {
-      val foldersManager = FoldersManager(accountName)
+    fun build(accountEntity: AccountEntity, labels: List<LabelEntity>): FoldersManager {
+      val foldersManager = FoldersManager(accountEntity)
 
       labels.forEach { label ->
         foldersManager.addFolder(LocalFolder(label))

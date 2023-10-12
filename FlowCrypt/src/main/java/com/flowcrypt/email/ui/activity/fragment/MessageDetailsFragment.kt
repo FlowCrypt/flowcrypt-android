@@ -264,10 +264,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
-  private var isArchiveActionEnabled: Boolean = false
-  private var isMoveToInboxActionEnabled: Boolean = false
   private var isMoveToSpamActionEnabled: Boolean = false
-  private var isMarkAsNotSpamActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var downloadAttachmentsProgressJob: Job? = null
@@ -308,6 +305,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     collectReVerifySignaturesStateFlow()
     subscribeToTwoWayDialog()
     subscribeToChoosePublicKeyDialogFragment()
+    collectMessageActionsVisibilityStateFlow()
   }
 
   override fun onStop() {
@@ -338,15 +336,22 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         val menuActionMarkAsNotSpam = menu.findItem(R.id.menuActionMarkAsNotSpam)
         val menuActionChangeLabels = menu.findItem(R.id.menuActionChangeLabels)
 
-        menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
+        menuItemArchiveMsg?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.ARCHIVE
+        )
         menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
-        menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
+        menuActionMoveToInbox?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.MOVE_TO_INBOX
+        )
         menuActionMarkUnread?.isVisible =
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
         menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
-        menuActionMarkAsNotSpam?.isVisible = isMarkAsNotSpamActionEnabled
-        menuActionChangeLabels?.isVisible =
-          AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+        menuActionMarkAsNotSpam?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.MARK_AS_NOT_SPAM
+        )
+        menuActionChangeLabels?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.CHANGE_LABELS
+        )
 
         menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
         menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
@@ -665,9 +670,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     if (folderType != null) {
       when (folderType) {
         FoldersManager.FolderType.INBOX -> {
-          if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
-            isArchiveActionEnabled = true
-          }
           isDeleteActionEnabled = true
           isMoveToSpamActionEnabled = true
         }
@@ -678,60 +680,36 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         FoldersManager.FolderType.TRASH -> {
-          isMoveToInboxActionEnabled = true
           isDeleteActionEnabled = true
           isMoveToSpamActionEnabled = true
         }
 
         FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
-          isMoveToInboxActionEnabled = false
           isMoveToSpamActionEnabled = false
-          isArchiveActionEnabled = false
           isDeleteActionEnabled = true
         }
 
         FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM -> {
-          if (AccountEntity.ACCOUNT_TYPE_GOOGLE != account?.accountType) {
-            isArchiveActionEnabled = false
-          } else {
-            isMarkAsNotSpamActionEnabled = true
-          }
           isMoveToSpamActionEnabled = false
-          isArchiveActionEnabled = false
           isDeleteActionEnabled = true
         }
 
         else -> {
-          isMoveToInboxActionEnabled = true
-          isArchiveActionEnabled = false
           isDeleteActionEnabled = true
           isMoveToSpamActionEnabled = true
         }
       }
     } else {
-      isArchiveActionEnabled = false
-      isMoveToInboxActionEnabled = false
       isMoveToSpamActionEnabled = false
       isDeleteActionEnabled = true
     }
 
     if (foldersManager != null) {
-      if (foldersManager.folderAll == null) {
-        isArchiveActionEnabled = false
-      }
-
       if (foldersManager.folderTrash == null) {
         isDeleteActionEnabled = false
       }
     } else {
-      isArchiveActionEnabled = false
       isDeleteActionEnabled = false
-    }
-
-    when (args.messageEntity.msgState) {
-      MessageState.PENDING_ARCHIVING -> isArchiveActionEnabled = false
-      else -> {
-      }
     }
 
     activity?.invalidateOptionsMenu()
@@ -856,10 +834,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun updateViews(messageEntity: MessageEntity) {
     updateActionBar(messageEntity)
 
-    binding?.imageButtonReplyAll?.visibleOrGone(
+    binding?.imageButtonReplyAll?.visibleOrInvisible(
       !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )
-    binding?.imageButtonMoreOptions?.visibleOrGone(
+    binding?.imageButtonMoreOptions?.visibleOrInvisible(
       !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )
     updateMsgDetails(messageEntity)
@@ -1721,6 +1699,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           else -> {
           }
         }
+      }
+    }
+  }
+
+  private fun collectMessageActionsVisibilityStateFlow() {
+    launchAndRepeatWithViewLifecycle {
+      msgDetailsViewModel.messageActionsAvailabilityStateFlow.collect {
+        activity?.invalidateOptionsMenu()
       }
     }
   }

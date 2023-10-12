@@ -18,6 +18,7 @@ import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
@@ -69,11 +70,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -324,7 +327,7 @@ class MsgDetailsViewModel(
                   && cachedLabelIds.containsAll(latestLabelIds))
             ) {
               freshestMessageEntity?.copy(
-                labelIds = latestLabelIds.joinToString(" ")
+                labelIds = latestLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
               )?.let { roomDatabase.msgDao().updateSuspend(it) }
             }
             MessageEntity.generateColoredLabels(latestLabelIds, labelEntities)
@@ -335,6 +338,37 @@ class MsgDetailsViewModel(
           emptyList()
         }
       })
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  val messageActionsAvailabilityStateFlow =
+    freshMsgLiveData.asFlow().mapLatest { entity ->
+      val activeAccount = getActiveAccountSuspend()
+        ?: return@mapLatest MessageAction.entries.associateBy({ it }, { false })
+      val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
+      MessageAction.entries.associateBy({ it }, { false }).toMutableMap().apply {
+        val folderType = foldersManager.getFolderByFullName(entity?.folder)?.getFolderType()
+        if (activeAccount.isGoogleSignInAccount) {
+          val labelIds = entity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR).orEmpty()
+          this[MessageAction.ARCHIVE] = labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+          this[MessageAction.MOVE_TO_INBOX] =
+            folderType !in setOf(FoldersManager.FolderType.OUTBOX, FoldersManager.FolderType.SPAM)
+                && !labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+          this[MessageAction.CHANGE_LABELS] = folderType != FoldersManager.FolderType.OUTBOX
+          this[MessageAction.MARK_AS_NOT_SPAM] =
+            folderType in setOf(FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM)
+        } else {
+          this[MessageAction.MOVE_TO_INBOX] = folderType !in listOf(
+            FoldersManager.FolderType.TRASH,
+            FoldersManager.FolderType.DRAFTS,
+            FoldersManager.FolderType.OUTBOX,
+          )
+        }
+      }
+    }.stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = MessageAction.entries.associateBy({ it }, { false })
+    )
 
   init {
     afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
@@ -454,6 +488,10 @@ class MsgDetailsViewModel(
           return@cancelPreviousThenRun reVerifySignaturesInternal()
         }
     }
+  }
+
+  fun getMessageActionAvailability(messageAction: MessageAction): Boolean {
+    return messageActionsAvailabilityStateFlow.value[messageAction] ?: false
   }
 
   private suspend fun reVerifySignaturesInternal(): Result<VerificationResult> =
@@ -847,6 +885,15 @@ class MsgDetailsViewModel(
         e.printStackTrace()
       }
     }
+
+  enum class MessageAction {
+    DELETE,
+    ARCHIVE,
+    MOVE_TO_INBOX,
+    MOVE_TO_SPAM,
+    MARK_AS_NOT_SPAM,
+    CHANGE_LABELS
+  }
 
   /**
    * This class will be used to identify the fetching progress.

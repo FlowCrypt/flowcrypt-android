@@ -149,10 +149,11 @@
 
                 <TextView
                     android:id="@+id/textViewDate"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
+                    android:textAlignment="viewEnd"
                     android:textColor="@color/gray"
                     android:textSize="@dimen/default_text_size_medium"
                     app:layout_constrainedWidth="true"

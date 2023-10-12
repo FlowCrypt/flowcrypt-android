@@ -95,7 +95,7 @@ class UpdateLabelsWorker(context: Context, params: WorkerParameters) :
     ) = withContext(Dispatchers.IO) {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       val email = account.email
-      val foldersManager = FoldersManager(account.email)
+      val foldersManager = FoldersManager(account)
 
       val list = action.invoke()
 

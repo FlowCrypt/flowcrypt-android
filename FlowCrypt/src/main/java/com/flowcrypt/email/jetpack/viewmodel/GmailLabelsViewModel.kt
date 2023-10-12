@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -87,28 +88,59 @@ class GmailLabelsViewModel(
               IllegalStateException("Account is not defined")
             )
 
+          val labelsEntities = roomDatabase.labelDao().getLabelsSuspend(
+            account = activeAccount.email,
+            accountType = activeAccount.accountType
+          )
+
+          val protectedLabelIds = labelsEntities
+            .filter { !it.isCustom && it.name != GmailApiHelper.LABEL_INBOX }
+            .map { it.name }
+
           val latestMessageEntityRecord = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
             ?: return@cancelPreviousThenRun Result.success(true)
 
           val cachedLabelIds = latestMessageEntityRecord.labelIds.orEmpty()
             .split(MessageEntity.LABEL_IDS_SEPARATOR).toSet()
 
+          val allowedToChangeLabelIds = cachedLabelIds.filter { it !in protectedLabelIds }.toSet()
+          val addLabelIds = labelIds - allowedToChangeLabelIds
+          val removeLabelIds = allowedToChangeLabelIds - labelIds
+
           GmailApiHelper.changeLabels(
             context = getApplication(),
             accountEntity = activeAccount,
             ids = listOf(messageEntity.uidAsHEX),
-            addLabelIds = (labelIds - cachedLabelIds).toList(),
-            removeLabelIds = (cachedLabelIds - labelIds).toList()
+            addLabelIds = addLabelIds.toList(),
+            removeLabelIds = removeLabelIds.toList()
           )
 
           //update the local cache
+          val finalLabelIds = cachedLabelIds + addLabelIds - removeLabelIds
           val folderLabel = messageEntity.folder
-          if (labelIds.contains(folderLabel)) {
-            roomDatabase.msgDao().updateSuspend(
-              latestMessageEntityRecord.copy(labelIds = labelIds.joinToString(" "))
-            )
-          } else {
-            roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+          val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
+          val folderType = foldersManager.getFolderByFullName(messageEntity.folder)?.getFolderType()
+
+          when {
+            folderType in setOf(FoldersManager.FolderType.TRASH, FoldersManager.FolderType.SPAM)
+                && finalLabelIds.contains(GmailApiHelper.LABEL_INBOX) -> {
+              roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+            }
+
+            finalLabelIds.contains(folderLabel) || folderType in setOf(
+              FoldersManager.FolderType.DRAFTS,
+              FoldersManager.FolderType.All
+            ) -> {
+              roomDatabase.msgDao().updateSuspend(
+                latestMessageEntityRecord.copy(
+                  labelIds = finalLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+                )
+              )
+            }
+
+            else -> {
+              roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+            }
           }
 
           Result.success(true)

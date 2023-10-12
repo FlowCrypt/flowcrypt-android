@@ -51,6 +51,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -331,9 +332,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val isGoogleAccount = activeAccount?.isGoogleSignInAccount ?: false
 
         folders.forEach { localFolder ->
-          if (localFolder.isCustom
-            && localFolder.labelListVisibility == LabelEntity.LabelListVisibility.HIDE
-          ) {
+          val isGmailApiCategories = foldersManager.accountEntity.isGoogleSignInAccount
+              && localFolder.fullName in GmailApiHelper.CATEGORIES
+          val isHiddenFolder = localFolder.isCustom
+              && localFolder.labelListVisibility == LabelEntity.LabelListVisibility.HIDE
+          if (isHiddenFolder || isGmailApiCategories) {
             return@forEach
           }
 

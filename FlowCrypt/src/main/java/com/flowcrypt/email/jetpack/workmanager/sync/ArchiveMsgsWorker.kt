@@ -10,10 +10,12 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.Message
@@ -83,7 +85,21 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) :
       } else {
         val uidList = candidatesForArchiving.map { it.uid }
         action.invoke(inboxFolder.fullName, uidList)
-        roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
+        if (account.isGoogleSignInAccount && account.useAPI) {
+          val messageEntitiesToBeDeleted =
+            candidatesForArchiving.filter { it.folder == JavaEmailConstants.FOLDER_INBOX }.toSet()
+          roomDatabase.msgDao().deleteSuspend(messageEntitiesToBeDeleted)
+          val messageEntitiesToBeUpdated = candidatesForArchiving - messageEntitiesToBeDeleted
+          roomDatabase.msgDao().updateSuspend(messageEntitiesToBeUpdated.map { messageEntity ->
+            val labelIds = messageEntity.labelIds
+              ?.split(MessageEntity.LABEL_IDS_SEPARATOR)?.toMutableSet()
+              ?.apply { remove(JavaEmailConstants.FOLDER_INBOX) }
+              ?.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+            messageEntity.copy(state = MessageState.NONE.value, labelIds = labelIds)
+          })
+        } else {
+          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
+        }
       }
     }
   }

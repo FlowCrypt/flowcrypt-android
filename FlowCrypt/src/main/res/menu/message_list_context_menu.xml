@@ -13,6 +13,12 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/menuActionMoveToInbox"
+        android:icon="@drawable/selector_ic_move_to_inbox_white"
+        android:title="@string/move_to_inbox"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/menuActionDeleteMessage"
         android:icon="@drawable/selector_ic_delete_white"
         android:title="@string/delete"

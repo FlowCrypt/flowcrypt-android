@@ -100,7 +100,7 @@ class GmailApiHelper {
     const val LABEL_SPAM = JavaEmailConstants.FOLDER_SPAM
 
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
-    private val HIDDEN_LABEL_IDS = arrayOf(
+    val CATEGORIES = arrayOf(
       "CHAT",
       "CATEGORY_FORUMS",
       "CATEGORY_UPDATES",
@@ -352,7 +352,7 @@ class GmailApiHelper {
           .list(DEFAULT_USER_ID)
           .execute()
 
-        return@withContext response.labels?.filterNot { it.id in HIDDEN_LABEL_IDS } ?: emptyList()
+        return@withContext response.labels ?: emptyList()
       }
 
     suspend fun changeLabels(
