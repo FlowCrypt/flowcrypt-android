@@ -354,6 +354,8 @@ class MsgDetailsViewModel(
             folderType !in setOf(FoldersManager.FolderType.OUTBOX, FoldersManager.FolderType.SPAM)
                 && !labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
           this[MessageAction.CHANGE_LABELS] = folderType != FoldersManager.FolderType.OUTBOX
+          this[MessageAction.MARK_AS_NOT_SPAM] =
+            folderType in setOf(FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM)
         } else {
           this[MessageAction.MOVE_TO_INBOX] = folderType !in listOf(
             FoldersManager.FolderType.TRASH,

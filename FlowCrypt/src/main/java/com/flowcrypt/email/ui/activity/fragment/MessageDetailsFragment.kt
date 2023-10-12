@@ -265,7 +265,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
   private var isMoveToSpamActionEnabled: Boolean = false
-  private var isMarkAsNotSpamActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var downloadAttachmentsProgressJob: Job? = null
@@ -347,7 +346,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         menuActionMarkUnread?.isVisible =
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
         menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
-        menuActionMarkAsNotSpam?.isVisible = isMarkAsNotSpamActionEnabled
+        menuActionMarkAsNotSpam?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
+          MsgDetailsViewModel.MessageAction.MARK_AS_NOT_SPAM
+        )
         menuActionChangeLabels?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
           MsgDetailsViewModel.MessageAction.CHANGE_LABELS
         )
@@ -689,9 +690,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM -> {
-          if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
-            isMarkAsNotSpamActionEnabled = true
-          }
           isMoveToSpamActionEnabled = false
           isDeleteActionEnabled = true
         }
