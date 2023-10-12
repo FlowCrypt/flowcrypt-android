@@ -122,7 +122,7 @@ class GmailLabelsViewModel(
           val folderType = foldersManager.getFolderByFullName(messageEntity.folder)?.getFolderType()
 
           when {
-            folderType == FoldersManager.FolderType.TRASH
+            folderType in setOf(FoldersManager.FolderType.TRASH, FoldersManager.FolderType.SPAM)
                 && finalLabelIds.contains(GmailApiHelper.LABEL_INBOX) -> {
               roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
             }
