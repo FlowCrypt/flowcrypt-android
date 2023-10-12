@@ -80,16 +80,16 @@ data class AccountEntity constructor(
 
   @IgnoredOnParcel
   @Ignore
-  val account: Account = Account(
-    this.email, accountType
-      ?: this.email.substring(this.email.indexOf('@') + 1).lowercase()
-  )
+  val account: Account = Account(this.email.ifEmpty { "unknown" },
+    accountType ?: this.email.substring(this.email.indexOf('@') + 1).lowercase()
+      .ifEmpty { "unknown" })
 
   @IgnoredOnParcel
   @Ignore
   val isGoogleSignInAccount: Boolean = ACCOUNT_TYPE_GOOGLE.equals(accountType, ignoreCase = true)
 
   @Ignore
+  @IgnoredOnParcel
   val avatarResource: Any = photoUrl ?: R.mipmap.ic_account_default_photo
 
   val useOAuth2: Boolean
