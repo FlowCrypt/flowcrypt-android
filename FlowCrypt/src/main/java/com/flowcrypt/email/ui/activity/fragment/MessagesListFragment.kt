@@ -662,11 +662,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           val msgEntity = adapter.getMsgEntity(position)
           if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
             0
-          } else
+          } else {
             super.getSwipeDirs(recyclerView, viewHolder)
-
-        } else
+          }
+        } else {
           super.getSwipeDirs(recyclerView, viewHolder)
+        }
       }
 
       override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
@@ -705,7 +706,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun isItemViewSwipeEnabled(): Boolean {
-        return isArchiveActionEnabled()
+        return AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+            && currentFolder?.getFolderType() == FoldersManager.FolderType.INBOX
       }
 
       override fun onChildDraw(
@@ -765,6 +767,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     itemTouchHelper.attachToRecyclerView(binding?.recyclerViewMsgs)
   }
 
+  /**
+   * This method helps loading the next messages if a connection was interrupted and restored.
+   * After a user overscroll at the bottom the app tries to load the next messages.
+   */
   private fun setupBottomOverScroll() {
     binding?.recyclerViewMsgs?.let { recyclerView ->
       val overScrollAdapter = object : RecyclerViewOverScrollDecorAdapter(recyclerView) {
