@@ -350,8 +350,9 @@ class MsgDetailsViewModel(
         if (activeAccount.isGoogleSignInAccount) {
           val labelIds = entity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR).orEmpty()
           this[MessageAction.ARCHIVE] = labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
-          this[MessageAction.MOVE_TO_INBOX] = folderType != FoldersManager.FolderType.OUTBOX
-              && !labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+          this[MessageAction.MOVE_TO_INBOX] =
+            folderType !in setOf(FoldersManager.FolderType.OUTBOX, FoldersManager.FolderType.SPAM)
+                && !labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
           this[MessageAction.CHANGE_LABELS] = folderType != FoldersManager.FolderType.OUTBOX
         } else {
           this[MessageAction.MOVE_TO_INBOX] = folderType !in listOf(

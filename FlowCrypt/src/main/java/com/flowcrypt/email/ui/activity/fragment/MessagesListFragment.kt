@@ -1288,7 +1288,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private fun isMoveToInboxActionEnabled(): Boolean {
     return when (FoldersManager.getFolderType(currentFolder)) {
-      FoldersManager.FolderType.OUTBOX -> false
+      FoldersManager.FolderType.OUTBOX, FoldersManager.FolderType.SPAM -> false
 
       else -> if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
         val selection = tracker?.selection?.map { it }
