@@ -637,6 +637,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
+  /**
+   * Inspired by https://github.com/ernestoyaquello/DragDropSwipeRecyclerview
+   */
   private fun setupItemTouchHelper() {
     val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
       0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
@@ -709,6 +712,23 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         return AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
             && currentFolder?.getFolderType() == FoldersManager.FolderType.INBOX
       }
+
+      override fun isLongPressDragEnabled(): Boolean = false
+
+      override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+        super.onSelectedChanged(viewHolder, actionState)
+        /*
+        we have to disable swipeRefreshLayout while a user is swiping
+        because swipeRefreshLayout makes swiping buggy.
+        */
+        binding?.swipeRefreshLayout?.isEnabled = actionState != ItemTouchHelper.ACTION_STATE_SWIPE
+      }
+
+      override fun canDropOver(
+        recyclerView: RecyclerView,
+        current: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder
+      ): Boolean = false
 
       override fun onChildDraw(
         c: Canvas, recyclerView: RecyclerView,
