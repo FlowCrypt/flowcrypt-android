@@ -141,6 +141,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   private lateinit var adapter: MsgsPagedListAdapter
   private var keepSelectionInMemory = false
   private var isForceSendingEnabled: Boolean = true
+  private var hasActiveSwiping: Boolean = false
 
   private val isOutboxFolder: Boolean
     get() {
@@ -624,10 +625,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           StorageStrategy.createLongStorage()
         ).withSelectionPredicate(object : SelectionTracker.SelectionPredicate<Long>() {
           override fun canSetStateForKey(key: Long, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+            currentFolder?.searchQuery == null && !hasActiveSwiping
 
           override fun canSetStateAtPosition(position: Int, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+            currentFolder?.searchQuery == null && !hasActiveSwiping
 
           override fun canSelectMultiple(): Boolean = true
         }).build()
@@ -722,6 +723,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         because swipeRefreshLayout makes swiping buggy.
         */
         binding?.swipeRefreshLayout?.isEnabled = actionState != ItemTouchHelper.ACTION_STATE_SWIPE
+
+        hasActiveSwiping = actionState == ItemTouchHelper.ACTION_STATE_SWIPE
       }
 
       override fun canDropOver(
