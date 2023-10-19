@@ -141,6 +141,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   private lateinit var adapter: MsgsPagedListAdapter
   private var keepSelectionInMemory = false
   private var isForceSendingEnabled: Boolean = true
+  private var hasActiveSwiping: Boolean = false
 
   private val isOutboxFolder: Boolean
     get() {
@@ -624,10 +625,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           StorageStrategy.createLongStorage()
         ).withSelectionPredicate(object : SelectionTracker.SelectionPredicate<Long>() {
           override fun canSetStateForKey(key: Long, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+            currentFolder?.searchQuery == null && !hasActiveSwiping
 
           override fun canSetStateAtPosition(position: Int, nextState: Boolean): Boolean =
-            currentFolder?.searchQuery == null
+            currentFolder?.searchQuery == null && !hasActiveSwiping
 
           override fun canSelectMultiple(): Boolean = true
         }).build()
@@ -637,6 +638,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
+  /**
+   * Inspired by https://github.com/ernestoyaquello/DragDropSwipeRecyclerview
+   */
   private fun setupItemTouchHelper() {
     val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
       0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
@@ -662,11 +666,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           val msgEntity = adapter.getMsgEntity(position)
           if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
             0
-          } else
+          } else {
             super.getSwipeDirs(recyclerView, viewHolder)
-
-        } else
+          }
+        } else {
           super.getSwipeDirs(recyclerView, viewHolder)
+        }
       }
 
       override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
@@ -705,8 +710,28 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun isItemViewSwipeEnabled(): Boolean {
-        return isArchiveActionEnabled()
+        return actionMode == null && AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+            && currentFolder?.getFolderType() == FoldersManager.FolderType.INBOX
       }
+
+      override fun isLongPressDragEnabled(): Boolean = false
+
+      override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+        super.onSelectedChanged(viewHolder, actionState)
+        /*
+        we have to disable swipeRefreshLayout while a user is swiping
+        because swipeRefreshLayout makes swiping buggy.
+        */
+        binding?.swipeRefreshLayout?.isEnabled = actionState != ItemTouchHelper.ACTION_STATE_SWIPE
+
+        hasActiveSwiping = actionState == ItemTouchHelper.ACTION_STATE_SWIPE
+      }
+
+      override fun canDropOver(
+        recyclerView: RecyclerView,
+        current: RecyclerView.ViewHolder,
+        target: RecyclerView.ViewHolder
+      ): Boolean = false
 
       override fun onChildDraw(
         c: Canvas, recyclerView: RecyclerView,
@@ -765,6 +790,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     itemTouchHelper.attachToRecyclerView(binding?.recyclerViewMsgs)
   }
 
+  /**
+   * This method helps loading the next messages if a connection was interrupted and restored.
+   * After a user overscroll at the bottom the app tries to load the next messages.
+   */
   private fun setupBottomOverScroll() {
     binding?.recyclerViewMsgs?.let { recyclerView ->
       val overScrollAdapter = object : RecyclerViewOverScrollDecorAdapter(recyclerView) {
@@ -860,11 +889,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
             R.id.menuActionMarkUnread -> {
               msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_UNREAD)
+              mode?.finish()
               true
             }
 
             R.id.menuActionMarkRead -> {
               msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_READ)
+              mode?.finish()
               true
             }
 
