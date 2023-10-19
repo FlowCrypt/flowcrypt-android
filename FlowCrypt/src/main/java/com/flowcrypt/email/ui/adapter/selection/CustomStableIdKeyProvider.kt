@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.adapter.selection
 
 import androidx.recyclerview.selection.ItemKeyProvider
 import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 
 /**
  * @author Denys Bondarenko
@@ -24,8 +25,12 @@ class CustomStableIdKeyProvider(private val recyclerView: RecyclerView) :
     return recyclerView.adapter?.getItemId(position)
   }
 
+  /**
+   * This method is important for selection stability.
+   * If it returns a wrong position the selection will disappear during scrolling.
+   */
   override fun getPosition(key: Long): Int {
-    return recyclerView.findViewHolderForItemId(key)?.bindingAdapterPosition
-      ?: RecyclerView.NO_POSITION
+    val adapter = recyclerView.adapter as? MsgsPagedListAdapter ?: return RecyclerView.NO_POSITION
+    return adapter.currentList?.indexOfFirst { it?.id == key } ?: RecyclerView.NO_POSITION
   }
 }

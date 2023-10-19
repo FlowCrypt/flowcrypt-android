@@ -710,7 +710,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun isItemViewSwipeEnabled(): Boolean {
-        return AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+        return actionMode == null && AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
             && currentFolder?.getFolderType() == FoldersManager.FolderType.INBOX
       }
 
@@ -889,11 +889,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
             R.id.menuActionMarkUnread -> {
               msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_UNREAD)
+              mode?.finish()
               true
             }
 
             R.id.menuActionMarkRead -> {
               msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_READ)
+              mode?.finish()
               true
             }
 
