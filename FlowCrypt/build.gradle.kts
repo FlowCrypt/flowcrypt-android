@@ -453,7 +453,7 @@ dependencies {
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
   implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
   implementation("com.squareup.okio:okio:3.6.0")
-  implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+  implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
   implementation("com.sun.mail:jakarta.mail:2.0.1")
   implementation("com.sun.activation:jakarta.activation:2.0.1")
