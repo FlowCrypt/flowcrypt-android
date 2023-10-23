@@ -453,7 +453,7 @@ dependencies {
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
   implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
   implementation("com.squareup.okio:okio:3.6.0")
-  implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+  implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
   implementation("com.sun.mail:jakarta.mail:2.0.1")
   implementation("com.sun.activation:jakarta.activation:2.0.1")
@@ -472,10 +472,10 @@ dependencies {
   implementation("org.bitbucket.b_c:jose4j:0.9.3")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1")
-  implementation("org.jsoup:jsoup:1.16.1")
+  implementation("org.jsoup:jsoup:1.16.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-  implementation("ch.acra:acra-http:5.11.2")
+  implementation("ch.acra:acra-http:5.11.3")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
