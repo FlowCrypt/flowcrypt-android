@@ -16,7 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundTint
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundTintResId
 import org.hamcrest.Matchers.startsWith
 import org.junit.Test
 
@@ -74,7 +74,7 @@ abstract class BaseCheckPassphraseOnFirstScreenTest : BaseTest() {
       }
 
       onView(withId(firstScreenContinueButtonResId))
-        .check(matches(withViewBackgroundTint(getTargetContext(), color)))
+        .check(matches(withViewBackgroundTintResId(getTargetContext(), color)))
     }
   }
 
