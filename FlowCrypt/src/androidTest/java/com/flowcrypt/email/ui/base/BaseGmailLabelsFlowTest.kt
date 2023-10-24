@@ -83,14 +83,14 @@ abstract class BaseGmailLabelsFlowTest : BaseMessageDetailsFlowTest() {
     }
   )
 
-  protected fun genIncomingMessageInfo() = getMsgInfo(
+  protected fun genIncomingMessageInfo(labelsIds: Collection<String> = initLabelIds()) = getMsgInfo(
     "messages/info/standard_msg_info_plaintext.json",
     "messages/mime/standard_msg_info_plaintext.txt"
   ) { incomingMsgInfo ->
     val originalMessageEntity = incomingMsgInfo?.msgEntity ?: return@getMsgInfo null
     return@getMsgInfo incomingMsgInfo.copy(
       msgEntity = originalMessageEntity.copy(
-        labelIds = initLabelIds().joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+        labelIds = labelsIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
       )
     )
   }
