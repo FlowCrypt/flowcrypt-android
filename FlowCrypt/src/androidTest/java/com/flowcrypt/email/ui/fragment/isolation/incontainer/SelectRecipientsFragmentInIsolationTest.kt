@@ -17,6 +17,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -56,12 +57,14 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
 
   @Test
   @FlakyTest
+  @FlowCryptTestSettings(useCommonIdling = false)
   fun testShowEmptyView() {
     launchFragmentInContainer<SelectRecipientsFragment>(
       fragmentArgs = SelectRecipientsFragmentArgs(
         requestKey = UUID.randomUUID().toString()
       ).toBundle()
     )
+    Thread.sleep(1000)
     onView(withId(R.id.tVEmpty))
       .check(matches(isDisplayed()))
       .check(matches(withText(R.string.no_results)))

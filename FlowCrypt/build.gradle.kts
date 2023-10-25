@@ -386,19 +386,19 @@ dependencies {
   androidTestImplementation("androidx.room:room-testing:2.5.2")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.8.1")
-  androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
+  androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
   androidTestUtil("androidx.test:orchestrator:1.4.2")
 
-  testImplementation("com.squareup.okhttp3:mockwebserver:4.11.0")
+  testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.5.2")
   testImplementation("org.robolectric:robolectric:4.10.3")
   testImplementation("io.github.classgraph:classgraph:4.8.163")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  //we need it to test Parcelable
+  //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.10")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
