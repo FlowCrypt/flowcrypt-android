@@ -41,6 +41,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
@@ -441,6 +442,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  @FlowCryptTestSettings(useCommonIdling = false)
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule?.launch(intent)
 

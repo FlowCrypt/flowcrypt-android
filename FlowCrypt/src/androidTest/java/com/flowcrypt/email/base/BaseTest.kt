@@ -47,6 +47,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.shutdown
+import com.flowcrypt.email.rules.FlowCryptTestSettingsRule
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -61,6 +62,7 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import java.io.InputStream
 import java.util.Properties
 
@@ -73,6 +75,9 @@ abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
   protected var countingIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
+
+  @get:Rule
+  val flowCryptTestSettingsRule = FlowCryptTestSettingsRule()
 
   protected val decorView: View?
     get() {
@@ -99,7 +104,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
   @Before
   fun registerCountingIdlingResource() {
     countingIdlingResource = FlavorSettings.getCountingIdlingResource()
-    if (useCommonIdling) {
+    if (flowCryptTestSettingsRule.flowCryptTestSettings?.useCommonIdling != false) {
       (countingIdlingResource as? CountingIdlingResource)?.shutdown()
       countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
@@ -278,8 +283,12 @@ abstract class BaseTest : BaseActivityTestImplementation {
     mimeMsgPath: String,
     vararg atts: AttachmentInfo?,
     useCrLfForMime: Boolean = false,
+    action: ((incomingMessageInfo: IncomingMessageInfo?) -> IncomingMessageInfo?)? = null
   ): IncomingMessageInfo? {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
+    val defaultIncomingMsgInfo = TestGeneralUtil.getObjectFromJson(
+      path, IncomingMessageInfo::class.java
+    )
+    val incomingMsgInfo = action?.invoke(defaultIncomingMsgInfo) ?: defaultIncomingMsgInfo
     incomingMsgInfo?.msgEntity?.let {
       val uri = roomDatabase.msgDao().insert(it)
       val attEntities = mutableListOf<AttachmentEntity>()
