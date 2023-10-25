@@ -18,6 +18,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -37,8 +38,8 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class MainSettingsFragmentNavigationToSubMenuFlowTest : BaseTest() {
-  override val useCommonIdling: Boolean = false
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.mainSettingsFragment
