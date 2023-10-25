@@ -398,7 +398,7 @@ dependencies {
   testImplementation("io.github.classgraph:classgraph:4.8.163")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  //we need it to test Parcelable
+  //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.10")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
