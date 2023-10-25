@@ -23,7 +23,7 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextViewDrawable
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundTint
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundTintResId
 import com.flowcrypt.email.matchers.TextViewDrawableMatcher
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -135,9 +135,9 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
       ),
       isUsableForEncryption = pgpKeyDetails.usableForEncryption,
       statusLabelText = getResString(R.string.revoked),
-      statusLabelTextColor = R.color.white,
-      statusLabelIcon = R.drawable.ic_outline_warning_amber_16,
-      statusLabelTintColor = R.color.red
+      statusLabelTextColorResId = R.color.white,
+      statusLabelIconResId = R.drawable.ic_outline_warning_amber_16,
+      statusLabelTintColorResId = R.color.red
     )
   }
 
@@ -177,9 +177,9 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
       expirationDate = getResString(R.string.key_expiration, actualExpirationDate),
       isUsableForEncryption = pgpKeyDetails.usableForEncryption,
       statusLabelText = getResString(R.string.expired),
-      statusLabelTextColor = R.color.white,
-      statusLabelIcon = R.drawable.ic_outline_warning_amber_16,
-      statusLabelTintColor = R.color.orange
+      statusLabelTextColorResId = R.color.white,
+      statusLabelIconResId = R.drawable.ic_outline_warning_amber_16,
+      statusLabelTintColorResId = R.color.orange
     )
   }
 
@@ -190,9 +190,9 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
     expirationDate: String,
     isUsableForEncryption: Boolean,
     statusLabelText: String? = null,
-    statusLabelTextColor: Int? = null,
-    statusLabelIcon: Int? = null,
-    statusLabelTintColor: Int? = null
+    statusLabelTextColorResId: Int? = null,
+    statusLabelIconResId: Int? = null,
+    statusLabelTintColorResId: Int? = null
   ) {
     onView(withId(R.id.recyclerViewKeys))
       .perform(scrollToPosition<RecyclerView.ViewHolder>(1))
@@ -244,14 +244,19 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
               if (isUsableForEncryption) not(isDisplayed()) else allOf(
                 isDisplayed(),
                 withText(statusLabelText),
-                statusLabelTextColor?.let { hasTextColor(it) },
-                statusLabelIcon?.let {
+                statusLabelTextColorResId?.let { hasTextColor(it) },
+                statusLabelIconResId?.let {
                   withTextViewDrawable(
                     it,
                     TextViewDrawableMatcher.DrawablePosition.LEFT
                   )
                 },
-                statusLabelTintColor?.let { withViewBackgroundTint(getTargetContext(), it) }
+                statusLabelTintColorResId?.let {
+                  withViewBackgroundTintResId(
+                    getTargetContext(),
+                    it
+                  )
+                }
               ),
             )
           )

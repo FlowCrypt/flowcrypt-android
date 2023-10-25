@@ -283,8 +283,12 @@ abstract class BaseTest : BaseActivityTestImplementation {
     mimeMsgPath: String,
     vararg atts: AttachmentInfo?,
     useCrLfForMime: Boolean = false,
+    action: ((incomingMessageInfo: IncomingMessageInfo?) -> IncomingMessageInfo?)? = null
   ): IncomingMessageInfo? {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
+    val defaultIncomingMsgInfo = TestGeneralUtil.getObjectFromJson(
+      path, IncomingMessageInfo::class.java
+    )
+    val incomingMsgInfo = action?.invoke(defaultIncomingMsgInfo) ?: defaultIncomingMsgInfo
     incomingMsgInfo?.msgEntity?.let {
       val uri = roomDatabase.msgDao().insert(it)
       val attEntities = mutableListOf<AttachmentEntity>()
