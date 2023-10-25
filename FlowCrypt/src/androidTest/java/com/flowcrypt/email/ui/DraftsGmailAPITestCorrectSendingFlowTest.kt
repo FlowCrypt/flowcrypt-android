@@ -25,6 +25,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -54,8 +55,8 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
-  override val useCommonIdling: Boolean = false
   private val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
 
   override val mockWebServerRule: FlowCryptMockWebServerRule = FlowCryptMockWebServerRule(
