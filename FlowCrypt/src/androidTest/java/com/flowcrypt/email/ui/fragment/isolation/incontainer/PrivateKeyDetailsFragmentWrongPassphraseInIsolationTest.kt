@@ -14,6 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -34,6 +35,7 @@ import org.junit.runner.RunWith
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class PrivateKeyDetailsFragmentWrongPassphraseInIsolationTest : BaseTest() {
@@ -44,7 +46,6 @@ class PrivateKeyDetailsFragmentWrongPassphraseInIsolationTest : BaseTest() {
     passphrase = "wrong passphrase",
     sourceType = KeyImportDetails.SourceType.EMAIL
   )
-  override val useIntents: Boolean = true
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

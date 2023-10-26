@@ -23,6 +23,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.LazyActivityScenarioRule
@@ -36,8 +37,8 @@ import java.io.File
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 abstract class BaseComposeScreenTest : BaseTest() {
-  override val useIntents: Boolean = true
   override val activeActivityRule: LazyActivityScenarioRule<CreateMessageActivity>? =
     lazyActivityScenarioRule(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?

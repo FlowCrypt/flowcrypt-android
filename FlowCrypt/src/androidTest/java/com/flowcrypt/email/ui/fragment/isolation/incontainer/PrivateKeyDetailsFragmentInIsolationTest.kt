@@ -28,6 +28,7 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -55,13 +56,13 @@ import java.util.Date
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
-  override val useIntents: Boolean = true
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

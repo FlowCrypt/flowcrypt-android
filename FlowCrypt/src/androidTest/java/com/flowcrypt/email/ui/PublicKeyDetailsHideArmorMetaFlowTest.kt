@@ -31,6 +31,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -64,6 +65,7 @@ import java.util.Properties
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/1532
  */
+@FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
@@ -84,7 +86,6 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
   private val publicKeyEntity =
     keyDetails.toPublicKeyEntity(addAccountToDatabaseRule.account.email).copy(id = 12)
 
-  override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.publicKeyDetailsFragment,

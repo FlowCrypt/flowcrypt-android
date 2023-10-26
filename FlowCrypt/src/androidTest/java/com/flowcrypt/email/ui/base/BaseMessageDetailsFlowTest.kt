@@ -37,6 +37,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
@@ -62,8 +63,8 @@ import org.junit.After
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 abstract class BaseMessageDetailsFlowTest : BaseTest() {
-  override val useIntents: Boolean = true
   override val activeActivityRule =
     lazyActivityScenarioRule<MainActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?

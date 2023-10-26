@@ -18,6 +18,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -35,6 +36,7 @@ import org.junit.runner.RunWith
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class ImportRecipientAllowAttesterSearchOnlyForDomainsEmptyFlowTest : BaseTest() {
@@ -55,7 +57,6 @@ class ImportRecipientAllowAttesterSearchOnlyForDomainsEmptyFlowTest : BaseTest()
 
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
 
-  override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.importRecipientsFromSourceFragment

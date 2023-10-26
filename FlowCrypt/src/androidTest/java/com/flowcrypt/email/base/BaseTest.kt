@@ -79,6 +79,9 @@ abstract class BaseTest : BaseActivityTestImplementation {
   @get:Rule
   val flowCryptTestSettingsRule = FlowCryptTestSettingsRule()
 
+  private val useIntents
+    get() = flowCryptTestSettingsRule.flowCryptTestSettings?.useIntents ?: false
+
   protected val decorView: View?
     get() {
       var decorView: View? = null
