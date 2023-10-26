@@ -20,6 +20,7 @@ plugins {
   id("com.starter.easylauncher")
   id("kotlin-parcelize")
   id("com.google.devtools.ksp")
+  id("org.ajoberstar.grgit")
 }
 
 val keystoreProperties = Properties()
@@ -98,8 +99,10 @@ android {
 
     getByName("debug") {
       isDebuggable = true
-      versionNameSuffix =
-        "_" + defaultConfig.versionCode + "__" + SimpleDateFormat("yyyy_MM_dd").format(Date())
+      versionNameSuffix = "_" +
+          defaultConfig.versionCode +
+          "__" + SimpleDateFormat("yyyy_MM_dd").format(Date()) +
+          "__" + grgit.head().id.substring(0, 7)
       applicationIdSuffix = ".debug"
       signingConfig = signingConfigs.getByName("debug")
 
