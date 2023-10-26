@@ -15,10 +15,13 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.IMAPStoreConnection
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -38,6 +41,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 import java.net.HttpURLConnection
 import java.util.UUID
 
@@ -46,9 +50,11 @@ import java.util.UUID
  *
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 @DependsOnMailServer
+@MediumTest
+@RunWith(AndroidJUnit4::class)
 class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
-  override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
   private val userWithoutBackups = AccountDaoManager.getUserWithoutBackup()

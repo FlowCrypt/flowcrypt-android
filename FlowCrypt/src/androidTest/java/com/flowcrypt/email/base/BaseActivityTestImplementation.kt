@@ -21,7 +21,4 @@ interface BaseActivityTestImplementation {
 
   val activityScenario: ActivityScenario<*>?
     get() = activityScenarioRule?.scenario
-
-  val useIntents: Boolean
-    get() = false
 }

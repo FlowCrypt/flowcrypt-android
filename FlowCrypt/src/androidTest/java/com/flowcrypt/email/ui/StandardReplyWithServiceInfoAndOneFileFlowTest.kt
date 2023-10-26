@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipCloseIconAvailability
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
@@ -55,6 +56,7 @@ import org.junit.runner.RunWith
  *
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
@@ -87,7 +89,6 @@ class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
     atts = listOf(attachmentInfo)
   )
 
-  override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(
     intent = CreateMessageActivity.generateIntent(
       getTargetContext(),

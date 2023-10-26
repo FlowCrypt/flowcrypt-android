@@ -15,6 +15,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -39,6 +40,7 @@ import java.util.Date
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class PrivateKeyDetailsFragmentExpiredKeyInIsolationTest : BaseTest() {
@@ -51,7 +53,6 @@ class PrivateKeyDetailsFragmentExpiredKeyInIsolationTest : BaseTest() {
     passphraseType = KeyEntity.PassphraseType.RAM
   )
   private val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
-  override val useIntents: Boolean = true
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
