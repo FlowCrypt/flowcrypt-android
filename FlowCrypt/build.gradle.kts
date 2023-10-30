@@ -397,7 +397,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.5.2")
-  testImplementation("org.robolectric:robolectric:4.10.3")
+  testImplementation("org.robolectric:robolectric:4.11")
   testImplementation("io.github.classgraph:classgraph:4.8.163")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
