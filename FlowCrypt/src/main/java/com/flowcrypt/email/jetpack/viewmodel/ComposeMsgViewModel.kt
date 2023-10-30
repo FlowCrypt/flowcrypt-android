@@ -359,9 +359,9 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
         when (response.status) {
           Result.Status.SUCCESS -> {
-            val pubKeyString = response.data?.pubkey
-            if (pubKeyString?.isNotEmpty() == true) {
-              val parsedResult = PgpKey.parseKeys(source = pubKeyString).pgpKeyDetailsList
+            val sourceString = response.data?.pubkey
+            if (sourceString?.isNotEmpty() == true) {
+              val parsedResult = PgpKey.parseKeys(source = sourceString).pgpKeyDetailsList
               if (parsedResult.isNotEmpty()) {
                 return@withContext parsedResult
               }
@@ -408,11 +408,6 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
       val deDuplicatedListOfFetchedPubKeys = uniqueMapOfFetchedPubKeys.values
       for (fetchedPgpKeyDetails in deDuplicatedListOfFetchedPubKeys) {
-        if (!fetchedPgpKeyDetails.usableForEncryption) {
-          //we skip a key that is not usable for encryption
-          continue
-        }
-
         val existingPublicKeyEntity = cachedRecipientEntity.publicKeys.firstOrNull {
           it.fingerprint == fetchedPgpKeyDetails.fingerprint
         }

@@ -37,8 +37,6 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.pgpainless.algorithm.EncryptionPurpose
-import org.pgpainless.key.info.KeyRingInfo
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -287,15 +285,7 @@ object ApiClientRepository : BaseApiRepository {
         if (email.isValidEmail()) {
           val wkdResult = getResult {
             val pgpPublicKeyRingCollection = WkdClient.lookupEmail(context, email)
-
-            //For now, we just peak at the first matching key. It should be improved inthe future.
-            // See more details here https://github.com/FlowCrypt/flowcrypt-android/issues/480
-            val firstMatchingKey = pgpPublicKeyRingCollection?.firstOrNull {
-              KeyRingInfo(it)
-                .getEncryptionSubkeys(EncryptionPurpose.ANY)
-                .isNotEmpty()
-            }
-            firstMatchingKey?.armor()?.let { armoredPubKey ->
+            pgpPublicKeyRingCollection?.armor()?.let { armoredPubKey ->
               Response.success(armoredPubKey)
             } ?: Response.error(HttpURLConnection.HTTP_NOT_FOUND, "Not found".toResponseBody())
           }
