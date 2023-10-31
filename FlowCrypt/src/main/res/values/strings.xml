@@ -611,6 +611,9 @@
     <string name="mark_as_not_spam">Mark as not spam</string>
     <string name="change_labels">Change labels</string>
     <string name="label">Label</string>
+    <string name="auth_flag">Auth flag</string>
+    <string name="encryption_flag">Encryption flag</string>
+    <string name="sign_flag">Sign flag</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">For your protection and data security, there are currently only %1$d attempt left, followed by a 5-minute cooldown period.</item>
         <item quantity="other">For your protection and data security, there are currently only %1$d attempts left, followed by a 5-minute cooldown period.</item>

@@ -87,7 +87,8 @@
         app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
-        app:srcCompat="@drawable/ic_posibility_auth" />
+        android:contentDescription="@string/auth_flag"
+        app:srcCompat="@drawable/ic_possibility_auth" />
 
     <ImageView
         android:id="@+id/imageViewEncryptionFlag"
@@ -96,7 +97,8 @@
         app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
         app:layout_constraintEnd_toStartOf="@+id/imageViewSignFlag"
         app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
-        app:srcCompat="@drawable/ic_posibility_encryption" />
+        android:contentDescription="@string/encryption_flag"
+        app:srcCompat="@drawable/ic_possibility_encryption" />
 
     <ImageView
         android:id="@+id/imageViewSignFlag"
@@ -105,6 +107,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
         app:layout_constraintEnd_toStartOf="@+id/imageViewAuthFlag"
         app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
-        app:srcCompat="@drawable/ic_posibility_sign" />
+        android:contentDescription="@string/sign_flag"
+        app:srcCompat="@drawable/ic_possibility_sign" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
