@@ -5,12 +5,12 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 
 /**
  * This exception means that the key already added.
  *
  * @author Denys Bondarenko
  */
-class KeyAlreadyAddedException(val keyDetails: PgpKeyDetails, errorMsg: String) :
+class KeyAlreadyAddedException(val keyDetails: PgpKeyRingDetails, errorMsg: String) :
   Exception(errorMsg)

@@ -29,25 +29,25 @@ class PrivateKeysManager {
       sourceType: KeyImportDetails.SourceType,
       passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
     ) {
-      val pgpKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
-      saveKeyToDatabase(accountEntity, pgpKeyDetails, passphrase, sourceType, passphraseType)
+      val pgpKeyRingDetails = getPgpKeyDetailsFromAssets(keyPath)
+      saveKeyToDatabase(accountEntity, pgpKeyRingDetails, passphrase, sourceType, passphraseType)
     }
 
     fun saveKeyToDatabase(
       accountEntity: AccountEntity,
-      pgpKeyDetails: PgpKeyDetails,
+      pgpKeyRingDetails: PgpKeyDetails,
       passphrase: String?,
       sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
     ) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val keyEntity = pgpKeyDetails
+      val keyEntity = pgpKeyRingDetails
         .copy(passphraseType = passphraseType)
         .toKeyEntity(accountEntity)
         .copy(
           source = sourceType.toString(),
-          privateKey = KeyStoreCryptoManager.encrypt(pgpKeyDetails.privateKey).toByteArray(),
+          privateKey = KeyStoreCryptoManager.encrypt(pgpKeyRingDetails.privateKey).toByteArray(),
           storedPassphrase = when (passphraseType) {
             KeyEntity.PassphraseType.DATABASE -> KeyStoreCryptoManager.encrypt(passphrase)
             else -> null
@@ -55,7 +55,7 @@ class PrivateKeysManager {
         )
       val existingKey = roomDatabase.keysDao().getKeyByAccountAndFingerprint(
         accountEntity.email,
-        pgpKeyDetails.fingerprint
+        pgpKeyRingDetails.fingerprint
       )
       existingKey?.let { roomDatabase.keysDao().delete(it) }
       roomDatabase.keysDao().insert(keyEntity)
@@ -67,14 +67,14 @@ class PrivateKeysManager {
       savePubKeyToDatabase(getPgpKeyDetailsFromAssets(assetsPath))
     }
 
-    fun savePubKeyToDatabase(pgpKeyDetails: PgpKeyDetails) {
+    fun savePubKeyToDatabase(pgpKeyRingDetails: PgpKeyDetails) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
-      val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address.lowercase()
+      val email = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()).address.lowercase()
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       if (roomDatabase.recipientDao().getRecipientByEmail(email) == null) {
-        roomDatabase.recipientDao().insert(requireNotNull(pgpKeyDetails.toRecipientEntity()))
+        roomDatabase.recipientDao().insert(requireNotNull(pgpKeyRingDetails.toRecipientEntity()))
       }
-      roomDatabase.pubKeyDao().insert(pgpKeyDetails.toPublicKeyEntity(email))
+      roomDatabase.pubKeyDao().insert(pgpKeyRingDetails.toPublicKeyEntity(email))
       // Added timeout for a better sync between threads.
       Thread.sleep(500)
     }
@@ -119,14 +119,14 @@ class PrivateKeysManager {
     }
 
     fun deleteKey(accountEntity: AccountEntity, keyPath: String) {
-      val pgpKeyDetails = getPgpKeyDetailsFromAssets(keyPath)
-      deleteKey(accountEntity, pgpKeyDetails)
+      val pgpKeyRingDetails = getPgpKeyDetailsFromAssets(keyPath)
+      deleteKey(accountEntity, pgpKeyRingDetails)
     }
 
-    fun deleteKey(accountEntity: AccountEntity, pgpKeyDetails: PgpKeyDetails) {
+    fun deleteKey(accountEntity: AccountEntity, pgpKeyRingDetails: PgpKeyDetails) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      pgpKeyDetails.fingerprint.let {
+      pgpKeyRingDetails.fingerprint.let {
         roomDatabase.keysDao().deleteByAccountAndFingerprint(accountEntity.email, it)
       }
 

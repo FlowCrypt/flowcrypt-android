@@ -13,9 +13,9 @@ import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpArmor
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
@@ -96,7 +96,7 @@ class SecurityUtils {
         PgpPwd.checkForWeakPassphrase(passPhrase)
 
         val keyDetails =
-          key.toPgpKeyDetails(account.clientConfiguration?.shouldHideArmorMeta() ?: false)
+          key.toPgpKeyRingDetails(account.clientConfiguration?.shouldHideArmorMeta() ?: false)
         val encryptedKey = if (keyDetails.isFullyDecrypted) {
           PgpKey.encryptKey(keyDetails.privateKey ?: throw IllegalStateException(), passPhrase)
         } else {
@@ -126,9 +126,9 @@ class SecurityUtils {
       for (recipientWithPubKeys in recipientsWithPubKeys) {
         for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
           val pgpKeyDetailsList = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
-          for (pgpKeyDetails in pgpKeyDetailsList) {
-            if (!pgpKeyDetails.isExpired && !pgpKeyDetails.isRevoked) {
-              publicKeys.add(pgpKeyDetails.publicKey)
+          for (pgpKeyRingDetails in pgpKeyDetailsList) {
+            if (!pgpKeyRingDetails.isExpired && !pgpKeyRingDetails.isRevoked) {
+              publicKeys.add(pgpKeyRingDetails.publicKey)
             }
           }
         }
@@ -169,7 +169,7 @@ class SecurityUtils {
       context: Context,
       account: AccountEntity,
       senderEmail: String
-    ): PgpKeyDetails {
+    ): PgpKeyRingDetails {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
       val pgpSecretKeyRing = keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
         ?: if (account.email.equals(senderEmail, ignoreCase = true)) {

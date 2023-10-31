@@ -470,7 +470,7 @@
             app:argType="string" />
         <argument
             android:name="privateKeys"
-            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails[]" />
+            app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails[]" />
         <argument
             android:name="sourceType"
             app:argType="com.flowcrypt.email.model.KeyImportDetails$SourceType" />
@@ -553,8 +553,8 @@
             android:name="accountEntity"
             app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
         <argument
-            android:name="existingPgpKeyDetails"
-            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+            android:name="existingPgpKeyRingDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails" />
         <action
             android:id="@+id/action_updatePrivateKeyFragment_to_updatePrivateKeyDialogFragment"
             app:destination="@id/updatePrivateKeyDialogFragment" />
@@ -626,8 +626,8 @@
             android:name="publicKeyEntity"
             app:argType="com.flowcrypt.email.database.entity.PublicKeyEntity" />
         <argument
-            android:name="pgpKeyDetails"
-            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+            android:name="pgpKeyRingDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails" />
     </dialog>
 
     <dialog
@@ -638,11 +638,11 @@
             android:name="requestKey"
             app:argType="string" />
         <argument
-            android:name="existingPgpKeyDetails"
-            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+            android:name="existingPgpKeyRingDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails" />
         <argument
-            android:name="newPgpKeyDetails"
-            app:argType="com.flowcrypt.email.security.model.PgpKeyDetails" />
+            android:name="newPgpKeyRingDetails"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails" />
     </dialog>
 
     <dialog

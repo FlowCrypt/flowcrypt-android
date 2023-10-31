@@ -31,7 +31,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -120,16 +120,16 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
             val matchedKeys = getMatchedKeys(pgpKeyDetailsList)
             if (CollectionUtils.isEmpty(matchedKeys)) {
-              for (pgpKeyDetails in pgpKeyDetailsList) {
-                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, args.email)
+              for (pgpKeyRingDetails in pgpKeyDetailsList) {
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyRingDetails, args.email)
                 if (att != null) {
                   atts.add(att)
                 }
               }
             } else {
               atts.clear()
-              for (pgpKeyDetails in matchedKeys) {
-                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyDetails, args.email)
+              for (pgpKeyRingDetails in matchedKeys) {
+                val att = EmailUtil.genAttInfoFromPubKey(pgpKeyRingDetails, args.email)
                 if (att != null) {
                   atts.add(att)
                 }
@@ -198,18 +198,18 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   /**
-   * Get a list with the matched [PgpKeyDetails]. If the sender email matched email the email from
+   * Get a list with the matched [PgpKeyRingDetails]. If the sender email matched email the email from
    * [RecipientWithPubKeys] which got from the private key than we return a list with relevant public keys.
    *
-   * @return A matched [PgpKeyDetails] or null.
+   * @return A matched [PgpKeyRingDetails] or null.
    */
-  private fun getMatchedKeys(pgpKeyDetailsList: List<PgpKeyDetails>): List<PgpKeyDetails> {
-    val keyDetails = ArrayList<PgpKeyDetails>()
+  private fun getMatchedKeys(pgpKeyRingDetailsList: List<PgpKeyRingDetails>): List<PgpKeyRingDetails> {
+    val keyDetails = ArrayList<PgpKeyRingDetails>()
 
-    for (pgpKeyDetails in pgpKeyDetailsList) {
-      val addresses = pgpKeyDetails.mimeAddresses.map { it.address.lowercase() }
+    for (pgpKeyRingDetails in pgpKeyRingDetailsList) {
+      val addresses = pgpKeyRingDetails.mimeAddresses.map { it.address.lowercase() }
       if (args.email.lowercase() in addresses) {
-        keyDetails.add(pgpKeyDetails)
+        keyDetails.add(pgpKeyRingDetails)
       }
     }
 

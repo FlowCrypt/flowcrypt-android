@@ -42,7 +42,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.util.DateTimeUtil
@@ -108,7 +108,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
             clipboard.setPrimaryClip(
               ClipData.newPlainText(
                 "pubKey",
-                cachedPublicKeyEntity?.pgpKeyDetails?.publicKey
+                cachedPublicKeyEntity?.pgpKeyRingDetails?.publicKey
               )
             )
             toast(R.string.public_key_copied_to_clipboard)
@@ -160,12 +160,12 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           }
 
           Result.Status.SUCCESS -> {
-            val pgpKeyDetails = it.data?.pgpKeyDetails
-            if (pgpKeyDetails == null) {
+            val pgpKeyRingDetails = it.data?.pgpKeyRingDetails
+            if (pgpKeyRingDetails == null) {
               toast(R.string.error_no_keys)
               navController?.navigateUp()
             } else {
-              updateViews(pgpKeyDetails)
+              updateViews(pgpKeyRingDetails)
               showContent()
             }
             countingIdlingResource?.decrementSafely(this@PublicKeyDetailsFragment)
@@ -197,7 +197,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     uri ?: return
     try {
       val context = this.context ?: return
-      val pubKey = cachedPublicKeyEntity?.pgpKeyDetails?.publicKey ?: return
+      val pubKey = cachedPublicKeyEntity?.pgpKeyRingDetails?.publicKey ?: return
       GeneralUtil.writeFileFromStringToUri(context, uri, pubKey)
       toast(getString(R.string.saved))
     } catch (e: Exception) {
@@ -229,16 +229,16 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     }
   }
 
-  private fun updateViews(pgpKeyDetails: PgpKeyDetails) {
+  private fun updateViews(pgpKeyRingDetails: PgpKeyRingDetails) {
     binding?.layoutUsers?.removeAllViews()
-    pgpKeyDetails.users.forEachIndexed { index, s ->
+    pgpKeyRingDetails.users.forEachIndexed { index, s ->
       val textView = TextView(context)
       textView.text = getString(R.string.template_user, index + 1, s)
       binding?.layoutUsers?.addView(textView)
     }
 
     binding?.layoutFingerprints?.removeAllViews()
-    pgpKeyDetails.ids.forEachIndexed { index, s ->
+    pgpKeyRingDetails.ids.forEachIndexed { index, s ->
       val textViewFingerprint = TextView(context)
       textViewFingerprint.text =
         getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
@@ -246,10 +246,10 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     }
 
     binding?.textViewAlgorithm?.text =
-      getString(R.string.template_algorithm, pgpKeyDetails.algo.algorithm)
+      getString(R.string.template_algorithm, pgpKeyRingDetails.algo.algorithm)
     binding?.textViewCreated?.text = getString(
       R.string.template_created,
-      DateTimeUtil.getPgpDateFormat(context).format(Date(pgpKeyDetails.created))
+      DateTimeUtil.getPgpDateFormat(context).format(Date(pgpKeyRingDetails.created))
     )
   }
 

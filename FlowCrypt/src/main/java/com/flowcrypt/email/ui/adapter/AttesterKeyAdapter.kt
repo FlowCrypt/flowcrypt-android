@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.AttesterKeyItemBinding
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.UIUtil
 
 
@@ -25,7 +25,7 @@ import com.flowcrypt.email.util.UIUtil
  * @author Denys Bondarenko
  */
 class AttesterKeyAdapter :
-  ListAdapter<Pair<String, PgpKeyDetails>, AttesterKeyAdapter.ViewHolder>(DIFF_CALLBACK) {
+  ListAdapter<Pair<String, PgpKeyRingDetails>, AttesterKeyAdapter.ViewHolder>(DIFF_CALLBACK) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
@@ -42,7 +42,7 @@ class AttesterKeyAdapter :
    */
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val binding = AttesterKeyItemBinding.bind(itemView)
-    fun bind(pair: Pair<String, PgpKeyDetails>) {
+    fun bind(pair: Pair<String, PgpKeyRingDetails>) {
       val context = itemView.context
       binding.textViewKeyOwner.text = pair.first
 
@@ -78,30 +78,33 @@ class AttesterKeyAdapter :
      * Check is public key found, and the fingerprint does not match any fingerprints of saved keys.
      *
      * @param context Interface to global information about an application environment.
-     * @param pgpKeyDetails The [PgpKeyDetails] object which contains info about a public key.
+     * @param pgpKeyRingDetails The [PgpKeyRingDetails] object which contains info about a public key.
      * @return true if public key found, and the fingerprint does not match any
      * fingerprints of saved keys, otherwise false.
      */
-    private fun isPublicKeyMatching(context: Context, pgpKeyDetails: PgpKeyDetails): Boolean {
-      return pgpKeyDetails.fingerprint.let {
+    private fun isPublicKeyMatching(
+      context: Context,
+      pgpKeyRingDetails: PgpKeyRingDetails
+    ): Boolean {
+      return pgpKeyRingDetails.fingerprint.let {
         KeysStorageImpl.getInstance(context).getPGPSecretKeyRingByFingerprint(it) != null
       }
     }
   }
 
   companion object {
-    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Pair<String, PgpKeyDetails>>() {
+    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Pair<String, PgpKeyRingDetails>>() {
       override fun areItemsTheSame(
-        oldItem: Pair<String, PgpKeyDetails>,
-        newItem: Pair<String, PgpKeyDetails>
+        oldItem: Pair<String, PgpKeyRingDetails>,
+        newItem: Pair<String, PgpKeyRingDetails>
       ): Boolean {
         return oldItem.first == newItem.first
             && oldItem.second.fingerprint == newItem.second.fingerprint
       }
 
       override fun areContentsTheSame(
-        oldItem: Pair<String, PgpKeyDetails>,
-        newItem: Pair<String, PgpKeyDetails>
+        oldItem: Pair<String, PgpKeyRingDetails>,
+        newItem: Pair<String, PgpKeyRingDetails>
       ): Boolean {
         return oldItem.first == newItem.first && oldItem.second == newItem.second
       }

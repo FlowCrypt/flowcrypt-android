@@ -27,7 +27,7 @@ import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ImportPubKeysFromSourceSharedViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ImportAllPubKeysFromSourceDialogFragment
@@ -58,15 +58,15 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
 
   private val pubKeysAdapter = ImportOrUpdatePubKeysRecyclerViewAdapter(
     object : ImportOrUpdatePubKeysRecyclerViewAdapter.PubKeyActionsListener {
-      override fun onSavePubKeyClick(pgpKeyDetails: PgpKeyDetails) {
-        cachedPubKeysKeysViewModel.addPubKeysBasedOnPgpKeyDetails(pgpKeyDetails)
+      override fun onSavePubKeyClick(pgpKeyRingDetails: PgpKeyRingDetails) {
+        cachedPubKeysKeysViewModel.addPubKeysBasedOnPgpKeyDetails(pgpKeyRingDetails)
       }
 
       override fun onUpdatePubKeyClick(
-        pgpKeyDetails: PgpKeyDetails,
+        pgpKeyRingDetails: PgpKeyRingDetails,
         existingPublicKeyEntity: PublicKeyEntity
       ) {
-        cachedPubKeysKeysViewModel.updateExistingPubKey(pgpKeyDetails, existingPublicKeyEntity)
+        cachedPubKeysKeysViewModel.updateExistingPubKey(pgpKeyRingDetails, existingPublicKeyEntity)
       }
     })
 
@@ -104,7 +104,7 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
 
   private fun setupImportPubKeysFromSourceSharedViewModel() {
     launchAndRepeatWithViewLifecycle {
-      importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
+      importPubKeysFromSourceSharedViewModel.pgpKeyRingDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
             countingIdlingResource?.incrementSafely(this@ParseAndSavePubKeysFragment)

@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.Parcelize
+import org.pgpainless.algorithm.KeyFlag
 
 /**
  * This class collects base info of [org.bouncycastle.openpgp.PGPKeyRing]
@@ -29,7 +30,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class PgpKeyDetails constructor(
+data class PgpKeyRingDetails constructor(
   @Expose val isFullyDecrypted: Boolean,
   @Expose val isFullyEncrypted: Boolean,
   @Expose val isRevoked: Boolean,
@@ -43,6 +44,7 @@ data class PgpKeyDetails constructor(
   @Expose val expiration: Long? = null,
   @Expose val algo: Algo,
   @Expose val primaryKeyId: Long,
+  @Expose val possibilities: List<Int>,
   var tempPassphrase: CharArray? = null,
   var passphraseType: KeyEntity.PassphraseType? = null,
   var importSourceType: KeyImportDetails.SourceType? = null
@@ -71,9 +73,9 @@ data class PgpKeyDetails constructor(
     return mimeAddresses.firstOrNull()
   }
 
-  fun isNewerThan(pgpKeyDetails: PgpKeyDetails?): Boolean {
+  fun isNewerThan(pgpKeyRingDetails: PgpKeyRingDetails?): Boolean {
     val existingLastModified = lastModified ?: 0
-    val providedLastModified = pgpKeyDetails?.lastModified ?: 0
+    val providedLastModified = pgpKeyRingDetails?.lastModified ?: 0
     return existingLastModified > providedLastModified
   }
 
@@ -103,7 +105,7 @@ data class PgpKeyDetails constructor(
       accountType = accountEntity.accountType,
       source = PrivateKeySourceType.BACKUP.toString(),
       privateKey = privateKey?.toByteArray()
-        ?: throw NullPointerException("pgpKeyDetails.privateKey == null"),
+        ?: throw NullPointerException("pgpKeyRingDetails.privateKey == null"),
       storedPassphrase = tempPassphrase?.let { String(it) },
       passphraseType = passphraseType
         ?: throw IllegalArgumentException("passphraseType is not defined")
@@ -154,15 +156,20 @@ data class PgpKeyDetails constructor(
     }
   }
 
+  fun hasPossibility(keyFlag: KeyFlag): Boolean {
+    return possibilities.contains(keyFlag.flag)
+  }
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
 
-    other as PgpKeyDetails
+    other as PgpKeyRingDetails
 
     if (isFullyDecrypted != other.isFullyDecrypted) return false
     if (isFullyEncrypted != other.isFullyEncrypted) return false
     if (isRevoked != other.isRevoked) return false
+    if (usableForEncryption != other.usableForEncryption) return false
     if (privateKey != other.privateKey) return false
     if (publicKey != other.publicKey) return false
     if (users != other.users) return false
@@ -172,11 +179,13 @@ data class PgpKeyDetails constructor(
     if (expiration != other.expiration) return false
     if (algo != other.algo) return false
     if (primaryKeyId != other.primaryKeyId) return false
+    if (possibilities != other.possibilities) return false
     if (tempPassphrase != null) {
       if (other.tempPassphrase == null) return false
       if (!tempPassphrase.contentEquals(other.tempPassphrase)) return false
     } else if (other.tempPassphrase != null) return false
     if (passphraseType != other.passphraseType) return false
+    if (importSourceType != other.importSourceType) return false
 
     return true
   }
@@ -185,6 +194,7 @@ data class PgpKeyDetails constructor(
     var result = isFullyDecrypted.hashCode()
     result = 31 * result + isFullyEncrypted.hashCode()
     result = 31 * result + isRevoked.hashCode()
+    result = 31 * result + usableForEncryption.hashCode()
     result = 31 * result + (privateKey?.hashCode() ?: 0)
     result = 31 * result + publicKey.hashCode()
     result = 31 * result + users.hashCode()
@@ -194,8 +204,10 @@ data class PgpKeyDetails constructor(
     result = 31 * result + (expiration?.hashCode() ?: 0)
     result = 31 * result + algo.hashCode()
     result = 31 * result + primaryKeyId.hashCode()
+    result = 31 * result + possibilities.hashCode()
     result = 31 * result + (tempPassphrase?.contentHashCode() ?: 0)
     result = 31 * result + (passphraseType?.hashCode() ?: 0)
+    result = 31 * result + (importSourceType?.hashCode() ?: 0)
     return result
   }
 }

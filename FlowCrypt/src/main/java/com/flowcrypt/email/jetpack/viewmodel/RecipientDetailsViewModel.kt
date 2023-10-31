@@ -32,7 +32,7 @@ class RecipientDetailsViewModel(
     pureRecipientPubKeysFlow.mapLatest { fullList ->
       fullList.forEach {
         withContext(Dispatchers.IO) {
-          it.pgpKeyDetails = try {
+          it.pgpKeyRingDetails = try {
             PgpKey.parseKeys(
               source = it.publicKey,
               throwExceptionIfUnknownSource = false

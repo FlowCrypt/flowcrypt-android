@@ -11,9 +11,9 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 
 /**
  * @author Denys Bondarenko
@@ -21,10 +21,10 @@ import com.flowcrypt.email.security.model.PgpKeyDetails
 class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
 
-  val keysWithEmptyPassphrasesLiveData: MediatorLiveData<Result<List<PgpKeyDetails>>> =
+  val keysWithEmptyPassphrasesLiveData: MediatorLiveData<Result<List<PgpKeyRingDetails>>> =
     MediatorLiveData()
 
-  private val pgpKeyDetailsLiveData: LiveData<Result<List<PgpKeyDetails>>> =
+  private val pgpKeyRingDetailsLiveData: LiveData<Result<List<PgpKeyRingDetails>>> =
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
       liveData {
         emit(Result.loading())
@@ -34,7 +34,7 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
             Result.success(
               list
                 .map {
-                  it.toPgpKeyDetails(
+                  it.toPgpKeyRingDetails(
                     account?.clientConfiguration?.shouldHideArmorMeta() ?: false
                   )
                 }
@@ -49,7 +49,7 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
       }
     }
 
-  private val afterPassphraseUpdatedKeyDetailsLiveData: LiveData<Result<List<PgpKeyDetails>>> =
+  private val afterPassphraseUpdatedKeyDetailsLiveData: LiveData<Result<List<PgpKeyRingDetails>>> =
     keysStorage.passphrasesUpdatesLiveData.switchMap {
       liveData {
         emit(Result.loading())
@@ -68,7 +68,7 @@ class KeysWithEmptyPassphraseViewModel(application: Application) : AccountViewMo
     }
 
   init {
-    keysWithEmptyPassphrasesLiveData.addSource(pgpKeyDetailsLiveData) {
+    keysWithEmptyPassphrasesLiveData.addSource(pgpKeyRingDetailsLiveData) {
       keysWithEmptyPassphrasesLiveData.value = it
     }
     keysWithEmptyPassphrasesLiveData.addSource(afterPassphraseUpdatedKeyDetailsLiveData) {

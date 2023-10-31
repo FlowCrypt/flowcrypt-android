@@ -32,13 +32,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_top_message_subject"
         android:maxLines="1"
+        android:ellipsize="end"
         android:textColor="@color/nobel"
-        app:autoSizeMaxTextSize="@dimen/default_text_size_big"
-        app:autoSizeMinTextSize="@dimen/default_text_size_small"
-        app:autoSizeStepGranularity="1sp"
-        app:autoSizeTextType="uniform"
+        android:textSize="@dimen/default_text_size_very_small"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewEncryptionFlag"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toBottomOf="@+id/tVPrimaryUser"
         app:layout_constraintVertical_bias="0.0"
@@ -81,5 +79,32 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_end="@dimen/margin_top_bottom_message" />
+
+    <ImageView
+        android:id="@+id/imageViewAuthFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
+        app:srcCompat="@drawable/ic_posibility_auth" />
+
+    <ImageView
+        android:id="@+id/imageViewEncryptionFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewSignFlag"
+        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
+        app:srcCompat="@drawable/ic_posibility_encryption" />
+
+    <ImageView
+        android:id="@+id/imageViewSignFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewAuthFlag"
+        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
+        app:srcCompat="@drawable/ic_posibility_sign" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

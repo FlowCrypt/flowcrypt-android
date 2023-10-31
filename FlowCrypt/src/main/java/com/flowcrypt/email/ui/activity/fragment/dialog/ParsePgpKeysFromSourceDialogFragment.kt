@@ -93,7 +93,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
 
   private fun setupParseKeysViewModel() {
     launchAndRepeatWithLifecycle {
-      parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
+      parseKeysViewModel.pgpKeyRingDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
             countingIdlingResource?.incrementSafely(this@ParsePgpKeysFromSourceDialogFragment)
@@ -107,8 +107,8 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
               handleWrongSourceIssue()
             } else {
               val keys = when (args.filterType) {
-                PRIVATE_ONLY -> it.data?.filter { pgpKeyDetails -> pgpKeyDetails.isPrivate }
-                PUBLIC_ONLY -> it.data?.filter { pgpKeyDetails -> !pgpKeyDetails.isPrivate }
+                PRIVATE_ONLY -> it.data?.filter { pgpKeyRingDetails -> pgpKeyRingDetails.isPrivate }
+                PUBLIC_ONLY -> it.data?.filter { pgpKeyRingDetails -> !pgpKeyRingDetails.isPrivate }
                 else -> it.data
               }
 

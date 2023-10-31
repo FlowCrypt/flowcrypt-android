@@ -28,14 +28,14 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.util.GeneralUtil
@@ -60,16 +60,17 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupAsFileLiveData = MutableLiveData<Result<Boolean>>()
-  val savePrivateKeysLiveData = MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>()
+  val savePrivateKeysLiveData =
+    MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyRingDetails>>>?>()
   val parseKeysLiveData = MutableLiveData<Result<PgpKey.ParseKeyResult?>>()
   val additionalActionsAfterPrivateKeyCreationLiveData =
-    MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>()
+    MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyRingDetails>>>?>()
   val additionalActionsAfterPrivateKeysImportingLiveData =
-    MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>()
+    MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyRingDetails>>>?>()
   val deleteKeysLiveData = MutableLiveData<Result<Boolean>>()
-  val protectPrivateKeysLiveData = MutableLiveData<Result<List<PgpKeyDetails>>>(Result.none())
+  val protectPrivateKeysLiveData = MutableLiveData<Result<List<PgpKeyRingDetails>>>(Result.none())
 
-  val parseKeysResultLiveData: LiveData<Result<List<PgpKeyDetails>>> =
+  val parseKeysResultLiveData: LiveData<Result<List<PgpKeyRingDetails>>> =
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
       liveData {
         emit(Result.loading())
@@ -77,7 +78,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         emit(
           try {
             Result.success(list.map {
-              it.toPgpKeyDetails(
+              it.toPgpKeyRingDetails(
                 account?.clientConfiguration?.shouldHideArmorMeta() ?: false
               )
             })
@@ -178,12 +179,12 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   }
 
   /**
-   * Encrypt sensitive info of [PgpKeyDetails] via AndroidKeyStore and save it in
+   * Encrypt sensitive info of [PgpKeyRingDetails] via AndroidKeyStore and save it in
    * the local database.
    */
   fun encryptAndSaveKeysToDatabase(
     accountEntity: AccountEntity?,
-    keys: List<PgpKeyDetails>,
+    keys: List<PgpKeyRingDetails>,
     addAccountIfNotExist: Boolean = false
   ) {
     if (accountEntity == null) {
@@ -195,9 +196,9 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       val context: Context = getApplication()
       savePrivateKeysLiveData.value = Result.loading()
       try {
-        for (pgpKeyDetails in keys) {
-          val fingerprint = pgpKeyDetails.fingerprint
-          if (!pgpKeyDetails.isFullyEncrypted) {
+        for (pgpKeyRingDetails in keys) {
+          val fingerprint = pgpKeyRingDetails.fingerprint
+          if (!pgpKeyRingDetails.isFullyEncrypted) {
             throw IllegalStateException(
               context.getString(R.string.found_not_fully_encrypted_key, fingerprint)
             )
@@ -213,7 +214,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
             val existingPgpKeyDetails =
               PgpKey.parseKeys(decryptedPrivateKey).pgpKeyDetailsList.firstOrNull()
 
-            if (existingPgpKeyDetails?.isNewerThan(pgpKeyDetails) == true) {
+            if (existingPgpKeyDetails?.isNewerThan(pgpKeyRingDetails) == true) {
               continue
             }
           }
@@ -227,17 +228,17 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           }
 
           val encryptedPassphrase =
-            if (pgpKeyDetails.passphraseType == KeyEntity.PassphraseType.DATABASE) {
+            if (pgpKeyRingDetails.passphraseType == KeyEntity.PassphraseType.DATABASE) {
               KeyStoreCryptoManager.encryptSuspend(
-                String(requireNotNull(pgpKeyDetails.tempPassphrase))
+                String(requireNotNull(pgpKeyRingDetails.tempPassphrase))
               )
             } else null
 
           val encryptedPrvKey =
-            KeyStoreCryptoManager.encryptSuspend(pgpKeyDetails.privateKey).toByteArray()
+            KeyStoreCryptoManager.encryptSuspend(pgpKeyRingDetails.privateKey).toByteArray()
 
-          val keyEntity = (existingKeyEntity ?: pgpKeyDetails.toKeyEntity(accountEntity)).copy(
-            source = requireNotNull(pgpKeyDetails.importSourceType?.toPrivateKeySourceTypeString()),
+          val keyEntity = (existingKeyEntity ?: pgpKeyRingDetails.toKeyEntity(accountEntity)).copy(
+            source = requireNotNull(pgpKeyRingDetails.importSourceType?.toPrivateKeySourceTypeString()),
             privateKey = encryptedPrvKey,
             storedPassphrase = encryptedPassphrase
           )
@@ -248,10 +249,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           }
 
           if (isAddedOrUpdated) {
-            if (pgpKeyDetails.passphraseType == KeyEntity.PassphraseType.RAM) {
+            if (pgpKeyRingDetails.passphraseType == KeyEntity.PassphraseType.RAM) {
               keysStorage.putPassphraseToCache(
                 fingerprint = fingerprint,
-                passphrase = Passphrase(pgpKeyDetails.tempPassphrase),
+                passphrase = Passphrase(pgpKeyRingDetails.tempPassphrase),
                 validUntil = keysStorage.calculateLifeTimeForPassphrase(),
                 passphraseType = KeyEntity.PassphraseType.RAM
               )
@@ -260,7 +261,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
             //update pub keys
             val recipientDao = roomDatabase.recipientDao()
             val pubKeysDao = roomDatabase.pubKeyDao()
-            for (mimeAddress in pgpKeyDetails.mimeAddresses) {
+            for (mimeAddress in pgpKeyRingDetails.mimeAddresses) {
               val address = mimeAddress.address.lowercase()
               val name = mimeAddress.personal
 
@@ -271,13 +272,16 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
               }
 
               val existingPubKeyEntity =
-                pubKeysDao.getPublicKeyByRecipientAndFingerprint(address, pgpKeyDetails.fingerprint)
+                pubKeysDao.getPublicKeyByRecipientAndFingerprint(
+                  address,
+                  pgpKeyRingDetails.fingerprint
+                )
               if (existingPubKeyEntity == null) {
-                pubKeysDao.insertSuspend(pgpKeyDetails.toPublicKeyEntity(address))
+                pubKeysDao.insertSuspend(pgpKeyRingDetails.toPublicKeyEntity(address))
               } else if (existingKeyEntity != null) {
                 pubKeysDao.updateSuspend(
                   existingPubKeyEntity.copy(
-                    publicKey = pgpKeyDetails.publicKey.toByteArray()
+                    publicKey = pgpKeyRingDetails.publicKey.toByteArray()
                   )
                 )
               }
@@ -361,7 +365,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
   fun doAdditionalActionsAfterPrivateKeyCreation(
     accountEntity: AccountEntity,
-    keys: List<PgpKeyDetails>,
+    keys: List<PgpKeyRingDetails>,
     idToken: String? = null,
   ) {
     processPrivateKeysInternally(
@@ -374,7 +378,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
   fun doAdditionalActionsAfterPrivateKeysImporting(
     accountEntity: AccountEntity,
-    keys: List<PgpKeyDetails>,
+    keys: List<PgpKeyRingDetails>,
     idToken: String? = null,
   ) {
     processPrivateKeysInternally(
@@ -387,24 +391,25 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
   private fun processPrivateKeysInternally(
     accountEntity: AccountEntity,
-    keys: List<PgpKeyDetails>,
+    keys: List<PgpKeyRingDetails>,
     idToken: String?,
-    mutableLiveData: MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyDetails>>>?>
+    mutableLiveData: MutableLiveData<Result<Pair<AccountEntity, List<PgpKeyRingDetails>>>?>
   ) {
     viewModelScope.launch {
       mutableLiveData.value = Result.loading()
       try {
-        val pgpKeyDetails = keys.firstOrNull() ?: throw java.lang.IllegalStateException("No keys")
+        val pgpKeyRingDetails =
+          keys.firstOrNull() ?: throw java.lang.IllegalStateException("No keys")
         doAdditionalOperationsForPrivateKey(
           accountEntity = accountEntity,
-          pgpKeyDetails = pgpKeyDetails,
+          pgpKeyRingDetails = pgpKeyRingDetails,
           idToken = idToken,
         )
         mutableLiveData.value = Result.success(Pair(accountEntity, keys))
       } catch (e: Exception) {
         e.printStackTrace()
-        for (pgpKeyDetails in keys) {
-          pgpKeyDetails.fingerprint.let {
+        for (pgpKeyRingDetails in keys) {
+          pgpKeyRingDetails.fingerprint.let {
             roomDatabase.keysDao().deleteByAccountAndFingerprintSuspend(accountEntity.email, it)
           }
         }
@@ -414,7 +419,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
   }
 
-  fun deleteKeys(accountEntity: AccountEntity, keys: List<PgpKeyDetails>) {
+  fun deleteKeys(accountEntity: AccountEntity, keys: List<PgpKeyRingDetails>) {
     viewModelScope.launch {
       deleteKeysLiveData.value = Result.loading()
       try {
@@ -443,13 +448,13 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     }
   }
 
-  fun protectPrivateKeys(privateKeys: List<PgpKeyDetails>, passphrase: Passphrase) {
+  fun protectPrivateKeys(privateKeys: List<PgpKeyRingDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
       protectPrivateKeysLiveData.value = Result.loading()
       val sourceTypeInfo = privateKeys.associateBy({ it.fingerprint }, { it.importSourceType })
       try {
-        val encryptedKeysSource = privateKeys.map { pgpKeyDetails ->
-          PgpKey.encryptKeySuspend(requireNotNull(pgpKeyDetails.privateKey), passphrase)
+        val encryptedKeysSource = privateKeys.map { pgpKeyRingDetails ->
+          PgpKey.encryptKeySuspend(requireNotNull(pgpKeyRingDetails.privateKey), passphrase)
         }.joinToString(separator = "\n")
 
         protectPrivateKeysLiveData.value =
@@ -468,18 +473,18 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
   private suspend fun doAdditionalOperationsForPrivateKey(
     accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails,
+    pgpKeyRingDetails: PgpKeyRingDetails,
     idToken: String? = null,
   ) {
     if (accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.ENFORCE_ATTESTER_SUBMIT)) {
-      registerUserPublicKey(accountEntity, pgpKeyDetails, idToken, false)
+      registerUserPublicKey(accountEntity, pgpKeyRingDetails, idToken, false)
 
       if (!accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
-        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
+        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyRingDetails)) {
           val backupAction = ActionQueueEntity.fromAction(
             BackupPrivateKeyToInboxAction(
               0,
-              accountEntity.email, 0, pgpKeyDetails.fingerprint
+              accountEntity.email, 0, pgpKeyRingDetails.fingerprint
             )
           )
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
@@ -487,21 +492,21 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       }
     } else {
       if (!accountEntity.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)) {
-        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyDetails)) {
+        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, pgpKeyRingDetails)) {
           val backupAction = ActionQueueEntity.fromAction(
             BackupPrivateKeyToInboxAction(
               0,
-              accountEntity.email, 0, pgpKeyDetails.fingerprint
+              accountEntity.email, 0, pgpKeyRingDetails.fingerprint
             )
           )
           backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
         }
       }
 
-      registerUserPublicKey(accountEntity, pgpKeyDetails, idToken)
+      registerUserPublicKey(accountEntity, pgpKeyRingDetails, idToken)
     }
 
-    idToken?.let { postWelcomeMessage(accountEntity, pgpKeyDetails, it) }
+    idToken?.let { postWelcomeMessage(accountEntity, pgpKeyRingDetails, it) }
   }
 
   private suspend fun getModifiedPgpKeyDetails(
@@ -509,7 +514,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
     newPassphrase: Passphrase,
     originalPrivateKey: String,
     fingerprint: String
-  ): PgpKeyDetails = withContext(Dispatchers.IO) {
+  ): PgpKeyRingDetails = withContext(Dispatchers.IO) {
     val keyEncryptedWithNewPassphrase = try {
       PgpKey.changeKeyPassphrase(
         armored = originalPrivateKey,
@@ -548,7 +553,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
    */
   private suspend fun saveCreatedPrivateKeyAsBackupToInbox(
     accountEntity: AccountEntity,
-    keyDetails: PgpKeyDetails
+    keyDetails: PgpKeyRingDetails
   ): Boolean =
     withContext(Dispatchers.IO) {
       try {
@@ -579,7 +584,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
    */
   private suspend fun registerUserPublicKey(
     accountEntity: AccountEntity,
-    keyDetails: PgpKeyDetails,
+    keyDetails: PgpKeyRingDetails,
     idToken: String? = null,
     isSilent: Boolean = true,
   ): Boolean = withContext(Dispatchers.IO) {
@@ -643,7 +648,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
    */
   private suspend fun postWelcomeMessage(
     accountEntity: AccountEntity,
-    keyDetails: PgpKeyDetails,
+    keyDetails: PgpKeyRingDetails,
     idToken: String,
   ): Boolean =
     withContext(Dispatchers.IO) {

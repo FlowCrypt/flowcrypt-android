@@ -67,7 +67,7 @@ class ComposeScreenTestPassInRamFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+    val fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
     val fingerprintFormatted = GeneralUtil.doSectionsInText(
       originalString = fingerprint, groupSize = 4
     )

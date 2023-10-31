@@ -23,11 +23,11 @@ class AddPrivateKeyToDatabaseRule constructor(
   val sourceType: KeyImportDetails.SourceType,
   val passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
 ) : BaseRule() {
-  var pgpKeyDetails: PgpKeyDetails
+  var pgpKeyRingDetails: PgpKeyDetails
     private set
 
   init {
-    pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(keyPath, true)
+    pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(keyPath, true)
   }
 
   constructor(
@@ -45,7 +45,7 @@ class AddPrivateKeyToDatabaseRule constructor(
   override fun execute() {
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = accountEntity,
-      pgpKeyDetails = pgpKeyDetails,
+      pgpKeyRingDetails = pgpKeyRingDetails,
       passphrase = passphrase,
       sourceType = sourceType,
       passphraseType = passphraseType

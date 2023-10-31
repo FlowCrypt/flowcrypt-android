@@ -17,7 +17,7 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
@@ -97,7 +97,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
 
       requireNotNull(ekmPrivateResult.data?.privateKeys)
 
-      val pgpKeyDetailsList = mutableListOf<PgpKeyDetails>()
+      val pgpKeyRingDetailsList = mutableListOf<PgpKeyRingDetails>()
       ekmPrivateResult.data?.privateKeys?.forEach { key ->
         val parsedList = PgpKey.parsePrivateKeys(requireNotNull(key.decryptedPrivateKey))
           .map {
@@ -134,27 +134,27 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
                 )
               }
             }
-            pgpKeyDetailsList.addAll(parsedList)
+            pgpKeyRingDetailsList.addAll(parsedList)
           }
         }
       }
 
-      handleParsedKeys(activeAccount, pgpKeyDetailsList)
+      handleParsedKeys(activeAccount, pgpKeyRingDetailsList)
 
       Result.success(true)
     }
 
   private suspend fun handleParsedKeys(
     activeAccount: AccountEntity,
-    fetchedPgpKeyDetailsList: MutableList<PgpKeyDetails>
+    fetchedPgpKeyRingDetailsList: MutableList<PgpKeyRingDetails>
   ) = withContext(Dispatchers.IO) {
     val context: Context = getApplication()
     val keysStorage = KeysStorageImpl.getInstance(context)
     val existingKeyEntities = keysStorage.getRawKeys()
     val existingPgpKeyDetailsList = keysStorage.getPgpKeyDetailsList()
-    val keysToUpdate = mutableListOf<PgpKeyDetails>()
-    val keysToAdd = mutableListOf<PgpKeyDetails>()
-    val fingerprintsOfFetchedKeys = fetchedPgpKeyDetailsList.map { it.fingerprint.uppercase() }
+    val keysToUpdate = mutableListOf<PgpKeyRingDetails>()
+    val keysToAdd = mutableListOf<PgpKeyRingDetails>()
+    val fingerprintsOfFetchedKeys = fetchedPgpKeyRingDetailsList.map { it.fingerprint.uppercase() }
     val fingerprintsOfKeysToDelete = existingPgpKeyDetailsList.filter {
       !it.isRevoked && it.fingerprint.uppercase() !in fingerprintsOfFetchedKeys
     }.map { it.fingerprint }
@@ -162,7 +162,7 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
       it.fingerprint.uppercase() in fingerprintsOfKeysToDelete
     }
 
-    for (fetchedPgpKeyDetails in fetchedPgpKeyDetailsList) {
+    for (fetchedPgpKeyDetails in fetchedPgpKeyRingDetailsList) {
       val existingPgpKeyDetails = existingPgpKeyDetailsList.firstOrNull {
         it.fingerprint == fetchedPgpKeyDetails.fingerprint
       }
@@ -184,20 +184,20 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
     roomDatabase.withTransaction {
       val passphrase: Passphrase = getUsablePassphraseFromCache()
 
-      for (pgpKeyDetails in keysToUpdate) {
+      for (pgpKeyRingDetails in keysToUpdate) {
         val existingKeyEntity = existingKeyEntities.first {
-          it.fingerprint == pgpKeyDetails.fingerprint
+          it.fingerprint == pgpKeyRingDetails.fingerprint
         }
 
-        val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
+        val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyRingDetails)
         roomDatabase.keysDao().updateSuspend(
           existingKeyEntity.copy(privateKey = safeVersionOfPrvKey)
         )
       }
 
-      for (pgpKeyDetails in keysToAdd) {
-        val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyDetails)
-        val keyEntity = pgpKeyDetails.toKeyEntity(activeAccount).copy(
+      for (pgpKeyRingDetails in keysToAdd) {
+        val safeVersionOfPrvKey = protectAndEncryptInternally(passphrase, pgpKeyRingDetails)
+        val keyEntity = pgpKeyRingDetails.toKeyEntity(activeAccount).copy(
           privateKey = safeVersionOfPrvKey,
           storedPassphrase = null
         )
@@ -214,10 +214,10 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
    */
   private suspend fun protectAndEncryptInternally(
     passphrase: Passphrase,
-    pgpKeyDetails: PgpKeyDetails
+    pgpKeyRingDetails: PgpKeyRingDetails
   ): ByteArray = withContext(Dispatchers.IO) {
     val protectedPrvKey = PgpKey.encryptKeySuspend(
-      armored = requireNotNull(pgpKeyDetails.privateKey),
+      armored = requireNotNull(pgpKeyRingDetails.privateKey),
       passphrase = passphrase
     )
     val encryptedPrvKeyInternally = KeyStoreCryptoManager.encryptSuspend(protectedPrvKey)

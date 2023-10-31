@@ -36,7 +36,7 @@ import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -57,9 +57,9 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
 
   private val recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(this)
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private var tracker: SelectionTracker<PgpKeyDetails>? = null
+  private var tracker: SelectionTracker<PgpKeyRingDetails>? = null
   private var actionMode: ActionMode? = null
-  private val selectionObserver = object : SelectionTracker.SelectionObserver<PgpKeyDetails>() {
+  private val selectionObserver = object : SelectionTracker.SelectionObserver<PgpKeyRingDetails>() {
     override fun onSelectionChanged() {
       super.onSelectionChanged()
       when {
@@ -111,12 +111,12 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     tracker?.onSaveInstanceState(outState)
   }
 
-  override fun onKeySelected(position: Int, pgpKeyDetails: PgpKeyDetails?) {
+  override fun onKeySelected(position: Int, pgpKeyRingDetails: PgpKeyRingDetails?) {
     if (tracker?.hasSelection() == true) {
       return
     }
 
-    pgpKeyDetails?.let {
+    pgpKeyRingDetails?.let {
       navController?.navigate(
         PrivateKeysListFragmentDirections
           .actionPrivateKeysListFragmentToPrivateKeyDetailsFragment(it.fingerprint)
@@ -195,9 +195,9 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     tracker = SelectionTracker.Builder(
       javaClass.simpleName,
       recyclerView,
-      PgpKeyDetailsKeyProvider(recyclerViewAdapter.pgpKeyDetailsList),
+      PgpKeyDetailsKeyProvider(recyclerViewAdapter.pgpKeyRingDetailsList),
       PrivateKeyItemDetailsLookup(recyclerView),
-      StorageStrategy.createParcelableStorage(PgpKeyDetails::class.java)
+      StorageStrategy.createParcelableStorage(PgpKeyRingDetails::class.java)
     ).build()
 
     recyclerViewAdapter.tracker = tracker
@@ -246,7 +246,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
 
   private fun subscribeToImportingAdditionalPrivateKeys() {
     setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
-      val keys = bundle.getParcelableArrayListViaExt<PgpKeyDetails>(
+      val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
       if (keys?.isNotEmpty() == true) {

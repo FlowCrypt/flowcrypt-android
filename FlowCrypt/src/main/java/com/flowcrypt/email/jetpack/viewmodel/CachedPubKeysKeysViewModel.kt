@@ -12,7 +12,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,7 +49,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
               source = it.publicKey,
               throwExceptionIfUnknownSource = false
             ).pgpKeyDetailsList
-            it.pgpKeyDetails = result.firstOrNull()
+            it.pgpKeyRingDetails = result.firstOrNull()
           }
         }
         emit(filteredList.associateBy({ it.recipient + it.fingerprint }, { it }))
@@ -74,7 +74,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
                 source = it.publicKey,
                 throwExceptionIfUnknownSource = false
               ).pgpKeyDetailsList
-              it.pgpKeyDetails = result.firstOrNull()
+              it.pgpKeyRingDetails = result.firstOrNull()
             }
           }
           emit(filteredList.associateBy({ it.recipient + it.fingerprint }, { it }))
@@ -106,22 +106,22 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
   val importAllPubKeysPubKeyStateFlow =
     importAllPubKeysMutableStateFlow.asStateFlow()
 
-  fun specifyFilter(list: Collection<PgpKeyDetails>) {
+  fun specifyFilter(list: Collection<PgpKeyRingDetails>) {
     val keys = mutableSetOf<String>()
-    for (pgpKeyDetails in list) {
-      val email = pgpKeyDetails.getPrimaryInternetAddress()?.address?.lowercase() ?: continue
-      val fingerprint = pgpKeyDetails.fingerprint.uppercase()
+    for (pgpKeyRingDetails in list) {
+      val email = pgpKeyRingDetails.getPrimaryInternetAddress()?.address?.lowercase() ?: continue
+      val fingerprint = pgpKeyRingDetails.fingerprint.uppercase()
       keys.add(email + fingerprint)
     }
     setOfRecipientsAndFingerprintsMutableStateFlow.value = keys
   }
 
-  fun addPubKeysBasedOnPgpKeyDetails(pgpKeyDetails: PgpKeyDetails) {
+  fun addPubKeysBasedOnPgpKeyDetails(pgpKeyRingDetails: PgpKeyRingDetails) {
     viewModelScope.launch {
       addPubKeysMutableStateFlow.value = Result.loading()
       val context: Context = getApplication()
 
-      val primaryAddress = pgpKeyDetails.mimeAddresses.firstOrNull()?.address?.lowercase()
+      val primaryAddress = pgpKeyRingDetails.mimeAddresses.firstOrNull()?.address?.lowercase()
       if (primaryAddress == null) {
         addPubKeysMutableStateFlow.value = Result.exception(
           IllegalStateException(context.getString(R.string.primary_address_not_defined))
@@ -140,7 +140,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
         }
       }
 
-      val publicKeyEntity = pgpKeyDetails.toPublicKeyEntity(primaryAddress)
+      val publicKeyEntity = pgpKeyRingDetails.toPublicKeyEntity(primaryAddress)
 
       val existingPublicKeyEntity = roomDatabase.pubKeyDao().getPublicKeyByRecipientAndFingerprint(
         publicKeyEntity.recipient, publicKeyEntity.fingerprint
@@ -170,27 +170,30 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
     }
   }
 
-  fun updateExistingPubKey(pgpKeyDetails: PgpKeyDetails, existingPublicKeyEntity: PublicKeyEntity) {
+  fun updateExistingPubKey(
+    pgpKeyRingDetails: PgpKeyRingDetails,
+    existingPublicKeyEntity: PublicKeyEntity
+  ) {
     viewModelScope.launch {
       updateExistingPubKeyMutableStateFlow.value = Result.loading()
       val context: Context = getApplication()
       try {
-        if (existingPublicKeyEntity.pgpKeyDetails == null) {
-          existingPublicKeyEntity.pgpKeyDetails =
+        if (existingPublicKeyEntity.pgpKeyRingDetails == null) {
+          existingPublicKeyEntity.pgpKeyRingDetails =
             PgpKey.parseKeys(source = existingPublicKeyEntity.publicKey)
               .pgpKeyDetailsList.firstOrNull()
         }
 
         when {
-          existingPublicKeyEntity.pgpKeyDetails?.isRevoked == true -> {
+          existingPublicKeyEntity.pgpKeyRingDetails?.isRevoked == true -> {
             updateExistingPubKeyMutableStateFlow.value = Result.exception(
               IllegalStateException(context.getString(R.string.key_is_revoked_unable_to_update))
             )
           }
 
-          pgpKeyDetails.isNewerThan(existingPublicKeyEntity.pgpKeyDetails) -> {
+          pgpKeyRingDetails.isNewerThan(existingPublicKeyEntity.pgpKeyRingDetails) -> {
             val publicKeyEntity =
-              existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
+              existingPublicKeyEntity.copy(publicKey = pgpKeyRingDetails.publicKey.toByteArray())
 
             val isPubKeyUpdated = roomDatabase.pubKeyDao().updateSuspend(publicKeyEntity) > 0
             if (isPubKeyUpdated) {
@@ -221,7 +224,7 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
     }
   }
 
-  fun importAllPubKeysWithConflictResolution(list: Collection<PgpKeyDetails>) {
+  fun importAllPubKeysWithConflictResolution(list: Collection<PgpKeyRingDetails>) {
     viewModelScope.launch {
       val context: Context = getApplication()
       importAllPubKeysMutableStateFlow.value =
@@ -231,11 +234,11 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
       var lastProgress = 0f
       val totalOperationsCount = list.size
 
-      for ((index, pgpKeyDetails) in list.withIndex()) {
+      for ((index, pgpKeyRingDetails) in list.withIndex()) {
         try {
           val primaryAddress =
-            pgpKeyDetails.mimeAddresses.firstOrNull()?.address?.lowercase() ?: continue
-          val fingerprint = pgpKeyDetails.fingerprint
+            pgpKeyRingDetails.mimeAddresses.firstOrNull()?.address?.lowercase() ?: continue
+          val fingerprint = pgpKeyRingDetails.fingerprint
 
           val existingPublicKeyEntity = roomDatabase.pubKeyDao()
             .getPublicKeyByRecipientAndFingerprint(primaryAddress, fingerprint)
@@ -248,20 +251,20 @@ class CachedPubKeysKeysViewModel(application: Application) : AccountViewModel(ap
               } else true
             if (isNewRecipientAdded) {
               roomDatabase.pubKeyDao()
-                .insertSuspend(pgpKeyDetails.toPublicKeyEntity(primaryAddress))
+                .insertSuspend(pgpKeyRingDetails.toPublicKeyEntity(primaryAddress))
             }
           } else {
             val existingPgpKeyDetails = withContext(Dispatchers.IO) {
               val result = PgpKey.parseKeys(
-                source = pgpKeyDetails.publicKey,
+                source = pgpKeyRingDetails.publicKey,
                 throwExceptionIfUnknownSource = false
               ).pgpKeyDetailsList
               result.firstOrNull()
             } ?: continue
             val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
-            if (!isExistingKeyRevoked && pgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
+            if (!isExistingKeyRevoked && pgpKeyRingDetails.isNewerThan(existingPgpKeyDetails)) {
               roomDatabase.pubKeyDao().updateSuspend(
-                existingPublicKeyEntity.copy(publicKey = pgpKeyDetails.publicKey.toByteArray())
+                existingPublicKeyEntity.copy(publicKey = pgpKeyRingDetails.publicKey.toByteArray())
               )
             }
           }

@@ -48,7 +48,7 @@ import com.flowcrypt.email.jetpack.viewmodel.CheckCustomerUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.CHECKED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.SKIP_REMAINING_KEYS
@@ -158,14 +158,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   override fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
     accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails
+    pgpKeyRingDetails: PgpKeyRingDetails
   ) {
-    handleUnlockedKeys(accountEntity, listOf(pgpKeyDetails))
+    handleUnlockedKeys(accountEntity, listOf(pgpKeyRingDetails))
   }
 
   override fun onAdditionalActionsAfterPrivateKeyImportingCompleted(
     accountEntity: AccountEntity,
-    keys: List<PgpKeyDetails>
+    keys: List<PgpKeyRingDetails>
   ) {
     handleUnlockedKeys(accountEntity, keys)
   }
@@ -344,7 +344,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     when (result.status) {
       Result.Status.SUCCESS -> {
         @Suppress("UNCHECKED_CAST")
-        onFetchKeysCompleted(result.data as ArrayList<PgpKeyDetails>?)
+        onFetchKeysCompleted(result.data as ArrayList<PgpKeyRingDetails>?)
       }
 
       Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -411,7 +411,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt(
         CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
-      ) ?: emptyList<PgpKeyDetails>()
+      ) ?: emptyList<PgpKeyRingDetails>()
 
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CHECKED_KEYS,
@@ -474,7 +474,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       val keys =
         bundle.getParcelableArrayListViaExt(CreateOrImportPrivateKeyDuringSetupFragment.KEY_PRIVATE_KEYS)
-          ?: emptyList<PgpKeyDetails>()
+          ?: emptyList<PgpKeyRingDetails>()
 
       val account = bundle.getParcelableViaExt<AccountEntity>(
         CreateOrImportPrivateKeyDuringSetupFragment.KEY_ACCOUNT
@@ -516,7 +516,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun onFetchKeysCompleted(keyDetailsList: List<PgpKeyDetails>?) {
+  private fun onFetchKeysCompleted(keyDetailsList: List<PgpKeyRingDetails>?) {
     if (keyDetailsList.isNullOrEmpty()) {
       getTempAccount()?.let {
         requireContext().startService(
@@ -730,7 +730,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         Result.Status.SUCCESS -> {
           showContent()
           importCandidates.clear()
-          importCandidates.addAll(it?.data?.pgpKeyDetailsList ?: emptyList())
+          importCandidates.addAll(it?.data?.pgpKeyRingDetailsList ?: emptyList())
           navController?.navigate(
             MainSignInFragmentDirections
               .actionMainSignInFragmentToCheckPassphraseStrengthFragment(
@@ -784,8 +784,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         Result.Status.SUCCESS -> {
           importCandidates.clear()
           importCandidates.addAll(it.data ?: emptyList())
-          importCandidates.forEach { pgpKeyDetails ->
-            pgpKeyDetails.passphraseType = KeyEntity.PassphraseType.RAM
+          importCandidates.forEach { pgpKeyRingDetails ->
+            pgpKeyRingDetails.passphraseType = KeyEntity.PassphraseType.RAM
           }
           getTempAccount()?.let { account ->
             accountViewModel.addNewAccount(account)
@@ -832,7 +832,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     )
   }
 
-  private fun handleUnlockedKeys(accountEntity: AccountEntity?, keys: List<PgpKeyDetails>) {
+  private fun handleUnlockedKeys(accountEntity: AccountEntity?, keys: List<PgpKeyRingDetails>) {
     if (keys.isEmpty()) {
       showContent()
       showInfoSnackbar(msgText = getString(R.string.error_no_keys))

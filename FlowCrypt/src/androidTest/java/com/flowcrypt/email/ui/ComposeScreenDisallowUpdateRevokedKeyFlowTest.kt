@@ -69,7 +69,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     accountEntity = addAccountToDatabaseRule.account
   )
 
-  val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+  val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
     "pgp/default@flowcrypt.test_secondKey_pub_revoked.asc"
   )
 
@@ -77,7 +77,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     listOf(
       RecipientWithPubKeys(
         RecipientEntity(email = RECIPIENT_WITH_REVOKED_KEY),
-        listOf(pgpKeyDetails.toPublicKeyEntity(RECIPIENT_WITH_REVOKED_KEY).copy(id = 12))
+        listOf(pgpKeyRingDetails.toPublicKeyEntity(RECIPIENT_WITH_REVOKED_KEY).copy(id = 12))
       )
     )
   )
@@ -95,7 +95,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
 
   @Test
   fun testDisallowUpdateRevokedKeyFromLookup() {
-    val userWithRevokedKey = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+    val userWithRevokedKey = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
 
     //check the recipient pub key before call lookupEmail
     val existingRecipientBefore = roomDatabase.recipientDao()

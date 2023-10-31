@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.api
 
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
 
@@ -17,5 +17,5 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class EkmPrivateKeysResponse constructor(
   @Expose val privateKeys: List<Key>? = null,
-  val pgpKeyDetailsList: List<PgpKeyDetails>? = null
+  val pgpKeyRingDetailsList: List<PgpKeyRingDetails>? = null
 ) : ApiResponse

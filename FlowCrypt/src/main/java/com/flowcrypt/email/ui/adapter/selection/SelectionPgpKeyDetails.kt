@@ -6,15 +6,15 @@
 package com.flowcrypt.email.ui.adapter.selection
 
 import androidx.recyclerview.selection.ItemDetailsLookup
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 
 /**
  * @author Denys Bondarenko
  */
 class SelectionPgpKeyDetails(
   private val position: Int,
-  private val pgpKeyDetails: PgpKeyDetails?
-) : ItemDetailsLookup.ItemDetails<PgpKeyDetails>() {
-  override fun getSelectionKey() = pgpKeyDetails
+  private val pgpKeyRingDetails: PgpKeyRingDetails?
+) : ItemDetailsLookup.ItemDetails<PgpKeyRingDetails>() {
+  override fun getSelectionKey() = pgpKeyRingDetails
   override fun getPosition() = position
 }

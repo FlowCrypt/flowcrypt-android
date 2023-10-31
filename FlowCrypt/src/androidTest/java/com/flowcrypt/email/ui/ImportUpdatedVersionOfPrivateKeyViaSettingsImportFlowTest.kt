@@ -91,7 +91,7 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
 
     assertTrue(
       KeysStorageImpl.getInstance(getTargetContext()).getPgpKeyDetailsList().first {
-        it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.fingerprint
+        it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyRingDetails.fingerprint
       }.isExpired
     )
 
@@ -115,7 +115,7 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
 
     assertTrue(
       KeysStorageImpl.getInstance(getTargetContext()).getPgpKeyDetailsList().first {
-        it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.fingerprint
+        it.fingerprint == addPrivateKeyToDatabaseRuleExpired.pgpKeyRingDetails.fingerprint
       }.isExpired
     )
   }
@@ -125,12 +125,12 @@ class ImportUpdatedVersionOfPrivateKeyViaSettingsImportFlowTest : BaseTest() {
       allOf(
         hasSibling(
           withText(
-            addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.getUserIdsAsSingleString()
+            addPrivateKeyToDatabaseRuleExpired.pgpKeyRingDetails.getUserIdsAsSingleString()
           )
         ),
         hasSibling(
           withText(
-            addPrivateKeyToDatabaseRuleExpired.pgpKeyDetails.getStatusText(getTargetContext())
+            addPrivateKeyToDatabaseRuleExpired.pgpKeyRingDetails.getStatusText(getTargetContext())
           )
         )
       )

@@ -46,7 +46,7 @@ import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeyDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -228,13 +228,13 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           toast(getString(R.string.please_provide_passphrase_to_proceed))
           showNeedPassphraseDialog()
         } else {
-          val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails()
-          if (pgpKeyDetails != null) {
+          val pgpKeyRingDetails = privateKeyDetailsViewModel.getPgpKeyDetails()
+          if (pgpKeyRingDetails != null) {
             navController?.navigate(
               PrivateKeyDetailsFragmentDirections
                 .actionPrivateKeyDetailsFragmentToUpdatePrivateKeyFragment(
                   accountEntity = accountEntity,
-                  existingPgpKeyDetails = pgpKeyDetails
+                  existingPgpKeyRingDetails = pgpKeyRingDetails
                 )
             )
           }
@@ -244,10 +244,10 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   }
 
   private fun showNeedPassphraseDialog() {
-    val pgpKeyDetails = privateKeyDetailsViewModel.getPgpKeyDetails() ?: return
+    val pgpKeyRingDetails = privateKeyDetailsViewModel.getPgpKeyDetails() ?: return
     showNeedPassphraseDialog(
       requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
-      fingerprints = listOf(pgpKeyDetails.fingerprint)
+      fingerprints = listOf(pgpKeyRingDetails.fingerprint)
     )
   }
 
@@ -308,7 +308,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   }
 
   private fun setupPgpKeyDetailsViewModel() {
-    privateKeyDetailsViewModel.pgpKeyDetailsLiveData.observe(viewLifecycleOwner) {
+    privateKeyDetailsViewModel.pgpKeyRingDetailsLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
           countingIdlingResource?.incrementSafely(this@PrivateKeyDetailsFragment)
@@ -337,12 +337,12 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     }
   }
 
-  private fun matchPassphrase(pgpKeyDetails: PgpKeyDetails) {
+  private fun matchPassphrase(pgpKeyRingDetails: PgpKeyRingDetails) {
     val passPhrase = privateKeyDetailsViewModel.getPassphrase() ?: return
     if (passPhrase.isEmpty) return
     checkPrivateKeysViewModel.checkKeys(
       keys = listOf(
-        pgpKeyDetails.copy(passphraseType = privateKeyDetailsViewModel.getPassphraseType())
+        pgpKeyRingDetails.copy(passphraseType = privateKeyDetailsViewModel.getPassphraseType())
       ),
       passphrase = passPhrase
     )
@@ -387,7 +387,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
           val checkResult = it.data?.firstOrNull()
           val verificationMsg: String?
           if (checkResult != null) {
-            if (checkResult.pgpKeyDetails.isPrivate) {
+            if (checkResult.pgpKeyRingDetails.isPrivate) {
               if (checkResult.e == null) {
                 binding?.tVPassPhraseVerification?.setTextColor(
                   UIUtil.getColor(requireContext(), R.color.colorPrimaryLight)

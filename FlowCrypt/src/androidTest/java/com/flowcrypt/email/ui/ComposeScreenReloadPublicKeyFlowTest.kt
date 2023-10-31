@@ -59,7 +59,7 @@ class ComposeScreenReloadPublicKeyFlowTest : BaseComposeScreenTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activityScenarioRule.scenario
 
-  private val pgpKeyDetails = PGPainless.generateKeyRing()
+  private val pgpKeyRingDetails = PGPainless.generateKeyRing()
     .simpleEcKeyRing(RECIPIENT, TestConstants.DEFAULT_PASSWORD).toPgpKeyDetails()
 
   private val addRecipientsToDatabaseRule = AddRecipientsToDatabaseRule(
@@ -85,7 +85,7 @@ class ComposeScreenReloadPublicKeyFlowTest : BaseComposeScreenTest() {
   @Test
   fun testDisallowUpdateRevokedKeyFromLookup() {
     val userWithMissingPublicKey =
-      requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+      requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
 
     fillInAllFields(userWithMissingPublicKey)
 

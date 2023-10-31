@@ -107,7 +107,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
   private val defaultMsgEncryptionType: MessageEncryptionType = MessageEncryptionType.ENCRYPTED
 
-  private val pgpKeyDetails: PgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+  private val pgpKeyRingDetails: PgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
     "pgp/not_attested_user@flowcrypt.test_prv_default.asc"
   )
 
@@ -344,7 +344,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     registerAllIdlingResources()
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-    val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+    val email = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
     fillInAllFields(email)
 
     onView(withId(R.id.recyclerViewChipsTo))
@@ -368,7 +368,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    addTextToClipboard("public key", pgpKeyDetails.publicKey)
+    addTextToClipboard("public key", pgpKeyRingDetails.publicKey)
 
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))
@@ -446,13 +446,13 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule?.launch(intent)
 
-    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/attested_user@flowcrypt.test_prv_default_strong.asc"
     )
 
-    pgpKeyDetails.toRecipientEntity()?.let {
+    pgpKeyRingDetails.toRecipientEntity()?.let {
       roomDatabase.recipientDao().insert(it)
-      roomDatabase.pubKeyDao().insert(pgpKeyDetails.toPublicKeyEntity(it.email))
+      roomDatabase.pubKeyDao().insert(pgpKeyRingDetails.toPublicKeyEntity(it.email))
     }
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
@@ -471,7 +471,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         hasDescendant(
           allOf(
             withId(R.id.tVOnlyEmail),
-            withText(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+            withText(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
           )
         ),
         click()
@@ -509,7 +509,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .perform(click())
 
     val att = EmailUtil.genAttInfoFromPubKey(
-      addPrivateKeyToDatabaseRule.pgpKeyDetails,
+      addPrivateKeyToDatabaseRule.pgpKeyRingDetails,
       addPrivateKeyToDatabaseRule.accountEntity.email
     )
 

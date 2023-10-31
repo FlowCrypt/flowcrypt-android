@@ -75,7 +75,7 @@ class PrivateKeyDetailsFragmentExpiredKeyInIsolationTest : BaseTest() {
 
   @Test
   fun testShowExpirationDate() {
-    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
     assertNotNull(details.expiration)
     val expiration = requireNotNull(details.expiration)
     val expectedExpirationDate = "Jan 1, 2011"

@@ -15,7 +15,7 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 
@@ -59,7 +59,7 @@ data class PublicKeyEntity(
 ) : Parcelable {
 
   @Ignore
-  var pgpKeyDetails: PgpKeyDetails? = null
+  var pgpKeyRingDetails: PgpKeyRingDetails? = null
 
   @Ignore
   var isNotUsable: Boolean? = null
@@ -70,7 +70,7 @@ data class PublicKeyEntity(
     requireNotNull(parcel.readString()),
     requireNotNull(parcel.createByteArray())
   ) {
-    pgpKeyDetails = parcel.readParcelableViaExt(PgpKeyDetails::class.java)
+    pgpKeyRingDetails = parcel.readParcelableViaExt(PgpKeyRingDetails::class.java)
     isNotUsable = parcel.readValue(Boolean::class.java.classLoader) as? Boolean
   }
 
@@ -84,7 +84,7 @@ data class PublicKeyEntity(
     if (recipient != other.recipient) return false
     if (fingerprint != other.fingerprint) return false
     if (!publicKey.contentEquals(other.publicKey)) return false
-    if (pgpKeyDetails != other.pgpKeyDetails) return false
+    if (pgpKeyRingDetails != other.pgpKeyRingDetails) return false
     if (isNotUsable != other.isNotUsable) return false
 
     return true
@@ -95,7 +95,7 @@ data class PublicKeyEntity(
     result = 31 * result + recipient.hashCode()
     result = 31 * result + fingerprint.hashCode()
     result = 31 * result + publicKey.contentHashCode()
-    result = 31 * result + (pgpKeyDetails?.hashCode() ?: 0)
+    result = 31 * result + (pgpKeyRingDetails?.hashCode() ?: 0)
     result = 31 * result + (isNotUsable?.hashCode() ?: 0)
     return result
   }
@@ -106,7 +106,7 @@ data class PublicKeyEntity(
       parcel.writeString(recipient)
       parcel.writeString(fingerprint)
       parcel.writeByteArray(publicKey)
-      parcel.writeParcelable(pgpKeyDetails, flags)
+      parcel.writeParcelable(pgpKeyRingDetails, flags)
       parcel.writeValue(isNotUsable)
     }
 

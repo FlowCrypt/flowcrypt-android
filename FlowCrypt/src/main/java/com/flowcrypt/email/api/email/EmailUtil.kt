@@ -36,7 +36,7 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -200,19 +200,22 @@ class EmailUtil {
     /**
      * Generate [AttachmentInfo] using the given key details.
      *
-     * @param pgpKeyDetails The key details
+     * @param pgpKeyRingDetails The key details
      * @return A generated [AttachmentInfo].
      */
-    fun genAttInfoFromPubKey(pgpKeyDetails: PgpKeyDetails?, email: String): AttachmentInfo? {
-      if (pgpKeyDetails != null) {
-        val fileName = "0x" + pgpKeyDetails.fingerprint.uppercase() + ".asc"
+    fun genAttInfoFromPubKey(
+      pgpKeyRingDetails: PgpKeyRingDetails?,
+      email: String
+    ): AttachmentInfo? {
+      if (pgpKeyRingDetails != null) {
+        val fileName = "0x" + pgpKeyRingDetails.fingerprint.uppercase() + ".asc"
 
-        return if (!TextUtils.isEmpty(pgpKeyDetails.publicKey)) {
+        return if (!TextUtils.isEmpty(pgpKeyRingDetails.publicKey)) {
           val attachmentInfoBuilder = AttachmentInfo.Builder()
 
           attachmentInfoBuilder.name = fileName
-          attachmentInfoBuilder.encodedSize = pgpKeyDetails.publicKey.length.toLong()
-          attachmentInfoBuilder.rawData = pgpKeyDetails.publicKey.toByteArray()
+          attachmentInfoBuilder.encodedSize = pgpKeyRingDetails.publicKey.length.toLong()
+          attachmentInfoBuilder.rawData = pgpKeyRingDetails.publicKey.toByteArray()
           attachmentInfoBuilder.type = Constants.MIME_TYPE_PGP_KEY
           attachmentInfoBuilder.email = email
           attachmentInfoBuilder.id = generateContentId()

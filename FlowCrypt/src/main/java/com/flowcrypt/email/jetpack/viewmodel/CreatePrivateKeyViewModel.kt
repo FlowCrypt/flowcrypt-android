@@ -10,9 +10,9 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,11 +27,11 @@ import org.pgpainless.key.util.UserId
  * @author Denys Bondarenko
  */
 class CreatePrivateKeyViewModel(application: Application) : RoomBasicViewModel(application) {
-  private val createPrivateKeyMutableStateFlow: MutableStateFlow<Result<PgpKeyDetails>> =
+  private val createPrivateKeyMutableStateFlow: MutableStateFlow<Result<PgpKeyRingDetails>> =
     MutableStateFlow(Result.none())
-  val createPrivateKeyStateFlow: StateFlow<Result<PgpKeyDetails>> =
+  val createPrivateKeyStateFlow: StateFlow<Result<PgpKeyRingDetails>> =
     createPrivateKeyMutableStateFlow.asStateFlow()
-  private val controlledRunnerForKeyCreation = ControlledRunner<Result<PgpKeyDetails>>()
+  private val controlledRunnerForKeyCreation = ControlledRunner<Result<PgpKeyRingDetails>>()
 
   fun createPrivateKey(
     accountEntity: AccountEntity,
@@ -44,19 +44,20 @@ class CreatePrivateKeyViewModel(application: Application) : RoomBasicViewModel(a
         controlledRunnerForKeyCreation.cancelPreviousThenRun {
           return@cancelPreviousThenRun withContext(Dispatchers.IO) {
             try {
-              val pgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+              val pgpKeyRingDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
                 UserId.nameAndEmail(
                   accountEntity.displayName
                     ?: accountEntity.email, accountEntity.email
                 ), passphrase
-              ).toPgpKeyDetails(accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false)
-                .copy(
-                  passphraseType = passphraseType,
-                  tempPassphrase = passphrase.toCharArray(),
-                  importSourceType = KeyImportDetails.SourceType.NEW
-                )
+              ).toPgpKeyRingDetails(
+                accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
+              ).copy(
+                passphraseType = passphraseType,
+                tempPassphrase = passphrase.toCharArray(),
+                importSourceType = KeyImportDetails.SourceType.NEW
+              )
 
-              Result.success(pgpKeyDetails)
+              Result.success(pgpKeyRingDetails)
             } catch (e: Exception) {
               Result.exception(e)
             }

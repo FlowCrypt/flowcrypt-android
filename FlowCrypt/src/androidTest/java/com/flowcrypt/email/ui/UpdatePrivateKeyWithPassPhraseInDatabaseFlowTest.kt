@@ -65,7 +65,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.privateKeyDetailsFragment,
       extras = PrivateKeyDetailsFragmentArgs(
-        fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+        fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
       ).toBundle()
     )
   )
@@ -86,7 +86,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
               name = "Default"
             ),
             listOf(
-              addPrivateKeyToDatabaseRule.pgpKeyDetails
+              addPrivateKeyToDatabaseRule.pgpKeyRingDetails
                 .toPublicKeyEntity(addAccountToDatabaseRule.account.email)
                 .copy(id = 1)
             )
@@ -100,7 +100,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
   @Test
   fun testUpdateSuccess() {
     val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
-    val originalKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    val originalKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
     val updatedKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_fisrtKey_prv_default_mod_05_22_2023.asc"
     )
@@ -183,7 +183,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
   @Test
   fun testMissingExpectedEmailAddress() {
     checkWarningMessage(
-      pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
         "pgp/denbond7@flowcrypt.test_prv_strong_primary.asc"
       ),
       warningMessage = getResString(
@@ -196,7 +196,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
   @Test
   fun testUseTheSamePrivateKey() {
     checkWarningMessage(
-      pgpKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails,
+      pgpKeyRingDetails = addPrivateKeyToDatabaseRule.pgpKeyRingDetails,
       warningMessage = getResString(
         R.string.you_are_trying_to_import_the_same_key
       )
@@ -206,7 +206,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
   @Test
   fun testFingerprintMismatch() {
     checkWarningMessage(
-      pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
         "pgp/default@flowcrypt.test_secondKey_prv_default.asc"
       ),
       warningMessage = getResString(
@@ -218,15 +218,15 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
   @Test
   fun testUseOlderPrivateKey() {
     checkWarningMessage(
-      pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
         "pgp/default@flowcrypt.test_fisrtKey_prv_default.asc"
       ),
       warningMessage = getResString(R.string.warning_existing_key_has_more_recent_signature)
     )
   }
 
-  private fun checkWarningMessage(pgpKeyDetails: PgpKeyDetails, warningMessage: String) {
-    openUpdatePrivateKeyScreenAndTypeKey(pgpKeyDetails.privateKey)
+  private fun checkWarningMessage(pgpKeyRingDetails: PgpKeyDetails, warningMessage: String) {
+    openUpdatePrivateKeyScreenAndTypeKey(pgpKeyRingDetails.privateKey)
 
     //check 'use this key' is not visible
     onView(withId(android.R.id.button1))

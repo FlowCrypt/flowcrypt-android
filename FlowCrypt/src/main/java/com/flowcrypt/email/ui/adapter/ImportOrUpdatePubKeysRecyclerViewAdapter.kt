@@ -17,7 +17,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visible
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -28,7 +28,7 @@ import com.flowcrypt.email.util.UIUtil
  */
 class ImportOrUpdatePubKeysRecyclerViewAdapter(
   private val pubKeyActionsListener: PubKeyActionsListener? = null
-) : ListAdapter<PgpKeyDetails, ImportOrUpdatePubKeysRecyclerViewAdapter.ViewHolder>
+) : ListAdapter<PgpKeyRingDetails, ImportOrUpdatePubKeysRecyclerViewAdapter.ViewHolder>
   (DiffUtilCallBack()) {
 
   val existingPubKeyEntities = mutableMapOf<String, PublicKeyEntity>()
@@ -63,17 +63,17 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
     private val buttonUpdateContact: Button = itemView.findViewById(R.id.buttonUpdateContact)
 
     fun bind(
-      pgpKeyDetails: PgpKeyDetails,
+      pgpKeyRingDetails: PgpKeyRingDetails,
       pubKeyActionsListener: PubKeyActionsListener?
     ) {
       val context = itemView.context
-      val address = pgpKeyDetails.getPrimaryInternetAddress()?.address?.lowercase() ?: ""
-      val existingPubKeyEntity = existingPubKeyEntities[address + pgpKeyDetails.fingerprint]
+      val address = pgpKeyRingDetails.getPrimaryInternetAddress()?.address?.lowercase() ?: ""
+      val existingPubKeyEntity = existingPubKeyEntities[address + pgpKeyRingDetails.fingerprint]
 
       buttonUpdateContact.visibility = View.GONE
       buttonSaveContact.visibility = View.GONE
 
-      if (pgpKeyDetails.getPrimaryInternetAddress()?.address?.isNotEmpty() == true) {
+      if (pgpKeyRingDetails.getPrimaryInternetAddress()?.address?.isNotEmpty() == true) {
         textViewKeyOwnerTemplate.text = context.getString(
           R.string.template_message_part_public_key_owner,
           address
@@ -83,11 +83,11 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
       UIUtil.setHtmlTextToTextView(
         context.getString(
           R.string.template_message_part_public_key_fingerprint,
-          GeneralUtil.doSectionsInText(" ", pgpKeyDetails.fingerprint, 4)
+          GeneralUtil.doSectionsInText(" ", pgpKeyRingDetails.fingerprint, 4)
         ), textViewFingerprintTemplate
       )
 
-      if (!pgpKeyDetails.usableForEncryption) {
+      if (!pgpKeyRingDetails.usableForEncryption) {
         textViewStatus.visible()
         textViewStatus.text = context.getString(R.string.cannot_be_used_for_encryption)
         textViewStatus.setTextColor(UIUtil.getColor(context, R.color.red))
@@ -97,12 +97,12 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
       }
 
       if (existingPubKeyEntity != null) {
-        if (pgpKeyDetails.isNewerThan(existingPubKeyEntity.pgpKeyDetails)) {
+        if (pgpKeyRingDetails.isNewerThan(existingPubKeyEntity.pgpKeyRingDetails)) {
           buttonUpdateContact.visible()
           buttonUpdateContact.setOnClickListener {
             if (GeneralUtil.isEmailValid(address)) {
               pubKeyActionsListener?.onUpdatePubKeyClick(
-                pgpKeyDetails = pgpKeyDetails,
+                pgpKeyRingDetails = pgpKeyRingDetails,
                 existingPublicKeyEntity = existingPubKeyEntity
               )
             }
@@ -116,7 +116,7 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
         buttonSaveContact.setOnClickListener {
           if (GeneralUtil.isEmailValid(address)) {
             pubKeyActionsListener?.onSavePubKeyClick(
-              pgpKeyDetails = pgpKeyDetails
+              pgpKeyRingDetails = pgpKeyRingDetails
             )
           }
         }
@@ -124,21 +124,21 @@ class ImportOrUpdatePubKeysRecyclerViewAdapter(
     }
   }
 
-  class DiffUtilCallBack : DiffUtil.ItemCallback<PgpKeyDetails>() {
-    override fun areItemsTheSame(oldItem: PgpKeyDetails, newItem: PgpKeyDetails) =
+  class DiffUtilCallBack : DiffUtil.ItemCallback<PgpKeyRingDetails>() {
+    override fun areItemsTheSame(oldItem: PgpKeyRingDetails, newItem: PgpKeyRingDetails) =
       oldItem.fingerprint == newItem.fingerprint
 
-    override fun areContentsTheSame(oldItem: PgpKeyDetails, newItem: PgpKeyDetails) =
+    override fun areContentsTheSame(oldItem: PgpKeyRingDetails, newItem: PgpKeyRingDetails) =
       oldItem == newItem
   }
 
   interface PubKeyActionsListener {
     fun onSavePubKeyClick(
-      pgpKeyDetails: PgpKeyDetails
+      pgpKeyRingDetails: PgpKeyRingDetails
     )
 
     fun onUpdatePubKeyClick(
-      pgpKeyDetails: PgpKeyDetails,
+      pgpKeyRingDetails: PgpKeyRingDetails,
       existingPublicKeyEntity: PublicKeyEntity
     )
   }

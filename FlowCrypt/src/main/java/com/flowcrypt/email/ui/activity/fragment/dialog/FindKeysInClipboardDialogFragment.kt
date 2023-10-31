@@ -107,7 +107,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
 
   private fun setupParseKeysViewModel() {
     launchAndRepeatWithLifecycle {
-      parseKeysViewModel.pgpKeyDetailsListStateFlow.collect {
+      parseKeysViewModel.pgpKeyRingDetailsListStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
             countingIdlingResource?.incrementSafely(this@FindKeysInClipboardDialogFragment)

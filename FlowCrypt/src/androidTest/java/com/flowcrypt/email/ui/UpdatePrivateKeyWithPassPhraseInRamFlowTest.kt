@@ -70,7 +70,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.privateKeyDetailsFragment,
       extras = PrivateKeyDetailsFragmentArgs(
-        fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+        fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
       ).toBundle()
     )
   )
@@ -91,7 +91,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
               name = "Default"
             ),
             listOf(
-              addPrivateKeyToDatabaseRule.pgpKeyDetails
+              addPrivateKeyToDatabaseRule.pgpKeyRingDetails
                 .toPublicKeyEntity(addAccountToDatabaseRule.account.email)
                 .copy(id = 1)
             )
@@ -105,7 +105,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
   @Test
   fun testUpdateSuccess() {
     val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
-    val originalKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    val originalKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
     val updatedKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_fisrtKey_prv_default_mod_05_22_2023.asc"
     )

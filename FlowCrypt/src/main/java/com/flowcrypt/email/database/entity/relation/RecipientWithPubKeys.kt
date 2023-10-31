@@ -30,11 +30,11 @@ data class RecipientWithPubKeys(
   }
 
   fun hasNotExpiredPubKey(): Boolean {
-    return publicKeys.any { it.pgpKeyDetails?.isExpired?.not() ?: false }
+    return publicKeys.any { it.pgpKeyRingDetails?.isExpired?.not() ?: false }
   }
 
   fun hasNotRevokedPubKey(): Boolean {
-    return publicKeys.any { it.pgpKeyDetails?.isRevoked?.not() ?: false }
+    return publicKeys.any { it.pgpKeyRingDetails?.isRevoked?.not() ?: false }
   }
 
   fun hasUsablePubKey(): Boolean {

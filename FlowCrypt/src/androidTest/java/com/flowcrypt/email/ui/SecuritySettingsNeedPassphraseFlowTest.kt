@@ -69,7 +69,7 @@ class SecuritySettingsNeedPassphraseFlowTest : BaseTest() {
         )
       )
 
-    val fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+    val fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
     val fingerprintFormatted = GeneralUtil.doSectionsInText(
       originalString = fingerprint, groupSize = 4
     )

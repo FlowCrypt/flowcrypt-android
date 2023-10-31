@@ -5,9 +5,10 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 
 /**
  * @author Denys Bondarenko
  */
-class SavePrivateKeyToDatabaseException(val keys: List<PgpKeyDetails>, e: Exception) : Exception(e)
+class SavePrivateKeyToDatabaseException(val keys: List<PgpKeyRingDetails>, e: Exception) :
+  Exception(e)

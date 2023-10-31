@@ -20,7 +20,7 @@ import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
 import com.flowcrypt.email.util.exception.ApiException
@@ -339,7 +339,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
         for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
           try {
             val result = PgpKey.parseKeys(source = publicKeyEntity.publicKey).pgpKeyDetailsList
-            publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+            publicKeyEntity.pgpKeyRingDetails = result.firstOrNull()
           } catch (e: Exception) {
             e.printStackTrace()
             publicKeyEntity.isNotUsable = true
@@ -349,7 +349,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       }
 
     private suspend fun getPublicKeysFromRemoteServersInternal(email: String):
-        List<PgpKeyDetails>? = withContext(Dispatchers.IO) {
+        List<PgpKeyRingDetails>? = withContext(Dispatchers.IO) {
       try {
         val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
         if (!lookUpCandidates.containsKey(email)) {
@@ -400,18 +400,19 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
 
     private suspend fun updateCachedInfoWithPubKeysFromLookUp(
-      cachedRecipientEntity: RecipientWithPubKeys, fetchedPgpKeyDetailsList: List<PgpKeyDetails>
+      cachedRecipientEntity: RecipientWithPubKeys,
+      fetchedPgpKeyRingDetailsList: List<PgpKeyRingDetails>
     ) = withContext(Dispatchers.IO) {
       val email = cachedRecipientEntity.recipient.email
       val uniqueMapOfFetchedPubKeys =
-        deduplicateFetchedPubKeysByFingerprint(fetchedPgpKeyDetailsList)
+        deduplicateFetchedPubKeysByFingerprint(fetchedPgpKeyRingDetailsList)
 
       val deDuplicatedListOfFetchedPubKeys = uniqueMapOfFetchedPubKeys.values
       for (fetchedPgpKeyDetails in deDuplicatedListOfFetchedPubKeys) {
         val existingPublicKeyEntity = cachedRecipientEntity.publicKeys.firstOrNull {
           it.fingerprint == fetchedPgpKeyDetails.fingerprint
         }
-        val existingPgpKeyDetails = existingPublicKeyEntity?.pgpKeyDetails
+        val existingPgpKeyDetails = existingPublicKeyEntity?.pgpKeyRingDetails
         if (existingPgpKeyDetails != null) {
           val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
           if (!isExistingKeyRevoked && fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
@@ -427,11 +428,11 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
 
     private fun deduplicateFetchedPubKeysByFingerprint(
-      fetchedPgpKeyDetailsList: List<PgpKeyDetails>
-    ): Map<String, PgpKeyDetails> {
-      val uniqueMapOfFetchedPubKeys = mutableMapOf<String, PgpKeyDetails>()
+      fetchedPgpKeyRingDetailsList: List<PgpKeyRingDetails>
+    ): Map<String, PgpKeyRingDetails> {
+      val uniqueMapOfFetchedPubKeys = mutableMapOf<String, PgpKeyRingDetails>()
 
-      for (fetchedPgpKeyDetails in fetchedPgpKeyDetailsList) {
+      for (fetchedPgpKeyDetails in fetchedPgpKeyRingDetailsList) {
         val fetchedFingerprint = fetchedPgpKeyDetails.fingerprint
         val alreadyEncounteredFetchedPgpKeyDetails = uniqueMapOfFetchedPubKeys[fetchedFingerprint]
         if (alreadyEncounteredFetchedPgpKeyDetails == null) {

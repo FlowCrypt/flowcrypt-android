@@ -126,7 +126,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
   private val pubKeyAttachmentInfo = requireNotNull(
     EmailUtil.genAttInfoFromPubKey(
-      addPrivateKeyToDatabaseRule.pgpKeyDetails,
+      addPrivateKeyToDatabaseRule.pgpKeyRingDetails,
       addPrivateKeyToDatabaseRule.accountEntity.email
     )
   )

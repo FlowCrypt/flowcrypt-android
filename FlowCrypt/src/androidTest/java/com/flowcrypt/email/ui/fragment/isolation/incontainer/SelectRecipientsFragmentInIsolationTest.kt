@@ -78,7 +78,7 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
         RecipientWithPubKeys(
           RecipientEntity(email = ComposeScreenDisallowUpdateRevokedKeyFlowTest.RECIPIENT_WITH_REVOKED_KEY),
           listOf(
-            addPrivateKeyToDatabaseRule.pgpKeyDetails.toPublicKeyEntity(
+            addPrivateKeyToDatabaseRule.pgpKeyRingDetails.toPublicKeyEntity(
               ComposeScreenDisallowUpdateRevokedKeyFlowTest.RECIPIENT_WITH_REVOKED_KEY
             ).copy(id = 12)
           )

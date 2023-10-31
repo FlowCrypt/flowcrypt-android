@@ -64,7 +64,7 @@ import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
@@ -1154,7 +1154,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateFromAddressAdapter(list: List<PGPSecretKeyRing>) {
-    val setOfUsers = list.map { keyRing -> keyRing.toPgpKeyDetails().mimeAddresses }
+    val setOfUsers = list.map { keyRing -> keyRing.toPgpKeyRingDetails().mimeAddresses }
       .flatten()
       .map { mimeAddress -> mimeAddress.address }
 

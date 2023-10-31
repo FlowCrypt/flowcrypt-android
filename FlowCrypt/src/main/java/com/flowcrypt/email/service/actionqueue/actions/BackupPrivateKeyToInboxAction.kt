@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -41,18 +41,19 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(
     val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
     val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
     val keysStorage = KeysStorageImpl.getInstance(context)
-    val pgpKeyDetails = keysStorage
+    val pgpKeyRingDetails = keysStorage
       .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)
-      ?.toPgpKeyDetails(account.clientConfiguration?.shouldHideArmorMeta() ?: false) ?: return
+      ?.toPgpKeyRingDetails(account.clientConfiguration?.shouldHideArmorMeta() ?: false) ?: return
 
     val encryptedKey: String
-    if (pgpKeyDetails.isFullyEncrypted) {
-      encryptedKey = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key")
+    if (pgpKeyRingDetails.isFullyEncrypted) {
+      encryptedKey = pgpKeyRingDetails.privateKey ?: throw IllegalArgumentException("empty key")
     } else {
       try {
-        val passphrase = keysStorage.getPassphraseByFingerprint(pgpKeyDetails.fingerprint) ?: return
+        val passphrase =
+          keysStorage.getPassphraseByFingerprint(pgpKeyRingDetails.fingerprint) ?: return
         encryptedKey = PgpKey.encryptKey(
-          armored = pgpKeyDetails.privateKey ?: throw IllegalArgumentException("empty key"),
+          armored = pgpKeyRingDetails.privateKey ?: throw IllegalArgumentException("empty key"),
           passphrase = passphrase
         )
       } catch (e: Exception) {

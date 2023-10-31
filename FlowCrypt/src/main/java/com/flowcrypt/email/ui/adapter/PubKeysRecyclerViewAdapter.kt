@@ -8,14 +8,16 @@ package com.flowcrypt.email.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
+import com.flowcrypt.email.databinding.PublicKeyItemBinding
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
+import org.pgpainless.algorithm.KeyFlag
 import java.util.Date
 
 /**
@@ -24,42 +26,52 @@ import java.util.Date
 class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyActionsListener) :
   ListAdapter<PublicKeyEntity, PubKeysRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
 
-  private var dateFormat: java.text.DateFormat? = null
-
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    val view =
+    return ViewHolder(
       LayoutInflater.from(parent.context).inflate(R.layout.public_key_item, parent, false)
-    return ViewHolder(view)
+    )
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    if (dateFormat == null) {
-      dateFormat = DateTimeUtil.getPgpDateFormat(holder.itemView.context)
-    }
-
     getItem(position)?.let { holder.bind(it, onPubKeyActionsListener) }
   }
 
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    private val tVPrimaryUser: TextView = itemView.findViewById(R.id.tVPrimaryUser)
-    private val tVFingerprint: TextView = itemView.findViewById(R.id.tVFingerprint)
-    private val tVCreationDate: TextView = itemView.findViewById(R.id.tVCreationDate)
-
+    val binding = PublicKeyItemBinding.bind(itemView)
+    private val dateFormat = DateTimeUtil.getPgpDateFormat(itemView.context)
     fun bind(
       publicKeyEntity: PublicKeyEntity,
       onPubKeyActionsListener: OnPubKeyActionsListener?
     ) {
-      tVPrimaryUser.text = publicKeyEntity.pgpKeyDetails?.getUserIdsAsSingleString()
-      tVFingerprint.text = GeneralUtil.doSectionsInText(
+      binding.tVPrimaryUser.text = publicKeyEntity.pgpKeyRingDetails?.getUserIdsAsSingleString()
+      binding.tVFingerprint.text = GeneralUtil.doSectionsInText(
         originalString = publicKeyEntity.fingerprint, groupSize = 4
       )
 
-      val timestamp = publicKeyEntity.pgpKeyDetails?.created ?: 0
+      val timestamp = publicKeyEntity.pgpKeyRingDetails?.created ?: 0
       if (timestamp != -1L) {
-        tVCreationDate.text = dateFormat?.format(Date(timestamp))
+        binding.tVCreationDate.text = dateFormat.format(Date(timestamp))
       } else {
-        tVCreationDate.text = null
+        binding.tVCreationDate.text = null
       }
+
+      binding.imageViewAuthFlag.visibleOrGone(
+        publicKeyEntity.pgpKeyRingDetails?.hasPossibility(
+          KeyFlag.AUTHENTICATION
+        ) == true
+      )
+      binding.imageViewEncryptionFlag.visibleOrGone(
+        publicKeyEntity.pgpKeyRingDetails?.hasPossibility(
+          KeyFlag.ENCRYPT_COMMS
+        ) == true || publicKeyEntity.pgpKeyRingDetails?.hasPossibility(
+          KeyFlag.ENCRYPT_STORAGE
+        ) == true
+      )
+      binding.imageViewSignFlag.visibleOrGone(
+        publicKeyEntity.pgpKeyRingDetails?.hasPossibility(
+          KeyFlag.SIGN_DATA
+        ) == true
+      )
 
       itemView.setOnClickListener {
         onPubKeyActionsListener?.onPubKeyClick(publicKeyEntity)

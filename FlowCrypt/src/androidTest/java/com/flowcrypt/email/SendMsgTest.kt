@@ -106,7 +106,7 @@ class SendMsgTest {
         name = "Default"
       ),
       listOf(
-        addPrivateKeyToDatabaseRule.pgpKeyDetails
+        addPrivateKeyToDatabaseRule.pgpKeyRingDetails
           .toPublicKeyEntity(addAccountToDatabaseRule.account.email)
           .copy(id = 1)
       )
@@ -288,7 +288,7 @@ class SendMsgTest {
         val buffer = ByteArrayOutputStream()
 
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
-          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
+          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
         )
 
         val messageMetadata = getMessageMetadata(
@@ -323,7 +323,7 @@ class SendMsgTest {
       delay(3000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
-          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
+          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
         )
 
         val multipart = mimeMessage.content as MimeMultipart
@@ -402,7 +402,7 @@ class SendMsgTest {
       delay(5000)
       checkExistingMsgOnServer(sentFolder.fullName, outgoingMessageInfo) { _, mimeMessage ->
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
-          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
+          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
         )
 
         val multipart = mimeMessage.content as MimeMultipart
@@ -466,7 +466,7 @@ class SendMsgTest {
         val buffer = ByteArrayOutputStream()
 
         val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
-          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey)
+          requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
         )
 
         val messageMetadata = getMessageMetadata(
@@ -486,7 +486,7 @@ class SendMsgTest {
             .publicKeys
             .asSequence()
             .toList()[1].keyID,
-          PgpKey.parseKeys(addPrivateKeyToDatabaseRule.pgpKeyDetails.publicKey)
+          PgpKey.parseKeys(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey)
             .pgpKeyRingCollection
             .pgpPublicKeyRingCollection
             .first()

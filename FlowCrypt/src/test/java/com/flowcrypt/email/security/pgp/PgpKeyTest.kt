@@ -8,7 +8,7 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.TestUtil
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
@@ -42,7 +43,7 @@ class PgpKeyTest {
 
   @Test
   fun testParseKeysWithNormalKey() {
-    val expected = PgpKeyDetails(
+    val expected = PgpKeyRingDetails(
       isFullyDecrypted = true,
       isFullyEncrypted = false,
       usableForEncryption = true,
@@ -63,7 +64,13 @@ class PgpKeyTest {
       created = 1543592161000L,
       lastModified = 1543592161000L,
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
-      primaryKeyId = 4193120410270338832
+      primaryKeyId = 4193120410270338832,
+      possibilities = listOf(
+        KeyFlag.ENCRYPT_COMMS.flag,
+        KeyFlag.ENCRYPT_STORAGE.flag,
+        KeyFlag.SIGN_DATA.flag,
+        KeyFlag.CERTIFY_OTHER.flag,
+      )
     )
     val actual = PgpKey.parseKeys(source = TestKeys.KEYS["rsa1"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
@@ -72,7 +79,7 @@ class PgpKeyTest {
 
   @Test
   fun testParseKeysWithExpiredKey() {
-    val expected = PgpKeyDetails(
+    val expected = PgpKeyRingDetails(
       isFullyDecrypted = true,
       isFullyEncrypted = false,
       isRevoked = false,
@@ -94,7 +101,13 @@ class PgpKeyTest {
       lastModified = 1594847701000L,
       expiration = 1594847702000L,
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
-      primaryKeyId = -4691725871015490871
+      primaryKeyId = -4691725871015490871,
+      possibilities = listOf(
+        KeyFlag.ENCRYPT_COMMS.flag,
+        KeyFlag.ENCRYPT_STORAGE.flag,
+        KeyFlag.SIGN_DATA.flag,
+        KeyFlag.CERTIFY_OTHER.flag,
+      )
     )
     val actual = PgpKey.parseKeys(source = TestKeys.KEYS["expired"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
