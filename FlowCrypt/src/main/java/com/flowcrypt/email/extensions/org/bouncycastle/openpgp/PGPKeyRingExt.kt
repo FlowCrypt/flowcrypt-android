@@ -81,7 +81,7 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
       addAll(
         keyRingInfo.publicKeys.flatMap { keyRingInfo.getKeyFlagsOf(it.keyID) }.toSet()
           .map { it.flag })
-    }.toList()
+    }
   )
 }
 

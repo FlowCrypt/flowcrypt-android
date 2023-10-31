@@ -65,7 +65,7 @@ class PgpKeyTest {
       lastModified = 1543592161000L,
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
       primaryKeyId = 4193120410270338832,
-      possibilities = listOf(
+      possibilities = setOf(
         KeyFlag.ENCRYPT_COMMS.flag,
         KeyFlag.ENCRYPT_STORAGE.flag,
         KeyFlag.SIGN_DATA.flag,
@@ -83,7 +83,7 @@ class PgpKeyTest {
       isFullyDecrypted = true,
       isFullyEncrypted = false,
       isRevoked = false,
-      usableForEncryption = true,
+      usableForEncryption = false,
       privateKey = null,
       publicKey = loadResourceAsString(
         "keys/6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9.public.gpg-key"
@@ -102,7 +102,7 @@ class PgpKeyTest {
       expiration = 1594847702000L,
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
       primaryKeyId = -4691725871015490871,
-      possibilities = listOf(
+      possibilities = setOf(
         KeyFlag.ENCRYPT_COMMS.flag,
         KeyFlag.ENCRYPT_STORAGE.flag,
         KeyFlag.SIGN_DATA.flag,

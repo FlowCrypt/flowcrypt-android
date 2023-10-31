@@ -44,7 +44,7 @@ data class PgpKeyRingDetails constructor(
   @Expose val expiration: Long? = null,
   @Expose val algo: Algo,
   @Expose val primaryKeyId: Long,
-  @Expose val possibilities: List<Int>,
+  @Expose val possibilities: Set<Int>,
   var tempPassphrase: CharArray? = null,
   var passphraseType: KeyEntity.PassphraseType? = null,
   var importSourceType: KeyImportDetails.SourceType? = null
