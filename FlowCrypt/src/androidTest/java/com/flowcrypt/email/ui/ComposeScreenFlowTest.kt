@@ -54,7 +54,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
@@ -107,7 +107,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
   private val defaultMsgEncryptionType: MessageEncryptionType = MessageEncryptionType.ENCRYPTED
 
-  private val pgpKeyRingDetails: PgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+  private val pgpKeyRingDetails: PgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
     "pgp/not_attested_user@flowcrypt.test_prv_default.asc"
   )
 

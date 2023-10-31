@@ -32,7 +32,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -114,7 +114,7 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
     }
   }
 
-  private fun testImportUnprotectedPrivateKey(preparation: (pgpKeyRingDetails: PgpKeyDetails) -> Unit) {
+  private fun testImportUnprotectedPrivateKey(preparation: (pgpKeyRingDetails: PgpKeyRingDetails) -> Unit) {
     val pgpKeyRingDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/unprotected@flowcrypt.test_prv.asc")
 

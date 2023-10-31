@@ -31,7 +31,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
@@ -225,7 +225,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
     )
   }
 
-  private fun checkWarningMessage(pgpKeyRingDetails: PgpKeyDetails, warningMessage: String) {
+  private fun checkWarningMessage(pgpKeyRingDetails: PgpKeyRingDetails, warningMessage: String) {
     openUpdatePrivateKeyScreenAndTypeKey(pgpKeyRingDetails.privateKey)
 
     //check 'use this key' is not visible

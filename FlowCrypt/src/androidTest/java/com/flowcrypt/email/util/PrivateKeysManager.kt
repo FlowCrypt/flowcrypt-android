@@ -11,7 +11,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import org.pgpainless.key.collection.PGPKeyRingCollection
 
@@ -35,7 +35,7 @@ class PrivateKeysManager {
 
     fun saveKeyToDatabase(
       accountEntity: AccountEntity,
-      pgpKeyRingDetails: PgpKeyDetails,
+      pgpKeyRingDetails: PgpKeyRingDetails,
       passphrase: String?,
       sourceType: KeyImportDetails.SourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
@@ -67,7 +67,7 @@ class PrivateKeysManager {
       savePubKeyToDatabase(getPgpKeyDetailsFromAssets(assetsPath))
     }
 
-    fun savePubKeyToDatabase(pgpKeyRingDetails: PgpKeyDetails) {
+    fun savePubKeyToDatabase(pgpKeyRingDetails: PgpKeyRingDetails) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val email = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()).address.lowercase()
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
@@ -82,14 +82,14 @@ class PrivateKeysManager {
     fun getPgpKeyDetailsFromAssets(
       assetsPath: String,
       onlyPrivate: Boolean = false
-    ): PgpKeyDetails {
+    ): PgpKeyRingDetails {
       return getPgpKeyDetailsListFromAssets(assetsPath, onlyPrivate).first()
     }
 
     fun getPgpKeyDetailsListFromAssets(
       assetsPath: String,
       onlyPrivate: Boolean = false
-    ): List<PgpKeyDetails> {
+    ): List<PgpKeyRingDetails> {
       val parsedCollections =
         PgpKey.parseKeys(TestGeneralUtil.readFileFromAssetsAsStream(assetsPath))
 
@@ -110,8 +110,8 @@ class PrivateKeysManager {
     fun getKeysFromAssets(
       keysPaths: Array<String>,
       onlyPrivate: Boolean = false
-    ): ArrayList<PgpKeyDetails> {
-      val privateKeys = ArrayList<PgpKeyDetails>()
+    ): ArrayList<PgpKeyRingDetails> {
+      val privateKeys = ArrayList<PgpKeyRingDetails>()
       keysPaths.forEach { path ->
         privateKeys.addAll(getPgpKeyDetailsListFromAssets(path, onlyPrivate))
       }
@@ -123,7 +123,7 @@ class PrivateKeysManager {
       deleteKey(accountEntity, pgpKeyRingDetails)
     }
 
-    fun deleteKey(accountEntity: AccountEntity, pgpKeyRingDetails: PgpKeyDetails) {
+    fun deleteKey(accountEntity: AccountEntity, pgpKeyRingDetails: PgpKeyRingDetails) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       pgpKeyRingDetails.fingerprint.let {
