@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.PublicKeyItemBinding
+import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -43,17 +44,44 @@ class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyAc
       publicKeyEntity: PublicKeyEntity,
       onPubKeyActionsListener: OnPubKeyActionsListener?
     ) {
-      binding.tVPrimaryUser.text = publicKeyEntity.pgpKeyRingDetails?.getUserIdsAsSingleString()
+      val context = itemView.context
+      val pgpKeyRingDetails = publicKeyEntity.pgpKeyRingDetails
+
+      binding.tVPrimaryUserOrEmail.text =
+        pgpKeyRingDetails?.primaryMimeAddress?.personal ?: pgpKeyRingDetails?.primaryUserId
+      pgpKeyRingDetails?.primaryMimeAddress?.address?.let {
+        binding.tVPrimaryUserEmail.visible()
+        binding.tVPrimaryUserEmail.text = it
+      }
+
+      binding.imageViewManyUserIds.visibleOrGone((pgpKeyRingDetails?.users?.size ?: 0) > 1)
       binding.tVFingerprint.text = GeneralUtil.doSectionsInText(
         originalString = publicKeyEntity.fingerprint, groupSize = 4
       )
 
-      val timestamp = publicKeyEntity.pgpKeyRingDetails?.created ?: 0
-      if (timestamp != -1L) {
-        binding.tVCreationDate.text = dateFormat.format(Date(timestamp))
+      val creationDate = pgpKeyRingDetails?.created ?: 0
+      if (creationDate != -1L) {
+        binding.tVCreationDate.text = dateFormat.format(Date(creationDate))
       } else {
         binding.tVCreationDate.text = null
       }
+
+      binding.textViewExpiration.text = pgpKeyRingDetails?.expiration?.let {
+        context.getString(R.string.key_expiration, dateFormat.format(Date(it)))
+      } ?: context.getString(
+        R.string.key_expiration,
+        context.getString(R.string.key_does_not_expire)
+      )
+
+      pgpKeyRingDetails?.let {
+        binding.textViewStatus.backgroundTintList =
+          pgpKeyRingDetails.getColorStateListDependsOnStatus(context)
+        binding.textViewStatus.setCompoundDrawablesWithIntrinsicBounds(
+          pgpKeyRingDetails.getStatusIcon(), 0, 0, 0
+        )
+        binding.textViewStatus.text = pgpKeyRingDetails.getStatusText(context)
+      }
+
 
       binding.imageViewAuthFlag.visibleOrGone(
         publicKeyEntity.pgpKeyRingDetails?.hasPossibility(

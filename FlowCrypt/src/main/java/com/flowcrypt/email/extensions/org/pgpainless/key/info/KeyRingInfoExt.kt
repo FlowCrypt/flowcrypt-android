@@ -18,6 +18,13 @@ fun KeyRingInfo.usableForEncryption(): Boolean {
       && primaryUserId?.isNotEmpty() == true
 }
 
+fun KeyRingInfo.usableForSigning(): Boolean {
+  return !publicKey.hasRevocation()
+      && !isExpired()
+      && isSigningCapable
+      && primaryUserId?.isNotEmpty() == true
+}
+
 fun KeyRingInfo.isExpired(): Boolean {
   return try {
     primaryKeyExpirationDate?.time?.let { System.currentTimeMillis() > it } ?: false

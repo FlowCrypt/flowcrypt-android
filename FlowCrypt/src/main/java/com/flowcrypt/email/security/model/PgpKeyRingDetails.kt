@@ -35,9 +35,11 @@ data class PgpKeyRingDetails constructor(
   @Expose val isFullyEncrypted: Boolean,
   @Expose val isRevoked: Boolean,
   @Expose val usableForEncryption: Boolean,
+  @Expose val usableForSigning: Boolean,
   @Expose @SerializedName("private") val privateKey: String?,
   @Expose @SerializedName("public") val publicKey: String,
   @Expose val users: List<String>,
+  @Expose val primaryUserId: String?,
   @Expose val ids: List<KeyId>,
   @Expose val created: Long,
   @Expose val lastModified: Long? = null,
@@ -59,6 +61,15 @@ data class PgpKeyRingDetails constructor(
 
   val mimeAddresses: List<InternetAddress>
     get() = parseMimeAddresses()
+
+  val primaryMimeAddress: InternetAddress?
+    get() = primaryUserId?.let {
+      try {
+        InternetAddress.parse(it).firstOrNull()
+      } catch (e: Exception) {
+        null
+      }
+    }
 
   val isPartiallyEncrypted: Boolean
     get() {
@@ -132,6 +143,7 @@ data class PgpKeyRingDetails constructor(
     return ContextCompat.getColorStateList(
       context, when {
         usableForEncryption -> R.color.colorPrimary
+        usableForSigning -> R.color.colorAccent
         isRevoked -> R.color.red
         isExpired || isPartiallyEncrypted -> R.color.orange
         else -> R.color.gray
@@ -148,7 +160,7 @@ data class PgpKeyRingDetails constructor(
 
   fun getStatusText(context: Context): String {
     return when {
-      usableForEncryption -> context.getString(R.string.valid)
+      usableForEncryption || usableForSigning -> context.getString(R.string.valid)
       isRevoked -> context.getString(R.string.revoked)
       isExpired -> context.getString(R.string.expired)
       isPartiallyEncrypted -> context.getString(R.string.not_valid)
@@ -170,9 +182,11 @@ data class PgpKeyRingDetails constructor(
     if (isFullyEncrypted != other.isFullyEncrypted) return false
     if (isRevoked != other.isRevoked) return false
     if (usableForEncryption != other.usableForEncryption) return false
+    if (usableForSigning != other.usableForSigning) return false
     if (privateKey != other.privateKey) return false
     if (publicKey != other.publicKey) return false
     if (users != other.users) return false
+    if (primaryUserId != other.primaryUserId) return false
     if (ids != other.ids) return false
     if (created != other.created) return false
     if (lastModified != other.lastModified) return false
@@ -195,9 +209,11 @@ data class PgpKeyRingDetails constructor(
     result = 31 * result + isFullyEncrypted.hashCode()
     result = 31 * result + isRevoked.hashCode()
     result = 31 * result + usableForEncryption.hashCode()
+    result = 31 * result + usableForSigning.hashCode()
     result = 31 * result + (privateKey?.hashCode() ?: 0)
     result = 31 * result + publicKey.hashCode()
     result = 31 * result + users.hashCode()
+    result = 31 * result + (primaryUserId?.hashCode() ?: 0)
     result = 31 * result + ids.hashCode()
     result = 31 * result + created.hashCode()
     result = 31 * result + (lastModified?.hashCode() ?: 0)
