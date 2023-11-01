@@ -558,7 +558,6 @@
     <string name="key_does_not_expire">Key does not expire</string>
     <string name="status">Status:</string>
     <string name="valid">valid</string>
-    <string name="undefined">undefined</string>
     <string name="not_valid">not valid</string>
     <string name="expired">expired</string>
     <string name="refreshing_keys_from_ekm_failed">Refreshing keys from EKM failed</string>

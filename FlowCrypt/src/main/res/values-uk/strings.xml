@@ -473,7 +473,6 @@
     <string name="key_does_not_expire">безстроково</string>
     <string name="status">Статус:</string>
     <string name="valid">валідний</string>
-    <string name="undefined">не визначений</string>
     <string name="not_valid">не валідний</string>
     <string name="expired">прострочений</string>
     <string name="refreshing_keys_from_ekm_failed">Не вдалося оновить ключі з сервера EKM</string>
