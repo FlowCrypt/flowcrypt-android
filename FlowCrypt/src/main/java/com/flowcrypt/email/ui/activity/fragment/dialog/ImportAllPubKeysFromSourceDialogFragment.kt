@@ -62,7 +62,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
 
   private fun setupImportPubKeysFromSourceSharedViewModel() {
     launchAndRepeatWithLifecycle {
-      importPubKeysFromSourceSharedViewModel.pgpKeyDetailsListStateFlow.collect {
+      importPubKeysFromSourceSharedViewModel.pgpKeyRingDetailsListStateFlow.collect {
         if (it.status == Result.Status.SUCCESS) {
           val pgpKeyDetailsList = it.data
           if (pgpKeyDetailsList.isNullOrEmpty()) {

@@ -30,7 +30,7 @@ import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.CANCELED
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.CHECKED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.NEGATIVE
@@ -61,10 +61,10 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     }
   }
 
-  private var originalKeys: MutableList<PgpKeyDetails> = mutableListOf()
-  private val unlockedKeys: MutableList<PgpKeyDetails> = mutableListOf()
-  private val remainingKeys: MutableList<PgpKeyDetails> = mutableListOf()
-  private var keyDetailsAndFingerprintsMap: MutableMap<PgpKeyDetails, String> = mutableMapOf()
+  private var originalKeys: MutableList<PgpKeyRingDetails> = mutableListOf()
+  private val unlockedKeys: MutableList<PgpKeyRingDetails> = mutableListOf()
+  private val remainingKeys: MutableList<PgpKeyRingDetails> = mutableListOf()
+  private var keyDetailsAndFingerprintsMap: MutableMap<PgpKeyRingDetails, String> = mutableMapOf()
 
   private var uniqueKeysCount: Int = 0
 
@@ -194,8 +194,8 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
               val resultKeys = it.data ?: emptyList()
               val sessionUnlockedKeys = resultKeys
                 .filter { checkResult ->
-                  checkResult.pgpKeyDetails.tempPassphrase?.isNotEmpty() == true
-                }.map { checkResult -> checkResult.pgpKeyDetails }
+                  checkResult.pgpKeyRingDetails.tempPassphrase?.isNotEmpty() == true
+                }.map { checkResult -> checkResult.pgpKeyRingDetails }
               if (sessionUnlockedKeys.isNotEmpty()) {
                 unlockedKeys.addAll(sessionUnlockedKeys)
 
@@ -297,33 +297,33 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   /**
    * Get a count of unique fingerprints.
    *
-   * @param map An input map of [PgpKeyDetails].
+   * @param map An input map of [PgpKeyRingDetails].
    * @return A count of unique fingerprints.
    */
-  private fun getCountOfUniqueKeys(map: Map<PgpKeyDetails, String>): Int {
+  private fun getCountOfUniqueKeys(map: Map<PgpKeyRingDetails, String>): Int {
     return getUniqueFingerprints(map).size
   }
 
   /**
    * Get a set of unique fingerprints.
    *
-   * @param map An input map of [PgpKeyDetails].
+   * @param map An input map of [PgpKeyRingDetails].
    * @return A list of unique fingerprints.
    */
-  private fun getUniqueFingerprints(map: Map<PgpKeyDetails, String>): Set<String> {
+  private fun getUniqueFingerprints(map: Map<PgpKeyRingDetails, String>): Set<String> {
     return HashSet(map.values)
   }
 
   /**
-   * Generate a map of incoming list of [PgpKeyDetails] objects where values
-   * will be a [PgpKeyDetails] fingerprints.
+   * Generate a map of incoming list of [PgpKeyRingDetails] objects where values
+   * will be a [PgpKeyRingDetails] fingerprints.
    *
-   * @param keys An incoming list of [PgpKeyDetails] objects.
+   * @param keys An incoming list of [PgpKeyRingDetails] objects.
    * @return A generated map.
    */
-  private fun prepareMapFromKeyDetailsList(keys: List<PgpKeyDetails>?):
-      MutableMap<PgpKeyDetails, String> {
-    val map = HashMap<PgpKeyDetails, String>()
+  private fun prepareMapFromKeyDetailsList(keys: List<PgpKeyRingDetails>?):
+      MutableMap<PgpKeyRingDetails, String> {
+    val map = HashMap<PgpKeyRingDetails, String>()
 
     keys?.let {
       for (keyDetails in it) {

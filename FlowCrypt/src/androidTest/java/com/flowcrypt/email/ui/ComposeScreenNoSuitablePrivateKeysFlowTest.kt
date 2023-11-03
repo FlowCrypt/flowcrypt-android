@@ -78,7 +78,7 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
     }
 
     assertEquals(
-      "There are no usable for encryption keys for " + addPrivateKeyToDatabaseRule.pgpKeyDetails.getPrimaryInternetAddress(),
+      "There are no usable for encryption keys for " + addPrivateKeyToDatabaseRule.pgpKeyRingDetails.getPrimaryInternetAddress(),
       exception.message
     )
 
@@ -100,7 +100,7 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
     )
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = addAccountToDatabaseRule.account,
-      pgpKeyDetails = details,
+      pgpKeyRingDetails = details,
       passphrase = null,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.RAM

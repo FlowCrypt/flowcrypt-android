@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model
 import android.os.Parcel
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.android.os.readParcelableViaExt
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.google.gson.annotations.Expose
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parceler
@@ -22,7 +22,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class PublicKeyMsgBlock constructor(
   @Expose override val content: String?,
-  @Expose val keyDetails: PgpKeyDetails? = null,
+  @Expose val keyDetails: PgpKeyRingDetails? = null,
   @Expose override val error: MsgBlockError? = null,
   @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
@@ -34,7 +34,7 @@ data class PublicKeyMsgBlock constructor(
 
   constructor(parcel: Parcel) : this(
     parcel.readString(),
-    parcel.readParcelableViaExt(PgpKeyDetails::class.java),
+    parcel.readParcelableViaExt(PgpKeyRingDetails::class.java),
     parcel.readParcelableViaExt(MsgBlockError::class.java),
     1 == parcel.readInt()
   ) {

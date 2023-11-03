@@ -21,7 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
@@ -112,7 +112,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
               for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
                 try {
                   val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
-                  publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+                  publicKeyEntity.pgpKeyRingDetails = result.firstOrNull()
                 } catch (e: Exception) {
                   e.printStackTrace()
                   publicKeyEntity.isNotUsable = true
@@ -152,15 +152,16 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun addRecipientsBasedOnPgpKeyDetails(pgpKeyDetails: PgpKeyDetails) {
+  fun addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails: PgpKeyRingDetails) {
     viewModelScope.launch {
-      val primaryAddress = pgpKeyDetails.mimeAddresses.firstOrNull()?.address ?: return@launch
+      val primaryAddress = pgpKeyRingDetails.mimeAddresses.firstOrNull()?.address ?: return@launch
       val contact = roomDatabase.recipientDao().getRecipientByEmailSuspend(primaryAddress)
       if (contact == null) {
         val isInserted =
           roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = primaryAddress)) > 0
         if (isInserted) {
-          roomDatabase.pubKeyDao().insertSuspend(pgpKeyDetails.toPublicKeyEntity(primaryAddress))
+          roomDatabase.pubKeyDao()
+            .insertSuspend(pgpKeyRingDetails.toPublicKeyEntity(primaryAddress))
         } else {
           val context: Context = getApplication()
           Toast.makeText(
@@ -172,15 +173,21 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun copyPubKeysToRecipient(recipientEntity: RecipientEntity, pgpKeyDetails: PgpKeyDetails) {
+  fun copyPubKeysToRecipient(
+    recipientEntity: RecipientEntity,
+    pgpKeyRingDetails: PgpKeyRingDetails
+  ) {
     viewModelScope.launch {
       addPublicKeyToRecipientMutableStateFlow.value = Result.loading()
       try {
         val existingPubKey = roomDatabase.pubKeyDao()
-          .getPublicKeyByRecipientAndFingerprint(recipientEntity.email, pgpKeyDetails.fingerprint)
+          .getPublicKeyByRecipientAndFingerprint(
+            recipientEntity.email,
+            pgpKeyRingDetails.fingerprint
+          )
         if (existingPubKey == null) {
           roomDatabase.pubKeyDao()
-            .insertSuspend(pgpKeyDetails.toPublicKeyEntity(recipientEntity.email))
+            .insertSuspend(pgpKeyRingDetails.toPublicKeyEntity(recipientEntity.email))
         }
         addPublicKeyToRecipientMutableStateFlow.value = Result.success(
           requireNotNull(
@@ -193,7 +200,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
   }
 
-  fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyDetails: PgpKeyDetails) {
+  fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyRingDetails: PgpKeyRingDetails) {
     viewModelScope.launch {
       updateRecipientPublicKeyMutableStateFlow.value = Result.loading()
 
@@ -201,7 +208,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
         updateRecipientPublicKeyMutableStateFlow.value = Result.success(
           roomDatabase.pubKeyDao()
             .updateSuspend(
-              pgpKeyDetails.toPublicKeyEntity(publicKeyEntity.recipient).copy(
+              pgpKeyRingDetails.toPublicKeyEntity(publicKeyEntity.recipient).copy(
                 id = publicKeyEntity.id,
                 recipient = publicKeyEntity.recipient
               )
@@ -303,7 +310,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
    * @throws IOException
    */
   private suspend fun getPublicKeysFromRemoteServersInternal(email: String):
-      List<PgpKeyDetails>? = withContext(Dispatchers.IO) {
+      List<PgpKeyRingDetails>? = withContext(Dispatchers.IO) {
     try {
       val activeAccount = getActiveAccountSuspend()
       val response = ApiClientRepository.PubLookup.fetchPubKey(
@@ -348,7 +355,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
         try {
           val result = PgpKey.parseKeys(publicKeyEntity.publicKey).pgpKeyDetailsList
-          publicKeyEntity.pgpKeyDetails = result.firstOrNull()
+          publicKeyEntity.pgpKeyRingDetails = result.firstOrNull()
         } catch (e: Exception) {
           e.printStackTrace()
           publicKeyEntity.isNotUsable = true
@@ -358,10 +365,12 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
     }
 
   private suspend fun updateCachedInfoWithPubKeysFromLookUp(
-    cachedRecipientEntity: RecipientWithPubKeys, fetchedPgpKeyDetailsList: List<PgpKeyDetails>
+    cachedRecipientEntity: RecipientWithPubKeys,
+    fetchedPgpKeyRingDetailsList: List<PgpKeyRingDetails>
   ) = withContext(Dispatchers.IO) {
     val email = cachedRecipientEntity.recipient.email
-    val uniqueMapOfFetchedPubKeys = deduplicateFetchedPubKeysByFingerprint(fetchedPgpKeyDetailsList)
+    val uniqueMapOfFetchedPubKeys =
+      deduplicateFetchedPubKeysByFingerprint(fetchedPgpKeyRingDetailsList)
 
     val deDuplicatedListOfFetchedPubKeys = uniqueMapOfFetchedPubKeys.values
     for (fetchedPgpKeyDetails in deDuplicatedListOfFetchedPubKeys) {
@@ -373,7 +382,7 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
       val existingPublicKeyEntity = cachedRecipientEntity.publicKeys.firstOrNull {
         it.fingerprint == fetchedPgpKeyDetails.fingerprint
       }
-      val existingPgpKeyDetails = existingPublicKeyEntity?.pgpKeyDetails
+      val existingPgpKeyDetails = existingPublicKeyEntity?.pgpKeyRingDetails
       if (existingPgpKeyDetails != null) {
         val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
         if (!isExistingKeyRevoked && fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
@@ -389,11 +398,11 @@ class RecipientsViewModel(application: Application) : AccountViewModel(applicati
   }
 
   private fun deduplicateFetchedPubKeysByFingerprint(
-    fetchedPgpKeyDetailsList: List<PgpKeyDetails>
-  ): Map<String, PgpKeyDetails> {
-    val uniqueMapOfFetchedPubKeys = mutableMapOf<String, PgpKeyDetails>()
+    fetchedPgpKeyRingDetailsList: List<PgpKeyRingDetails>
+  ): Map<String, PgpKeyRingDetails> {
+    val uniqueMapOfFetchedPubKeys = mutableMapOf<String, PgpKeyRingDetails>()
 
-    for (fetchedPgpKeyDetails in fetchedPgpKeyDetailsList) {
+    for (fetchedPgpKeyDetails in fetchedPgpKeyRingDetailsList) {
       val fetchedFingerprint = fetchedPgpKeyDetails.fingerprint
       val alreadyEncounteredFetchedPgpKeyDetails = uniqueMapOfFetchedPubKeys[fetchedFingerprint]
       if (alreadyEncounteredFetchedPgpKeyDetails == null) {

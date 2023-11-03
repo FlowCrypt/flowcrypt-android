@@ -299,7 +299,7 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
     )
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = addAccountToDatabaseRule.account,
-      pgpKeyDetails = secondKeyDetails,
+      pgpKeyRingDetails = secondKeyDetails,
       passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.RAM

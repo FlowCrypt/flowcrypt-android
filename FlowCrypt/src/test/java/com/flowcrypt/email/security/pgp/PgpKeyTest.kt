@@ -8,7 +8,7 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.TestUtil
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
@@ -42,16 +43,18 @@ class PgpKeyTest {
 
   @Test
   fun testParseKeysWithNormalKey() {
-    val expected = PgpKeyDetails(
+    val expected = PgpKeyRingDetails(
       isFullyDecrypted = true,
       isFullyEncrypted = false,
       usableForEncryption = true,
+      usableForSigning = true,
       isRevoked = false,
       privateKey = null,
       publicKey = loadResourceAsString(
         "keys/E76853E128A0D376CAE47C143A30F4CC0A9A8F10.public.gpg-key"
       ).replace("@@VERSION_NAME@@", BuildConfig.VERSION_NAME),
       users = listOf("Test <t@est.com>"),
+      primaryUserId = "Test <t@est.com>",
       ids = listOf(
         KeyId(
           fingerprint = "E76853E128A0D376CAE47C143A30F4CC0A9A8F10"
@@ -63,7 +66,13 @@ class PgpKeyTest {
       created = 1543592161000L,
       lastModified = 1543592161000L,
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2047, curve = null),
-      primaryKeyId = 4193120410270338832
+      primaryKeyId = 4193120410270338832,
+      possibilities = setOf(
+        KeyFlag.ENCRYPT_COMMS.flag,
+        KeyFlag.ENCRYPT_STORAGE.flag,
+        KeyFlag.SIGN_DATA.flag,
+        KeyFlag.CERTIFY_OTHER.flag,
+      )
     )
     val actual = PgpKey.parseKeys(source = TestKeys.KEYS["rsa1"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)
@@ -72,16 +81,18 @@ class PgpKeyTest {
 
   @Test
   fun testParseKeysWithExpiredKey() {
-    val expected = PgpKeyDetails(
+    val expected = PgpKeyRingDetails(
       isFullyDecrypted = true,
       isFullyEncrypted = false,
       isRevoked = false,
-      usableForEncryption = true,
+      usableForEncryption = false,
+      usableForSigning = false,
       privateKey = null,
       publicKey = loadResourceAsString(
         "keys/6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9.public.gpg-key"
       ).replace("@@VERSION_NAME@@", BuildConfig.VERSION_NAME),
       users = listOf("<auto.refresh.expired.key@recipient.com>"),
+      primaryUserId = "<auto.refresh.expired.key@recipient.com>",
       ids = listOf(
         KeyId(
           fingerprint = "6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9"
@@ -94,7 +105,13 @@ class PgpKeyTest {
       lastModified = 1594847701000L,
       expiration = 1594847702000L,
       algo = Algo(algorithm = "RSA_GENERAL", algorithmId = 1, bits = 2048, curve = null),
-      primaryKeyId = -4691725871015490871
+      primaryKeyId = -4691725871015490871,
+      possibilities = setOf(
+        KeyFlag.ENCRYPT_COMMS.flag,
+        KeyFlag.ENCRYPT_STORAGE.flag,
+        KeyFlag.SIGN_DATA.flag,
+        KeyFlag.CERTIFY_OTHER.flag,
+      )
     )
     val actual = PgpKey.parseKeys(source = TestKeys.KEYS["expired"]!!.publicKey)
     assertEquals(1, actual.getAllKeys().size)

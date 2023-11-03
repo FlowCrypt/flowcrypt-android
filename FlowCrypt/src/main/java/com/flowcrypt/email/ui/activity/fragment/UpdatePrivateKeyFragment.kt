@@ -33,7 +33,7 @@ import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
@@ -63,8 +63,8 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    supportActionBar?.title = args.existingPgpKeyDetails.getUserIdsAsSingleString()
-    supportActionBar?.subtitle = args.existingPgpKeyDetails.fingerprint
+    supportActionBar?.title = args.existingPgpKeyRingDetails.getUserIdsAsSingleString()
+    supportActionBar?.subtitle = args.existingPgpKeyRingDetails.fingerprint
 
     initViews()
     subscribeToUpdatePrivateKey()
@@ -88,7 +88,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
     )
   }
 
-  override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
+  override fun handleParsedKeys(keys: List<PgpKeyRingDetails>) {
     if (keys.size > 1) {
       showInfoDialog(
         dialogTitle = "",
@@ -101,8 +101,8 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
       UpdatePrivateKeyFragmentDirections
         .actionUpdatePrivateKeyFragmentToUpdatePrivateKeyDialogFragment(
           requestKey = REQUEST_KEY_UPDATE_PRIVATE_KEY,
-          existingPgpKeyDetails = args.existingPgpKeyDetails,
-          newPgpKeyDetails = keys.first()
+          existingPgpKeyRingDetails = args.existingPgpKeyRingDetails,
+          newPgpKeyRingDetails = keys.first()
         )
     )
   }
@@ -138,7 +138,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
 
   private fun subscribeToUpdatePrivateKey() {
     setFragmentResultListener(REQUEST_KEY_UPDATE_PRIVATE_KEY) { _, bundle ->
-      val newPrivateKey = bundle.getParcelableViaExt<PgpKeyDetails>(
+      val newPrivateKey = bundle.getParcelableViaExt<PgpKeyRingDetails>(
         UpdatePrivateKeyDialogFragment.KEY_NEW_PRIVATE_KEY
       ) ?: return@setFragmentResultListener
 
@@ -161,7 +161,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
     setFragmentResultListener(REQUEST_KEY_CHECK_NEW_PRIVATE_KEY) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt(
         CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
-      ) ?: emptyList<PgpKeyDetails>()
+      ) ?: emptyList<PgpKeyRingDetails>()
 
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS -> {
@@ -179,10 +179,10 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
     }
   }
 
-  private fun handleCheckedNewPrivateKey(newPgpKeyDetails: PgpKeyDetails) {
+  private fun handleCheckedNewPrivateKey(newPgpKeyRingDetails: PgpKeyRingDetails) {
     privateKeysViewModel.encryptAndSaveKeysToDatabase(
       args.accountEntity,
-      listOf(newPgpKeyDetails.copy(importSourceType = importSourceType))
+      listOf(newPgpKeyRingDetails.copy(importSourceType = importSourceType))
     )
   }
 
@@ -197,7 +197,7 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
 
           Result.Status.SUCCESS -> {
             it.data?.let {
-              val fingerprint = args.existingPgpKeyDetails.fingerprint
+              val fingerprint = args.existingPgpKeyRingDetails.fingerprint
               toast(getString(R.string.key_was_updated, fingerprint), Toast.LENGTH_LONG)
               navController?.navigateUp()
             }

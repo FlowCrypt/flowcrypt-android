@@ -32,7 +32,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -87,10 +87,10 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
 
   @Test
   fun testImportFromFileUnprotectedKey() {
-    testImportUnprotectedPrivateKey { pgpKeyDetails ->
+    testImportUnprotectedPrivateKey { pgpKeyRingDetails ->
       val fileWithPublicKey: File = TestGeneralUtil.createFileWithTextContent(
         TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_prv.asc",
-        requireNotNull(pgpKeyDetails.privateKey)
+        requireNotNull(pgpKeyRingDetails.privateKey)
       )
 
       val resultData =
@@ -105,8 +105,8 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
 
   @Test
   fun testImportFromClipboardUnprotectedKey() {
-    testImportUnprotectedPrivateKey { pgpKeyDetails ->
-      addTextToClipboard("unprotected private key", requireNotNull(pgpKeyDetails.privateKey))
+    testImportUnprotectedPrivateKey { pgpKeyRingDetails ->
+      addTextToClipboard("unprotected private key", requireNotNull(pgpKeyRingDetails.privateKey))
 
       onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))
@@ -114,15 +114,15 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
     }
   }
 
-  private fun testImportUnprotectedPrivateKey(preparation: (pgpKeyDetails: PgpKeyDetails) -> Unit) {
-    val pgpKeyDetails =
+  private fun testImportUnprotectedPrivateKey(preparation: (pgpKeyRingDetails: PgpKeyRingDetails) -> Unit) {
+    val pgpKeyRingDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/unprotected@flowcrypt.test_prv.asc")
 
     //check that we don't have a key with an owner == unprotected@flowcrypt.test
     onView(
       allOf(
         withId(R.id.textViewKeyOwner),
-        withText(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+        withText(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
       )
     ).check(doesNotExist())
 
@@ -134,7 +134,7 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
       .perform(click())
 
     //do additional preparation depends on a test
-    preparation.invoke(pgpKeyDetails)
+    preparation.invoke(pgpKeyRingDetails)
 
     isDialogWithTextDisplayed(
       decorView,
@@ -181,7 +181,7 @@ class PrivateKeysListFragmentFlowTest : BaseTest() {
     onView(withId(R.id.recyclerViewKeys))
       .perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-          hasDescendant(withText(requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)))
+          hasDescendant(withText(requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)))
         )
       )
   }

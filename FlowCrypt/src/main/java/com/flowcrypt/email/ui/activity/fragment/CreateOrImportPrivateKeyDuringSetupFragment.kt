@@ -23,7 +23,7 @@ import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_CREATED_KEY
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.HANDLE_RESOLVED_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CreateOrImportPrivateKeyDuringSetupFragment.Result.Companion.USE_ANOTHER_ACCOUNT
@@ -85,7 +85,7 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
 
   private fun setResult(
     @Result result: Int,
-    keys: List<PgpKeyDetails>,
+    keys: List<PgpKeyRingDetails>,
     account: AccountEntity
   ) {
     navController?.navigateUp()
@@ -102,20 +102,20 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
   private fun subscribeToCheckPrivateKeysFromImport() {
     setFragmentResultListener(REQUEST_KEY_PRIVATE_KEYS) { _, bundle ->
       val keys =
-        bundle.getParcelableArrayListViaExt<PgpKeyDetails>(ImportPrivateKeysDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+        bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(ImportPrivateKeysDuringSetupFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       keys?.let { setResult(HANDLE_RESOLVED_KEYS, it, args.accountEntity) }
     }
   }
 
   private fun subscribeToCreatePrivateKey() {
     setFragmentResultListener(REQUEST_KEY_CREATE_KEY) { _, bundle ->
-      val pgpKeyDetails = bundle.getParcelableViaExt<PgpKeyDetails>(
+      val pgpKeyRingDetails = bundle.getParcelableViaExt<PgpKeyRingDetails>(
         CreatePrivateKeyFirstFragment.KEY_CREATED_KEY
       ) ?: return@setFragmentResultListener
       val account =
         bundle.getParcelableViaExt<AccountEntity>(CreatePrivateKeyFirstFragment.KEY_ACCOUNT)
           ?: return@setFragmentResultListener
-      setResult(HANDLE_CREATED_KEY, listOf(pgpKeyDetails), account)
+      setResult(HANDLE_CREATED_KEY, listOf(pgpKeyRingDetails), account)
     }
   }
 

@@ -43,7 +43,7 @@ import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
@@ -171,14 +171,14 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
   override fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
     accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails
+    pgpKeyRingDetails: PgpKeyRingDetails
   ) {
-    handleUnlockedKeys(listOf(pgpKeyDetails))
+    handleUnlockedKeys(listOf(pgpKeyRingDetails))
   }
 
   override fun onAdditionalActionsAfterPrivateKeyImportingCompleted(
     accountEntity: AccountEntity,
-    keys: List<PgpKeyDetails>
+    keys: List<PgpKeyRingDetails>
   ) {
     handleUnlockedKeys(keys)
   }
@@ -340,7 +340,8 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       Result.Status.SUCCESS -> {
         dismissCurrentSnackBar()
 
-        @Suppress("UNCHECKED_CAST") val keyDetailsList = result.data as ArrayList<PgpKeyDetails>?
+        @Suppress("UNCHECKED_CAST") val keyDetailsList =
+          result.data as ArrayList<PgpKeyRingDetails>?
         if (keyDetailsList?.isEmpty() == true) {
           authCreds?.let { authCredentials ->
             val account = AccountEntity(authCredentials)
@@ -445,7 +446,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt(
         CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS
-      ) ?: emptyList<PgpKeyDetails>()
+      ) ?: emptyList<PgpKeyRingDetails>()
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           handleUnlockedKeys(keys)
@@ -468,7 +469,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
       val keys = bundle.getParcelableArrayListViaExt(
         CreateOrImportPrivateKeyDuringSetupFragment.KEY_PRIVATE_KEYS
-      ) ?: emptyList<PgpKeyDetails>()
+      ) ?: emptyList<PgpKeyRingDetails>()
 
       when (result) {
         CreateOrImportPrivateKeyDuringSetupFragment.Result.HANDLE_RESOLVED_KEYS -> {
@@ -851,7 +852,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     }
   }
 
-  private fun handleUnlockedKeys(keys: List<PgpKeyDetails>) {
+  private fun handleUnlockedKeys(keys: List<PgpKeyRingDetails>) {
     if (keys.isEmpty()) {
       showContent()
       showInfoSnackbar(msgText = getString(R.string.error_no_keys))

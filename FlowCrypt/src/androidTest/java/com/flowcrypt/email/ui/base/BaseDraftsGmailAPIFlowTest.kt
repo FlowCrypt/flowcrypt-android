@@ -117,7 +117,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
   )
 
   protected val decryptedPrivateKey = PgpKey.decryptKey(
-    requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyDetails.privateKey),
+    requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey),
     Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
   )
 

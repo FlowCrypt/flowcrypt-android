@@ -90,7 +90,7 @@ class PrivateKeyDetailsFragmentFlowTest : BaseTest() {
 
   @Test
   fun testKeyDetailsShowPubKey() {
-    val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
     onView(withId(R.id.btnShowPubKey))
       .check(matches(isDisplayed()))
       .perform(click())

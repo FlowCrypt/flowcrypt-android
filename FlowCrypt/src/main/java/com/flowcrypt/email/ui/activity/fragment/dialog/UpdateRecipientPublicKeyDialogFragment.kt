@@ -19,7 +19,7 @@ import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseUpdateKeyDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 
@@ -33,10 +33,10 @@ class UpdateRecipientPublicKeyDialogFragment : BaseUpdateKeyDialogFragment() {
   override fun prepareTitleText(): String = getString(R.string.public_key_details)
 
   override fun onPositiveButtonClicked() {
-    recipientsViewModel.updateExistingPubKey(args.publicKeyEntity, args.pgpKeyDetails)
+    recipientsViewModel.updateExistingPubKey(args.publicKeyEntity, args.pgpKeyRingDetails)
   }
 
-  override fun getNewPgpKeyDetails(): PgpKeyDetails = args.pgpKeyDetails
+  override fun getNewPgpKeyRingDetails(): PgpKeyRingDetails = args.pgpKeyRingDetails
 
   override fun getExpectedEmailAddress(): String = args.publicKeyEntity.recipient
   override fun getAdditionalWarningText(): String = ""

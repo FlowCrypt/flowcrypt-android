@@ -24,7 +24,7 @@ import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
 import com.flowcrypt.email.api.retrofit.response.api.FesServerResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -81,7 +81,7 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
     val generatedKey = PGPainless.generateKeyRing().simpleEcKeyRing(
       UserId.nameAndEmail(USER_ENFORCE_ATTESTER_SUBMIT, USER_ENFORCE_ATTESTER_SUBMIT),
       TestConstants.DEFAULT_STRONG_PASSWORD
-    ).toPgpKeyDetails()
+    ).toPgpKeyRingDetails()
 
     privateKey = requireNotNull(generatedKey.privateKey)
     fileWithPrivateKey = TestGeneralUtil.createFileWithTextContent(

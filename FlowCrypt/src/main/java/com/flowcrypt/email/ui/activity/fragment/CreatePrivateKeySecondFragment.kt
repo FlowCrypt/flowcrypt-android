@@ -18,7 +18,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentCreatePrivateKeySecondBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.CreatePrivateKeyDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -98,12 +98,12 @@ class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySeco
 
   private fun subscribeToCreatePrivateKey() {
     setFragmentResultListener(REQUEST_KEY_CREATE_PRIVATE_KEY) { _, bundle ->
-      val pgpKeyDetails =
-        bundle.getParcelableViaExt<PgpKeyDetails>(CreatePrivateKeyDialogFragment.KEY_CREATED_KEY)
+      val pgpKeyRingDetails =
+        bundle.getParcelableViaExt<PgpKeyRingDetails>(CreatePrivateKeyDialogFragment.KEY_CREATED_KEY)
       navController?.navigateUp()
       setFragmentResult(
         REQUEST_KEY_CREATE_KEY,
-        bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
+        bundleOf(KEY_CREATED_KEY to pgpKeyRingDetails)
       )
     }
   }

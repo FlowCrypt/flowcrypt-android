@@ -13,7 +13,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountSettingsEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
@@ -82,7 +82,7 @@ class CheckPrivateKeysViewModel(
     initialValue = Pair(0, 0L)
   )
 
-  fun checkKeys(keys: List<PgpKeyDetails>, passphrase: Passphrase) {
+  fun checkKeys(keys: List<PgpKeyRingDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
       if (useAntiBruteforceProtection) {
         if (AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE ==
@@ -105,7 +105,7 @@ class CheckPrivateKeysViewModel(
     }
   }
 
-  private suspend fun checkKeysInternal(keys: List<PgpKeyDetails>, passphrase: Passphrase):
+  private suspend fun checkKeysInternal(keys: List<PgpKeyRingDetails>, passphrase: Passphrase):
       List<CheckResult> =
     withContext(Dispatchers.IO) {
       val context: Context = getApplication()
@@ -152,7 +152,7 @@ class CheckPrivateKeysViewModel(
 
         resultList.add(
           CheckResult(
-            pgpKeyDetails = copy,
+            pgpKeyRingDetails = copy,
             passphrase = passphrase.asString ?: throw IllegalArgumentException(),
             e = e
           )
@@ -213,7 +213,7 @@ class CheckPrivateKeysViewModel(
   }
 
   data class CheckResult(
-    val pgpKeyDetails: PgpKeyDetails,
+    val pgpKeyRingDetails: PgpKeyRingDetails,
     val passphrase: String, val e: Throwable? = null
   )
 }

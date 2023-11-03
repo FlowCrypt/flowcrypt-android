@@ -85,7 +85,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testKeyDetailsCheckDetails() {
-    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
 
     onView(withId(R.id.tVFingerprint))
       .check(
@@ -144,7 +144,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testKeyDetailsCopyToClipBoard() {
-    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
     onView(withId(R.id.btnCopyToClipboard))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -163,7 +163,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
-    val details = addPrivateKeyToDatabaseRule.pgpKeyDetails
+    val details = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
 
     val file = File(
       getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),

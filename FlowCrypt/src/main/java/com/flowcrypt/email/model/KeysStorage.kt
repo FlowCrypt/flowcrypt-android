@@ -7,7 +7,7 @@ package com.flowcrypt.email.model
 
 import androidx.annotation.Keep
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -20,7 +20,7 @@ interface KeysStorage {
 
   fun getPGPSecretKeyRings(): List<PGPSecretKeyRing>
 
-  fun getPgpKeyDetailsList(): List<PgpKeyDetails>
+  fun getPgpKeyDetailsList(): List<PgpKeyRingDetails>
 
   fun getPGPSecretKeyRingByFingerprint(fingerprint: String): PGPSecretKeyRing?
 

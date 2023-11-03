@@ -248,13 +248,13 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
         EMAIL_GET_KEYS_VIA_EKM_NOT_FULLY_DECRYPTED
       )
     )
-    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/keys/user_with_not_fully_decrypted_prv_key@flowcrypt.test_prv_default.asc"
     )
     isDialogWithTextDisplayed(
       decorView, "IllegalStateException:" + getResString(
         R.string.found_not_fully_decrypted_key_ask_admin,
-        pgpKeyDetails.fingerprint
+        pgpKeyRingDetails.fingerprint
       )
     )
     onView(withText(R.string.retry))

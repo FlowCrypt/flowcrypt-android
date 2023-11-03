@@ -63,7 +63,7 @@ class DisallowUpdateRevokedKeyFromSettingsFlowTest : BaseTest() {
     accountEntity = addAccountToDatabaseRule.account
   )
 
-  val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+  val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
     "pgp/default@flowcrypt.test_fisrtKey_pub_revoked.asc"
   )
 
@@ -71,7 +71,7 @@ class DisallowUpdateRevokedKeyFromSettingsFlowTest : BaseTest() {
     listOf(
       RecipientWithPubKeys(
         RecipientEntity(email = RECIPIENT_WITH_REVOKED_KEY),
-        listOf(pgpKeyDetails.toPublicKeyEntity(RECIPIENT_WITH_REVOKED_KEY).copy(id = 12))
+        listOf(pgpKeyRingDetails.toPublicKeyEntity(RECIPIENT_WITH_REVOKED_KEY).copy(id = 12))
       )
     )
   )

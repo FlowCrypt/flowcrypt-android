@@ -63,7 +63,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(defaultAccount)
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = defaultAccount,
-      pgpKeyDetails = pgpKeyDetailsPrimaryDefaultAccount,
+      pgpKeyRingDetails = pgpKeyDetailsPrimaryDefaultAccount,
       passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.DATABASE
@@ -94,13 +94,13 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
       .addAccount(defaultAccount)
 
-    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_secondKey_prv_strong.asc"
     )
 
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = defaultAccount,
-      pgpKeyDetails = pgpKeyDetails,
+      pgpKeyRingDetails = pgpKeyRingDetails,
       passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.DATABASE
@@ -119,7 +119,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
     onView(withId(R.id.rVAttester))
       .perform(scrollToPosition<RecyclerView.ViewHolder>(1))
       .check(matches(hasDescendant(withText(getResString(R.string.wrong_public_key_recorded)))))
-      .check(matches(hasDescendant(withText(pgpKeyDetails.getUserIdsAsSingleString()))))
+      .check(matches(hasDescendant(withText(pgpKeyRingDetails.getUserIdsAsSingleString()))))
 
     onView(withText(getResString(R.string.wrong_public_key_recorded)))
       .check(matches(hasTextColor(R.color.red)))
@@ -131,13 +131,13 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
     FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
       .addAccount(userWithoutPubKeyOnAttester)
 
-    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/not_attested_user@flowcrypt.test_prv_default.asc"
     )
 
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = userWithoutPubKeyOnAttester,
-      pgpKeyDetails = pgpKeyDetails,
+      pgpKeyRingDetails = pgpKeyRingDetails,
       passphrase = TestConstants.DEFAULT_PASSWORD,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.DATABASE

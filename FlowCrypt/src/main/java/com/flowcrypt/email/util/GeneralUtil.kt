@@ -454,8 +454,8 @@ class GeneralUtil {
         for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
           val pgpKeyDetailsList =
             PgpKey.parseKeys(source = publicKeyEntity.publicKey).pgpKeyDetailsList
-          for (pgpKeyDetails in pgpKeyDetailsList) {
-            if (!pgpKeyDetails.isExpired && !pgpKeyDetails.isRevoked) {
+          for (pgpKeyRingDetails in pgpKeyDetailsList) {
+            if (!pgpKeyRingDetails.isExpired && !pgpKeyRingDetails.isRevoked) {
               mapOfRecipients[recipientWithPubKeys.recipient.email] = true
             }
           }
@@ -537,14 +537,14 @@ class GeneralUtil {
       val stringBuilder = StringBuilder()
       stringBuilder.append("<ul>")
 
-      keysStorage.getPgpKeyDetailsList().forEach { pgpKeyDetails ->
+      keysStorage.getPgpKeyDetailsList().forEach { pgpKeyRingDetails ->
         stringBuilder.append("<li>")
         val fingerprint = doSectionsInText(
-          originalString = pgpKeyDetails.fingerprint, groupSize = 4
+          originalString = pgpKeyRingDetails.fingerprint, groupSize = 4
         )
         stringBuilder.append("<b>$fingerprint</b> - ")
-        val status = pgpKeyDetails.getStatusText(context)
-        val colorStateList = pgpKeyDetails.getColorStateListDependsOnStatus(context)
+        val status = pgpKeyRingDetails.getStatusText(context)
+        val colorStateList = pgpKeyRingDetails.getColorStateListDependsOnStatus(context)
         val backgroundColor = colorStateList?.defaultColor ?: Color.BLACK
         val backgroundColorHex = String.format("#%06X", 0xFFFFFF and backgroundColor)
         stringBuilder.append(

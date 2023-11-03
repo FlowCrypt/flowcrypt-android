@@ -8,8 +8,8 @@ package com.flowcrypt.email.security.pgp
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPKeyRing
@@ -158,10 +158,11 @@ object PgpKey {
     }
   }
 
-  suspend fun parsePrivateKeys(source: String): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
-    parseKeys(source = source, throwExceptionIfUnknownSource = false).pgpKeyRingCollection
-      .pgpSecretKeyRingCollection.map { it.toPgpKeyDetails() }
-  }
+  suspend fun parsePrivateKeys(source: String): List<PgpKeyRingDetails> =
+    withContext(Dispatchers.IO) {
+      parseKeys(source = source, throwExceptionIfUnknownSource = false).pgpKeyRingCollection
+        .pgpSecretKeyRingCollection.map { it.toPgpKeyRingDetails() }
+    }
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
     return PGPainless.modifyKeyRing(key)
@@ -206,7 +207,7 @@ object PgpKey {
     val pgpKeyDetailsList =
       getAllKeys().mapNotNull {
         try {
-          it.toPgpKeyDetails(hideArmorMeta = hideArmorMeta)
+          it.toPgpKeyRingDetails(hideArmorMeta = hideArmorMeta)
         } catch (e: Exception) {
           e.printStackTrace()
           if (skipErrors) {

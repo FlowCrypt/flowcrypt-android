@@ -26,7 +26,7 @@ import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.CreatePrivateKeyViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -91,14 +91,14 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
           }
 
           Result.Status.SUCCESS -> {
-            val pgpKeyDetails: PgpKeyDetails? = it.data
-            if (pgpKeyDetails == null) {
-              handleException(NullPointerException("pgpKeyDetails == null"))
+            val pgpKeyRingDetails: PgpKeyRingDetails? = it.data
+            if (pgpKeyRingDetails == null) {
+              handleException(NullPointerException("pgpKeyRingDetails == null"))
             } else {
               navController?.navigateUp()
               setFragmentResult(
                 args.requestKey,
-                bundleOf(KEY_CREATED_KEY to pgpKeyDetails)
+                bundleOf(KEY_CREATED_KEY to pgpKeyRingDetails)
               )
             }
             countingIdlingResource?.decrementSafely(this@CreatePrivateKeyDialogFragment)

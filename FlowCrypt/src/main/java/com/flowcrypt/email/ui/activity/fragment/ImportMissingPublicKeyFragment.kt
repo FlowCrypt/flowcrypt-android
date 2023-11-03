@@ -25,7 +25,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -65,12 +65,12 @@ class ImportMissingPublicKeyFragment :
     )
   }
 
-  override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
+  override fun handleParsedKeys(keys: List<PgpKeyRingDetails>) {
     if (keys.isNotEmpty()) {
       if (keys.size == 1) {
-        val pgpKeyDetails = keys.first()
+        val pgpKeyRingDetails = keys.first()
 
-        if (!pgpKeyDetails.usableForEncryption) {
+        if (!pgpKeyRingDetails.usableForEncryption) {
           showInfoSnackbar(
             view = binding?.root,
             msgText = getString(R.string.cannot_be_used_for_encryption),
@@ -79,7 +79,7 @@ class ImportMissingPublicKeyFragment :
           return
         }
 
-        if (pgpKeyDetails.isPrivate) {
+        if (pgpKeyRingDetails.isPrivate) {
           showInfoSnackbar(
             view = binding?.root,
             msgText = getString(R.string.file_has_wrong_pgp_structure, getString(R.string.public_)),
@@ -89,7 +89,7 @@ class ImportMissingPublicKeyFragment :
         }
         recipientsViewModel.copyPubKeysToRecipient(
           args.recipientWithPubKeys.recipient,
-          pgpKeyDetails
+          pgpKeyRingDetails
         )
       } else {
         showInfoSnackbar(binding?.root, getString(R.string.select_only_one_key))

@@ -104,7 +104,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
@@ -1196,7 +1196,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           }
           if (matchingKeyByFingerprint != null) {
             when {
-              matchingKeyByFingerprint.pgpKeyDetails?.isRevoked == true -> {
+              matchingKeyByFingerprint.pgpKeyRingDetails?.isRevoked == true -> {
                 textViewStatus?.text = getString(R.string.key_is_revoked_unable_to_update)
                 textViewStatus?.setTextColor(UIUtil.getColor(requireContext(), R.color.red))
                 textViewStatus?.visible()
@@ -1204,7 +1204,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                 button.gone()
               }
 
-              keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyDetails) -> {
+              keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyRingDetails) -> {
                 textViewManualImportWarning?.visible()
                 initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
               }
@@ -1232,11 +1232,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     return pubKeyView
   }
 
-  private fun initImportPubKeyButton(pgpKeyDetails: PgpKeyDetails?, button: Button) {
+  private fun initImportPubKeyButton(pgpKeyRingDetails: PgpKeyRingDetails?, button: Button) {
     button.setText(R.string.import_pub_key)
     button.setOnClickListener { v ->
-      if (pgpKeyDetails != null) {
-        recipientsViewModel.addRecipientsBasedOnPgpKeyDetails(pgpKeyDetails)
+      if (pgpKeyRingDetails != null) {
+        recipientsViewModel.addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails)
         toast(R.string.pub_key_successfully_imported)
         v.gone()
       } else {
@@ -1247,13 +1247,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun initUpdatePubKeyButton(
     publicKeyEntity: PublicKeyEntity,
-    pgpKeyDetails: PgpKeyDetails?,
+    pgpKeyRingDetails: PgpKeyRingDetails?,
     button: Button
   ) {
     button.setText(R.string.update_pub_key)
     button.setOnClickListener { v ->
-      if (pgpKeyDetails != null) {
-        recipientsViewModel.updateExistingPubKey(publicKeyEntity, pgpKeyDetails)
+      if (pgpKeyRingDetails != null) {
+        recipientsViewModel.updateExistingPubKey(publicKeyEntity, pgpKeyRingDetails)
         toast(R.string.pub_key_successfully_updated)
         v.gone()
       } else {
@@ -1511,7 +1511,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             var isReVerificationNeeded = false
             for (recipientWithPubKeys in recipientsWithPubKeys) {
               for (publicKeyEntity in recipientWithPubKeys.publicKeys) {
-                if (publicKeyEntity.pgpKeyDetails?.primaryKeyId in keyIdOfSigningKeys) {
+                if (publicKeyEntity.pgpKeyRingDetails?.primaryKeyId in keyIdOfSigningKeys) {
                   isReVerificationNeeded = true
                 }
               }
@@ -1840,7 +1840,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun subscribeToImportingAdditionalPrivateKeys() {
     setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
-      val keys = bundle.getParcelableArrayListViaExt<PgpKeyDetails>(
+      val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
       if (keys?.isNotEmpty() == true) {

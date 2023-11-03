@@ -14,10 +14,10 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.util.Passphrase
 import java.time.Instant
@@ -29,7 +29,7 @@ class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Applicat
   AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
 
-  private val pgpKeyDetailsLiveDataDirect: LiveData<Result<PgpKeyDetails?>> =
+  private val pgpKeyRingDetailsLiveDataDirect: LiveData<Result<PgpKeyRingDetails?>> =
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
       liveData {
         emit(Result.loading())
@@ -40,7 +40,7 @@ class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Applicat
               list.firstOrNull {
                 val openPgpV4Fingerprint = OpenPgpV4Fingerprint(it)
                 openPgpV4Fingerprint.toString().equals(fingerprint, true)
-              }?.toPgpKeyDetails(account?.clientConfiguration?.shouldHideArmorMeta() ?: false)
+              }?.toPgpKeyRingDetails(account?.clientConfiguration?.shouldHideArmorMeta() ?: false)
             )
           } catch (e: Exception) {
             Result.exception(e)
@@ -49,7 +49,7 @@ class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Applicat
       }
     }
 
-  private val pgpKeyDetailsLiveDataAfterPassphraseUpdates: LiveData<Result<PgpKeyDetails?>> =
+  private val pgpKeyRingDetailsLiveDataAfterPassphraseUpdates: LiveData<Result<PgpKeyRingDetails?>> =
     keysStorage.passphrasesUpdatesLiveData.switchMap {
       liveData {
         emit(Result.loading())
@@ -57,7 +57,7 @@ class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Applicat
           try {
             val account = getActiveAccountSuspend()
             Result.success(
-              keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyDetails(
+              keysStorage.getPGPSecretKeyRingByFingerprint(fingerprint ?: "")?.toPgpKeyRingDetails(
                 account?.clientConfiguration?.shouldHideArmorMeta() ?: false
               )
             )
@@ -68,18 +68,18 @@ class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Applicat
       }
     }
 
-  val pgpKeyDetailsLiveData = MediatorLiveData<Result<PgpKeyDetails?>>()
+  val pgpKeyRingDetailsLiveData = MediatorLiveData<Result<PgpKeyRingDetails?>>()
 
   init {
-    pgpKeyDetailsLiveData.addSource(pgpKeyDetailsLiveDataDirect) {
-      pgpKeyDetailsLiveData.value = it
+    pgpKeyRingDetailsLiveData.addSource(pgpKeyRingDetailsLiveDataDirect) {
+      pgpKeyRingDetailsLiveData.value = it
     }
-    pgpKeyDetailsLiveData.addSource(pgpKeyDetailsLiveDataAfterPassphraseUpdates) {
-      pgpKeyDetailsLiveData.value = it
+    pgpKeyRingDetailsLiveData.addSource(pgpKeyRingDetailsLiveDataAfterPassphraseUpdates) {
+      pgpKeyRingDetailsLiveData.value = it
     }
   }
 
-  fun getPgpKeyDetails(): PgpKeyDetails? = pgpKeyDetailsLiveData.value?.data
+  fun getPgpKeyDetails(): PgpKeyRingDetails? = pgpKeyRingDetailsLiveData.value?.data
 
   fun getPassphrase(): Passphrase? {
     return fingerprint?.let { keysStorage.getPassphraseByFingerprint(it) }

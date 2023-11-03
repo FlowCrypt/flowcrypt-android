@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
@@ -33,14 +33,14 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class AccountPublicKeyServersViewModel(application: Application) : AccountViewModel(application) {
-  val accountKeysInfoLiveData = MediatorLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
+  val accountKeysInfoLiveData = MediatorLiveData<Result<List<Pair<String, PgpKeyRingDetails>>>>()
   private val initLiveData = activeAccountLiveData.switchMap { accountEntity ->
     liveData {
       emit(Result.loading())
       emit(getResult(accountEntity))
     }
   }
-  private val refreshingLiveData = MutableLiveData<Result<List<Pair<String, PgpKeyDetails>>>>()
+  private val refreshingLiveData = MutableLiveData<Result<List<Pair<String, PgpKeyRingDetails>>>>()
 
   init {
     accountKeysInfoLiveData.addSource(initLiveData) { accountKeysInfoLiveData.value = it }
@@ -84,10 +84,10 @@ class AccountPublicKeyServersViewModel(application: Application) : AccountViewMo
   }
 
   private suspend fun getResult(accountEntity: AccountEntity?):
-      Result<List<Pair<String, PgpKeyDetails>>> = withContext(Dispatchers.IO) {
+      Result<List<Pair<String, PgpKeyRingDetails>>> = withContext(Dispatchers.IO) {
     return@withContext if (accountEntity != null) {
       try {
-        val results = mutableListOf<Pair<String, PgpKeyDetails>>()
+        val results = mutableListOf<Pair<String, PgpKeyRingDetails>>()
         val emails = ArrayList<String>()
         emails.add(accountEntity.email)
 

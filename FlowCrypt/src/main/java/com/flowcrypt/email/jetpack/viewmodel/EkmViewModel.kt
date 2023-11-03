@@ -18,7 +18,7 @@ import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration.ConfigurationProperty
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
@@ -67,7 +67,7 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
           throw IllegalStateException(context.getString(R.string.no_prv_keys_ask_admin))
         }
 
-        val pgpKeyDetailsList = mutableListOf<PgpKeyDetails>()
+        val pgpKeyRingDetailsList = mutableListOf<PgpKeyRingDetails>()
         ekmPrivateResult.data?.privateKeys?.forEach { key ->
           val parsedList = PgpKey.parsePrivateKeys(requireNotNull(key.decryptedPrivateKey))
             .map { it.copy(passphraseType = KeyEntity.PassphraseType.RAM) }
@@ -87,14 +87,14 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
                 )
               }
             }
-            pgpKeyDetailsList.addAll(parsedList.map {
+            pgpKeyRingDetailsList.addAll(parsedList.map {
               it.copy(importSourceType = KeyImportDetails.SourceType.EKM)
             })
           }
         }
 
         ekmLiveData.value = ekmPrivateResult.copy(
-          data = ekmPrivateResult.data?.copy(pgpKeyDetailsList = pgpKeyDetailsList)
+          data = ekmPrivateResult.data?.copy(pgpKeyRingDetailsList = pgpKeyRingDetailsList)
         )
       } catch (e: Exception) {
         ekmLiveData.value = Result.exception(e)

@@ -65,12 +65,12 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testShowValidKey() {
-    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc"
     )
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = addAccountToDatabaseRule.account,
-      pgpKeyDetails = pgpKeyDetails,
+      pgpKeyRingDetails = pgpKeyRingDetails,
       passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.DATABASE
@@ -89,25 +89,25 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
     doBaseCheckingForKey(
       keyOwner = "default@flowcrypt.test",
       fingerprint = "3DEBE9F677D5B9BB38E5A244225F8023C20D0957",
-      creationDate = dateFormat.format(Date(pgpKeyDetails.created)),
-      expirationDate = pgpKeyDetails.expiration?.let {
+      creationDate = dateFormat.format(Date(pgpKeyRingDetails.created)),
+      expirationDate = pgpKeyRingDetails.expiration?.let {
         getResString(R.string.key_expiration, dateFormat.format(Date(it)))
       } ?: getResString(
         R.string.key_expiration,
         getResString(R.string.key_does_not_expire)
       ),
-      isUsableForEncryption = pgpKeyDetails.usableForEncryption
+      isUsableForEncryption = pgpKeyRingDetails.usableForEncryption
     )
   }
 
   @Test
   fun testShowRevokedKey() {
-    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_secondKey_prv_strong_revoked.asc"
     )
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = addAccountToDatabaseRule.account,
-      pgpKeyDetails = pgpKeyDetails,
+      pgpKeyRingDetails = pgpKeyRingDetails,
       passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.DATABASE
@@ -126,14 +126,14 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
     doBaseCheckingForKey(
       keyOwner = "default@flowcrypt.test",
       fingerprint = "45F0A5260A80F238598DD081C669001D0A6DCAC8",
-      creationDate = dateFormat.format(Date(pgpKeyDetails.created)),
-      expirationDate = pgpKeyDetails.expiration?.let {
+      creationDate = dateFormat.format(Date(pgpKeyRingDetails.created)),
+      expirationDate = pgpKeyRingDetails.expiration?.let {
         getResString(R.string.key_expiration, dateFormat.format(Date(it)))
       } ?: getResString(
         R.string.key_expiration,
         getResString(R.string.key_does_not_expire)
       ),
-      isUsableForEncryption = pgpKeyDetails.usableForEncryption,
+      isUsableForEncryption = pgpKeyRingDetails.usableForEncryption,
       statusLabelText = getResString(R.string.revoked),
       statusLabelTextColorResId = R.color.white,
       statusLabelIconResId = R.drawable.ic_outline_warning_amber_16,
@@ -143,12 +143,12 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testShowExpiredKey() {
-    val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/expired@flowcrypt.test_prv_default.asc"
     )
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = addAccountToDatabaseRule.account,
-      pgpKeyDetails = pgpKeyDetails,
+      pgpKeyRingDetails = pgpKeyRingDetails,
       passphrase = TestConstants.DEFAULT_PASSWORD,
       sourceType = KeyImportDetails.SourceType.EMAIL,
       passphraseType = KeyEntity.PassphraseType.DATABASE
@@ -164,8 +164,8 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
       .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
       .check(matches(withRecyclerViewItemCount(1)))
 
-    assertNotNull(pgpKeyDetails.expiration)
-    val expiration = requireNotNull(pgpKeyDetails.expiration)
+    assertNotNull(pgpKeyRingDetails.expiration)
+    val expiration = requireNotNull(pgpKeyRingDetails.expiration)
     val expectedExpirationDate = "Jan 1, 2011"
     val actualExpirationDate = dateFormat.format(Date(expiration))
     assertEquals(expectedExpirationDate, actualExpirationDate)
@@ -173,9 +173,9 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
     doBaseCheckingForKey(
       keyOwner = "expired@flowcrypt.test",
       fingerprint = "599132F15A04487AA6356C7F717B789F05D874DA",
-      creationDate = dateFormat.format(Date(pgpKeyDetails.created)),
+      creationDate = dateFormat.format(Date(pgpKeyRingDetails.created)),
       expirationDate = getResString(R.string.key_expiration, actualExpirationDate),
-      isUsableForEncryption = pgpKeyDetails.usableForEncryption,
+      isUsableForEncryption = pgpKeyRingDetails.usableForEncryption,
       statusLabelText = getResString(R.string.expired),
       statusLabelTextColorResId = R.color.white,
       statusLabelIconResId = R.drawable.ic_outline_warning_amber_16,

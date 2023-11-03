@@ -136,9 +136,9 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
         val passPhrase = Passphrase.fromPassword(typedText)
         val existedKeys =
           keysWithEmptyPassphraseViewModel.keysWithEmptyPassphrasesLiveData.value?.data
-        val matchingKeys = (existedKeys ?: emptyList()).filter { pgpKeyDetails ->
+        val matchingKeys = (existedKeys ?: emptyList()).filter { pgpKeyRingDetails ->
           fingerprintList.any { element ->
-            element.uppercase() in pgpKeyDetails.ids.map { keyId -> keyId.fingerprint.uppercase() }
+            element.uppercase() in pgpKeyRingDetails.ids.map { keyId -> keyId.fingerprint.uppercase() }
           }
         }
         checkPrivateKeysViewModel.checkKeys(
@@ -160,9 +160,9 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
         Result.Status.SUCCESS -> {
           binding?.pBLoading?.gone()
-          val matchingKeys = (it.data ?: emptyList()).filter { pgpKeyDetails ->
+          val matchingKeys = (it.data ?: emptyList()).filter { pgpKeyRingDetails ->
             fingerprintList.any { element ->
-              element.uppercase() in pgpKeyDetails.ids.map { keyId -> keyId.fingerprint.uppercase() }
+              element.uppercase() in pgpKeyRingDetails.ids.map { keyId -> keyId.fingerprint.uppercase() }
             }
           }
           if (matchingKeys.isEmpty()) {
@@ -228,14 +228,14 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
             if (checkResult.e is WrongPassPhraseException) {
               isWrongPassphraseExceptionFound = true
             } else {
-              val passphraseType = checkResult.pgpKeyDetails.passphraseType ?: continue
-              val rawPassphrase = checkResult.pgpKeyDetails.tempPassphrase ?: continue
+              val passphraseType = checkResult.pgpKeyRingDetails.passphraseType ?: continue
+              val rawPassphrase = checkResult.pgpKeyRingDetails.tempPassphrase ?: continue
               countOfMatchedPassphrases++
               val passphrase = Passphrase(rawPassphrase)
               context?.let { nonNullContext ->
                 val keysStorage = KeysStorageImpl.getInstance(nonNullContext)
                 keysStorage.putPassphraseToCache(
-                  fingerprint = checkResult.pgpKeyDetails.fingerprint,
+                  fingerprint = checkResult.pgpKeyRingDetails.fingerprint,
                   passphrase = passphrase,
                   validUntil = keysStorage.calculateLifeTimeForPassphrase(),
                   passphraseType = passphraseType

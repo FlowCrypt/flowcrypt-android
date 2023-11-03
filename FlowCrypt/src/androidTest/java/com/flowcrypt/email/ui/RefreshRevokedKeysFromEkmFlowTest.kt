@@ -87,7 +87,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
       keysStorage = keysStorage,
-      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
     )
 
     //check existing key before updating
@@ -118,7 +118,7 @@ class RefreshRevokedKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
       keysStorage = keysStorage,
-      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
     )
 
     //check existing key before updating

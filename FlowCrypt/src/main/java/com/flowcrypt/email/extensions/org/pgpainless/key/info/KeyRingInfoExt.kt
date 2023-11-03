@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.extensions.org.pgpainless.key.info
 
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.key.info.KeyRingInfo
 
 /**
@@ -17,6 +18,13 @@ fun KeyRingInfo.usableForEncryption(): Boolean {
       && primaryUserId?.isNotEmpty() == true
 }
 
+fun KeyRingInfo.usableForSigning(): Boolean {
+  return !publicKey.hasRevocation()
+      && !isExpired()
+      && isSigningCapable
+      && primaryUserId?.isNotEmpty() == true
+}
+
 fun KeyRingInfo.isExpired(): Boolean {
   return try {
     primaryKeyExpirationDate?.time?.let { System.currentTimeMillis() > it } ?: false
@@ -24,4 +32,8 @@ fun KeyRingInfo.isExpired(): Boolean {
     e.printStackTrace()
     false
   }
+}
+
+fun KeyRingInfo.getMasterKey(): PGPPublicKey? {
+  return publicKeys.firstOrNull { it.isMasterKey }
 }

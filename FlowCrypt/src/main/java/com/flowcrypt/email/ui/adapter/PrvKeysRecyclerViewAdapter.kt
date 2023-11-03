@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.GeneralUtil
 
 
@@ -21,8 +21,8 @@ import com.flowcrypt.email.util.GeneralUtil
  * @author Denys Bondarenko
  */
 class PrvKeysRecyclerViewAdapter(
-  val pgpKeyDetailsList: MutableList<PgpKeyDetails> = mutableListOf()
-) : ListAdapter<PgpKeyDetails, PrvKeysRecyclerViewAdapter.ViewHolder>
+  val pgpKeyRingDetailsList: MutableList<PgpKeyRingDetails> = mutableListOf()
+) : ListAdapter<PgpKeyRingDetails, PrvKeysRecyclerViewAdapter.ViewHolder>
   (DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -39,20 +39,20 @@ class PrvKeysRecyclerViewAdapter(
     private val tVEmail: TextView = itemView.findViewById(R.id.tVEmail)
     private val tVFingerprint: TextView = itemView.findViewById(R.id.tVFingerprint)
 
-    fun bind(pgpKeyDetails: PgpKeyDetails) {
-      tVEmail.text = pgpKeyDetails.getUserIdsAsSingleString()
+    fun bind(pgpKeyRingDetails: PgpKeyRingDetails) {
+      tVEmail.text = pgpKeyRingDetails.getUserIdsAsSingleString()
       tVFingerprint.text = GeneralUtil.doSectionsInText(
-        originalString = pgpKeyDetails.fingerprint, groupSize = 4
+        originalString = pgpKeyRingDetails.fingerprint, groupSize = 4
       )
     }
   }
 
 
-  class DiffUtilCallBack : DiffUtil.ItemCallback<PgpKeyDetails>() {
-    override fun areItemsTheSame(oldItem: PgpKeyDetails, newItem: PgpKeyDetails) =
+  class DiffUtilCallBack : DiffUtil.ItemCallback<PgpKeyRingDetails>() {
+    override fun areItemsTheSame(oldItem: PgpKeyRingDetails, newItem: PgpKeyRingDetails) =
       oldItem.fingerprint == newItem.fingerprint
 
-    override fun areContentsTheSame(oldItem: PgpKeyDetails, newItem: PgpKeyDetails) =
+    override fun areContentsTheSame(oldItem: PgpKeyRingDetails, newItem: PgpKeyRingDetails) =
       oldItem == newItem
   }
 }

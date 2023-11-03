@@ -21,7 +21,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -75,7 +75,7 @@ class ImportPrivateKeysDuringSetupFragment :
     )
   }
 
-  override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
+  override fun handleParsedKeys(keys: List<PgpKeyRingDetails>) {
     if (keys.isNotEmpty()) {
       val title = if (activeUri != null) {
         val fileName = GeneralUtil.getFileNameFromUri(requireContext(), activeUri)
@@ -112,7 +112,7 @@ class ImportPrivateKeysDuringSetupFragment :
   private fun subscribeToCheckPrivateKeys() {
     setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
-        bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+        bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           navController?.navigateUp()

@@ -38,7 +38,7 @@ class PublicKeyDetailsViewModel(
           if (publicKeyEntity != null) {
             val activeAccount = getActiveAccountSuspend()
             withContext(Dispatchers.IO) {
-              publicKeyEntity.pgpKeyDetails =
+              publicKeyEntity.pgpKeyRingDetails =
                 PgpKey.parseKeys(
                   source = publicKeyEntity.publicKey,
                   throwExceptionIfUnknownSource = false,

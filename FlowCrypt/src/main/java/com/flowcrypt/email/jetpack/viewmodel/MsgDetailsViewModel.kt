@@ -562,7 +562,7 @@ class MsgDetailsViewModel(
             roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(recipient)
           try {
             block.existingRecipientWithPubKeys?.publicKeys?.forEach {
-              it.pgpKeyDetails =
+              it.pgpKeyRingDetails =
                 PgpKey.parseKeys(source = it.publicKey).pgpKeyDetailsList.firstOrNull()
             }
           } catch (e: Exception) {

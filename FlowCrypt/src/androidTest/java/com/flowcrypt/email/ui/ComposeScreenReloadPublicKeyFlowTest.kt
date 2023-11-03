@@ -21,7 +21,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -59,8 +59,8 @@ class ComposeScreenReloadPublicKeyFlowTest : BaseComposeScreenTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activityScenarioRule.scenario
 
-  private val pgpKeyDetails = PGPainless.generateKeyRing()
-    .simpleEcKeyRing(RECIPIENT, TestConstants.DEFAULT_PASSWORD).toPgpKeyDetails()
+  private val pgpKeyRingDetails = PGPainless.generateKeyRing()
+    .simpleEcKeyRing(RECIPIENT, TestConstants.DEFAULT_PASSWORD).toPgpKeyRingDetails()
 
   private val addRecipientsToDatabaseRule = AddRecipientsToDatabaseRule(
     listOf(
@@ -85,7 +85,7 @@ class ComposeScreenReloadPublicKeyFlowTest : BaseComposeScreenTest() {
   @Test
   fun testDisallowUpdateRevokedKeyFromLookup() {
     val userWithMissingPublicKey =
-      requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+      requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
 
     fillInAllFields(userWithMissingPublicKey)
 

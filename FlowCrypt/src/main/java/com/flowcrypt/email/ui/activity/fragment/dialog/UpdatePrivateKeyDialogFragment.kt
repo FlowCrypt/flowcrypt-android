@@ -10,7 +10,7 @@ import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseUpdateKeyDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 
@@ -26,27 +26,27 @@ class UpdatePrivateKeyDialogFragment : BaseUpdateKeyDialogFragment() {
     navController?.navigateUp()
     setFragmentResult(
       args.requestKey,
-      bundleOf(KEY_NEW_PRIVATE_KEY to args.newPgpKeyDetails)
+      bundleOf(KEY_NEW_PRIVATE_KEY to args.newPgpKeyRingDetails)
     )
   }
 
-  override fun getNewPgpKeyDetails(): PgpKeyDetails = args.newPgpKeyDetails
+  override fun getNewPgpKeyRingDetails(): PgpKeyRingDetails = args.newPgpKeyRingDetails
 
   override fun getExpectedEmailAddress(): String {
-    return args.existingPgpKeyDetails.getPrimaryInternetAddress()?.address ?: ""
+    return args.existingPgpKeyRingDetails.getPrimaryInternetAddress()?.address ?: ""
   }
 
   override fun getAdditionalWarningText(): String {
     return when {
-      args.newPgpKeyDetails.fingerprint != args.existingPgpKeyDetails.fingerprint -> {
+      args.newPgpKeyRingDetails.fingerprint != args.existingPgpKeyRingDetails.fingerprint -> {
         getString(R.string.fingerprint_mismatch_you_are_trying_to_import_different_key)
       }
 
-      args.existingPgpKeyDetails.lastModified == args.newPgpKeyDetails.lastModified -> {
+      args.existingPgpKeyRingDetails.lastModified == args.newPgpKeyRingDetails.lastModified -> {
         getString(R.string.you_are_trying_to_import_the_same_key)
       }
 
-      args.existingPgpKeyDetails.isNewerThan(args.newPgpKeyDetails) -> {
+      args.existingPgpKeyRingDetails.isNewerThan(args.newPgpKeyRingDetails) -> {
         getString(R.string.warning_existing_key_has_more_recent_signature)
       }
 
@@ -56,8 +56,8 @@ class UpdatePrivateKeyDialogFragment : BaseUpdateKeyDialogFragment() {
 
   override fun isNewKeyAcceptable(): Boolean {
     return isExpectedEmailFound()
-        && args.newPgpKeyDetails.fingerprint == args.existingPgpKeyDetails.fingerprint
-        && args.newPgpKeyDetails.isNewerThan(args.existingPgpKeyDetails)
+        && args.newPgpKeyRingDetails.fingerprint == args.existingPgpKeyRingDetails.fingerprint
+        && args.newPgpKeyRingDetails.isNewerThan(args.existingPgpKeyRingDetails)
   }
 
   companion object {

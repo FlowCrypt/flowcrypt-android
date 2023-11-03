@@ -7,10 +7,11 @@ package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import androidx.annotation.WorkerThread
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForSigning
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -33,7 +34,7 @@ import java.time.Instant
  */
 @Throws(IOException::class)
 @WorkerThread
-fun PGPKeyRing.toPgpKeyDetails(hideArmorMeta: Boolean = false): PgpKeyDetails {
+fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDetails {
   val keyRingInfo = KeyRingInfo(this)
 
   val algo = Algo(
@@ -63,20 +64,27 @@ fun PGPKeyRing.toPgpKeyDetails(hideArmorMeta: Boolean = false): PgpKeyDetails {
     armor(hideArmorMeta = hideArmorMeta)
   }
 
-  return PgpKeyDetails(
+  return PgpKeyRingDetails(
     isFullyDecrypted = keyRingInfo.isFullyDecrypted,
     isFullyEncrypted = keyRingInfo.isFullyEncrypted,
     isRevoked = getPublicKey().hasRevocation(),
     usableForEncryption = keyRingInfo.usableForEncryption(),
+    usableForSigning = keyRingInfo.usableForSigning(),
     privateKey = privateKey,
     publicKey = publicKey,
     users = keyRingInfo.userIds,
+    primaryUserId = keyRingInfo.primaryUserId,
     ids = keyIdList,
     created = keyRingInfo.creationDate.time,
     lastModified = keyRingInfo.lastModified.time,
     expiration = keyRingInfo.primaryKeyExpirationDate?.time,
     algo = algo,
-    primaryKeyId = keyRingInfo.keyId
+    primaryKeyId = keyRingInfo.keyId,
+    possibilities = mutableSetOf<Int>().apply {
+      addAll(
+        keyRingInfo.publicKeys.flatMap { keyRingInfo.getKeyFlagsOf(it.keyID) }.toSet()
+          .map { it.flag })
+    }
   )
 }
 

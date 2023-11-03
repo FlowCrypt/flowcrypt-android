@@ -21,7 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.com.sun.mail.imap.canBeUsedToSearchBackups
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthException
@@ -39,7 +39,7 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
-  val privateKeysLiveData = MutableLiveData<Result<ArrayList<PgpKeyDetails>?>>()
+  val privateKeysLiveData = MutableLiveData<Result<ArrayList<PgpKeyRingDetails>?>>()
 
   fun fetchAvailableKeys(accountEntity: AccountEntity?) {
     viewModelScope.launch {
@@ -54,7 +54,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
     }
   }
 
-  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<PgpKeyDetails>> =
+  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<PgpKeyRingDetails>> =
     withContext(Dispatchers.IO) {
       try {
         when (accountEntity.accountType) {
@@ -81,16 +81,16 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
     }
 
   /**
-   * Get a list of [PgpKeyDetails] using the standard JavaMail API
+   * Get a list of [PgpKeyRingDetails] using the standard JavaMail API
    *
-   * @return A list of [PgpKeyDetails]
+   * @return A list of [PgpKeyRingDetails]
    * @throws MessagingException
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(accountEntity: AccountEntity): Collection<PgpKeyDetails> =
+  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(accountEntity: AccountEntity): Collection<PgpKeyRingDetails> =
     withContext(Dispatchers.IO) {
-      val details = ArrayList<PgpKeyDetails>()
+      val details = ArrayList<PgpKeyRingDetails>()
       OpenStoreHelper.openStore(
         getApplication(),
         accountEntity,

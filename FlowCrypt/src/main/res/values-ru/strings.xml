@@ -472,7 +472,6 @@
     <string name="key_does_not_expire">бессрочно</string>
     <string name="status">Статус:</string>
     <string name="valid">валидный</string>
-    <string name="undefined">не определен</string>
     <string name="not_valid">не валидный</string>
     <string name="expired">просроченный</string>
     <string name="refreshing_keys_from_ekm_failed">Не удалось обновить ключи с сервера EKM</string>
@@ -601,6 +600,10 @@
     <string name="mark_as_not_spam">Исключить из спама</string>
     <string name="change_labels">Изменить ярлык</string>
     <string name="label">Ярлык</string>
+    <string name="auth_flag">Флаг аутентификации</string>
+    <string name="encryption_flag">Флаг шифрования</string>
+    <string name="sign_flag">Флага подписи</string>
+    <string name="has_more_than_one_user_id">Имеет более одного ID пользователя</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

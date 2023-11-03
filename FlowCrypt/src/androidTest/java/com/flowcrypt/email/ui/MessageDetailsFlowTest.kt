@@ -391,9 +391,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     )
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
-    val pgpKeyDetails =
+    val pgpKeyRingDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
-    val email = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address
+    val email = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()).address
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(
       matches(withText(getResString(R.string.template_message_part_public_key_owner, email)))
     )
@@ -404,7 +404,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
           getHtmlString(
             getResString(
               R.string.template_message_part_public_key_fingerprint,
-              GeneralUtil.doSectionsInText(" ", pgpKeyDetails.fingerprint, 4)!!
+              GeneralUtil.doSectionsInText(" ", pgpKeyRingDetails.fingerprint, 4)!!
             )
           )
         )
@@ -448,10 +448,10 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
     baseCheck(msgInfo)
 
-    val pgpKeyDetails =
+    val pgpKeyRingDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/denbond7@flowcrypt.test_pub_primary.asc")
     val primaryAddress =
-      requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()).address.lowercase()
+      requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()).address.lowercase()
     val recipientBeforeSaving = runBlocking {
       roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(primaryAddress)
     }
@@ -478,7 +478,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       requireNotNull(recipientAfterSaving?.publicKeys?.firstOrNull()?.publicKey)
     val pgpKeyDetailsOfDatabaseEntity =
       PgpKey.parseKeys(publicKeyByteArray).pgpKeyDetailsList.firstOrNull()
-    assertEquals(pgpKeyDetails.fingerprint, pgpKeyDetailsOfDatabaseEntity?.fingerprint)
+    assertEquals(pgpKeyRingDetails.fingerprint, pgpKeyDetailsOfDatabaseEntity?.fingerprint)
   }
 
   @Test

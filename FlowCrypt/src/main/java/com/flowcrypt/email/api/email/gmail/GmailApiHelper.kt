@@ -27,7 +27,7 @@ import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FlavorSettings
@@ -728,20 +728,20 @@ class GmailApiHelper {
     }
 
     /**
-     * Get a list of [PgpKeyDetails] using the **Gmail API**
+     * Get a list of [PgpKeyRingDetails] using the **Gmail API**
      *
      * @param context context Interface to global information about an application environment;
      * @param account An [AccountEntity] object.
-     * @return A list of [PgpKeyDetails]
+     * @return A list of [PgpKeyRingDetails]
      * @throws MessagingException
      * @throws IOException
      */
     suspend fun getPrivateKeyBackups(
       context: Context,
       account: AccountEntity
-    ): List<PgpKeyDetails> = withContext(Dispatchers.IO) {
+    ): List<PgpKeyRingDetails> = withContext(Dispatchers.IO) {
       try {
-        val list = mutableListOf<PgpKeyDetails>()
+        val list = mutableListOf<PgpKeyRingDetails>()
 
         val searchQuery = EmailUtil.getGmailBackupSearchQuery(account.email)
         val gmailApiService = generateGmailApiService(context, account)

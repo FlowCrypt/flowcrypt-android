@@ -29,7 +29,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.base.BaseRefreshKeysFromEkmFlowTest
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -97,7 +97,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
       keysStorage = keysStorage,
-      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
     )
 
     //check existing key before updating
@@ -155,7 +155,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
       keysStorage = keysStorage,
-      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
     )
 
     //check existing key before updating
@@ -177,7 +177,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     assertEquals(existingPgpKeyDetailsBeforeUpdating, existingPgpKeyDetailsAfterUpdating)
   }
 
-  private fun checkExistingKeyBeforeUpdating(keysStorage: KeysStorageImpl): PgpKeyDetails {
+  private fun checkExistingKeyBeforeUpdating(keysStorage: KeysStorageImpl): PgpKeyRingDetails {
     val existingPgpKeyDetailsBeforeUpdating = keysStorage.getPgpKeyDetailsList().first()
     assertTrue(existingPgpKeyDetailsBeforeUpdating.isExpired)
     assertEquals(

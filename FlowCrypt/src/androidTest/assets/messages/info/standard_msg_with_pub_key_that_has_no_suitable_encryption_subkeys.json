@@ -14,7 +14,7 @@
           {
             "fingerprint": "58DF2107B952BA3721A6081AA06BBF82A207B21E",
             "id": 15,
-            "pgpKeyDetails": {
+            "pgpKeyRingDetails": {
               "algo": {
                 "algorithm": "RSA_GENERAL",
                 "algorithmId": 1,

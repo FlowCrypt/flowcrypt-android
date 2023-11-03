@@ -22,7 +22,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
@@ -35,18 +35,18 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   protected val existingAccounts = mutableListOf<AccountEntity>()
-  protected val importCandidates = mutableListOf<PgpKeyDetails>()
+  protected val importCandidates = mutableListOf<PgpKeyRingDetails>()
 
   abstract fun getTempAccount(): AccountEntity?
   abstract fun onAccountAdded(accountEntity: AccountEntity)
   abstract fun onAdditionalActionsAfterPrivateKeyCreationCompleted(
     accountEntity: AccountEntity,
-    pgpKeyDetails: PgpKeyDetails
+    pgpKeyRingDetails: PgpKeyRingDetails
   )
 
   abstract fun onAdditionalActionsAfterPrivateKeyImportingCompleted(
     accountEntity: AccountEntity,
-    keys: List<PgpKeyDetails>
+    keys: List<PgpKeyRingDetails>
   )
 
   override val isToolbarVisible: Boolean = false

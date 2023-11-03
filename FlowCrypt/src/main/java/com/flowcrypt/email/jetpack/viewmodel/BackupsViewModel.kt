@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.com.sun.mail.imap.canBeUsedToSearchBackups
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.sun.mail.imap.IMAPFolder
@@ -35,7 +35,7 @@ import java.util.Properties
  * @author Denys Bondarenko
  */
 class BackupsViewModel(application: Application) : AccountViewModel(application) {
-  val onlineBackupsLiveData: LiveData<Result<List<PgpKeyDetails>?>> =
+  val onlineBackupsLiveData: LiveData<Result<List<PgpKeyRingDetails>?>> =
     activeAccountLiveData.switchMap { accountEntity ->
       liveData {
         accountEntity?.let {
@@ -159,8 +159,8 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
   private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(
     account: AccountEntity,
     store: Store
-  ): MutableList<PgpKeyDetails> = withContext(Dispatchers.IO) {
-    val keyDetailsList = mutableListOf<PgpKeyDetails>()
+  ): MutableList<PgpKeyRingDetails> = withContext(Dispatchers.IO) {
+    val keyDetailsList = mutableListOf<PgpKeyRingDetails>()
     val folders = store.defaultFolder.list("*")
 
     for (folder in folders) {

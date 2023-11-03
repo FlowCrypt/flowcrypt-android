@@ -13,10 +13,10 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.model.KeysStorage
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
@@ -100,17 +100,17 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     } ?: emptyList()
   }
 
-  override fun getPgpKeyDetailsList(): List<PgpKeyDetails> {
+  override fun getPgpKeyDetailsList(): List<PgpKeyRingDetails> {
     return getPgpKeyDetailsList(getPGPSecretKeyRings())
   }
 
   @WorkerThread
   @Synchronized
-  fun getPgpKeyDetailsList(rings: List<PGPSecretKeyRing>): List<PgpKeyDetails> {
+  fun getPgpKeyDetailsList(rings: List<PGPSecretKeyRing>): List<PgpKeyRingDetails> {
     return rings.map {
-      val pgpKeyDetails = it.toPgpKeyDetails()
-      val passphrase = getPassphraseByFingerprint(pgpKeyDetails.fingerprint)
-      pgpKeyDetails.copy(tempPassphrase = passphrase?.chars)
+      val pgpKeyRingDetails = it.toPgpKeyRingDetails()
+      val passphrase = getPassphraseByFingerprint(pgpKeyRingDetails.fingerprint)
+      pgpKeyRingDetails.copy(tempPassphrase = passphrase?.chars)
     }
   }
 

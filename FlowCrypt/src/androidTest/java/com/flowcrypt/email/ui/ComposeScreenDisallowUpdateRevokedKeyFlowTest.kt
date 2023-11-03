@@ -18,7 +18,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -69,7 +69,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     accountEntity = addAccountToDatabaseRule.account
   )
 
-  val pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+  val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
     "pgp/default@flowcrypt.test_secondKey_pub_revoked.asc"
   )
 
@@ -77,7 +77,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     listOf(
       RecipientWithPubKeys(
         RecipientEntity(email = RECIPIENT_WITH_REVOKED_KEY),
-        listOf(pgpKeyDetails.toPublicKeyEntity(RECIPIENT_WITH_REVOKED_KEY).copy(id = 12))
+        listOf(pgpKeyRingDetails.toPublicKeyEntity(RECIPIENT_WITH_REVOKED_KEY).copy(id = 12))
       )
     )
   )
@@ -95,7 +95,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
 
   @Test
   fun testDisallowUpdateRevokedKeyFromLookup() {
-    val userWithRevokedKey = requireNotNull(pgpKeyDetails.getPrimaryInternetAddress()?.address)
+    val userWithRevokedKey = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
 
     //check the recipient pub key before call lookupEmail
     val existingRecipientBefore = roomDatabase.recipientDao()
@@ -103,7 +103,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     assertNotNull(existingRecipientBefore)
     val pubKeyBefore = requireNotNull(existingRecipientBefore?.publicKeys?.first()?.publicKey)
     val pgpKeyDetailsBefore = PgpKey.parseKeys(pubKeyBefore)
-      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyDetails()
+      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyRingDetails()
     assertTrue(pgpKeyDetailsBefore.isRevoked)
 
     fillInAllFields(userWithRevokedKey)
@@ -128,7 +128,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     assertNotNull(existingRecipientAfter)
     val pubKeyAfter = requireNotNull(existingRecipientBefore?.publicKeys?.first()?.publicKey)
     val pgpKeyDetailsAfter = PgpKey.parseKeys(pubKeyAfter)
-      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyDetails()
+      .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyRingDetails()
     assertTrue(pgpKeyDetailsAfter.isRevoked)
   }
 

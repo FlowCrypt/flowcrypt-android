@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
@@ -93,6 +94,8 @@ class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>()
     binding?.rVPubKeys?.apply {
       setHasFixedSize(true)
       val manager = LinearLayoutManager(context)
+      val decoration = DividerItemDecoration(context, manager.orientation)
+      addItemDecoration(decoration)
       layoutManager = manager
       adapter = pubKeysRecyclerViewAdapter
     }

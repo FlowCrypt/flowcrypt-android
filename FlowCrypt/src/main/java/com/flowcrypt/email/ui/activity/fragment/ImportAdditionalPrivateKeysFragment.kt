@@ -36,7 +36,7 @@ import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
@@ -62,7 +62,7 @@ class ImportAdditionalPrivateKeysFragment :
   override val isDisplayHomeAsUpEnabled = false
   override val isToolbarVisible: Boolean = false
 
-  private var cachedUnprotectedKey: PgpKeyDetails? = null
+  private var cachedUnprotectedKey: PgpKeyRingDetails? = null
 
   override val progressView: View?
     get() = binding?.layoutProgress?.root
@@ -99,7 +99,7 @@ class ImportAdditionalPrivateKeysFragment :
     )
   }
 
-  override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
+  override fun handleParsedKeys(keys: List<PgpKeyRingDetails>) {
     if (keys.size == 1 && !keys.first().isFullyEncrypted) {
       cachedUnprotectedKey = keys.first()
       showTwoWayDialog(
@@ -257,14 +257,14 @@ class ImportAdditionalPrivateKeysFragment :
   private fun subscribeToCheckPrivateKeys() {
     setFragmentResultListener(REQUEST_KEY_CHECK_PRIVATE_KEYS) { _, bundle ->
       val keys =
-        bundle.getParcelableArrayListViaExt<PgpKeyDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
+        bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(CheckKeysFragment.KEY_UNLOCKED_PRIVATE_KEYS)
       when (bundle.getInt(CheckKeysFragment.KEY_STATE)) {
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           keys?.let {
             privateKeysViewModel.encryptAndSaveKeysToDatabase(
               args.accountEntity,
-              it.map { pgpKeyDetails ->
-                pgpKeyDetails.copy(
+              it.map { pgpKeyRingDetails ->
+                pgpKeyRingDetails.copy(
                   importSourceType = importSourceType
                 )
               })
@@ -299,11 +299,11 @@ class ImportAdditionalPrivateKeysFragment :
 
   private fun observeOnResultLiveData() {
     getNavigationResult<kotlin.Result<*>>(RecheckProvidedPassphraseFragment.KEY_ACCEPTED_PASSPHRASE_RESULT) {
-      val pgpKeyDetails = cachedUnprotectedKey ?: return@getNavigationResult
+      val pgpKeyRingDetails = cachedUnprotectedKey ?: return@getNavigationResult
       if (it.isSuccess) {
         val passphrase = it.getOrNull() as? CharArray ?: return@getNavigationResult
         privateKeysViewModel.protectPrivateKeys(
-          listOf(pgpKeyDetails),
+          listOf(pgpKeyRingDetails),
           Passphrase(passphrase)
         )
       }
@@ -319,8 +319,8 @@ class ImportAdditionalPrivateKeysFragment :
         }
 
         Result.Status.SUCCESS -> {
-          it.data?.firstOrNull()?.let { pgpKeyDetails ->
-            tryToUnlockKeys(listOf(pgpKeyDetails.copy(tempPassphrase = null)))
+          it.data?.firstOrNull()?.let { pgpKeyRingDetails ->
+            tryToUnlockKeys(listOf(pgpKeyRingDetails.copy(tempPassphrase = null)))
           }
 
           privateKeysViewModel.protectPrivateKeysLiveData.value = Result.none()
@@ -342,7 +342,7 @@ class ImportAdditionalPrivateKeysFragment :
     }
   }
 
-  private fun filterKeys(keys: List<PgpKeyDetails>): Pair<Set<String>, List<PgpKeyDetails>> {
+  private fun filterKeys(keys: List<PgpKeyRingDetails>): Pair<Set<String>, List<PgpKeyRingDetails>> {
     val connector = KeysStorageImpl.getInstance(requireContext())
     val filteredList = keys.toMutableList()
 
@@ -350,17 +350,17 @@ class ImportAdditionalPrivateKeysFragment :
     val uniqueKeysFingerprints = HashSet<String>()
 
     while (iterator.hasNext()) {
-      val pgpKeyDetails = iterator.next()
-      uniqueKeysFingerprints.add(pgpKeyDetails.fingerprint)
-      if (connector.getPGPSecretKeyRingByFingerprint(pgpKeyDetails.fingerprint) != null) {
+      val pgpKeyRingDetails = iterator.next()
+      uniqueKeysFingerprints.add(pgpKeyRingDetails.fingerprint)
+      if (connector.getPGPSecretKeyRingByFingerprint(pgpKeyRingDetails.fingerprint) != null) {
         iterator.remove()
-        uniqueKeysFingerprints.remove(pgpKeyDetails.fingerprint)
+        uniqueKeysFingerprints.remove(pgpKeyRingDetails.fingerprint)
       }
     }
     return Pair(uniqueKeysFingerprints, filteredList)
   }
 
-  private fun tryToUnlockKeys(filteredKeys: List<PgpKeyDetails>) {
+  private fun tryToUnlockKeys(filteredKeys: List<PgpKeyRingDetails>) {
     val title = if (activeUri != null) {
       val fileName = GeneralUtil.getFileNameFromUri(requireContext(), activeUri)
       resources.getQuantityString(

@@ -93,16 +93,16 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
       keysStorage = keysStorage,
-      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint
+      fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
     )
 
     //check existing keys before updating
     val firstPgpKeyDetailsBeforeUpdating = keysStorage.getPgpKeyDetailsList()
-      .first { it.fingerprint == addPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint }
+      .first { it.fingerprint == addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint }
     assertTrue(firstPgpKeyDetailsBeforeUpdating.isRevoked)
 
     assertNotNull(keysStorage.getPgpKeyDetailsList()
-      .firstOrNull { it.fingerprint == addSecondPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint })
+      .firstOrNull { it.fingerprint == addSecondPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint })
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
     Thread.sleep(2000)
@@ -110,7 +110,7 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
     //check existing keys after updating. We should have only the first key.
     assertEquals(keysStorage.getPgpKeyDetailsList().size, 1)
     assertNull(keysStorage.getPgpKeyDetailsList()
-      .firstOrNull { it.fingerprint == addSecondPrivateKeyToDatabaseRule.pgpKeyDetails.fingerprint })
+      .firstOrNull { it.fingerprint == addSecondPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint })
 
     val firstPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList()
       .first { it.fingerprint == firstPgpKeyDetailsBeforeUpdating.fingerprint }

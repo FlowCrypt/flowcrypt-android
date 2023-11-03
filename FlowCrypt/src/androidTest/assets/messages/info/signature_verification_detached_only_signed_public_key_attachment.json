@@ -23,7 +23,7 @@
           {
             "fingerprint": "C16428D601CB393789CF61D4C32089CD6AF8D6CE",
             "id": 4,
-            "pgpKeyDetails": {
+            "pgpKeyRingDetails": {
               "algo": {
                 "algorithm": "EDDSA",
                 "algorithmId": 22,

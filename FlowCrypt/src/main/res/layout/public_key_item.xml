@@ -12,37 +12,92 @@
     android:foreground="?android:attr/selectableItemBackground"
     android:orientation="vertical">
 
+    <ImageView
+        android:id="@+id/imageViewManyUserIds"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/default_margin_small"
+        android:contentDescription="@string/has_more_than_one_user_id"
+        app:layout_constraintBottom_toBottomOf="@+id/tVCreationDate"
+        app:layout_constraintEnd_toStartOf="@+id/tVCreationDate"
+        app:layout_constraintTop_toTopOf="@+id/tVCreationDate"
+        app:srcCompat="@drawable/baseline_group_24" />
+
     <TextView
-        android:id="@+id/tVPrimaryUser"
+        android:id="@+id/tVPrimaryUserOrEmail"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/default_margin_small"
         android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@color/dark"
         android:textSize="@dimen/default_text_size_big"
-        app:layout_constraintEnd_toStartOf="@+id/tVCreationDate"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewManyUserIds"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintStart_toStartOf="@+id/tVPrimaryUserEmail"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
-        tools:text="human@flowcrypt.com" />
+        tools:text="Bill Bob" />
+
+    <TextView
+        android:id="@+id/tVPrimaryUserEmail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/nobel"
+        android:textSize="@dimen/default_text_size_very_small"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/tVPrimaryUserOrEmail"
+        tools:text="test@flowcrypt.test" />
 
     <TextView
         android:id="@+id/tVFingerprint"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_top_message_subject"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:ellipsize="end"
         android:maxLines="1"
         android:textColor="@color/nobel"
-        app:autoSizeMaxTextSize="@dimen/default_text_size_big"
-        app:autoSizeMinTextSize="@dimen/default_text_size_small"
-        app:autoSizeStepGranularity="1sp"
-        app:autoSizeTextType="uniform"
+        android:textSize="@dimen/default_text_size_very_small"
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewEncryptionFlag"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/tVPrimaryUser"
+        app:layout_constraintTop_toBottomOf="@+id/tVPrimaryUserEmail"
         app:layout_constraintVertical_bias="0.0"
+        app:layout_goneMarginTop="@dimen/default_margin_content"
         tools:text="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
+
+    <TextView
+        android:id="@+id/textViewExpiration"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content"
+        android:ellipsize="middle"
+        android:maxLines="1"
+        android:textColor="@color/nobel"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+        app:layout_constraintEnd_toStartOf="@+id/textViewStatus"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toBottomOf="@+id/tVFingerprint"
+        tools:text="Expiration: April 19, 2015" />
+
+    <TextView
+        android:id="@+id/textViewStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_small"
+        android:background="@drawable/bg_rectangle_silver_border"
+        android:backgroundTint="@color/red"
+        android:drawablePadding="@dimen/default_twice_dip"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        app:drawableStartCompat="@drawable/ic_outline_warning_amber_16"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewExpiration"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintStart_toEndOf="@+id/textViewExpiration"
+        app:layout_constraintTop_toTopOf="@+id/textViewExpiration"
+        tools:text="@string/revoked" />
 
     <TextView
         android:id="@+id/tVCreationDate"
@@ -50,8 +105,8 @@
         android:layout_height="wrap_content"
         android:textColor="@color/dark"
         android:textSize="@dimen/default_text_size_medium"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tVPrimaryUserOrEmail"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-        app:layout_constraintTop_toTopOf="@+id/guidelineTop"
         tools:text="April 19, 2015" />
 
     <androidx.constraintlayout.widget.Guideline
@@ -81,5 +136,35 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_end="@dimen/margin_top_bottom_message" />
+
+    <ImageView
+        android:id="@+id/imageViewAuthFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/auth_flag"
+        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
+        app:srcCompat="@drawable/ic_possibility_auth" />
+
+    <ImageView
+        android:id="@+id/imageViewEncryptionFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/encryption_flag"
+        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewSignFlag"
+        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
+        app:srcCompat="@drawable/ic_possibility_encryption" />
+
+    <ImageView
+        android:id="@+id/imageViewSignFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/sign_flag"
+        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewAuthFlag"
+        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
+        app:srcCompat="@drawable/ic_possibility_sign" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

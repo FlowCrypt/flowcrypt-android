@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentDialogKeyDetailsBinding
 import com.flowcrypt.email.extensions.visible
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.dialog.BaseDialogFragment
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -31,7 +31,7 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
   protected var binding: FragmentDialogKeyDetailsBinding? = null
   abstract fun prepareTitleText(): String
   abstract fun onPositiveButtonClicked()
-  abstract fun getNewPgpKeyDetails(): PgpKeyDetails
+  abstract fun getNewPgpKeyRingDetails(): PgpKeyRingDetails
   abstract fun getExpectedEmailAddress(): String
   abstract fun getAdditionalWarningText(): String
   abstract fun isNewKeyAcceptable(): Boolean
@@ -62,13 +62,13 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
   }
 
   protected fun isExpectedEmailFound(): Boolean {
-    val pgpKeyDetails = getNewPgpKeyDetails()
-    return if (pgpKeyDetails.mimeAddresses.isEmpty()) {
-      pgpKeyDetails.users.any { user ->
+    val pgpKeyRingDetails = getNewPgpKeyRingDetails()
+    return if (pgpKeyRingDetails.mimeAddresses.isEmpty()) {
+      pgpKeyRingDetails.users.any { user ->
         user.contains(getExpectedEmailAddress(), ignoreCase = true)
       }
     } else {
-      pgpKeyDetails.mimeAddresses.any { address ->
+      pgpKeyRingDetails.mimeAddresses.any { address ->
         address.address.equals(getExpectedEmailAddress(), true)
       }
     }
@@ -76,9 +76,9 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
 
   @SuppressLint("SetTextI18n")
   private fun initViews() {
-    val pgpKeyDetails = getNewPgpKeyDetails()
-    if (pgpKeyDetails.mimeAddresses.isEmpty()) {
-      pgpKeyDetails.users.forEach { user ->
+    val pgpKeyRingDetails = getNewPgpKeyRingDetails()
+    if (pgpKeyRingDetails.mimeAddresses.isEmpty()) {
+      pgpKeyRingDetails.users.forEach { user ->
         val userLayout =
           layoutInflater.inflate(R.layout.item_user_with_email, binding?.lUsers, false)
         val tVUserName = userLayout.findViewById<TextView>(R.id.tVUserName)
@@ -86,7 +86,7 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
         binding?.lUsers?.addView(userLayout)
       }
     } else {
-      pgpKeyDetails.mimeAddresses.forEach { address ->
+      pgpKeyRingDetails.mimeAddresses.forEach { address ->
         val userLayout =
           layoutInflater.inflate(R.layout.item_user_with_email, binding?.lUsers, false)
         val tVUserName = userLayout.findViewById<TextView>(R.id.tVUserName)
@@ -97,7 +97,7 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
       }
     }
 
-    pgpKeyDetails.ids.forEach { uid ->
+    pgpKeyRingDetails.ids.forEach { uid ->
       val tVFingerprint = TextView(context)
       tVFingerprint.setTextSize(
         TypedValue.COMPLEX_UNIT_PX,
@@ -111,24 +111,24 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
     }
 
     binding?.tVAlgorithm?.text =
-      getString(R.string.template_algorithm, pgpKeyDetails.algo.algorithm)
-    binding?.tVAlgorithmBitsOrCurve?.text = if (pgpKeyDetails.algo.bits == 0) {
-      getString(R.string.template_curve, pgpKeyDetails.algo.curve)
+      getString(R.string.template_algorithm, pgpKeyRingDetails.algo.algorithm)
+    binding?.tVAlgorithmBitsOrCurve?.text = if (pgpKeyRingDetails.algo.bits == 0) {
+      getString(R.string.template_curve, pgpKeyRingDetails.algo.curve)
     } else {
-      getString(R.string.template_algorithm_bits, pgpKeyDetails.algo.bits.toString())
+      getString(R.string.template_algorithm_bits, pgpKeyRingDetails.algo.bits.toString())
     }
 
     val dateFormat = DateTimeUtil.getPgpDateFormat(context)
 
     binding?.tVCreated?.text = getString(
       R.string.template_created,
-      dateFormat.format(Date(pgpKeyDetails.created))
+      dateFormat.format(Date(pgpKeyRingDetails.created))
     )
     binding?.tVModified?.text = getString(
       R.string.template_modified,
-      dateFormat.format(Date(pgpKeyDetails.lastModified ?: 0))
+      dateFormat.format(Date(pgpKeyRingDetails.lastModified ?: 0))
     )
-    binding?.tVExpiration?.text = pgpKeyDetails.expiration?.let {
+    binding?.tVExpiration?.text = pgpKeyRingDetails.expiration?.let {
       context?.getString(R.string.key_expiration, dateFormat.format(Date(it)))
     } ?: context?.getString(
       R.string.key_expiration,
@@ -141,11 +141,11 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
         getString(R.string.warning_no_expected_email, getExpectedEmailAddress())
     }
 
-    if (pgpKeyDetails.isExpired) {
+    if (pgpKeyRingDetails.isExpired) {
       binding?.tVWarning?.visible()
       val warningText = getString(
         R.string.warning_key_expired,
-        DateTimeUtil.getPgpDateFormat(context).format(Date(pgpKeyDetails.expiration ?: 0))
+        DateTimeUtil.getPgpDateFormat(context).format(Date(pgpKeyRingDetails.expiration ?: 0))
       )
       if (binding?.tVWarning?.text.isNullOrEmpty()) {
         binding?.tVWarning?.text = warningText

@@ -9,7 +9,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 
@@ -23,11 +23,11 @@ class AddPrivateKeyToDatabaseRule constructor(
   val sourceType: KeyImportDetails.SourceType,
   val passphraseType: KeyEntity.PassphraseType = KeyEntity.PassphraseType.DATABASE
 ) : BaseRule() {
-  var pgpKeyDetails: PgpKeyDetails
+  var pgpKeyRingDetails: PgpKeyRingDetails
     private set
 
   init {
-    pgpKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(keyPath, true)
+    pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(keyPath, true)
   }
 
   constructor(
@@ -45,7 +45,7 @@ class AddPrivateKeyToDatabaseRule constructor(
   override fun execute() {
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = accountEntity,
-      pgpKeyDetails = pgpKeyDetails,
+      pgpKeyRingDetails = pgpKeyRingDetails,
       passphrase = passphrase,
       sourceType = sourceType,
       passphraseType = passphraseType

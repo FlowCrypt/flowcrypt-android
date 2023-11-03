@@ -9,7 +9,7 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
@@ -26,11 +26,11 @@ import java.io.InputStream
  * @author Denys Bondarenko
  */
 open class ParseKeysViewModel(application: Application) : AccountViewModel(application) {
-  private val pgpKeyDetailsListMutableStateFlow: MutableStateFlow<Result<List<PgpKeyDetails>>> =
+  private val pgpKeyRingDetailsListMutableStateFlow: MutableStateFlow<Result<List<PgpKeyRingDetails>>> =
     MutableStateFlow(Result.none())
-  val pgpKeyDetailsListStateFlow: StateFlow<Result<List<PgpKeyDetails>>> =
-    pgpKeyDetailsListMutableStateFlow.asStateFlow()
-  private val controlledRunnerForParseKeys = ControlledRunner<Result<List<PgpKeyDetails>>>()
+  val pgpKeyRingDetailsListStateFlow: StateFlow<Result<List<PgpKeyRingDetails>>> =
+    pgpKeyRingDetailsListMutableStateFlow.asStateFlow()
+  private val controlledRunnerForParseKeys = ControlledRunner<Result<List<PgpKeyRingDetails>>>()
 
   fun parseKeys(source: ByteArray?, skipErrors: Boolean = false) {
     source?.let { parseKeys(inputStream = it.inputStream(), skipErrors = skipErrors) }
@@ -38,21 +38,22 @@ open class ParseKeysViewModel(application: Application) : AccountViewModel(appli
 
   fun parseKeys(inputStream: InputStream, skipErrors: Boolean = false) {
     viewModelScope.launch {
-      pgpKeyDetailsListMutableStateFlow.value = Result.loading()
-      pgpKeyDetailsListMutableStateFlow.value = controlledRunnerForParseKeys.cancelPreviousThenRun {
-        return@cancelPreviousThenRun withContext(Dispatchers.IO) {
-          try {
-            Result.success(
-              PgpKey.parseKeys(
-                source = inputStream,
-                skipErrors = skipErrors
-              ).pgpKeyDetailsList
-            )
-          } catch (e: Exception) {
-            Result.exception(e)
+      pgpKeyRingDetailsListMutableStateFlow.value = Result.loading()
+      pgpKeyRingDetailsListMutableStateFlow.value =
+        controlledRunnerForParseKeys.cancelPreviousThenRun {
+          return@cancelPreviousThenRun withContext(Dispatchers.IO) {
+            try {
+              Result.success(
+                PgpKey.parseKeys(
+                  source = inputStream,
+                  skipErrors = skipErrors
+                ).pgpKeyDetailsList
+              )
+            } catch (e: Exception) {
+              Result.exception(e)
+            }
           }
         }
-      }
     }
   }
 }

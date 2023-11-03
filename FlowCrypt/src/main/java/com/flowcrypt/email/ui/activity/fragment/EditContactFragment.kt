@@ -22,7 +22,7 @@ import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeyImportDetails
-import com.flowcrypt.email.security.model.PgpKeyDetails
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment
@@ -71,7 +71,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
     )
   }
 
-  override fun handleParsedKeys(keys: List<PgpKeyDetails>) {
+  override fun handleParsedKeys(keys: List<PgpKeyRingDetails>) {
     if (keys.size > 1) {
       showInfoDialog(
         dialogTitle = "",
@@ -85,7 +85,7 @@ class EditContactFragment : BaseImportKeyFragment<FragmentEditContactBinding>(),
         .actionEditContactFragmentToUpdateRecipientPublicKeyDialogFragment(
           requestKey = REQUEST_KEY_UPDATE_RECIPIENT_PUBLIC_KEY,
           publicKeyEntity = args.publicKeyEntity,
-          pgpKeyDetails = keys.first()
+          pgpKeyRingDetails = keys.first()
         )
     )
   }
