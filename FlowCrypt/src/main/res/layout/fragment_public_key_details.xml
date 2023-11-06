@@ -31,51 +31,175 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <TextView
+                android:id="@+id/textViewMasterKey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:text="@string/primary_key"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <View
+                android:id="@+id/dividerPrimaryKey"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyFingerprint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_small"
+                android:textIsSelectable="true"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey"
+                tools:text="670F 4904 6294 213E A166 DBA6 AAD5 550D FBC7 9F22" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyAlgorithm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/textViewPrimaryKeyModified"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyFingerprint"
+                tools:text="Algorithm: RSA, 4096 bit" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyModified"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/textViewPrimaryKeyAlgorithm"
+                app:layout_constraintTop_toTopOf="@+id/textViewPrimaryKeyAlgorithm"
+                tools:text="Modified: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyCreated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/textViewPrimaryKeyExpiration"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyAlgorithm"
+                tools:text="Created: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyExpiration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toEndOf="@+id/textViewPrimaryKeyCreated"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyModified"
+                tools:text="Expires: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyCapabilities"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:text="@string/capabilities"
+                android:textIsSelectable="true"
+                app:drawableEndCompat="@drawable/ic_possibility_auth"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyCreated" />
+
+            <TextView
+                android:id="@+id/textViewStatusValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:background="@drawable/bg_rectangle_silver_border"
+                android:backgroundTint="@color/orange"
+                android:drawablePadding="@dimen/default_twice_dip"
+                android:text="@string/revoked"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textIsSelectable="true"
+                app:drawableStartCompat="@drawable/ic_outline_warning_amber_16"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyExpiration" />
+
+            <TextView
+                android:id="@+id/textViewUserIDs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_large"
+                android:text="@string/user_ids"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewStatusValue" />
+
+            <View
+                android:id="@+id/dividerUserIds"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewUserIDs" />
+
+
             <LinearLayout
                 android:id="@+id/layoutUsers"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content"
+                android:layout_marginTop="5dp"
                 android:orientation="vertical"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toBottomOf="@+id/dividerUserIds">
 
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewSubKeys"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Subkeys"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/layoutUsers" />
+
+            <View
+                android:id="@+id/dividerSubKeys"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewSubKeys" />
 
             <LinearLayout
                 android:id="@+id/layoutFingerprints"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content"
+                android:layout_marginTop="32dp"
                 android:orientation="vertical"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/layoutUsers">
+                app:layout_constraintTop_toBottomOf="@+id/dividerSubKeys">
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/textViewAlgorithm"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/layoutFingerprints"
-                tools:text="Algorithm: RSA 4096 bit" />
-
-
-            <TextView
-                android:id="@+id/textViewCreated"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewAlgorithm"
-                tools:text="Created: Nov 3, 2017" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guidelineLeft"

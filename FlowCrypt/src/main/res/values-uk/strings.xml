@@ -470,6 +470,7 @@
     <string name="no_private_keys_suitable_for_encryption">Вибачте, Ви не можете відправити зашифроване повідомлення. У Вас немає жодного закритого ключа, придатного для шифрування.</string>
     <string name="revoked">відкликаний</string>
     <string name="key_expiration">Строк дії ключа: %1$s</string>
+    <string name="expires">Термін дії спливає: %1$s</string>
     <string name="key_does_not_expire">безстроково</string>
     <string name="status">Статус:</string>
     <string name="valid">валідний</string>
@@ -605,6 +606,9 @@
     <string name="encryption_flag">Маркер шифрування</string>
     <string name="sign_flag">Маркер підпису</string>
     <string name="has_more_than_one_user_id">Має більше одного ID користувача</string>
+    <string name="primary_key">Основний ключ</string>
+    <string name="never">Never</string>
+    <string name="capabilities">Застосування:</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

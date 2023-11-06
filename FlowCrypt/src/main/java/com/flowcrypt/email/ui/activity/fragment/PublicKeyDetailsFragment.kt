@@ -9,9 +9,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -20,6 +22,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
@@ -53,6 +56,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.util.Date
+
 
 /**
  * This fragment shows the given public key details
@@ -230,6 +234,8 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   }
 
   private fun updateViews(pgpKeyRingDetails: PgpKeyRingDetails) {
+    updatePrimaryKeyInfo(pgpKeyRingDetails)
+
     binding?.layoutUsers?.removeAllViews()
     pgpKeyRingDetails.users.forEachIndexed { index, s ->
       val textView = TextView(context)
@@ -244,12 +250,45 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
         getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
       binding?.layoutFingerprints?.addView(textViewFingerprint)
     }
+  }
 
-    binding?.textViewAlgorithm?.text =
+  private fun updatePrimaryKeyInfo(pgpKeyRingDetails: PgpKeyRingDetails) {
+    val dateFormat = DateTimeUtil.getPgpDateFormat(context)
+    binding?.textViewPrimaryKeyFingerprint?.text = GeneralUtil.doSectionsInText(
+      originalString = pgpKeyRingDetails.fingerprint, groupSize = 4
+    )
+    binding?.textViewPrimaryKeyAlgorithm?.text =
       getString(R.string.template_algorithm, pgpKeyRingDetails.algo.algorithm)
-    binding?.textViewCreated?.text = getString(
+    binding?.textViewPrimaryKeyCreated?.text = getString(
       R.string.template_created,
-      DateTimeUtil.getPgpDateFormat(context).format(Date(pgpKeyRingDetails.created))
+      dateFormat.format(Date(pgpKeyRingDetails.created))
+    )
+    binding?.textViewPrimaryKeyModified?.text = getString(
+      R.string.template_modified,
+      dateFormat.format(Date(pgpKeyRingDetails.lastModified))
+    )
+    binding?.textViewPrimaryKeyExpiration?.text = pgpKeyRingDetails.expiration?.let {
+      context?.getString(R.string.expires, dateFormat.format(Date(it)))
+    } ?: context?.getString(
+      R.string.expires, getString(R.string.never)
+    )
+
+    val iconEncrypt =
+      ContextCompat.getDrawable(requireContext(), R.drawable.ic_possibility_encryption)!!
+    val iconSign = ContextCompat.getDrawable(requireContext(), R.drawable.ic_possibility_sign)!!
+    val iconAuth = ContextCompat.getDrawable(requireContext(), R.drawable.ic_possibility_auth)!!
+
+    val finalDrawable = LayerDrawable(arrayOf(iconEncrypt, iconSign, iconAuth))
+    finalDrawable.setLayerInset(0, 0, 0, iconSign.intrinsicWidth + iconAuth.intrinsicWidth, 0)
+    finalDrawable.setLayerInset(1, iconEncrypt.intrinsicWidth, 0, iconAuth.intrinsicWidth, 0)
+    finalDrawable.setLayerInset(2, iconEncrypt.intrinsicWidth + iconSign.intrinsicWidth, 0, 0, 0)
+    finalDrawable.setLayerGravity(1, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
+
+    binding?.textViewPrimaryKeyCapabilities?.setCompoundDrawablesWithIntrinsicBounds(
+      null,
+      null,
+      finalDrawable,
+      null
     )
   }
 
