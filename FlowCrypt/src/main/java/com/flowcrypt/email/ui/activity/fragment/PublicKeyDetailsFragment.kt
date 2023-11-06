@@ -9,11 +9,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.LayerDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -22,7 +20,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
-import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
@@ -273,23 +270,19 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       R.string.expires, getString(R.string.never)
     )
 
-    val iconEncrypt =
-      ContextCompat.getDrawable(requireContext(), R.drawable.ic_possibility_encryption)!!
-    val iconSign = ContextCompat.getDrawable(requireContext(), R.drawable.ic_possibility_sign)!!
-    val iconAuth = ContextCompat.getDrawable(requireContext(), R.drawable.ic_possibility_auth)!!
-
-    val finalDrawable = LayerDrawable(arrayOf(iconEncrypt, iconSign, iconAuth))
-    finalDrawable.setLayerInset(0, 0, 0, iconSign.intrinsicWidth + iconAuth.intrinsicWidth, 0)
-    finalDrawable.setLayerInset(1, iconEncrypt.intrinsicWidth, 0, iconAuth.intrinsicWidth, 0)
-    finalDrawable.setLayerInset(2, iconEncrypt.intrinsicWidth + iconSign.intrinsicWidth, 0, 0, 0)
-    finalDrawable.setLayerGravity(1, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
-
     binding?.textViewPrimaryKeyCapabilities?.setCompoundDrawablesWithIntrinsicBounds(
       null,
       null,
-      finalDrawable,
+      pgpKeyRingDetails.generatePrimaryKeyCapabilitiesDrawable(requireContext()),
       null
     )
+
+    binding?.textViewStatusValue?.backgroundTintList =
+      pgpKeyRingDetails.getColorStateListDependsOnStatus(requireContext())
+    binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
+      pgpKeyRingDetails.getStatusIcon(), 0, 0, 0
+    )
+    binding?.textViewStatusValue?.text = pgpKeyRingDetails.getStatusText(requireContext())
   }
 
   private fun chooseDest() {
