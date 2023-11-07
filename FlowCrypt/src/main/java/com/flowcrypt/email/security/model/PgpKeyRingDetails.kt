@@ -178,8 +178,7 @@ data class PgpKeyRingDetails constructor(
   }
 
   fun generatePrimaryKeyCapabilitiesDrawable(context: Context): Drawable? {
-    val iconCertify =
-      ContextCompat.getDrawable(context, R.drawable.ic_possibility_encryption)//fix me
+    val iconCertify = ContextCompat.getDrawable(context, R.drawable.ic_possibility_cert)
     val iconEncrypt = ContextCompat.getDrawable(context, R.drawable.ic_possibility_encryption)
     val iconSign = ContextCompat.getDrawable(context, R.drawable.ic_possibility_sign)
     val iconAuth = ContextCompat.getDrawable(context, R.drawable.ic_possibility_auth)
