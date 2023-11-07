@@ -18,7 +18,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -27,6 +26,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -45,6 +45,8 @@ import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.adapter.UserIdListAdapter
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -82,6 +84,8 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   private val savePubKeyActivityResultLauncher =
     registerForActivityResult(ExportPubKeyCreateDocument()) { uri: Uri? -> uri?.let { saveKey(it) } }
 
+  private val userIdsAdapter = UserIdListAdapter()
+
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
@@ -91,6 +95,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    initUserIdsRecyclerView()
     setupPublicKeyDetailsViewModel()
   }
 
@@ -233,20 +238,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   private fun updateViews(pgpKeyRingDetails: PgpKeyRingDetails) {
     updatePrimaryKeyInfo(pgpKeyRingDetails)
 
-    binding?.layoutUsers?.removeAllViews()
-    pgpKeyRingDetails.users.forEachIndexed { index, s ->
-      val textView = TextView(context)
-      textView.text = getString(R.string.template_user, index + 1, s)
-      binding?.layoutUsers?.addView(textView)
-    }
-
-    binding?.layoutFingerprints?.removeAllViews()
-    pgpKeyRingDetails.ids.forEachIndexed { index, s ->
-      val textViewFingerprint = TextView(context)
-      textViewFingerprint.text =
-        getString(R.string.template_fingerprint_2, index + 1, s.fingerprint)
-      binding?.layoutFingerprints?.addView(textViewFingerprint)
-    }
+    userIdsAdapter.submitList(pgpKeyRingDetails.users)
   }
 
   private fun updatePrimaryKeyInfo(pgpKeyRingDetails: PgpKeyRingDetails) {
@@ -283,6 +275,18 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       pgpKeyRingDetails.getStatusIcon(), 0, 0, 0
     )
     binding?.textViewStatusValue?.text = pgpKeyRingDetails.getStatusText(requireContext())
+  }
+
+  private fun initUserIdsRecyclerView() {
+    binding?.recyclerViewUserIds?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+        )
+      )
+      adapter = userIdsAdapter
+    }
   }
 
   private fun chooseDest() {

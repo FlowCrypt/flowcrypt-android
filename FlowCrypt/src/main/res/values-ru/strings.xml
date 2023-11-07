@@ -270,7 +270,6 @@
     <string name="key_already_imported_finishing_setup">Ключ уже импортирован, завершаем настройку.</string>
     <string name="pending">В ожидании&#8230;</string>
     <string name="public_key_copied_to_clipboard">Открытый ключ скопирован в буфер обмена</string>
-    <string name="template_user">Пользователь %1$d: %2$s</string>
     <string name="template_algorithm_bits">Длина ключа, бит: %1$s</string>
     <string name="template_algorithm">Алгоритм: : %1$s</string>
     <string name="template_modified">Изменено: %1$s</string>
@@ -608,6 +607,7 @@
     <string name="primary_key">Основной ключ</string>
     <string name="never">Never</string>
     <string name="capabilities">Возможности:</string>
+    <string name="sub_keys">Подключи</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

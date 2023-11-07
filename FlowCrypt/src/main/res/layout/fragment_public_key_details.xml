@@ -157,49 +157,49 @@
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/textViewUserIDs" />
 
-
-            <LinearLayout
-                android:id="@+id/layoutUsers"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewUserIds"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:orientation="vertical"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/dividerUserIds">
-
-            </LinearLayout>
+                app:layout_constraintTop_toBottomOf="@+id/dividerUserIds"
+                tools:itemCount="4"
+                tools:orientation="horizontal" />
 
             <TextView
                 android:id="@+id/textViewSubKeys"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Subkeys"
+                android:layout_marginTop="@dimen/default_margin_content_large"
+                android:text="@string/sub_keys"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/layoutUsers" />
+                app:layout_constraintTop_toBottomOf="@+id/recyclerViewUserIds" />
 
             <View
                 android:id="@+id/dividerSubKeys"
                 android:layout_width="0dp"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/default_single_dip"
                 android:background="?android:attr/listDivider"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/textViewSubKeys" />
 
-            <LinearLayout
-                android:id="@+id/layoutFingerprints"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewSubKeys"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:orientation="vertical"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/dividerSubKeys">
-
-            </LinearLayout>
+                app:layout_constraintTop_toBottomOf="@+id/dividerSubKeys"
+                tools:itemCount="4"
+                tools:listitem="@layout/item_sub_key_details"
+                tools:orientation="horizontal" />
 
 
             <androidx.constraintlayout.widget.Guideline

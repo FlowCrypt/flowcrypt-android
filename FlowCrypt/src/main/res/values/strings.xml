@@ -337,7 +337,7 @@
     <string name="template_algorithm">Algorithm: %1$s</string>
     <string name="template_algorithm_bits">Bits: %1$s</string>
     <string name="template_curve" translatable="false">Curve: %1$s</string>
-    <string name="template_user">User %1$d: %2$s</string>
+    <string name="template_user" translatable="false">%1$d: %2$s</string>
     <string name="template_fingerprint_2">Fingerprint %1$d: %2$s</string>
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
     <string name="email_must_be_non_empty">Email should not be empty</string>
@@ -619,6 +619,7 @@
     <string name="never">Never</string>
     <string name="capabilities">Capabilities:</string>
     <string name="user_ids" translatable="false">User ID(s)</string>
+    <string name="sub_keys">Subkeys</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">For your protection and data security, there are currently only %1$d attempt left, followed by a 5-minute cooldown period.</item>
         <item quantity="other">For your protection and data security, there are currently only %1$d attempts left, followed by a 5-minute cooldown period.</item>

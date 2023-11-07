@@ -271,7 +271,6 @@
     <string name="key_already_imported_finishing_setup">Ключ вже імпортовано, завершуємо налаштування.</string>
     <string name="pending">В очікуванні&#8230;</string>
     <string name="public_key_copied_to_clipboard">Вікритий ключ скопійовано до буфера обміну</string>
-    <string name="template_user">Користувач %1$d: %2$s</string>
     <string name="template_algorithm_bits">Довжина ключа, біт: %1$s</string>
     <string name="template_algorithm">Алгоритм: : %1$s</string>
     <string name="template_modified">Змінено: %1$s</string>
@@ -609,6 +608,7 @@
     <string name="primary_key">Основний ключ</string>
     <string name="never">Never</string>
     <string name="capabilities">Застосування:</string>
+    <string name="sub_keys">Підключі</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>
