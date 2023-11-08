@@ -7,11 +7,8 @@ package com.flowcrypt.email.security.model
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.LayerDrawable
 import android.os.Parcelable
 import android.util.Patterns
-import android.view.Gravity
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -175,58 +172,6 @@ data class PgpKeyRingDetails constructor(
 
   fun hasPossibility(keyFlag: KeyFlag): Boolean {
     return possibilities.contains(keyFlag.flag)
-  }
-
-  fun generatePrimaryKeyCapabilitiesDrawable(context: Context): Drawable? {
-    val iconCertify = ContextCompat.getDrawable(context, R.drawable.ic_possibility_cert)
-    val iconEncrypt = ContextCompat.getDrawable(context, R.drawable.ic_possibility_encryption)
-    val iconSign = ContextCompat.getDrawable(context, R.drawable.ic_possibility_sign)
-    val iconAuth = ContextCompat.getDrawable(context, R.drawable.ic_possibility_auth)
-
-    val set = linkedSetOf<Drawable?>().toMutableSet()
-
-    if (hasPossibility(KeyFlag.CERTIFY_OTHER)) {
-      set.add(iconCertify)
-    }
-    if (hasPossibility(KeyFlag.ENCRYPT_COMMS) || hasPossibility(KeyFlag.ENCRYPT_STORAGE)) {
-      set.add(iconEncrypt)
-    }
-    if (hasPossibility(KeyFlag.SIGN_DATA)) {
-      set.add(iconSign)
-    }
-    if (hasPossibility(KeyFlag.AUTHENTICATION)) {
-      set.add(iconAuth)
-    }
-
-    val array = set.filterNotNull().toTypedArray()
-    return if (array.size > 1) {
-      LayerDrawable(array).apply {
-        for (i in array.indices) {
-          val insetLeft = if (i > 0) {
-            array.slice(0..<i).sumOf { it.intrinsicWidth }
-          } else {
-            0
-          }
-
-          val insetRight = if (i == array.size - 1) {
-            0
-          } else {
-            array.slice(i + 1..<array.size).sumOf { it.intrinsicWidth }
-          }
-
-          setLayerInset(
-            i,
-            insetLeft,
-            0,
-            insetRight,
-            0
-          )
-          setLayerGravity(i, Gravity.CENTER_VERTICAL)
-        }
-      }
-    } else {
-      array.firstOrNull()
-    }
   }
 
   override fun equals(other: Any?): Boolean {

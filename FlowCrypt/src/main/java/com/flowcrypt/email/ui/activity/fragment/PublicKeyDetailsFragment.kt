@@ -26,6 +26,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -38,13 +39,18 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.lastModifiedDate
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPrimaryKey
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPubKeysWithoutPrimary
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.PublicKeyDetailsViewModel
-import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.adapter.SubKeysListAdapter
 import com.flowcrypt.email.ui.adapter.UserIdListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
@@ -53,6 +59,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import org.pgpainless.key.info.KeyRingInfo
 import java.io.FileNotFoundException
 import java.util.Date
 
@@ -79,12 +86,18 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   }
 
   private val cachedPublicKeyEntity: PublicKeyEntity?
-    get() = publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.value.data
+    get() = publicKeyDetailsViewModel.publicKeyEntityStateFlow.value.data
+
+  private val armoredPublicKey: String?
+    get() = publicKeyDetailsViewModel.keyRingInfoStateFlow.value.data?.keys?.armor(
+      hideArmorMeta = account?.clientConfiguration?.shouldHideArmorMeta() ?: false
+    )
 
   private val savePubKeyActivityResultLauncher =
     registerForActivityResult(ExportPubKeyCreateDocument()) { uri: Uri? -> uri?.let { saveKey(it) } }
 
   private val userIdsAdapter = UserIdListAdapter()
+  private val subKeysAdapter = SubKeysListAdapter()
 
   override val progressView: View?
     get() = binding?.progress?.root
@@ -96,6 +109,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initUserIdsRecyclerView()
+    initSubKeysRecyclerView()
     setupPublicKeyDetailsViewModel()
   }
 
@@ -111,12 +125,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           R.id.menuActionCopy -> {
             val clipboard =
               requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(
-              ClipData.newPlainText(
-                "pubKey",
-                cachedPublicKeyEntity?.pgpKeyRingDetails?.publicKey
-              )
-            )
+            clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", armoredPublicKey))
             toast(R.string.public_key_copied_to_clipboard)
             true
           }
@@ -158,7 +167,11 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
 
   private fun setupPublicKeyDetailsViewModel() {
     launchAndRepeatWithViewLifecycle {
-      publicKeyDetailsViewModel.publicKeyEntityWithPgpDetailFlow.collect {
+      publicKeyDetailsViewModel.publicKeyEntityStateFlow.collect { }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      publicKeyDetailsViewModel.keyRingInfoStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
             countingIdlingResource?.incrementSafely(this@PublicKeyDetailsFragment)
@@ -166,12 +179,12 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           }
 
           Result.Status.SUCCESS -> {
-            val pgpKeyRingDetails = it.data?.pgpKeyRingDetails
-            if (pgpKeyRingDetails == null) {
+            val keyRingInfo = it.data
+            if (keyRingInfo == null) {
               toast(R.string.error_no_keys)
               navController?.navigateUp()
             } else {
-              updateViews(pgpKeyRingDetails)
+              updateViews(keyRingInfo)
               showContent()
             }
             countingIdlingResource?.decrementSafely(this@PublicKeyDetailsFragment)
@@ -203,7 +216,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     uri ?: return
     try {
       val context = this.context ?: return
-      val pubKey = cachedPublicKeyEntity?.pgpKeyRingDetails?.publicKey ?: return
+      val pubKey = armoredPublicKey ?: return
       GeneralUtil.writeFileFromStringToUri(context, uri, pubKey)
       toast(getString(R.string.saved))
     } catch (e: Exception) {
@@ -235,28 +248,31 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     }
   }
 
-  private fun updateViews(pgpKeyRingDetails: PgpKeyRingDetails) {
-    updatePrimaryKeyInfo(pgpKeyRingDetails)
+  private fun updateViews(keyRingInfo: KeyRingInfo) {
+    updatePrimaryKeyInfo(keyRingInfo)
 
-    userIdsAdapter.submitList(pgpKeyRingDetails.users)
+    userIdsAdapter.submitList(keyRingInfo.userIds)
+    subKeysAdapter.submitList(keyRingInfo, keyRingInfo.getPubKeysWithoutPrimary())
   }
 
-  private fun updatePrimaryKeyInfo(pgpKeyRingDetails: PgpKeyRingDetails) {
+  private fun updatePrimaryKeyInfo(keyRingInfo: KeyRingInfo) {
     val dateFormat = DateTimeUtil.getPgpDateFormat(context)
     binding?.textViewPrimaryKeyFingerprint?.text = GeneralUtil.doSectionsInText(
-      originalString = pgpKeyRingDetails.fingerprint, groupSize = 4
+      originalString = keyRingInfo.fingerprint.toString(), groupSize = 4
     )
     binding?.textViewPrimaryKeyAlgorithm?.text =
-      getString(R.string.template_algorithm, pgpKeyRingDetails.algo.algorithm)
+      getString(R.string.template_algorithm, keyRingInfo.algorithm.name)
     binding?.textViewPrimaryKeyCreated?.text = getString(
       R.string.template_created,
-      dateFormat.format(Date(pgpKeyRingDetails.created))
+      dateFormat.format(Date(keyRingInfo.creationDate.time))
     )
-    binding?.textViewPrimaryKeyModified?.text = getString(
-      R.string.template_modified,
-      dateFormat.format(Date(pgpKeyRingDetails.lastModified))
-    )
-    binding?.textViewPrimaryKeyExpiration?.text = pgpKeyRingDetails.expiration?.let {
+    keyRingInfo.getPrimaryKey()?.lastModifiedDate()?.let {
+      binding?.textViewPrimaryKeyModified?.text = getString(
+        R.string.template_modified, dateFormat.format(it)
+      )
+    }
+
+    binding?.textViewPrimaryKeyExpiration?.text = keyRingInfo.primaryKeyExpirationDate?.time?.let {
       context?.getString(R.string.expires, dateFormat.format(Date(it)))
     } ?: context?.getString(
       R.string.expires, getString(R.string.never)
@@ -265,16 +281,18 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     binding?.textViewPrimaryKeyCapabilities?.setCompoundDrawablesWithIntrinsicBounds(
       null,
       null,
-      pgpKeyRingDetails.generatePrimaryKeyCapabilitiesDrawable(requireContext()),
+      keyRingInfo.generateKeyCapabilitiesDrawable(
+        requireContext(), keyRingInfo.getPrimaryKey()?.keyID ?: 0
+      ),
       null
     )
 
-    binding?.textViewStatusValue?.backgroundTintList =
+    /*binding?.textViewStatusValue?.backgroundTintList =
       pgpKeyRingDetails.getColorStateListDependsOnStatus(requireContext())
     binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
       pgpKeyRingDetails.getStatusIcon(), 0, 0, 0
     )
-    binding?.textViewStatusValue?.text = pgpKeyRingDetails.getStatusText(requireContext())
+    binding?.textViewStatusValue?.text = pgpKeyRingDetails.getStatusText(requireContext())*/
   }
 
   private fun initUserIdsRecyclerView() {
@@ -282,10 +300,26 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       layoutManager = LinearLayoutManager(context)
       addItemDecoration(
         MarginItemDecoration(
-          marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+          marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
         )
       )
       adapter = userIdsAdapter
+    }
+  }
+
+  private fun initSubKeysRecyclerView() {
+    binding?.recyclerViewSubKeys?.apply {
+      val linearLayoutManager = LinearLayoutManager(context)
+      val decoration = DividerItemDecoration(context, linearLayoutManager.orientation)
+      layoutManager = linearLayoutManager
+      addItemDecoration(decoration)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+        )
+      )
+      adapter = subKeysAdapter
     }
   }
 
