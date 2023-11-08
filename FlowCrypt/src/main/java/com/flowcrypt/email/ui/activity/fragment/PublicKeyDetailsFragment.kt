@@ -183,7 +183,6 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
           Result.Status.SUCCESS -> {
             val keyRingInfo = it.data
             if (keyRingInfo == null) {
-              toast(R.string.error_no_keys)
               navController?.navigateUp()
             } else {
               updateViews(keyRingInfo)
@@ -262,25 +261,32 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     binding?.textViewPrimaryKeyFingerprint?.text = GeneralUtil.doSectionsInText(
       originalString = keyRingInfo.fingerprint.toString(), groupSize = 4
     )
-    val bitStrength =
-      if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else null
-    val algoWithBits = keyRingInfo.algorithm.name + (bitStrength?.let { "/$it" } ?: "")
-    binding?.textViewPrimaryKeyAlgorithm?.text = algoWithBits
+
+    binding?.textViewPrimaryKeyAlgorithm?.apply {
+      val bitStrength =
+        if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else null
+      val algoWithBits = keyRingInfo.algorithm.name + (bitStrength?.let { "/$it" } ?: "")
+      text = algoWithBits
+    }
+
     binding?.textViewPrimaryKeyCreated?.text = getString(
       R.string.template_created,
       dateFormat.format(Date(keyRingInfo.creationDate.time))
     )
-    keyRingInfo.getPrimaryKey()?.getLastModificationDate()?.let {
-      binding?.textViewPrimaryKeyModified?.text = getString(
-        R.string.template_modified, dateFormat.format(it)
-      )
+
+    binding?.textViewPrimaryKeyModified?.apply {
+      text = keyRingInfo.getPrimaryKey()?.getLastModificationDate()?.let {
+        getString(R.string.template_modified, dateFormat.format(it))
+      }
     }
 
-    binding?.textViewPrimaryKeyExpiration?.text = keyRingInfo.primaryKeyExpirationDate?.time?.let {
-      context?.getString(R.string.expires, dateFormat.format(Date(it)))
-    } ?: context?.getString(
-      R.string.expires, getString(R.string.never)
-    )
+    binding?.textViewPrimaryKeyExpiration?.apply {
+      text = keyRingInfo.primaryKeyExpirationDate?.time?.let {
+        context?.getString(R.string.expires, dateFormat.format(Date(it)))
+      } ?: context?.getString(
+        R.string.expires, getString(R.string.never)
+      )
+    }
 
     binding?.textViewPrimaryKeyCapabilities?.setCompoundDrawablesWithIntrinsicBounds(
       null,
@@ -291,12 +297,11 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       null
     )
 
-    binding?.textViewStatusValue?.backgroundTintList =
-      keyRingInfo.getColorStateListDependsOnStatus(requireContext())
-    binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
-      keyRingInfo.getStatusIcon(), 0, 0, 0
-    )
-    binding?.textViewStatusValue?.text = keyRingInfo.getStatusText(requireContext())
+    binding?.textViewStatusValue?.apply {
+      backgroundTintList = keyRingInfo.getColorStateListDependsOnStatus(requireContext())
+      setCompoundDrawablesWithIntrinsicBounds(keyRingInfo.getStatusIcon(), 0, 0, 0)
+      text = keyRingInfo.getStatusText(requireContext())
+    }
   }
 
   private fun initUserIdsRecyclerView() {
@@ -330,7 +335,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
   private fun chooseDest() {
     val sanitizedEmail = args.recipientEntity.email.replace("[^a-z0-9]".toRegex(), "")
     val fileName = "0x" + cachedPublicKeyEntity?.fingerprint + "-" +
-        sanitizedEmail + "-publickey" + ".asc"
+        sanitizedEmail + "-public_key" + ".asc"
     savePubKeyActivityResultLauncher.launch(fileName)
   }
 
