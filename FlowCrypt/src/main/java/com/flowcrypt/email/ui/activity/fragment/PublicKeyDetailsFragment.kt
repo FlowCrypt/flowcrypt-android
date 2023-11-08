@@ -265,10 +265,8 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     )
     val bitStrength =
       if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else null
-    binding?.textViewPrimaryKeyAlgorithm?.text =
-      getString(
-        R.string.template_algorithm,
-        keyRingInfo.algorithm.name + (bitStrength?.let { "/$it" } ?: ""))
+    val algoWithBits = keyRingInfo.algorithm.name + (bitStrength?.let { "/$it" } ?: "")
+    binding?.textViewPrimaryKeyAlgorithm?.text = algoWithBits
     binding?.textViewPrimaryKeyCreated?.text = getString(
       R.string.template_created,
       dateFormat.format(Date(keyRingInfo.creationDate.time))

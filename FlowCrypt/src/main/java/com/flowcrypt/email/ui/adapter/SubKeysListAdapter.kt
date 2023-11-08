@@ -59,11 +59,8 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
       )
       val algorithm = PublicKeyAlgorithm.requireFromId(publicKey.algorithm)
       val bitStrength = if (publicKey.bitStrength != -1) publicKey.bitStrength else null
-      binding.textViewKeyAlgorithm.text =
-        context.getString(
-          R.string.template_algorithm,
-          algorithm.name + (bitStrength?.let { "/$it" } ?: "")
-        )
+      val algoWithBits = algorithm.name + (bitStrength?.let { "/$it" } ?: "")
+      binding.textViewKeyAlgorithm.text = algoWithBits
       binding.textViewKeyCreated.text = context.getString(
         R.string.template_created,
         dateFormat.format(Date(publicKey.creationTime.time))

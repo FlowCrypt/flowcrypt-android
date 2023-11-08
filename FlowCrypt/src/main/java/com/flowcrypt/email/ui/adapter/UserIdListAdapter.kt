@@ -18,7 +18,7 @@ import com.flowcrypt.email.R
  */
 class UserIdListAdapter : ListAdapter<String, UserIdListAdapter.UserIdViewHolder>(DIFF_CALLBACK) {
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserIdViewHolder {
-    return UserIdViewHolder(TextView(parent.context))
+    return UserIdViewHolder(TextView(parent.context).apply { setTextIsSelectable(true) })
   }
 
   override fun onBindViewHolder(holder: UserIdViewHolder, position: Int) {

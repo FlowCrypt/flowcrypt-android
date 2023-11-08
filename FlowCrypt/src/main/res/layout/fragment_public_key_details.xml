@@ -57,6 +57,12 @@
                 android:layout_marginTop="@dimen/default_margin_small"
                 android:textIsSelectable="true"
                 android:textStyle="bold"
+                android:ellipsize="middle"
+                android:maxLines="1"
+                app:autoSizeMaxTextSize="@dimen/default_text_size_big"
+                app:autoSizeMinTextSize="@dimen/default_text_size_small"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey"
@@ -69,11 +75,10 @@
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/textViewPrimaryKeyModified"
-                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintHorizontal_chainStyle="spread_inside"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyFingerprint"
-                tools:text="Algorithm: RSA, 4096 bit" />
+                tools:text="ELGAMAL_GENERAL/4096" />
 
             <TextView
                 android:id="@+id/textViewPrimaryKeyModified"
