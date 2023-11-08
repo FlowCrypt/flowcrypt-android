@@ -44,7 +44,6 @@ import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getLastModificati
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListDependsOnStatus
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPrimaryKey
-import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPubKeysWithoutPrimary
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusIcon
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -255,7 +254,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     updatePrimaryKeyInfo(keyRingInfo)
 
     userIdsAdapter.submitList(keyRingInfo.userIds)
-    subKeysAdapter.submitList(keyRingInfo, keyRingInfo.getPubKeysWithoutPrimary())
+    subKeysAdapter.submit(keyRingInfo)
   }
 
   private fun updatePrimaryKeyInfo(keyRingInfo: KeyRingInfo) {

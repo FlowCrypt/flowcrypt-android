@@ -28,7 +28,7 @@ fun PGPPublicKey.armor(
   return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
 }
 
-fun PGPPublicKey.getLastModificationDate(): Date? {
+fun PGPPublicKey.getLastModificationDate(): Date {
   var mostRecent: PGPSignature? = null
   for (signature in signatures) {
     if (mostRecent == null || signature.creationTime.after(mostRecent.creationTime)) {
@@ -42,7 +42,7 @@ fun PGPPublicKey.getLastModificationDate(): Date? {
     }
   }
 
-  return mostRecent?.creationTime
+  return mostRecent?.creationTime ?: creationTime
 }
 
 fun PGPPublicKey.getExpirationDate(): Date? {

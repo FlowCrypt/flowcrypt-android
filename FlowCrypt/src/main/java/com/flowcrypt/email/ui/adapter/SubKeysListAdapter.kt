@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +19,7 @@ import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusColorSta
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusIcon
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusText
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPubKeysWithoutPrimary
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import org.bouncycastle.openpgp.PGPPublicKey
@@ -44,9 +44,9 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
     holder.bind(keyRingInfo, publicKey)
   }
 
-  fun submitList(keyRingInfo: KeyRingInfo?, list: Collection<PGPPublicKey>?) {
+  fun submit(keyRingInfo: KeyRingInfo?) {
     this.keyRingInfo = keyRingInfo
-    super.submitList(list?.toList())
+    super.submitList(keyRingInfo?.getPubKeysWithoutPrimary()?.toList())
   }
 
   inner class SubKeysViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -57,27 +57,33 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
       binding.textViewKeyFingerprint.text = GeneralUtil.doSectionsInText(
         originalString = OpenPgpFingerprint.of(publicKey).toString(), groupSize = 4
       )
-      val algorithm = PublicKeyAlgorithm.requireFromId(publicKey.algorithm)
-      val bitStrength = if (publicKey.bitStrength != -1) publicKey.bitStrength else null
-      val algoWithBits = algorithm.name + (bitStrength?.let { "/$it" } ?: "")
-      binding.textViewKeyAlgorithm.text = algoWithBits
+
+      binding.textViewKeyAlgorithm.apply {
+        val algorithm = PublicKeyAlgorithm.requireFromId(publicKey.algorithm)
+        val bitStrength = if (publicKey.bitStrength != -1) publicKey.bitStrength else null
+        val algoWithBits = algorithm.name + (bitStrength?.let { "/$it" } ?: "")
+        text = algoWithBits
+      }
+
       binding.textViewKeyCreated.text = context.getString(
         R.string.template_created,
         dateFormat.format(Date(publicKey.creationTime.time))
       )
 
-      publicKey.getLastModificationDate()?.let { lastModification ->
-        binding.textViewKeyModified.text = context.getString(
+      binding.textViewKeyModified.apply {
+        text = context.getString(
           R.string.template_modified,
-          dateFormat.format(Date(lastModification.time))
+          dateFormat.format(Date(publicKey.getLastModificationDate().time))
         )
       }
 
-      val expirationDate = publicKey.getExpirationDate()
-      binding.textViewKeyExpiration.text = if (expirationDate == null) {
-        context?.getString(R.string.expires, context.getString(R.string.never))
-      } else {
-        context?.getString(R.string.expires, dateFormat.format(expirationDate))
+      binding.textViewKeyExpiration.apply {
+        val expirationDate = publicKey.getExpirationDate()
+        text = if (expirationDate == null) {
+          context?.getString(R.string.expires, context.getString(R.string.never))
+        } else {
+          context?.getString(R.string.expires, dateFormat.format(expirationDate))
+        }
       }
 
       binding.textViewKeyCapabilities.setCompoundDrawablesWithIntrinsicBounds(
@@ -104,12 +110,12 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
         return oldItem === newItem
       }
 
-      @SuppressLint("DiffUtilEquals")
       override fun areContentsTheSame(
         oldItem: PGPPublicKey,
         newItem: PGPPublicKey
       ): Boolean {
-        return oldItem === newItem
+        return OpenPgpFingerprint.of(oldItem).equals(OpenPgpFingerprint.of(newItem))
+            && oldItem.getLastModificationDate() == newItem.getLastModificationDate()
       }
     }
   }
