@@ -14,11 +14,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.ItemSubKeyDetailsBinding
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expirationDate
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getExpirationDate
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getLastModificationDate
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusColorStateList
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusIcon
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusText
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.lastModifiedDate
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -66,14 +66,14 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
         dateFormat.format(Date(publicKey.creationTime.time))
       )
 
-      publicKey.lastModifiedDate()?.let { lastModification ->
+      publicKey.getLastModificationDate()?.let { lastModification ->
         binding.textViewKeyModified.text = context.getString(
           R.string.template_modified,
           dateFormat.format(Date(lastModification.time))
         )
       }
 
-      val expirationDate = publicKey.expirationDate()
+      val expirationDate = publicKey.getExpirationDate()
       binding.textViewKeyExpiration.text = if (expirationDate == null) {
         context?.getString(R.string.expires, context.getString(R.string.never))
       } else {

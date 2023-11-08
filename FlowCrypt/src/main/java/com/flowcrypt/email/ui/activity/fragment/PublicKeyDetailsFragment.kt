@@ -40,7 +40,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.lastModifiedDate
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getLastModificationDate
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListDependsOnStatus
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPrimaryKey
@@ -271,7 +271,7 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       R.string.template_created,
       dateFormat.format(Date(keyRingInfo.creationDate.time))
     )
-    keyRingInfo.getPrimaryKey()?.lastModifiedDate()?.let {
+    keyRingInfo.getPrimaryKey()?.getLastModificationDate()?.let {
       binding?.textViewPrimaryKeyModified?.text = getString(
         R.string.template_modified, dateFormat.format(it)
       )

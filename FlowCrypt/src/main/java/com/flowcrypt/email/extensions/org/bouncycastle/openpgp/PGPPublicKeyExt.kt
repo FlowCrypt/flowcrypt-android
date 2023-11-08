@@ -28,7 +28,7 @@ fun PGPPublicKey.armor(
   return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
 }
 
-fun PGPPublicKey.lastModifiedDate(): Date? {
+fun PGPPublicKey.getLastModificationDate(): Date? {
   var mostRecent: PGPSignature? = null
   for (signature in signatures) {
     if (mostRecent == null || signature.creationTime.after(mostRecent.creationTime)) {
@@ -45,7 +45,7 @@ fun PGPPublicKey.lastModifiedDate(): Date? {
   return mostRecent?.creationTime
 }
 
-fun PGPPublicKey.expirationDate(): Date? {
+fun PGPPublicKey.getExpirationDate(): Date? {
   return if (validSeconds == 0L) {
     null
   } else {
@@ -55,7 +55,7 @@ fun PGPPublicKey.expirationDate(): Date? {
 
 fun PGPPublicKey.getStatusColorStateList(context: Context): ColorStateList? {
   val isRevoked = hasRevocation()
-  val isExpired = expirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
+  val isExpired = getExpirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
 
   return ContextCompat.getColorStateList(
     context, when {
@@ -68,7 +68,7 @@ fun PGPPublicKey.getStatusColorStateList(context: Context): ColorStateList? {
 
 fun PGPPublicKey.getStatusIcon(): Int {
   val isRevoked = hasRevocation()
-  val isExpired = expirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
+  val isExpired = getExpirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
 
   return when {
     !isRevoked && !isExpired -> R.drawable.ic_baseline_gpp_good_16
@@ -79,7 +79,7 @@ fun PGPPublicKey.getStatusIcon(): Int {
 
 fun PGPPublicKey.getStatusText(context: Context): String {
   val isRevoked = hasRevocation()
-  val isExpired = expirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
+  val isExpired = getExpirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
   return when {
     isRevoked -> context.getString(R.string.revoked)
     isExpired -> context.getString(R.string.expired)
