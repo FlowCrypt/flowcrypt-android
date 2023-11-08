@@ -338,7 +338,6 @@
     <string name="template_algorithm_bits">Bits: %1$s</string>
     <string name="template_curve" translatable="false">Curve: %1$s</string>
     <string name="template_user" translatable="false">%1$d: %2$s</string>
-    <string name="template_fingerprint_2">Fingerprint %1$d: %2$s</string>
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
     <string name="email_must_be_non_empty">Email should not be empty</string>
     <string name="your_email_address">Your email address</string>
