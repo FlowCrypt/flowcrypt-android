@@ -42,8 +42,11 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.lastModifiedDate
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListDependsOnStatus
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPrimaryKey
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPubKeysWithoutPrimary
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusIcon
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -260,8 +263,12 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
     binding?.textViewPrimaryKeyFingerprint?.text = GeneralUtil.doSectionsInText(
       originalString = keyRingInfo.fingerprint.toString(), groupSize = 4
     )
+    val bitStrength =
+      if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else null
     binding?.textViewPrimaryKeyAlgorithm?.text =
-      getString(R.string.template_algorithm, keyRingInfo.algorithm.name)
+      getString(
+        R.string.template_algorithm,
+        keyRingInfo.algorithm.name + (bitStrength?.let { "/$it" } ?: ""))
     binding?.textViewPrimaryKeyCreated?.text = getString(
       R.string.template_created,
       dateFormat.format(Date(keyRingInfo.creationDate.time))
@@ -287,12 +294,12 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
       null
     )
 
-    /*binding?.textViewStatusValue?.backgroundTintList =
-      pgpKeyRingDetails.getColorStateListDependsOnStatus(requireContext())
+    binding?.textViewStatusValue?.backgroundTintList =
+      keyRingInfo.getColorStateListDependsOnStatus(requireContext())
     binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
-      pgpKeyRingDetails.getStatusIcon(), 0, 0, 0
+      keyRingInfo.getStatusIcon(), 0, 0, 0
     )
-    binding?.textViewStatusValue?.text = pgpKeyRingDetails.getStatusText(requireContext())*/
+    binding?.textViewStatusValue?.text = keyRingInfo.getStatusText(requireContext())
   }
 
   private fun initUserIdsRecyclerView() {

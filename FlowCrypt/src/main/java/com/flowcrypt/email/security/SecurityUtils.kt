@@ -149,7 +149,7 @@ class SecurityUtils {
     ): List<String> {
       val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
       val matchingKeyRingInfoList = keysStorage.getPGPSecretKeyRingsByUserId(senderEmail)
-        .map { KeyRingInfo(it) }.filter { it.usableForEncryption() }
+        .map { KeyRingInfo(it) }.filter { it.usableForEncryption }
       if (matchingKeyRingInfoList.isEmpty()) {
         throw IllegalStateException("There are no usable for encryption keys for $senderEmail")
       }

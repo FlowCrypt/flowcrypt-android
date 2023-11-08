@@ -6,6 +6,7 @@
 package com.flowcrypt.email.extensions.org.pgpainless.key.info
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.view.Gravity
@@ -18,28 +19,41 @@ import org.pgpainless.key.info.KeyRingInfo
 /**
  * @author Denys Bondarenko
  */
-fun KeyRingInfo.usableForEncryption(): Boolean {
-  return !publicKey.hasRevocation()
-      && !isExpired()
-      && isUsableForEncryption
-      && primaryUserId?.isNotEmpty() == true
-}
-
-fun KeyRingInfo.usableForSigning(): Boolean {
-  return !publicKey.hasRevocation()
-      && !isExpired()
-      && isSigningCapable
-      && primaryUserId?.isNotEmpty() == true
-}
-
-fun KeyRingInfo.isExpired(): Boolean {
-  return try {
-    primaryKeyExpirationDate?.time?.let { System.currentTimeMillis() > it } ?: false
-  } catch (e: Exception) {
-    e.printStackTrace()
-    false
+val KeyRingInfo.usableForEncryption: Boolean
+  get() {
+    return !publicKey.hasRevocation()
+        && !isExpired
+        && isUsableForEncryption
+        && primaryUserId?.isNotEmpty() == true
   }
-}
+
+val KeyRingInfo.usableForSigning: Boolean
+  get() {
+    return !publicKey.hasRevocation()
+        && !isExpired
+        && isSigningCapable
+        && primaryUserId?.isNotEmpty() == true
+  }
+
+val KeyRingInfo.isExpired: Boolean
+  get() {
+    return try {
+      primaryKeyExpirationDate?.time?.let { System.currentTimeMillis() > it } ?: false
+    } catch (e: Exception) {
+      e.printStackTrace()
+      false
+    }
+  }
+
+val KeyRingInfo.isPartiallyEncrypted: Boolean
+  get() {
+    return !isFullyDecrypted && !isFullyEncrypted
+  }
+
+val KeyRingInfo.isRevoked: Boolean
+  get() {
+    return publicKey.hasRevocation()
+  }
 
 fun KeyRingInfo.getPrimaryKey(): PGPPublicKey? {
   return publicKeys.firstOrNull { it.isMasterKey }
@@ -100,5 +114,36 @@ fun KeyRingInfo.generateKeyCapabilitiesDrawable(context: Context, keyId: Long): 
     }
   } else {
     array.firstOrNull()
+  }
+}
+
+fun KeyRingInfo.getColorStateListDependsOnStatus(context: Context): ColorStateList? {
+  return ContextCompat.getColorStateList(
+    context, when {
+      usableForEncryption -> R.color.colorPrimary
+      usableForSigning -> R.color.colorAccent
+      isRevoked -> R.color.red
+      isExpired || isPartiallyEncrypted -> R.color.orange
+      else -> R.color.gray
+    }
+  )
+}
+
+fun KeyRingInfo.getStatusIcon(): Int {
+  return when {
+    !isRevoked
+        && !isExpired
+        && !isPartiallyEncrypted -> R.drawable.ic_baseline_gpp_good_16
+
+    else -> R.drawable.ic_outline_warning_amber_16
+  }
+}
+
+fun KeyRingInfo.getStatusText(context: Context): String {
+  return when {
+    publicKey.hasRevocation() -> context.getString(R.string.revoked)
+    isExpired -> context.getString(R.string.expired)
+    isPartiallyEncrypted -> context.getString(R.string.not_valid)
+    else -> context.getString(R.string.valid)
   }
 }
