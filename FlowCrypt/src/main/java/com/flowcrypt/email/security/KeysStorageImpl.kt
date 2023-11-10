@@ -263,7 +263,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   }
 
   override fun getFirstUsableForEncryptionPGPSecretKeyRing(user: String): PGPSecretKeyRing? {
-    return getPGPSecretKeyRingsByUserId(user).firstOrNull { KeyRingInfo(it).usableForEncryption() }
+    return getPGPSecretKeyRingsByUserId(user).firstOrNull { KeyRingInfo(it).usableForEncryption }
   }
 
   override fun getPassPhrasesUpdatesFlow(): Flow<Long> = passphrasesUpdatesLiveData.asFlow()

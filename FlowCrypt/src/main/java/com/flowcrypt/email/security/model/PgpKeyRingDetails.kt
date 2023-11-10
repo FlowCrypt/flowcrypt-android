@@ -42,7 +42,7 @@ data class PgpKeyRingDetails constructor(
   @Expose val primaryUserId: String?,
   @Expose val ids: List<KeyId>,
   @Expose val created: Long,
-  @Expose val lastModified: Long? = null,
+  @Expose val lastModified: Long,
   @Expose val expiration: Long? = null,
   @Expose val algo: Algo,
   @Expose val primaryKeyId: Long,
@@ -85,7 +85,7 @@ data class PgpKeyRingDetails constructor(
   }
 
   fun isNewerThan(pgpKeyRingDetails: PgpKeyRingDetails?): Boolean {
-    val existingLastModified = lastModified ?: 0
+    val existingLastModified = lastModified
     val providedLastModified = pgpKeyRingDetails?.lastModified ?: 0
     return existingLastModified > providedLastModified
   }
@@ -218,7 +218,7 @@ data class PgpKeyRingDetails constructor(
     result = 31 * result + (primaryUserId?.hashCode() ?: 0)
     result = 31 * result + ids.hashCode()
     result = 31 * result + created.hashCode()
-    result = 31 * result + (lastModified?.hashCode() ?: 0)
+    result = 31 * result + lastModified.hashCode()
     result = 31 * result + (expiration?.hashCode() ?: 0)
     result = 31 * result + algo.hashCode()
     result = 31 * result + primaryKeyId.hashCode()

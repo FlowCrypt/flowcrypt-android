@@ -16,8 +16,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
+import org.pgpainless.key.info.KeyRingInfo
 
 /**
  * @author Denys Bondarenko
@@ -29,24 +31,30 @@ class PublicKeyDetailsViewModel(
   private val publicKeyEntityFlow =
     roomDatabase.pubKeyDao().getPublicKeyByIdFlow(publicKeyEntity.id ?: -1)
 
+  @OptIn(ExperimentalCoroutinesApi::class)
+  val publicKeyEntityStateFlow = publicKeyEntityFlow.mapLatest {
+    Result.success(it)
+  }.stateIn(
+    scope = viewModelScope,
+    started = SharingStarted.WhileSubscribed(5000),
+    initialValue = Result.none()
+  )
+
   @ExperimentalCoroutinesApi
-  val publicKeyEntityWithPgpDetailFlow: StateFlow<Result<PublicKeyEntity?>> =
+  val keyRingInfoStateFlow: StateFlow<Result<KeyRingInfo?>> =
     publicKeyEntityFlow.flatMapLatest { publicKeyEntity ->
       flow {
         emit(Result.loading())
         try {
-          if (publicKeyEntity != null) {
-            val activeAccount = getActiveAccountSuspend()
-            withContext(Dispatchers.IO) {
-              publicKeyEntity.pgpKeyRingDetails =
-                PgpKey.parseKeys(
-                  source = publicKeyEntity.publicKey,
-                  throwExceptionIfUnknownSource = false,
-                  hideArmorMeta = activeAccount?.clientConfiguration?.shouldHideArmorMeta() ?: false
-                ).pgpKeyDetailsList.firstOrNull()
-            }
+          val activeAccount = getActiveAccountSuspend()
+          val keyRing = withContext(Dispatchers.IO) {
+            PgpKey.parseKeys(
+              source = publicKeyEntity?.publicKey ?: byteArrayOf(),
+              throwExceptionIfUnknownSource = false,
+              hideArmorMeta = activeAccount?.clientConfiguration?.shouldHideArmorMeta() ?: false
+            ).getAllKeys().firstOrNull()
           }
-          emit(Result.success(publicKeyEntity))
+          emit(Result.success(keyRing?.let { KeyRingInfo(keyRing) }))
         } catch (e: Exception) {
           emit(Result.exception(e))
         }

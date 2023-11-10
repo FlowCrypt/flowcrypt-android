@@ -40,6 +40,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.DateTimeUtil
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.CoreMatchers
@@ -103,23 +104,18 @@ class PublicKeyDetailsFlowTest : BaseTest() {
         .check(matches(isDisplayed()))
     }
 
-    keyDetails.ids.forEachIndexed { index, s ->
-      onView(withText(getResString(R.string.template_fingerprint_2, index + 1, s.fingerprint)))
+    keyDetails.ids.forEach { keyId ->
+      val text = GeneralUtil.doSectionsInText(
+        originalString = keyId.fingerprint, groupSize = 4
+      )
+
+      onView(withText(text))
         .check(matches(isDisplayed()))
     }
 
-    onView(withId(R.id.textViewAlgorithm))
-      .check(
-        matches(
-          withText(
-            getResString(
-              R.string.template_algorithm,
-              keyDetails.algo.algorithm!!
-            )
-          )
-        )
-      )
-    onView(withId(R.id.textViewCreated))
+    onView(withId(R.id.textViewPrimaryKeyAlgorithm))
+      .check(matches(withText(keyDetails.algo.algorithm!! + "/" + keyDetails.algo.bits)))
+    onView(withId(R.id.textViewPrimaryKeyCreated))
       .check(
         matches(
           withText(

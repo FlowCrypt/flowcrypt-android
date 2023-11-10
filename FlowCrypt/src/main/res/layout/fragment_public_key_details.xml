@@ -31,51 +31,181 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <LinearLayout
-                android:id="@+id/layoutUsers"
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/textViewMasterKey"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content"
-                android:orientation="vertical"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                android:text="@string/primary_key"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/layoutFingerprints"
+            <View
+                android:id="@+id/dividerPrimaryKey"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content"
-                android:orientation="vertical"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/layoutUsers">
-
-            </LinearLayout>
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey" />
 
             <TextView
-                android:id="@+id/textViewAlgorithm"
+                android:id="@+id/textViewPrimaryKeyFingerprint"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content"
+                android:layout_marginTop="@dimen/default_margin_small"
                 android:textIsSelectable="true"
+                android:textStyle="bold"
+                android:ellipsize="middle"
+                android:maxLines="1"
+                app:autoSizeMaxTextSize="@dimen/default_text_size_big"
+                app:autoSizeMinTextSize="@dimen/default_text_size_small"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/layoutFingerprints"
-                tools:text="Algorithm: RSA 4096 bit" />
-
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey"
+                tools:text="670F 4904 6294 213E A166 DBA6 AAD5 550D FBC7 9F22" />
 
             <TextView
-                android:id="@+id/textViewCreated"
-                android:layout_width="0dp"
+                android:id="@+id/textViewPrimaryKeyAlgorithm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/textViewPrimaryKeyModified"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyFingerprint"
+                tools:text="ELGAMAL_GENERAL/4096" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyModified"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textIsSelectable="true"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/textViewPrimaryKeyAlgorithm"
+                app:layout_constraintTop_toTopOf="@+id/textViewPrimaryKeyAlgorithm"
+                tools:text="Modified: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyCreated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/textViewPrimaryKeyExpiration"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewAlgorithm"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyAlgorithm"
                 tools:text="Created: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyExpiration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toEndOf="@+id/textViewPrimaryKeyCreated"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyModified"
+                tools:text="Expires: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyCapabilities"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:text="@string/capabilities"
+                android:textIsSelectable="true"
+                app:drawableEndCompat="@drawable/ic_possibility_auth"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyCreated" />
+
+            <TextView
+                android:id="@+id/textViewStatusValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_twice_dip"
+                android:background="@drawable/bg_rectangle_silver_border"
+                tools:backgroundTint="@color/orange"
+                android:drawablePadding="@dimen/default_twice_dip"
+                tools:text="@string/revoked"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textIsSelectable="true"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewPrimaryKeyCapabilities"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyExpiration" />
+
+            <TextView
+                android:id="@+id/textViewUserIDs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_large"
+                android:text="@string/user_ids"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewStatusValue" />
+
+            <View
+                android:id="@+id/dividerUserIds"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewUserIDs" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewUserIds"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/dividerUserIds"
+                tools:itemCount="4"
+                tools:orientation="horizontal" />
+
+            <TextView
+                android:id="@+id/textViewSubKeys"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_large"
+                android:text="@string/sub_keys"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/recyclerViewUserIds" />
+
+            <View
+                android:id="@+id/dividerSubKeys"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewSubKeys" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewSubKeys"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_small"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/dividerSubKeys"
+                tools:itemCount="4"
+                tools:listitem="@layout/item_sub_key_details"
+                tools:orientation="horizontal" />
+
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guidelineLeft"
