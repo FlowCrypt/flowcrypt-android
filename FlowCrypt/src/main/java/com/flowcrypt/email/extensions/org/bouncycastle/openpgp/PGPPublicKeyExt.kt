@@ -12,7 +12,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPSignature
 import java.io.IOException
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -29,38 +28,19 @@ fun PGPPublicKey.armor(
 }
 
 fun PGPPublicKey.getLastModificationDate(): Date {
-  var mostRecent: PGPSignature? = null
-  for (signature in signatures) {
-    if (mostRecent == null || signature.creationTime.after(mostRecent.creationTime)) {
-      mostRecent = signature
-    }
-  }
-
-  for (signature in keySignatures) {
-    if (mostRecent == null || signature.creationTime.after(mostRecent.creationTime)) {
-      mostRecent = signature
-    }
-  }
-
-  return mostRecent?.creationTime ?: creationTime
+  val allSignatures = (listOf(signatures, keySignatures).flatMap { it.asSequence() }).toList()
+  return allSignatures.maxByOrNull { it.creationTime }?.creationTime ?: creationTime
 }
 
-fun PGPPublicKey.getExpirationDate(): Date? {
-  return if (validSeconds == 0L) {
-    null
-  } else {
-    Date(creationTime.time + TimeUnit.SECONDS.toMillis(validSeconds))
-  }
+fun PGPPublicKey.getExpirationDate(): Date? = validSeconds.takeIf { it != 0L }?.let {
+  Date(creationTime.time + TimeUnit.SECONDS.toMillis(it))
 }
 
 fun PGPPublicKey.getStatusColorStateList(context: Context): ColorStateList? {
-  val isRevoked = hasRevocation()
-  val isExpired = getExpirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
-
   return ContextCompat.getColorStateList(
     context, when {
-      isRevoked -> R.color.red
-      isExpired -> R.color.orange
+      hasRevocation() -> R.color.red
+      getExpirationDate()?.before(Date()) == true -> R.color.orange
       else -> R.color.colorPrimary
     }
   )

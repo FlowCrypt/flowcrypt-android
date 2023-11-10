@@ -65,55 +65,31 @@ fun KeyRingInfo.getPubKeysWithoutPrimary(): Collection<PGPPublicKey> {
 }
 
 fun KeyRingInfo.generateKeyCapabilitiesDrawable(context: Context, keyId: Long): Drawable? {
-  val iconCertify = ContextCompat.getDrawable(context, R.drawable.ic_possibility_cert)
-  val iconEncrypt = ContextCompat.getDrawable(context, R.drawable.ic_possibility_encryption)
-  val iconSign = ContextCompat.getDrawable(context, R.drawable.ic_possibility_sign)
-  val iconAuth = ContextCompat.getDrawable(context, R.drawable.ic_possibility_auth)
-
-  val set = linkedSetOf<Drawable?>().toMutableSet()
   val keyFlags = getKeyFlagsOf(keyId)
-
-  if (keyFlags.contains(KeyFlag.CERTIFY_OTHER)) {
-    set.add(iconCertify)
-  }
-  if (keyFlags.contains(KeyFlag.ENCRYPT_COMMS) || keyFlags.contains(KeyFlag.ENCRYPT_STORAGE)) {
-    set.add(iconEncrypt)
-  }
-  if (keyFlags.contains(KeyFlag.SIGN_DATA)) {
-    set.add(iconSign)
-  }
-  if (keyFlags.contains(KeyFlag.AUTHENTICATION)) {
-    set.add(iconAuth)
+  val drawables = listOf(
+    KeyFlag.CERTIFY_OTHER to R.drawable.ic_possibility_cert,
+    KeyFlag.ENCRYPT_COMMS to R.drawable.ic_possibility_encryption,
+    KeyFlag.ENCRYPT_STORAGE to R.drawable.ic_possibility_encryption,
+    KeyFlag.SIGN_DATA to R.drawable.ic_possibility_sign,
+    KeyFlag.AUTHENTICATION to R.drawable.ic_possibility_auth
+  ).mapNotNull { (flag, drawableRes) ->
+    drawableRes.takeIf { keyFlags.contains(flag) }
+  }.toSet().mapNotNull {
+    ContextCompat.getDrawable(context, it)
   }
 
-  val array = set.filterNotNull().toTypedArray()
-  return if (array.size > 1) {
-    LayerDrawable(array).apply {
-      for (i in array.indices) {
-        val insetLeft = if (i > 0) {
-          array.slice(0..<i).sumOf { it.intrinsicWidth }
-        } else {
-          0
-        }
-
-        val insetRight = if (i == array.size - 1) {
-          0
-        } else {
-          array.slice(i + 1..<array.size).sumOf { it.intrinsicWidth }
-        }
-
+  return when {
+    drawables.size > 1 -> LayerDrawable(drawables.toTypedArray()).apply {
+      for (i in drawables.indices) {
         setLayerInset(
-          i,
-          insetLeft,
-          0,
-          insetRight,
-          0
+          i, drawables.take(i).sumOf { it.intrinsicWidth }, 0,
+          drawables.takeLast(drawables.size - i - 1).sumOf { it.intrinsicWidth }, 0
         )
         setLayerGravity(i, Gravity.CENTER_VERTICAL)
       }
     }
-  } else {
-    array.firstOrNull()
+
+    else -> drawables.firstOrNull()
   }
 }
 
