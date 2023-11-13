@@ -263,7 +263,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
       binding?.textViewStatusValue?.backgroundTintList =
         value.getColorStateListDependsOnStatus(requireContext())
       binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
-        value.getStatusIcon(), 0, 0, 0
+        value.getStatusIconResId(), 0, 0, 0
       )
       binding?.textViewStatusValue?.text = value.getStatusText(requireContext())
 
@@ -274,7 +274,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
       )
       binding?.textViewModificationDate?.text = getString(
         R.string.template_modification_date,
-        dateFormat.format(Date(value.lastModified ?: value.created))
+        dateFormat.format(Date(value.lastModified))
       )
       binding?.textViewExpirationDate?.text = value.expiration?.let {
         getString(R.string.key_expiration, dateFormat.format(Date(it)))

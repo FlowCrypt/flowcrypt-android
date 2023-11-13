@@ -77,7 +77,7 @@ class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyAc
         binding.textViewStatus.backgroundTintList =
           pgpKeyRingDetails.getColorStateListDependsOnStatus(context)
         binding.textViewStatus.setCompoundDrawablesWithIntrinsicBounds(
-          pgpKeyRingDetails.getStatusIcon(), 0, 0, 0
+          pgpKeyRingDetails.getStatusIconResId(), 0, 0, 0
         )
         binding.textViewStatus.text = pgpKeyRingDetails.getStatusText(context)
       }
