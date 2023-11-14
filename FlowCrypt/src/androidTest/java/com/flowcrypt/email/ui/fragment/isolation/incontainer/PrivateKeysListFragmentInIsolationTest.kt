@@ -247,8 +247,8 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
                 statusLabelTextColorResId?.let { hasTextColor(it) },
                 statusLabelIconResId?.let {
                   withTextViewDrawable(
-                    it,
-                    TextViewDrawableMatcher.DrawablePosition.LEFT
+                    resourceId = it,
+                    drawablePosition = TextViewDrawableMatcher.DrawablePosition.LEFT
                   )
                 },
                 statusLabelTintColorResId?.let {

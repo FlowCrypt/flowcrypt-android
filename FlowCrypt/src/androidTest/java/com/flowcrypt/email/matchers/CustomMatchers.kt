@@ -8,6 +8,7 @@ package com.flowcrypt.email.matchers
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -95,10 +96,11 @@ class CustomMatchers {
     }
 
     fun withTextViewDrawable(
-      @DrawableRes resourceId: Int,
+      drawable: Drawable? = null,
+      @DrawableRes resourceId: Int = 0,
       @TextViewDrawableMatcher.DrawablePosition drawablePosition: Int
     ): Matcher<View> {
-      return TextViewDrawableMatcher(resourceId, drawablePosition)
+      return TextViewDrawableMatcher(drawable, resourceId, drawablePosition)
     }
 
     fun hasItem(matcher: Matcher<View>): Matcher<View> {

@@ -88,8 +88,8 @@ class ComposeScreenPasswordProtectedFlowTest : BaseComposeScreenTest() {
       .check(
         matches(
           withTextViewDrawable(
-            R.drawable.ic_password_not_protected_white_24,
-            TextViewDrawableMatcher.DrawablePosition.LEFT
+            resourceId = R.drawable.ic_password_not_protected_white_24,
+            drawablePosition = TextViewDrawableMatcher.DrawablePosition.LEFT
           )
         )
       )
