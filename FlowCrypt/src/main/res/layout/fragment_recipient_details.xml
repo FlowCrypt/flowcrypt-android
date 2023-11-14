@@ -9,55 +9,38 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/iVPerson"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/default_margin_content"
-        android:layout_marginTop="@dimen/default_margin_content"
-        android:contentDescription="@string/recipient_detail"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_baseline_person_green_24" />
-
     <TextView
         android:id="@+id/tVName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content"
         android:layout_marginEnd="@dimen/default_margin_content"
+        android:drawablePadding="@dimen/default_margin_small"
         android:ellipsize="middle"
         android:maxLines="1"
         android:textAppearance="@style/TextAppearance.AppCompat.Title"
-        app:layout_constraintBottom_toBottomOf="@+id/iVPerson"
+        app:drawableLeftCompat="@drawable/ic_baseline_person_green_24"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/iVPerson"
-        app:layout_constraintTop_toTopOf="@+id/iVPerson"
-        tools:text="Den at FlowCrypt" />
-
-    <ImageView
-        android:id="@+id/iVEmail"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/default_margin_content"
-        android:layout_marginTop="@dimen/default_margin_content_small"
-        android:contentDescription="@string/recipient_detail"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/iVPerson"
-        app:srcCompat="@drawable/ic_email_encrypted" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Den at FlowCrypt" />
 
     <TextView
         android:id="@+id/tVEmail"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginStart="@dimen/default_margin_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
         android:layout_marginEnd="@dimen/default_margin_content"
+        android:drawablePadding="@dimen/default_margin_small"
         android:ellipsize="middle"
         android:maxLines="1"
-        app:layout_constraintBottom_toBottomOf="@+id/iVEmail"
+        android:gravity="center_vertical"
+        app:drawableLeftCompat="@drawable/ic_email_encrypted"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/iVEmail"
-        app:layout_constraintTop_toTopOf="@+id/iVEmail"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tVName"
         tools:text="flowcrypt@flowcrypt.test" />
 
     <TextView

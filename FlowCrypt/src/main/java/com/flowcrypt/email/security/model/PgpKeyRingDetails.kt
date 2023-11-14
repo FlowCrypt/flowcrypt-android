@@ -151,7 +151,7 @@ data class PgpKeyRingDetails constructor(
     )
   }
 
-  fun getStatusIcon(): Int {
+  fun getStatusIconResId(): Int {
     return when {
       !isRevoked
           && !isExpired
