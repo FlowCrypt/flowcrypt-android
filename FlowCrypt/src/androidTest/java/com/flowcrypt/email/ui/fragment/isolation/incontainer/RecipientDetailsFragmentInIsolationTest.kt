@@ -203,8 +203,8 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
                       )
                     ),
                     withTextViewDrawable(
-                      firstKeyDetails.getStatusIconResId(),
-                      TextViewDrawableMatcher.DrawablePosition.LEFT
+                      resourceId = firstKeyDetails.getStatusIconResId(),
+                      drawablePosition = TextViewDrawableMatcher.DrawablePosition.LEFT
                     )
                   )
                 ),
