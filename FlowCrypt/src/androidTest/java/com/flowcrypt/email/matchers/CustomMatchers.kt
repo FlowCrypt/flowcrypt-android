@@ -120,11 +120,15 @@ class CustomMatchers {
       context: Context,
       colorStringHex: String
     ): BackgroundTintMatcher {
-      return BackgroundTintMatcher(
+      return withViewBackgroundTint(
         requireNotNull(
           ColorStateList.valueOf(colorStringHex.parseAsColorBasedOnDefaultSettings(context))
         )
       )
+    }
+
+    fun withViewBackgroundTint(colorStateList: ColorStateList): BackgroundTintMatcher {
+      return BackgroundTintMatcher(colorStateList)
     }
 
     fun withTextInputLayoutError(expectedHint: String): TextInputLayoutErrorMatcher {

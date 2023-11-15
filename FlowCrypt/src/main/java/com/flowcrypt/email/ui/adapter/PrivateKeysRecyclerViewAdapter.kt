@@ -68,7 +68,7 @@ class PrivateKeysRecyclerViewAdapter(
       viewHolder.textViewStatus.backgroundTintList =
         pgpKeyRingDetails.getColorStateListDependsOnStatus(context)
       viewHolder.textViewStatus.setCompoundDrawablesWithIntrinsicBounds(
-        pgpKeyRingDetails.getStatusIcon(), 0, 0, 0
+        pgpKeyRingDetails.getStatusIconResId(), 0, 0, 0
       )
       viewHolder.textViewStatus.text = pgpKeyRingDetails.getStatusText(context)
     }
