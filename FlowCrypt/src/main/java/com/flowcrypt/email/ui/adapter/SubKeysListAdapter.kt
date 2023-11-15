@@ -16,7 +16,7 @@ import com.flowcrypt.email.databinding.ItemSubKeyDetailsBinding
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getExpirationDate
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getLastModificationDate
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusColorStateList
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusIcon
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusIconResId
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusText
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPubKeysWithoutPrimary
@@ -95,7 +95,7 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
 
       binding.textViewStatusValue.apply {
         backgroundTintList = publicKey.getStatusColorStateList(context)
-        setCompoundDrawablesWithIntrinsicBounds(publicKey.getStatusIcon(), 0, 0, 0)
+        setCompoundDrawablesWithIntrinsicBounds(publicKey.getStatusIconResId(), 0, 0, 0)
         text = publicKey.getStatusText(context)
       }
     }

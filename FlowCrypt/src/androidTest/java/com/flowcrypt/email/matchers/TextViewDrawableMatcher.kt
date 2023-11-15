@@ -34,7 +34,9 @@ class TextViewDrawableMatcher(
       return false
     }
 
-    val expectedBitmap = drawable?.toBitmap() ?: view.context.getDrawable(resourceId)?.toBitmap()
+    val expectedBitmap = drawable?.toBitmap() ?: if (resourceId != 0) {
+      view.context.getDrawable(resourceId)?.toBitmap()
+    } else return true
     return view.compoundDrawables[drawablePosition].toBitmap().sameAs(expectedBitmap)
   }
 
