@@ -46,7 +46,7 @@ fun PGPPublicKey.getStatusColorStateList(context: Context): ColorStateList? {
   )
 }
 
-fun PGPPublicKey.getStatusIcon(): Int {
+fun PGPPublicKey.getStatusIconResId(): Int {
   val isRevoked = hasRevocation()
   val isExpired = getExpirationDate()?.let { System.currentTimeMillis() > it.time } ?: false
 

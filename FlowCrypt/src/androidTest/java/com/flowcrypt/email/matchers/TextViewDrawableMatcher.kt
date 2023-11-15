@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.matchers
 
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.DrawableRes
@@ -17,12 +18,13 @@ import org.hamcrest.TypeSafeMatcher
  * @author Denys Bondarenko
  */
 class TextViewDrawableMatcher(
-  @DrawableRes private val resourceId: Int,
+  private val drawable: Drawable? = null,
+  @DrawableRes private val resourceId: Int = 0,
   @DrawablePosition private val drawablePosition: Int
 ) : TypeSafeMatcher<View>() {
   override fun describeTo(description: Description) {
     description.appendText(
-      "TextView with compound drawable at position $drawablePosition" +
+      "TextView with compound $drawable at position $drawablePosition" +
           " same as drawable with id $resourceId"
     )
   }
@@ -32,7 +34,9 @@ class TextViewDrawableMatcher(
       return false
     }
 
-    val expectedBitmap = view.context.getDrawable(resourceId)?.toBitmap()
+    val expectedBitmap = drawable?.toBitmap() ?: if (resourceId != 0) {
+      view.context.getDrawable(resourceId)?.toBitmap()
+    } else return true
     return view.compoundDrawables[drawablePosition].toBitmap().sameAs(expectedBitmap)
   }
 

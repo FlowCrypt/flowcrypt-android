@@ -282,10 +282,8 @@ class PublicKeyDetailsFragment : BaseFragment<FragmentPublicKeyDetailsBinding>()
 
     binding?.textViewPrimaryKeyExpiration?.apply {
       text = keyRingInfo.primaryKeyExpirationDate?.time?.let {
-        context?.getString(R.string.expires, dateFormat.format(Date(it)))
-      } ?: context?.getString(
-        R.string.expires, getString(R.string.never)
-      )
+        getString(R.string.expires, dateFormat.format(Date(it)))
+      } ?: getString(R.string.expires, getString(R.string.never))
     }
 
     binding?.textViewPrimaryKeyCapabilities?.setCompoundDrawablesWithIntrinsicBounds(
