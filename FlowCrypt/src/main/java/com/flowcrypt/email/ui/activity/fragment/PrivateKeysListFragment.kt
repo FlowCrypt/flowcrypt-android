@@ -40,7 +40,7 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
-import com.flowcrypt.email.ui.adapter.PrivateKeysRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.PrivateKeysListAdapter
 import com.flowcrypt.email.ui.adapter.selection.PgpKeyDetailsKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.PrivateKeyItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
@@ -51,11 +51,11 @@ import com.flowcrypt.email.util.GeneralUtil
  * @author Denys Bondarenko
  */
 class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), ListProgressBehaviour,
-  PrivateKeysRecyclerViewAdapter.OnKeySelectedListener {
+  PrivateKeysListAdapter.OnKeySelectedListener {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentPrivateKeysBinding.inflate(inflater, container, false)
 
-  private val recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(this)
+  private val privateKeysAdapter = PrivateKeysListAdapter(this)
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var tracker: SelectionTracker<PgpKeyRingDetails>? = null
   private var actionMode: ActionMode? = null
@@ -128,7 +128,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     super.onAccountInfoRefreshed(accountEntity)
     if (accountEntity?.clientConfiguration?.usesKeyManager() == true) {
       binding?.floatActionButtonAddKey?.gone()
-      recyclerViewAdapter.tracker = null
+      privateKeysAdapter.tracker = null
     }
   }
 
@@ -142,7 +142,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
 
         Result.Status.SUCCESS -> {
           val detailsList = it.data ?: emptyList()
-          recyclerViewAdapter.swap(detailsList)
+          privateKeysAdapter.swap(detailsList)
           if (detailsList.isEmpty()) {
             showEmptyView()
           } else {
@@ -169,12 +169,12 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
       val decoration = DividerItemDecoration(context, manager.orientation)
       addItemDecoration(decoration)
       layoutManager = manager
-      adapter = recyclerViewAdapter
+      adapter = adapter
     }
 
     //setupSelectionTracker(recyclerView)
 
-    if (recyclerViewAdapter.itemCount > 0) {
+    if (privateKeysAdapter.itemCount > 0) {
       showContent()
     }
 
@@ -195,12 +195,12 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     tracker = SelectionTracker.Builder(
       javaClass.simpleName,
       recyclerView,
-      PgpKeyDetailsKeyProvider(recyclerViewAdapter.pgpKeyRingDetailsList),
+      PgpKeyDetailsKeyProvider(privateKeysAdapter.pgpKeyRingDetailsList),
       PrivateKeyItemDetailsLookup(recyclerView),
       StorageStrategy.createParcelableStorage(PgpKeyRingDetails::class.java)
     ).build()
 
-    recyclerViewAdapter.tracker = tracker
+    privateKeysAdapter.tracker = tracker
     tracker?.addObserver(selectionObserver)
   }
 

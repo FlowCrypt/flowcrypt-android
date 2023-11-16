@@ -26,10 +26,10 @@ import java.util.Date
  *
  * @author Denys Bondarenko
  */
-class PrivateKeysRecyclerViewAdapter(
+class PrivateKeysListAdapter(
   private val listener: OnKeySelectedListener?,
   val pgpKeyRingDetailsList: MutableList<PgpKeyRingDetails> = mutableListOf()
-) : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<PrivateKeysListAdapter.ViewHolder>() {
   private var dateFormat: java.text.DateFormat? = null
   var tracker: SelectionTracker<PgpKeyRingDetails>? = null
 
