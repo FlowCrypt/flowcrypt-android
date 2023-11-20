@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.PgpKeyItemBinding
-import com.flowcrypt.email.extensions.kotlin.internetAddress
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListDependsOnStatus
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusIcon
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
@@ -69,7 +69,7 @@ class PrivateKeysListAdapter(private val onKeySelectedListener: OnKeySelectedLis
     fun bind(keyRingInfo: KeyRingInfo, listener: OnKeySelectedListener?) {
       val context = itemView.context
 
-      val primaryUserMimeAddress = keyRingInfo.primaryUserId.internetAddress()
+      val primaryUserMimeAddress = keyRingInfo.primaryUserId.asInternetAddress()
       binding.tVPrimaryUserOrEmail.text =
         primaryUserMimeAddress?.personal ?: keyRingInfo.primaryUserId
 

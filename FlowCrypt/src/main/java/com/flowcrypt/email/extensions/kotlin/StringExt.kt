@@ -154,7 +154,7 @@ fun String.capitalize(): String {
   return lowercase().replaceFirstChar { it.titlecase(Locale.ROOT) }
 }
 
-fun String?.internetAddress(): InternetAddress? {
+fun String?.asInternetAddress(): InternetAddress? {
   return try {
     InternetAddress.parse(this)
   } catch (e: Exception) {
