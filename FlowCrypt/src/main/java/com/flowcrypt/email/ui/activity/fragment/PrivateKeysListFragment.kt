@@ -7,20 +7,14 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -32,14 +26,11 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
-import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
-import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.PrivateKeysListAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -57,8 +48,6 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
   private val privateKeysAdapter = PrivateKeysListAdapter(
     onKeySelectedListener = object : PrivateKeysListAdapter.OnKeySelectedListener {
       override fun onKeySelected(position: Int, pgpKeyRingDetails: KeyRingInfo?) {
-        if (tracker?.hasSelection() == true) return
-
         pgpKeyRingDetails?.let {
           navController?.navigate(
             PrivateKeysListFragmentDirections
@@ -66,34 +55,10 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
           )
         }
       }
-    },
-    checkSelection = {
-      tracker?.isSelected(it) ?: false
-    })
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private var tracker: SelectionTracker<KeyRingInfo>? = null
-  private var actionMode: ActionMode? = null
-  private val selectionObserver = object : SelectionTracker.SelectionObserver<KeyRingInfo>() {
-    override fun onSelectionChanged() {
-      super.onSelectionChanged()
-      when {
-        tracker?.hasSelection() == true -> {
-          if (actionMode == null) {
-            actionMode =
-              (this@PrivateKeysListFragment.activity as AppCompatActivity).startSupportActionMode(
-                genActionModeForKeys()
-              )
-          }
-          actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
-        }
-
-        tracker?.hasSelection() == false -> {
-          actionMode?.finish()
-          actionMode = null
-        }
-      }
     }
-  }
+  )
+
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override val emptyView: View?
     get() = binding?.emptyView
@@ -108,21 +73,6 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     initViews()
     setupPrivateKeysViewModel()
     subscribeToImportingAdditionalPrivateKeys()
-    subscribeToTwoWayDialog()
-  }
-
-  override fun onViewStateRestored(savedInstanceState: Bundle?) {
-    super.onViewStateRestored(savedInstanceState)
-    tracker?.onRestoreInstanceState(savedInstanceState)
-
-    if (tracker?.hasSelection() == true) {
-      selectionObserver.onSelectionChanged()
-    }
-  }
-
-  override fun onSaveInstanceState(outState: Bundle) {
-    super.onSaveInstanceState(outState)
-    tracker?.onSaveInstanceState(outState)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -173,7 +123,6 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
       addItemDecoration(decoration)
       layoutManager = manager
       adapter = privateKeysAdapter
-      setupSelectionTracker(this)
     }
 
     if (privateKeysAdapter.itemCount > 0) {
@@ -193,58 +142,6 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     }
   }
 
-  private fun setupSelectionTracker(recyclerView: RecyclerView) {
-    /*tracker = SelectionTracker.Builder(
-      javaClass.simpleName,
-      recyclerView,
-      KeyRingInfoItemKeyProvider(privateKeysAdapter.currentList),
-      KeyRingInfoItemDetailsLookup(recyclerView),
-      StorageStrategy.createStringStorage()
-    ).build()*/
-
-    tracker?.addObserver(selectionObserver)
-  }
-
-  private fun genActionModeForKeys(): ActionMode.Callback {
-    return object : ActionMode.Callback {
-      override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-        val count = tracker?.selection?.size() ?: 0
-        return when (item?.itemId) {
-          R.id.menuActionDeleteKey -> {
-            showTwoWayDialog(
-              requestCode = REQUEST_CODE_DELETE_KEYS_DIALOG,
-              dialogTitle = "",
-              dialogMsg = requireContext().resources.getQuantityString(
-                R.plurals.delete_key_question,
-                count,
-                count
-              ),
-              positiveButtonTitle = getString(android.R.string.ok),
-              negativeButtonTitle = getString(android.R.string.cancel),
-              isCancelable = false
-            )
-            true
-          }
-
-          else -> false
-        }
-      }
-
-      override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        mode?.menuInflater?.inflate(R.menu.private_keys_list_context_menu, menu)
-        return true
-      }
-
-      override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        return true
-      }
-
-      override fun onDestroyActionMode(mode: ActionMode?) {
-        tracker?.clearSelection()
-      }
-    }
-  }
-
   private fun subscribeToImportingAdditionalPrivateKeys() {
     setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
@@ -256,26 +153,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     }
   }
 
-  private fun subscribeToTwoWayDialog() {
-    setFragmentResultListenerForTwoWayDialog { _, bundle ->
-      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
-      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
-
-      when (requestCode) {
-        REQUEST_CODE_DELETE_KEYS_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          /*account?.let { accountEntity ->
-            tracker?.selection?.map { it }
-              ?.let { privateKeysViewModel.deleteKeys(accountEntity, it) }
-          }*/
-
-          actionMode?.finish()
-        }
-      }
-    }
-  }
-
   companion object {
-    private const val REQUEST_CODE_DELETE_KEYS_DIALOG = 100
     private val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
       PrivateKeysListFragment::class.java

@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -21,7 +20,6 @@ import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForSigning
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.ui.adapter.selection.KeyRingInfoItemDetails
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import org.pgpainless.key.info.KeyRingInfo
@@ -32,8 +30,7 @@ import org.pgpainless.key.info.KeyRingInfo
  * @author Denys Bondarenko
  */
 class PrivateKeysListAdapter(
-  private val onKeySelectedListener: OnKeySelectedListener?,
-  private val checkSelection: (KeyRingInfo) -> Boolean = { false }
+  private val onKeySelectedListener: OnKeySelectedListener?
 ) : ListAdapter<KeyRingInfo, PrivateKeysListAdapter.ViewHolder>(DIFF_CALLBACK) {
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
@@ -45,7 +42,6 @@ class PrivateKeysListAdapter(
     val pgpKeyRingDetails = getItem(position)
     pgpKeyRingDetails?.let {
       viewHolder.bind(it, onKeySelectedListener)
-      viewHolder.setActivated(checkSelection.invoke(it))
     }
   }
 
@@ -56,15 +52,6 @@ class PrivateKeysListAdapter(
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     private val binding = PgpKeyItemBinding.bind(itemView)
     private val dateFormat = DateTimeUtil.getPgpDateFormat(itemView.context)
-    fun getItemDetails(): ItemDetailsLookup.ItemDetails<KeyRingInfo>? {
-      return currentList.getOrNull(bindingAdapterPosition)?.let {
-        KeyRingInfoItemDetails(bindingAdapterPosition, it)
-      }
-    }
-
-    fun setActivated(isActivated: Boolean) {
-      itemView.isActivated = isActivated
-    }
 
     fun bind(keyRingInfo: KeyRingInfo, listener: OnKeySelectedListener?) {
       val context = itemView.context
