@@ -14,11 +14,11 @@ import org.pgpainless.key.info.KeyRingInfo
 /**
  * @author Denys Bondarenko
  */
-class PrivateKeyItemDetailsLookup(private val recyclerView: RecyclerView) :
+class KeyRingInfoItemDetailsLookup(private val recyclerView: RecyclerView) :
   ItemDetailsLookup<KeyRingInfo>() {
   override fun getItemDetails(e: MotionEvent): ItemDetails<KeyRingInfo>? {
     return recyclerView.findChildViewUnder(e.x, e.y)?.let {
-      (recyclerView.getChildViewHolder(it) as? PrivateKeysListAdapter.ViewHolder)?.getPgpKeyDetails()
+      (recyclerView.getChildViewHolder(it) as? PrivateKeysListAdapter.ViewHolder)?.getSelectionKeyRingInfo()
     }
   }
 }

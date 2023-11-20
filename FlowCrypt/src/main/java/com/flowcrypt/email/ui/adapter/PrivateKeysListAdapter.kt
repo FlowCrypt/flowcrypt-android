@@ -22,7 +22,7 @@ import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForSigning
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.ui.adapter.selection.SelectionPgpKeyDetails
+import com.flowcrypt.email.ui.adapter.selection.SelectionKeyRingInfo
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import org.pgpainless.key.info.KeyRingInfo
@@ -56,9 +56,9 @@ class PrivateKeysListAdapter(private val onKeySelectedListener: OnKeySelectedLis
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     val binding = PgpKeyItemBinding.bind(itemView)
     private val dateFormat = DateTimeUtil.getPgpDateFormat(itemView.context)
-    fun getPgpKeyDetails(): ItemDetailsLookup.ItemDetails<KeyRingInfo>? {
+    fun getSelectionKeyRingInfo(): ItemDetailsLookup.ItemDetails<KeyRingInfo>? {
       return currentList.getOrNull(bindingAdapterPosition)?.let {
-        SelectionPgpKeyDetails(bindingAdapterPosition, it)
+        SelectionKeyRingInfo(bindingAdapterPosition, it)
       }
     }
 
