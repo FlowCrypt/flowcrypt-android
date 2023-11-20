@@ -6,13 +6,13 @@
 package com.flowcrypt.email.ui.adapter.selection
 
 import androidx.recyclerview.selection.ItemKeyProvider
-import com.flowcrypt.email.security.model.PgpKeyRingDetails
+import org.pgpainless.key.info.KeyRingInfo
 
 /**
  * @author Denys Bondarenko
  */
-class PgpKeyDetailsKeyProvider(private val items: List<PgpKeyRingDetails>) :
-  ItemKeyProvider<PgpKeyRingDetails>(SCOPE_CACHED) {
+class KeyRingInfoItemKeyProvider(private val items: List<KeyRingInfo>) :
+  ItemKeyProvider<KeyRingInfo>(SCOPE_CACHED) {
   override fun getKey(position: Int) = items.getOrNull(position)
-  override fun getPosition(key: PgpKeyRingDetails) = items.indexOf(key)
+  override fun getPosition(key: KeyRingInfo) = items.indexOf(key)
 }

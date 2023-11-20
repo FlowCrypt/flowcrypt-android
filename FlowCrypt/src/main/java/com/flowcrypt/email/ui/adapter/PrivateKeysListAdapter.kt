@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.selection.ItemDetailsLookup
-import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -22,7 +21,7 @@ import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForSigning
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.ui.adapter.selection.SelectionKeyRingInfo
+import com.flowcrypt.email.ui.adapter.selection.KeyRingInfoItemDetails
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import org.pgpainless.key.info.KeyRingInfo
@@ -32,20 +31,21 @@ import org.pgpainless.key.info.KeyRingInfo
  *
  * @author Denys Bondarenko
  */
-class PrivateKeysListAdapter(private val onKeySelectedListener: OnKeySelectedListener?) :
-  ListAdapter<KeyRingInfo, PrivateKeysListAdapter.ViewHolder>(DIFF_CALLBACK) {
-  var tracker: SelectionTracker<KeyRingInfo>? = null
-
+class PrivateKeysListAdapter(
+  private val onKeySelectedListener: OnKeySelectedListener?,
+  private val checkSelection: (KeyRingInfo) -> Boolean = { false }
+) : ListAdapter<KeyRingInfo, PrivateKeysListAdapter.ViewHolder>(DIFF_CALLBACK) {
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    val view = LayoutInflater.from(parent.context).inflate(R.layout.pgp_key_item, parent, false)
-    return ViewHolder(view)
+    return ViewHolder(
+      LayoutInflater.from(parent.context).inflate(R.layout.pgp_key_item, parent, false)
+    )
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
     val pgpKeyRingDetails = getItem(position)
     pgpKeyRingDetails?.let {
       viewHolder.bind(it, onKeySelectedListener)
-      tracker?.isSelected(it)?.let { isSelected -> viewHolder.setActivated(isSelected) }
+      viewHolder.setActivated(checkSelection.invoke(it))
     }
   }
 
@@ -54,11 +54,11 @@ class PrivateKeysListAdapter(private val onKeySelectedListener: OnKeySelectedLis
   }
 
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-    val binding = PgpKeyItemBinding.bind(itemView)
+    private val binding = PgpKeyItemBinding.bind(itemView)
     private val dateFormat = DateTimeUtil.getPgpDateFormat(itemView.context)
-    fun getSelectionKeyRingInfo(): ItemDetailsLookup.ItemDetails<KeyRingInfo>? {
+    fun getItemDetails(): ItemDetailsLookup.ItemDetails<KeyRingInfo>? {
       return currentList.getOrNull(bindingAdapterPosition)?.let {
-        SelectionKeyRingInfo(bindingAdapterPosition, it)
+        KeyRingInfoItemDetails(bindingAdapterPosition, it)
       }
     }
 
@@ -106,28 +106,17 @@ class PrivateKeysListAdapter(private val onKeySelectedListener: OnKeySelectedLis
       binding.imageViewEncryptionFlag.visibleOrGone(keyRingInfo.usableForEncryption)
       binding.imageViewSignFlag.visibleOrGone(keyRingInfo.usableForSigning)
 
-      itemView.setOnClickListener {
-        listener?.onKeySelected(bindingAdapterPosition, keyRingInfo)
-      }
+      itemView.setOnClickListener { listener?.onKeySelected(bindingAdapterPosition, keyRingInfo) }
     }
   }
 
   companion object {
     private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<KeyRingInfo>() {
-      override fun areItemsTheSame(
-        oldItem: KeyRingInfo,
-        newItem: KeyRingInfo
-      ): Boolean {
-        return oldItem === newItem
-      }
+      override fun areItemsTheSame(oldItem: KeyRingInfo, newItem: KeyRingInfo) = oldItem === newItem
 
-      override fun areContentsTheSame(
-        oldItem: KeyRingInfo,
-        newItem: KeyRingInfo
-      ): Boolean {
-        return oldItem.fingerprint.toString() == newItem.fingerprint.toString()
+      override fun areContentsTheSame(oldItem: KeyRingInfo, newItem: KeyRingInfo) =
+        oldItem.fingerprint.toString() == newItem.fingerprint.toString()
             && oldItem.lastModified == newItem.lastModified
-      }
     }
   }
 }

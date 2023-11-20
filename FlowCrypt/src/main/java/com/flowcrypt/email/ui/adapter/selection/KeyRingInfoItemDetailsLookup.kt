@@ -18,7 +18,7 @@ class KeyRingInfoItemDetailsLookup(private val recyclerView: RecyclerView) :
   ItemDetailsLookup<KeyRingInfo>() {
   override fun getItemDetails(e: MotionEvent): ItemDetails<KeyRingInfo>? {
     return recyclerView.findChildViewUnder(e.x, e.y)?.let {
-      (recyclerView.getChildViewHolder(it) as? PrivateKeysListAdapter.ViewHolder)?.getSelectionKeyRingInfo()
+      (recyclerView.getChildViewHolder(it) as? PrivateKeysListAdapter.ViewHolder)?.getItemDetails()
     }
   }
 }

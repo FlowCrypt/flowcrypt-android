@@ -50,16 +50,30 @@ import org.pgpainless.key.info.KeyRingInfo
  *
  * @author Denys Bondarenko
  */
-class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), ListProgressBehaviour,
-  PrivateKeysListAdapter.OnKeySelectedListener {
+class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), ListProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentPrivateKeysBinding.inflate(inflater, container, false)
 
-  private val privateKeysAdapter = PrivateKeysListAdapter(this)
+  private val privateKeysAdapter = PrivateKeysListAdapter(
+    onKeySelectedListener = object : PrivateKeysListAdapter.OnKeySelectedListener {
+      override fun onKeySelected(position: Int, pgpKeyRingDetails: KeyRingInfo?) {
+        if (tracker?.hasSelection() == true) return
+
+        pgpKeyRingDetails?.let {
+          navController?.navigate(
+            PrivateKeysListFragmentDirections
+              .actionPrivateKeysListFragmentToPrivateKeyDetailsFragment(it.fingerprint.toString())
+          )
+        }
+      }
+    },
+    checkSelection = {
+      tracker?.isSelected(it) ?: false
+    })
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private var tracker: SelectionTracker<PgpKeyRingDetails>? = null
+  private var tracker: SelectionTracker<KeyRingInfo>? = null
   private var actionMode: ActionMode? = null
-  private val selectionObserver = object : SelectionTracker.SelectionObserver<PgpKeyRingDetails>() {
+  private val selectionObserver = object : SelectionTracker.SelectionObserver<KeyRingInfo>() {
     override fun onSelectionChanged() {
       super.onSelectionChanged()
       when {
@@ -111,24 +125,10 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     tracker?.onSaveInstanceState(outState)
   }
 
-  override fun onKeySelected(position: Int, pgpKeyRingDetails: KeyRingInfo?) {
-    if (tracker?.hasSelection() == true) {
-      return
-    }
-
-    pgpKeyRingDetails?.let {
-      navController?.navigate(
-        PrivateKeysListFragmentDirections
-          .actionPrivateKeysListFragmentToPrivateKeyDetailsFragment(it.fingerprint.toString())
-      )
-    }
-  }
-
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     if (accountEntity?.clientConfiguration?.usesKeyManager() == true) {
       binding?.floatActionButtonAddKey?.gone()
-      privateKeysAdapter.tracker = null
     }
   }
 
@@ -173,9 +173,8 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
       addItemDecoration(decoration)
       layoutManager = manager
       adapter = privateKeysAdapter
+      setupSelectionTracker(this)
     }
-
-    //setupSelectionTracker(recyclerView)
 
     if (privateKeysAdapter.itemCount > 0) {
       showContent()
@@ -198,12 +197,11 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     /*tracker = SelectionTracker.Builder(
       javaClass.simpleName,
       recyclerView,
-      PgpKeyDetailsKeyProvider(privateKeysAdapter.currentList),
-      PrivateKeyItemDetailsLookup(recyclerView),
-      StorageStrategy.createParcelableStorage(PgpKeyRingDetails::class.java)
-    ).build()
+      KeyRingInfoItemKeyProvider(privateKeysAdapter.currentList),
+      KeyRingInfoItemDetailsLookup(recyclerView),
+      StorageStrategy.createStringStorage()
+    ).build()*/
 
-    privateKeysAdapter.tracker = tracker*/
     tracker?.addObserver(selectionObserver)
   }
 
@@ -265,10 +263,10 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
 
       when (requestCode) {
         REQUEST_CODE_DELETE_KEYS_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          account?.let { accountEntity ->
+          /*account?.let { accountEntity ->
             tracker?.selection?.map { it }
               ?.let { privateKeysViewModel.deleteKeys(accountEntity, it) }
-          }
+          }*/
 
           actionMode?.finish()
         }

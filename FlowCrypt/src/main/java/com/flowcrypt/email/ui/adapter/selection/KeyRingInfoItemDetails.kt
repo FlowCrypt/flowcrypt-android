@@ -11,7 +11,7 @@ import org.pgpainless.key.info.KeyRingInfo
 /**
  * @author Denys Bondarenko
  */
-class SelectionKeyRingInfo(private val position: Int, private val keyRingInfo: KeyRingInfo?) :
+class KeyRingInfoItemDetails(private val position: Int, private val keyRingInfo: KeyRingInfo?) :
   ItemDetailsLookup.ItemDetails<KeyRingInfo>() {
   override fun getSelectionKey() = keyRingInfo
   override fun getPosition() = position
