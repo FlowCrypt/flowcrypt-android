@@ -18,7 +18,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.selection.SelectionTracker
-import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +30,7 @@ import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
@@ -41,9 +41,9 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.PrivateKeysListAdapter
-import com.flowcrypt.email.ui.adapter.selection.PgpKeyDetailsKeyProvider
-import com.flowcrypt.email.ui.adapter.selection.PrivateKeyItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.pgpainless.key.info.KeyRingInfo
 
 /**
  * This [Fragment] shows information about available private keys in the database.
@@ -111,7 +111,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     tracker?.onSaveInstanceState(outState)
   }
 
-  override fun onKeySelected(position: Int, pgpKeyRingDetails: PgpKeyRingDetails?) {
+  override fun onKeySelected(position: Int, pgpKeyRingDetails: KeyRingInfo?) {
     if (tracker?.hasSelection() == true) {
       return
     }
@@ -119,7 +119,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     pgpKeyRingDetails?.let {
       navController?.navigate(
         PrivateKeysListFragmentDirections
-          .actionPrivateKeysListFragmentToPrivateKeyDetailsFragment(it.fingerprint)
+          .actionPrivateKeysListFragmentToPrivateKeyDetailsFragment(it.fingerprint.toString())
       )
     }
   }
@@ -132,32 +132,35 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     }
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.parseKeysResultLiveData.observe(viewLifecycleOwner) {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          showProgress()
-          countingIdlingResource?.incrementSafely(this@PrivateKeysListFragment)
-        }
-
-        Result.Status.SUCCESS -> {
-          val detailsList = it.data ?: emptyList()
-          privateKeysAdapter.swap(detailsList)
-          if (detailsList.isEmpty()) {
-            showEmptyView()
-          } else {
-            showContent()
+    launchAndRepeatWithViewLifecycle {
+      privateKeysViewModel.secretKeyRingsInfoStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            showProgress()
+            countingIdlingResource?.incrementSafely(this@PrivateKeysListFragment)
           }
-          countingIdlingResource?.decrementSafely(this@PrivateKeysListFragment)
-        }
 
-        Result.Status.EXCEPTION -> {
-          showContent()
-          toast(it.exception?.message, Toast.LENGTH_SHORT)
-          countingIdlingResource?.decrementSafely(this@PrivateKeysListFragment)
-        }
+          Result.Status.SUCCESS -> {
+            val detailsList = it.data ?: emptyList()
+            privateKeysAdapter.submitList(detailsList)
+            if (detailsList.isEmpty()) {
+              showEmptyView()
+            } else {
+              showContent()
+            }
+            countingIdlingResource?.decrementSafely(this@PrivateKeysListFragment)
+          }
 
-        else -> {}
+          Result.Status.EXCEPTION -> {
+            showContent()
+            toast(it.exception?.message, Toast.LENGTH_SHORT)
+            countingIdlingResource?.decrementSafely(this@PrivateKeysListFragment)
+          }
+
+          else -> {}
+        }
       }
     }
   }
@@ -169,7 +172,7 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
       val decoration = DividerItemDecoration(context, manager.orientation)
       addItemDecoration(decoration)
       layoutManager = manager
-      adapter = adapter
+      adapter = privateKeysAdapter
     }
 
     //setupSelectionTracker(recyclerView)
@@ -192,15 +195,15 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
   }
 
   private fun setupSelectionTracker(recyclerView: RecyclerView) {
-    tracker = SelectionTracker.Builder(
+    /*tracker = SelectionTracker.Builder(
       javaClass.simpleName,
       recyclerView,
-      PgpKeyDetailsKeyProvider(privateKeysAdapter.pgpKeyRingDetailsList),
+      PgpKeyDetailsKeyProvider(privateKeysAdapter.currentList),
       PrivateKeyItemDetailsLookup(recyclerView),
       StorageStrategy.createParcelableStorage(PgpKeyRingDetails::class.java)
     ).build()
 
-    privateKeysAdapter.tracker = tracker
+    privateKeysAdapter.tracker = tracker*/
     tracker?.addObserver(selectionObserver)
   }
 

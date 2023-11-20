@@ -40,7 +40,7 @@
         android:layout_weight="1"
         android:divider="@color/aluminum"
         android:dividerHeight="@dimen/default_single_dip"
-        tools:listitem="@layout/key_item" />
+        tools:listitem="@layout/pub_key_adapter_item_radio_button" />
 
     <Button
         android:id="@+id/buttonOk"

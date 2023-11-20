@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.PublicKeyEntity
-import com.flowcrypt.email.databinding.PublicKeyItemBinding
+import com.flowcrypt.email.databinding.PgpKeyItemBinding
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
@@ -29,7 +29,7 @@ class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyAc
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
-      LayoutInflater.from(parent.context).inflate(R.layout.public_key_item, parent, false)
+      LayoutInflater.from(parent.context).inflate(R.layout.pgp_key_item, parent, false)
     )
   }
 
@@ -38,7 +38,7 @@ class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyAc
   }
 
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    val binding = PublicKeyItemBinding.bind(itemView)
+    val binding = PgpKeyItemBinding.bind(itemView)
     private val dateFormat = DateTimeUtil.getPgpDateFormat(itemView.context)
     fun bind(
       publicKeyEntity: PublicKeyEntity,
@@ -59,11 +59,11 @@ class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyAc
         originalString = publicKeyEntity.fingerprint, groupSize = 4
       )
 
-      val creationDate = pgpKeyRingDetails?.created ?: 0
-      if (creationDate != -1L) {
-        binding.tVCreationDate.text = dateFormat.format(Date(creationDate))
-      } else {
-        binding.tVCreationDate.text = null
+      binding.tVCreationDate.apply {
+        val creationDate = pgpKeyRingDetails?.created ?: 0
+        text = if (creationDate != -1L) {
+          dateFormat.format(Date(creationDate))
+        } else null
       }
 
       binding.textViewExpiration.text = pgpKeyRingDetails?.expiration?.let {

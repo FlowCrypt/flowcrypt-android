@@ -13,6 +13,7 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -44,9 +45,16 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.key.collection.PGPKeyRingCollection
+import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 
 /**
@@ -88,6 +96,23 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         )
       }
     }
+
+  @ExperimentalCoroutinesApi
+  val secretKeyRingsInfoStateFlow: StateFlow<Result<List<KeyRingInfo>?>> =
+    keysStorage.secretKeyRingsLiveData.asFlow().flatMapLatest {
+      flow {
+        emit(Result.loading())
+        try {
+          emit(Result.success(it.map { pgpSecretKeyRing -> KeyRingInfo(pgpSecretKeyRing) }))
+        } catch (e: Exception) {
+          emit(Result.exception(e))
+        }
+      }
+    }.stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = Result.none()
+    )
 
   fun changePassphrase(newPassphrase: Passphrase) {
     viewModelScope.launch {

@@ -8,96 +8,56 @@ package com.flowcrypt.email.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.databinding.PgpKeyItemBinding
+import com.flowcrypt.email.extensions.kotlin.internetAddress
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListDependsOnStatus
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusIcon
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
+import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForSigning
 import com.flowcrypt.email.extensions.visibleOrGone
-import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.adapter.selection.SelectionPgpKeyDetails
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
-import java.util.Date
+import org.pgpainless.key.info.KeyRingInfo
 
 /**
  * This adapter will be used to show a list of private keys.
  *
  * @author Denys Bondarenko
  */
-class PrivateKeysListAdapter(
-  private val listener: OnKeySelectedListener?,
-  val pgpKeyRingDetailsList: MutableList<PgpKeyRingDetails> = mutableListOf()
-) : RecyclerView.Adapter<PrivateKeysListAdapter.ViewHolder>() {
-  private var dateFormat: java.text.DateFormat? = null
-  var tracker: SelectionTracker<PgpKeyRingDetails>? = null
+class PrivateKeysListAdapter(private val onKeySelectedListener: OnKeySelectedListener?) :
+  ListAdapter<KeyRingInfo, PrivateKeysListAdapter.ViewHolder>(DIFF_CALLBACK) {
+  var tracker: SelectionTracker<KeyRingInfo>? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    val view = LayoutInflater.from(parent.context).inflate(R.layout.key_item, parent, false)
+    val view = LayoutInflater.from(parent.context).inflate(R.layout.pgp_key_item, parent, false)
     return ViewHolder(view)
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-    val context = viewHolder.itemView.context
-    if (dateFormat == null) {
-      dateFormat = DateTimeUtil.getPgpDateFormat(context)
+    val pgpKeyRingDetails = getItem(position)
+    pgpKeyRingDetails?.let {
+      viewHolder.bind(it, onKeySelectedListener)
+      tracker?.isSelected(it)?.let { isSelected -> viewHolder.setActivated(isSelected) }
     }
-
-    val pgpKeyRingDetails = pgpKeyRingDetailsList[position]
-    tracker?.isSelected(pgpKeyRingDetails)?.let { viewHolder.setActivated(it) }
-
-    viewHolder.textViewKeyOwner.text = pgpKeyRingDetails.getUserIdsAsSingleString()
-    viewHolder.textViewFingerprint.text = GeneralUtil.doSectionsInText(
-      originalString = pgpKeyRingDetails.fingerprint, groupSize = 4
-    )
-
-    val timestamp = pgpKeyRingDetails.created
-    if (timestamp != -1L) {
-      viewHolder.textViewCreationDate.text = dateFormat?.format(Date(timestamp))
-    } else {
-      viewHolder.textViewCreationDate.text = null
-    }
-
-    viewHolder.textViewExpiration.text = pgpKeyRingDetails.expiration?.let {
-      context.getString(R.string.key_expiration, dateFormat?.format(Date(it)))
-    } ?: context.getString(R.string.key_expiration, context.getString(R.string.key_does_not_expire))
-
-    viewHolder.textViewStatus.visibleOrGone(!pgpKeyRingDetails.usableForEncryption)
-    if (!pgpKeyRingDetails.usableForEncryption) {
-      viewHolder.textViewStatus.backgroundTintList =
-        pgpKeyRingDetails.getColorStateListDependsOnStatus(context)
-      viewHolder.textViewStatus.setCompoundDrawablesWithIntrinsicBounds(
-        pgpKeyRingDetails.getStatusIconResId(), 0, 0, 0
-      )
-      viewHolder.textViewStatus.text = pgpKeyRingDetails.getStatusText(context)
-    }
-
-    viewHolder.itemView.setOnClickListener {
-      listener?.onKeySelected(viewHolder.bindingAdapterPosition, pgpKeyRingDetails)
-    }
-  }
-
-  override fun getItemCount(): Int {
-    return pgpKeyRingDetailsList.size
-  }
-
-  fun swap(newList: List<PgpKeyRingDetails>) {
-    val diffUtilCallback = DiffUtilCallback(this.pgpKeyRingDetailsList, newList)
-    val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
-
-    pgpKeyRingDetailsList.clear()
-    pgpKeyRingDetailsList.addAll(newList)
-    productDiffResult.dispatchUpdatesTo(this)
   }
 
   interface OnKeySelectedListener {
-    fun onKeySelected(position: Int, pgpKeyRingDetails: PgpKeyRingDetails?)
+    fun onKeySelected(position: Int, pgpKeyRingDetails: KeyRingInfo?)
   }
 
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-    fun getPgpKeyDetails(): ItemDetailsLookup.ItemDetails<PgpKeyRingDetails>? {
-      return pgpKeyRingDetailsList.getOrNull(bindingAdapterPosition)?.let {
+    val binding = PgpKeyItemBinding.bind(itemView)
+    private val dateFormat = DateTimeUtil.getPgpDateFormat(itemView.context)
+    fun getPgpKeyDetails(): ItemDetailsLookup.ItemDetails<KeyRingInfo>? {
+      return currentList.getOrNull(bindingAdapterPosition)?.let {
         SelectionPgpKeyDetails(bindingAdapterPosition, it)
       }
     }
@@ -106,31 +66,68 @@ class PrivateKeysListAdapter(
       itemView.isActivated = isActivated
     }
 
-    val textViewKeyOwner: TextView = view.findViewById(R.id.textViewKeyOwner)
-    val textViewFingerprint: TextView = view.findViewById(R.id.textViewFingerprint)
-    val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
-    val textViewExpiration: TextView = view.findViewById(R.id.textViewExpiration)
-    val textViewStatus: TextView = view.findViewById(R.id.textViewStatus)
+    fun bind(keyRingInfo: KeyRingInfo, listener: OnKeySelectedListener?) {
+      val context = itemView.context
+
+      val primaryUserMimeAddress = keyRingInfo.primaryUserId.internetAddress()
+      binding.tVPrimaryUserOrEmail.text =
+        primaryUserMimeAddress?.personal ?: keyRingInfo.primaryUserId
+
+      primaryUserMimeAddress?.address?.let {
+        binding.tVPrimaryUserEmail.text = it
+        binding.tVPrimaryUserEmail.visibleOrGone(
+          binding.tVPrimaryUserEmail.text != binding.tVPrimaryUserOrEmail.text
+        )
+      }
+
+      binding.imageViewManyUserIds.visibleOrGone(keyRingInfo.userIds.size > 1)
+      binding.tVFingerprint.text = GeneralUtil.doSectionsInText(
+        originalString = keyRingInfo.fingerprint.toString(), groupSize = 4
+      )
+
+      binding.tVCreationDate.text = dateFormat.format(keyRingInfo.creationDate)
+
+      binding.textViewExpiration.text = keyRingInfo.primaryKeyExpirationDate?.let {
+        context.getString(R.string.key_expiration, dateFormat.format(it))
+      } ?: context.getString(
+        R.string.key_expiration,
+        context.getString(R.string.key_does_not_expire)
+      )
+
+      binding.textViewStatus.apply {
+        backgroundTintList = keyRingInfo.getColorStateListDependsOnStatus(context)
+        setCompoundDrawablesWithIntrinsicBounds(keyRingInfo.getStatusIcon(), 0, 0, 0)
+        text = keyRingInfo.getStatusText(context)
+      }
+
+      //we don't care about this one here
+      binding.imageViewAuthFlag.visibleOrGone(false)
+
+      binding.imageViewEncryptionFlag.visibleOrGone(keyRingInfo.usableForEncryption)
+      binding.imageViewSignFlag.visibleOrGone(keyRingInfo.usableForSigning)
+
+      itemView.setOnClickListener {
+        listener?.onKeySelected(bindingAdapterPosition, keyRingInfo)
+      }
+    }
   }
 
-  inner class DiffUtilCallback(
-    private val oldList: List<PgpKeyRingDetails>,
-    private val newList: List<PgpKeyRingDetails>
-  ) : DiffUtil.Callback() {
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-      val old = oldList[oldItemPosition]
-      val new = newList[newItemPosition]
-      return old.fingerprint == new.fingerprint
-    }
+  companion object {
+    private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<KeyRingInfo>() {
+      override fun areItemsTheSame(
+        oldItem: KeyRingInfo,
+        newItem: KeyRingInfo
+      ): Boolean {
+        return oldItem === newItem
+      }
 
-    override fun getOldListSize(): Int = oldList.size
-
-    override fun getNewListSize(): Int = newList.size
-
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-      val old = oldList[oldItemPosition]
-      val new = newList[newItemPosition]
-      return old == new
+      override fun areContentsTheSame(
+        oldItem: KeyRingInfo,
+        newItem: KeyRingInfo
+      ): Boolean {
+        return oldItem.fingerprint.toString() == newItem.fingerprint.toString()
+            && oldItem.lastModified == newItem.lastModified
+      }
     }
   }
 }
