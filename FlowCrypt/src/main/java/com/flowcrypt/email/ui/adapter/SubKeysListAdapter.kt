@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.ItemSubKeyDetailsBinding
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getExpirationDate
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getLastModificationDate
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusColorStateList
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getStatusIconResId
@@ -78,7 +77,7 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
       }
 
       binding.textViewKeyExpiration.apply {
-        val expirationDate = publicKey.getExpirationDate()
+        val expirationDate = keyRingInfo?.getSubkeyExpirationDate(OpenPgpFingerprint.of(publicKey))
         text = if (expirationDate == null) {
           context?.getString(R.string.expires, context.getString(R.string.never))
         } else {

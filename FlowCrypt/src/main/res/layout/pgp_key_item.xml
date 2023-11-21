@@ -18,13 +18,13 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/default_margin_small"
         android:contentDescription="@string/has_more_than_one_user_id"
-        app:layout_constraintBottom_toBottomOf="@+id/tVCreationDate"
-        app:layout_constraintEnd_toStartOf="@+id/tVCreationDate"
-        app:layout_constraintTop_toTopOf="@+id/tVCreationDate"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewCreationDate"
+        app:layout_constraintEnd_toStartOf="@+id/textViewCreationDate"
+        app:layout_constraintTop_toTopOf="@+id/textViewCreationDate"
         app:srcCompat="@drawable/baseline_group_24" />
 
     <TextView
-        android:id="@+id/tVPrimaryUserOrEmail"
+        android:id="@+id/textViewPrimaryUserOrEmail"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/default_margin_small"
@@ -34,12 +34,12 @@
         android:textSize="@dimen/default_text_size_big"
         app:layout_constraintEnd_toStartOf="@+id/imageViewManyUserIds"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/tVPrimaryUserEmail"
+        app:layout_constraintStart_toStartOf="@+id/textViewPrimaryUserEmail"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
         tools:text="Bill Bob" />
 
     <TextView
-        android:id="@+id/tVPrimaryUserEmail"
+        android:id="@+id/textViewPrimaryUserEmail"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ellipsize="end"
@@ -47,11 +47,11 @@
         android:textColor="@color/nobel"
         android:textSize="@dimen/default_text_size_very_small"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/tVPrimaryUserOrEmail"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryUserOrEmail"
         tools:text="test@flowcrypt.test" />
 
     <TextView
-        android:id="@+id/tVFingerprint"
+        android:id="@+id/textViewFingerprint"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
@@ -62,10 +62,40 @@
         app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
         app:layout_constraintEnd_toStartOf="@+id/imageViewEncryptionFlag"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/tVPrimaryUserEmail"
+        app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryUserEmail"
         app:layout_constraintVertical_bias="0.0"
         app:layout_goneMarginTop="@dimen/default_margin_content"
         tools:text="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
+
+    <ImageView
+        android:id="@+id/imageViewAuthFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/auth_flag"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintTop_toTopOf="@+id/textViewFingerprint"
+        app:srcCompat="@drawable/ic_possibility_auth" />
+
+    <ImageView
+        android:id="@+id/imageViewEncryptionFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/encryption_flag"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewSignFlag"
+        app:layout_constraintTop_toTopOf="@+id/textViewFingerprint"
+        app:srcCompat="@drawable/ic_possibility_encryption" />
+
+    <ImageView
+        android:id="@+id/imageViewSignFlag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/sign_flag"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewFingerprint"
+        app:layout_constraintEnd_toStartOf="@+id/imageViewAuthFlag"
+        app:layout_constraintTop_toTopOf="@+id/textViewFingerprint"
+        app:srcCompat="@drawable/ic_possibility_sign" />
 
     <TextView
         android:id="@+id/textViewExpiration"
@@ -79,7 +109,7 @@
         app:layout_constraintEnd_toStartOf="@+id/textViewStatus"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-        app:layout_constraintTop_toBottomOf="@+id/tVFingerprint"
+        app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
         tools:text="Expiration: April 19, 2015" />
 
     <TextView
@@ -100,12 +130,12 @@
         tools:text="@string/revoked" />
 
     <TextView
-        android:id="@+id/tVCreationDate"
+        android:id="@+id/textViewCreationDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/dark"
         android:textSize="@dimen/default_text_size_medium"
-        app:layout_constraintBaseline_toBaselineOf="@+id/tVPrimaryUserOrEmail"
+        app:layout_constraintBaseline_toBaselineOf="@+id/textViewPrimaryUserOrEmail"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         tools:text="April 19, 2015" />
 
@@ -136,35 +166,5 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_end="@dimen/margin_top_bottom_message" />
-
-    <ImageView
-        android:id="@+id/imageViewAuthFlag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/auth_flag"
-        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
-        app:srcCompat="@drawable/ic_possibility_auth" />
-
-    <ImageView
-        android:id="@+id/imageViewEncryptionFlag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/encryption_flag"
-        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
-        app:layout_constraintEnd_toStartOf="@+id/imageViewSignFlag"
-        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
-        app:srcCompat="@drawable/ic_possibility_encryption" />
-
-    <ImageView
-        android:id="@+id/imageViewSignFlag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/sign_flag"
-        app:layout_constraintBottom_toBottomOf="@+id/tVFingerprint"
-        app:layout_constraintEnd_toStartOf="@+id/imageViewAuthFlag"
-        app:layout_constraintTop_toTopOf="@+id/tVFingerprint"
-        app:srcCompat="@drawable/ic_possibility_sign" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

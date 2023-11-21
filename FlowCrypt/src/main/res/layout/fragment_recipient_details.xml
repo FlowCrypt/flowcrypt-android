@@ -63,7 +63,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tVPubKeys"
-        tools:listitem="@layout/public_key_item" />
+        tools:listitem="@layout/pgp_key_item" />
 
     <include
         android:id="@+id/progress"

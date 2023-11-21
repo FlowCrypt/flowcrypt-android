@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
 import com.flowcrypt.email.util.UIUtil
+import jakarta.mail.internet.InternetAddress
 import org.json.JSONObject
 import java.io.InputStream
 import java.net.URLDecoder
@@ -151,4 +152,12 @@ fun String?.parseAsColorBasedOnDefaultSettings(
 
 fun String.capitalize(): String {
   return lowercase().replaceFirstChar { it.titlecase(Locale.ROOT) }
+}
+
+fun String?.asInternetAddress(): InternetAddress? {
+  return try {
+    InternetAddress.parse(this)
+  } catch (e: Exception) {
+    emptyArray<InternetAddress>()
+  }.firstOrNull()
 }
