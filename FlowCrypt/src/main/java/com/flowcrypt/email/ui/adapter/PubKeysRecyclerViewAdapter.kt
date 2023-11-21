@@ -47,19 +47,19 @@ class PubKeysRecyclerViewAdapter(private val onPubKeyActionsListener: OnPubKeyAc
       val context = itemView.context
       val pgpKeyRingDetails = publicKeyEntity.pgpKeyRingDetails
 
-      binding.tVPrimaryUserOrEmail.text =
+      binding.textViewPrimaryUserOrEmail.text =
         pgpKeyRingDetails?.primaryMimeAddress?.personal ?: pgpKeyRingDetails?.primaryUserId
       pgpKeyRingDetails?.primaryMimeAddress?.address?.let {
-        binding.tVPrimaryUserEmail.visible()
-        binding.tVPrimaryUserEmail.text = it
+        binding.textViewPrimaryUserEmail.visible()
+        binding.textViewPrimaryUserEmail.text = it
       }
 
       binding.imageViewManyUserIds.visibleOrGone((pgpKeyRingDetails?.users?.size ?: 0) > 1)
-      binding.tVFingerprint.text = GeneralUtil.doSectionsInText(
+      binding.textViewFingerprint.text = GeneralUtil.doSectionsInText(
         originalString = publicKeyEntity.fingerprint, groupSize = 4
       )
 
-      binding.tVCreationDate.apply {
+      binding.textViewCreationDate.apply {
         val creationDate = pgpKeyRingDetails?.created ?: 0
         text = if (creationDate != -1L) {
           dateFormat.format(Date(creationDate))

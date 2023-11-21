@@ -5,21 +5,16 @@
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.RecyclerViewActions.scrollToPosition
-import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextViewDrawable
@@ -88,15 +83,19 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
 
     doBaseCheckingForKey(
       keyOwner = "default@flowcrypt.test",
+      keyOwnerEmail = "default@flowcrypt.test",
+      hasManyUserIds = false,
       fingerprint = "3DEBE9F677D5B9BB38E5A244225F8023C20D0957",
       creationDate = dateFormat.format(Date(pgpKeyRingDetails.created)),
-      expirationDate = pgpKeyRingDetails.expiration?.let {
-        getResString(R.string.key_expiration, dateFormat.format(Date(it)))
-      } ?: getResString(
+      expirationDate = getResString(
         R.string.key_expiration,
         getResString(R.string.key_does_not_expire)
       ),
-      isUsableForEncryption = pgpKeyRingDetails.usableForEncryption
+      statusLabelText = getResString(R.string.valid),
+      statusLabelIconResId = R.drawable.ic_baseline_gpp_good_16,
+      statusLabelTintColorResId = R.color.colorPrimary,
+      usableForEncryption = true,
+      usableForSigning = true
     )
   }
 
@@ -125,19 +124,19 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
 
     doBaseCheckingForKey(
       keyOwner = "default@flowcrypt.test",
+      keyOwnerEmail = "default@flowcrypt.test",
+      hasManyUserIds = false,
       fingerprint = "45F0A5260A80F238598DD081C669001D0A6DCAC8",
       creationDate = dateFormat.format(Date(pgpKeyRingDetails.created)),
-      expirationDate = pgpKeyRingDetails.expiration?.let {
-        getResString(R.string.key_expiration, dateFormat.format(Date(it)))
-      } ?: getResString(
+      expirationDate = getResString(
         R.string.key_expiration,
         getResString(R.string.key_does_not_expire)
       ),
-      isUsableForEncryption = pgpKeyRingDetails.usableForEncryption,
       statusLabelText = getResString(R.string.revoked),
-      statusLabelTextColorResId = R.color.white,
       statusLabelIconResId = R.drawable.ic_outline_warning_amber_16,
-      statusLabelTintColorResId = R.color.red
+      statusLabelTintColorResId = R.color.red,
+      usableForEncryption = false,
+      usableForSigning = false
     )
   }
 
@@ -171,93 +170,158 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
     assertEquals(expectedExpirationDate, actualExpirationDate)
 
     doBaseCheckingForKey(
-      keyOwner = "expired@flowcrypt.test",
+      keyOwner = "Expired Key",
+      keyOwnerEmail = "expired@flowcrypt.test",
+      hasManyUserIds = false,
       fingerprint = "599132F15A04487AA6356C7F717B789F05D874DA",
       creationDate = dateFormat.format(Date(pgpKeyRingDetails.created)),
       expirationDate = getResString(R.string.key_expiration, actualExpirationDate),
-      isUsableForEncryption = pgpKeyRingDetails.usableForEncryption,
       statusLabelText = getResString(R.string.expired),
-      statusLabelTextColorResId = R.color.white,
       statusLabelIconResId = R.drawable.ic_outline_warning_amber_16,
-      statusLabelTintColorResId = R.color.orange
+      statusLabelTintColorResId = R.color.orange,
+      usableForEncryption = false,
+      usableForSigning = false
+    )
+  }
+
+  @Test
+  fun testShowKeyWithManyUserIds() {
+    val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      "pgp/rich@flowcrypt.test_prv_default.asc"
+    )
+    PrivateKeysManager.saveKeyToDatabase(
+      accountEntity = addAccountToDatabaseRule.account,
+      pgpKeyRingDetails = pgpKeyRingDetails,
+      passphrase = TestConstants.DEFAULT_PASSWORD,
+      sourceType = KeyImportDetails.SourceType.EMAIL,
+      passphraseType = KeyEntity.PassphraseType.DATABASE
+    )
+
+    launchFragmentInContainer<PrivateKeysListFragment>()
+
+    onView(withId(R.id.emptyView))
+      .check(matches(not(isDisplayed())))
+
+    onView(withId(R.id.recyclerViewKeys))
+      .check(matches(isDisplayed()))
+      .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(1)))
+
+    doBaseCheckingForKey(
+      keyOwner = "Rich",
+      keyOwnerEmail = "rich@flowcrypt.test",
+      hasManyUserIds = true,
+      fingerprint = "670F49046294213EA166DBA6AAD5550DFBC79F22",
+      creationDate = dateFormat.format(Date(pgpKeyRingDetails.created)),
+      expirationDate = getResString(
+        R.string.key_expiration,
+        getResString(R.string.key_does_not_expire)
+      ),
+      statusLabelText = getResString(R.string.valid),
+      statusLabelIconResId = R.drawable.ic_baseline_gpp_good_16,
+      statusLabelTintColorResId = R.color.colorAccent,
+      usableForEncryption = false,
+      usableForSigning = true
     )
   }
 
   private fun doBaseCheckingForKey(
     keyOwner: String,
+    keyOwnerEmail: String,
+    hasManyUserIds: Boolean,
     fingerprint: String,
     creationDate: String,
     expirationDate: String,
-    isUsableForEncryption: Boolean,
-    statusLabelText: String? = null,
-    statusLabelTextColorResId: Int? = null,
-    statusLabelIconResId: Int? = null,
-    statusLabelTintColorResId: Int? = null
+    statusLabelText: String,
+    statusLabelIconResId: Int,
+    statusLabelTintColorResId: Int,
+    usableForEncryption: Boolean,
+    usableForSigning: Boolean,
   ) {
     onView(withId(R.id.recyclerViewKeys))
-      .perform(scrollToPosition<RecyclerView.ViewHolder>(1))
       .check(
         matches(
-          hasDescendant(
-            allOf(
-              withId(R.id.textViewKeyOwner),
-              withText(keyOwner)
-            )
-          )
-        )
-      )
-      .check(
-        matches(
-          hasDescendant(
-            allOf(
-              withId(R.id.textViewFingerprint),
-              withText(GeneralUtil.doSectionsInText(originalString = fingerprint, groupSize = 4))
-            )
-          )
-        )
-      )
-      .check(
-        matches(
-          hasDescendant(
-            allOf(
-              withId(R.id.textViewExpiration),
-              withText(expirationDate)
-            )
-          )
-        )
-      )
-      .check(
-        matches(
-          hasDescendant(
-            allOf(
-              withId(R.id.textViewCreationDate),
-              withText(creationDate)
-            )
-          )
-        )
-      )
-      .check(
-        matches(
-          hasDescendant(
-            allOf(
-              withId(R.id.textViewStatus),
-              if (isUsableForEncryption) not(isDisplayed()) else allOf(
-                isDisplayed(),
-                withText(statusLabelText),
-                statusLabelTextColorResId?.let { hasTextColor(it) },
-                statusLabelIconResId?.let {
-                  withTextViewDrawable(
-                    resourceId = it,
-                    drawablePosition = TextViewDrawableMatcher.DrawablePosition.LEFT
+          CustomMatchers.hasItem(
+            withChild(
+              allOf(
+                hasSibling(
+                  allOf(
+                    withId(R.id.textViewPrimaryUserOrEmail),
+                    withText(keyOwner)
                   )
-                },
-                statusLabelTintColorResId?.let {
-                  withViewBackgroundTintResId(
-                    getTargetContext(),
-                    it
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.textViewPrimaryUserEmail),
+                    if (keyOwnerEmail == keyOwner) {
+                      withEffectiveVisibility(Visibility.GONE)
+                    } else {
+                      withText(keyOwnerEmail)
+                    }
                   )
-                }
-              ),
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.imageViewManyUserIds),
+                    withEffectiveVisibility(if (hasManyUserIds) Visibility.VISIBLE else Visibility.GONE)
+                  )
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.textViewCreationDate),
+                    withText(creationDate)
+                  )
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.textViewExpiration),
+                    withText(expirationDate)
+                  )
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.textViewFingerprint),
+                    withText(
+                      GeneralUtil.doSectionsInText(
+                        originalString = fingerprint,
+                        groupSize = 4
+                      )
+                    )
+                  )
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.textViewStatus),
+                    withText(statusLabelText),
+                    withViewBackgroundTintResId(
+                      getTargetContext(),
+                      statusLabelTintColorResId
+                    ),
+                    withTextViewDrawable(
+                      resourceId = statusLabelIconResId,
+                      drawablePosition = TextViewDrawableMatcher.DrawablePosition.LEFT
+                    )
+                  )
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.imageViewEncryptionFlag),
+                    withEffectiveVisibility(if (usableForEncryption) Visibility.VISIBLE else Visibility.GONE)
+                  )
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.imageViewSignFlag),
+                    withEffectiveVisibility(if (usableForSigning) Visibility.VISIBLE else Visibility.GONE)
+                  )
+                ),
+                hasSibling(
+                  allOf(
+                    withId(R.id.imageViewAuthFlag),
+                    withEffectiveVisibility(Visibility.GONE)
+                  )
+                )
+              )
             )
           )
         )

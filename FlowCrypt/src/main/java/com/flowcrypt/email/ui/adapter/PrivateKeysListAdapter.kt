@@ -57,22 +57,22 @@ class PrivateKeysListAdapter(
       val context = itemView.context
 
       val primaryUserMimeAddress = keyRingInfo.primaryUserId.asInternetAddress()
-      binding.tVPrimaryUserOrEmail.text =
+      binding.textViewPrimaryUserOrEmail.text =
         primaryUserMimeAddress?.personal ?: keyRingInfo.primaryUserId
 
       primaryUserMimeAddress?.address?.let {
-        binding.tVPrimaryUserEmail.text = it
-        binding.tVPrimaryUserEmail.visibleOrGone(
-          binding.tVPrimaryUserEmail.text != binding.tVPrimaryUserOrEmail.text
+        binding.textViewPrimaryUserEmail.text = it
+        binding.textViewPrimaryUserEmail.visibleOrGone(
+          binding.textViewPrimaryUserEmail.text != binding.textViewPrimaryUserOrEmail.text
         )
       }
 
       binding.imageViewManyUserIds.visibleOrGone(keyRingInfo.userIds.size > 1)
-      binding.tVFingerprint.text = GeneralUtil.doSectionsInText(
+      binding.textViewFingerprint.text = GeneralUtil.doSectionsInText(
         originalString = keyRingInfo.fingerprint.toString(), groupSize = 4
       )
 
-      binding.tVCreationDate.text = dateFormat.format(keyRingInfo.creationDate)
+      binding.textViewCreationDate.text = dateFormat.format(keyRingInfo.creationDate)
 
       binding.textViewExpiration.text = keyRingInfo.primaryKeyExpirationDate?.let {
         context.getString(R.string.key_expiration, dateFormat.format(it))

@@ -143,7 +143,7 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
               allOf(
                 hasSibling(
                   allOf(
-                    withId(R.id.tVPrimaryUserOrEmail),
+                    withId(R.id.textViewPrimaryUserOrEmail),
                     withText(
                       firstKeyDetails.primaryMimeAddress?.personal ?: firstKeyDetails.primaryUserId
                     )
@@ -151,7 +151,7 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
                 ),
                 hasSibling(
                   allOf(
-                    withId(R.id.tVPrimaryUserEmail),
+                    withId(R.id.textViewPrimaryUserEmail),
                     withText(firstKeyDetails.primaryMimeAddress?.address)
                   )
                 ),
@@ -163,7 +163,7 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
                 ),
                 hasSibling(
                   allOf(
-                    withId(R.id.tVCreationDate),
+                    withId(R.id.textViewCreationDate),
                     withText(dateFormat.format(Date(firstKeyDetails.created)))
                   )
                 ),
@@ -180,7 +180,7 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
                 ),
                 hasSibling(
                   allOf(
-                    withId(R.id.tVFingerprint),
+                    withId(R.id.textViewFingerprint),
                     withText(
                       GeneralUtil.doSectionsInText(
                         originalString = firstKeyDetails.fingerprint,
