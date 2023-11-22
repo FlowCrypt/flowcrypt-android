@@ -30,6 +30,7 @@
         android:menuCategory="system"
         android:orderInCategory="2002"
         android:title="@string/delete"
+        android:visible="false"
         app:showAsAction="ifRoom" />
 
     <item
@@ -37,5 +38,6 @@
         android:menuCategory="system"
         android:orderInCategory="2003"
         android:title="@string/edit"
+        android:visible="false"
         app:showAsAction="ifRoom" />
 </menu>
