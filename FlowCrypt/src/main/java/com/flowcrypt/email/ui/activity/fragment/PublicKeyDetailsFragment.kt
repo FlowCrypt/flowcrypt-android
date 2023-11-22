@@ -68,13 +68,6 @@ class PublicKeyDetailsFragment : BasePublicKeyDetailsFragment<FragmentPublicKeyD
       hideArmorMeta = account?.clientConfiguration?.shouldHideArmorMeta() ?: false
     )
 
-  override val progressView: View?
-    get() = binding?.progress?.root
-  override val contentView: View?
-    get() = binding?.layoutContent
-  override val statusView: View?
-    get() = binding?.status?.root
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     setupPublicKeyDetailsViewModel()

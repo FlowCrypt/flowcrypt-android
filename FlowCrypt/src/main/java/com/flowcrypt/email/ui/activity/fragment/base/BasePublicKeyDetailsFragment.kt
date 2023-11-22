@@ -47,12 +47,20 @@ import java.util.Date
 /**
  * @author Denys Bondarenko
  */
-abstract class BasePublicKeyDetailsFragment<T : ViewBinding> : BaseFragment<T>() {
+abstract class BasePublicKeyDetailsFragment<T : ViewBinding> : BaseFragment<T>(),
+  ProgressBehaviour {
 
   abstract val armoredPublicKey: String?
   abstract val publicKeyFingerprint: String
   abstract val keyOwnerEmail: String
   abstract val isAdditionActionsEnabled: Boolean
+
+  override val progressView: View?
+    get() = viewBinding?.progress?.root
+  override val contentView: View?
+    get() = viewBinding?.layoutContent
+  override val statusView: View?
+    get() = viewBinding?.status?.root
 
   private val userIdsAdapter = UserIdListAdapter()
   private val subKeysAdapter = SubKeysListAdapter()

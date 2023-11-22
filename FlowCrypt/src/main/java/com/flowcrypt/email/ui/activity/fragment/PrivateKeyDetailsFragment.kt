@@ -201,9 +201,11 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     }
 
     binding?.btnShowPubKey?.setOnClickListener {
-      showInfoDialog(
-        dialogTitle = "",
-        dialogMsg = privateKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
+      navController?.navigate(
+        PrivateKeyDetailsFragmentDirections
+          .actionPrivateKeyDetailsFragmentToPrivateToPublicKeyDetailsFragment(
+            fingerprint = args.fingerprint
+          )
       )
     }
 
