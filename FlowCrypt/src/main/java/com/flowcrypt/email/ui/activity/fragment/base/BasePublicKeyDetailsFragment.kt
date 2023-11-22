@@ -32,6 +32,7 @@ import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListD
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPrimaryKey
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusIcon
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.ui.adapter.SubKeysListAdapter
 import com.flowcrypt.email.ui.adapter.UserIdListAdapter
@@ -104,6 +105,11 @@ abstract class BasePublicKeyDetailsFragment<T : ViewBinding> : BaseFragment<T>()
 
           R.id.menuActionSave -> {
             chooseDest()
+            true
+          }
+
+          R.id.menuActionShow -> {
+            showInfoDialog(dialogTitle = "", dialogMsg = armoredPublicKey)
             true
           }
 

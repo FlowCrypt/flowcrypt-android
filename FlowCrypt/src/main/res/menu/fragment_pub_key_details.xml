@@ -25,10 +25,17 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/menuActionShow"
+        android:menuCategory="system"
+        android:orderInCategory="2002"
+        android:title="@string/show_public_key"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/menuActionDelete"
         android:icon="@drawable/ic_delete_white_24dp"
         android:menuCategory="system"
-        android:orderInCategory="2002"
+        android:orderInCategory="2003"
         android:title="@string/delete"
         android:visible="false"
         app:showAsAction="ifRoom" />
@@ -36,7 +43,7 @@
     <item
         android:id="@+id/menuActionEdit"
         android:menuCategory="system"
-        android:orderInCategory="2003"
+        android:orderInCategory="2004"
         android:title="@string/edit"
         android:visible="false"
         app:showAsAction="ifRoom" />
