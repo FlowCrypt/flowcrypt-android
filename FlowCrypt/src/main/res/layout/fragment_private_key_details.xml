@@ -33,7 +33,7 @@
                 android:layout_marginTop="@dimen/default_margin_content_small"
                 android:gravity="center"
                 android:text="@string/public_key_below_is_safe_to_share"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -71,14 +71,100 @@
                 app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
 
             <TextView
-                android:id="@+id/tVFingerprint"
+                android:id="@+id/textViewMasterKey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Key Info"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnSaveToFile" />
+
+            <View
+                android:id="@+id/dividerPrimaryKey"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey" />
+
+            <TextView
+                android:id="@+id/textViewFingerprint"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/btnSaveToFile"
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey"
                 tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyAlgorithm"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
+                tools:text="Algorithm: ELGAMAL_GENERAL/4096" />
+
+            <TextView
+                android:id="@+id/textViewCreationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyAlgorithm"
+                tools:text="Created: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewModificationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewCreationDate"
+                tools:text="Modified: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewExpirationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewModificationDate"
+                tools:text="Expires: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewUsableForEncryption"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewExpirationDate"
+                tools:text="Usable for encryption: true" />
+
+            <TextView
+                android:id="@+id/textViewUsableForSigning"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewUsableForEncryption"
+                tools:text="Usable for signing: true" />
 
             <TextView
                 android:id="@+id/textViewStatus"
@@ -88,7 +174,7 @@
                 android:ellipsize="middle"
                 android:text="@string/status"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVFingerprint" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewUsableForSigning" />
 
             <TextView
                 android:id="@+id/textViewStatusValue"
@@ -107,48 +193,35 @@
                 app:layout_constraintTop_toTopOf="@+id/textViewStatus" />
 
             <TextView
-                android:id="@+id/textViewCreationDate"
-                android:layout_width="0dp"
+                android:id="@+id/textViewUserIDs"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                android:layout_marginTop="24dp"
+                android:text="@string/user_ids"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
-                tools:text="Creation date: Nov 3, 2017" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewStatus" />
 
-            <TextView
-                android:id="@+id/textViewModificationDate"
+            <View
+                android:id="@+id/dividerUserIds"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewCreationDate"
-                tools:text="Modification date: Nov 3, 2017" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewUserIDs" />
 
-            <TextView
-                android:id="@+id/textViewExpirationDate"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewUserIds"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewModificationDate"
-                tools:text="Expiration date: Nov 3, 2017" />
-
-            <TextView
-                android:id="@+id/tVUsers"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewExpirationDate"
-                tools:text="Users: email@domain.com, email2@domain.com" />
+                app:layout_constraintTop_toBottomOf="@+id/dividerUserIds"
+                tools:itemCount="4"
+                tools:orientation="horizontal" />
 
             <TextView
                 android:id="@+id/tVPassPhraseVerification"
@@ -160,7 +233,7 @@
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVUsers" />
+                app:layout_constraintTop_toBottomOf="@+id/recyclerViewUserIds" />
 
             <Button
                 android:id="@+id/btnProvidePassphrase"

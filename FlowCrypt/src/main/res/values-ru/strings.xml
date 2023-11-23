@@ -607,6 +607,9 @@
     <string name="never">Некогда</string>
     <string name="capabilities">Возможности:</string>
     <string name="sub_keys">Подключи</string>
+    <string name="usable_for_encryption">Можно использовать для шифрования: %1$s</string>
+    <string name="usable_for_signing">Можно использовать для подписи: %1$s</string>
+    <string name="algorithm">Алгоритм: %1$s</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

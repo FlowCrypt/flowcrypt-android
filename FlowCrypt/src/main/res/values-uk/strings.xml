@@ -608,6 +608,9 @@
     <string name="never">Ніколи</string>
     <string name="capabilities">Застосування:</string>
     <string name="sub_keys">Підключі</string>
+    <string name="usable_for_encryption">Можна використовувати для шифрування: %1$s</string>
+    <string name="usable_for_signing">Можна використовувати для підпису: %1$s</string>
+    <string name="algorithm">Алгоритм: %1$s</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>
