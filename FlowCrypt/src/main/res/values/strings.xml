@@ -622,6 +622,7 @@
     <string name="usable_for_encryption">Usable for encryption: %1$s</string>
     <string name="usable_for_signing">Usable for signing: %1$s</string>
     <string name="algorithm">Algorithm: %1$s</string>
+    <string name="key_info">Key Info</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">For your protection and data security, there are currently only %1$d attempt left, followed by a 5-minute cooldown period.</item>
         <item quantity="other">For your protection and data security, there are currently only %1$d attempts left, followed by a 5-minute cooldown period.</item>
