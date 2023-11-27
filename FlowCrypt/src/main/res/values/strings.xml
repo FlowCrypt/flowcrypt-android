@@ -292,7 +292,6 @@
     <string name="save_to_file">Save to file</string>
     <string name="show_private_key">Show private key</string>
     <string name="template_fingerprint"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
-    <string name="template_creation_date">Key creation: %1$s</string>
     <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
