@@ -27,58 +27,171 @@
             android:animateLayoutChanges="true">
 
             <TextView
-                android:id="@+id/tVHeader"
-                android:layout_width="0dp"
+                android:id="@+id/textViewPublicKeys"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/default_margin_content_small"
-                android:gravity="center"
                 android:text="@string/public_key_below_is_safe_to_share"
-                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <Button
-                android:id="@+id/btnShowPubKey"
-                style="@style/AppWidget.Button.Big"
+            <View
+                android:id="@+id/dividerPublicKeys"
                 android:layout_width="0dp"
-                android:layout_marginTop="@dimen/default_margin_content"
-                android:text="@string/show_public_key"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVHeader" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewPublicKeys" />
+
+            <Button
+                style="?attr/materialIconButtonFilledStyle"
+                android:id="@+id/btnShowPubKey"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:backgroundTint="@color/colorPrimary"
+                android:contentDescription="@string/show_public_key"
+                app:cornerRadius="@dimen/default_margin_small"
+                app:icon="@drawable/outline_info_48"
+                app:iconGravity="textStart"
+                app:iconSize="@dimen/icon_size_big"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintEnd_toStartOf="@+id/btnCopyToClipboard"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintTop_toBottomOf="@+id/dividerPublicKeys" />
 
             <Button
                 android:id="@+id/btnCopyToClipboard"
-                style="@style/AppWidget.Button.Big"
+                style="?attr/materialIconButtonFilledStyle"
                 android:layout_width="0dp"
-                android:layout_marginTop="@dimen/default_margin_content"
-                android:text="@string/copy_to_clipboard"
-                android:textAllCaps="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/btnShowPubKey" />
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/default_margin_content_large"
+                android:layout_marginEnd="@dimen/default_margin_content_big"
+                android:backgroundTint="@color/colorPrimary"
+                android:contentDescription="@string/copy_to_clipboard"
+                app:cornerRadius="@dimen/default_margin_small"
+                app:icon="@drawable/baseline_content_copy_48"
+                app:iconGravity="textStart"
+                app:iconSize="@dimen/icon_size_big"
+                app:layout_constraintBottom_toBottomOf="@+id/btnShowPubKey"
+                app:layout_constraintEnd_toStartOf="@+id/btnSaveToFile"
+                app:layout_constraintStart_toEndOf="@+id/btnShowPubKey"
+                app:layout_constraintTop_toTopOf="@+id/btnShowPubKey" />
 
             <Button
                 android:id="@+id/btnSaveToFile"
-                style="@style/AppWidget.Button.Big"
-                android:layout_width="0dp"
-                android:layout_marginTop="@dimen/default_margin_content"
-                android:text="@string/save_to_file"
-                android:textAllCaps="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/btnCopyToClipboard" />
-
-            <TextView
-                android:id="@+id/tVFingerprint"
+                style="?attr/materialIconButtonFilledStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@color/colorPrimary"
+                android:contentDescription="@string/save_to_file"
+                app:cornerRadius="@dimen/default_margin_small"
+                app:icon="@drawable/baseline_save_48"
+                app:iconGravity="textStart"
+                app:iconSize="@dimen/icon_size_big"
+                app:layout_constraintBottom_toBottomOf="@+id/btnShowPubKey"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toEndOf="@+id/btnCopyToClipboard"
+                app:layout_constraintTop_toTopOf="@+id/btnShowPubKey" />
+
+            <TextView
+                android:id="@+id/textViewMasterKey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_large"
+                android:text="@string/key_info"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/btnShowPubKey" />
+
+            <View
+                android:id="@+id/dividerPrimaryKey"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey" />
+
+            <TextView
+                android:id="@+id/textViewFingerprint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_small"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/btnSaveToFile"
+                app:layout_constraintTop_toBottomOf="@+id/textViewMasterKey"
                 tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
+
+            <TextView
+                android:id="@+id/textViewPrimaryKeyAlgorithm"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewFingerprint"
+                tools:text="Algorithm: ELGAMAL_GENERAL/4096" />
+
+            <TextView
+                android:id="@+id/textViewCreationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewPrimaryKeyAlgorithm"
+                tools:text="Created: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewModificationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewCreationDate"
+                tools:text="Modified: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewExpirationDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewModificationDate"
+                tools:text="Expires: Nov 3, 2017" />
+
+            <TextView
+                android:id="@+id/textViewUsableForEncryption"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewExpirationDate"
+                tools:text="Usable for encryption: true" />
+
+            <TextView
+                android:id="@+id/textViewUsableForSigning"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:textIsSelectable="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewUsableForEncryption"
+                tools:text="Usable for signing: true" />
 
             <TextView
                 android:id="@+id/textViewStatus"
@@ -88,13 +201,13 @@
                 android:ellipsize="middle"
                 android:text="@string/status"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVFingerprint" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewUsableForSigning" />
 
             <TextView
                 android:id="@+id/textViewStatusValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
+                android:layout_marginStart="@dimen/default_margin_small"
                 android:background="@drawable/bg_rectangle_silver_border"
                 android:backgroundTint="@color/orange"
                 android:drawablePadding="@dimen/default_twice_dip"
@@ -107,60 +220,47 @@
                 app:layout_constraintTop_toTopOf="@+id/textViewStatus" />
 
             <TextView
-                android:id="@+id/textViewCreationDate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewStatus"
-                tools:text="Creation date: Nov 3, 2017" />
-
-            <TextView
-                android:id="@+id/textViewModificationDate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewCreationDate"
-                tools:text="Modification date: Nov 3, 2017" />
-
-            <TextView
-                android:id="@+id/textViewExpirationDate"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewModificationDate"
-                tools:text="Expiration date: Nov 3, 2017" />
-
-            <TextView
-                android:id="@+id/tVUsers"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
-                android:textIsSelectable="true"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewExpirationDate"
-                tools:text="Users: email@domain.com, email2@domain.com" />
-
-            <TextView
                 android:id="@+id/tVPassPhraseVerification"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_small"
+                android:layout_marginTop="8dp"
                 android:text="@string/stored_pass_phrase_loading"
                 android:textColor="@color/colorPrimaryLight"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVUsers" />
+                app:layout_constraintTop_toBottomOf="@+id/textViewStatus" />
+
+            <TextView
+                android:id="@+id/textViewUserIDs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/user_ids"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/tVPassPhraseVerification" />
+
+            <View
+                android:id="@+id/dividerUserIds"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/default_single_dip"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewUserIDs" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewUserIds"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/dividerUserIds"
+                tools:itemCount="4"
+                tools:orientation="horizontal" />
 
             <Button
                 android:id="@+id/btnProvidePassphrase"
@@ -172,7 +272,7 @@
                 android:visibility="gone"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/tVPassPhraseVerification"
+                app:layout_constraintTop_toBottomOf="@+id/recyclerViewUserIds"
                 tools:visibility="visible" />
 
             <Button

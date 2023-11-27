@@ -173,8 +173,6 @@
     <string name="details">Подробиці</string>
     <string name="delete_quoted_text">Видалити текст, що цитується</string>
     <string name="delete_message">Видалити повідомлення</string>
-    <string name="template_creation_date">Дата створення: %1$s</string>
-    <string name="template_modification_date">Дата модифікації: %1$s</string>
     <string name="date">Дата</string>
     <string name="please_wait_while_key_will_be_created">Створення ключа, будь ласка, зачекайте</string>
     <string name="template_created">Створено: %1$s</string>
@@ -403,7 +401,6 @@
     <string name="to_receiver">Кому %1$s</string>
     <string name="template_warning_max_total_attachments_size">Загальний розмір доданих вкладень не повинен перевищувати %1$s</string>
     <string name="use_public_key_from">Використати відкритий ключ з</string>
-    <string name="template_users">Користувачі: %1$s</string>
     <string name="warning">Попередження</string>
     <string name="password_quality_weak">слабка</string>
     <string name="wrong_public_key_recorded">Записаний невірний відкритий ключ. Вхідна зашифрована електронна пошта може бути недоступна для читання.</string>
@@ -608,6 +605,10 @@
     <string name="never">Ніколи</string>
     <string name="capabilities">Застосування:</string>
     <string name="sub_keys">Підключі</string>
+    <string name="usable_for_encryption">Можна використовувати для шифрування: %1$s</string>
+    <string name="usable_for_signing">Можна використовувати для підпису: %1$s</string>
+    <string name="algorithm">Алгоритм: %1$s</string>
+    <string name="key_info">Інформація про ключ</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

@@ -172,8 +172,6 @@
     <string name="details">Подробности</string>
     <string name="delete_quoted_text">Удалить цитируемый текст</string>
     <string name="delete_message">Удалить сообщение</string>
-    <string name="template_creation_date">Дата создания: %1$s</string>
-    <string name="template_modification_date">Дата изменения: %1$s</string>
     <string name="date">Дата</string>
     <string name="please_wait_while_key_will_be_created">Создание ключа, пожалуйста, подождите</string>
     <string name="template_created">Создано: %1$s</string>
@@ -402,7 +400,6 @@
     <string name="to_receiver">Кому %1$s</string>
     <string name="template_warning_max_total_attachments_size">Общий размер добавленных вложений не должен превышать %1$s</string>
     <string name="use_public_key_from">Использовать открытый ключ из</string>
-    <string name="template_users">Пользователи: %1$s</string>
     <string name="warning">Предупреждение</string>
     <string name="password_quality_weak">слабая</string>
     <string name="wrong_public_key_recorded">Записан неверный открытый ключ. Входящая зашифрованная электронная почта может быть недоступна для чтения.</string>
@@ -607,6 +604,10 @@
     <string name="never">Некогда</string>
     <string name="capabilities">Возможности:</string>
     <string name="sub_keys">Подключи</string>
+    <string name="usable_for_encryption">Можно использовать для шифрования: %1$s</string>
+    <string name="usable_for_signing">Можно использовать для подписи: %1$s</string>
+    <string name="algorithm">Алгоритм: %1$s</string>
+    <string name="key_info">Информация о ключе</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

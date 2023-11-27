@@ -15,10 +15,13 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPublicKeyRing
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 import java.time.Instant
 
@@ -29,18 +32,46 @@ class PrivateKeyDetailsViewModel(val fingerprint: String?, application: Applicat
   AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
 
-  private val pgpKeyRingDetailsLiveDataDirect: LiveData<Result<PgpKeyRingDetails?>> =
+  private val pgpSecretKeyRingLiveData: LiveData<PGPSecretKeyRing?> =
     keysStorage.secretKeyRingsLiveData.switchMap { list ->
+      liveData {
+        emit(
+          try {
+            list.firstOrNull {
+              val openPgpV4Fingerprint = OpenPgpV4Fingerprint(it)
+              openPgpV4Fingerprint.toString().equals(fingerprint, true)
+            }
+          } catch (e: Exception) {
+            null
+          }
+        )
+      }
+    }
+
+  val publicKeyKeyRingInfoLiveData: LiveData<KeyRingInfo?> =
+    pgpSecretKeyRingLiveData.switchMap { pgpSecretKeyRing ->
+      liveData {
+        emit(
+          try {
+            pgpSecretKeyRing?.let { KeyRingInfo(it.toPublicKeyRing()) }
+          } catch (e: Exception) {
+            null
+          }
+        )
+      }
+    }
+
+  private val pgpKeyRingDetailsLiveDataDirect: LiveData<Result<PgpKeyRingDetails?>> =
+    pgpSecretKeyRingLiveData.switchMap { keyRingInfo ->
       liveData {
         emit(Result.loading())
         emit(
           try {
             val account = getActiveAccountSuspend()
             Result.success(
-              list.firstOrNull {
-                val openPgpV4Fingerprint = OpenPgpV4Fingerprint(it)
-                openPgpV4Fingerprint.toString().equals(fingerprint, true)
-              }?.toPgpKeyRingDetails(account?.clientConfiguration?.shouldHideArmorMeta() ?: false)
+              keyRingInfo?.toPgpKeyRingDetails(
+                account?.clientConfiguration?.shouldHideArmorMeta() ?: false
+              )
             )
           } catch (e: Exception) {
             Result.exception(e)
