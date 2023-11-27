@@ -162,9 +162,10 @@ object TestGeneralUtil {
   }
 
   fun replaceVersionInKey(key: String?): String {
-    val regex = "Version: FlowCrypt \\d*.\\d*.\\d*(_.*)? Gmail Encryption".toRegex()
+    val regex =
+      "Version: FlowCrypt Email Encryption Email Encryption \\d*.\\d*.\\d*(_.*)?".toRegex()
     val version = BuildConfig.VERSION_NAME
-    val replacement = "Version: FlowCrypt $version Gmail Encryption"
+    val replacement = "Version: FlowCrypt Email Encryption Email Encryption $version"
     key?.let {
       return key.replaceFirst(regex, replacement)
     }

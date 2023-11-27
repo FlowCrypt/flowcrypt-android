@@ -1,5 +1,5 @@
 -----BEGIN PGP MESSAGE-----
-Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
+Version: FlowCrypt Email Encryption [BUILD_REPLACEABLE_VERSION]
 Comment: Seamlessly send and receive encrypted email
 
 wcBMAwurnAGLJl0iAQf/VynWdf/qkF1Wx6icj5OwXPYS3pGuupqQfkEh6ioO

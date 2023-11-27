@@ -33,7 +33,7 @@ class RawBlockParserTest {
         "entries" : [ {
           "id" : "1,email-key-manager,evaluation.org,pgp-key-private,106988520142055188323",
           "content" : "-----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: FlowCrypt 7.6.9 Gmail Encryption
+Version: FlowCrypt Email Encryption 7.6.9
 Comment: Seamlessly send and receive encrypted email
 
 xcLYBF5mRKEBCADX62s0p6mI6yrxB/ui/LqxfG4RcQzZJf8ah52Ynu1n8V7Y
@@ -98,7 +98,7 @@ ksD3kBAk43hGRSD2m/WDPWa/h2sh5rVswTKUDtv1fd1H6Ff5FnK21LHjEk0f
         }, {
           "id" : "1,email-key-manager,evaluation.org,pgp-key-public,ekm%40ekm-org-rules-test.flowcrypt.com",
           "content" : "-----BEGIN PGP PUBLIC KEY BLOCK-----
-Version: FlowCrypt 7.6.9 Gmail Encryption
+Version: FlowCrypt Email Encryption 7.6.9
 Comment: Seamlessly send and receive encrypted email
 
 xsBNBF5mRKEBCADX62s0p6mI6yrxB/ui/LqxfG4RcQzZJf8ah52Ynu1n8V7Y
@@ -143,7 +143,7 @@ Ek0f+P9DgunMb5OtkDwm6WWxpzV150LJcA==
   @Test
   fun testDetectBlocksReplacesIntendedBlocks() {
     val prv = """-----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: FlowCrypt 7.6.9 Gmail Encryption
+Version: FlowCrypt Email Encryption 7.6.9
 Comment: Seamlessly send and receive encrypted email
 
 xcLYBF5mRKEBCADX62s0p6mI6yrxB/ui/LqxfG4RcQzZJf8ah52Ynu1n8V7Y
@@ -206,7 +206,7 @@ ksD3kBAk43hGRSD2m/WDPWa/h2sh5rVswTKUDtv1fd1H6Ff5FnK21LHjEk0f
 -----END PGP PRIVATE KEY BLOCK-----"""
 
     val pub = """-----BEGIN PGP PUBLIC KEY BLOCK-----
-Version: FlowCrypt 7.6.9 Gmail Encryption
+Version: FlowCrypt Email Encryption 7.6.9
 Comment: Seamlessly send and receive encrypted email
 
 xsBNBF5mRKEBCADX62s0p6mI6yrxB/ui/LqxfG4RcQzZJf8ah52Ynu1n8V7Y

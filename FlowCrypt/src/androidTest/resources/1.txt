@@ -1,5 +1,5 @@
 -----BEGIN PGP PUBLIC KEY BLOCK-----
-Version: FlowCrypt 0.7.3 Gmail Encryption
+Version: FlowCrypt Email Encryption 0.7.3
 Comment: Seamlessly send and receive encrypted email
 
 xsBNBFyIz+4BCAC+msYGiVCIaQcts84ZT3JgjvQYSd6hynZ8vA/Og+5VIfVH

@@ -71,7 +71,7 @@ object TestKeys {
   val KEYS = mapOf(
     "rsa1" to TestKey(
       publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
-          "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
+          "Version: FlowCrypt Email Encryption 6.3.5\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
           "\n" +
           "xsBNBFwBWOEBB/9uIqBYIPDQbBqHMvGXhgnm+b2i5rNLXrrGoalrp7wYQ654\n" +
@@ -104,7 +104,7 @@ object TestKeys {
           "-----END PGP PUBLIC KEY BLOCK-----\n" +
           "\n",
       privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
-          "Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption\n" +
+          "Version: FlowCrypt Email Encryption [BUILD_REPLACEABLE_VERSION]\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
           "\n" +
           "xcMGBFwBWOEBB/9uIqBYIPDQbBqHMvGXhgnm+b2i5rNLXrrGoalrp7wYQ654\n" +
@@ -167,7 +167,7 @@ object TestKeys {
           "=15Xc\n" +
           "-----END PGP PRIVATE KEY BLOCK-----\n",
       decryptedPrivateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
-          "Version: FlowCrypt 0.0.1-dev Gmail Encryption\n" +
+          "Version: FlowCrypt Email Encryption 0.0.1-dev\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
           "\n" +
           "xcLYBFwBWOEBB/9uIqBYIPDQbBqHMvGXhgnm+b2i5rNLXrrGoalrp7wYQ654\n" +
@@ -234,7 +234,7 @@ object TestKeys {
     ),
     "rsa2" to TestKey(
       publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
-          "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
+          "Version: FlowCrypt Email Encryption 6.3.5\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
           "\n" +
           "xsFNBFwFqkQBEADxLDVykJKqNCBGHqF8Hw2lLkCWnR8OPGmoqMALl+KstBPm\n" +
@@ -290,7 +290,7 @@ object TestKeys {
           "-----END PGP PUBLIC KEY BLOCK-----\n" +
           "\n",
       privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
-          "Version: FlowCrypt  Email Encryption - flowcrypt.com\n" +
+          "Version: FlowCrypt Email Encryption\n" +
           "Comment: Seamlessly send, receive and search encrypted email\n" +
           "\n" +
           "xcaGBFwFqkQBEADxLDVykJKqNCBGHqF8Hw2lLkCWnR8OPGmoqMALl+KstBPm\n" +
@@ -410,7 +410,7 @@ object TestKeys {
     ),
     "ecc" to TestKey(
       publicKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
-          "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
+          "Version: FlowCrypt Email Encryption 6.3.5\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
           "\n" +
           "xjMEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\n" +
@@ -425,7 +425,7 @@ object TestKeys {
           "-----END PGP PUBLIC KEY BLOCK-----\n" +
           "\n",
       privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
-          "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
+          "Version: FlowCrypt Email Encryption 6.3.5\n" +
           "Comment: Seamlessly send and receive encrypted email\n" +
           "\n" +
           "xYYEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\n" +
