@@ -87,7 +87,7 @@ class PrivateKeyDetailsFragmentExpiredKeyInIsolationTest : BaseTest() {
         matches(
           withText(
             getHtmlString(
-              getResString(R.string.key_expiration, actualExpirationDate)
+              getResString(R.string.expires, actualExpirationDate)
             )
           )
         )

@@ -292,9 +292,6 @@
     <string name="save_to_file">Save to file</string>
     <string name="show_private_key">Show private key</string>
     <string name="template_fingerprint"><![CDATA[Fingerprint: <font color=\'#B7B7B7\'>%1$s</font>]]></string>
-    <string name="template_creation_date">Key creation: %1$s</string>
-    <string name="template_modification_date">Key modification: %1$s</string>
-    <string name="template_users">Users: %1$s</string>
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
     <string name="saved">Saved</string>
@@ -619,6 +616,10 @@
     <string name="capabilities">Capabilities:</string>
     <string name="user_ids" translatable="false">User ID(s)</string>
     <string name="sub_keys">Subkeys</string>
+    <string name="usable_for_encryption">Usable for encryption: %1$s</string>
+    <string name="usable_for_signing">Usable for signing: %1$s</string>
+    <string name="algorithm">Algorithm: %1$s</string>
+    <string name="key_info">Key Info</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">For your protection and data security, there are currently only %1$d attempt left, followed by a 5-minute cooldown period.</item>
         <item quantity="other">For your protection and data security, there are currently only %1$d attempts left, followed by a 5-minute cooldown period.</item>

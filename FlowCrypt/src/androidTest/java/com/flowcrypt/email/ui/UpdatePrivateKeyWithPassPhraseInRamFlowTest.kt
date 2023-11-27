@@ -114,7 +114,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     onView(
       withText(
         getResString(
-          R.string.template_modification_date,
+          R.string.template_modified,
           dateFormat.format(Date(requireNotNull(originalKeyDetails.lastModified)))
         )
       )
@@ -186,7 +186,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     onView(
       withText(
         getResString(
-          R.string.template_modification_date,
+          R.string.template_modified,
           dateFormat.format(Date(requireNotNull(updatedKeyDetails.lastModified)))
         )
       )

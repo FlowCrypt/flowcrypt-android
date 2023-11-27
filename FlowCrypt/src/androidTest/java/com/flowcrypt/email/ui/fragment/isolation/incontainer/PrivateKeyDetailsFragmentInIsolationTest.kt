@@ -9,12 +9,13 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
 import android.os.Environment
-import android.text.TextUtils
 import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
@@ -87,7 +88,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
   fun testKeyDetailsCheckDetails() {
     val details = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
 
-    onView(withId(R.id.tVFingerprint))
+    onView(withId(R.id.textViewFingerprint))
       .check(
         matches(
           withText(
@@ -107,7 +108,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
           withText(
             getHtmlString(
               getResString(
-                R.string.template_creation_date,
+                R.string.template_created,
                 dateFormat.format(Date(details.created))
               )
             )
@@ -120,7 +121,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
         matches(
           withText(
             getHtmlString(
-              getResString(R.string.key_expiration, getResString(R.string.key_does_not_expire))
+              getResString(R.string.expires, getResString(R.string.never))
             )
           )
         )
@@ -129,17 +130,14 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
 
-    onView(withId(R.id.tVUsers))
-      .check(
-        matches(
-          withText(
-            getResString(
-              R.string.template_users,
-              TextUtils.join(", ", details.mimeAddresses.map { it.address })
-            )
+    details.users.forEachIndexed { index, userId ->
+      onView(withId(R.id.recyclerViewUserIds))
+        .perform(
+          RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            withText(getResString(R.string.template_user, index + 1, userId))
           )
         )
-      )
+    }
   }
 
   @Test

@@ -313,6 +313,16 @@
     </fragment>
 
     <fragment
+        android:id="@+id/privateToPublicKeyDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.PrivateToPublicKeyDetailsFragment"
+        android:label="@string/pub_key"
+        tools:layout="@layout/fragment_public_key_details">
+        <argument
+            android:name="fingerprint"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/privateKeyDetailsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragment"
         android:label="@string/key_details"
@@ -323,6 +333,9 @@
         <action
             android:id="@+id/action_privateKeyDetailsFragment_to_updatePrivateKeyFragment"
             app:destination="@id/updatePrivateKeyFragment" />
+        <action
+            android:id="@+id/action_privateKeyDetailsFragment_to_privateToPublicKeyDetailsFragment"
+            app:destination="@id/privateToPublicKeyDetailsFragment" />
     </fragment>
 
     <fragment

@@ -25,6 +25,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -50,6 +51,8 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.adapter.UserIdListAdapter
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -93,6 +96,8 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     registerForActivityResult(CreateCustomDocument(Constants.MIME_TYPE_PGP_KEY)) { uri: Uri? ->
       uri?.let { saveKey(it) }
     }
+
+  private val userIdsAdapter = UserIdListAdapter()
 
   override val progressView: View?
     get() = binding?.progress?.root
@@ -201,9 +206,11 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
     }
 
     binding?.btnShowPubKey?.setOnClickListener {
-      showInfoDialog(
-        dialogTitle = "",
-        dialogMsg = privateKeyDetailsViewModel.getPgpKeyDetails()?.publicKey
+      navController?.navigate(
+        PrivateKeyDetailsFragmentDirections
+          .actionPrivateKeyDetailsFragmentToPrivateToPublicKeyDetailsFragment(
+            fingerprint = args.fingerprint
+          )
       )
     }
 
@@ -241,6 +248,20 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
         }
       }
     }
+
+    initUserIdsRecyclerView()
+  }
+
+  private fun initUserIdsRecyclerView() {
+    binding?.recyclerViewUserIds?.apply {
+      layoutManager = LinearLayoutManager(context)
+      addItemDecoration(
+        MarginItemDecoration(
+          marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+        )
+      )
+      adapter = userIdsAdapter
+    }
   }
 
   private fun showNeedPassphraseDialog() {
@@ -252,34 +273,71 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
   }
 
   private fun updateViews() {
-    privateKeyDetailsViewModel.getPgpKeyDetails()?.let { value ->
+    privateKeyDetailsViewModel.getPgpKeyDetails()?.let { pgpKeyRingDetails ->
+      val dateFormat = DateTimeUtil.getPgpDateFormat(context)
+
       UIUtil.setHtmlTextToTextView(
         getString(
           R.string.template_fingerprint,
-          GeneralUtil.doSectionsInText(" ", value.fingerprint, 4)
-        ), binding?.tVFingerprint
+          GeneralUtil.doSectionsInText(" ", pgpKeyRingDetails.fingerprint, 4)
+        ), binding?.textViewFingerprint
       )
 
-      binding?.textViewStatusValue?.backgroundTintList =
-        value.getColorStateListDependsOnStatus(requireContext())
-      binding?.textViewStatusValue?.setCompoundDrawablesWithIntrinsicBounds(
-        value.getStatusIconResId(), 0, 0, 0
-      )
-      binding?.textViewStatusValue?.text = value.getStatusText(requireContext())
+      binding?.textViewPrimaryKeyAlgorithm?.apply {
+        val bitStrength =
+          if (pgpKeyRingDetails.algo.bits != -1) pgpKeyRingDetails.algo.bits else null
+        val algoWithBits = pgpKeyRingDetails.algo.algorithm + (bitStrength?.let { "/$it" } ?: "")
+        text = context.getString(R.string.algorithm, algoWithBits)
+      }
 
-      val dateFormat = DateTimeUtil.getPgpDateFormat(context)
       binding?.textViewCreationDate?.text = getString(
-        R.string.template_creation_date,
-        dateFormat.format(Date(value.created))
+        R.string.template_created,
+        dateFormat.format(Date(pgpKeyRingDetails.created))
       )
-      binding?.textViewModificationDate?.text = getString(
-        R.string.template_modification_date,
-        dateFormat.format(Date(value.lastModified))
-      )
-      binding?.textViewExpirationDate?.text = value.expiration?.let {
-        getString(R.string.key_expiration, dateFormat.format(Date(it)))
-      } ?: getString(R.string.key_expiration, getString(R.string.key_does_not_expire))
-      binding?.tVUsers?.text = getString(R.string.template_users, value.getUserIdsAsSingleString())
+
+      binding?.textViewModificationDate?.text =
+        getString(R.string.template_modified, dateFormat.format(pgpKeyRingDetails.lastModified))
+
+
+      binding?.textViewExpirationDate?.apply {
+        text = pgpKeyRingDetails.expiration?.let {
+          getString(R.string.expires, dateFormat.format(Date(it)))
+        } ?: getString(R.string.expires, getString(R.string.never))
+      }
+
+      binding?.textViewUsableForEncryption?.apply {
+        text = context.getString(
+          R.string.usable_for_encryption, pgpKeyRingDetails.usableForEncryption.toString()
+        )
+
+        setTextColor(
+          UIUtil.getColor(
+            requireContext(),
+            if (pgpKeyRingDetails.usableForEncryption) R.color.colorPrimary else R.color.red
+          )
+        )
+      }
+
+      binding?.textViewUsableForSigning?.apply {
+        text = context.getString(
+          R.string.usable_for_signing, pgpKeyRingDetails.usableForSigning.toString()
+        )
+
+        setTextColor(
+          UIUtil.getColor(
+            requireContext(),
+            if (pgpKeyRingDetails.usableForSigning) R.color.colorAccent else R.color.red
+          )
+        )
+      }
+
+      binding?.textViewStatusValue?.apply {
+        backgroundTintList = pgpKeyRingDetails.getColorStateListDependsOnStatus(requireContext())
+        setCompoundDrawablesWithIntrinsicBounds(pgpKeyRingDetails.getStatusIconResId(), 0, 0, 0)
+        text = pgpKeyRingDetails.getStatusText(requireContext())
+      }
+
+      userIdsAdapter.submitList(pgpKeyRingDetails.users)
 
       val passPhrase = privateKeyDetailsViewModel.getPassphrase()
       val passPhraseType = privateKeyDetailsViewModel.getPassphraseType()
