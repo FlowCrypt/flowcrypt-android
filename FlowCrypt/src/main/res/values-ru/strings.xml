@@ -400,7 +400,6 @@
     <string name="to_receiver">Кому %1$s</string>
     <string name="template_warning_max_total_attachments_size">Общий размер добавленных вложений не должен превышать %1$s</string>
     <string name="use_public_key_from">Использовать открытый ключ из</string>
-    <string name="template_users">Пользователи: %1$s</string>
     <string name="warning">Предупреждение</string>
     <string name="password_quality_weak">слабая</string>
     <string name="wrong_public_key_recorded">Записан неверный открытый ключ. Входящая зашифрованная электронная почта может быть недоступна для чтения.</string>
