@@ -402,7 +402,7 @@ dependencies {
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.20")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.21")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -465,7 +465,7 @@ dependencies {
     exclude("com.sun.mail")
   }
 
-  implementation("org.pgpainless:pgpainless-core:1.6.2")
+  implementation("org.pgpainless:pgpainless-core:1.6.3")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
