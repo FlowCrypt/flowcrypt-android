@@ -91,7 +91,7 @@ object PgpArmor {
 
   @JvmStatic
   val FLOWCRYPT_HEADERS = listOf(
-    Pair(ArmoredOutputStream.VERSION_HDR, "FlowCrypt ${BuildConfig.VERSION_NAME} Gmail Encryption"),
+    Pair(ArmoredOutputStream.VERSION_HDR, "FlowCrypt Email Encryption ${BuildConfig.VERSION_NAME}"),
     Pair("Comment", "Seamlessly send and receive encrypted email")
   )
 
