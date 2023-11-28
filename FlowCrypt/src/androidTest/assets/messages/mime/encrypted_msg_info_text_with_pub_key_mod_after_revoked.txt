@@ -47,7 +47,7 @@ Content-Disposition: attachment;
 Content-ID: <6ad30513-0c68-4182-b24c-356ec0cb7112@flowcrypt>
 
 -----BEGIN PGP PUBLIC KEY BLOCK-----
-Version: FlowCrypt 1.3.4_dev_134__2022_06_17 Gmail Encryption
+Version: FlowCrypt Email Encryption 1.3.4_dev_134__2022_06_17
 Comment: Seamlessly send and receive encrypted email
 
 mDMEYIq7phYJKwYBBAHaRw8BAQdAat45rrh+gvQwWwJw5eScq3Pdxt/8d+lWNVSm

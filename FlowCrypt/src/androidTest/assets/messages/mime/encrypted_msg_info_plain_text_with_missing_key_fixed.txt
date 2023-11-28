@@ -27,7 +27,7 @@ Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 -----BEGIN PGP MESSAGE-----
-Version: FlowCrypt 0.7.3 Gmail Encryption
+Version: FlowCrypt Email Encryption 0.7.3
 Comment: Seamlessly send and receive encrypted email
 
 wcBMA8iMPjccEmlgAQf9H5ZrLjIqWqYM91ND2DaEFQQC6iafE0CkdNR33Aq2

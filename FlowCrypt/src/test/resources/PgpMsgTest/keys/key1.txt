@@ -1,5 +1,5 @@
 -----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: FlowCrypt 6.9.1 Gmail Encryption
+Version: FlowCrypt Email Encryption 6.9.1
 Comment: Seamlessly send and receive encrypted email
 
 xcaGBFn9GlIBEACiAU8yhymNq2lTxEG1OU0Xka9tUJ4A7wsDhHNnuhxzjVP8

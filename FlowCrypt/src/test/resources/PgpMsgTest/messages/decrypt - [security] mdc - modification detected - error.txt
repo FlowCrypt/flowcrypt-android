@@ -1,5 +1,5 @@
 -----BEGIN PGP MESSAGE-----
-Version: FlowCrypt 5.5.9 Gmail Encryption flowcrypt.com
+Version: FlowCrypt Email Encryption 5.5.9
 Comment: Seamlessly send, receive and search encrypted email
 
 wcFMA0taL/zmLZUBAQ/+KvSED2vb9fJMQd6lRTh0idC7srhg4ESSf4ggCXFE

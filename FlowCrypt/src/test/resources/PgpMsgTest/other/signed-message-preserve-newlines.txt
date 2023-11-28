@@ -8,7 +8,7 @@ signed inline
 should easily verify
 This is email footer
 -----BEGIN PGP SIGNATURE-----
-Version: FlowCrypt 5.0.4 Gmail Encryption flowcrypt.com
+Version: FlowCrypt Email Encryption 5.0.4
 Comment: Seamlessly send, receive and search encrypted email
 
 wsFcBAEBCAAQBQJZ+74YCRAGylU+wkVdcAAAfAkQAKYwTCQUX4K26jwzKPG0
