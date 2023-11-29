@@ -492,6 +492,7 @@ class GeneralUtil {
       withContext(Dispatchers.IO) {
         //before fetch idToken from [GoogleSignInClient]
         //we try to get IdToken from the flavor settings
+        @Suppress("UNNECESSARY_SAFE_CALL")
         FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
 
         val googleSignInClient = GoogleSignIn.getClient(

@@ -42,7 +42,7 @@ abstract class BaseDialogFragment : DialogFragment(), IdlingCountListener {
       }
     } else if (useLinkify) {
       (dialog?.findViewById<View>(android.R.id.message) as? TextView)?.apply {
-        autoLinkMask = Linkify.ALL
+        autoLinkMask = Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES or Linkify.PHONE_NUMBERS
         movementMethod = LinkMovementMethod.getInstance()
       }
     }

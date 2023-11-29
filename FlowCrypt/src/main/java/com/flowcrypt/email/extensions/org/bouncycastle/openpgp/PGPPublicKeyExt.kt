@@ -10,7 +10,6 @@ import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.openpgp.PGPPublicKey
 import java.io.IOException
 import java.util.Date
@@ -20,12 +19,8 @@ import java.util.concurrent.TimeUnit
  * @author Denys Bondarenko
  */
 @Throws(IOException::class)
-fun PGPPublicKey.armor(
-  hideArmorMeta: Boolean = false,
-  headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS
-): String {
-  return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
-}
+fun PGPPublicKey.armor(hideArmorMeta: Boolean = false): String =
+  SecurityUtils.armor(hideArmorMeta) { this.encode(it) }
 
 fun PGPPublicKey.getLastModificationDate(): Date {
   val allSignatures = (listOf(signatures, keySignatures).flatMap { it.asSequence() }).toList()

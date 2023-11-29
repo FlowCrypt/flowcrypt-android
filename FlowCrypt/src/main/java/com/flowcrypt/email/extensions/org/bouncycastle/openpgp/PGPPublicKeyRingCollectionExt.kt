@@ -6,7 +6,6 @@
 package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
 
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import java.io.IOException
 
@@ -14,9 +13,5 @@ import java.io.IOException
  * @author Denys Bondarenko
  */
 @Throws(IOException::class)
-fun PGPPublicKeyRingCollection.armor(
-  hideArmorMeta: Boolean = false,
-  headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS
-): String {
-  return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
-}
+fun PGPPublicKeyRingCollection.armor(hideArmorMeta: Boolean = false): String =
+  SecurityUtils.armor(hideArmorMeta) { this.encode(it) }

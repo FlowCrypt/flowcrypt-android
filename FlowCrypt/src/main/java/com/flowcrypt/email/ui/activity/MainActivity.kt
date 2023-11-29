@@ -311,7 +311,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         ActionQueueWorker.enqueue(this.applicationContext)
         invalidateOptionsMenu()
         binding.navigationView.getHeaderView(0)?.let { headerView ->
-          navigationViewManager?.initUserProfileView(this@MainActivity, headerView, accountEntity)
+          navigationViewManager?.initUserProfileView(headerView, accountEntity)
         }
       }
     }

@@ -12,7 +12,6 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
-import com.flowcrypt.email.security.pgp.PgpArmor
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.algorithm.PublicKeyAlgorithm
@@ -89,12 +88,8 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
 }
 
 @Throws(IOException::class)
-fun PGPKeyRing.armor(
-  hideArmorMeta: Boolean = false,
-  headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS
-): String {
-  return SecurityUtils.armor(hideArmorMeta, headers) { this.encode(it) }
-}
+fun PGPKeyRing.armor(hideArmorMeta: Boolean = false): String =
+  SecurityUtils.armor(hideArmorMeta) { this.encode(it) }
 
 val PGPKeyRing.expiration: Instant?
   get() {
