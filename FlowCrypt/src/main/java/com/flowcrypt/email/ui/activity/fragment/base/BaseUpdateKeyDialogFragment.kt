@@ -125,8 +125,7 @@ abstract class BaseUpdateKeyDialogFragment : BaseDialogFragment() {
       dateFormat.format(Date(pgpKeyRingDetails.created))
     )
     binding?.tVModified?.text = getString(
-      R.string.template_modified,
-      dateFormat.format(Date(pgpKeyRingDetails.lastModified ?: 0))
+      R.string.template_modified, dateFormat.format(Date(pgpKeyRingDetails.lastModified))
     )
     binding?.tVExpiration?.text = pgpKeyRingDetails.expiration?.let {
       context?.getString(R.string.key_expiration, dateFormat.format(Date(it)))

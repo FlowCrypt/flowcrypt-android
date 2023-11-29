@@ -90,10 +90,9 @@ object PgpArmor {
   val ARMOR_HEADER_UNKNOWN = ARMOR_HEADER_DICT[RawBlockParser.RawBlockType.UNKNOWN]
 
   @JvmStatic
-  val FLOWCRYPT_HEADERS = listOf(
-    Pair(ArmoredOutputStream.VERSION_HDR, "FlowCrypt Email Encryption ${BuildConfig.VERSION_NAME}"),
-    Pair("Comment", "Seamlessly send and receive encrypted email")
-  )
+  val FLOWCRYPT_HEADERS: ArmoredOutputStream.Builder = ArmoredOutputStream.builder()
+    .setVersion("FlowCrypt Email Encryption ${BuildConfig.VERSION_NAME}")
+    .setComment("Seamlessly send and receive encrypted email")
 
   // note: using RawBlockParser.RawBlockType.UNKNOWN instead of "key" in Typescript
   @JvmStatic

@@ -198,20 +198,15 @@ class SecurityUtils {
 
     fun armor(
       hideArmorMeta: Boolean = false,
-      headers: List<Pair<String, String>>? = PgpArmor.FLOWCRYPT_HEADERS,
+      armoredOutputStreamBuilder: ArmoredOutputStream.Builder? = PgpArmor.FLOWCRYPT_HEADERS,
       encode: (outputStream: OutputStream) -> Unit
     ): String {
       ByteArrayOutputStream().use { out ->
-        ArmoredOutputStream(out).use { armoredOut ->
-          if (headers != null) {
-            if (hideArmorMeta) {
-              armoredOut.clearHeaders()
-            } else {
-              for (header in headers) {
-                armoredOut.setHeader(header.first, header.second)
-              }
-            }
+        (armoredOutputStreamBuilder ?: ArmoredOutputStream.builder()).apply {
+          if (hideArmorMeta) {
+            clearHeaders()
           }
+        }.build(out).use { armoredOut ->
           encode.invoke(armoredOut)
         }
         return String(out.toByteArray(), StandardCharsets.US_ASCII)

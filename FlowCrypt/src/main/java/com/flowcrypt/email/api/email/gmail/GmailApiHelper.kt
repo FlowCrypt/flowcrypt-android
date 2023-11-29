@@ -177,7 +177,10 @@ class GmailApiHelper {
       val appName = context.getString(R.string.app_name)
       val rootUrl = FlavorSettings.getGmailAPIRootUrl()
       val builder = Gmail.Builder(transport, factory, credential).setApplicationName(appName)
+
+      @Suppress("UNNECESSARY_SAFE_CALL")
       rootUrl?.let { builder.rootUrl = it }
+
       if (!FlavorSettings.isGMailAPIHttpRequestInitializerEnabled()) {
         builder.httpRequestInitializer = null
       }

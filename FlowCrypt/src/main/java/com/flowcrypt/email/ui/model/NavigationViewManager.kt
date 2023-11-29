@@ -36,9 +36,9 @@ class NavigationViewManager(
   /**
    * Init the user profile in the top of the navigation view.
    *
-   * @param view The view which contains user profile views.
+   * @param headerView The view which contains user profile views.
    */
-  fun initUserProfileView(context: Context, headerView: View, accountEntity: AccountEntity) {
+  fun initUserProfileView(headerView: View, accountEntity: AccountEntity) {
     navHeaderBinding = NavHeaderBinding.bind(headerView)
 
     if (accountEntity.displayName.isNullOrEmpty()) {
