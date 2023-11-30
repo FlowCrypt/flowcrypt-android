@@ -40,6 +40,7 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -64,6 +65,8 @@ import org.pgpainless.util.Passphrase
  */
 class PrivateKeysViewModel(application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
+  private val controlledRunnerForAdditionalOperationsForPrivateKeys =
+    ControlledRunner<Result<Pair<AccountEntity, List<PgpKeyRingDetails>>>>()
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
@@ -425,12 +428,25 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       try {
         val pgpKeyRingDetails =
           keys.firstOrNull() ?: throw java.lang.IllegalStateException("No keys")
-        doAdditionalOperationsForPrivateKey(
-          accountEntity = accountEntity,
-          pgpKeyRingDetails = pgpKeyRingDetails,
-          idToken = idToken,
-        )
-        mutableLiveData.value = Result.success(Pair(accountEntity, keys))
+        val result = controlledRunnerForAdditionalOperationsForPrivateKeys.joinPreviousOrRun {
+          return@joinPreviousOrRun try {
+            doAdditionalOperationsForPrivateKey(
+              accountEntity = accountEntity,
+              pgpKeyRingDetails = pgpKeyRingDetails,
+              idToken = idToken,
+            )
+            Result.success(Pair(accountEntity, keys))
+          } catch (e: Exception) {
+            //we can skip the exception here as we will handle it below
+            Result.exception(e)
+          }
+        }
+
+        if (result.exception != null) {
+          throw result.exception
+        } else {
+          mutableLiveData.value = result
+        }
       } catch (e: Exception) {
         e.printStackTrace()
         for (pgpKeyRingDetails in keys) {
@@ -601,6 +617,9 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
    * Set or replace public key. If idToken != null an auth mechanism will be used to upload
    * the given pub key. Otherwise will be used a request to replace public key that will
    * be verified by clicking email.
+   *
+   * More details can be found here
+   * https://github.com/FlowCrypt/flowcrypt-browser/pull/4704#issuecomment-1253847852
    *
    * @param accountEntity [AccountEntity] which will be used for registration.
    * @param keyDetails Details of the created key.

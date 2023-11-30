@@ -494,7 +494,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           if (account != null && keys.isNotEmpty()) {
             privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
               accountEntity = account,
-              keys = keys
+              keys = keys,
+              idToken = cachedGoogleSignInAccount?.idToken
             )
           }
         }
