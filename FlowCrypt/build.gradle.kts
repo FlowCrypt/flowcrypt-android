@@ -469,7 +469,7 @@ dependencies {
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
-  implementation("commons-io:commons-io:2.15.0")
+  implementation("commons-io:commons-io:2.15.1")
   implementation("com.burhanrashid52:photoeditor:3.0.1")
   implementation("net.openid:appauth:0.11.1")
   implementation("org.bitbucket.b_c:jose4j:0.9.3")
