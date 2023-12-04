@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.ContentResolver
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
@@ -23,21 +24,36 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
+import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ApiException
 import jakarta.mail.Message
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeBodyPart
+import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InvalidObjectException
+import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -115,6 +131,56 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     MutableStateFlow(emptyList())
   val attachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
     attachmentsMutableStateFlow.asStateFlow()
+
+  private val draftRepeatableCheckingFlow: Flow<Long> = flow {
+    while (viewModelScope.isActive) {
+      delay(DELAY_TIMEOUT)
+      emit(System.currentTimeMillis())
+    }
+  }.flowOn(Dispatchers.Default)
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val draftMimeMessageStateFlow: StateFlow<MimeMessage> =
+    draftRepeatableCheckingFlow.mapLatest {
+      withContext(Dispatchers.IO) {
+        DraftMimeMessage().apply {
+          subject = outgoingMessageInfoStateFlow.value.subject
+          setContent(MimeMultipart().apply {
+            addBodyPart(
+              MimeBodyPart().apply {
+                setText(outgoingMessageInfoStateFlow.value.msg ?: "")
+              }
+            )
+          })
+          setFrom(outgoingMessageInfoStateFlow.value.from)
+          setRecipients(
+            Message.RecipientType.TO,
+            outgoingMessageInfoStateFlow.value.toRecipients?.toTypedArray()
+          )
+          setRecipients(
+            Message.RecipientType.CC,
+            outgoingMessageInfoStateFlow.value.ccRecipients?.toTypedArray()
+          )
+          setRecipients(
+            Message.RecipientType.BCC,
+            outgoingMessageInfoStateFlow.value.bccRecipients?.toTypedArray()
+          )
+          saveChanges()
+        }
+      }
+    }.stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = DraftMimeMessage()
+    )
+
+  init {
+    viewModelScope.launch {
+      draftMimeMessageStateFlow.collect { mimeMessage ->
+        LogsUtil.d(ComposeMsgViewModel::class.java.simpleName, "Draft for $mimeMessage saved")
+      }
+    }
+  }
 
   fun addAttachments(attachments: List<AttachmentInfo>) {
     attachmentsMutableStateFlow.update { existingAttachments ->
@@ -450,5 +516,27 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     companion object {
       const val PARALLELISM_COUNT = 10
     }
+  }
+
+  private class DraftMimeMessage : FlowCryptMimeMessage(Session.getDefaultInstance(Properties())) {
+    val timeInMilliseconds = System.currentTimeMillis()
+
+    //TODO-denbond7 remove me before release. Just for testing
+    override fun toString(): String {
+      return timeInMilliseconds.toString() +
+          "|" + from.contentToString() +
+          "|" + subject +
+          "|" + getRecipients(Message.RecipientType.TO).contentToString() +
+          "|" + getRecipients(Message.RecipientType.CC).contentToString() +
+          "|" + getRecipients(Message.RecipientType.BCC).contentToString()
+    }
+
+    override fun equals(other: Any?): Boolean {
+      return super.equals(other)
+    }
+  }
+
+  companion object {
+    private val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)
   }
 }
