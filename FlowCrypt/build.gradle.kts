@@ -465,7 +465,7 @@ dependencies {
     exclude("com.sun.mail")
   }
 
-  implementation("org.pgpainless:pgpainless-core:1.6.3")
+  implementation("org.pgpainless:pgpainless-core:1.6.4")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
@@ -475,7 +475,7 @@ dependencies {
   implementation("org.bitbucket.b_c:jose4j:0.9.3")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1")
-  implementation("org.jsoup:jsoup:1.16.2")
+  implementation("org.jsoup:jsoup:1.17.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("ch.acra:acra-http:5.11.3")
