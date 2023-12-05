@@ -7,8 +7,10 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.ContentResolver
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FlowCryptMimeMessage
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
@@ -21,6 +23,7 @@ import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
@@ -49,7 +52,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.InvalidObjectException
 import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
@@ -143,35 +148,60 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   private val draftMimeMessageStateFlow: StateFlow<MimeMessage> =
     draftRepeatableCheckingFlow.mapLatest {
       withContext(Dispatchers.IO) {
-        DraftMimeMessage().apply {
-          subject = outgoingMessageInfoStateFlow.value.subject
-          setContent(MimeMultipart().apply {
-            addBodyPart(
-              MimeBodyPart().apply {
-                setText(outgoingMessageInfoStateFlow.value.msg ?: "")
-              }
+        val session = Session.getDefaultInstance(Properties())
+        val context: Context = getApplication()
+        val replyToMsgEntity = outgoingMessageInfoStateFlow.value.replyToMsgEntity
+        try {
+          val mimeMessage = if (replyToMsgEntity == null) {
+            DraftMimeMessage(session)
+          } else {
+            val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMsgEntity.id.toString())
+              ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
+
+            val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
+            val inputStream = context.contentResolver?.openInputStream(uri)
+              ?: throw IllegalArgumentException("InputStream not found")
+            val out = ByteArrayOutputStream().apply {
+              MimeMessage(
+                session, KeyStoreCryptoManager.getCipherInputStream(inputStream)
+              ).reply(false).writeTo(this)
+            }
+            DraftMimeMessage(session, out.toByteArray().inputStream())
+          }
+
+          mimeMessage.apply {
+            subject = outgoingMessageInfoStateFlow.value.subject
+            setContent(MimeMultipart().apply {
+              addBodyPart(
+                MimeBodyPart().apply {
+                  setText(outgoingMessageInfoStateFlow.value.msg ?: "")
+                }
+              )
+            })
+            setFrom(outgoingMessageInfoStateFlow.value.from)
+            setRecipients(
+              Message.RecipientType.TO,
+              outgoingMessageInfoStateFlow.value.toRecipients?.toTypedArray()
             )
-          })
-          setFrom(outgoingMessageInfoStateFlow.value.from)
-          setRecipients(
-            Message.RecipientType.TO,
-            outgoingMessageInfoStateFlow.value.toRecipients?.toTypedArray()
-          )
-          setRecipients(
-            Message.RecipientType.CC,
-            outgoingMessageInfoStateFlow.value.ccRecipients?.toTypedArray()
-          )
-          setRecipients(
-            Message.RecipientType.BCC,
-            outgoingMessageInfoStateFlow.value.bccRecipients?.toTypedArray()
-          )
-          saveChanges()
+            setRecipients(
+              Message.RecipientType.CC,
+              outgoingMessageInfoStateFlow.value.ccRecipients?.toTypedArray()
+            )
+            setRecipients(
+              Message.RecipientType.BCC,
+              outgoingMessageInfoStateFlow.value.bccRecipients?.toTypedArray()
+            )
+            saveChanges()
+          }
+        } catch (e: Exception) {
+          e.printStackTrace()
+          return@withContext DraftMimeMessage(session)
         }
       }
     }.stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
-      initialValue = DraftMimeMessage()
+      initialValue = DraftMimeMessage(Session.getDefaultInstance(Properties()))
     )
 
   init {
@@ -518,7 +548,11 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
-  private class DraftMimeMessage : FlowCryptMimeMessage(Session.getDefaultInstance(Properties())) {
+  private class DraftMimeMessage : FlowCryptMimeMessage {
+    constructor(session: Session) : super(session)
+    constructor(session: Session, inputStream: InputStream) : super(session, inputStream)
+    constructor(mimeMessage: MimeMessage) : super(mimeMessage)
+
     val timeInMilliseconds = System.currentTimeMillis()
 
     //TODO-denbond7 remove me before release. Just for testing
