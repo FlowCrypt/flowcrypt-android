@@ -166,7 +166,7 @@ class DraftViewModel(
   private suspend fun prepareAndSaveDraftForUploading(outgoingMessageInfo: OutgoingMessageInfo): Result<Boolean> =
     withContext(Dispatchers.IO) {
       try {
-        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        val activeAccount = getActiveAccountSuspend()
           ?: return@withContext Result.success(false)
 
         sessionDraftMessageEntity = if (sessionDraftMessageEntity == null) {
@@ -221,7 +221,11 @@ class DraftViewModel(
             }
           }
 
-          MsgsCacheManager.storeMsg(draftMessageEntity.id.toString(), mimeMessage as MimeMessage)
+          MsgsCacheManager.storeMsg(
+            key = draftMessageEntity.id.toString(),
+            msg = mimeMessage as MimeMessage,
+            accountEntity = activeAccount
+          )
           val messageEntityWithoutStateChange = draftMessageEntity.copy(
             subject = outgoingMessageInfo.subject,
             fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
@@ -286,7 +290,7 @@ class DraftViewModel(
     }
   }
 
-  private data class DraftFingerprint constructor(
+  private data class DraftFingerprint(
     var msgText: String? = null,
     var msgSubject: String? = null,
     val toRecipients: Set<String> = setOf(),

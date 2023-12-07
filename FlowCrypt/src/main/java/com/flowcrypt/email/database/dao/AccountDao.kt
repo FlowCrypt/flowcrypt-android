@@ -11,6 +11,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.pgp.PgpKey
+import java.util.UUID
 
 /**
  * This class describe creating of table which has name
@@ -61,10 +63,17 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     val availableAccounts = getAccountsSuspend()
     //mark all accounts as non-active
     updateAccountsSuspend(availableAccounts.map { it.copy(isActive = false) })
+    val pgpPassphrase = UUID.randomUUID().toString()
+    val pgpPrivateKey = PgpKey.create(
+      email = accountEntity.email,
+      passphrase = pgpPassphrase
+    ).encoded
 
     //encrypt sensitive info
     val encryptedPassword = KeyStoreCryptoManager.encryptSuspend(accountEntity.password)
     val encryptedSmtpPassword = KeyStoreCryptoManager.encryptSuspend(accountEntity.smtpPassword)
+    val encryptedPgpPassphrase = KeyStoreCryptoManager.encryptSuspend(pgpPassphrase)
+    val encryptedPgpPrivateKey = KeyStoreCryptoManager.encryptSuspend(pgpPrivateKey)
 
     insertSuspend(
       accountEntity.copy(
@@ -72,26 +81,8 @@ abstract class AccountDao : BaseDao<AccountEntity> {
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
         isActive = true,
-      )
-    )
-  }
-
-  @Transaction
-  open fun addAccount(accountEntity: AccountEntity) {
-    val availableAccounts = getAccounts()
-    //mark all accounts as non-active
-    updateAccounts(availableAccounts.map { it.copy(isActive = false) })
-
-    //encrypt sensitive info
-    val encryptedPassword = KeyStoreCryptoManager.encrypt(accountEntity.password)
-    val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(accountEntity.smtpPassword)
-
-    insert(
-      accountEntity.copy(
-        email = accountEntity.email.lowercase(),
-        password = encryptedPassword,
-        smtpPassword = encryptedSmtpPassword,
-        isActive = true,
+        pgpPassphrase = encryptedPgpPassphrase,
+        pgpPrivateKey = encryptedPgpPrivateKey
       )
     )
   }

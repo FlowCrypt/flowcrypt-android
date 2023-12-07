@@ -8,7 +8,11 @@ package com.flowcrypt.email.api.email
 import android.content.Context
 import android.net.Uri
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.kotlin.toPGPPublicKeyRingCollection
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPublicKeyRing
+import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.cache.DiskLruCache
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.internal.io.FileSystem
 import okio.buffer
+import org.pgpainless.PGPainless
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -41,17 +46,19 @@ object MsgsCacheManager {
     )
   }
 
-  fun storeMsg(key: String, msg: MimeMessage) {
-    storeMsgInternal(key) {
-      msg.writeTo(it)
+  suspend fun storeMsg(key: String, msg: MimeMessage, accountEntity: AccountEntity) =
+    withContext(Dispatchers.IO) {
+      storeMsgInternal(key, accountEntity) {
+        msg.writeTo(it)
+      }
     }
-  }
 
-  fun storeMsg(key: String, inputStream: InputStream) {
-    storeMsgInternal(key) {
-      inputStream.copyTo(it)
+  suspend fun storeMsg(key: String, inputStream: InputStream, accountEntity: AccountEntity) =
+    withContext(Dispatchers.IO) {
+      storeMsgInternal(key, accountEntity) {
+        inputStream.copyTo(it)
+      }
     }
-  }
 
   fun getMsgAsByteArray(key: String): ByteArray {
     return diskLruCache[key]?.getByteArray(0) ?: return byteArrayOf()
@@ -89,14 +96,26 @@ object MsgsCacheManager {
     diskLruCache.evictAll()
   }
 
-  private fun storeMsgInternal(key: String, action: (outputStream: OutputStream) -> Unit) {
+  private fun storeMsgInternal(
+    key: String,
+    accountEntity: AccountEntity,
+    action: (outputStream: OutputStream) -> Unit
+  ) {
     val editor = diskLruCache.edit(key) ?: return
 
     try {
       val bufferedSink = editor.newSink().buffer()
 
-      KeyStoreCryptoManager.encryptOutputStream(bufferedSink.outputStream()) {
-        action.invoke(it)
+      PgpEncryptAndOrSign.encryptAndOrSign(
+        destOutputStream = bufferedSink.outputStream(),
+        pgpPublicKeyRingCollection = PGPainless.readKeyRing()
+          .secretKeyRingCollection(requireNotNull(accountEntity.pgpPrivateKey))
+          .map { it.toPublicKeyRing().armor() }.toPGPPublicKeyRingCollection()
+      ) { out ->
+        out.use { outputStream ->
+          action.invoke(outputStream)
+        }
+
         bufferedSink.flush()
       }
 

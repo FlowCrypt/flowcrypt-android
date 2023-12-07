@@ -13,6 +13,7 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,8 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.pgpainless.PGPainless
-import org.pgpainless.key.util.UserId
 
 /**
  * @author Denys Bondarenko
@@ -44,11 +43,10 @@ class CreatePrivateKeyViewModel(application: Application) : RoomBasicViewModel(a
         controlledRunnerForKeyCreation.cancelPreviousThenRun {
           return@cancelPreviousThenRun withContext(Dispatchers.IO) {
             try {
-              val pgpKeyRingDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
-                UserId.nameAndEmail(
-                  accountEntity.displayName
-                    ?: accountEntity.email, accountEntity.email
-                ), passphrase
+              val pgpKeyRingDetails = PgpKey.create(
+                email = accountEntity.email,
+                name = accountEntity.displayName ?: accountEntity.email,
+                passphrase = passphrase
               ).toPgpKeyRingDetails(
                 accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
               ).copy(

@@ -212,8 +212,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
    */
   fun encryptAndSaveKeysToDatabase(
     accountEntity: AccountEntity?,
-    keys: List<PgpKeyRingDetails>,
-    addAccountIfNotExist: Boolean = false
+    keys: List<PgpKeyRingDetails>
   ) {
     if (accountEntity == null) {
       savePrivateKeysLiveData.value = Result.exception(NullPointerException("account == null"))
@@ -244,14 +243,6 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
             if (existingPgpKeyDetails?.isNewerThan(pgpKeyRingDetails) == true) {
               continue
-            }
-          }
-
-          if (addAccountIfNotExist) {
-            val existedAccount = roomDatabase.accountDao()
-              .getAccountSuspend(accountEntity.email.lowercase())
-            if (existedAccount == null) {
-              roomDatabase.accountDao().addAccountSuspend(accountEntity)
             }
           }
 

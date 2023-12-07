@@ -94,7 +94,8 @@ object PgpEncryptAndOrSign {
 
   @Throws(IOException::class)
   fun encryptAndOrSign(
-    srcInputStream: InputStream, destOutputStream: OutputStream,
+    srcInputStream: InputStream,
+    destOutputStream: OutputStream,
     pgpPublicKeyRingCollection: PGPPublicKeyRingCollection? = null,
     protectedPgpPublicKeyRingCollection: PGPPublicKeyRingCollection? = null,
     pgpSecretKeyRingCollection: PGPSecretKeyRingCollection? = null,
@@ -118,6 +119,34 @@ object PgpEncryptAndOrSign {
       ).use { encryptionStream ->
         srcStream.copyTo(encryptionStream)
       }
+    }
+  }
+
+  @Throws(IOException::class)
+  fun encryptAndOrSign(
+    destOutputStream: OutputStream,
+    pgpPublicKeyRingCollection: PGPPublicKeyRingCollection? = null,
+    protectedPgpPublicKeyRingCollection: PGPPublicKeyRingCollection? = null,
+    pgpSecretKeyRingCollection: PGPSecretKeyRingCollection? = null,
+    secretKeyRingProtector: SecretKeyRingProtector? = null,
+    doArmor: Boolean = false,
+    hideArmorMeta: Boolean = false,
+    passphrase: Passphrase? = null,
+    fileName: String? = null,
+    action: (outputStream: OutputStream) -> Unit
+  ) {
+    genEncryptionStream(
+      destOutputStream = destOutputStream,
+      pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
+      protectedPgpPublicKeyRingCollection = protectedPgpPublicKeyRingCollection,
+      pgpSecretKeyRingCollection = pgpSecretKeyRingCollection,
+      secretKeyRingProtector = secretKeyRingProtector,
+      doArmor = doArmor,
+      hideArmorMeta = hideArmorMeta,
+      passphrase = passphrase,
+      fileName = fileName,
+    ).use { encryptionStream ->
+      action.invoke(encryptionStream)
     }
   }
 

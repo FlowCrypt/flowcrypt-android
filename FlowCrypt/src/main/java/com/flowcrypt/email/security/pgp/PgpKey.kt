@@ -24,11 +24,30 @@ import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
+import org.pgpainless.key.util.UserId
 import org.pgpainless.util.Passphrase
 import java.io.InputStream
 
 @Suppress("unused")
 object PgpKey {
+
+  /**
+   * Encrypt the given key.
+   *
+   * @param armored Should be a single private key.
+   */
+  suspend fun create(
+    email: String,
+    name: String? = null,
+    passphrase: String
+  ): PGPSecretKeyRing =
+    withContext(Dispatchers.IO) {
+      return@withContext PGPainless.generateKeyRing().simpleEcKeyRing(
+        if (name != null) UserId.nameAndEmail(name, email) else UserId.onlyEmail(email),
+        passphrase
+      )
+    }
+
   /**
    * Encrypt the given key.
    *

@@ -151,8 +151,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   override fun onAccountAdded(accountEntity: AccountEntity) {
     privateKeysViewModel.encryptAndSaveKeysToDatabase(
-      accountEntity,
-      importCandidates
+      accountEntity = accountEntity,
+      keys = importCandidates
     )
   }
 

@@ -156,8 +156,8 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     //we should be sure we save keys with the same source type
     if (importCandidates.mapNotNull { it.importSourceType }.toSet().size == 1) {
       privateKeysViewModel.encryptAndSaveKeysToDatabase(
-        accountEntity,
-        importCandidates
+        accountEntity = accountEntity,
+        keys = importCandidates
       )
     } else {
       //remove account and show error

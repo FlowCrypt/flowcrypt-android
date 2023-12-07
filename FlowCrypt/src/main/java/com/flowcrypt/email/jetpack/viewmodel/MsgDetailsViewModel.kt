@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import android.text.TextUtils
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
@@ -44,7 +45,6 @@ import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -81,6 +81,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 import java.io.BufferedInputStream
 import java.io.InputStream
 import java.util.Collections
@@ -511,18 +514,34 @@ class MsgDetailsViewModel(
       Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
     val uri = msgSnapshot.getUri(0)
     passphraseNeededLiveData.postValue(emptyList())
+    val accountEntity = getActiveAccountSuspend()
+      ?: throw java.lang.NullPointerException("Account is null")
     if (uri != null) {
       val context: Context = getApplication()
       try {
         FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
 
+        Log.d("DDDDDD", "Start")
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
+        val keys = PGPainless.readKeyRing()
+          .secretKeyRingCollection(requireNotNull(accountEntity.pgpPrivateKey))
+
+        val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
+          srcInputStream = inputStream,
+          secretKeys = keys,
+          protector = PasswordBasedSecretKeyRingProtector.forKey(
+            keys.first(),
+            Passphrase.fromPassword(requireNotNull(accountEntity.pgpPassphrase))
+          )
+        )
+
         val processedMimeMessage = PgpMsg.processMimeMessage(
           context = getApplication(),
-          inputStream = KeyStoreCryptoManager.getCipherInputStream(inputStream)
+          inputStream = decryptionStream
         )
+        Log.d("DDDDDD", "Stop")
         preResultsProcessing(processedMimeMessage.blocks)
         return@withContext Result.success(processedMimeMessage)
       } catch (e: Exception) {
@@ -606,16 +625,24 @@ class MsgDetailsViewModel(
               accountEntity = accountEntity
             )
             if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), originalMsg)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                msg = originalMsg,
+                accountEntity = accountEntity
+              )
             } else {
               val inputStream = FetchingInputStream(
                 GmailApiHelper.getWholeMimeMessageInputStream(
-                  getApplication(),
-                  accountEntity,
-                  messageEntity
+                  context = getApplication(),
+                  account = accountEntity,
+                  messageEntity = messageEntity
                 )
               )
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                inputStream = inputStream,
+                accountEntity = accountEntity
+              )
             }
 
             GmailApiHelper.changeLabels(
@@ -691,13 +718,21 @@ class MsgDetailsViewModel(
               customMsg.saveChanges()
               customMsg.setMessageId(originalMsg.messageID ?: "")
 
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                msg = customMsg,
+                accountEntity = accountEntity
+              )
             } else {
               val cachedMsg = MimeMessage(
                 originalMsg.session,
                 FetchingInputStream((originalMsg as IMAPMessage).mimeStream)
               )
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), cachedMsg)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                msg = cachedMsg,
+                accountEntity = accountEntity
+              )
             }
 
             processingProgressLiveData.postValue(
