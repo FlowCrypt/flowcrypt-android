@@ -76,8 +76,8 @@ data class AccountEntity(
     name = "use_customer_fes_url",
     defaultValue = "0"
   ) val useCustomerFesUrl: Boolean = false,
-  @ColumnInfo(name = "pgp_passphrase", defaultValue = "NULL") val pgpPassphrase: String? = null,
-  @ColumnInfo(name = "pgp_private_key") val pgpPrivateKey: ByteArray? = null
+  @ColumnInfo(name = "pgp_passphrase", defaultValue = "NULL") val pgpPassphrase: String,
+  @ColumnInfo(name = "pgp_private_key") val pgpPrivateKey: ByteArray
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -134,7 +134,9 @@ data class AccountEntity(
     showOnlyEncrypted = false,
     clientConfiguration = clientConfiguration,
     useAPI = true,
-    useCustomerFesUrl = useCustomerFesUrl
+    useCustomerFesUrl = useCustomerFesUrl,
+    pgpPassphrase = "",
+    pgpPrivateKey = byteArrayOf()
   )
 
   constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :
@@ -167,7 +169,9 @@ data class AccountEntity(
         showOnlyEncrypted = false,
         clientConfiguration = clientConfiguration,
         useAPI = false,
-        useCustomerFesUrl = false
+        useCustomerFesUrl = false,
+        pgpPassphrase = "",
+        pgpPrivateKey = byteArrayOf()
       )
 
   constructor(email: String) :
@@ -198,7 +202,9 @@ data class AccountEntity(
         contactsLoaded = false,
         showOnlyEncrypted = false,
         clientConfiguration = null,
-        useAPI = false
+        useAPI = false,
+        pgpPassphrase = "",
+        pgpPrivateKey = byteArrayOf()
       )
 
   fun imapOpt(): SecurityType.Option {
@@ -275,10 +281,7 @@ data class AccountEntity(
     if (useAPI != other.useAPI) return false
     if (useCustomerFesUrl != other.useCustomerFesUrl) return false
     if (pgpPassphrase != other.pgpPassphrase) return false
-    if (pgpPrivateKey != null) {
-      if (other.pgpPrivateKey == null) return false
-      if (!pgpPrivateKey.contentEquals(other.pgpPrivateKey)) return false
-    } else if (other.pgpPrivateKey != null) return false
+    if (!pgpPrivateKey.contentEquals(other.pgpPrivateKey)) return false
     if (account != other.account) return false
     if (isGoogleSignInAccount != other.isGoogleSignInAccount) return false
     return avatarResource == other.avatarResource
@@ -314,8 +317,8 @@ data class AccountEntity(
     result = 31 * result + (clientConfiguration?.hashCode() ?: 0)
     result = 31 * result + useAPI.hashCode()
     result = 31 * result + useCustomerFesUrl.hashCode()
-    result = 31 * result + (pgpPassphrase?.hashCode() ?: 0)
-    result = 31 * result + (pgpPrivateKey?.contentHashCode() ?: 0)
+    result = 31 * result + pgpPassphrase.hashCode()
+    result = 31 * result + pgpPrivateKey.contentHashCode()
     result = 31 * result + account.hashCode()
     result = 31 * result + isGoogleSignInAccount.hashCode()
     result = 31 * result + avatarResource.hashCode()

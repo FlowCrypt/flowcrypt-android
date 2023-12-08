@@ -8,6 +8,7 @@ package com.flowcrypt.email.database
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.provider.BaseColumns
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.room.Database
@@ -39,8 +40,11 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.pgp.PgpKey
+import kotlinx.coroutines.runBlocking
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import java.util.UUID
 
 
 /**
@@ -1378,8 +1382,29 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     val MIGRATION_41_42 = object : FlowCryptMigration(41, 42) {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2523
-        database.execSQL("ALTER TABLE accounts ADD COLUMN `pgp_passphrase` TEXT DEFAULT NULL;")
-        database.execSQL("ALTER TABLE accounts ADD COLUMN `pgp_private_key` BLOB DEFAULT NULL;")
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `pgp_passphrase` TEXT DEFAULT 'empty';")
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `pgp_private_key` BLOB DEFAULT 'empty';")
+
+        val cursor = database.query("SELECT * FROM accounts;")
+        if (cursor.count > 0) {
+          while (cursor.moveToNext()) {
+            val id = cursor.getString(cursor.getColumnIndexOrThrow(BaseColumns._ID))
+            val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+            val pgpPassphrase = UUID.randomUUID().toString()
+            val pgpPrivateKey = runBlocking {
+              PgpKey.create(
+                email = email,
+                passphrase = pgpPassphrase
+              ).encoded
+            }
+            val encryptedPgpPassphrase = KeyStoreCryptoManager.encrypt(pgpPassphrase)
+            val encryptedPgpPrivateKey = KeyStoreCryptoManager.encrypt(pgpPrivateKey)
+            database.execSQL(
+              "UPDATE accounts SET pgp_passphrase = ?, pgp_private_key = ? WHERE ${BaseColumns._ID} = ?;",
+              arrayOf(encryptedPgpPassphrase, encryptedPgpPrivateKey, id)
+            )
+          }
+        }
       }
     }
 
