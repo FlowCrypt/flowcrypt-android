@@ -32,9 +32,11 @@ import java.io.InputStream
 object PgpKey {
 
   /**
-   * Encrypt the given key.
+   * Create a PGP key.
    *
-   * @param armored Should be a single private key.
+   * @param email An email address that will be used for [org.pgpainless.key.util.UserId].
+   * @param name A name that will be used for [org.pgpainless.key.util.UserId].
+   * @param passphrase A passphrase that will be used as a private key pass.
    */
   suspend fun create(
     email: String,
