@@ -526,14 +526,14 @@ class MsgDetailsViewModel(
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
         val keys = PGPainless.readKeyRing()
-          .secretKeyRingCollection(requireNotNull(accountEntity.pgpPrivateKey))
+          .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
 
         val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
           srcInputStream = inputStream,
           secretKeys = keys,
           protector = PasswordBasedSecretKeyRingProtector.forKey(
             keys.first(),
-            Passphrase.fromPassword(requireNotNull(accountEntity.pgpPassphrase))
+            Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
           )
         )
 

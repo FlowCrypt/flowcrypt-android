@@ -1382,8 +1382,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     val MIGRATION_41_42 = object : FlowCryptMigration(41, 42) {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2523
-        database.execSQL("ALTER TABLE accounts ADD COLUMN `pgp_passphrase` TEXT DEFAULT 'empty';")
-        database.execSQL("ALTER TABLE accounts ADD COLUMN `pgp_private_key` BLOB DEFAULT 'empty';")
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `service_pgp_passphrase` TEXT NOT NULL DEFAULT '';")
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `service_pgp_private_key` BLOB NOT NULL DEFAULT '';")
 
         val cursor = database.query("SELECT * FROM accounts;")
         if (cursor.count > 0) {
@@ -1400,7 +1400,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
             val encryptedPgpPassphrase = KeyStoreCryptoManager.encrypt(pgpPassphrase)
             val encryptedPgpPrivateKey = KeyStoreCryptoManager.encrypt(pgpPrivateKey)
             database.execSQL(
-              "UPDATE accounts SET pgp_passphrase = ?, pgp_private_key = ? WHERE ${BaseColumns._ID} = ?;",
+              "UPDATE accounts SET service_pgp_passphrase = ?, service_pgp_private_key = ? WHERE ${BaseColumns._ID} = ?;",
               arrayOf(encryptedPgpPassphrase, encryptedPgpPrivateKey, id)
             )
           }

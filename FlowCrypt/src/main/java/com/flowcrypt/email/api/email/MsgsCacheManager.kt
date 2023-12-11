@@ -109,7 +109,7 @@ object MsgsCacheManager {
       PgpEncryptAndOrSign.encryptAndOrSign(
         destOutputStream = bufferedSink.outputStream(),
         pgpPublicKeyRingCollection = PGPainless.readKeyRing()
-          .secretKeyRingCollection(requireNotNull(accountEntity.pgpPrivateKey))
+          .secretKeyRingCollection(requireNotNull(accountEntity.servicePgpPrivateKey))
           .map { it.toPublicKeyRing().armor() }.toPGPPublicKeyRingCollection()
       ) { out ->
         out.use { outputStream ->

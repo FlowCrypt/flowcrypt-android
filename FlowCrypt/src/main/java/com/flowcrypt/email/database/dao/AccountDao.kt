@@ -81,8 +81,8 @@ abstract class AccountDao : BaseDao<AccountEntity> {
         password = encryptedPassword,
         smtpPassword = encryptedSmtpPassword,
         isActive = true,
-        pgpPassphrase = encryptedPgpPassphrase,
-        pgpPrivateKey = encryptedPgpPrivateKey
+        servicePgpPassphrase = encryptedPgpPassphrase,
+        servicePgpPrivateKey = encryptedPgpPrivateKey
       )
     )
   }
