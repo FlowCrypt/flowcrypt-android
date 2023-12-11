@@ -96,7 +96,7 @@ object KeyStoreCryptoManager {
   }
 
   /**
-   * This method encrypts an input text via AES symmetric algorithm and returns encrypted data.
+   * This method encrypts input bytes via AES symmetric algorithm and returns encrypted data.
    * Don't call it from the main thread.
    *
    * @param bytes The input bytes which will be encrypted.
@@ -134,11 +134,11 @@ object KeyStoreCryptoManager {
   }
 
   /**
-   * This method decrypts the input encrypted text via AES symmetric algorithm and returns decrypted data.
+   * This method decrypts the input encrypted bytes via AES symmetric algorithm and returns decrypted bytes.
    * It can be used with coroutines.
    *
-   * @param encryptedData The input encrypted text, which must be encrypted and encoded in base64.
-   * @return <tt>String</tt> Return decrypted data.
+   * @param encryptedBytes The input encrypted bytes, which must be encrypted and encoded in base64.
+   * @return <tt>String</tt> Return decrypted bytes.
    * @throws Exception The decryption process can throw a lot of exceptions.
    */
   suspend fun decryptSuspend(encryptedBytes: ByteArray?): ByteArray = withContext(Dispatchers.IO) {
@@ -159,11 +159,11 @@ object KeyStoreCryptoManager {
   }
 
   /**
-   * This method decrypts the input encrypted text via AES symmetric algorithm and returns decrypted data.
+   * This method decrypts the input encrypted bytes via AES symmetric algorithm and returns decrypted bytes.
    * Don't call it from the main thread.
    *
-   * @param encryptedData The input encrypted text, which must be encrypted and encoded in base64.
-   * @return <tt>String</tt> Return decrypted data.
+   * @param encryptedBytes The input encrypted bytes, which must be encrypted and encoded in base64.
+   * @return <tt>String</tt> Return decrypted bytes.
    * @throws Exception The decryption process can throw a lot of exceptions.
    */
   @WorkerThread
