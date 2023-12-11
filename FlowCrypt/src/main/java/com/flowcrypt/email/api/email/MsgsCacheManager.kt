@@ -9,9 +9,6 @@ import android.content.Context
 import android.net.Uri
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.kotlin.toPGPPublicKeyRingCollection
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
-import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPublicKeyRing
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.cache.DiskLruCache
 import jakarta.mail.internet.MimeMessage
@@ -109,8 +106,7 @@ object MsgsCacheManager {
       PgpEncryptAndOrSign.encryptAndOrSign(
         destOutputStream = bufferedSink.outputStream(),
         pgpPublicKeyRingCollection = PGPainless.readKeyRing()
-          .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
-          .map { it.toPublicKeyRing().armor() }.toPGPPublicKeyRingCollection()
+          .publicKeyRingCollection(accountEntity.servicePgpPrivateKey)
       ) { out ->
         out.use { outputStream ->
           action.invoke(outputStream)
