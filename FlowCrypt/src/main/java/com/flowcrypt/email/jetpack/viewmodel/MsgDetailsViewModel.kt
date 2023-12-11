@@ -8,12 +8,11 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import android.text.TextUtils
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.asFlow
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -43,6 +42,7 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.jetpack.livedata.SkipInitialValueObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -374,28 +374,25 @@ class MsgDetailsViewModel(
     )
 
   init {
-    afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
-      afterKeysStorageUpdatedMsgLiveData.value = it
-    }
-    afterKeysStorageUpdatedMsgLiveData.addSource(afterPassphrasesUpdatedMsgLiveData) {
-      afterKeysStorageUpdatedMsgLiveData.value = it
-    }
-
-    mediatorMsgLiveData.addSource(freshMsgLiveData) { mediatorMsgLiveData.value = it }
-    //here we resolve a situation when a user updates private keys.
-    // To prevent errors we skip the first call
-    mediatorMsgLiveData.addSource(
-      afterKeysStorageUpdatedMsgLiveData,
-      object : Observer<MessageEntity?> {
-        var isFirstCall = true
-        override fun onChanged(value: MessageEntity?) {
-          if (isFirstCall) {
-            isFirstCall = false
-          } else {
-            mediatorMsgLiveData.value = value
-          }
-        }
+    afterKeysStorageUpdatedMsgLiveData.addSource(
+      afterKeysUpdatedMsgLiveData,
+      SkipInitialValueObserver {
+        afterKeysStorageUpdatedMsgLiveData.value = it
       })
+
+    afterKeysStorageUpdatedMsgLiveData.addSource(
+      afterPassphrasesUpdatedMsgLiveData,
+      SkipInitialValueObserver {
+        afterKeysStorageUpdatedMsgLiveData.value = it
+      }
+    )
+
+    mediatorMsgLiveData.addSource(freshMsgLiveData.distinctUntilChanged()) {
+      mediatorMsgLiveData.value = it
+    }
+    mediatorMsgLiveData.addSource(afterKeysStorageUpdatedMsgLiveData) {
+      mediatorMsgLiveData.value = it
+    }
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) {
@@ -521,7 +518,6 @@ class MsgDetailsViewModel(
       try {
         FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
 
-        Log.d("DDDDDD", "Start")
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
@@ -541,7 +537,7 @@ class MsgDetailsViewModel(
           context = getApplication(),
           inputStream = decryptionStream
         )
-        Log.d("DDDDDD", "Stop")
+
         preResultsProcessing(processedMimeMessage.blocks)
         return@withContext Result.success(processedMimeMessage)
       } catch (e: Exception) {

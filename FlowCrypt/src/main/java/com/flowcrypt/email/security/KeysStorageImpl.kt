@@ -76,7 +76,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     }
   }
 
-  val passphrasesUpdatesLiveData = MutableLiveData<Long>()
+  val passphrasesUpdatesLiveData = MutableLiveData(System.currentTimeMillis())
 
   init {
     keysLiveData.observeForever {
@@ -199,6 +199,8 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   }
 
   override fun updatePassphrasesCache() {
+    val hashCodeBeforeChanges = passPhraseMap.hashCode()
+
     for (key in getRawKeys()) {
       if (key.passphraseType == KeyEntity.PassphraseType.RAM) {
         val entry = passPhraseMap[key.fingerprint] ?: continue
@@ -212,10 +214,14 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
       }
     }
 
-    passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+    if (hashCodeBeforeChanges != passPhraseMap.hashCode()) {
+      passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+    }
   }
 
   override fun clearPassphrasesCache() {
+    val hashCodeBeforeChanges = passPhraseMap.hashCode()
+
     for (key in getRawKeys()) {
       if (key.passphraseType == KeyEntity.PassphraseType.RAM) {
         val entry = passPhraseMap[key.fingerprint] ?: continue
@@ -226,7 +232,9 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
       }
     }
 
-    passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+    if (hashCodeBeforeChanges != passPhraseMap.hashCode()) {
+      passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+    }
   }
 
   override fun putPassphraseToCache(
@@ -235,13 +243,17 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     validUntil: Instant,
     passphraseType: KeyEntity.PassphraseType
   ) {
+    val hashCodeBeforeChanges = passPhraseMap.hashCode()
+
     passPhraseMap[fingerprint] = PassPhraseInRAM(
       passphrase = passphrase,
       validUntil = validUntil,
       passphraseType = passphraseType
     )
 
-    passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+    if (hashCodeBeforeChanges != passPhraseMap.hashCode()) {
+      passphrasesUpdatesLiveData.postValue(System.currentTimeMillis())
+    }
   }
 
   override fun hasEmptyPassphrase(vararg types: KeyEntity.PassphraseType): Boolean {
