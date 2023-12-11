@@ -106,7 +106,7 @@ object PgpEncryptAndOrSign {
     fileName: String? = null,
   ) {
     srcInputStream.use { srcStream ->
-      genEncryptionStream(
+      encryptAndOrSign(
         destOutputStream = destOutputStream,
         pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
         protectedPgpPublicKeyRingCollection = protectedPgpPublicKeyRingCollection,
@@ -116,7 +116,7 @@ object PgpEncryptAndOrSign {
         hideArmorMeta = hideArmorMeta,
         passphrase = passphrase,
         fileName = fileName,
-      ).use { encryptionStream ->
+      ) { encryptionStream ->
         srcStream.copyTo(encryptionStream)
       }
     }
@@ -135,7 +135,7 @@ object PgpEncryptAndOrSign {
     fileName: String? = null,
     action: (outputStream: OutputStream) -> Unit
   ) {
-    genEncryptionStream(
+    genEncryptionStreamInternal(
       destOutputStream = destOutputStream,
       pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
       protectedPgpPublicKeyRingCollection = protectedPgpPublicKeyRingCollection,
@@ -150,7 +150,7 @@ object PgpEncryptAndOrSign {
     }
   }
 
-  private fun genEncryptionStream(
+  private fun genEncryptionStreamInternal(
     destOutputStream: OutputStream,
     pgpPublicKeyRingCollection: PGPPublicKeyRingCollection?,
     protectedPgpPublicKeyRingCollection: PGPPublicKeyRingCollection?,
