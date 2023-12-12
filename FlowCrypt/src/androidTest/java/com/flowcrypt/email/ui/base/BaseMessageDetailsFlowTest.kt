@@ -102,8 +102,9 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
 
   protected fun testStandardMsgPlaintextInternal(): IncomingMessageInfo? {
     val incomingMessageInfo = getMsgInfo(
-      "messages/info/standard_msg_info_plaintext.json",
-      "messages/mime/standard_msg_info_plaintext.txt"
+      path = "messages/info/standard_msg_info_plaintext.json",
+      mimeMsgPath = "messages/mime/standard_msg_info_plaintext.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(incomingMessageInfo)
     onView(withId(R.id.tVTo))

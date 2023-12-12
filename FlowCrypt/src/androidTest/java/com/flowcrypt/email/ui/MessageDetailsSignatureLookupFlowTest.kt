@@ -51,7 +51,8 @@ class MessageDetailsSignatureLookupFlowTest : BaseMessageDetailsFlowTest() {
     val msgInfo = getMsgInfo(
       path = "messages/info/signature_verification_detached_only_signed.json",
       mimeMsgPath = "messages/mime/signature_verification_detached_only_signed.txt",
-      useCrLfForMime = true
+      useCrLfForMime = true,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 

@@ -26,6 +26,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
@@ -44,6 +45,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 import java.io.File
 import java.util.Properties
 import java.util.concurrent.TimeUnit
@@ -191,9 +195,21 @@ class DraftViewModel(
             existingSnapshot.getUri(0)?.let { fileUri ->
               (getApplication() as Context).contentResolver?.openInputStream(fileUri)
                 ?.let { inputStream ->
+                  val keys = PGPainless.readKeyRing()
+                    .secretKeyRingCollection(activeAccount.servicePgpPrivateKey)
+
+                  val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
+                    srcInputStream = inputStream,
+                    secretKeys = keys,
+                    protector = PasswordBasedSecretKeyRingProtector.forKey(
+                      keys.first(),
+                      Passphrase.fromPassword(activeAccount.servicePgpPassphrase)
+                    )
+                  )
+
                   val oldVersion = FlowCryptMimeMessage(
                     Session.getInstance(Properties()),
-                    KeyStoreCryptoManager.getCipherInputStream(inputStream)
+                    decryptionStream
                   )
 
                   oldVersion.getHeader(JavaEmailConstants.HEADER_REFERENCES)?.firstOrNull()

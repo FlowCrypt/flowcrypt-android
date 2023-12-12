@@ -66,8 +66,9 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testShowNeedPassphraseError() {
     val incomingMsgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_need_passphrase_single_key.json",
-      "messages/mime/encrypted_msg_info_plain_text.txt"
+      path = "messages/info/encrypted_msg_need_passphrase_single_key.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_plain_text.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     launchActivity(incomingMsgInfo!!.msgEntity)
@@ -109,8 +110,9 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testNeedPassphraseDialogTypingText() {
     val incomingMsgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_need_passphrase_single_key.json",
-      "messages/mime/encrypted_msg_info_plain_text.txt"
+      path = "messages/info/encrypted_msg_need_passphrase_single_key.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_plain_text.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     launchActivity(incomingMsgInfo!!.msgEntity)
@@ -164,7 +166,8 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
 
     val incomingMsgInfo = getMsgInfo(
       "messages/info/encrypted_msg_need_passphrase_single_key.json",
-      "messages/mime/encrypted_msg_info_plain_text.txt"
+      "messages/mime/encrypted_msg_info_plain_text.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     launchActivity(incomingMsgInfo!!.msgEntity)
@@ -257,8 +260,10 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
     )
 
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_with_one_att.json",
-      "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo
+      path = "messages/info/encrypted_msg_info_text_with_one_att.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt",
+      encryptedAttInfo,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     launchActivity(msgInfo!!.msgEntity)
@@ -306,8 +311,9 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
     )
 
     val incomingMsgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_need_passphrase_multiply_keys.json",
-      "messages/mime/encrypted_msg_for_2_keys_of_the_same_user.txt"
+      path = "messages/info/encrypted_msg_need_passphrase_multiply_keys.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_for_2_keys_of_the_same_user.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     launchActivity(incomingMsgInfo!!.msgEntity)

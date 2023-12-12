@@ -153,10 +153,12 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
   @FlakyTest
   fun testVisibilityOfDownloadingProgressIcon() {
     baseCheckWithAtt(
-      getMsgInfo(
-        "messages/info/standard_msg_info_plaintext_with_one_att.json",
-        "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo
-      ), simpleAttInfo
+      incomingMsgInfo = getMsgInfo(
+        path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
+        mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt",
+        simpleAttInfo,
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+      ), att = simpleAttInfo
     )
 
     unregisterCountingIdlingResource()
