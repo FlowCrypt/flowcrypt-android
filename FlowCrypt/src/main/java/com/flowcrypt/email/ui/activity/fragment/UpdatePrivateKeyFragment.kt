@@ -181,8 +181,8 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
 
   private fun handleCheckedNewPrivateKey(newPgpKeyRingDetails: PgpKeyRingDetails) {
     privateKeysViewModel.encryptAndSaveKeysToDatabase(
-      args.accountEntity,
-      listOf(newPgpKeyRingDetails.copy(importSourceType = importSourceType))
+      accountEntity = args.accountEntity,
+      keys = listOf(newPgpKeyRingDetails.copy(importSourceType = importSourceType))
     )
   }
 

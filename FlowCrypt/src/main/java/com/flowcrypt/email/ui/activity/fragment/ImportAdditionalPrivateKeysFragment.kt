@@ -234,8 +234,8 @@ class ImportAdditionalPrivateKeysFragment :
                 duration = Snackbar.LENGTH_INDEFINITE,
                 onClickListener = {
                   privateKeysViewModel.encryptAndSaveKeysToDatabase(
-                    args.accountEntity,
-                    e.keys
+                    accountEntity = args.accountEntity,
+                    keys = e.keys
                   )
                 }
               )
@@ -262,8 +262,8 @@ class ImportAdditionalPrivateKeysFragment :
         CheckKeysFragment.CheckingState.CHECKED_KEYS, CheckKeysFragment.CheckingState.SKIP_REMAINING_KEYS -> {
           keys?.let {
             privateKeysViewModel.encryptAndSaveKeysToDatabase(
-              args.accountEntity,
-              it.map { pgpKeyRingDetails ->
+              accountEntity = args.accountEntity,
+              keys = it.map { pgpKeyRingDetails ->
                 pgpKeyRingDetails.copy(
                   importSourceType = importSourceType
                 )

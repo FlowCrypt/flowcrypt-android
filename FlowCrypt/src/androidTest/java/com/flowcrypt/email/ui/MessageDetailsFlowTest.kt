@@ -170,10 +170,12 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testStandardMsgPlaintextWithOneAttachment() {
     baseCheckWithAtt(
-      getMsgInfo(
-        "messages/info/standard_msg_info_plaintext_with_one_att.json",
-        "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo
-      ), simpleAttInfo
+      incomingMsgInfo = getMsgInfo(
+        path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
+        mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt",
+        simpleAttInfo,
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+      ), att = simpleAttInfo
     )
 
     onView(withId(R.id.imageButtonPreviewAtt))
@@ -184,8 +186,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testEncryptedMsgPlaintext() {
     baseCheck(
       getMsgInfo(
-        "messages/info/encrypted_msg_info_text.json",
-        "messages/mime/encrypted_msg_info_plain_text.txt"
+        path = "messages/info/encrypted_msg_info_text.json",
+        mimeMsgPath = "messages/mime/encrypted_msg_info_plain_text.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
   }
@@ -194,11 +197,12 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testEncryptedBigInlineAtt() {
     IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
     baseCheck(
-      getMsgInfo(
-        "messages/info/encrypted_msg_big_inline_att.json",
-        "messages/mime/encrypted_msg_big_inline_att.txt"
+      incomingMsgInfo = getMsgInfo(
+        path = "messages/info/encrypted_msg_big_inline_att.json",
+        mimeMsgPath = "messages/mime/encrypted_msg_big_inline_att.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       ),
-      false
+      checkWebContent = false
     ) {
       //we need additional time to decrypt a message
       Thread.sleep(30000)
@@ -209,8 +213,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testDecryptionError_KEY_MISMATCH_MissingKeyErrorImportKey() {
     testMissingKey(
       getMsgInfo(
-        "messages/info/encrypted_msg_info_text_with_missing_key.json",
-        "messages/mime/encrypted_msg_info_text_with_missing_key.txt"
+        path = "messages/info/encrypted_msg_info_text_with_missing_key.json",
+        mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_missing_key.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
 
@@ -246,8 +251,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testDecryptionError_KEY_MISMATCH_MissingPubKey() {
     testMissingKey(
       getMsgInfo(
-        "messages/info/encrypted_msg_info_text_error_one_pub_key.json",
-        "messages/mime/encrypted_msg_info_plain_text_error_one_pub_key.txt"
+        path = "messages/info/encrypted_msg_info_text_error_one_pub_key.json",
+        mimeMsgPath = "messages/mime/encrypted_msg_info_plain_text_error_one_pub_key.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
   }
@@ -255,8 +261,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testDecryptionError_FORMAT_BadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
-      "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt"
+      path = "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     ) ?: throw NullPointerException()
 
     assertThat(msgInfo, notNullValue())
@@ -284,8 +291,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @FlakyTest
   fun testDecryptionError_NO_MDC() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_error_no_mdc.json",
-      "messages/mime/encrypted_msg_info_error_no_mdc.txt"
+      path = "messages/info/encrypted_msg_info_error_no_mdc.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_error_no_mdc.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     ) ?: throw NullPointerException()
 
     assertThat(msgInfo, notNullValue())
@@ -312,8 +320,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testMissingKeyErrorChooseSinglePubKey() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_with_missing_key.json",
-      "messages/mime/encrypted_msg_info_text_with_missing_key.txt"
+      path = "messages/info/encrypted_msg_info_text_with_missing_key.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_missing_key.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     testMissingKey(msgInfo)
@@ -340,8 +349,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_with_missing_key.json",
-      "messages/mime/encrypted_msg_info_text_with_missing_key.txt"
+      path = "messages/info/encrypted_msg_info_text_with_missing_key.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_missing_key.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     testMissingKey(msgInfo)
@@ -377,8 +387,10 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testEncryptedMsgTextWithOneAttachment() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_with_one_att.json",
-      "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo
+      path = "messages/info/encrypted_msg_info_text_with_one_att.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt",
+      encryptedAttInfo,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheckWithAtt(msgInfo, encryptedAttInfo)
   }
@@ -386,8 +398,10 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testEncryptedMsgPlaintextWithPubKey() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_with_pub_key.json",
-      "messages/mime/encrypted_msg_info_text_with_pub_key.txt", pubKeyAttInfo
+      path = "messages/info/encrypted_msg_info_text_with_pub_key.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_pub_key.txt",
+      pubKeyAttInfo,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
@@ -442,8 +456,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSavingPubKeyFromMessagePart() {
     val msgInfo = getMsgInfo(
-      "messages/info/standard_msg_with_pub_key.json",
-      "messages/mime/standard_msg_with_pub_key.txt"
+      path = "messages/info/standard_msg_with_pub_key.json",
+      mimeMsgPath = "messages/mime/standard_msg_with_pub_key.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     baseCheck(msgInfo)
@@ -485,8 +500,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun test8bitEncodingUtf8() {
     baseCheck(
       getMsgInfo(
-        "messages/info/msg_info_8bit-utf8.json",
-        "messages/mime/8bit-utf8.txt"
+        path = "messages/info/msg_info_8bit-utf8.json",
+        mimeMsgPath = "messages/mime/8bit-utf8.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
   }
@@ -495,8 +511,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testToLabelForTwoRecipients() {
     baseCheck(
       getMsgInfo(
-        "messages/info/standard_msg_info_plaintext_to_2_recipients.json",
-        "messages/mime/standard_msg_info_plaintext_to_2_recipients.txt"
+        path = "messages/info/standard_msg_info_plaintext_to_2_recipients.json",
+        mimeMsgPath = "messages/mime/standard_msg_info_plaintext_to_2_recipients.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
 
@@ -509,8 +526,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testMsgDetailsSingleToReplyToCC() {
     val msgInfo = getMsgInfo(
-      "messages/info/standard_msg_info_plaintext_single_to_replyto_cc.json",
-      "messages/mime/standard_msg_info_plaintext_single_to_replyto_to_cc.txt"
+      path = "messages/info/standard_msg_info_plaintext_single_to_replyto_cc.json",
+      mimeMsgPath = "messages/mime/standard_msg_info_plaintext_single_to_replyto_to_cc.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -596,8 +614,10 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     )
 
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_hidden_att_pgp_mime_modified_by_google.json",
-      "messages/mime/encrypted_msg_hidden_att_pgp_mime_modified_by_google.txt", attInfo
+      path = "messages/info/encrypted_msg_hidden_att_pgp_mime_modified_by_google.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_hidden_att_pgp_mime_modified_by_google.txt",
+      attInfo,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
     onView(withId(R.id.rVAttachments))
@@ -608,8 +628,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testEncryptedSymantecEncryptionServerMessageFormat() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_symantec_encryption_server_message_format.json",
-      "messages/mime/encrypted_msg_symantec_encryption_server_message_format.txt"
+      path = "messages/info/encrypted_msg_symantec_encryption_server_message_format.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_symantec_encryption_server_message_format.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
   }
@@ -617,8 +638,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testShowParsePubKeyError() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_inline_pub_key_parse_error.json",
-      "messages/mime/encrypted_msg_inline_pub_key_parse_error.txt"
+      path = "messages/info/encrypted_msg_inline_pub_key_parse_error.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_inline_pub_key_parse_error.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     ) ?: throw NullPointerException()
 
     assertThat(msgInfo, notNullValue())
@@ -642,8 +664,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSignedArmoredMsg() {
     val msgInfo = getMsgInfo(
-      "messages/info/signed_msg_armored.json",
-      "messages/mime/signed_msg_armored.txt"
+      path = "messages/info/signed_msg_armored.json",
+      mimeMsgPath = "messages/mime/signed_msg_armored.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
   }
@@ -651,8 +674,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSignedMsgClearSign() {
     val msgInfo = getMsgInfo(
-      "messages/info/signed_msg_clearsign.json",
-      "messages/mime/signed_msg_clearsign.txt"
+      path = "messages/info/signed_msg_clearsign.json",
+      mimeMsgPath = "messages/mime/signed_msg_clearsign.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
   }
@@ -660,8 +684,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSignedMsgClearSignBroken() {
     val msgInfo = getMsgInfo(
-      "messages/info/signed_msg_clearsign_broken.json",
-      "messages/mime/signed_msg_clearsign_broken.txt"
+      path = "messages/info/signed_msg_clearsign_broken.json",
+      mimeMsgPath = "messages/mime/signed_msg_clearsign_broken.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     ) ?: throw NullPointerException()
 
     assertThat(msgInfo, notNullValue())
@@ -685,8 +710,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testMsgWithKeyThatHasNoSuitableEncryptionSubKeys() {
     val msgInfo = getMsgInfo(
-      "messages/info/standard_msg_with_pub_key_that_has_no_suitable_encryption_subkeys.json",
-      "messages/mime/standard_msg_with_pub_key_that_has_no_suitable_encryption_subkeys.txt"
+      path = "messages/info/standard_msg_with_pub_key_that_has_no_suitable_encryption_subkeys.json",
+      mimeMsgPath = "messages/mime/standard_msg_with_pub_key_that_has_no_suitable_encryption_subkeys.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -701,8 +727,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSignatureVerificationInbandMissingPubKeyEncryptedAndSigned() {
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_missing_pub_key_encrypted_signed.json",
-      "messages/mime/signature_verification_inband_missing_pub_key_encrypted_signed.txt"
+      path = "messages/info/signature_verification_inband_missing_pub_key_encrypted_signed.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_missing_pub_key_encrypted_signed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -716,8 +743,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSignatureVerificationInbandMissingPubKeyOnlySigned() {
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_missing_pub_key_only_signed.json",
-      "messages/mime/signature_verification_inband_missing_pub_key_only_signed.txt"
+      path = "messages/info/signature_verification_inband_missing_pub_key_only_signed.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_missing_pub_key_only_signed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -733,8 +761,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_second.asc")
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_only_signed_mixed.json",
-      "messages/mime/signature_verification_inband_only_signed_mixed.txt"
+      path = "messages/info/signature_verification_inband_only_signed_mixed.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_only_signed_mixed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -750,8 +779,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_second.asc")
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_encrypted_signed_mixed.json",
-      "messages/mime/signature_verification_inband_encrypted_signed_mixed.txt"
+      path = "messages/info/signature_verification_inband_encrypted_signed_mixed.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_encrypted_signed_mixed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -767,8 +797,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_only_signed_partially.json",
-      "messages/mime/signature_verification_inband_only_signed_partially.txt"
+      path = "messages/info/signature_verification_inband_only_signed_partially.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_only_signed_partially.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -784,8 +815,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_encrypted_signed_partially.json",
-      "messages/mime/signature_verification_inband_encrypted_signed_partially.txt"
+      path = "messages/info/signature_verification_inband_encrypted_signed_partially.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_encrypted_signed_partially.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -801,8 +833,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_encrypted_signed.json",
-      "messages/mime/signature_verification_inband_encrypted_signed.txt"
+      path = "messages/info/signature_verification_inband_encrypted_signed.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_encrypted_signed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -818,8 +851,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_only_signed.json",
-      "messages/mime/signature_verification_inband_only_signed.txt"
+      path = "messages/info/signature_verification_inband_only_signed.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_only_signed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -833,8 +867,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSignatureVerificationInbandOnlyEncrypted() {
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_inband_only_encrypted.json",
-      "messages/mime/signature_verification_inband_only_encrypted.txt"
+      path = "messages/info/signature_verification_inband_only_encrypted.json",
+      mimeMsgPath = "messages/mime/signature_verification_inband_only_encrypted.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -852,7 +887,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     val msgInfo = getMsgInfo(
       path = "messages/info/signature_verification_detached_only_signed.json",
       mimeMsgPath = "messages/mime/signature_verification_detached_only_signed.txt",
-      useCrLfForMime = true
+      useCrLfForMime = true,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -870,7 +906,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     val msgInfo = getMsgInfo(
       path = "messages/info/signature_verification_detached_only_signed_public_key.json",
       mimeMsgPath = "messages/mime/signature_verification_detached_only_signed_public_key.txt",
-      useCrLfForMime = true
+      useCrLfForMime = true,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -888,7 +925,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     val msgInfo = getMsgInfo(
       path = "messages/info/signature_verification_detached_only_signed_public_key_attachment.json",
       mimeMsgPath = "messages/mime/signature_verification_detached_only_signed_public_key_attachment.txt",
-      useCrLfForMime = true
+      useCrLfForMime = true,
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -903,8 +941,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testMessageWithBrokenBase64() {
     baseCheck(
       getMsgInfo(
-        "messages/info/message_with_broken_base64.json",
-        "messages/mime/message_with_broken_base64.txt"
+        path = "messages/info/message_with_broken_base64.json",
+        mimeMsgPath = "messages/mime/message_with_broken_base64.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
   }
@@ -913,8 +952,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testViewsVisibilityOfOutgoingMessages() {
     val incomingMsgInfo = requireNotNull(
       getMsgInfo(
-        "messages/info/standard_msg_info_plaintext_outbox.json",
-        "messages/mime/standard_msg_info_plaintext.txt"
+        path = "messages/info/standard_msg_info_plaintext_outbox.json",
+        mimeMsgPath = "messages/mime/standard_msg_info_plaintext.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
 
@@ -934,8 +974,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_cleartext_only_signed.json",
-      "messages/mime/signature_verification_cleartext_only_signed.txt"
+      path = "messages/info/signature_verification_cleartext_only_signed.json",
+      mimeMsgPath = "messages/mime/signature_verification_cleartext_only_signed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -951,8 +992,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_cleartext_only_signed_partially.json",
-      "messages/mime/signature_verification_cleartext_only_signed_partially.txt"
+      path = "messages/info/signature_verification_cleartext_only_signed_partially.json",
+      mimeMsgPath = "messages/mime/signature_verification_cleartext_only_signed_partially.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -968,8 +1010,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_second.asc")
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_cleartext_only_signed_mixed.json",
-      "messages/mime/signature_verification_cleartext_only_signed_mixed.txt"
+      path = "messages/info/signature_verification_cleartext_only_signed_mixed.json",
+      mimeMsgPath = "messages/mime/signature_verification_cleartext_only_signed_mixed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -983,8 +1026,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testSignatureVerificationCleartextMissingPubKeyOnlySigned() {
     val msgInfo = getMsgInfo(
-      "messages/info/signature_verification_cleartext_missing_pub_key_only_signed.json",
-      "messages/mime/signature_verification_cleartext_missing_pub_key_only_signed.txt"
+      path = "messages/info/signature_verification_cleartext_missing_pub_key_only_signed.json",
+      mimeMsgPath = "messages/mime/signature_verification_cleartext_missing_pub_key_only_signed.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
     baseCheck(msgInfo)
 
@@ -998,8 +1042,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testEncryptedMsgMultipartAlternativePGPInTextPlain() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_multipart_alternative_pgp_in_text_plain.json",
-      "messages/mime/encrypted_msg_info_multipart_alternative_pgp_in_text_plain.txt"
+      path = "messages/info/encrypted_msg_info_multipart_alternative_pgp_in_text_plain.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_multipart_alternative_pgp_in_text_plain.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     baseCheck(msgInfo)
@@ -1015,8 +1060,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testDownloadingInlinedAttachmentInOpenPGPMIME() {
     val msgInfo = getMsgInfo(
-      "messages/info/open_pgp_mime_with_inlined_attachments.json",
-      "messages/mime/open_pgp_mime_with_inlined_attachments.txt"
+      path = "messages/info/open_pgp_mime_with_inlined_attachments.json",
+      mimeMsgPath = "messages/mime/open_pgp_mime_with_inlined_attachments.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     val attachmentName = "thumb_up.png"
@@ -1056,8 +1102,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testEncryptedSubjectOpenPgpMIMESigned() {
     baseCheck(
       getMsgInfo(
-        "messages/info/encrypted_subject_openpgp_mime_signed.json",
-        "messages/mime/encrypted_subject_openpgp_mime_signed.txt"
+        path = "messages/info/encrypted_subject_openpgp_mime_signed.json",
+        mimeMsgPath = "messages/mime/encrypted_subject_openpgp_mime_signed.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
   }
@@ -1066,8 +1113,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   fun testEncryptedSubjectOpenPgpMIMENotSigned() {
     baseCheck(
       getMsgInfo(
-        "messages/info/encrypted_subject_openpgp_mime_not_signed.json",
-        "messages/mime/encrypted_subject_openpgp_mime_not_signed.txt"
+        path = "messages/info/encrypted_subject_openpgp_mime_not_signed.json",
+        mimeMsgPath = "messages/mime/encrypted_subject_openpgp_mime_not_signed.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
   }
@@ -1083,8 +1131,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
     baseCheck(
       getMsgInfo(
-        "messages/info/tiny_inline_attachment.json",
-        "messages/mime/tiny_inline_attachment.txt"
+        path = "messages/info/tiny_inline_attachment.json",
+        mimeMsgPath = "messages/mime/tiny_inline_attachment.txt",
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
       )
     )
 
@@ -1105,8 +1154,9 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testCorrectHandlingOfOpenPGPMIME() {
     val msgInfo = getMsgInfo(
-      "messages/info/open_pgp_mime_with_inlined_attachments.json",
-      "messages/mime/open_pgp_mime_with_inlined_attachments.txt"
+      path = "messages/info/open_pgp_mime_with_inlined_attachments.json",
+      mimeMsgPath = "messages/mime/open_pgp_mime_with_inlined_attachments.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     assertEquals(4, msgInfo?.msgBlocks?.size)

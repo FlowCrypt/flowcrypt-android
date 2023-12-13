@@ -33,6 +33,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
+import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -60,7 +61,10 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
 
   @Test
   fun testKeysExistOnAttester() {
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao().addAccount(defaultAccount)
+    runBlocking {
+      FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
+        .addAccountSuspend(defaultAccount)
+    }
     PrivateKeysManager.saveKeyToDatabase(
       accountEntity = defaultAccount,
       pgpKeyRingDetails = pgpKeyDetailsPrimaryDefaultAccount,
@@ -91,8 +95,10 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   @Test
   @FlakyTest
   fun testDifferentKeysOnAttester() {
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
-      .addAccount(defaultAccount)
+    runBlocking {
+      FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
+        .addAccountSuspend(defaultAccount)
+    }
 
     val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/default@flowcrypt.test_secondKey_prv_strong.asc"
@@ -128,8 +134,10 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   @Test
   @FlakyTest
   fun testAccountWithNoKeysOnAttester() {
-    FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
-      .addAccount(userWithoutPubKeyOnAttester)
+    runBlocking {
+      FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
+        .addAccountSuspend(userWithoutPubKeyOnAttester)
+    }
 
     val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/not_attested_user@flowcrypt.test_prv_default.asc"

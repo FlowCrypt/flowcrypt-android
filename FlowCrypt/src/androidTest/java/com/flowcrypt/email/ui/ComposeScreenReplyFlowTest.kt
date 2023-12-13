@@ -15,6 +15,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -37,10 +38,15 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class ComposeScreenReplyFlowTest : BaseTest() {
-  private val msgInfo = getMsgInfo(
-    "messages/info/standard_msg_reply_to_header.json",
-    "messages/mime/standard_msg_reply_to_header.txt"
-  )
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule().apply {
+    execute()
+  }
+  private val msgInfo: IncomingMessageInfo?
+    get() = getMsgInfo(
+      path = "messages/info/standard_msg_reply_to_header.json",
+      mimeMsgPath = "messages/mime/standard_msg_reply_to_header.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    )
 
   override val activeActivityRule = activityScenarioRule<CreateMessageActivity>(
     Intent(
@@ -61,7 +67,7 @@ class ComposeScreenReplyFlowTest : BaseTest() {
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
-    .around(AddAccountToDatabaseRule())
+    .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
     .around(activeActivityRule)
     .around(ScreenshotTestRule())

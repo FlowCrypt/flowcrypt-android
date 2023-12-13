@@ -15,7 +15,9 @@ class AccountDaoManager {
   companion object {
 
     fun getDefaultAccountDao(): AccountEntity {
-      return getAccountDao("base_account_settings.json")
+      return getAccountDao("base_account_settings.json").copy(
+        servicePgpPassphrase = "", servicePgpPrivateKey = byteArrayOf()
+      )
     }
 
     fun getAccountDao(accountPath: String): AccountEntity {

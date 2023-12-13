@@ -26,6 +26,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
@@ -44,6 +45,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 import java.io.File
 import java.util.Properties
 import java.util.concurrent.TimeUnit
@@ -166,7 +170,7 @@ class DraftViewModel(
   private suspend fun prepareAndSaveDraftForUploading(outgoingMessageInfo: OutgoingMessageInfo): Result<Boolean> =
     withContext(Dispatchers.IO) {
       try {
-        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        val activeAccount = getActiveAccountSuspend()
           ?: return@withContext Result.success(false)
 
         sessionDraftMessageEntity = if (sessionDraftMessageEntity == null) {
@@ -191,9 +195,21 @@ class DraftViewModel(
             existingSnapshot.getUri(0)?.let { fileUri ->
               (getApplication() as Context).contentResolver?.openInputStream(fileUri)
                 ?.let { inputStream ->
+                  val keys = PGPainless.readKeyRing()
+                    .secretKeyRingCollection(activeAccount.servicePgpPrivateKey)
+
+                  val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
+                    srcInputStream = inputStream,
+                    secretKeys = keys,
+                    protector = PasswordBasedSecretKeyRingProtector.forKey(
+                      keys.first(),
+                      Passphrase.fromPassword(activeAccount.servicePgpPassphrase)
+                    )
+                  )
+
                   val oldVersion = FlowCryptMimeMessage(
                     Session.getInstance(Properties()),
-                    KeyStoreCryptoManager.getCipherInputStream(inputStream)
+                    decryptionStream
                   )
 
                   oldVersion.getHeader(JavaEmailConstants.HEADER_REFERENCES)?.firstOrNull()
@@ -221,7 +237,11 @@ class DraftViewModel(
             }
           }
 
-          MsgsCacheManager.storeMsg(draftMessageEntity.id.toString(), mimeMessage as MimeMessage)
+          MsgsCacheManager.storeMsg(
+            key = draftMessageEntity.id.toString(),
+            msg = mimeMessage as MimeMessage,
+            accountEntity = activeAccount
+          )
           val messageEntityWithoutStateChange = draftMessageEntity.copy(
             subject = outgoingMessageInfo.subject,
             fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
@@ -286,7 +306,7 @@ class DraftViewModel(
     }
   }
 
-  private data class DraftFingerprint constructor(
+  private data class DraftFingerprint(
     var msgText: String? = null,
     var msgSubject: String? = null,
     val toRecipients: Set<String> = setOf(),

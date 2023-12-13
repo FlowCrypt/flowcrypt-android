@@ -33,7 +33,7 @@ import kotlinx.parcelize.Parcelize
   ]
 )
 @Parcelize
-data class AccountEntity constructor(
+data class AccountEntity(
   @PrimaryKey(autoGenerate = true)
   @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
@@ -75,7 +75,9 @@ data class AccountEntity constructor(
   @ColumnInfo(
     name = "use_customer_fes_url",
     defaultValue = "0"
-  ) val useCustomerFesUrl: Boolean = false
+  ) val useCustomerFesUrl: Boolean = false,
+  @ColumnInfo(name = "service_pgp_passphrase") val servicePgpPassphrase: String,
+  @ColumnInfo(name = "service_pgp_private_key") val servicePgpPrivateKey: ByteArray
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -132,7 +134,9 @@ data class AccountEntity constructor(
     showOnlyEncrypted = false,
     clientConfiguration = clientConfiguration,
     useAPI = true,
-    useCustomerFesUrl = useCustomerFesUrl
+    useCustomerFesUrl = useCustomerFesUrl,
+    servicePgpPassphrase = "",
+    servicePgpPrivateKey = byteArrayOf()
   )
 
   constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :
@@ -165,7 +169,9 @@ data class AccountEntity constructor(
         showOnlyEncrypted = false,
         clientConfiguration = clientConfiguration,
         useAPI = false,
-        useCustomerFesUrl = false
+        useCustomerFesUrl = false,
+        servicePgpPassphrase = "",
+        servicePgpPrivateKey = byteArrayOf()
       )
 
   constructor(email: String) :
@@ -196,7 +202,9 @@ data class AccountEntity constructor(
         contactsLoaded = false,
         showOnlyEncrypted = false,
         clientConfiguration = null,
-        useAPI = false
+        useAPI = false,
+        servicePgpPassphrase = "",
+        servicePgpPrivateKey = byteArrayOf()
       )
 
   fun imapOpt(): SecurityType.Option {
@@ -235,6 +243,86 @@ data class AccountEntity constructor(
     return hasClientConfigurationProperty(
       ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING
     )
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as AccountEntity
+
+    if (id != other.id) return false
+    if (email != other.email) return false
+    if (accountType != other.accountType) return false
+    if (displayName != other.displayName) return false
+    if (givenName != other.givenName) return false
+    if (familyName != other.familyName) return false
+    if (photoUrl != other.photoUrl) return false
+    if (isEnabled != other.isEnabled) return false
+    if (isActive != other.isActive) return false
+    if (username != other.username) return false
+    if (password != other.password) return false
+    if (imapServer != other.imapServer) return false
+    if (imapPort != other.imapPort) return false
+    if (imapUseSslTls != other.imapUseSslTls) return false
+    if (imapUseStarttls != other.imapUseStarttls) return false
+    if (imapAuthMechanisms != other.imapAuthMechanisms) return false
+    if (smtpServer != other.smtpServer) return false
+    if (smtpPort != other.smtpPort) return false
+    if (smtpUseSslTls != other.smtpUseSslTls) return false
+    if (smtpUseStarttls != other.smtpUseStarttls) return false
+    if (smtpAuthMechanisms != other.smtpAuthMechanisms) return false
+    if (smtpUseCustomSign != other.smtpUseCustomSign) return false
+    if (smtpUsername != other.smtpUsername) return false
+    if (smtpPassword != other.smtpPassword) return false
+    if (contactsLoaded != other.contactsLoaded) return false
+    if (showOnlyEncrypted != other.showOnlyEncrypted) return false
+    if (clientConfiguration != other.clientConfiguration) return false
+    if (useAPI != other.useAPI) return false
+    if (useCustomerFesUrl != other.useCustomerFesUrl) return false
+    if (servicePgpPassphrase != other.servicePgpPassphrase) return false
+    if (!servicePgpPrivateKey.contentEquals(other.servicePgpPrivateKey)) return false
+    if (account != other.account) return false
+    if (isGoogleSignInAccount != other.isGoogleSignInAccount) return false
+    return avatarResource == other.avatarResource
+  }
+
+  override fun hashCode(): Int {
+    var result = id?.hashCode() ?: 0
+    result = 31 * result + email.hashCode()
+    result = 31 * result + (accountType?.hashCode() ?: 0)
+    result = 31 * result + (displayName?.hashCode() ?: 0)
+    result = 31 * result + (givenName?.hashCode() ?: 0)
+    result = 31 * result + (familyName?.hashCode() ?: 0)
+    result = 31 * result + (photoUrl?.hashCode() ?: 0)
+    result = 31 * result + (isEnabled?.hashCode() ?: 0)
+    result = 31 * result + (isActive?.hashCode() ?: 0)
+    result = 31 * result + username.hashCode()
+    result = 31 * result + password.hashCode()
+    result = 31 * result + imapServer.hashCode()
+    result = 31 * result + (imapPort ?: 0)
+    result = 31 * result + (imapUseSslTls?.hashCode() ?: 0)
+    result = 31 * result + (imapUseStarttls?.hashCode() ?: 0)
+    result = 31 * result + (imapAuthMechanisms?.hashCode() ?: 0)
+    result = 31 * result + smtpServer.hashCode()
+    result = 31 * result + (smtpPort ?: 0)
+    result = 31 * result + (smtpUseSslTls?.hashCode() ?: 0)
+    result = 31 * result + (smtpUseStarttls?.hashCode() ?: 0)
+    result = 31 * result + (smtpAuthMechanisms?.hashCode() ?: 0)
+    result = 31 * result + (smtpUseCustomSign?.hashCode() ?: 0)
+    result = 31 * result + (smtpUsername?.hashCode() ?: 0)
+    result = 31 * result + (smtpPassword?.hashCode() ?: 0)
+    result = 31 * result + (contactsLoaded?.hashCode() ?: 0)
+    result = 31 * result + (showOnlyEncrypted?.hashCode() ?: 0)
+    result = 31 * result + (clientConfiguration?.hashCode() ?: 0)
+    result = 31 * result + useAPI.hashCode()
+    result = 31 * result + useCustomerFesUrl.hashCode()
+    result = 31 * result + servicePgpPassphrase.hashCode()
+    result = 31 * result + servicePgpPrivateKey.contentHashCode()
+    result = 31 * result + account.hashCode()
+    result = 31 * result + isGoogleSignInAccount.hashCode()
+    result = 31 * result + avatarResource.hashCode()
+    return result
   }
 
   companion object {

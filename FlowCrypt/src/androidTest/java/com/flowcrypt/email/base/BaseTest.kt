@@ -44,6 +44,7 @@ import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.shutdown
@@ -53,6 +54,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
@@ -286,6 +288,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
     mimeMsgPath: String,
     vararg atts: AttachmentInfo?,
     useCrLfForMime: Boolean = false,
+    accountEntity: AccountEntity,
     action: ((incomingMessageInfo: IncomingMessageInfo?) -> IncomingMessageInfo?)? = null
   ): IncomingMessageInfo? {
     val defaultIncomingMsgInfo = TestGeneralUtil.getObjectFromJson(
@@ -313,7 +316,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
           assetsMimeMsgSource
         }
 
-      addMsgToCache(uri.toString(), finalMimeMsgSource.toInputStream())
+      addMsgToCache(uri.toString(), finalMimeMsgSource.toInputStream(), accountEntity)
     }
     return incomingMsgInfo
   }
@@ -347,7 +350,13 @@ abstract class BaseTest : BaseActivityTestImplementation {
     )
   }
 
-  private fun addMsgToCache(key: String, inputStream: InputStream) {
-    MsgsCacheManager.storeMsg(key, MimeMessage(Session.getInstance(Properties()), inputStream))
+  private fun addMsgToCache(key: String, inputStream: InputStream, accountEntity: AccountEntity) {
+    runBlocking {
+      MsgsCacheManager.storeMsg(
+        key,
+        MimeMessage(Session.getInstance(Properties()), inputStream),
+        accountEntity
+      )
+    }
   }
 }
