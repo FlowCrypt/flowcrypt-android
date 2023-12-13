@@ -144,8 +144,10 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
               domain = EmailUtil.getDomain(fromAddress.address)
             )
 
-            val idToken = GeneralUtil.getGoogleIdToken(
-              applicationContext, RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN
+            val idToken = GeneralUtil.getGoogleIdTokenSilently(
+              context = applicationContext,
+              maxRetryAttemptCount = RETRY_ATTEMPTS_COUNT_FOR_GETTING_ID_TOKEN,
+              accountEntity = account
             )
             val replyToken = fetchReplyToken(baseFesUrlPath, idToken)
             val replyInfoData = ReplyInfoData(

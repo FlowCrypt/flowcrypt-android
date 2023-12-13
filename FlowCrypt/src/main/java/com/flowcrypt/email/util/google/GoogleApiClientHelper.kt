@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.util.google
 
+import android.accounts.Account
 import com.flowcrypt.email.Constants
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
@@ -17,15 +18,16 @@ import com.google.android.gms.common.api.Scope
 class GoogleApiClientHelper {
 
   companion object {
-    private const val SERVER_CLIENT_ID =
+    const val SERVER_CLIENT_ID =
       "374364070962-n83b6asllhfkhij6slijr61576lqqi3v.apps.googleusercontent.com"
 
-    fun generateGoogleSignInOptions(): GoogleSignInOptions {
+    fun generateGoogleSignInOptions(account: Account? = null): GoogleSignInOptions {
       val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
 
       builder.requestScopes(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
       builder.requestEmail()
       builder.requestIdToken(SERVER_CLIENT_ID)
+      account?.name?.let { builder.setAccountName(it) }
 
       return builder.build()
     }
