@@ -50,6 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.apache.commons.io.IOUtils
+import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import retrofit2.Retrofit
 import java.io.File
 import java.io.IOException
@@ -484,29 +485,51 @@ class GeneralUtil {
         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-    suspend fun getGoogleIdToken(
+    suspend fun getGoogleIdTokenSilently(
       context: Context,
       maxRetryAttemptCount: Int = 0,
-      retryAttempt: Int = 0
+      retryAttempt: Int = 0,
+      accountEntity: AccountEntity
     ): String =
       withContext(Dispatchers.IO) {
         //before fetch idToken from [GoogleSignInClient]
         //we try to get IdToken from the flavor settings
-        @Suppress("UNNECESSARY_SAFE_CALL")
+        @Suppress("UNNECESSARY_SAFE_CALL", "KotlinRedundantDiagnosticSuppress")
         FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
 
         val googleSignInClient = GoogleSignIn.getClient(
           context,
-          GoogleApiClientHelper.generateGoogleSignInOptions()
+          GoogleApiClientHelper.generateGoogleSignInOptions(accountEntity.account)
         )
         val silentSignIn = googleSignInClient.silentSignIn()
         if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
           if (retryAttempt <= maxRetryAttemptCount) {
             //do delay for 10 seconds and try again. Max attempts == maxRetryAttemptCount
             delay(TimeUnit.SECONDS.toMillis(10))
-            return@withContext getGoogleIdToken(context, maxRetryAttemptCount, retryAttempt + 1)
+            return@withContext getGoogleIdTokenSilently(
+              context,
+              maxRetryAttemptCount,
+              retryAttempt + 1,
+              accountEntity
+            )
           } else throw IllegalStateException("Could not receive idToken")
         }
+
+        val claims = JwtConsumerBuilder()
+          .setExpectedAudience(GoogleApiClientHelper.SERVER_CLIENT_ID)
+          .setRequireIssuedAt()
+          .setRequireExpirationTime()
+          .setRelaxVerificationKeyValidation()
+          .setSkipSignatureVerification()
+          .build()
+          .processToClaims(silentSignIn.result.idToken)
+
+        val email = claims.getClaimValueAsString("email")
+
+        if (!accountEntity.email.equals(email, true)) {
+          throw IllegalStateException("Received tokenId for a wrong account($email)")
+        }
+
         return@withContext requireNotNull(silentSignIn.result.idToken)
       }
 

@@ -64,9 +64,10 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
     withContext(Dispatchers.IO) {
       val context: Context = getApplication()
       val retryAttempts = 6
-      val idToken = GeneralUtil.getGoogleIdToken(
+      val idToken = GeneralUtil.getGoogleIdTokenSilently(
         context = context,
-        maxRetryAttemptCount = retryAttempts
+        maxRetryAttemptCount = retryAttempts,
+        accountEntity = activeAccount
       )
 
       val ekmPrivateResult = ApiClientRepository.EKM.getPrivateKeys(
