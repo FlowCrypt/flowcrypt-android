@@ -70,8 +70,9 @@ class MessageDetailsUpdatePubFromPartKeyFlowTest : BaseMessageDetailsFlowTest() 
   @Test
   fun testUpdatingPubKeyFromMessagePart() {
     val msgInfo = getMsgInfo(
-      "messages/info/standard_msg_with_updated_pub_key.json",
-      "messages/mime/standard_msg_with_updated_pub_key.txt"
+      path = "messages/info/standard_msg_with_updated_pub_key.json",
+      mimeMsgPath = "messages/mime/standard_msg_with_updated_pub_key.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     baseCheck(msgInfo)

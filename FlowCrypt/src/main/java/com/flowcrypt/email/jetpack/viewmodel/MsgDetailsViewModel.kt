@@ -11,8 +11,8 @@ import android.text.TextUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.asFlow
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -42,9 +42,9 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.jetpack.livedata.SkipInitialValueObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -81,6 +81,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 import java.io.BufferedInputStream
 import java.io.InputStream
 import java.util.Collections
@@ -371,28 +374,25 @@ class MsgDetailsViewModel(
     )
 
   init {
-    afterKeysStorageUpdatedMsgLiveData.addSource(afterKeysUpdatedMsgLiveData) {
-      afterKeysStorageUpdatedMsgLiveData.value = it
-    }
-    afterKeysStorageUpdatedMsgLiveData.addSource(afterPassphrasesUpdatedMsgLiveData) {
-      afterKeysStorageUpdatedMsgLiveData.value = it
-    }
-
-    mediatorMsgLiveData.addSource(freshMsgLiveData) { mediatorMsgLiveData.value = it }
-    //here we resolve a situation when a user updates private keys.
-    // To prevent errors we skip the first call
-    mediatorMsgLiveData.addSource(
-      afterKeysStorageUpdatedMsgLiveData,
-      object : Observer<MessageEntity?> {
-        var isFirstCall = true
-        override fun onChanged(value: MessageEntity?) {
-          if (isFirstCall) {
-            isFirstCall = false
-          } else {
-            mediatorMsgLiveData.value = value
-          }
-        }
+    afterKeysStorageUpdatedMsgLiveData.addSource(
+      afterKeysUpdatedMsgLiveData,
+      SkipInitialValueObserver {
+        afterKeysStorageUpdatedMsgLiveData.value = it
       })
+
+    afterKeysStorageUpdatedMsgLiveData.addSource(
+      afterPassphrasesUpdatedMsgLiveData,
+      SkipInitialValueObserver {
+        afterKeysStorageUpdatedMsgLiveData.value = it
+      }
+    )
+
+    mediatorMsgLiveData.addSource(freshMsgLiveData.distinctUntilChanged()) {
+      mediatorMsgLiveData.value = it
+    }
+    mediatorMsgLiveData.addSource(afterKeysStorageUpdatedMsgLiveData) {
+      mediatorMsgLiveData.value = it
+    }
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) {
@@ -511,6 +511,8 @@ class MsgDetailsViewModel(
       Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
     val uri = msgSnapshot.getUri(0)
     passphraseNeededLiveData.postValue(emptyList())
+    val accountEntity = getActiveAccountSuspend()
+      ?: throw java.lang.NullPointerException("Account is null")
     if (uri != null) {
       val context: Context = getApplication()
       try {
@@ -519,10 +521,23 @@ class MsgDetailsViewModel(
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
+        val keys = PGPainless.readKeyRing()
+          .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
+
+        val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
+          srcInputStream = inputStream,
+          secretKeys = keys,
+          protector = PasswordBasedSecretKeyRingProtector.forKey(
+            keys.first(),
+            Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
+          )
+        )
+
         val processedMimeMessage = PgpMsg.processMimeMessage(
           context = getApplication(),
-          inputStream = KeyStoreCryptoManager.getCipherInputStream(inputStream)
+          inputStream = decryptionStream
         )
+
         preResultsProcessing(processedMimeMessage.blocks)
         return@withContext Result.success(processedMimeMessage)
       } catch (e: Exception) {
@@ -606,16 +621,24 @@ class MsgDetailsViewModel(
               accountEntity = accountEntity
             )
             if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), originalMsg)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                msg = originalMsg,
+                accountEntity = accountEntity
+              )
             } else {
               val inputStream = FetchingInputStream(
                 GmailApiHelper.getWholeMimeMessageInputStream(
-                  getApplication(),
-                  accountEntity,
-                  messageEntity
+                  context = getApplication(),
+                  account = accountEntity,
+                  messageEntity = messageEntity
                 )
               )
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), inputStream)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                inputStream = inputStream,
+                accountEntity = accountEntity
+              )
             }
 
             GmailApiHelper.changeLabels(
@@ -691,13 +714,21 @@ class MsgDetailsViewModel(
               customMsg.saveChanges()
               customMsg.setMessageId(originalMsg.messageID ?: "")
 
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), customMsg)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                msg = customMsg,
+                accountEntity = accountEntity
+              )
             } else {
               val cachedMsg = MimeMessage(
                 originalMsg.session,
                 FetchingInputStream((originalMsg as IMAPMessage).mimeStream)
               )
-              MsgsCacheManager.storeMsg(messageEntity.id.toString(), cachedMsg)
+              MsgsCacheManager.storeMsg(
+                key = messageEntity.id.toString(),
+                msg = cachedMsg,
+                accountEntity = accountEntity
+              )
             }
 
             processingProgressLiveData.postValue(

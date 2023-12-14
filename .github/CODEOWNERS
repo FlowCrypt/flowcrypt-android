@@ -1,30 +1,30 @@
 # intentionally not using * to allow for dependabot automerge-see comment below
 # (github does not allow negative !FlowCrypt/build.gradle 
 
-.github @DenBond7 @ioanmo226
-.idea @DenBond7 @ioanmo226
-.semaphore @DenBond7 @ioanmo226
+.github @DenBond7 @sosnovsky
+.idea @DenBond7 @sosnovsky
+.semaphore @DenBond7 @sosnovsky
 
-FlowCrypt/libs @DenBond7 @ioanmo226
-FlowCrypt/schemas @DenBond7 @ioanmo226
-FlowCrypt/src @DenBond7 @ioanmo226
-FlowCrypt/.gitignore @DenBond7 @ioanmo226
-FlowCrypt/CMakeLists.txt @DenBond7 @ioanmo226
-FlowCrypt/lint.xml @DenBond7 @ioanmo226
-FlowCrypt/proguard-rules.pro @DenBond7 @ioanmo226
+FlowCrypt/libs @DenBond7 @sosnovsky
+FlowCrypt/schemas @DenBond7 @sosnovsky
+FlowCrypt/src @DenBond7 @sosnovsky
+FlowCrypt/.gitignore @DenBond7 @sosnovsky
+FlowCrypt/CMakeLists.txt @DenBond7 @sosnovsky
+FlowCrypt/lint.xml @DenBond7 @sosnovsky
+FlowCrypt/proguard-rules.pro @DenBond7 @sosnovsky
 # intentionally leaving out FlowCrypt/build.gradle 
 #   so that dependabot does not need codeowner approvals to auto-merge
 
-design @DenBond7 @ioanmo226
-docker-mailserver @DenBond7 @ioanmo226
-gradle/wrapper @DenBond7 @ioanmo226
-script @DenBond7 @ioanmo226
-.gitignore @DenBond7 @ioanmo226
-README.md @DenBond7 @ioanmo226
-detekt-config.yml @DenBond7 @ioanmo226
-detekt.gradle @DenBond7 @ioanmo226
-ext.gradle @DenBond7 @ioanmo226
-gradle.properties @DenBond7 @ioanmo226
-gradlew @DenBond7 @ioanmo226
-gradlew.bat @DenBond7 @ioanmo226
-settings.gradle @DenBond7 @ioanmo226
+design @DenBond7 @sosnovsky
+docker-mailserver @DenBond7 @sosnovsky
+gradle/wrapper @DenBond7 @sosnovsky
+script @DenBond7 @sosnovsky
+.gitignore @DenBond7 @sosnovsky
+README.md @DenBond7 @sosnovsky
+detekt-config.yml @DenBond7 @sosnovsky
+detekt.gradle @DenBond7 @sosnovsky
+ext.gradle @DenBond7 @sosnovsky
+gradle.properties @DenBond7 @sosnovsky
+gradlew @DenBond7 @sosnovsky
+gradlew.bat @DenBond7 @sosnovsky
+settings.gradle @DenBond7 @sosnovsky

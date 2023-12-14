@@ -186,8 +186,8 @@ abstract class BaseSingInFragment<T : ViewBinding> : BaseOAuthFragment<T>(), Pro
                 onClickListener = {
                   getTempAccount()?.let { accountEntity ->
                     privateKeysViewModel.encryptAndSaveKeysToDatabase(
-                      accountEntity,
-                      e.keys
+                      accountEntity = accountEntity,
+                      keys = e.keys
                     )
                   }
                 }

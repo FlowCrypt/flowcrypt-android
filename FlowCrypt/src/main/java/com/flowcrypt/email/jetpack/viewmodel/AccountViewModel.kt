@@ -129,6 +129,8 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
         return@withContext accountEntity?.copy(
           password = KeyStoreCryptoManager.decryptSuspend(accountEntity.password),
           smtpPassword = KeyStoreCryptoManager.decryptSuspend(accountEntity.smtpPassword),
+          servicePgpPassphrase = KeyStoreCryptoManager.decryptSuspend(accountEntity.servicePgpPassphrase),
+          servicePgpPrivateKey = KeyStoreCryptoManager.decryptSuspend(accountEntity.servicePgpPrivateKey)
         )
       }
   }

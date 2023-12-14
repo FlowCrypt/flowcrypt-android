@@ -55,12 +55,14 @@ class ComposeScreenReplyAllFlowTest : BaseTest() {
     verificationStatus = "accepted"
   )
 
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule(account)
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
     .around(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
-    .around(AddAccountToDatabaseRule(account))
+    .around(addAccountToDatabaseRule)
     .around(AddPrivateKeyToDatabaseRule())
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
@@ -68,8 +70,9 @@ class ComposeScreenReplyAllFlowTest : BaseTest() {
   @Test
   fun testReplyAllUsingGmailAlias() {
     val msgInfo = getMsgInfo(
-      "messages/info/standard_msg_reply_all_via_gmail_alias.json",
-      "messages/mime/standard_msg_reply_to_header.txt"
+      path = "messages/info/standard_msg_reply_all_via_gmail_alias.json",
+      mimeMsgPath = "messages/mime/standard_msg_reply_to_header.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     roomDatabase.accountAliasesDao().insert(accountAliasesEntity)

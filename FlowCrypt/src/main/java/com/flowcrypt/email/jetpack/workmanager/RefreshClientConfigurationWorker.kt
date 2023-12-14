@@ -54,9 +54,10 @@ class RefreshClientConfigurationWorker(context: Context, params: WorkerParameter
       domain = domain
     )
     try {
-      val idToken = GeneralUtil.getGoogleIdToken(
+      val idToken = GeneralUtil.getGoogleIdTokenSilently(
         context = applicationContext,
-        maxRetryAttemptCount = 5
+        maxRetryAttemptCount = 5,
+        accountEntity = account
       )
 
       val result = ApiClientRepository.FES.getClientConfiguration(

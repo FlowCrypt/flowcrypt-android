@@ -8,6 +8,7 @@ package com.flowcrypt.email.database
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.provider.BaseColumns
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.room.Database
@@ -39,8 +40,11 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.pgp.PgpKey
+import kotlinx.coroutines.runBlocking
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import java.util.UUID
 
 
 /**
@@ -96,7 +100,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 41
+    const val DB_VERSION = 42
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1374,6 +1378,36 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_41_42 = object : FlowCryptMigration(41, 42) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2523
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `service_pgp_passphrase` TEXT NOT NULL DEFAULT '';")
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `service_pgp_private_key` BLOB NOT NULL DEFAULT '';")
+
+        val cursor = database.query("SELECT * FROM accounts;")
+        if (cursor.count > 0) {
+          while (cursor.moveToNext()) {
+            val id = cursor.getString(cursor.getColumnIndexOrThrow(BaseColumns._ID))
+            val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+            val pgpPassphrase = UUID.randomUUID().toString()
+            val pgpPrivateKey = runBlocking {
+              PgpKey.create(
+                email = email,
+                passphrase = pgpPassphrase
+              ).encoded
+            }
+            val encryptedPgpPassphrase = KeyStoreCryptoManager.encrypt(pgpPassphrase)
+            val encryptedPgpPrivateKey = KeyStoreCryptoManager.encrypt(pgpPrivateKey)
+            database.execSQL(
+              "UPDATE accounts SET service_pgp_passphrase = ?, service_pgp_private_key = ? WHERE ${BaseColumns._ID} = ?;",
+              arrayOf(encryptedPgpPassphrase, encryptedPgpPrivateKey, id)
+            )
+          }
+        }
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1429,6 +1463,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_38_39,
           MIGRATION_39_40,
           MIGRATION_40_41,
+          MIGRATION_41_42,
         ).build()
         INSTANCE = instance
         return instance

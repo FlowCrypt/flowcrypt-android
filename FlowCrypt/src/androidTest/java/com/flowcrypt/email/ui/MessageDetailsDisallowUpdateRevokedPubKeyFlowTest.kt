@@ -77,8 +77,9 @@ class MessageDetailsDisallowUpdateRevokedPubKeyFlowTest : BaseMessageDetailsFlow
   @Test
   fun testDisallowUpdateRevokedPubKeyFromMessageDetails() {
     val msgInfo = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_with_pub_key_mod_after_revoked.json",
-      "messages/mime/encrypted_msg_info_text_with_pub_key_mod_after_revoked.txt"
+      path = "messages/info/encrypted_msg_info_text_with_pub_key_mod_after_revoked.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_pub_key_mod_after_revoked.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
     baseCheck(msgInfo)

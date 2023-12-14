@@ -58,6 +58,18 @@ object KeyStoreCryptoManager {
   }
 
   /**
+   * This method encrypts input bytes via AES symmetric algorithm and returns encrypted bytes.
+   * It can be used with coroutines.
+   *
+   * @param bytes The input bytes which will be encrypted.
+   * @return Encrypted bytes (base64)
+   * @throws Exception The encryption process can throw a lot of exceptions.
+   */
+  suspend fun encryptSuspend(bytes: ByteArray?): ByteArray = withContext(Dispatchers.IO) {
+    return@withContext encrypt(bytes)
+  }
+
+  /**
    * This method encrypts an input text via AES symmetric algorithm and returns encrypted data.
    * It can be used with coroutines.
    *
@@ -80,13 +92,26 @@ object KeyStoreCryptoManager {
   @WorkerThread
   fun encrypt(plainData: String?): String {
     val input = (plainData ?: "").toByteArray(StandardCharsets.UTF_8)
+    return String(encrypt(input))
+  }
+
+  /**
+   * This method encrypts input bytes via AES symmetric algorithm and returns encrypted data.
+   * Don't call it from the main thread.
+   *
+   * @param bytes The input bytes which will be encrypted.
+   * @return Encrypted bytes (base64)
+   * @throws Exception The encryption process can throw a lot of exceptions.
+   */
+  @WorkerThread
+  fun encrypt(bytes: ByteArray?): ByteArray {
+    val input = bytes ?: byteArrayOf()
     synchronized(this) {
       val cipher = getCipherForEncryption()
       val encryptedBytes = cipher.doFinal(input)
-      return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(
-        encryptedBytes,
-        BASE64_FLAGS
-      )
+      return Base64.encode(cipher.iv, BASE64_FLAGS) +
+          "\n".toByteArray() +
+          Base64.encode(encryptedBytes, BASE64_FLAGS)
     }
   }
 
@@ -109,6 +134,18 @@ object KeyStoreCryptoManager {
   }
 
   /**
+   * This method decrypts the input encrypted bytes via AES symmetric algorithm and returns decrypted bytes.
+   * It can be used with coroutines.
+   *
+   * @param encryptedBytes The input encrypted bytes, which must be encrypted and encoded in base64.
+   * @return <tt>String</tt> Return decrypted bytes.
+   * @throws Exception The decryption process can throw a lot of exceptions.
+   */
+  suspend fun decryptSuspend(encryptedBytes: ByteArray?): ByteArray = withContext(Dispatchers.IO) {
+    return@withContext decrypt(encryptedBytes)
+  }
+
+  /**
    * This method decrypts the input encrypted text via AES symmetric algorithm and returns decrypted data.
    * Don't call it from the main thread.
    *
@@ -118,27 +155,45 @@ object KeyStoreCryptoManager {
    */
   @WorkerThread
   fun decrypt(encryptedData: String?): String {
-    return if (encryptedData.isNullOrEmpty()) {
-      ""
-    } else {
-      val splitPosition = encryptedData.indexOf('\n')
+    return String(decrypt(encryptedData?.toByteArray()))
+  }
 
-      if (splitPosition == -1) {
-        throw IllegalArgumentException("wrong encryptedData")
-      }
+  /**
+   * This method decrypts the input encrypted bytes via AES symmetric algorithm and returns decrypted bytes.
+   * Don't call it from the main thread.
+   *
+   * @param encryptedBytes The input encrypted bytes, which must be encrypted and encoded in base64.
+   * @return <tt>String</tt> Return decrypted bytes.
+   * @throws Exception The decryption process can throw a lot of exceptions.
+   */
+  @WorkerThread
+  fun decrypt(encryptedBytes: ByteArray?): ByteArray {
+    val bytes = encryptedBytes ?: return byteArrayOf()
+    val splitPosition = bytes.indexOf('\n'.code.toByte())
 
-      val iv = encryptedData.substring(0, splitPosition)
-      synchronized(this) {
-        val cipher = getCipherForDecryption(iv)
-        val decodedBytes =
-          cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
-        String(decodedBytes, StandardCharsets.UTF_8)
-      }
+    if (splitPosition == -1) {
+      throw IllegalArgumentException("wrong encryptedData")
+    }
+
+    val iv = bytes.slice(0..splitPosition).toByteArray()
+    synchronized(this) {
+      val cipher = getCipherForDecryption(iv)
+      return cipher.doFinal(
+        Base64.decode(
+          bytes.slice(splitPosition + 1..<bytes.size).toByteArray(),
+          BASE64_FLAGS
+        )
+      )
     }
   }
 
   @WorkerThread
   fun getCipherForDecryption(iv: String): Cipher {
+    return getCipherForDecryption(iv.toByteArray())
+  }
+
+  @WorkerThread
+  fun getCipherForDecryption(iv: ByteArray): Cipher {
     return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply {
       init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, BASE64_FLAGS)))
     }

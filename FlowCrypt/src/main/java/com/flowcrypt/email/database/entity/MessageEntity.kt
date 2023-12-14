@@ -193,9 +193,7 @@ data class MessageEntity(
     if (isDraft != other.isDraft) return false
     if (isOutboxMsg != other.isOutboxMsg) return false
     if (uidAsHEX != other.uidAsHEX) return false
-    if (isPasswordProtected != other.isPasswordProtected) return false
-
-    return true
+    return isPasswordProtected == other.isPasswordProtected
   }
 
   override fun hashCode(): Int {

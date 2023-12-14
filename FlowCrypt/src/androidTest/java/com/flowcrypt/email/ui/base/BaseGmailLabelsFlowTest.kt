@@ -84,8 +84,9 @@ abstract class BaseGmailLabelsFlowTest : BaseMessageDetailsFlowTest() {
   )
 
   protected fun genIncomingMessageInfo(labelsIds: Collection<String> = initLabelIds()) = getMsgInfo(
-    "messages/info/standard_msg_info_plaintext.json",
-    "messages/mime/standard_msg_info_plaintext.txt"
+    path = "messages/info/standard_msg_info_plaintext.json",
+    mimeMsgPath = "messages/mime/standard_msg_info_plaintext.txt",
+    accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
   ) { incomingMsgInfo ->
     val originalMessageEntity = incomingMsgInfo?.msgEntity ?: return@getMsgInfo null
     return@getMsgInfo incomingMsgInfo.copy(

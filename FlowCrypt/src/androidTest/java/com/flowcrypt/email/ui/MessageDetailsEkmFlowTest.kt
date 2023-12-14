@@ -161,8 +161,9 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testMissingKeyErrorImportKey() {
     val details = getMsgInfo(
-      "messages/info/encrypted_msg_info_text_with_missing_key.json",
-      "messages/mime/encrypted_msg_info_text_with_missing_key.txt"
+      path = "messages/info/encrypted_msg_info_text_with_missing_key.json",
+      mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_missing_key.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )?.msgEntity
     requireNotNull(details)
     launchActivity(details)
@@ -177,10 +178,11 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testPreviewAttachmentButton() {
     baseCheckWithAtt(
-      getMsgInfo(
-        "messages/info/standard_msg_info_plaintext_with_one_att.json",
-        "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo
-      ), simpleAttInfo
+      incomingMsgInfo = getMsgInfo(
+        path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
+        mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo,
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+      ), att = simpleAttInfo
     )
 
     unregisterCountingIdlingResource()
