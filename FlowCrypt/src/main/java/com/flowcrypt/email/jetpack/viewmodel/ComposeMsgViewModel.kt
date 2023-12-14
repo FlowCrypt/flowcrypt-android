@@ -19,14 +19,16 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ApiException
 import jakarta.mail.Message
@@ -37,6 +39,7 @@ import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,15 +47,19 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
+import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 import java.io.IOException
 import java.io.InputStream
 import java.io.InvalidObjectException
@@ -64,7 +71,7 @@ import java.util.concurrent.TimeUnit
  * @author Denys Bondarenko
  */
 class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Application) :
-  RoomBasicViewModel(application) {
+  AccountViewModel(application) {
   private val recipientLookUpManager =
     RecipientLookUpManager(application, roomDatabase, viewModelScope) {
       replaceRecipient(Message.RecipientType.TO, it)
@@ -144,58 +151,33 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }.flowOn(Dispatchers.Default)
 
+  @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+  private val forceUpdatingDraftInCache = outgoingMessageInfoStateFlow
+    //skip too many updates
+    .debounce(200)
+    .mapLatest { System.currentTimeMillis() }
+
+  private val draftUpdateIndicatorFlow = merge(
+    draftRepeatableCheckingFlow,
+    forceUpdatingDraftInCache
+  )
+
   @OptIn(ExperimentalCoroutinesApi::class)
   private val draftMimeMessageStateFlow: StateFlow<MimeMessage> =
-    draftRepeatableCheckingFlow.mapLatest {
+    draftUpdateIndicatorFlow.mapLatest {
       withContext(Dispatchers.IO) {
         val session = Session.getDefaultInstance(Properties())
         val context: Context = getApplication()
         val replyToMsgEntity = outgoingMessageInfoStateFlow.value.replyToMsgEntity
-        try {
-          val mimeMessage = if (replyToMsgEntity == null) {
-            DraftMimeMessage(session)
-          } else {
-            val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMsgEntity.id.toString())
-              ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
-
-            val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
-            val inputStream = context.contentResolver?.openInputStream(uri)
-              ?: throw IllegalArgumentException("InputStream not found")
-            val out = ByteArrayOutputStream().apply {
-              MimeMessage(
-                session, KeyStoreCryptoManager.getCipherInputStream(inputStream)
-              ).reply(false).writeTo(this)
-            }
-            DraftMimeMessage(session, out.toByteArray().inputStream())
-          }
-
-          mimeMessage.apply {
-            subject = outgoingMessageInfoStateFlow.value.subject
-            setContent(MimeMultipart().apply {
-              addBodyPart(
-                MimeBodyPart().apply {
-                  setText(outgoingMessageInfoStateFlow.value.msg ?: "")
-                }
-              )
-            })
-            setFrom(outgoingMessageInfoStateFlow.value.from)
-            setRecipients(
-              Message.RecipientType.TO,
-              outgoingMessageInfoStateFlow.value.toRecipients?.toTypedArray()
-            )
-            setRecipients(
-              Message.RecipientType.CC,
-              outgoingMessageInfoStateFlow.value.ccRecipients?.toTypedArray()
-            )
-            setRecipients(
-              Message.RecipientType.BCC,
-              outgoingMessageInfoStateFlow.value.bccRecipients?.toTypedArray()
-            )
-            saveChanges()
-          }
+        val accountEntity = getActiveAccountSuspend()
+          ?: return@withContext DraftMimeMessage(Session.getDefaultInstance(Properties()))
+        return@withContext try {
+          prepareDraftMIMEMessage(replyToMsgEntity, session, context, accountEntity)
         } catch (e: Exception) {
-          e.printStackTrace()
-          return@withContext DraftMimeMessage(session)
+          if (GeneralUtil.isDebugBuild()) {
+            e.printStackTrace()
+          }
+          DraftMimeMessage(session)
         }
       }
     }.stateIn(
@@ -319,6 +301,22 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
+  fun callLookUpForMissedPubKeys() {
+    viewModelScope.launch {
+      allRecipients.forEach { entry ->
+        recipientLookUpManager.enqueue(entry.value)
+      }
+    }
+  }
+
+  fun callLookUpForRecipientIfNeeded(email: String?) {
+    viewModelScope.launch {
+      allRecipients.entries
+        .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
+        ?.value?.let { recipientLookUpManager.enqueue(it) }
+    }
+  }
+
   private fun replaceRecipient(
     recipientType: Message.RecipientType,
     recipientInfo: RecipientInfo
@@ -336,19 +334,58 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
-  fun callLookUpForMissedPubKeys() {
-    viewModelScope.launch {
-      allRecipients.forEach { entry ->
-        recipientLookUpManager.enqueue(entry.value)
-      }
-    }
-  }
+  private fun prepareDraftMIMEMessage(
+    replyToMsgEntity: MessageEntity?,
+    session: Session,
+    context: Context,
+    accountEntity: AccountEntity
+  ): MimeMessage {
+    return if (replyToMsgEntity == null) {
+      DraftMimeMessage(session)
+    } else {
+      val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMsgEntity.id.toString())
+        ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
 
-  fun callLookUpForRecipientIfNeeded(email: String?) {
-    viewModelScope.launch {
-      allRecipients.entries
-        .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
-        ?.value?.let { recipientLookUpManager.enqueue(it) }
+      val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
+      val inputStream = context.contentResolver?.openInputStream(uri)
+        ?: throw IllegalArgumentException("InputStream not found")
+
+      val keys = PGPainless.readKeyRing()
+        .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
+
+      val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
+        srcInputStream = inputStream,
+        secretKeys = keys,
+        protector = PasswordBasedSecretKeyRingProtector.forKey(
+          keys.first(),
+          Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
+        )
+      )
+
+      DraftMimeMessage(session, decryptionStream)
+    }.apply {
+      subject = outgoingMessageInfoStateFlow.value.subject
+      setContent(MimeMultipart().apply {
+        addBodyPart(
+          MimeBodyPart().apply {
+            setText(outgoingMessageInfoStateFlow.value.msg ?: "")
+          }
+        )
+      })
+      setFrom(outgoingMessageInfoStateFlow.value.from)
+      setRecipients(
+        Message.RecipientType.TO,
+        outgoingMessageInfoStateFlow.value.toRecipients?.toTypedArray()
+      )
+      setRecipients(
+        Message.RecipientType.CC,
+        outgoingMessageInfoStateFlow.value.ccRecipients?.toTypedArray()
+      )
+      setRecipients(
+        Message.RecipientType.BCC,
+        outgoingMessageInfoStateFlow.value.bccRecipients?.toTypedArray()
+      )
+      saveChanges()
     }
   }
 
@@ -563,10 +600,6 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
           "|" + getRecipients(Message.RecipientType.TO).contentToString() +
           "|" + getRecipients(Message.RecipientType.CC).contentToString() +
           "|" + getRecipients(Message.RecipientType.BCC).contentToString()
-    }
-
-    override fun equals(other: Any?): Boolean {
-      return super.equals(other)
     }
   }
 
