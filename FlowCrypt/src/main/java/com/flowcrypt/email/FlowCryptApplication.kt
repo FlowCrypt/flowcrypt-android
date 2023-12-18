@@ -73,6 +73,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   private fun setupGlobalSettingsForJavaMail() {
     //based on https://github.com/FlowCrypt/flowcrypt-android/issues/1553
     System.setProperty("mail.mime.base64.ignoreerrors", "true")
+    System.setProperty("mail.mime.parameters.strict", "false")
   }
 
   override fun attachBaseContext(base: Context) {

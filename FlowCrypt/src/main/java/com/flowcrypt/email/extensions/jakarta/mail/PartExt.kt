@@ -10,19 +10,51 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.core.msg.RawBlockParser
 import jakarta.mail.Part
 import jakarta.mail.internet.ContentType
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
-fun Part.isAttachment(): Boolean {
+fun Part.isAttachment(): Boolean = isDisposition(Part.ATTACHMENT)
+
+fun Part.isInline(): Boolean = isDisposition(Part.INLINE)
+
+/**
+ * https://www.ietf.org/rfc/rfc2183.txt
+ *
+ * disposition-type := "inline"
+ *                        / "attachment"
+ *                        / extension-token
+ *                        ; values are not case-sensitive
+ */
+fun Part.isDisposition(predictedDisposition: String): Boolean {
   return try {
-    Part.ATTACHMENT.equals(disposition, ignoreCase = true)
+    predictedDisposition.equals(this.disposition, ignoreCase = true)
   } catch (e: Exception) {
     //https://github.com/FlowCrypt/flowcrypt-android/issues/2425
-    val contentHeader = allHeaders.toList().first { it.name.equals("Content-Disposition", true) }
-    contentHeader.value.matches("(?i)(^attachment.*)".toRegex())
+    allHeaders.toList().firstOrNull {
+      it.name.equals("Content-Disposition", true)
+    }?.value?.startsWith(prefix = predictedDisposition, ignoreCase = true) == true
   }
 }
 
-fun Part.isInline(): Boolean {
-  return (this.disposition?.lowercase() ?: "") == Part.INLINE
+fun Part.getFileNameWithCarefully(): String? {
+  return try {
+    fileName
+  } catch (e: Exception) {
+    val undefined = "undefined"
+    val contentDispositionValue = allHeaders.toList().firstOrNull {
+      it.name.equals("Content-Disposition", true)
+    }?.value ?: return undefined
+
+    val pattern: Pattern =
+      Pattern.compile(
+        "(filename.*=)(.*)",
+        Pattern.CASE_INSENSITIVE or Pattern.MULTILINE
+      )
+    val matcher: Matcher = pattern.matcher(contentDispositionValue)
+    if (matcher.find()) {
+      return matcher.group(1)
+    } else return undefined
+  }
 }
 
 fun Part.isMultipart(): Boolean {
