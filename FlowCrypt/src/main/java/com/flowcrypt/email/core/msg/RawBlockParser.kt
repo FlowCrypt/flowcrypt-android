@@ -68,10 +68,14 @@ object RawBlockParser {
     "openpgp-encrypted-message.asc"
   )
 
-  fun detectBlocks(part: Part, isOpenPGPMimeSigned: Boolean = false): Collection<RawBlock> {
+  fun detectBlocks(
+    part: Part,
+    isOpenPGPMimeSigned: Boolean = false,
+    isOpenPGPMimeEncrypted: Boolean = false
+  ): Collection<RawBlock> {
     val mimePart = (part as? MimePart) ?: return emptyList()
     return when {
-      mimePart.isAttachment() -> {
+      mimePart.isAttachment() || isOpenPGPMimeEncrypted -> {
         when (treatAs(mimePart)) {
           TreatAs.HIDDEN -> {
             // ignore
@@ -339,9 +343,7 @@ object RawBlockParser {
 
       if (type != other.type) return false
       if (!content.contentEquals(other.content)) return false
-      if (isOpenPGPMimeSigned != other.isOpenPGPMimeSigned) return false
-
-      return true
+      return isOpenPGPMimeSigned == other.isOpenPGPMimeSigned
     }
 
     override fun hashCode(): Int {

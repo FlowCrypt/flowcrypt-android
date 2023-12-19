@@ -941,7 +941,10 @@ class EmailUtil {
                 //allow download keys less than 100kb
                 FilenameUtils.getExtension(fileName) in KEYS_EXTENSIONS && item.size < 10240 ||
                 //match signature
-                item.isMimeType("application/pgp-signature")
+                item.isMimeType("application/pgp-signature") ||
+                //match PGP/MIME version identification
+                item.isMimeType("application/pgp-encrypted")
+                && item.description.equals("PGP/MIME version identification", false)
             ) -> true
 
         isAttachment -> false

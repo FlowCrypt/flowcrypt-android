@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.extensions.jakarta.mail.hasPgpThings
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
+import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeEncrypted
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.jakarta.mail.isPlainText
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
@@ -248,11 +249,12 @@ object PgpMsg {
     verificationPublicKeys: PGPPublicKeyRingCollection,
     secretKeys: PGPSecretKeyRingCollection,
     protector: SecretKeyRingProtector,
-    isOpenPGPMimeSigned: Boolean = false
+    isOpenPGPMimeSigned: Boolean = false,
+    isOpenPGPMimeEncrypted: Boolean = false
   ): Collection<MsgBlock> {
     val blocks = mutableListOf<MsgBlock>()
     when {
-      //we found OpenPGP/MIME Signed message that should contains 2 parts.
+      //we found OpenPGP/MIME Signed message that should contain 2 parts.
       //See https://datatracker.ietf.org/doc/html/rfc3156#section-5 for more details
       part.isOpenPGPMimeSigned() -> {
         try {
@@ -302,6 +304,33 @@ object PgpMsg {
         }
       }
 
+      //we found OpenPGP/MIME Encrypted message that should contain 2 parts.
+      //See https://datatracker.ietf.org/doc/html/rfc3156#section-4 for more details
+      part.isOpenPGPMimeEncrypted() -> {
+        try {
+          val multiPart = part.content as? Multipart
+            ?: throw IllegalStateException("Wrong OpenPGP/MIME structure")
+          if (multiPart.count != 2) throw IllegalStateException("Wrong OpenPGP/MIME structure")
+
+          val encryptedDataPart = multiPart.getBodyPart(1)
+
+          blocks.addAll(
+            extractMsgBlocksFromPart(
+              part = encryptedDataPart,
+              verificationPublicKeys = verificationPublicKeys,
+              secretKeys = secretKeys,
+              protector = protector,
+              isOpenPGPMimeSigned = false,
+              isOpenPGPMimeEncrypted = true
+            )
+          )
+        } catch (e: Exception) {
+          if (GeneralUtil.isDebugBuild()) {
+            e.printStackTrace()
+          }
+        }
+      }
+
       //it's a multipart that should be investigated.
       part.isMultipart() -> {
         val multiPart = part.content as Multipart
@@ -339,7 +368,11 @@ object PgpMsg {
       //it's a part that should be handled
       else -> {
         try {
-          val detectedRawBlocks = RawBlockParser.detectBlocks(part, isOpenPGPMimeSigned)
+          val detectedRawBlocks = RawBlockParser.detectBlocks(
+            part = part,
+            isOpenPGPMimeSigned = isOpenPGPMimeSigned,
+            isOpenPGPMimeEncrypted = isOpenPGPMimeEncrypted
+          )
           val attachmentRawBlock =
             detectedRawBlocks.firstOrNull { it.type == RawBlockParser.RawBlockType.ATTACHMENT }
           val inlineAttachmentRawBlock =
