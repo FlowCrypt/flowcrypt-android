@@ -18,7 +18,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class AttachmentInfo constructor(
+data class AttachmentInfo(
   val rawData: ByteArray? = null,
   val email: String? = null,
   val folder: String? = null,
@@ -68,8 +68,7 @@ data class AttachmentInfo constructor(
     if (isDecrypted != other.isDecrypted) return false
     if (isEncryptionAllowed != other.isEncryptionAllowed) return false
     if (orderNumber != other.orderNumber) return false
-
-    return true
+    return decryptWhenForward == other.decryptWhenForward
   }
 
   override fun hashCode(): Int {
@@ -90,6 +89,7 @@ data class AttachmentInfo constructor(
     result = 31 * result + isDecrypted.hashCode()
     result = 31 * result + isEncryptionAllowed.hashCode()
     result = 31 * result + orderNumber
+    result = 31 * result + decryptWhenForward.hashCode()
     return result
   }
 

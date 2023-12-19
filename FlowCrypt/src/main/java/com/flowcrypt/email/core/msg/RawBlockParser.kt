@@ -8,6 +8,7 @@ package com.flowcrypt.email.core.msg
 
 import com.flowcrypt.email.core.msg.RawBlockParser.RawBlock
 import com.flowcrypt.email.extensions.jakarta.mail.baseContentType
+import com.flowcrypt.email.extensions.jakarta.mail.getFileNameWithCarefully
 import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
 import com.flowcrypt.email.extensions.jakarta.mail.isInline
 import com.flowcrypt.email.extensions.java.io.readText
@@ -191,7 +192,7 @@ object RawBlockParser {
   }
 
   private fun treatAs(mimePart: MimePart): TreatAs {
-    val name = mimePart.fileName?.lowercase() ?: ""
+    val name = mimePart.getFileNameWithCarefully()?.lowercase() ?: ""
     val baseContentType = mimePart.baseContentType()
     val length = mimePart.size
     when {
@@ -339,9 +340,7 @@ object RawBlockParser {
 
       if (type != other.type) return false
       if (!content.contentEquals(other.content)) return false
-      if (isOpenPGPMimeSigned != other.isOpenPGPMimeSigned) return false
-
-      return true
+      return isOpenPGPMimeSigned == other.isOpenPGPMimeSigned
     }
 
     override fun hashCode(): Int {
