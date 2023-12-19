@@ -250,6 +250,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
               uri = uri!!,
               useContentApp = useContentApp
             )
+            attDownloadManagerService?.update(attInfo, -1, -1)
             LogsUtil.d(TAG, attInfo?.getSafeName() + " is downloaded")
           }
 

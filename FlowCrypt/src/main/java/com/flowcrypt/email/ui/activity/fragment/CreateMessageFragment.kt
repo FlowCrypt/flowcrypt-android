@@ -266,7 +266,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     })
 
   private var folderType: FoldersManager.FolderType? = null
-  private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
+  private var fromAddressesAdapter: FromAddressesAdapter? = null
   private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
   private var extraActionInfo: ExtraActionInfo? = null
   private var nonEncryptedHintView: View? = null
@@ -537,7 +537,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       )
     )
 
-    accountEntity?.email?.let { email ->
+    accountEntity?.email?.lowercase()?.let { email ->
       if (fromAddressesAdapter?.objects?.contains(email) == false) {
         fromAddressesAdapter?.add(email)
       }
@@ -1112,7 +1112,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
 
       fromAddressesAdapter?.clear()
-      fromAddressesAdapter?.addAll(aliases)
+      fromAddressesAdapter?.addAll(aliases.map { alias -> alias.lowercase() })
 
       updateFromAddressAdapter(
         KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings()
@@ -1156,11 +1156,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun updateFromAddressAdapter(list: List<PGPSecretKeyRing>) {
     val setOfUsers = list.map { keyRing -> keyRing.toPgpKeyRingDetails().mimeAddresses }
       .flatten()
-      .map { mimeAddress -> mimeAddress.address }
+      .map { mimeAddress -> mimeAddress.address.lowercase() }
 
     fromAddressesAdapter?.let { adapter ->
       for (email in adapter.objects) {
-        adapter.updateKeyAvailability(email, setOfUsers.contains(email))
+        val formattedEmail = email.lowercase()
+        adapter.updateKeyAvailability(formattedEmail, setOfUsers.contains(formattedEmail))
       }
     }
   }
@@ -1514,12 +1515,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.editTextEmailMessage?.requestFocus()
       return false
     }
-    if (composeMsgViewModel.attachmentsStateFlow.value.isEmpty()
-      || !composeMsgViewModel.hasAttachmentsWithExternalStorageUri
-    ) {
-      return true
-    }
-    return false
+    return (composeMsgViewModel.attachmentsStateFlow.value.isEmpty()
+        || !composeMsgViewModel.hasAttachmentsWithExternalStorageUri)
   }
 
   private fun usePasswordIfNeeded(): CharArray? {

@@ -58,7 +58,7 @@ class AttachmentsRecyclerViewAdapter(
         itemView.setBackgroundResource(R.drawable.bg_att)
       }
 
-      textViewAttName.text = attachmentInfo.getSafeName()
+      textViewAttName.text = attachmentInfo.name
       textViewAttSize.text = Formatter.formatFileSize(itemView.context, attachmentInfo.encodedSize)
 
       imageButtonDownloadAtt.visibleOrGone(isDownloadEnabled)
