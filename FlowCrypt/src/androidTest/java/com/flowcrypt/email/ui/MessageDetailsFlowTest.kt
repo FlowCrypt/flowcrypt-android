@@ -1179,6 +1179,26 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       )
   }
 
+  @Test
+  fun testHiddenCryptupReplyDivForFESReplyAllCase() {
+    val incomingMessageInfo = getMsgInfo(
+      path = "messages/info/cryptup_reply_div_should_be_hidden_in_FES_messages.json",
+      mimeMsgPath = "messages/mime/cryptup_reply_div_should_be_hidden_in_FES_messages.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    )
+    baseCheck(incomingMessageInfo)
+
+    onWebView(withId(R.id.emailWebView))
+      .check(
+        webContent(
+          elementByXPath(
+            "/html/body",
+            withTextContent(not(containsString("cryptup_reply")))
+          )
+        )
+      )
+  }
+
   private fun checkQuotesFunctionality(incomingMessageInfo: IncomingMessageInfo?) {
     onView(withId(R.id.iBShowQuotedText))
       .check(matches(isDisplayed()))

@@ -1008,8 +1008,16 @@ object PgpMsg {
     return when (msgBlock) {
       is GenericMsgBlock -> {
         when (msgBlock.type) {
-          MsgBlock.Type.PLAIN_HTML -> msgBlock.copy(type = MsgBlock.Type.DECRYPTED_HTML)
-          MsgBlock.Type.PLAIN_TEXT -> msgBlock.copy(type = MsgBlock.Type.DECRYPTED_TEXT)
+          MsgBlock.Type.PLAIN_HTML -> msgBlock.copy(
+            type = MsgBlock.Type.DECRYPTED_HTML,
+            content = msgBlock.content?.let { stripFcReplyToken(it) }
+          )
+
+          MsgBlock.Type.PLAIN_TEXT -> msgBlock.copy(
+            type = MsgBlock.Type.DECRYPTED_TEXT,
+            content = msgBlock.content?.let { stripFcReplyToken(it) }
+          )
+
           else -> msgBlock
         }
       }

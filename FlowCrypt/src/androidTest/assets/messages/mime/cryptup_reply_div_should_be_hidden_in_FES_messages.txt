@@ -1,0 +1,64 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id WF4PDSLael+dCQAAZlazJA
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Mon, 05 Oct 2020 08:32:34 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 347E7A20940
+	for <default@flowcrypt.test>; Mon,  5 Oct 2020 08:32:34 +0000 (UTC)
+From: replies@flowcrypt.com
+Message-ID: <8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@flowcrypt.test>
+Date: Mon, 18 Dec 2023 09:08:20 +0000
+Reply-To: Den <den@flowcrypt.test>, client.errors@flowcrypt.test,
+	human@flowcrypt.test
+To: Den <den@flowcrypt.test>, human@flowcrypt.test
+Message-ID: <8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@flowcrypt.test>
+Subject: Re: cryptup_reply div should be hidden in FES messages
+MIME-Version: 1.0
+Content-Type: multipart/encrypted;
+	boundary="----=_Part_30_767886426.1702890500042"
+
+------=_Part_30_767886426.1702890500042
+Content-Type: application/pgp-encrypted
+Content-Transfer-Encoding: 7bit
+Content-Description: PGP/MIME version identification
+
+Version: 1
+
+------=_Part_30_767886426.1702890500042
+Content-Type: application/octet-stream; name=encrypted.asc
+Content-Transfer-Encoding: 7bit
+Content-Description: OpenPGP encrypted message
+Content-Disposition: inline; filename="encrypted.asc"
+
+-----BEGIN PGP MESSAGE-----
+Version: PGPainless
+
+wV4DTxRYvSK3u1MSAQdAnI5rBE3P+zQYDdp99pbPfTdUEBI3cYhlMwZGdN9HTzUw
+1zOgV5K06I6wB67BTeOZIChoTsv3ov2w7/mYmitNNyjRri2gGI5eey/nZJGlXU9A
+wV4DTxRYvSK3u1MSAQdA9fhxThYwv+rUH3uEsm5XqP++1L0k3p+n4ejIj8wbuAUw
+afpy4H1w61fFLjrQomP8KFIfMSNtJFzDs88zhdsUssx1Pg4BIHBwTvxrNFdorpFP
+0ukB3xKma35IsZ8b7II+UB/VfBsi7vHJYn9b466ewu5LexItGvpn+4VwyUEA+188
+EbTgmMbt0VCVe4wtqZ5JuRnshUHWgO+ft9JSGv3RV1nW4DUxDvZnfs5TXptfaANZ
+WJr4wZDmDdObsKbrL0GlLBiEac3ufGYJOxShLT1pjd1RoxWsqpolj4cWp/08FYhD
+jTRir1tbVZ3CMegu0RSQ88aV61Oarh13HMIxAp1BsjLN95/3cVI4Y5hvFgfGBEJ8
+rIBZFYg0/E03bhXes4iS9qf2321TU1KxUYFtAH0hmJl4KUAcpNXUQnOqufql5eOR
+rVNQKkh3TkAxzyrZnZHAZXg29Viq6ox0SBx8ii0NJ853EpFvEHh6sg2ljccekG1q
+PggyniAFbWXk2js8Z/9DTerBzg9srYKx4f9SxJCPn5XqIjHhHGomfAMYryNd+TuJ
+dKze/1WkaMHzJg3QhKz5Ee7OobPn3Cqa8oPRwXWoua0tp9rz1JWzMxlu0TtTboaY
+mSePM0Q0XknXRymkY5vyP+baWcNaD2Bw6DdMKTnwXdcTEUiGc7aW+2Y7CuWQKBB2
+I0anQSrVhLtnj1mquSucikN7IxdkH6bNvvZ2pW3mIRDH9BF72w5vR3qBkZXE4XuW
+7/kBkgq5FzB06c5bphwJw7t25DOsJIUCSmokw0FXGScv2MCWV9tRfldPQ2cqti/i
+6ur+j8UMNZOCBzVYCzQ/iPyubphv92S0mg5JQjh5ESgE/iWbwT2nm/f9GNp2ECOr
+17QGcmxRJd2KcajRLkTzpXaIQ+80ClNi66lqyHBG0IpGc4lSAdKwgZV7yxaR/2Fp
+hdvMLnmhukvyRpqSiGPKLgktNCQfduz6b39RlKSCiqvW60124Jhg4RclOCyD+Skq
+PtRLcRekMbwpHoYCOQ+gxzGjGZLJZ4otawIdFJYdwTBOFfhAKBcIDnHmp39FLBF3
+gFxIPDZfWnV2uugUFD3QTzw4dSKAarRgV8LGmwFOvH6SK/3l3R0iiWQyRX8+D7Yo
+dA6ePHlJ0Qi0aaYJEziJffy21dF9hqggzcLoGmOv2gogg3zoFBW0IcYpZS2adQCI
+otD63ymadqwEjRwzjSk6kWmxTSDGtGsDIMM3jELygiSPH71G2y9W+53B
+=OXSx
+-----END PGP MESSAGE-----
+
+------=_Part_30_767886426.1702890500042--
