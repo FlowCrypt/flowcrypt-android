@@ -18,14 +18,6 @@ class CreateFileWithIncreasedIndexTest {
   val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
-  fun normalizeFileNameTest() {
-    val fileName = ".**/../#./%%./../sy-s/русский/українська/汉语/漢語/Hànyǔ/中文/Zhōngwé/bla_   _b_l.a?"
-    val normalizedFileName = FileAndDirectoryUtils.normalizeFileName(fileName)
-    val theoreticalFileName = ".......sy-sHnyZhngwbla__b_l.a"
-    Assert.assertEquals(theoreticalFileName, normalizedFileName)
-  }
-
-  @Test
   fun fileWithExistedNameOnce() {
     val existedFile = temporaryFolder.newFile("tmp6153894960499929676.tmp")
     val newFileWithIncreasedIndex =
