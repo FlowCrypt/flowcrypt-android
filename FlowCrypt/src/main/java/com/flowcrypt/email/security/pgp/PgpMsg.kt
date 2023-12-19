@@ -1015,7 +1015,8 @@ object PgpMsg {
 
           MsgBlock.Type.PLAIN_TEXT -> msgBlock.copy(
             type = MsgBlock.Type.DECRYPTED_TEXT,
-            content = msgBlock.content?.let { stripFcReplyToken(it) })
+            content = msgBlock.content?.let { stripFcReplyToken(it) }
+          )
 
           else -> msgBlock
         }
