@@ -45,14 +45,13 @@ fun Part.getFileNameWithCarefully(): String? {
       it.name.equals("Content-Disposition", true)
     }?.value ?: return undefined
 
-    val pattern: Pattern =
-      Pattern.compile(
-        "(filename.*=)(.*)",
-        Pattern.CASE_INSENSITIVE or Pattern.MULTILINE
-      )
+    val pattern: Pattern = Pattern.compile(
+      "(filename.*=)(.*)",
+      Pattern.CASE_INSENSITIVE or Pattern.MULTILINE
+    )
     val matcher: Matcher = pattern.matcher(contentDispositionValue)
     if (matcher.find()) {
-      return matcher.group(1)
+      return matcher.group(2)
     } else return undefined
   }
 }
