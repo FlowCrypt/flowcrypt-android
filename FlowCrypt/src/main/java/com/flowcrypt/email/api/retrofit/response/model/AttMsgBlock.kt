@@ -13,13 +13,13 @@ interface AttMsgBlock : MsgBlock {
   val attMeta: AttMeta
 
   fun toAttachmentInfo(): AttachmentInfo {
-    return AttachmentInfo(
+    return AttachmentInfo.Builder(
       rawData = attMeta.data,
       type = attMeta.type ?: Constants.MIME_TYPE_BINARY_DATA,
       name = attMeta.name?.take(255),
       encodedSize = attMeta.length,
       id = EmailUtil.generateContentId(),
       isDecrypted = true
-    )
+    ).build()
   }
 }

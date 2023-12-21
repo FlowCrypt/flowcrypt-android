@@ -56,7 +56,7 @@ data class AttachmentEntity(
     forwardedFolder?.isNotEmpty() == true && (forwardedUid != null && forwardedUid > 0)
 
   fun toAttInfo(): AttachmentInfo {
-    return AttachmentInfo(
+    return AttachmentInfo.Builder(
       email = email,
       folder = folder,
       uid = uid,
@@ -71,7 +71,7 @@ data class AttachmentEntity(
       isForwarded = isForwarded,
       isEncryptionAllowed = true,
       decryptWhenForward = decryptWhenForward
-    )
+    ).build()
   }
 
   companion object {
