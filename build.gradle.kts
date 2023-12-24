@@ -10,7 +10,7 @@ plugins {
   id("org.jetbrains.kotlin.android") version "1.9.21" apply false
   id("androidx.navigation.safeargs.kotlin") version "2.6.0" apply false
   id("com.starter.easylauncher") version "6.2.0" apply false
-  id("org.jetbrains.kotlin.plugin.parcelize") version "1.9.21" apply false
+  id("org.jetbrains.kotlin.plugin.parcelize") version "1.9.22" apply false
   id("com.google.devtools.ksp") version "1.9.21-1.0.16" apply false
   id("org.ajoberstar.grgit") version "5.2.1" apply false
 }
