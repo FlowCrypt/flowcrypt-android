@@ -22,6 +22,7 @@ import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
@@ -139,12 +140,19 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
           withContext(Dispatchers.IO) {
             var messageEntity: MessageEntity? = null
             try {
+              val activeAccount = getActiveAccountSuspend()
+                ?: throw IllegalStateException("No active account")
               val finalOutgoingMessageInfo =
                 outgoingMessageInfoStateFlow.value.copy(password = password)
 
               messageEntity = finalOutgoingMessageInfo.toMessageEntity(
                 folder = JavaEmailConstants.FOLDER_OUTBOX,
-                flags = Flags()
+                flags = Flags(Flags.Flag.SEEN),
+                password = finalOutgoingMessageInfo.password?.let {
+                  KeyStoreCryptoManager.encrypt(
+                    String(it)
+                  ).toByteArray()
+                }
               )
               val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
               messageEntity = messageEntity.copy(id = messageId, uid = messageId)
@@ -155,6 +163,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
                 messageId = messageId,
                 outgoingMessageInfo = outgoingMessageInfoStateFlow.value.copy(password = password)
               )
+              updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
               Result.success(true)
             } catch (e: Exception) {
               try {
@@ -316,6 +325,19 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       }.update { map ->
         map.toMutableMap().apply { replace(normalizedEmail, recipientInfo) }
       }
+    }
+  }
+
+  private suspend fun updateOutgoingMsgCount(
+    email: String,
+    accountType: String?
+  ) {
+    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(email).size
+    val outboxLabel =
+      roomDatabase.labelDao().getLabelSuspend(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
+
+    outboxLabel?.let {
+      roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
     }
   }
 

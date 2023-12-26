@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email.model
 
 import android.os.Parcelable
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -108,6 +109,7 @@ data class OutgoingMessageInfo(
   fun toMessageEntity(
     folder: String,
     flags: Flags,
+    password: ByteArray? = null,
   ): MessageEntity {
     return MessageEntity(
       email = requireNotNull(account),
@@ -120,8 +122,14 @@ data class OutgoingMessageInfo(
       subject = subject,
       flags = flags.toString().uppercase(),
       hasAttachments = atts?.isNotEmpty() == true || forwardedAtts?.isNotEmpty() == true,
-      isNew = !flags.contains(Flags.Flag.SEEN),
-      isEncrypted = encryptionType == MessageEncryptionType.ENCRYPTED
+      isNew = false,
+      isEncrypted = encryptionType == MessageEncryptionType.ENCRYPTED,
+      state = if (messageType == MessageType.FORWARD) {
+        MessageState.NEW_FORWARDED.value
+      } else {
+        MessageState.NEW.value
+      },
+      password = password
     )
   }
 }

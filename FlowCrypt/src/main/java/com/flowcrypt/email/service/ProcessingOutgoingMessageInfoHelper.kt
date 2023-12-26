@@ -13,7 +13,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
@@ -26,8 +25,6 @@ import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWor
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
@@ -35,7 +32,6 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
-import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
@@ -50,28 +46,18 @@ import java.util.UUID
  * @author Denys Bondarenko
  */
 object ProcessingOutgoingMessageInfoHelper {
-  suspend fun process(context: Context, outgoingMessageInfo: OutgoingMessageInfo) =
-    withContext(Dispatchers.IO) {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
-      val accountEntity =
-        roomDatabase.accountDao().getAccount(outgoingMsgInfo.account?.lowercase() ?: "")
-          ?: return@withContext
+  suspend fun process(
+    context: Context,
+    outgoingMessageInfo: OutgoingMessageInfo,
+    messageEntity: MessageEntity
+  ) = withContext(Dispatchers.IO) {
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+    val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
+    val accountEntity = roomDatabase.accountDao().getAccount(
+      outgoingMsgInfo.account?.lowercase() ?: ""
+    ) ?: return@withContext
 
-      val uid = outgoingMsgInfo.uid
-      val email = accountEntity.email
-      val label = JavaEmailConstants.FOLDER_OUTBOX
-
-      if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
-        ExceptionUtil.handleError(
-          ForceHandlingException(
-            IllegalStateException("Message with the same uid is already exists")
-          )
-        )
-        return@withContext
-      }
-
-    var newMsgId: Long = -1
+    val uid = outgoingMsgInfo.uid
 
     try {
       updateContactsLastUseDateTime(context, outgoingMsgInfo)
@@ -91,86 +77,65 @@ object ProcessingOutgoingMessageInfoHelper {
       msg.writeTo(out)
 
       //todo-denbond7 need to think about that. It'll be better to store a message as a file
-      val msgEntity = prepareMessageEntity(
-        accountEntity = accountEntity,
-        msgInfo = outgoingMsgInfo,
-        generatedUID = uid,
-        msg = msg,
-        rawMsg = String(out.toByteArray()),
-        attsCacheDir = msgAttsCacheDir
+      roomDatabase.msgDao().updateSuspend(
+        messageEntity.copy(
+          rawMessageWithoutAttachments = String(out.toByteArray()),
+          attachmentsDirectory = attsCacheDir.name
+        )
       )
-      newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
-      if (newMsgId > 0) {
-        updateOutgoingMsgCount(email, accountEntity.accountType, roomDatabase)
+      val hasAtts = outgoingMsgInfo.atts?.isNotEmpty() == true
+          || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
 
-        val hasAtts = outgoingMsgInfo.atts?.isNotEmpty() == true
-            || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
-
-        if (hasAtts) {
-          if (!msgAttsCacheDir.exists()) {
-            if (!msgAttsCacheDir.mkdir()) {
-              throw IOException("Create cache directory for outgoing attachments failed!")
-            }
+      if (hasAtts) {
+        if (!msgAttsCacheDir.exists()) {
+          if (!msgAttsCacheDir.mkdir()) {
+            throw IOException("Create cache directory for outgoing attachments failed!")
           }
-
-          addAttsToCache(context, accountEntity, outgoingMsgInfo, uid, msgAttsCacheDir)
         }
 
-        if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
-          ForwardedAttachmentsDownloaderWorker.enqueue(context)
+        addAttsToCache(context, accountEntity, outgoingMsgInfo, uid, msgAttsCacheDir)
+      }
+
+      if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
+        ForwardedAttachmentsDownloaderWorker.enqueue(context)
+      } else {
+        val existingMsgEntity = roomDatabase.msgDao().getMsg(
+          messageEntity.email, messageEntity.folder, messageEntity.uid
+        ) ?: throw IllegalStateException("A message is not exist")
+        if (outgoingMsgInfo.encryptionType == MessageEncryptionType.ENCRYPTED
+          && outgoingMsgInfo.isPasswordProtected == true
+        ) {
+          roomDatabase.msgDao()
+            .update(existingMsgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
+          HandlePasswordProtectedMsgWorker.enqueue(context)
         } else {
-          val insertedMsgEntity = roomDatabase.msgDao().getMsg(
-            msgEntity.email, msgEntity.folder, msgEntity.uid
-          )
-          insertedMsgEntity?.let {
-            if (outgoingMsgInfo.encryptionType == MessageEncryptionType.ENCRYPTED
-              && outgoingMsgInfo.isPasswordProtected == true
-            ) {
-              roomDatabase.msgDao()
-                .update(it.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
-              HandlePasswordProtectedMsgWorker.enqueue(context)
-            } else {
-              roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
-              MessagesSenderWorker.enqueue(context)
-            }
-          }
+          roomDatabase.msgDao().update(existingMsgEntity.copy(state = MessageState.QUEUED.value))
+          MessagesSenderWorker.enqueue(context)
         }
       }
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(ForceHandlingException(e))
 
-      var msgEntity = roomDatabase.msgDao().getMsg(email, label, uid)
-        ?: MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
-
-      if (newMsgId <= 0) {
-        newMsgId = roomDatabase.msgDao().insert(msgEntity)
-        msgEntity = msgEntity.copy(id = newMsgId)
-      }
-
-      if (newMsgId > 0) {
-        when (e) {
-          is NoKeyAvailableException -> {
-            roomDatabase.msgDao().update(
-              msgEntity.copy(
-                state = MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-                errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
-              )
+      when (e) {
+        is NoKeyAvailableException -> {
+          roomDatabase.msgDao().update(
+            messageEntity.copy(
+              state = MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
+              errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
             )
-          }
-
-          else -> {
-            roomDatabase.msgDao().update(
-              msgEntity.copy(
-                state = MessageState.ERROR_DURING_CREATION.value,
-                errorMsg = e.message
-              )
-            )
-          }
+          )
         }
-      } else {
-        ExceptionUtil.handleError(IllegalStateException("An error occurred during inserting a new message"))
+
+        else -> {
+          roomDatabase.msgDao().update(
+            messageEntity.copy(
+              state = MessageState.ERROR_DURING_CREATION.value,
+              errorMsg = e.message
+            )
+          )
+        }
       }
 
       val failedOutgoingMsgsCount =
@@ -182,10 +147,6 @@ object ProcessingOutgoingMessageInfoHelper {
         )
       }
     }
-
-    if (newMsgId > 0) {
-      updateOutgoingMsgCount(email, accountEntity.accountType, roomDatabase)
-    }
   }
 
   private fun getAttsCacheDir(context: Context): File {
@@ -196,53 +157,6 @@ object ProcessingOutgoingMessageInfoHelper {
       }
     }
     return attsCacheDir
-  }
-
-  private fun updateOutgoingMsgCount(
-    email: String,
-    accountType: String?,
-    roomDatabase: FlowCryptRoomDatabase
-  ) {
-    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgs(email).size
-    val outboxLabel =
-      roomDatabase.labelDao().getLabel(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
-
-    outboxLabel?.let {
-      roomDatabase.labelDao().update(it.copy(messagesTotal = outgoingMsgCount))
-    }
-  }
-
-  private fun prepareMessageEntity(
-    accountEntity: AccountEntity,
-    msgInfo: OutgoingMessageInfo,
-    generatedUID: Long,
-    msg: Message,
-    rawMsg: String,
-    attsCacheDir: File
-  ): MessageEntity {
-
-    val messageEntity = MessageEntity.genMsgEntity(
-      accountEntity.email,
-      JavaEmailConstants.FOLDER_OUTBOX, msg, generatedUID, false
-    )
-
-    val hasAtts = msgInfo.atts?.isNotEmpty() == true || msgInfo.forwardedAtts?.isNotEmpty() == true
-    val isEncrypted = msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
-    val msgState = if (msgInfo.messageType == MessageType.FORWARD) {
-      MessageState.NEW_FORWARDED
-    } else {
-      MessageState.NEW
-    }
-
-    return messageEntity.copy(
-      hasAttachments = hasAtts,
-      rawMessageWithoutAttachments = rawMsg,
-      flags = MessageFlag.SEEN.value,
-      isEncrypted = isEncrypted,
-      state = msgState.value,
-      attachmentsDirectory = attsCacheDir.name,
-      password = msgInfo.password?.let { KeyStoreCryptoManager.encrypt(String(it)).toByteArray() }
-    )
   }
 
   private fun addAttsToCache(

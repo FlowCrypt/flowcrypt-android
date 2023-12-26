@@ -31,12 +31,19 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
     do {
       val file =
         FileAndDirectoryUtils.getFilesInDir(folder).firstOrNull() ?: return Result.success()
+      val messageEntity =
+        roomDatabase.msgDao().getMsgById(file.name.toLong())
+          ?: throw IllegalStateException("A message entity is not found")
       try {
         val outgoingMessageInfo =
           OutgoingMessageInfoManager.getOutgoingMessageInfoFromFile(applicationContext, file)
-        ProcessingOutgoingMessageInfoHelper.process(applicationContext, outgoingMessageInfo)
+        ProcessingOutgoingMessageInfoHelper.process(
+          applicationContext,
+          outgoingMessageInfo,
+          messageEntity
+        )
       } catch (e: Exception) {
-        //need to think about this one .need to update messageEntity
+        //need to think about this one. need to update messageEntity
         e.printStackTrace()
       }
 
