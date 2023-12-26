@@ -80,10 +80,10 @@ import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
+import com.flowcrypt.email.jetpack.workmanager.PrepareOutgoingMessagesWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -1061,27 +1061,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   /**
    * Send a message.
    */
-  @OptIn(DelicateCoroutinesApi::class)
   private fun sendMsg() {
     dismissCurrentSnackBar()
-    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
-    PrepareOutgoingMessagesJobIntentService.enqueueWork(
-      context = requireContext(),
-      outgoingMsgInfo = outgoingMessageInfo.copy(
-        uid = EmailUtil.genOutboxUID(requireContext()),
-        password = usePasswordIfNeeded()
-      )
-    )
-
-    draftViewModel.deleteDraft(GlobalScope)
-
-    toast(
-      if (GeneralUtil.isConnected(requireContext()))
-        R.string.sending
-      else
-        R.string.no_conn_msg_sent_later
-    )
-    activity?.finish()
+    composeMsgViewModel.sendMessage(password = usePasswordIfNeeded())
   }
 
   /**
@@ -1364,6 +1346,38 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         attachmentsRecyclerViewAdapter.submitList(allAttachments)
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      composeMsgViewModel.addOutgoingMessageInfoToQueueStateFlow.collect {
+        when (it.status) {
+          Result.Status.SUCCESS -> {
+            @Suppress("OPT_IN_USAGE")
+            draftViewModel.deleteDraft(GlobalScope)
+
+            PrepareOutgoingMessagesWorker.enqueue(requireContext())
+
+            toast(
+              if (GeneralUtil.isConnected(requireContext())) {
+                R.string.sending
+              } else {
+                R.string.no_conn_msg_sent_later
+              }
+            )
+            activity?.finish()
+          }
+
+          Result.Status.EXCEPTION -> {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = it.exceptionMsg,
+              isCancelable = true
+            )
+          }
+
+          else -> {}
+        }
       }
     }
   }

@@ -80,7 +80,7 @@ data class MessageEntity(
   @ColumnInfo(defaultValue = "-1") val state: Int? = null,
   @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
   @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
-  @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
+  @Expose @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,

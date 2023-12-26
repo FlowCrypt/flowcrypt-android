@@ -698,24 +698,6 @@ class EmailUtil {
     }
 
     /**
-     * Get next [UID] value for the outgoing message.
-     *
-     * @param context Interface to global information about an application environment.
-     * @return The next [UID] value for the outgoing message.
-     */
-    fun genOutboxUID(context: Context): Long {
-      return SharedPreferencesHelper.getLong(
-        PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREF_KEY_LAST_OUTBOX_UID, 0
-      ).inc().apply {
-        SharedPreferencesHelper.setLong(
-          PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_OUTBOX_UID, this
-        )
-      }
-    }
-
-    /**
      * Get information about the encryption state for the given messages.
      *
      * @param onlyEncrypted If true we show only encrypted messages

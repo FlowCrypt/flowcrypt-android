@@ -55,7 +55,6 @@ class Constants {
     const val PREF_KEY_MESSAGES_NOTIFICATION_FILTER = "preferences_key_messages_notification_filter"
     const val PREF_KEY_MANAGE_NOTIFICATIONS = "preferences_key_manage_notifications"
     const val PREF_KEY_SECURITY_CHANGE_PASS_PHRASE = "preferences_key_security_change_pass_phrase"
-    const val PREF_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid"
     const val PREF_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id"
     const val PREF_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed"
     const val PREF_KEY_BACKUPS = "pref_key_backups"

@@ -7,10 +7,8 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.ContentResolver
-import android.content.Context
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.api.email.FlowCryptMimeMessage
-import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
@@ -25,59 +23,41 @@ import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
-import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
-import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.OutgoingMessageInfoManager
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
+import jakarta.mail.Flags
 import jakarta.mail.Message
-import jakarta.mail.Session
-import jakarta.mail.internet.MimeBodyPart
-import jakarta.mail.internet.MimeMessage
-import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.pgpainless.PGPainless
-import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
-import org.pgpainless.util.Passphrase
 import java.io.IOException
-import java.io.InputStream
 import java.io.InvalidObjectException
-import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
 class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Application) :
   AccountViewModel(application) {
-  private val recipientLookUpManager =
-    RecipientLookUpManager(application, roomDatabase, viewModelScope) {
-      replaceRecipient(Message.RecipientType.TO, it)
-      replaceRecipient(Message.RecipientType.CC, it)
-      replaceRecipient(Message.RecipientType.BCC, it)
-    }
+  private val recipientLookUpManager = RecipientLookUpManager(
+    application = application,
+    roomDatabase = roomDatabase,
+    viewModelScope = viewModelScope
+  ) {
+    replaceRecipient(Message.RecipientType.TO, it)
+    replaceRecipient(Message.RecipientType.CC, it)
+    replaceRecipient(Message.RecipientType.BCC, it)
+  }
 
   private val messageEncryptionTypeMutableStateFlow: MutableStateFlow<MessageEncryptionType> =
     MutableStateFlow(
@@ -144,53 +124,56 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val attachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
     attachmentsMutableStateFlow.asStateFlow()
 
-  private val draftRepeatableCheckingFlow: Flow<Long> = flow {
-    while (viewModelScope.isActive) {
-      delay(DELAY_TIMEOUT)
-      emit(System.currentTimeMillis())
-    }
-  }.flowOn(Dispatchers.Default)
+  private val addOutgoingMessageInfoToQueueMutableStateFlow: MutableStateFlow<Result<Boolean?>> =
+    MutableStateFlow(Result.none())
+  val addOutgoingMessageInfoToQueueStateFlow: StateFlow<Result<Boolean?>> =
+    addOutgoingMessageInfoToQueueMutableStateFlow.asStateFlow()
+  private val controlledRunnerForAddingOutgoingMessageInfoToQueue =
+    ControlledRunner<Result<Boolean?>>()
 
-  @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-  private val forceUpdatingDraftInCache = outgoingMessageInfoStateFlow
-    //skip too many updates
-    .debounce(200)
-    .mapLatest { System.currentTimeMillis() }
-
-  private val draftUpdateIndicatorFlow = merge(
-    draftRepeatableCheckingFlow,
-    forceUpdatingDraftInCache
-  )
-
-  @OptIn(ExperimentalCoroutinesApi::class)
-  private val draftMimeMessageStateFlow: StateFlow<MimeMessage> =
-    draftUpdateIndicatorFlow.mapLatest {
-      withContext(Dispatchers.IO) {
-        val session = Session.getDefaultInstance(Properties())
-        val context: Context = getApplication()
-        val replyToMsgEntity = outgoingMessageInfoStateFlow.value.replyToMsgEntity
-        val accountEntity = getActiveAccountSuspend()
-          ?: return@withContext DraftMimeMessage(Session.getDefaultInstance(Properties()))
-        return@withContext try {
-          prepareDraftMIMEMessage(replyToMsgEntity, session, context, accountEntity)
-        } catch (e: Exception) {
-          if (GeneralUtil.isDebugBuild()) {
-            e.printStackTrace()
-          }
-          DraftMimeMessage(session)
-        }
-      }
-    }.stateIn(
-      scope = viewModelScope,
-      started = SharingStarted.WhileSubscribed(5000),
-      initialValue = DraftMimeMessage(Session.getDefaultInstance(Properties()))
-    )
-
-  init {
+  fun sendMessage(password: CharArray?) {
     viewModelScope.launch {
-      draftMimeMessageStateFlow.collect { mimeMessage ->
-        LogsUtil.d(ComposeMsgViewModel::class.java.simpleName, "Draft for $mimeMessage saved")
-      }
+      addOutgoingMessageInfoToQueueMutableStateFlow.value = Result.loading()
+      addOutgoingMessageInfoToQueueMutableStateFlow.value =
+        controlledRunnerForAddingOutgoingMessageInfoToQueue.joinPreviousOrRun {
+          withContext(Dispatchers.IO) {
+            var messageEntity: MessageEntity? = null
+            try {
+              val finalOutgoingMessageInfo =
+                outgoingMessageInfoStateFlow.value.copy(password = password)
+
+              messageEntity = finalOutgoingMessageInfo.toMessageEntity(
+                folder = JavaEmailConstants.FOLDER_OUTBOX,
+                flags = Flags()
+              )
+              val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
+              messageEntity = messageEntity.copy(id = messageId, uid = messageId)
+              roomDatabase.msgDao().updateSuspend(messageEntity)
+
+              OutgoingMessageInfoManager.enqueueOutgoingMessageInfo(
+                context = getApplication(),
+                messageId = messageId,
+                outgoingMessageInfo = outgoingMessageInfoStateFlow.value.copy(password = password)
+              )
+              Result.success(true)
+            } catch (e: Exception) {
+              try {
+                messageEntity?.let {
+                  if (messageEntity.id != null) {
+                    roomDatabase.msgDao().deleteSuspend(messageEntity)
+                    OutgoingMessageInfoManager.deleteOutgoingMessageInfo(
+                      context = getApplication(),
+                      messageId = requireNotNull(messageEntity.id),
+                    )
+                  }
+                }
+              } catch (e: Exception) {
+                e.printStackTrace()
+              }
+              Result.exception(e)
+            }
+          }
+        }
     }
   }
 
@@ -211,7 +194,9 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   }
 
   fun updateOutgoingMessageInfo(outgoingMessageInfo: OutgoingMessageInfo) {
-    outgoingMessageInfoMutableStateFlow.update { outgoingMessageInfo }
+    outgoingMessageInfoMutableStateFlow.update {
+      outgoingMessageInfo.copy(timestamp = System.currentTimeMillis())
+    }
   }
 
   fun switchMessageEncryptionType(messageEncryptionType: MessageEncryptionType) {
@@ -331,61 +316,6 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       }.update { map ->
         map.toMutableMap().apply { replace(normalizedEmail, recipientInfo) }
       }
-    }
-  }
-
-  private fun prepareDraftMIMEMessage(
-    replyToMsgEntity: MessageEntity?,
-    session: Session,
-    context: Context,
-    accountEntity: AccountEntity
-  ): MimeMessage {
-    return if (replyToMsgEntity == null) {
-      DraftMimeMessage(session)
-    } else {
-      val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMsgEntity.id.toString())
-        ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
-
-      val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
-      val inputStream = context.contentResolver?.openInputStream(uri)
-        ?: throw IllegalArgumentException("InputStream not found")
-
-      val keys = PGPainless.readKeyRing()
-        .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
-
-      val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
-        srcInputStream = inputStream,
-        secretKeys = keys,
-        protector = PasswordBasedSecretKeyRingProtector.forKey(
-          keys.first(),
-          Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
-        )
-      )
-
-      DraftMimeMessage(session, decryptionStream)
-    }.apply {
-      subject = outgoingMessageInfoStateFlow.value.subject
-      setContent(MimeMultipart().apply {
-        addBodyPart(
-          MimeBodyPart().apply {
-            setText(outgoingMessageInfoStateFlow.value.msg ?: "")
-          }
-        )
-      })
-      setFrom(outgoingMessageInfoStateFlow.value.from)
-      setRecipients(
-        Message.RecipientType.TO,
-        outgoingMessageInfoStateFlow.value.toRecipients?.toTypedArray()
-      )
-      setRecipients(
-        Message.RecipientType.CC,
-        outgoingMessageInfoStateFlow.value.ccRecipients?.toTypedArray()
-      )
-      setRecipients(
-        Message.RecipientType.BCC,
-        outgoingMessageInfoStateFlow.value.bccRecipients?.toTypedArray()
-      )
-      saveChanges()
     }
   }
 
@@ -583,27 +513,5 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     companion object {
       const val PARALLELISM_COUNT = 10
     }
-  }
-
-  private class DraftMimeMessage : FlowCryptMimeMessage {
-    constructor(session: Session) : super(session)
-    constructor(session: Session, inputStream: InputStream) : super(session, inputStream)
-    constructor(mimeMessage: MimeMessage) : super(mimeMessage)
-
-    val timeInMilliseconds = System.currentTimeMillis()
-
-    //TODO-denbond7 remove me before release. Just for testing
-    override fun toString(): String {
-      return timeInMilliseconds.toString() +
-          "|" + from.contentToString() +
-          "|" + subject +
-          "|" + getRecipients(Message.RecipientType.TO).contentToString() +
-          "|" + getRecipients(Message.RecipientType.CC).contentToString() +
-          "|" + getRecipients(Message.RecipientType.BCC).contentToString()
-    }
-  }
-
-  companion object {
-    private val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)
   }
 }

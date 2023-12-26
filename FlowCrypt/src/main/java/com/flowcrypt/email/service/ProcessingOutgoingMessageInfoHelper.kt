@@ -36,6 +36,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import jakarta.mail.Message
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -48,25 +50,26 @@ import java.util.UUID
  * @author Denys Bondarenko
  */
 object ProcessingOutgoingMessageInfoHelper {
-  fun process(context: Context, outgoingMessageInfo: OutgoingMessageInfo) {
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-    val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
-    val accountEntity =
-      roomDatabase.accountDao().getAccount(outgoingMsgInfo.account?.lowercase() ?: "")
-        ?: return
+  suspend fun process(context: Context, outgoingMessageInfo: OutgoingMessageInfo) =
+    withContext(Dispatchers.IO) {
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
+      val accountEntity =
+        roomDatabase.accountDao().getAccount(outgoingMsgInfo.account?.lowercase() ?: "")
+          ?: return@withContext
 
-    val uid = outgoingMsgInfo.uid
-    val email = accountEntity.email
-    val label = JavaEmailConstants.FOLDER_OUTBOX
+      val uid = outgoingMsgInfo.uid
+      val email = accountEntity.email
+      val label = JavaEmailConstants.FOLDER_OUTBOX
 
-    if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
-      ExceptionUtil.handleError(
-        ForceHandlingException(
-          IllegalStateException("Message with the same uid is already exists")
+      if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
+        ExceptionUtil.handleError(
+          ForceHandlingException(
+            IllegalStateException("Message with the same uid is already exists")
+          )
         )
-      )
-      return
-    }
+        return@withContext
+      }
 
     var newMsgId: Long = -1
 

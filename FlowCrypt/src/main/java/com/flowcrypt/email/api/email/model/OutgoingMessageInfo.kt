@@ -10,6 +10,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.google.gson.annotations.Expose
+import jakarta.mail.Flags
 import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
@@ -102,5 +103,25 @@ data class OutgoingMessageInfo(
     result = 31 * result + timestamp.hashCode()
     result = 31 * result + (isPasswordProtected?.hashCode() ?: 0)
     return result
+  }
+
+  fun toMessageEntity(
+    folder: String,
+    flags: Flags,
+  ): MessageEntity {
+    return MessageEntity(
+      email = requireNotNull(account),
+      folder = folder,
+      uid = uid,
+      fromAddress = from.toString(),
+      replyTo = replyToMsgEntity?.replyTo,
+      toAddress = toRecipients?.toString(),
+      ccAddress = ccRecipients?.toString(),
+      subject = subject,
+      flags = flags.toString().uppercase(),
+      hasAttachments = atts?.isNotEmpty() == true || forwardedAtts?.isNotEmpty() == true,
+      isNew = !flags.contains(Flags.Flag.SEEN),
+      isEncrypted = encryptionType == MessageEncryptionType.ENCRYPTED
+    )
   }
 }
