@@ -142,16 +142,14 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
             try {
               val activeAccount = getActiveAccountSuspend()
                 ?: throw IllegalStateException("No active account")
-              val finalOutgoingMessageInfo =
+              val outgoingMessageInfo =
                 outgoingMessageInfoStateFlow.value.copy(password = password)
 
-              messageEntity = finalOutgoingMessageInfo.toMessageEntity(
+              messageEntity = outgoingMessageInfo.toMessageEntity(
                 folder = JavaEmailConstants.FOLDER_OUTBOX,
                 flags = Flags(Flags.Flag.SEEN),
-                password = finalOutgoingMessageInfo.password?.let {
-                  KeyStoreCryptoManager.encrypt(
-                    String(it)
-                  ).toByteArray()
+                password = outgoingMessageInfo.password?.let {
+                  KeyStoreCryptoManager.encrypt(String(it)).toByteArray()
                 }
               )
               val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
@@ -160,19 +158,37 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
               OutgoingMessageInfoManager.enqueueOutgoingMessageInfo(
                 context = getApplication(),
-                messageId = messageId,
-                outgoingMessageInfo = outgoingMessageInfoStateFlow.value.copy(password = password)
+                messageEntity = messageEntity,
+                outgoingMessageInfo = outgoingMessageInfo.copy(
+                  uid = messageId,
+                  password = password,
+                  atts = outgoingMessageInfo.atts?.map {
+                    it.copy(
+                      email = outgoingMessageInfo.account,
+                      folder = JavaEmailConstants.FOLDER_OUTBOX,
+                      uid = messageId
+                    )
+                  },
+                  forwardedAtts = outgoingMessageInfo.forwardedAtts?.map {
+                    it.copy(
+                      email = outgoingMessageInfo.account,
+                      folder = JavaEmailConstants.FOLDER_OUTBOX,
+                      uid = messageId
+                    )
+                  },
+                )
               )
               updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
               Result.success(true)
             } catch (e: Exception) {
               try {
+                //delete unused resources if any exception has occurred
                 messageEntity?.let {
                   if (messageEntity.id != null) {
                     roomDatabase.msgDao().deleteSuspend(messageEntity)
                     OutgoingMessageInfoManager.deleteOutgoingMessageInfo(
                       context = getApplication(),
-                      messageId = requireNotNull(messageEntity.id),
+                      id = requireNotNull(messageEntity.id),
                     )
                   }
                 }

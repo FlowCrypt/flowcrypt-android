@@ -126,6 +126,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     FragmentCreateMessageBinding.inflate(inflater, container, false)
 
   private lateinit var draftCacheDir: File
+  private var menu: Menu? = null
 
   private val args by navArgs<CreateMessageFragmentArgs>()
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
@@ -375,6 +376,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     menuHost.addMenuProvider(object : MenuProvider {
       override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menuInflater.inflate(R.menu.fragment_compose, menu)
+        this@CreateMessageFragment.menu = menu
       }
 
       override fun onPrepareMenu(menu: Menu) {
@@ -1352,6 +1354,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.addOutgoingMessageInfoToQueueStateFlow.collect {
         when (it.status) {
+          Result.Status.LOADING -> {
+            menu?.findItem(R.id.menuActionSend)?.setEnabled(false)
+          }
+
           Result.Status.SUCCESS -> {
             @Suppress("OPT_IN_USAGE")
             draftViewModel.deleteDraft(GlobalScope)
@@ -1368,7 +1374,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             activity?.finish()
           }
 
-          Result.Status.EXCEPTION -> {
+          Result.Status.EXCEPTION, Result.Status.ERROR -> {
+            menu?.findItem(R.id.menuActionSend)?.setEnabled(true)
             showInfoDialog(
               dialogTitle = "",
               dialogMsg = it.exceptionMsg,
