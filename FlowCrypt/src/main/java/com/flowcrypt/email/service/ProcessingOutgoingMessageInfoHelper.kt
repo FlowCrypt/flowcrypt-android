@@ -16,10 +16,12 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.dao.BaseDao
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.replaceWithCachedRecipients
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
@@ -56,7 +58,7 @@ object ProcessingOutgoingMessageInfoHelper {
     val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
     val accountEntity = roomDatabase.accountDao().getAccount(
       outgoingMsgInfo.account?.lowercase() ?: ""
-    ) ?: return@withContext
+    ) ?: throw IllegalStateException("Account is not defined")
 
     val uid = outgoingMsgInfo.uid
 
@@ -291,24 +293,28 @@ object ProcessingOutgoingMessageInfoHelper {
    *
    * @param outgoingMessageInfo - [OutgoingMessageInfo] which contains information about an outgoing message.
    */
-  private fun updateContactsLastUseDateTime(
+  private suspend fun updateContactsLastUseDateTime(
     context: Context,
     outgoingMessageInfo: OutgoingMessageInfo
-  ) {
+  ) = withContext(Dispatchers.IO) {
     try {
       val recipientDao = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
-      //todo-denbond7 we can improve it to use a single request to the local database
-      for (email in outgoingMessageInfo.getAllRecipients()) {
-        val recipientEntity = recipientDao.getRecipientByEmail(email)
-        if (recipientEntity == null) {
-          recipientDao.insert(RecipientEntity(email = email))
-        } else {
-          recipientDao.update(recipientEntity.copy(lastUse = System.currentTimeMillis()))
-        }
+      val allRecipients = outgoingMessageInfo.getAllRecipients().map { it.lowercase() }
+      BaseDao.doOperationViaStepsSuspend(list = allRecipients) { recipients: Collection<String> ->
+        val entities = recipientDao.getRecipientsByEmails(recipients)
+        recipientDao.updateSuspend(entities.map { it.copy(lastUse = outgoingMessageInfo.timestamp) })
+        val existingRecipients = entities.map { it.email }.toSet()
+        val recipientsToBeAdded = recipients - existingRecipients
+        recipientDao.insertSuspend(recipientsToBeAdded.map { email ->
+          RecipientEntity(
+            email = email,
+            lastUse = outgoingMessageInfo.timestamp
+          )
+        })
+        entities.size + recipientsToBeAdded.size
       }
     } catch (e: Exception) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
+      e.printStackTraceIfDebugOnly()
     }
   }
 }
