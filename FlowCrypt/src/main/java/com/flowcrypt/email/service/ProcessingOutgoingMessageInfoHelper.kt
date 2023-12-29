@@ -49,7 +49,8 @@ object ProcessingOutgoingMessageInfoHelper {
   suspend fun process(
     context: Context,
     outgoingMessageInfo: OutgoingMessageInfo,
-    messageEntity: MessageEntity
+    messageEntity: MessageEntity,
+    doLastAction: () -> Unit = {}
   ) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
@@ -114,6 +115,8 @@ object ProcessingOutgoingMessageInfoHelper {
           MessagesSenderWorker.enqueue(context)
         }
       }
+
+      doLastAction.invoke()
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(ForceHandlingException(e))
@@ -146,6 +149,8 @@ object ProcessingOutgoingMessageInfoHelper {
           failedOutgoingMsgsCount
         )
       }
+
+      throw e
     }
   }
 

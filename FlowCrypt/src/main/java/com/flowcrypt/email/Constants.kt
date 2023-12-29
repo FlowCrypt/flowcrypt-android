@@ -71,7 +71,6 @@ class Constants {
      */
     const val MAX_PUB_KEY_SIZE = 1024 * 256
 
-    const val PGP_CACHE_DIR = "PGP"
     const val FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded"
     const val ATTACHMENTS_CACHE_DIR = "attachments"
     const val DRAFT_CACHE_DIR = "draft"

@@ -11,6 +11,8 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
@@ -27,10 +29,10 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
     LogsUtil.d(TAG, "doWork")
 
     val id = inputData.getLong(KEY_ID, NO_ID).takeIf { it != NO_ID } ?: return Result.success()
+    val messageEntity = roomDatabase.msgDao().getMsgById(id)
 
     try {
       val folder = OutgoingMessageInfoManager.getOutgoingInfoDirectory(applicationContext)
-      val messageEntity = roomDatabase.msgDao().getMsgById(id)
       val file = FileAndDirectoryUtils.getFilesInDir(folder)
         .firstOrNull { it.name == id.toString() }
 
@@ -52,18 +54,23 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
         context = applicationContext,
         outgoingMessageInfo = outgoingMessageInfo,
         messageEntity = messageEntity
-      )
-
-      //delete already handled outgoing message info
-      file.delete()
-    } catch (e: Exception) {
-      //need to think about this one. need to update messageEntity
-      e.printStackTrace()
-      return if (MAX_ATTEMPT_COUNT == runAttemptCount) {
-        Result.failure()
-      } else {
-        Result.retry()
+      ) {
+        //delete already handled outgoing message info
+        file.delete()
       }
+    } catch (e: Exception) {
+      e.printStackTraceIfDebugOnly()
+
+      roomDatabase.msgDao().getMsgById(id)?.let {
+        roomDatabase.msgDao().updateSuspend(
+          it.copy(
+            state = MessageState.ERROR_DURING_CREATION.value,
+            errorMsg = e.message
+          )
+        )
+      }
+
+      return Result.failure()
     }
 
     return Result.success()
@@ -73,7 +80,6 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
     private val TAG = PrepareOutgoingMessagesWorker::class.java.simpleName
     private const val KEY_ID = "KEY_ID"
     private const val NO_ID = -1L
-    private const val MAX_ATTEMPT_COUNT = 5
 
     val NAME = PrepareOutgoingMessagesWorker::class.java.simpleName
 
