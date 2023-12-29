@@ -1362,7 +1362,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             @Suppress("OPT_IN_USAGE")
             draftViewModel.deleteDraft(GlobalScope)
 
-            PrepareOutgoingMessagesWorker.enqueue(requireContext())
+            it.data?.id?.let { id -> PrepareOutgoingMessagesWorker.enqueue(requireContext(), id) }
 
             toast(
               if (GeneralUtil.isConnected(requireContext())) {

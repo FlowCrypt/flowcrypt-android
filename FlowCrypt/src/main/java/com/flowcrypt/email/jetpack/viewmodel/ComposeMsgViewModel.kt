@@ -125,12 +125,12 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val attachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
     attachmentsMutableStateFlow.asStateFlow()
 
-  private val addOutgoingMessageInfoToQueueMutableStateFlow: MutableStateFlow<Result<Boolean?>> =
+  private val addOutgoingMessageInfoToQueueMutableStateFlow: MutableStateFlow<Result<MessageEntity?>> =
     MutableStateFlow(Result.none())
-  val addOutgoingMessageInfoToQueueStateFlow: StateFlow<Result<Boolean?>> =
+  val addOutgoingMessageInfoToQueueStateFlow: StateFlow<Result<MessageEntity?>> =
     addOutgoingMessageInfoToQueueMutableStateFlow.asStateFlow()
   private val controlledRunnerForAddingOutgoingMessageInfoToQueue =
-    ControlledRunner<Result<Boolean?>>()
+    ControlledRunner<Result<MessageEntity?>>()
 
   fun sendMessage(password: CharArray?) {
     viewModelScope.launch {
@@ -179,7 +179,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
                 )
               )
               updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
-              Result.success(true)
+              Result.success(messageEntity)
             } catch (e: Exception) {
               try {
                 //delete unused resources if any exception has occurred

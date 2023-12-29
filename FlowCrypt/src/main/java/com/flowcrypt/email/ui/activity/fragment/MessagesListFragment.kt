@@ -71,7 +71,6 @@ import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.jetpack.workmanager.PrepareOutgoingMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
@@ -347,10 +346,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       binding?.swipeRefreshLayout?.isRefreshing = false
 
       if (isOutboxFolder) {
-        context?.let {
-          PrepareOutgoingMessagesWorker.enqueue(it)
-          MessagesSenderWorker.enqueue(it)
-        }
+        context?.let { MessagesSenderWorker.enqueue(it) }
       }
     } else {
       if (GeneralUtil.isConnected(context)) {
