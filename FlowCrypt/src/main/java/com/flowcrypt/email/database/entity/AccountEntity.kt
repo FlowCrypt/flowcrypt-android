@@ -19,7 +19,10 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -324,6 +327,16 @@ data class AccountEntity(
     result = 31 * result + avatarResource.hashCode()
     return result
   }
+
+  suspend fun withDecryptedInfo(): AccountEntity =
+    withContext(Dispatchers.IO) {
+      return@withContext copy(
+        password = KeyStoreCryptoManager.decryptSuspend(password),
+        smtpPassword = KeyStoreCryptoManager.decryptSuspend(smtpPassword),
+        servicePgpPassphrase = KeyStoreCryptoManager.decryptSuspend(servicePgpPassphrase),
+        servicePgpPrivateKey = KeyStoreCryptoManager.decryptSuspend(servicePgpPrivateKey)
+      )
+    }
 
   companion object {
     const val TABLE_NAME = "accounts"
