@@ -704,9 +704,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
 
   private suspend fun saveBackupsToInboxInternal() = withContext(Dispatchers.IO) {
     val account = requireNotNull(
-      getAccountEntityWithDecryptedInfo(
-        roomDatabase.accountDao().getActiveAccountSuspend()
-      )
+      roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
     )
 
     val sess = OpenStoreHelper.getAccountSess(getApplication(), account)
