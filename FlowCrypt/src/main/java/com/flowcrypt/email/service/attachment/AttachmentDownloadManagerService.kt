@@ -37,7 +37,6 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.extensions.kotlin.toHex
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -53,6 +52,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
@@ -497,9 +497,9 @@ class AttachmentDownloadManagerService : LifecycleService() {
           return
         }
 
-        val account = AccountViewModel.getAccountEntityWithDecryptedInfo(
-          roomDatabase.accountDao().getAccount(email)
-        )
+        val account = runBlocking {
+          roomDatabase.accountDao().getAccount(email)?.withDecryptedInfo()
+        }
         if (account == null) {
           listener?.onCanceled(att.copy(name = finalFileName))
           return

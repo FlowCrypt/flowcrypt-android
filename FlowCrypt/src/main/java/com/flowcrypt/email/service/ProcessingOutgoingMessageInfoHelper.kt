@@ -36,6 +36,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import jakarta.mail.Message
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -51,9 +52,10 @@ object ProcessingOutgoingMessageInfoHelper {
   fun process(context: Context, outgoingMessageInfo: OutgoingMessageInfo) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
-    val accountEntity =
+    val accountEntity = runBlocking {
       roomDatabase.accountDao().getAccount(outgoingMsgInfo.account?.lowercase() ?: "")
-        ?: return
+        ?.withDecryptedInfo()
+    } ?: return
 
     val uid = outgoingMsgInfo.uid
     val email = accountEntity.email
