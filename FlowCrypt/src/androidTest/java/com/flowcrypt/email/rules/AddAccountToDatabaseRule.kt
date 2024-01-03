@@ -33,7 +33,11 @@ class AddAccountToDatabaseRule(val account: AccountEntity) : BaseRule() {
 
   private fun saveAccountToDatabase() {
     accountEntityWithDecryptedInfoCached = runBlocking {
-      FlowCryptRoomDatabase.getDatabase(targetContext).accountDao().addAccountSuspend(account)
+      try {
+        FlowCryptRoomDatabase.getDatabase(targetContext).accountDao().addAccountSuspend(account)
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
       getAccountEntityWithDecryptedInfo()
     }
   }
