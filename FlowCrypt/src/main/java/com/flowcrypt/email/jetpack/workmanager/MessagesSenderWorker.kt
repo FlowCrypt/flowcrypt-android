@@ -31,7 +31,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -79,9 +78,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
       }
 
       try {
-        val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
-          roomDatabase.accountDao().getActiveAccountSuspend()
-        )
+        val account = roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
           ?: return@withContext Result.success()
 
         val attsCacheDir = File(applicationContext.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
