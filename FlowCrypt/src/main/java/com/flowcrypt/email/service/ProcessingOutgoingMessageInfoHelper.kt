@@ -58,7 +58,7 @@ object ProcessingOutgoingMessageInfoHelper {
     val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
     val accountEntity = roomDatabase.accountDao().getAccount(
       outgoingMsgInfo.account?.lowercase() ?: ""
-    ) ?: throw IllegalStateException("Account is not defined")
+    )?.withDecryptedInfo() ?: throw IllegalStateException("Account is not defined")
 
     val uid = outgoingMsgInfo.uid
 
