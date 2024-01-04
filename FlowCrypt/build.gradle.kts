@@ -402,7 +402,7 @@ dependencies {
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.21")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.22")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -475,7 +475,7 @@ dependencies {
   implementation("org.bitbucket.b_c:jose4j:0.9.4")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1")
-  implementation("org.jsoup:jsoup:1.17.1")
+  implementation("org.jsoup:jsoup:1.17.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("ch.acra:acra-http:5.11.3")
