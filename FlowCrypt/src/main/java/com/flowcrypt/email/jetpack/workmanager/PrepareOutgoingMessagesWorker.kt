@@ -52,7 +52,7 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
       )
       ProcessingOutgoingMessageInfoHelper.process(
         context = applicationContext,
-        outgoingMessageInfo = outgoingMessageInfo,
+        originalOutgoingMessageInfo = outgoingMessageInfo,
         messageEntity = messageEntity
       ) {
         //delete already handled outgoing message info

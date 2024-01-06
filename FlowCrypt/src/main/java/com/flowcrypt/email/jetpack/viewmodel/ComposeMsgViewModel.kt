@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.ContentResolver
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
@@ -166,14 +167,18 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
                     it.copy(
                       email = outgoingMessageInfo.account,
                       folder = JavaEmailConstants.FOLDER_OUTBOX,
-                      uid = messageId
+                      uid = messageId,
+                      type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
                     )
                   },
                   forwardedAtts = outgoingMessageInfo.forwardedAtts?.map {
                     it.copy(
                       email = outgoingMessageInfo.account,
                       folder = JavaEmailConstants.FOLDER_OUTBOX,
-                      uid = messageId
+                      uid = messageId,
+                      fwdFolder = it.folder,
+                      fwdUid = it.uid,
+                      type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
                     )
                   },
                 )

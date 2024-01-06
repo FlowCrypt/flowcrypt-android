@@ -15,6 +15,7 @@ import jakarta.mail.Flags
 import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
+import java.util.UUID
 
 /**
  * Simple POJO class which describe an outgoing message model.
@@ -129,7 +130,8 @@ data class OutgoingMessageInfo(
       } else {
         MessageState.NEW.value
       },
-      password = password
+      password = password,
+      attachmentsDirectory = UUID.randomUUID().toString()
     )
   }
 }

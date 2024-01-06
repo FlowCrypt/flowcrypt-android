@@ -11,13 +11,11 @@ import android.text.TextUtils
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.BaseDao
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
@@ -42,7 +40,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -50,54 +47,48 @@ import java.util.UUID
 object ProcessingOutgoingMessageInfoHelper {
   suspend fun process(
     context: Context,
-    outgoingMessageInfo: OutgoingMessageInfo,
+    originalOutgoingMessageInfo: OutgoingMessageInfo,
     messageEntity: MessageEntity,
     doLastAction: () -> Unit = {}
   ) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-    val outgoingMsgInfo = outgoingMessageInfo.replaceWithCachedRecipients(context)
+    val outgoingMsgInfo = originalOutgoingMessageInfo.replaceWithCachedRecipients(context)
     val accountEntity = roomDatabase.accountDao().getAccount(
       outgoingMsgInfo.account?.lowercase() ?: ""
     )?.withDecryptedInfo() ?: throw IllegalStateException("Account is not defined")
 
-    val uid = outgoingMsgInfo.uid
-
     try {
       updateContactsLastUseDateTime(context, outgoingMsgInfo)
 
-      val msg = EmailUtil.genMessage(
-        context = context,
-        accountEntity = accountEntity,
-        outgoingMsgInfo = outgoingMsgInfo,
-        signingRequired = true,
-        hideArmorMeta = accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
-      )
-
-      val attsCacheDir = getAttsCacheDir(context)
-      val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
-
-      val out = ByteArrayOutputStream()
-      msg.writeTo(out)
+      val mimeMessageAsByteArray = ByteArrayOutputStream().apply {
+        EmailUtil.genMessage(
+          context = context,
+          accountEntity = accountEntity,
+          outgoingMsgInfo = outgoingMsgInfo,
+          signingRequired = true,
+          hideArmorMeta = accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
+        ).writeTo(this)
+      }.toByteArray()
 
       //todo-denbond7 need to think about that. It'll be better to store a message as a file
       roomDatabase.msgDao().updateSuspend(
-        messageEntity.copy(
-          rawMessageWithoutAttachments = String(out.toByteArray()),
-          attachmentsDirectory = attsCacheDir.name
-        )
+        messageEntity.copy(rawMessageWithoutAttachments = String(mimeMessageAsByteArray))
       )
 
       val hasAtts = outgoingMsgInfo.atts?.isNotEmpty() == true
           || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
 
       if (hasAtts) {
+        val msgAttsCacheDir = File(
+          getAttsCacheDir(context), requireNotNull(messageEntity.attachmentsDirectory)
+        )
         if (!msgAttsCacheDir.exists()) {
           if (!msgAttsCacheDir.mkdir()) {
             throw IOException("Create cache directory for outgoing attachments failed!")
           }
         }
 
-        addAttsToCache(context, accountEntity, outgoingMsgInfo, uid, msgAttsCacheDir)
+        addAttsToCache(context, outgoingMsgInfo, msgAttsCacheDir)
       }
 
       if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
@@ -168,9 +159,8 @@ object ProcessingOutgoingMessageInfoHelper {
 
   private fun addAttsToCache(
     context: Context,
-    accountEntity: AccountEntity,
     outgoingMsgInfo: OutgoingMessageInfo,
-    uid: Long, attsCacheDir: File
+    attsCacheDir: File
   ) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val cachedAtts = ArrayList<AttachmentInfo>()
@@ -185,15 +175,7 @@ object ProcessingOutgoingMessageInfoHelper {
     }
 
     if (outgoingMsgInfo.atts?.isNotEmpty() == true) {
-      val outgoingAttachmentInfoList = outgoingMsgInfo.atts.map { attachmentInfo ->
-        attachmentInfo.copy(
-          email = accountEntity.email,
-          folder = JavaEmailConstants.FOLDER_OUTBOX,
-          uid = uid
-        )
-      }
-
-      for (attachmentInfo in outgoingAttachmentInfoList) {
+      for (attachmentInfo in outgoingMsgInfo.atts) {
         var uri: Uri?
         var name: String? = null
 
@@ -266,16 +248,8 @@ object ProcessingOutgoingMessageInfoHelper {
     }
 
     if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
-      for (attachmentInfo in outgoingMsgInfo.forwardedAtts) {
-        val candidate = attachmentInfo.copy(
-          folder = JavaEmailConstants.FOLDER_OUTBOX,
-          uid = uid,
-          fwdFolder = attachmentInfo.folder,
-          fwdUid = attachmentInfo.uid,
-          type = attachmentInfo.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA },
-          orderNumber = 0
-        )
-        if (attachmentInfo.isEncryptionAllowed
+      for (candidate in outgoingMsgInfo.forwardedAtts) {
+        if (candidate.isEncryptionAllowed
           && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
         ) {
           cachedAtts.add(candidate.copy(name = candidate.name + "." + Constants.PGP_FILE_EXT))
