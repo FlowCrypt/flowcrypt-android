@@ -13,6 +13,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -60,7 +61,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
     onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())
     onView(withId(R.id.editTextEmailAddress))
-      .perform(typeText(recipient), pressImeActionButton(), closeSoftKeyboard())
+      .perform(replaceText(recipient), pressImeActionButton(), closeSoftKeyboard())
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(
