@@ -1065,7 +1065,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
-    composeMsgViewModel.sendMessage(password = usePasswordIfNeeded())
+    composeMsgViewModel.enqueueOutgoingMessage(password = usePasswordIfNeeded())
   }
 
   /**

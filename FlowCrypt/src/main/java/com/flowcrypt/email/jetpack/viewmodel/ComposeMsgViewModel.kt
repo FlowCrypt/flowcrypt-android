@@ -133,7 +133,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   private val controlledRunnerForAddingOutgoingMessageInfoToQueue =
     ControlledRunner<Result<MessageEntity?>>()
 
-  fun sendMessage(password: CharArray?) {
+  fun enqueueOutgoingMessage(password: CharArray?) {
     viewModelScope.launch {
       addOutgoingMessageInfoToQueueMutableStateFlow.value = Result.loading()
       addOutgoingMessageInfoToQueueMutableStateFlow.value =
