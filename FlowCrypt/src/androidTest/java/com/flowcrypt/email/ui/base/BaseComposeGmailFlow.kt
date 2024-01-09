@@ -20,6 +20,8 @@ import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.java.io.readText
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -34,23 +36,17 @@ import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
-import jakarta.activation.DataSource
-import jakarta.mail.internet.ContentType
-import jakarta.mail.internet.InternetHeaders
-import jakarta.mail.internet.MimeBodyPart
-import jakarta.mail.internet.MimeMultipart
-import okhttp3.Headers
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
+import jakarta.mail.Session
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.pgpainless.util.Passphrase
-import rawhttp.core.RawHttp
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 import java.net.HttpURLConnection
+import java.util.Properties
 
 /**
  * @author Denys Bondarenko
@@ -187,6 +183,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           id = DraftsGmailAPITestCorrectSendingFlowTest.MESSAGE_ID_SENT
           threadId = DraftsGmailAPITestCorrectSendingFlowTest.THREAD_ID_SENT
           labelIds = listOf(JavaEmailConstants.FOLDER_SENT)
+          raw = request.body.inputStream().readText()
         }
 
         sentCache.add(message)
@@ -195,89 +192,28 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           .setBody(message.toString())
       }
 
-      request.method == "POST" && request.path == "/batch" -> {
-        val mimeMultipart = MimeMultipart(object : DataSource {
-          override fun getInputStream(): InputStream = request.body.inputStream()
-
-          override fun getOutputStream(): OutputStream {
-            throw UnsupportedOperationException()
-          }
-
-          override fun getContentType(): String {
-            return request.getHeader("Content-Type") ?: throw IllegalArgumentException()
-          }
-
-          override fun getName(): String = ""
-        })
-
-        val count = mimeMultipart.count
-        val rawHttp = RawHttp()
-        val responseMimeMultipart = MimeMultipart()
-        for (i in 0 until count) {
-          try {
-            val bodyPart = mimeMultipart.getBodyPart(i)
-            val rawHttpRequest = rawHttp.parseRequest(bodyPart.inputStream)
-            val requestBody = if (rawHttpRequest.body.isPresent) {
-              rawHttpRequest.body.get().asRawBytes().toRequestBody(
-                contentType = bodyPart.contentType.toMediaTypeOrNull()
-              )
-            } else null
-
-            val okhttp3Request = okhttp3.Request.Builder()
-              .method(
-                method = rawHttpRequest.method,
-                body = requestBody
-              )
-              .url(rawHttpRequest.uri.toURL())
-              .headers(Headers.Builder().build())
-              .build()
-
-            val response = ApiHelper.getInstance(getTargetContext())
-              .retrofit.callFactory().newCall(okhttp3Request).execute()
-
-            val stringBuilder = StringBuilder().apply {
-              append(response.protocol.toString().uppercase())
-              append(" ")
-              append(response.code)
-              append(" ")
-              append(response.message)
-              append("\n")
-
-              response.headers.forEach {
-                append(it.first + ": " + it.second + "\n")
-              }
-              append("\n")
-              append(response.body?.string())
-            }
-
-            responseMimeMultipart.addBodyPart(
-              MimeBodyPart(
-                InternetHeaders(byteArrayOf().inputStream()).apply {
-                  setHeader("Content-Type", "application/http")
-                  setHeader("Content-ID", "response-${i + 1}")
-                },
-                stringBuilder.toString().toByteArray()
-              )
-            )
-          } catch (e: Exception) {
-            e.printStackTrace()
-          }
-        }
-
-        val outputStream = ByteArrayOutputStream()
-        responseMimeMultipart.writeTo(outputStream)
-        val content = String(outputStream.toByteArray())
-        val boundary = (ContentType(responseMimeMultipart.contentType)).getParameter("boundary")
-
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", "multipart/mixed; boundary=$boundary")
-          .setBody(content)
-      }
-
       else -> {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
     }
+  }
+
+  protected fun checkMimeMessage(
+    action: (message: MimeMessage) -> Unit
+  ) {
+    val rawMime = requireNotNull(sentCache.first().raw)
+    val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), rawMime.toInputStream())
+
+    //do base checks
+    assertEquals(rawMime, SUBJECT, mimeMessage.subject)
+    assertArrayEquals(
+      rawMime,
+      arrayOf(InternetAddress(addAccountToDatabaseRule.account.email)),
+      mimeMessage.from
+    )
+
+    //do external checks
+    action.invoke(mimeMessage)
   }
 
   companion object {

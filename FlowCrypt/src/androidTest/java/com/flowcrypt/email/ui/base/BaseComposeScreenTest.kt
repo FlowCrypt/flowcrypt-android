@@ -67,13 +67,13 @@ abstract class BaseComposeScreenTest : BaseTest() {
       .perform(
         scrollTo(),
         click(),
-        typeText("subject"),
+        typeText(SUBJECT),
         closeSoftKeyboard()
       )
     onView(withId(R.id.editTextEmailMessage))
       .perform(
         scrollTo(),
-        typeText("message"),
+        typeText(MESSAGE),
         closeSoftKeyboard()
       )
   }
@@ -89,5 +89,10 @@ abstract class BaseComposeScreenTest : BaseTest() {
     onView(withId(R.id.menuActionAttachFile))
       .check(matches(isDisplayed()))
       .perform(click())
+  }
+
+  companion object{
+    const val SUBJECT = "subject"
+    const val MESSAGE = "message"
   }
 }

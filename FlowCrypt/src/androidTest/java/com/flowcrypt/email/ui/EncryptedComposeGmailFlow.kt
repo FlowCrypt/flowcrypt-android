@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
@@ -24,7 +23,6 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
-import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -42,7 +40,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
-class StandardComposeGmailFlow : BaseComposeGmailFlow() {
+class EncryptedComposeGmailFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -64,12 +62,6 @@ class StandardComposeGmailFlow : BaseComposeGmailFlow() {
 
   @Test
   fun testSending() {
-    //switch to standard mode
-    openActionBarOverflowOrOptionsMenu(getTargetContext())
-    onView(withText(R.string.switch_to_standard_email))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -95,11 +87,5 @@ class StandardComposeGmailFlow : BaseComposeGmailFlow() {
           )
         )
       )
-
-    checkMimeMessage { mimeMessage ->
-      val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(1, multipart.count)
-      assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
-    }
   }
 }
