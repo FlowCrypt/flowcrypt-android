@@ -3,7 +3,7 @@
  * Contributors: denbond7
  */
 
-package com.flowcrypt.email.ui
+package com.flowcrypt.email.ui.gmailapi
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
@@ -47,7 +47,7 @@ import org.junit.runner.RunWith
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
-class StandardComposeGmailFlow : BaseComposeGmailFlow() {
+class StandardComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {

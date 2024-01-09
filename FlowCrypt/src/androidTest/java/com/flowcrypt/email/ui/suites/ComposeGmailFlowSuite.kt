@@ -6,8 +6,8 @@
 package com.flowcrypt.email.ui.suites
 
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
-import com.flowcrypt.email.ui.EncryptedComposeGmailFlow
-import com.flowcrypt.email.ui.StandardComposeGmailFlow
+import com.flowcrypt.email.ui.gmailapi.EncryptedComposeGmailApiFlow
+import com.flowcrypt.email.ui.gmailapi.StandardComposeGmailApiFlow
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 
@@ -17,7 +17,7 @@ import org.junit.runners.Suite
 @NotReadyForCI(message = "this class just for local executing")
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
-  StandardComposeGmailFlow::class,
-  EncryptedComposeGmailFlow::class,
+  StandardComposeGmailApiFlow::class,
+  EncryptedComposeGmailApiFlow::class,
 )
 class ComposeGmailFlowSuite
