@@ -9,13 +9,14 @@ package com.flowcrypt.email.ui.gmailapi
  * @author Denys Bondarenko
  */
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.extensions.kotlin.toInputStream
@@ -52,7 +53,7 @@ import java.io.ByteArrayOutputStream
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
-class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
+class EncryptedWithOwnPublicKeyComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -79,6 +80,12 @@ class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
       addAttachment(it)
     }
 
+    //switch to standard mode
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.include_public_key))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -86,7 +93,12 @@ class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
 
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(atts.size + 1, multipart.count)
+      assertEquals(
+        atts.size
+            + 1 // message part
+            + 1 // public key part
+        , multipart.count
+      )
       val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
         requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
       )
@@ -105,6 +117,17 @@ class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
         val attachmentPart = multipart.getBodyPart(index + 1) as MimePart
         checkEncryptedAttachment(attachmentPart, file.name, genFileContent(index), pgpSecretKeyRing)
       }
+
+      val publicKeyPart = multipart.getBodyPart(atts.size + 1) as MimePart
+      assertEquals(Part.ATTACHMENT, publicKeyPart.disposition)
+      assertEquals(
+        "0x${addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint}.asc",
+        publicKeyPart.fileName
+      )
+      assertEquals(
+        addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey,
+        String(publicKeyPart.inputStream.readBytes())
+      )
     }
   }
 }

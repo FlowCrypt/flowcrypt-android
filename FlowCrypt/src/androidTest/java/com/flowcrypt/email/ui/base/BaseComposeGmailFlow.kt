@@ -12,6 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -24,6 +25,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.matchers.ToolBarTitleMatcher.Companion.withText
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -45,9 +47,11 @@ import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
 import jakarta.mail.Message
+import jakarta.mail.Part
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimePart
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -245,6 +249,28 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
     )
   )
+
+  protected fun checkEncryptedAttachment(
+    attachmentPart: MimePart,
+    originalFileName: String,
+    originalFileContent: String,
+    pgpSecretKeyRing: PGPSecretKeyRing
+  ) {
+    assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
+    assertEquals(originalFileName + "." + Constants.PGP_FILE_EXT, attachmentPart.fileName)
+
+    val attachmentOutputStream = ByteArrayOutputStream()
+    val attachmentMessageMetadata = getMessageMetadata(
+      inputStream = attachmentPart.inputStream,
+      outputStream = attachmentOutputStream,
+      pgpSecretKeyRing = pgpSecretKeyRing
+    )
+
+    assertEquals(originalFileName, attachmentMessageMetadata.filename)
+    assertEquals(true, attachmentMessageMetadata.isEncrypted)
+    assertEquals(false, attachmentMessageMetadata.isSigned)
+    assertEquals(originalFileContent, String(attachmentOutputStream.toByteArray()))
+  }
 
   protected fun doAfterSendingChecks(
     action: (
