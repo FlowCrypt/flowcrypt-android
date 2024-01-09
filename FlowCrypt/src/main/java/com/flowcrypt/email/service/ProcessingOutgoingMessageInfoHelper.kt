@@ -174,88 +174,75 @@ object ProcessingOutgoingMessageInfoHelper {
       pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
     }
 
-    if (outgoingMsgInfo.atts?.isNotEmpty() == true) {
-      for (attachmentInfo in outgoingMsgInfo.atts) {
-        var uri: Uri?
-        var name: String? = null
+    for (attachmentInfo in outgoingMsgInfo.atts ?: emptyList()) {
+      var uri: Uri?
+      var name: String? = null
 
-        try {
-          val origFileUri = attachmentInfo.uri
-          var originalFileInputStream: InputStream? = null
-          if (origFileUri != null) {
-            originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
-          } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
-            originalFileInputStream = ByteArrayInputStream(attachmentInfo.rawData)
-          }
+      val origFileUri = attachmentInfo.uri
+      var originalFileInputStream: InputStream? = null
+      if (origFileUri != null) {
+        originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
+      } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
+        originalFileInputStream = ByteArrayInputStream(attachmentInfo.rawData)
+      }
 
-          if (originalFileInputStream == null) {
-            continue
-          }
+      if (originalFileInputStream == null) {
+        throw IllegalStateException("The file stream is null")
+      }
 
-          val originalAttName = attachmentInfo.getSafeName()
-          if (attachmentInfo.isEncryptionAllowed &&
-            outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
-          ) {
-            val fileName = originalAttName + "." + Constants.PGP_FILE_EXT
-            var encryptedTempFile = File(attsCacheDir, fileName)
+      val originalAttName = attachmentInfo.getSafeName()
+      if (attachmentInfo.isEncryptionAllowed && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+        val fileName = originalAttName + "." + Constants.PGP_FILE_EXT
+        var encryptedTempFile = File(attsCacheDir, fileName)
 
-            if (encryptedTempFile.exists()) {
-              encryptedTempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(
-                attsCacheDir,
-                encryptedTempFile.name
-              )
-            }
-            PgpEncryptAndOrSign.encryptAndOrSign(
-              srcInputStream = originalFileInputStream,
-              destOutputStream = encryptedTempFile.outputStream(),
-              pubKeys = requireNotNull(pubKeys),
-              fileName = originalAttName,
-            )
-            uri = FileProvider.getUriForFile(
-              context,
-              Constants.FILE_PROVIDER_AUTHORITY,
-              encryptedTempFile
-            )
-            name = encryptedTempFile.name
-          } else {
-            var cachedAtt = File(attsCacheDir, originalAttName)
-            if (cachedAtt.exists()) {
-              cachedAtt =
-                FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
-            }
-
-            FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
-            uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
-          }
-
-          cachedAtts.add(
-            attachmentInfo.copy(
-              type = attachmentInfo.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA },
-              uri = uri,
-              name = name ?: attachmentInfo.name
-            )
+        if (encryptedTempFile.exists()) {
+          encryptedTempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(
+            attsCacheDir, encryptedTempFile.name
           )
-          if (origFileUri != null) {
-            if (Constants.FILE_PROVIDER_AUTHORITY.equals(origFileUri.authority, true)) {
-              context.contentResolver.delete(origFileUri, null, null)
-            }
-          }
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
+        }
+        PgpEncryptAndOrSign.encryptAndOrSign(
+          srcInputStream = originalFileInputStream,
+          destOutputStream = encryptedTempFile.outputStream(),
+          pubKeys = requireNotNull(pubKeys),
+          fileName = originalAttName,
+        )
+        uri = FileProvider.getUriForFile(
+          context, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile
+        )
+        name = encryptedTempFile.name
+      } else {
+        var cachedAtt = File(attsCacheDir, originalAttName)
+        if (cachedAtt.exists()) {
+          cachedAtt =
+            FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
+        }
+
+        FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
+        uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
+      }
+
+      cachedAtts.add(
+        attachmentInfo.copy(
+          type = attachmentInfo.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA },
+          uri = uri,
+          name = name ?: attachmentInfo.name
+        )
+      )
+
+      if (origFileUri != null) {
+        if (Constants.FILE_PROVIDER_AUTHORITY.equals(origFileUri.authority, true)) {
+          context.contentResolver.delete(origFileUri, null, null)
         }
       }
     }
 
-    if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
-      for (candidate in outgoingMsgInfo.forwardedAtts) {
-        if (candidate.isEncryptionAllowed
-          && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
-        ) {
-          cachedAtts.add(candidate.copy(name = candidate.name + "." + Constants.PGP_FILE_EXT))
-        } else {
-          cachedAtts.add(candidate)
-        }
+    for (candidate in outgoingMsgInfo.forwardedAtts ?: emptyList()) {
+      if (candidate.isEncryptionAllowed
+        && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
+      ) {
+        cachedAtts.add(candidate.copy(name = candidate.name + "." + Constants.PGP_FILE_EXT))
+      } else {
+        cachedAtts.add(candidate)
       }
     }
 

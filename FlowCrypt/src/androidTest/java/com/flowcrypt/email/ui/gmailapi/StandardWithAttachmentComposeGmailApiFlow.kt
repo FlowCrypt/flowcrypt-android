@@ -5,6 +5,9 @@
 
 package com.flowcrypt.email.ui.gmailapi
 
+/**
+ * @author Denys Bondarenko
+ */
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
@@ -25,6 +28,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import jakarta.mail.Part
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -36,18 +40,15 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
-/**
- * @author Denys Bondarenko
- */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@FlowCryptTestSettings(useCommonIdling = false)
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 @OutgoingMessageConfiguration(
   to = [TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER],
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
-class StandardComposeGmailApiFlow : BaseComposeGmailFlow() {
+class StandardWithAttachmentComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -75,6 +76,11 @@ class StandardComposeGmailApiFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
 
+    //add attachments
+    atts.forEach {
+      addAttachment(it)
+    }
+
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -82,8 +88,25 @@ class StandardComposeGmailApiFlow : BaseComposeGmailFlow() {
 
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(1, multipart.count)
+      assertEquals(atts.size + 1, multipart.count)
       assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
+
+      atts.forEachIndexed { index, file ->
+        assertEquals(
+          Part.ATTACHMENT,
+          multipart.getBodyPart(index + 1).disposition
+        )
+
+        assertEquals(
+          file.name,
+          multipart.getBodyPart(index + 1).fileName
+        )
+
+        assertEquals(
+          genFileContent(index),
+          multipart.getBodyPart(index + 1).content as String
+        )
+      }
     }
   }
 }

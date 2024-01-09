@@ -51,13 +51,16 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.hamcrest.CoreMatchers.not
+import org.junit.AfterClass
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Rule
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.Properties
@@ -308,5 +311,34 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     const val BASE_URL = "https://flowcrypt.test"
     const val LOCATION_URL =
       "/upload/gmail/v1/users/me/messages/send?uploadType=resumable&upload_id=Location"
+
+    private const val ATTACHMENTS_COUNT = 3
+    var atts: MutableList<File> = mutableListOf()
+
+    @BeforeClass
+    @JvmStatic
+    fun setUp() {
+      createFilesForCommonAtts()
+    }
+
+    @AfterClass
+    @JvmStatic
+    fun tearDown() {
+      TestGeneralUtil.deleteFiles(atts)
+    }
+
+    fun genFileContent(id: Int): String {
+      return "$id - Text for filling the attached file"
+    }
+
+    private fun createFilesForCommonAtts() {
+      for (i in 0 until ATTACHMENTS_COUNT) {
+        atts.add(
+          TestGeneralUtil.createFileWithTextContent(
+            "$i.txt", genFileContent(i)
+          )
+        )
+      }
+    }
   }
 }
