@@ -7,8 +7,9 @@ package com.flowcrypt.email.ui.suites
 
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.ui.gmailapi.EncryptedComposeGmailApiFlow
+import com.flowcrypt.email.ui.gmailapi.EncryptedWithAttachmentsComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardComposeGmailApiFlow
-import com.flowcrypt.email.ui.gmailapi.StandardWithAttachmentComposeGmailApiFlow
+import com.flowcrypt.email.ui.gmailapi.StandardWithAttachmentsComposeGmailApiFlow
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 
@@ -20,6 +21,7 @@ import org.junit.runners.Suite
 @Suite.SuiteClasses(
   StandardComposeGmailApiFlow::class,
   EncryptedComposeGmailApiFlow::class,
-  StandardWithAttachmentComposeGmailApiFlow::class,
+  StandardWithAttachmentsComposeGmailApiFlow::class,
+  EncryptedWithAttachmentsComposeGmailApiFlow::class,
 )
 class ComposeGmailFlowSuite

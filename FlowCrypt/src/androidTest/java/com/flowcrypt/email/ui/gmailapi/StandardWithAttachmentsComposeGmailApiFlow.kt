@@ -48,7 +48,7 @@ import org.junit.runner.RunWith
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
-class StandardWithAttachmentComposeGmailApiFlow : BaseComposeGmailFlow() {
+class StandardWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -92,20 +92,10 @@ class StandardWithAttachmentComposeGmailApiFlow : BaseComposeGmailFlow() {
       assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
 
       atts.forEachIndexed { index, file ->
-        assertEquals(
-          Part.ATTACHMENT,
-          multipart.getBodyPart(index + 1).disposition
-        )
-
-        assertEquals(
-          file.name,
-          multipart.getBodyPart(index + 1).fileName
-        )
-
-        assertEquals(
-          genFileContent(index),
-          multipart.getBodyPart(index + 1).content as String
-        )
+        val mimePart = multipart.getBodyPart(index + 1)
+        assertEquals(Part.ATTACHMENT, mimePart.disposition)
+        assertEquals(file.name, mimePart.fileName)
+        assertEquals(genFileContent(index), mimePart.content as String)
       }
     }
   }

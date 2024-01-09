@@ -31,11 +31,13 @@ import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.OutgoingMessageConfigurationRule
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.Label
@@ -72,6 +74,11 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   protected val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
   abstract val mockWebServerRule: FlowCryptMockWebServerRule
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
+
+  protected val pgpKeyRingDetailsTo: PgpKeyRingDetails =
+    PrivateKeysManager.getPgpKeyDetailsFromAssets(
+      "pgp/attested_user@flowcrypt.test_prv_default_strong.asc"
+    )
 
   @get:Rule
   val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
@@ -147,7 +154,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
             MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(TestGeneralUtil.readResourceAsString("3.txt"))
+              .setBody(pgpKeyRingDetailsTo.publicKey)
           }
 
           else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
