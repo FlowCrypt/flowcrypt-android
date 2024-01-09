@@ -62,6 +62,7 @@ import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import kotlinx.coroutines.delay
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -230,6 +231,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   fun testIsScreenOfComposeNewMsg() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
+
+    Thread.sleep(1000)
 
     onView(withText(R.string.compose))
       .check(matches(isDisplayed()))

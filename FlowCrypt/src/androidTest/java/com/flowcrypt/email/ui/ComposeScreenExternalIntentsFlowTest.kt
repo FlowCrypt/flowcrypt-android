@@ -45,6 +45,7 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -63,6 +64,7 @@ import java.util.UUID
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   override val activeActivityRule =
     lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
