@@ -31,6 +31,7 @@ import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.OutgoingMessageConfigurationRule
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
 import com.flowcrypt.email.ui.activity.MainActivity
@@ -47,12 +48,17 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.hamcrest.CoreMatchers.not
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.Properties
 
@@ -215,6 +221,20 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       }
     }
   }
+
+  protected fun getMessageMetadata(
+    inputStream: InputStream,
+    outputStream: ByteArrayOutputStream,
+    pgpSecretKeyRing: PGPSecretKeyRing
+  ) = PgpDecryptAndOrVerify.decrypt(
+    srcInputStream = inputStream,
+    destOutputStream = outputStream,
+    secretKeys = PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)),
+    protector = PasswordBasedSecretKeyRingProtector.forKey(
+      pgpSecretKeyRing,
+      Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
+    )
+  )
 
   protected fun doAfterSendingChecks(
     action: (

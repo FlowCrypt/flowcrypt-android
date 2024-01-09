@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -23,6 +24,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import jakarta.mail.internet.MimeMultipart
@@ -36,6 +38,8 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 
 /**
  * @author Denys Bondarenko
@@ -78,7 +82,22 @@ class EncryptedComposeGmailFlow : BaseComposeGmailFlow() {
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(1, multipart.count)
-      //assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
+      val encryptedContent =
+        (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
+      val buffer = ByteArrayOutputStream()
+
+      val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
+        requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
+      )
+
+      val messageMetadata = getMessageMetadata(
+        inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
+        outputStream = buffer,
+        pgpSecretKeyRing = pgpSecretKeyRing
+      )
+      assertEquals(true, messageMetadata.isEncrypted)
+      assertEquals(true, messageMetadata.isSigned)
+      assertEquals(MESSAGE, String(buffer.toByteArray()))
     }
   }
 }
