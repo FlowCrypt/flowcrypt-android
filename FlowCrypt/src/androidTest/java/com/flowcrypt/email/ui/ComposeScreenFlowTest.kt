@@ -40,6 +40,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.expiration
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
@@ -62,7 +63,6 @@ import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import kotlinx.coroutines.delay
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -347,8 +347,9 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     registerAllIdlingResources()
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-    val email = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
-    fillInAllFields(email)
+    val primaryInternetAddress = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress())
+    val email = primaryInternetAddress.address
+    fillInAllFields(to = setOf(primaryInternetAddress))
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
@@ -396,7 +397,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
+    fillInAllFields(
+      to = setOf(
+        requireNotNull(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
+      )
+    )
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -458,7 +463,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       roomDatabase.pubKeyDao().insert(pgpKeyRingDetails.toPublicKeyEntity(it.email))
     }
 
-    fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
+    fillInAllFields(
+      to = setOf(
+        requireNotNull(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
+      )
+    )
 
     Thread.sleep(2000)
 
@@ -583,7 +592,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
-    val email = requireNotNull(keyDetails.getPrimaryInternetAddress()).address
+    val primaryInternetAddress = requireNotNull(keyDetails.getPrimaryInternetAddress())
+    val email = primaryInternetAddress.address
     val personal = requireNotNull(keyDetails.getPrimaryInternetAddress()).personal
     roomDatabase.recipientDao().insert(requireNotNull(keyDetails.toRecipientEntity()))
     roomDatabase.pubKeyDao().insert(keyDetails.toPublicKeyEntity(email))
@@ -591,7 +601,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(email)
+    fillInAllFields(to = setOf(primaryInternetAddress))
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
@@ -632,7 +642,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(email)
+    fillInAllFields(to = setOf(requireNotNull(email.asInternetAddress())))
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
@@ -680,7 +690,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(internetAddress.address)
+    fillInAllFields(to = setOf(internetAddress))
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(

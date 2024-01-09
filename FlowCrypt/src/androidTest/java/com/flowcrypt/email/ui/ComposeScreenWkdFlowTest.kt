@@ -16,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -238,7 +239,11 @@ class ComposeScreenWkdFlowTest : BaseComposeScreenTest() {
     .setBody(Buffer().write(TestGeneralUtil.readFileFromAssetsAsByteArray(keyPath)))
 
   private fun check(recipient: String, colorResourcesId: Int) {
-    fillInAllFields(recipient)
+    fillInAllFields(
+      to = setOf(
+        requireNotNull(recipient.asInternetAddress())
+      )
+    )
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
         scrollTo<RecyclerView.ViewHolder>(

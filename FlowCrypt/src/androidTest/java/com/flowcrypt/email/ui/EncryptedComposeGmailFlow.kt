@@ -17,12 +17,15 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -40,6 +43,11 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
+@OutgoingMessageConfiguration(
+  to = [TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER],
+  message = BaseComposeScreenTest.MESSAGE,
+  subject = BaseComposeScreenTest.SUBJECT
+)
 class EncryptedComposeGmailFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -67,25 +75,10 @@ class EncryptedComposeGmailFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //need to wait some time while the app send a message
-    Thread.sleep(5000)
-
-    //check that we have one message in the server cache and outbox label is not displayed
-    assertEquals(1, sentCache.size)
-    onView(withId(R.id.toolbar))
-      .check(
-        matches(
-          not(
-            hasDescendant(
-              withText(
-                getQuantityString(
-                  R.plurals.outbox_msgs_count,
-                  1
-                )
-              )
-            )
-          )
-        )
-      )
+    doAfterSendingChecks { _, mimeMessage ->
+      val multipart = mimeMessage.content as MimeMultipart
+      assertEquals(1, multipart.count)
+      //assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
+    }
   }
 }

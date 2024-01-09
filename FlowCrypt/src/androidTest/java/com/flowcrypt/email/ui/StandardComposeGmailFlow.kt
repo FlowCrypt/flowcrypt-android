@@ -9,7 +9,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -18,17 +17,18 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers.not
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -42,6 +42,11 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
+@OutgoingMessageConfiguration(
+  to = ["Personal Name <attested_user@flowcrypt.test>"],
+  message = BaseComposeScreenTest.MESSAGE,
+  subject = BaseComposeScreenTest.SUBJECT
+)
 class StandardComposeGmailFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -75,28 +80,7 @@ class StandardComposeGmailFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //need to wait some time while the app send a message
-    Thread.sleep(5000)
-
-    //check that we have one message in the server cache and outbox label is not displayed
-    assertEquals(1, sentCache.size)
-    onView(withId(R.id.toolbar))
-      .check(
-        matches(
-          not(
-            hasDescendant(
-              withText(
-                getQuantityString(
-                  R.plurals.outbox_msgs_count,
-                  1
-                )
-              )
-            )
-          )
-        )
-      )
-
-    checkMimeMessage { mimeMessage ->
+    doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(1, multipart.count)
       assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)

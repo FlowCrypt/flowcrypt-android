@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.base
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
@@ -21,11 +22,15 @@ import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.java.io.readText
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
+import com.flowcrypt.email.matchers.ToolBarTitleMatcher.Companion.withText
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.OutgoingMessageConfigurationRule
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
 import com.flowcrypt.email.ui.activity.MainActivity
@@ -36,14 +41,17 @@ import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
+import jakarta.mail.Message
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.CoreMatchers.not
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 import java.util.Properties
@@ -55,6 +63,9 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   protected val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
   abstract val mockWebServerRule: FlowCryptMockWebServerRule
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
+
+  @get:Rule
+  val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
 
   private val accountEntity = AccountDaoManager.getDefaultAccountDao().copy(
     accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
@@ -108,7 +119,14 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    fillInAllFields(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER)
+    val outgoingMessageConfiguration =
+      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
+
+    fillInAllFields(
+      to = outgoingMessageConfiguration.to.map { requireNotNull(it.asInternetAddress()) },
+      subject = outgoingMessageConfiguration.subject,
+      message = outgoingMessageConfiguration.message,
+    )
   }
 
   protected fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
@@ -198,22 +216,70 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     }
   }
 
-  protected fun checkMimeMessage(
-    action: (message: MimeMessage) -> Unit
+  protected fun doAfterSendingChecks(
+    action: (
+      outgoingMessageConfiguration: OutgoingMessageConfiguration,
+      message: MimeMessage
+    ) -> Unit
   ) {
+    //need to wait some time while the app send a message
+    Thread.sleep(5000)
+
+    //check that we have one message in the server cache and outbox label is not displayed
+    assertEquals(1, sentCache.size)
+    onView(withId(R.id.toolbar))
+      .check(
+        matches(
+          not(
+            hasDescendant(
+              withText(
+                getQuantityString(
+                  R.plurals.outbox_msgs_count,
+                  1
+                )
+              )
+            )
+          )
+        )
+      )
+
+    //check sent MIME message
     val rawMime = requireNotNull(sentCache.first().raw)
     val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), rawMime.toInputStream())
+    val outgoingMessageConfiguration =
+      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
     //do base checks
-    assertEquals(rawMime, SUBJECT, mimeMessage.subject)
+    assertEquals(rawMime, outgoingMessageConfiguration.subject, mimeMessage.subject)
     assertArrayEquals(
       rawMime,
       arrayOf(InternetAddress(addAccountToDatabaseRule.account.email)),
       mimeMessage.from
     )
+    if (outgoingMessageConfiguration.to.isNotEmpty()) {
+      assertArrayEquals(
+        rawMime,
+        outgoingMessageConfiguration.to.mapNotNull { it.asInternetAddress() }.toTypedArray(),
+        mimeMessage.getRecipients(Message.RecipientType.TO)
+      )
+    }
+    if (outgoingMessageConfiguration.cc.isNotEmpty()) {
+      assertArrayEquals(
+        rawMime,
+        outgoingMessageConfiguration.cc.mapNotNull { it.asInternetAddress() }.toTypedArray(),
+        mimeMessage.getRecipients(Message.RecipientType.CC)
+      )
+    }
+    if (outgoingMessageConfiguration.bcc.isNotEmpty()) {
+      assertArrayEquals(
+        rawMime,
+        outgoingMessageConfiguration.bcc.mapNotNull { it.asInternetAddress() }.toTypedArray(),
+        mimeMessage.getRecipients(Message.RecipientType.BCC)
+      )
+    }
 
     //do external checks
-    action.invoke(mimeMessage)
+    action.invoke(outgoingMessageConfiguration, mimeMessage)
   }
 
   companion object {

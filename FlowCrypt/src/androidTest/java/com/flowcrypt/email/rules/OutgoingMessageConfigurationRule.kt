@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 
@@ -14,15 +14,15 @@ import org.junit.runner.Description
  *
  * @author Denys Bondarenko
  */
-class FlowCryptTestSettingsRule : TestWatcher() {
+class OutgoingMessageConfigurationRule : TestWatcher() {
   @Volatile
-  var flowCryptTestSettings: FlowCryptTestSettings? = null
+  var outgoingMessageConfiguration: OutgoingMessageConfiguration? = null
     private set
 
   override fun starting(d: Description) {
-    flowCryptTestSettings =
-      d.getAnnotation(FlowCryptTestSettings::class.java) ?: d.testClass.getAnnotation(
-        FlowCryptTestSettings::class.java
+    outgoingMessageConfiguration =
+      d.getAnnotation(OutgoingMessageConfiguration::class.java) ?: d.testClass.getAnnotation(
+        OutgoingMessageConfiguration::class.java
       )
   }
 }

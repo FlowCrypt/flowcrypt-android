@@ -32,6 +32,7 @@ import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
+import jakarta.mail.internet.InternetAddress
 import org.hamcrest.Matchers.allOf
 import java.io.File
 
@@ -57,23 +58,32 @@ abstract class BaseComposeScreenTest : BaseTest() {
       )
     }
 
-  protected fun fillInAllFields(recipient: String) {
+  protected fun fillInAllFields(
+    to: Collection<InternetAddress>,
+    cc: Collection<InternetAddress>? = null,
+    bcc: Collection<InternetAddress>? = null,
+    subject: String = SUBJECT,
+    message: String = MESSAGE
+  ) {
     onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())
-    onView(withId(R.id.editTextEmailAddress))
-      .perform(replaceText(recipient), pressImeActionButton(), closeSoftKeyboard())
+    for (recipient in to) {
+      onView(withId(R.id.editTextEmailAddress))
+        .perform(replaceText(recipient.address), pressImeActionButton(), closeSoftKeyboard())
+    }
+
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(
         scrollTo(),
         click(),
-        typeText(SUBJECT),
+        typeText(subject),
         closeSoftKeyboard()
       )
     onView(withId(R.id.editTextEmailMessage))
       .perform(
         scrollTo(),
-        typeText(MESSAGE),
+        typeText(message),
         closeSoftKeyboard()
       )
   }
