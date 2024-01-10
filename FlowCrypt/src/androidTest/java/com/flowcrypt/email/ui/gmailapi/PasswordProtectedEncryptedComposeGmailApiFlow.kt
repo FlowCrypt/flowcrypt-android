@@ -78,7 +78,7 @@ import kotlin.random.Random
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("fix me")
-class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
+class PasswordProtectedEncryptedComposeGmailApiFlow : BaseDraftsGmailAPIFlowTest() {
 
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
