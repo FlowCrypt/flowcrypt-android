@@ -103,23 +103,13 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
             + 1 // public key part
         , multipart.count
       )
-      val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
-        requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
-      )
-      val buffer = ByteArrayOutputStream()
-      val messageMetadata = getMessageMetadata(
-        inputStream = ((mimeMessage.content as MimeMultipart)
-          .getBodyPart(0).content as String).toInputStream(),
-        outputStream = buffer,
-        pgpSecretKeyRing = pgpSecretKeyRing
-      )
-      assertEquals(true, messageMetadata.isEncrypted)
-      assertEquals(true, messageMetadata.isSigned)
-      assertEquals(MESSAGE, String(buffer.toByteArray()))
+
+      val encryptedMessagePart = multipart.getBodyPart(0)
+      checkEncryptedMessagePart(encryptedMessagePart)
 
       atts.forEachIndexed { index, file ->
         val attachmentPart = multipart.getBodyPart(index + 1) as MimePart
-        checkEncryptedAttachment(attachmentPart, file.name, genFileContent(index), pgpSecretKeyRing)
+        checkEncryptedAttachment(attachmentPart, file.name, genFileContent(index))
       }
 
       val publicKeyPart = multipart.getBodyPart(atts.size + 1) as MimePart

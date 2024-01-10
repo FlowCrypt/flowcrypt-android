@@ -26,6 +26,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import jakarta.mail.BodyPart
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -85,40 +86,8 @@ class EncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(1, multipart.count)
-      val encryptedContent =
-        (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
-      val buffer = ByteArrayOutputStream()
-
-      val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
-        requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
-      )
-
-      val messageMetadata = getMessageMetadata(
-        inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
-        outputStream = buffer,
-        pgpSecretKeyRing = pgpSecretKeyRing
-      )
-      assertEquals(true, messageMetadata.isEncrypted)
-      assertEquals(true, messageMetadata.isSigned)
-      assertEquals(MESSAGE, String(buffer.toByteArray()))
-
-      val expectedIds = arrayOf(
-        extractKeyId(addPrivateKeyToDatabaseRule.pgpKeyRingDetails),
-        extractKeyId(toPgpKeyDetails),
-        extractKeyId(ccPgpKeyDetails),
-      ).sortedArray()
-
-      val actualIds =
-        messageMetadata.recipientKeyIds.filter { it != 0L }.toTypedArray().sortedArray()
-
-      assertArrayEquals(
-        "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
-        expectedIds,
-        actualIds
-      )
-
-      //https://github.com/FlowCrypt/flowcrypt-android/issues/2306
-      Assert.assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(bccPgpKeyDetails)))
+      val encryptedMessagePart = multipart.getBodyPart(0)
+      checkEncryptedMessagePart(encryptedMessagePart)
     }
   }
 }

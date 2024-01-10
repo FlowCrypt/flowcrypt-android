@@ -48,6 +48,7 @@ import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
+import jakarta.mail.BodyPart
 import jakarta.mail.Message
 import jakarta.mail.Part
 import jakarta.mail.Session
@@ -60,6 +61,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.hamcrest.CoreMatchers.not
 import org.junit.AfterClass
+import org.junit.Assert
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -67,6 +69,7 @@ import org.junit.BeforeClass
 import org.junit.Rule
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -296,9 +299,12 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   protected fun checkEncryptedAttachment(
     attachmentPart: MimePart,
     originalFileName: String,
-    originalFileContent: String,
-    pgpSecretKeyRing: PGPSecretKeyRing
+    originalFileContent: String
   ) {
+    val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
+      requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
+    )
+
     assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
     assertEquals(originalFileName + "." + Constants.PGP_FILE_EXT, attachmentPart.fileName)
 
@@ -323,6 +329,54 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       .publicKeys
       .asSequence()
       .toList()[1].keyID
+  }
+
+  protected fun checkEncryptedMessagePart(bodyPart: BodyPart) {
+    val encryptedContent = bodyPart.content as String
+    val buffer = ByteArrayOutputStream()
+
+    val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
+      requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
+    )
+
+    val outgoingMessageConfiguration =
+      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
+
+    val messageMetadata = getMessageMetadata(
+      inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
+      outputStream = buffer,
+      pgpSecretKeyRing = pgpSecretKeyRing
+    )
+    assertEquals(true, messageMetadata.isEncrypted)
+    assertEquals(true, messageMetadata.isSigned)
+    assertEquals(outgoingMessageConfiguration.message, String(buffer.toByteArray()))
+
+    val expectedIds = mutableListOf<Long>().apply {
+      add(extractKeyId(addPrivateKeyToDatabaseRule.pgpKeyRingDetails))
+      if (outgoingMessageConfiguration.to.contains(TO_RECIPIENT)) {
+        add(extractKeyId(toPgpKeyDetails))
+      }
+      if (outgoingMessageConfiguration.cc.contains(CC_RECIPIENT)) {
+        add(extractKeyId(ccPgpKeyDetails))
+      }
+      if (outgoingMessageConfiguration.bcc.contains(BCC_RECIPIENT)) {
+        add(0)
+      }
+    }.toTypedArray().sortedArray()
+
+    val actualIds =
+      messageMetadata.recipientKeyIds.toTypedArray().sortedArray()
+
+    assertArrayEquals(
+      "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
+      expectedIds,
+      actualIds
+    )
+
+    if (outgoingMessageConfiguration.bcc.isNotEmpty()) {
+      //https://github.com/FlowCrypt/flowcrypt-android/issues/2306
+      Assert.assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(bccPgpKeyDetails)))
+    }
   }
 
   protected fun doAfterSendingChecks(

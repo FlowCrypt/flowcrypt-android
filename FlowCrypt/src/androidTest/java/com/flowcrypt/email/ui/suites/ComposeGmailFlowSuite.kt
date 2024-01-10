@@ -21,8 +21,8 @@ import org.junit.runners.Suite
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
   StandardComposeGmailApiFlow::class,
-  EncryptedComposeGmailApiFlow::class,
   StandardWithAttachmentsComposeGmailApiFlow::class,
+  EncryptedComposeGmailApiFlow::class,
   EncryptedWithAttachmentsComposeGmailApiFlow::class,
   EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow::class,
 )
