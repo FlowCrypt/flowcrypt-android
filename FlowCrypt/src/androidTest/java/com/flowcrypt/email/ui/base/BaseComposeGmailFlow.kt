@@ -112,53 +112,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   protected val bccPgpKeyDetails =
     PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/not_attested_user@flowcrypt.test-pub.asc")
 
-  protected val recipientWithPubKeys = listOf(
-    RecipientWithPubKeys(
-      RecipientEntity(
-        email = accountEntity.email,
-        name = "Default"
-      ),
-      listOf(
-        addPrivateKeyToDatabaseRule.pgpKeyRingDetails
-          .toPublicKeyEntity(accountEntity.email)
-          .copy(id = 1)
-      )
-    ),
-    RecipientWithPubKeys(
-      RecipientEntity(
-        email = requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address),
-        name = "TO"
-      ),
-      listOf(
-        toPgpKeyDetails
-          .toPublicKeyEntity(requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address))
-          .copy(id = 2)
-      )
-    ),
-    RecipientWithPubKeys(
-      RecipientEntity(
-        email = requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address),
-        name = "CC"
-      ),
-      listOf(
-        ccPgpKeyDetails
-          .toPublicKeyEntity(requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address))
-          .copy(id = 3)
-      )
-    ),
-    RecipientWithPubKeys(
-      RecipientEntity(
-        email = requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address),
-        name = "BCC"
-      ),
-      listOf(
-        bccPgpKeyDetails
-          .toPublicKeyEntity(requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address))
-          .copy(id = 4)
-      )
-    )
-  )
-
   @get:Rule
   val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
 
@@ -186,6 +139,55 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   @Before
   fun prepareTest() {
     openComposeScreenAndFillData()
+  }
+
+  open fun prepareRecipientsForTest(): List<RecipientWithPubKeys>{
+   return listOf(
+      RecipientWithPubKeys(
+        RecipientEntity(
+          email = accountEntity.email,
+          name = "Default"
+        ),
+        listOf(
+          addPrivateKeyToDatabaseRule.pgpKeyRingDetails
+            .toPublicKeyEntity(accountEntity.email)
+            .copy(id = 1)
+        )
+      ),
+      RecipientWithPubKeys(
+        RecipientEntity(
+          email = requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address),
+          name = "TO"
+        ),
+        listOf(
+          toPgpKeyDetails
+            .toPublicKeyEntity(requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address))
+            .copy(id = 2)
+        )
+      ),
+      RecipientWithPubKeys(
+        RecipientEntity(
+          email = requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address),
+          name = "CC"
+        ),
+        listOf(
+          ccPgpKeyDetails
+            .toPublicKeyEntity(requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address))
+            .copy(id = 3)
+        )
+      ),
+      RecipientWithPubKeys(
+        RecipientEntity(
+          email = requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address),
+          name = "BCC"
+        ),
+        listOf(
+          bccPgpKeyDetails
+            .toPublicKeyEntity(requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address))
+            .copy(id = 4)
+        )
+      )
+    )
   }
 
   protected fun openComposeScreenAndFillData() {

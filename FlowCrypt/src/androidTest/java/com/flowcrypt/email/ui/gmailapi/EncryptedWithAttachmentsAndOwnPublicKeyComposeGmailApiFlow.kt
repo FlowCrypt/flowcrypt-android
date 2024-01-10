@@ -68,7 +68,7 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
       .around(mockWebServerRule)
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
-      .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))
+      .around(AddRecipientsToDatabaseRule(prepareRecipientsForTest()))
       .around(addLabelsToDatabaseRule)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())

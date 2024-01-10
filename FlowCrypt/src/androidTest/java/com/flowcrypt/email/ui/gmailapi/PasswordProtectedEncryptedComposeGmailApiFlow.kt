@@ -25,6 +25,8 @@ import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -34,6 +36,8 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
+import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.gson.GsonHelper
@@ -77,8 +81,15 @@ import kotlin.random.Random
 
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
-class PasswordProtectedEncryptedComposeGmailApiFlow : BaseDraftsGmailAPIFlowTest() {
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
+@OutgoingMessageConfiguration(
+  to = [BaseComposeGmailFlow.TO_RECIPIENT],
+  cc = [BaseComposeGmailFlow.CC_RECIPIENT],
+  bcc = [BaseComposeGmailFlow.BCC_RECIPIENT],
+  message = BaseComposeScreenTest.MESSAGE,
+  subject = BaseComposeScreenTest.SUBJECT
+)
+class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -103,7 +114,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseDraftsGmailAPIFlowTest
       }
     })
 
-  private val recipientWithPubKeys = listOf(
+  private val recipientWithPubKeysList = listOf(
     RecipientWithPubKeys(
       RecipientEntity(
         email = TO_RECIPIENT_WITHOUT_PUBLIC_KEY,
@@ -142,7 +153,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseDraftsGmailAPIFlowTest
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
       .around(addLabelsToDatabaseRule)
-      .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))
+      .around(AddRecipientsToDatabaseRule(recipientWithPubKeysList))
       .around(ScreenshotTestRule())
 
   private var isRequestToMessageAPITested = false
