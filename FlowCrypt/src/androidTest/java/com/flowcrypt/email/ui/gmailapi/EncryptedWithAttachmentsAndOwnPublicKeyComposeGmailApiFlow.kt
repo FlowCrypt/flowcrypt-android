@@ -56,7 +56,7 @@ import java.io.ByteArrayOutputStream
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
-class EncryptedWithOwnPublicKeyComposeGmailApiFlow : BaseComposeGmailFlow() {
+class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
