@@ -17,6 +17,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
+import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -46,7 +47,9 @@ import java.io.ByteArrayOutputStream
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
-  to = [TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER],
+  to = [BaseComposeGmailFlow.TO_RECIPIENT],
+  cc = [BaseComposeGmailFlow.CC_RECIPIENT],
+  bcc = [BaseComposeGmailFlow.BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
@@ -66,6 +69,7 @@ class EncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
       .around(mockWebServerRule)
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
+      .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))
       .around(addLabelsToDatabaseRule)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
@@ -98,7 +102,7 @@ class EncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
       assertEquals(MESSAGE, String(buffer.toByteArray()))
 
       val expectedIds = arrayOf(
-        PgpKey.parseKeys(pgpKeyRingDetailsTo.publicKey)
+        PgpKey.parseKeys(toPgpKeyDetails.publicKey)
           .pgpKeyRingCollection
           .pgpPublicKeyRingCollection
           .first()

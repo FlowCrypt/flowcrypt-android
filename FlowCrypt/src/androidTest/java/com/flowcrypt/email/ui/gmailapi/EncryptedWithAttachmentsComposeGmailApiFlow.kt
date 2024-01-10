@@ -15,13 +15,13 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
+import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -30,7 +30,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import jakarta.mail.Part
 import jakarta.mail.internet.MimeMultipart
 import jakarta.mail.internet.MimePart
 import okhttp3.mockwebserver.Dispatcher
@@ -48,7 +47,9 @@ import java.io.ByteArrayOutputStream
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 @OutgoingMessageConfiguration(
-  to = [TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER],
+  to = [BaseComposeGmailFlow.TO_RECIPIENT],
+  cc = [BaseComposeGmailFlow.CC_RECIPIENT],
+  bcc = [BaseComposeGmailFlow.BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
@@ -68,6 +69,7 @@ class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
       .around(mockWebServerRule)
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
+      .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))
       .around(addLabelsToDatabaseRule)
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())

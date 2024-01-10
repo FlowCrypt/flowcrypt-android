@@ -22,6 +22,8 @@ import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
@@ -33,7 +35,6 @@ import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.OutgoingMessageConfigurationRule
-import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
@@ -75,18 +76,6 @@ import java.util.Properties
  * @author Denys Bondarenko
  */
 abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
-  protected val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
-  abstract val mockWebServerRule: FlowCryptMockWebServerRule
-  override val activityScenarioRule = activityScenarioRule<MainActivity>()
-
-  protected val pgpKeyRingDetailsTo: PgpKeyRingDetails =
-    PrivateKeysManager.getPgpKeyDetailsFromAssets(
-      "pgp/attested_user@flowcrypt.test_prv_default_strong.asc"
-    )
-
-  @get:Rule
-  val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
-
   private val accountEntity = AccountDaoManager.getDefaultAccountDao().copy(
     accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
       flags = listOf(
@@ -107,15 +96,76 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   protected val addPrivateKeyToDatabaseRule =
     AddPrivateKeyToDatabaseRule(addAccountToDatabaseRule.account)
 
+  protected val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
+  abstract val mockWebServerRule: FlowCryptMockWebServerRule
+  override val activityScenarioRule = activityScenarioRule<MainActivity>()
+
+  protected val toPgpKeyDetails =
+    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/attested_user@flowcrypt.test_prv_default_strong.asc")
+  protected val ccPgpKeyDetails =
+    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/user_without_letters@flowcrypt.test_prv_strong.asc")
+  protected val bccPgpKeyDetails =
+    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/not_attested_user@flowcrypt.test-pub.asc")
+
+  protected val recipientWithPubKeys = listOf(
+    RecipientWithPubKeys(
+      RecipientEntity(
+        email = accountEntity.email,
+        name = "Default"
+      ),
+      listOf(
+        addPrivateKeyToDatabaseRule.pgpKeyRingDetails
+          .toPublicKeyEntity(accountEntity.email)
+          .copy(id = 1)
+      )
+    ),
+    RecipientWithPubKeys(
+      RecipientEntity(
+        email = requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address),
+        name = "TO"
+      ),
+      listOf(
+        toPgpKeyDetails
+          .toPublicKeyEntity(requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address))
+          .copy(id = 2)
+      )
+    ),
+    RecipientWithPubKeys(
+      RecipientEntity(
+        email = requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address),
+        name = "CC"
+      ),
+      listOf(
+        ccPgpKeyDetails
+          .toPublicKeyEntity(requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address))
+          .copy(id = 3)
+      )
+    ),
+    RecipientWithPubKeys(
+      RecipientEntity(
+        email = requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address),
+        name = "BCC"
+      ),
+      listOf(
+        bccPgpKeyDetails
+          .toPublicKeyEntity(requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address))
+          .copy(id = 4)
+      )
+    )
+  )
+
+  @get:Rule
+  val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
+
   protected val addLabelsToDatabaseRule = AddLabelsToDatabaseRule(
-    account = addAccountToDatabaseRule.account, folders = listOf(
+    account = accountEntity, folders = listOf(
       LocalFolder(
-        account = addAccountToDatabaseRule.account.email,
+        account = accountEntity.email,
         fullName = JavaEmailConstants.FOLDER_DRAFT,
         folderAlias = JavaEmailConstants.FOLDER_DRAFT,
         attributes = listOf("\\HasNoChildren", "\\Draft")
       ), LocalFolder(
-        account = addAccountToDatabaseRule.account.email,
+        account = accountEntity.email,
         fullName = JavaEmailConstants.FOLDER_INBOX,
         folderAlias = JavaEmailConstants.FOLDER_INBOX,
         attributes = listOf("\\HasNoChildren")
@@ -144,6 +194,12 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
 
     fillInAllFields(
       to = outgoingMessageConfiguration.to.map { requireNotNull(it.asInternetAddress()) },
+      cc = outgoingMessageConfiguration.cc.takeIf { it.isNotEmpty() }?.map {
+        requireNotNull(it.asInternetAddress())
+      },
+      bcc = outgoingMessageConfiguration.bcc.takeIf { it.isNotEmpty() }?.map {
+        requireNotNull(it.asInternetAddress())
+      },
       subject = outgoingMessageConfiguration.subject,
       message = outgoingMessageConfiguration.message,
     )
@@ -151,20 +207,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
 
   protected fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
     when {
-      request.path?.startsWith("/attester/pub", ignoreCase = true) == true -> {
-        val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
-
-        return when {
-          TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
-            MockResponse()
-              .setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(pgpKeyRingDetailsTo.publicKey)
-          }
-
-          else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        }
-      }
-
       request.path == "/v1/keys/private" -> {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
           ApiHelper.getInstance(getTargetContext()).gson
@@ -344,6 +386,10 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     const val BASE_URL = "https://flowcrypt.test"
     const val LOCATION_URL =
       "/upload/gmail/v1/users/me/messages/send?uploadType=resumable&upload_id=Location"
+
+    const val TO_RECIPIENT = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER
+    const val CC_RECIPIENT = "user_without_letters@flowcrypt.test"
+    const val BCC_RECIPIENT = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
 
     private const val ATTACHMENTS_COUNT = 3
     var atts: MutableList<File> = mutableListOf()
