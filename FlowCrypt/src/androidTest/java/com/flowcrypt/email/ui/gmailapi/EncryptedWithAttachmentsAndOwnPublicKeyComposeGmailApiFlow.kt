@@ -76,7 +76,7 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
   @Test
   fun testSending() {
     //add attachments
-    atts.forEach {
+    attachments.forEach {
       addAttachment(it)
     }
 
@@ -94,7 +94,7 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(
-        atts.size
+        attachments.size
             + 1 // message part
             + 1 // public key part
         , multipart.count
@@ -103,12 +103,12 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
       val encryptedMessagePart = multipart.getBodyPart(0)
       checkEncryptedMessagePart(encryptedMessagePart)
 
-      atts.forEachIndexed { index, file ->
-        val attachmentPart = multipart.getBodyPart(index + 1) as MimePart
-        checkEncryptedAttachment(attachmentPart, file.name, genFileContent(index))
+      attachments.forEachIndexed { index, file ->
+        val attachmentPart = multipart.getBodyPart(index + 1)
+        checkEncryptedAttachment(attachmentPart, file.name, attachmentsDataCache[index])
       }
 
-      val publicKeyPart = multipart.getBodyPart(atts.size + 1) as MimePart
+      val publicKeyPart = multipart.getBodyPart(attachments.size + 1) as MimePart
       checkAttachedPublicKey(publicKeyPart)
     }
   }

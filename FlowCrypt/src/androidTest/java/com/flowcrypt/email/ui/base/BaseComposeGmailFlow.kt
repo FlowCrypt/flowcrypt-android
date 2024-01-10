@@ -61,7 +61,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.hamcrest.CoreMatchers.not
 import org.junit.AfterClass
-import org.junit.Assert
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -76,6 +75,7 @@ import java.io.File
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.Properties
+import kotlin.random.Random
 
 /**
  * @author Denys Bondarenko
@@ -300,28 +300,36 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   )
 
   protected fun checkEncryptedAttachment(
-    attachmentPart: MimePart,
-    originalFileName: String,
-    originalFileContent: String
+    attachmentPart: BodyPart,
+    fileName: String,
+    fileBytes: ByteArray
   ) {
     val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
       requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey)
     )
-
-    assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
-    assertEquals(originalFileName + "." + Constants.PGP_FILE_EXT, attachmentPart.fileName)
-
     val attachmentOutputStream = ByteArrayOutputStream()
     val attachmentMessageMetadata = getMessageMetadata(
       inputStream = attachmentPart.inputStream,
       outputStream = attachmentOutputStream,
       pgpSecretKeyRing = pgpSecretKeyRing
     )
-
-    assertEquals(originalFileName, attachmentMessageMetadata.filename)
+    val decryptedBytes = attachmentOutputStream.toByteArray()
+    assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
+    assertEquals(fileName + "." + Constants.PGP_FILE_EXT, attachmentPart.fileName)
+    assertEquals(fileName, attachmentMessageMetadata.filename)
     assertEquals(true, attachmentMessageMetadata.isEncrypted)
     assertEquals(false, attachmentMessageMetadata.isSigned)
-    assertEquals(originalFileContent, String(attachmentOutputStream.toByteArray()))
+    assertArrayEquals(fileBytes, decryptedBytes)
+  }
+
+  protected fun checkStandardAttachment(
+    attachmentPart: BodyPart,
+    fileName: String,
+    fileBytes: ByteArray
+  ) {
+    assertEquals(Part.ATTACHMENT, attachmentPart.disposition)
+    assertEquals(fileName, attachmentPart.fileName)
+    assertArrayEquals(fileBytes, attachmentPart.inputStream.readBytes())
   }
 
   protected fun checkAttachedPublicKey(publicKeyPart: MimePart) {
@@ -466,13 +474,20 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     const val BASE_URL = "https://flowcrypt.test"
     const val LOCATION_URL =
       "/upload/gmail/v1/users/me/messages/send?uploadType=resumable&upload_id=Location"
+    const val ATTACHMENT_NAME_1 = "text.txt"
+    const val ATTACHMENT_NAME_2 = "text1.txt"
+    const val ATTACHMENT_NAME_3 = "binary_key.key"
 
     const val TO_RECIPIENT = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER
     const val CC_RECIPIENT = "user_without_letters@flowcrypt.test"
     const val BCC_RECIPIENT = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
 
-    private const val ATTACHMENTS_COUNT = 3
-    var atts: MutableList<File> = mutableListOf()
+    var attachments: MutableList<File> = mutableListOf()
+
+    /**
+     * We need to have a cache of sent files to compare data after sending
+     */
+    var attachmentsDataCache: MutableList<ByteArray> = mutableListOf()
 
     @BeforeClass
     @JvmStatic
@@ -483,21 +498,34 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     @AfterClass
     @JvmStatic
     fun tearDown() {
-      TestGeneralUtil.deleteFiles(atts)
-    }
-
-    fun genFileContent(id: Int): String {
-      return "$id - Text for filling the attached file"
+      TestGeneralUtil.deleteFiles(attachments)
     }
 
     private fun createFilesForCommonAtts() {
-      for (i in 0 until ATTACHMENTS_COUNT) {
-        atts.add(
-          TestGeneralUtil.createFileWithTextContent(
-            "$i.txt", genFileContent(i)
+      attachmentsDataCache.addAll(
+        listOf(
+          "Text attachment 1".toByteArray(), //text data
+          "Text attachment 2".toByteArray(), //text data
+          Random.nextBytes(1024 * 1024), //binary data 1Mb
+        )
+      )
+
+      attachments.addAll(
+        listOf(
+          TestGeneralUtil.createFileWithContent(
+            fileName = ATTACHMENT_NAME_1,
+            byteArray = attachmentsDataCache[0]
+          ),
+          TestGeneralUtil.createFileWithContent(
+            fileName = ATTACHMENT_NAME_2,
+            byteArray = attachmentsDataCache[1]
+          ),
+          TestGeneralUtil.createFileWithContent(
+            fileName = ATTACHMENT_NAME_3,
+            byteArray = attachmentsDataCache[2]
           )
         )
-      }
+      )
     }
   }
 }

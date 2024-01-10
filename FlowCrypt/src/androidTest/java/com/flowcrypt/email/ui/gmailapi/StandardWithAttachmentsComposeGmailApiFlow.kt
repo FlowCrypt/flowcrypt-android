@@ -29,7 +29,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import jakarta.mail.Part
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -81,7 +80,7 @@ class StandardWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
       .perform(click())
 
     //add attachments
-    atts.forEach {
+    attachments.forEach {
       addAttachment(it)
     }
 
@@ -92,14 +91,12 @@ class StandardWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
 
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(atts.size + 1, multipart.count)
+      assertEquals(attachments.size + 1, multipart.count)
       assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
 
-      atts.forEachIndexed { index, file ->
-        val mimePart = multipart.getBodyPart(index + 1)
-        assertEquals(Part.ATTACHMENT, mimePart.disposition)
-        assertEquals(file.name, mimePart.fileName)
-        assertEquals(genFileContent(index), mimePart.content as String)
+      attachments.forEachIndexed { index, file ->
+        val attachmentPart = multipart.getBodyPart(index + 1)
+        checkStandardAttachment(attachmentPart, file.name, attachmentsDataCache[index])
       }
     }
   }

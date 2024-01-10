@@ -77,7 +77,7 @@ class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
   @Test
   fun testSending() {
     //add attachments
-    atts.forEach {
+    attachments.forEach {
       addAttachment(it)
     }
 
@@ -88,13 +88,13 @@ class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
 
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(atts.size + 1, multipart.count)
+      assertEquals(attachments.size + 1, multipart.count)
       val encryptedMessagePart = multipart.getBodyPart(0)
       checkEncryptedMessagePart(encryptedMessagePart)
 
-      atts.forEachIndexed { index, file ->
-        val attachmentPart = multipart.getBodyPart(index + 1) as MimePart
-        checkEncryptedAttachment(attachmentPart, file.name, genFileContent(index))
+      attachments.forEachIndexed { index, file ->
+        val attachmentPart = multipart.getBodyPart(index + 1)
+        checkEncryptedAttachment(attachmentPart, file.name, attachmentsDataCache[index])
       }
     }
   }
