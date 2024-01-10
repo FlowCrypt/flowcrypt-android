@@ -64,6 +64,7 @@ import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -321,7 +322,19 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     assertEquals(originalFileContent, String(attachmentOutputStream.toByteArray()))
   }
 
-  protected fun extractKeyId(pgpKeyRingDetails: PgpKeyRingDetails): Long {
+  protected fun checkAttachedPublicKey(publicKeyPart: MimePart) {
+    assertEquals(Part.ATTACHMENT, publicKeyPart.disposition)
+    assertEquals(
+      "0x${addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint}.asc",
+      publicKeyPart.fileName
+    )
+    assertEquals(
+      addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey,
+      String(publicKeyPart.inputStream.readBytes())
+    )
+  }
+
+  private fun extractKeyId(pgpKeyRingDetails: PgpKeyRingDetails): Long {
     return PgpKey.parseKeys(pgpKeyRingDetails.publicKey)
       .pgpKeyRingCollection
       .pgpPublicKeyRingCollection
@@ -375,7 +388,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
 
     if (outgoingMessageConfiguration.bcc.isNotEmpty()) {
       //https://github.com/FlowCrypt/flowcrypt-android/issues/2306
-      Assert.assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(bccPgpKeyDetails)))
+      assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(bccPgpKeyDetails)))
     }
   }
 

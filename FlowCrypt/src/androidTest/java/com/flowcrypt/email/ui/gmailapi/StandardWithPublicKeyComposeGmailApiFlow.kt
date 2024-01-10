@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.ui.gmailapi
 
-/**
- * @author Denys Bondarenko
- */
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
@@ -29,7 +26,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import jakarta.mail.Part
 import jakarta.mail.internet.MimeMultipart
 import jakarta.mail.internet.MimePart
 import okhttp3.mockwebserver.Dispatcher
@@ -42,9 +38,12 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
+/**
+ * @author Denys Bondarenko
+ */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
+@FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
   to = [BaseComposeGmailFlow.TO_RECIPIENT],
   cc = [BaseComposeGmailFlow.CC_RECIPIENT],
@@ -52,7 +51,7 @@ import org.junit.runner.RunWith
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
-class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGmailFlow() {
+class StandardWithPublicKeyComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -75,10 +74,11 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
 
   @Test
   fun testSending() {
-    //add attachments
-    atts.forEach {
-      addAttachment(it)
-    }
+    //switch to standard mode
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.switch_to_standard_email))
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     //attach a public key
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -94,21 +94,13 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
     doAfterSendingChecks { _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(
-        atts.size
-            + 1 // message part
-            + 1 // public key part
-        , multipart.count
+        1 // message
+            + 1, // public key
+        multipart.count
       )
+      assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
 
-      val encryptedMessagePart = multipart.getBodyPart(0)
-      checkEncryptedMessagePart(encryptedMessagePart)
-
-      atts.forEachIndexed { index, file ->
-        val attachmentPart = multipart.getBodyPart(index + 1) as MimePart
-        checkEncryptedAttachment(attachmentPart, file.name, genFileContent(index))
-      }
-
-      val publicKeyPart = multipart.getBodyPart(atts.size + 1) as MimePart
+      val publicKeyPart = multipart.getBodyPart(1) as MimePart
       checkAttachedPublicKey(publicKeyPart)
     }
   }
