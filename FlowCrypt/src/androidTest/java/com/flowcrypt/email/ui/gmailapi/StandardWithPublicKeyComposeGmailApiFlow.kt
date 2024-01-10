@@ -100,7 +100,7 @@ class StandardWithPublicKeyComposeGmailApiFlow : BaseComposeGmailFlow() {
       )
       assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
 
-      val publicKeyPart = multipart.getBodyPart(1) as MimePart
+      val publicKeyPart = multipart.getBodyPart(1)
       checkAttachedPublicKey(publicKeyPart)
     }
   }

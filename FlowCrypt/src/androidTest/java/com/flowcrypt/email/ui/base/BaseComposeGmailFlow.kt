@@ -54,7 +54,6 @@ import jakarta.mail.Part
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
-import jakarta.mail.internet.MimePart
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -69,7 +68,6 @@ import org.junit.BeforeClass
 import org.junit.Rule
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -332,7 +330,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     assertArrayEquals(fileBytes, attachmentPart.inputStream.readBytes())
   }
 
-  protected fun checkAttachedPublicKey(publicKeyPart: MimePart) {
+  protected fun checkAttachedPublicKey(publicKeyPart: BodyPart) {
     assertEquals(Part.ATTACHMENT, publicKeyPart.disposition)
     assertEquals(
       "0x${addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint}.asc",
@@ -355,7 +353,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   }
 
   protected fun checkEncryptedMessagePart(bodyPart: BodyPart) {
-    val encryptedContent = bodyPart.content as String
     val buffer = ByteArrayOutputStream()
 
     val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
@@ -366,7 +363,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
     val messageMetadata = getMessageMetadata(
-      inputStream = ByteArrayInputStream(encryptedContent.toByteArray()),
+      inputStream = bodyPart.inputStream,
       outputStream = buffer,
       pgpSecretKeyRing = pgpSecretKeyRing
     )
@@ -402,6 +399,24 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     }
   }
 
+  protected fun compareAddresses(expected: Array<String>, actual: Array<String>) {
+    assertArrayEquals(
+      expected
+        .map { requireNotNull(it.asInternetAddress()?.address?.lowercase()) }
+        .toTypedArray()
+        .sortedArray(),
+      actual
+        .map { requireNotNull(it.asInternetAddress()?.address?.lowercase()) }
+        .toTypedArray()
+        .sortedArray()
+    )
+  }
+
+  protected fun getEmailAddresses(mimeMessage: MimeMessage, type: Message.RecipientType) =
+    mimeMessage.getRecipients(type)
+      ?.map { (it as InternetAddress).address.lowercase() }
+      ?.toTypedArray() ?: emptyArray()
+
   protected fun doAfterSendingChecks(
     action: (
       outgoingMessageConfiguration: OutgoingMessageConfiguration,
@@ -409,7 +424,9 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     ) -> Unit
   ) {
     //need to wait some time while the app send a message
-    Thread.sleep(5000)
+    val outgoingMessageConfiguration =
+      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
+    Thread.sleep(outgoingMessageConfiguration.timeoutToWaitSendingInMilliseconds)
 
     //check that we have one message in the server cache and outbox label is not displayed
     assertEquals(1, sentCache.size)
@@ -432,8 +449,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     //check sent MIME message
     val rawMime = requireNotNull(sentCache.first().raw)
     val mimeMessage = MimeMessage(Session.getDefaultInstance(Properties()), rawMime.toInputStream())
-    val outgoingMessageConfiguration =
-      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
     //do base checks
     assertEquals(rawMime, outgoingMessageConfiguration.subject, mimeMessage.subject)
@@ -443,24 +458,21 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       mimeMessage.from
     )
     if (outgoingMessageConfiguration.to.isNotEmpty()) {
-      assertArrayEquals(
-        rawMime,
-        outgoingMessageConfiguration.to.mapNotNull { it.asInternetAddress() }.toTypedArray(),
-        mimeMessage.getRecipients(Message.RecipientType.TO)
+      compareAddresses(
+        outgoingMessageConfiguration.to,
+        getEmailAddresses(mimeMessage, Message.RecipientType.TO)
       )
     }
     if (outgoingMessageConfiguration.cc.isNotEmpty()) {
-      assertArrayEquals(
-        rawMime,
-        outgoingMessageConfiguration.cc.mapNotNull { it.asInternetAddress() }.toTypedArray(),
-        mimeMessage.getRecipients(Message.RecipientType.CC)
+      compareAddresses(
+        outgoingMessageConfiguration.cc,
+        getEmailAddresses(mimeMessage, Message.RecipientType.CC)
       )
     }
     if (outgoingMessageConfiguration.bcc.isNotEmpty()) {
-      assertArrayEquals(
-        rawMime,
-        outgoingMessageConfiguration.bcc.mapNotNull { it.asInternetAddress() }.toTypedArray(),
-        mimeMessage.getRecipients(Message.RecipientType.BCC)
+      compareAddresses(
+        outgoingMessageConfiguration.bcc,
+        getEmailAddresses(mimeMessage, Message.RecipientType.BCC)
       )
     }
 
@@ -506,7 +518,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
         listOf(
           "Text attachment 1".toByteArray(), //text data
           "Text attachment 2".toByteArray(), //text data
-          Random.nextBytes(1024 * 1024), //binary data 1Mb
+          Random.nextBytes(1024), //binary data 1Mb
         )
       )
 

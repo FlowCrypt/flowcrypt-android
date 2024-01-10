@@ -23,5 +23,6 @@ annotation class OutgoingMessageConfiguration(
   val cc: Array<String> = [],
   val bcc: Array<String> = [],
   val subject: String,
-  val message: String
+  val message: String,
+  val timeoutToWaitSendingInMilliseconds: Long = 5000L
 )

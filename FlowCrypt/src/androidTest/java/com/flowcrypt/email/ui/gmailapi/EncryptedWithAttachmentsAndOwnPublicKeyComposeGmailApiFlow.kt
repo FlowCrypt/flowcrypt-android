@@ -108,7 +108,7 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
         checkEncryptedAttachment(attachmentPart, file.name, attachmentsDataCache[index])
       }
 
-      val publicKeyPart = multipart.getBodyPart(attachments.size + 1) as MimePart
+      val publicKeyPart = multipart.getBodyPart(attachments.size + 1)
       checkAttachedPublicKey(publicKeyPart)
     }
   }
