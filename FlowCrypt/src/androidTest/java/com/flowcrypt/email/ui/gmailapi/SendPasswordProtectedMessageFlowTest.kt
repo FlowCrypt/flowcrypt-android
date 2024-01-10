@@ -3,7 +3,7 @@
  * Contributors: denbond7
  */
 
-package com.flowcrypt.email.ui
+package com.flowcrypt.email.ui.gmailapi
 
 import android.content.Context
 import android.os.Environment
