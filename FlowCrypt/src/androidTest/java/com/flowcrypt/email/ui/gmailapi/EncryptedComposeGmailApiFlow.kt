@@ -30,6 +30,7 @@ import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -102,23 +103,13 @@ class EncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
       assertEquals(MESSAGE, String(buffer.toByteArray()))
 
       val expectedIds = arrayOf(
-        PgpKey.parseKeys(toPgpKeyDetails.publicKey)
-          .pgpKeyRingCollection
-          .pgpPublicKeyRingCollection
-          .first()
-          .publicKeys
-          .asSequence()
-          .toList()[1].keyID,
-        PgpKey.parseKeys(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey)
-          .pgpKeyRingCollection
-          .pgpPublicKeyRingCollection
-          .first()
-          .publicKeys
-          .asSequence()
-          .toList()[1].keyID,
+        extractKeyId(addPrivateKeyToDatabaseRule.pgpKeyRingDetails),
+        extractKeyId(toPgpKeyDetails),
+        extractKeyId(ccPgpKeyDetails),
       ).sortedArray()
 
-      val actualIds = messageMetadata.recipientKeyIds.toTypedArray().sortedArray()
+      val actualIds =
+        messageMetadata.recipientKeyIds.filter { it != 0L }.toTypedArray().sortedArray()
 
       assertArrayEquals(
         "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
@@ -126,17 +117,8 @@ class EncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
         actualIds
       )
 
-      /*Assert.assertFalse(
-        messageMetadata.recipientKeyIds.contains(
-          PgpKey.parseKeys(bccPgpKeyDetails.publicKey)
-            .pgpKeyRingCollection
-            .pgpPublicKeyRingCollection
-            .first()
-            .publicKeys
-            .asSequence()
-            .toList()[1].keyID
-        )
-      )*/
+      //https://github.com/FlowCrypt/flowcrypt-android/issues/2306
+      Assert.assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(bccPgpKeyDetails)))
     }
   }
 }

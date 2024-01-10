@@ -35,6 +35,7 @@ import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.OutgoingMessageConfigurationRule
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
@@ -312,6 +313,16 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     assertEquals(true, attachmentMessageMetadata.isEncrypted)
     assertEquals(false, attachmentMessageMetadata.isSigned)
     assertEquals(originalFileContent, String(attachmentOutputStream.toByteArray()))
+  }
+
+  protected fun extractKeyId(pgpKeyRingDetails: PgpKeyRingDetails): Long {
+    return PgpKey.parseKeys(pgpKeyRingDetails.publicKey)
+      .pgpKeyRingCollection
+      .pgpPublicKeyRingCollection
+      .first()
+      .publicKeys
+      .asSequence()
+      .toList()[1].keyID
   }
 
   protected fun doAfterSendingChecks(
