@@ -29,9 +29,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import jakarta.mail.Part
 import jakarta.mail.internet.MimeMultipart
-import jakarta.mail.internet.MimePart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -91,7 +89,7 @@ class EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow : BaseComposeGm
       .check(matches(isDisplayed()))
       .perform(click())
 
-    doAfterSendingChecks { _, mimeMessage ->
+    doAfterSendingChecks { _, _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(
         attachments.size

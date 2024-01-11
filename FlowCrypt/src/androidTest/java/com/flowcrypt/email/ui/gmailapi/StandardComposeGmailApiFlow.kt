@@ -84,7 +84,7 @@ class StandardComposeGmailApiFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    doAfterSendingChecks { _, mimeMessage ->
+    doAfterSendingChecks { _, _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(1, multipart.count)
       assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)

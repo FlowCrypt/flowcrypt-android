@@ -17,8 +17,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.extensions.kotlin.toInputStream
-import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -27,11 +25,9 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import jakarta.mail.internet.MimeMultipart
-import jakarta.mail.internet.MimePart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -41,7 +37,6 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.io.ByteArrayOutputStream
 
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -86,7 +81,7 @@ class EncryptedWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    doAfterSendingChecks { _, mimeMessage ->
+    doAfterSendingChecks { _, _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(attachments.size + 1, multipart.count)
       val encryptedMessagePart = multipart.getBodyPart(0)

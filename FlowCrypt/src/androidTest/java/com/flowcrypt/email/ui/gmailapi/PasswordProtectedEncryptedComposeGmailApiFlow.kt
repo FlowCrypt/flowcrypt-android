@@ -51,7 +51,6 @@ import okhttp3.MultipartReader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -192,7 +191,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    doAfterSendingChecks { _, mimeMessage ->
+    doAfterSendingChecks { _, _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(
         1 // Part with FES message link
