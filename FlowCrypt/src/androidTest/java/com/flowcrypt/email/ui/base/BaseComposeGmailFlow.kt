@@ -189,13 +189,17 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   }
 
   protected fun openComposeScreenAndFillData() {
+    val outgoingMessageConfiguration =
+      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
+
+    if (outgoingMessageConfiguration.timeoutBeforeMovingToComposeInMilliseconds > 0) {
+      Thread.sleep(outgoingMessageConfiguration.timeoutBeforeMovingToComposeInMilliseconds)
+    }
+
     //open the compose screen
     onView(withId(R.id.floatActionButtonCompose))
       .check(matches(isDisplayed()))
       .perform(click())
-
-    val outgoingMessageConfiguration =
-      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
     fillInAllFields(
       to = outgoingMessageConfiguration.to.map { requireNotNull(it.asInternetAddress()) },
