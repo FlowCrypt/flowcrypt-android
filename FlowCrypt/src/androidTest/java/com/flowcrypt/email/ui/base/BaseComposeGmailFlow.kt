@@ -672,11 +672,12 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       labelIds = listOf(JavaEmailConstants.FOLDER_INBOX)
       snippet = SUBJECT_EXISTING_STANDARD
       historyId = HISTORY_ID_STANDARD
+      val boundary = "000000000000fbd8c4060ea7c59b"
       payload = MessagePart().apply {
         partId = ""
         mimeType = "multipart/mixed"
         filename = ""
-        headers = prepareMessageHeaders(SUBJECT_EXISTING_STANDARD, DATE_EXISTING_STANDARD)
+        headers = prepareMessageHeaders(SUBJECT_EXISTING_STANDARD, DATE_EXISTING_STANDARD, boundary)
         body = MessagePartBody().apply {
           setSize(0)
         }
@@ -796,7 +797,11 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       sizeEstimate = 0 // we don't care about this parameter
     }.toString()
 
-  private fun prepareMessageHeaders(subject: String, dateInMilliseconds: Long) = listOf(
+  private fun prepareMessageHeaders(
+    subject: String,
+    dateInMilliseconds: Long,
+    boundary: String
+  ) = listOf(
     MessagePartHeader().apply {
       name = "MIME-Version"
       value = "1.0"
@@ -815,11 +820,19 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     },
     MessagePartHeader().apply {
       name = "From"
+      value = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER
+    },
+    MessagePartHeader().apply {
+      name = "To"
       value = addAccountToDatabaseRule.account.email
     },
     MessagePartHeader().apply {
+      name = "Cc"
+      value = "denbond7@flowcrypt.test"
+    },
+    MessagePartHeader().apply {
       name = "Content-Type"
-      value = "multipart/mixed"
+      value = "multipart/mixed; boundary=\\\"$boundary\\\""
     },
   )
 
@@ -843,7 +856,10 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     fillData(outgoingMessageConfiguration)
   }
 
-  protected fun fillData(outgoingMessageConfiguration: OutgoingMessageConfiguration) {
+  protected fun fillData(
+    outgoingMessageConfiguration: OutgoingMessageConfiguration,
+    handleAdditionalRecipientsButtonVisibility: Boolean = true
+  ) {
     fillInAllFields(
       to = outgoingMessageConfiguration.to.map { requireNotNull(it.asInternetAddress()) },
       cc = outgoingMessageConfiguration.cc.takeIf { it.isNotEmpty() }?.map {
@@ -854,6 +870,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       },
       subject = outgoingMessageConfiguration.subject,
       message = outgoingMessageConfiguration.message,
+      handleAdditionalRecipientsButtonVisibility = handleAdditionalRecipientsButtonVisibility
     )
   }
 

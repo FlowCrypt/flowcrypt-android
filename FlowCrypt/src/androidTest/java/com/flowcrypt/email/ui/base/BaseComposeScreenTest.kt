@@ -64,7 +64,8 @@ abstract class BaseComposeScreenTest : BaseTest() {
     cc: Collection<InternetAddress>? = null,
     bcc: Collection<InternetAddress>? = null,
     subject: String = SUBJECT,
-    message: String = MESSAGE
+    message: String = MESSAGE,
+    handleAdditionalRecipientsButtonVisibility: Boolean = true
   ) {
     onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())
@@ -77,7 +78,9 @@ abstract class BaseComposeScreenTest : BaseTest() {
       ).perform(replaceText(recipient.address), pressImeActionButton(), closeSoftKeyboard())
     }
 
-    if (cc?.isNotEmpty() == true || bcc?.isNotEmpty() == true) {
+    if (handleAdditionalRecipientsButtonVisibility &&
+      (cc?.isNotEmpty() == true || bcc?.isNotEmpty() == true)
+    ) {
       onView(withId(R.id.imageButtonAdditionalRecipientsVisibility))
         .check(matches(isDisplayed()))
         .perform(click())

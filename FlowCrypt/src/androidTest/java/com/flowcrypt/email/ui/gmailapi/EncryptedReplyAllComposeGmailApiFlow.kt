@@ -6,14 +6,18 @@
 package com.flowcrypt.email.ui.gmailapi
 
 import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -57,11 +61,10 @@ import org.junit.runner.RunWith
   bcc = [BaseComposeGmailFlow.BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
-  isNew = false,
-  timeoutBeforeMovingToComposeInMilliseconds = 10000L
+  isNew = false
 )
 @Ignore("fix me after https://github.com/FlowCrypt/flowcrypt-android/issues/2553")
-class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
+class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -87,7 +90,7 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     //need to wait while the app loads the messages list
     Thread.sleep(2000)
 
-    //click on the standard message
+    //click on a message
     onView(withId(R.id.recyclerViewMsgs))
       .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
 
@@ -99,18 +102,16 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
 
+    //switch to encrypted mode
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.switch_to_secure_email))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
-    //need to wait while all action for replyAll case will be applied
-    Thread.sleep(1000)
-
-    fillData(
-      outgoingMessageConfiguration = outgoingMessageConfiguration,
-      handleAdditionalRecipientsButtonVisibility = false
-    )
-
-    Thread.sleep(50000)
+    fillData(outgoingMessageConfiguration)
 
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))
@@ -120,40 +121,11 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     //back to the message details screen
     pressBack()
 
-    doAfterSendingChecks { _, rawMime, mimeMessage ->
-      //check reply subject
-      assertEquals(rawMime, "Re: $SUBJECT_EXISTING_STANDARD", mimeMessage.subject)
-
-      //check reply text
+    doAfterSendingChecks { _, _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(1, multipart.count)
-      assertEquals(
-        MESSAGE + EmailUtil.genReplyContent(
-          IncomingMessageInfo(
-            msgEntity = MessageEntity(
-              email = "",
-              folder = "",
-              uid = 0,
-              fromAddress = addAccountToDatabaseRule.account.email,
-              receivedDate = DATE_EXISTING_STANDARD
-
-            ),
-            encryptionType = MessageEncryptionType.STANDARD,
-            msgBlocks = emptyList(),
-            subject = SUBJECT_EXISTING_STANDARD,
-            text = MESSAGE_EXISTING_STANDARD,
-            verificationResult = VerificationResult(
-              hasEncryptedParts = false,
-              hasSignedParts = false,
-              hasMixedSignatures = false,
-              isPartialSigned = false,
-              keyIdOfSigningKeys = emptyList(),
-              hasBadSignatures = false
-            )
-          )
-        ),
-        multipart.getBodyPart(0).content as String
-      )
+      //val encryptedMessagePart = multipart.getBodyPart(0)
+      //checkEncryptedMessagePart(encryptedMessagePart)
     }
   }
 }
