@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.gmailapi
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -18,8 +19,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
+import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -28,6 +34,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -102,10 +109,42 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
       .perform(click())
 
     //back to the message details screen
-    Espresso.pressBack()
+    pressBack()
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->
+      //check reply subject
       assertEquals(rawMime, "Re: $SUBJECT_EXISTING_STANDARD", mimeMessage.subject)
+
+      //check reply text
+      val multipart = mimeMessage.content as MimeMultipart
+      assertEquals(1, multipart.count)
+      assertEquals(
+        MESSAGE + EmailUtil.genReplyContent(
+          IncomingMessageInfo(
+            msgEntity = MessageEntity(
+              email = "",
+              folder = "",
+              uid = 0,
+              fromAddress = addAccountToDatabaseRule.account.email,
+              receivedDate = DATE_EXISTING_STANDARD
+
+            ),
+            encryptionType = MessageEncryptionType.STANDARD,
+            msgBlocks = emptyList(),
+            subject = SUBJECT_EXISTING_STANDARD,
+            text = MESSAGE_EXISTING_STANDARD,
+            verificationResult = VerificationResult(
+              hasEncryptedParts = false,
+              hasSignedParts = false,
+              hasMixedSignatures = false,
+              isPartialSigned = false,
+              keyIdOfSigningKeys = emptyList(),
+              hasBadSignatures = false
+            )
+          )
+        ),
+        multipart.getBodyPart(0).content as String
+      )
     }
   }
 }
