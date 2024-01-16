@@ -324,7 +324,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           .setBody(
             MessagePartBody().apply {
               factory = GsonFactory.getDefaultInstance()
-              data = "LS0tLS0tLS0tIGJlZ2lubmluZyBvZiBzeXN0ZW0K"
+              data = Base64.getEncoder().encodeToString(attachmentsDataCache[0])
             }.toString()
           )
       }
@@ -338,10 +338,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           .setBody(
             MessagePartBody().apply {
               factory = GsonFactory.getDefaultInstance()
-              data = "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAeElEQVR42u3WMQrAIAyFYR3tGR" +
-                  "171G71TjYUhyIIgUpNyv_Bm030DYYAAAAAAPiZWmuU7C3R6_Bni68lHsOXlnsJTzdfBrH7El1tRgv" +
-                  "YrZNieJt1UtTGbp2UtbFbpxfDr6-THJwlx6TkFQskyTYpib8LAAAAAOBjF1iV-BS5-DX4AAAAAElF" +
-                  "TkSuQmCC"
+              data = Base64.getEncoder().encodeToString(attachmentsDataCache[2])
             }.toString()
           )
       }
@@ -736,11 +733,11 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
             headers = listOf(
               MessagePartHeader().apply {
                 name = "Content-Type"
-                value = "text/plain; charset=\\\"US-ASCII\\\"; name=\\\"text.txt\\\""
+                value = "text/plain; charset=\\\"US-ASCII\\\"; name=\\\"$ATTACHMENT_NAME_1\\\""
               },
               MessagePartHeader().apply {
                 name = "Content-Disposition"
-                value = "attachment; filename=\\\"text.txt\\\""
+                value = "attachment; filename=\\\"$ATTACHMENT_NAME_1\\\""
               },
               MessagePartHeader().apply {
                 name = "Content-Transfer-Encoding"
@@ -763,15 +760,15 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           MessagePart().apply {
             partId = "2"
             mimeType = "image/png"
-            filename = "image.png"
+            filename = ATTACHMENT_NAME_3
             headers = listOf(
               MessagePartHeader().apply {
                 name = "Content-Type"
-                value = "image/png; name=\\\"image.png\\\""
+                value = "image/png; name=\\\"$ATTACHMENT_NAME_3\\\""
               },
               MessagePartHeader().apply {
                 name = "Content-Disposition"
-                value = "attachment; filename=\\\"image.png\\\""
+                value = "attachment; filename=\\\"$ATTACHMENT_NAME_3\\\""
               },
               MessagePartHeader().apply {
                 name = "Content-Transfer-Encoding"
@@ -820,15 +817,15 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     },
     MessagePartHeader().apply {
       name = "From"
-      value = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER
+      value = EXISTING_MESSAGE_FROM_RECIPIENT
     },
     MessagePartHeader().apply {
       name = "To"
-      value = addAccountToDatabaseRule.account.email
+      value = EXISTING_MESSAGE_TO_RECIPIENT
     },
     MessagePartHeader().apply {
       name = "Cc"
-      value = "denbond7@flowcrypt.test"
+      value = EXISTING_MESSAGE_CC_RECIPIENT
     },
     MessagePartHeader().apply {
       name = "Content-Type"
@@ -856,10 +853,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     fillData(outgoingMessageConfiguration)
   }
 
-  protected fun fillData(
-    outgoingMessageConfiguration: OutgoingMessageConfiguration,
-    handleAdditionalRecipientsButtonVisibility: Boolean = true
-  ) {
+  protected fun fillData(outgoingMessageConfiguration: OutgoingMessageConfiguration) {
     fillInAllFields(
       to = outgoingMessageConfiguration.to.map { requireNotNull(it.asInternetAddress()) },
       cc = outgoingMessageConfiguration.cc.takeIf { it.isNotEmpty() }?.map {
@@ -870,11 +864,15 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       },
       subject = outgoingMessageConfiguration.subject,
       message = outgoingMessageConfiguration.message,
-      handleAdditionalRecipientsButtonVisibility = handleAdditionalRecipientsButtonVisibility
+      isNew = outgoingMessageConfiguration.isNew
     )
   }
 
   companion object {
+    const val EXISTING_MESSAGE_FROM_RECIPIENT = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER
+    const val EXISTING_MESSAGE_TO_RECIPIENT = "default@flowcrypt.test"
+    const val EXISTING_MESSAGE_CC_RECIPIENT = "denbond7@flowcrypt.test"
+
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111113"
     const val DATE_EXISTING_STANDARD = 1704963592000

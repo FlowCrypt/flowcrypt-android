@@ -16,6 +16,7 @@ import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.action.ViewActions.typeTextIntoFocusedView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
@@ -65,8 +66,17 @@ abstract class BaseComposeScreenTest : BaseTest() {
     bcc: Collection<InternetAddress>? = null,
     subject: String = SUBJECT,
     message: String = MESSAGE,
-    handleAdditionalRecipientsButtonVisibility: Boolean = true
+    isNew: Boolean = true
   ) {
+    if (!isNew) {
+      onView(withId(R.id.editTextEmailMessage))
+        .perform(
+          scrollTo(),
+          typeTextIntoFocusedView(message),
+          closeSoftKeyboard()
+        )
+    }
+
     onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())
     for (recipient in to) {
@@ -78,9 +88,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
       ).perform(replaceText(recipient.address), pressImeActionButton(), closeSoftKeyboard())
     }
 
-    if (handleAdditionalRecipientsButtonVisibility &&
-      (cc?.isNotEmpty() == true || bcc?.isNotEmpty() == true)
-    ) {
+    if (cc?.isNotEmpty() == true || bcc?.isNotEmpty() == true) {
       onView(withId(R.id.imageButtonAdditionalRecipientsVisibility))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -120,12 +128,14 @@ abstract class BaseComposeScreenTest : BaseTest() {
         typeText(subject),
         closeSoftKeyboard()
       )
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(
-        scrollTo(),
-        typeText(message),
-        closeSoftKeyboard()
-      )
+    if (isNew) {
+      onView(withId(R.id.editTextEmailMessage))
+        .perform(
+          scrollTo(),
+          typeText(message),
+          closeSoftKeyboard()
+        )
+    }
   }
 
   protected fun addAttachment(att: File) {
