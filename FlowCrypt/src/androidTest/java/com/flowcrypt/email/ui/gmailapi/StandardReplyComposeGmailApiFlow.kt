@@ -33,12 +33,12 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import jakarta.mail.Message
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -52,15 +52,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
-  to = [BaseComposeGmailFlow.TO_RECIPIENT],
-  cc = [BaseComposeGmailFlow.CC_RECIPIENT],
-  bcc = [BaseComposeGmailFlow.BCC_RECIPIENT],
+  to = [],
+  cc = [],
+  bcc = [],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
   isNew = false
 )
-@Ignore("fix me after https://github.com/FlowCrypt/flowcrypt-android/issues/2553")
-class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
+class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -94,7 +93,7 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     Thread.sleep(1000)
 
     //click on replyAll
-    onView(withId(R.id.layoutReplyAllButton))
+    onView(withId(R.id.layoutReplyButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
 
@@ -105,8 +104,6 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     Thread.sleep(1000)
 
     fillData(outgoingMessageConfiguration)
-
-    Thread.sleep(50000)
 
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))
@@ -119,6 +116,20 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     doAfterSendingChecks { _, rawMime, mimeMessage ->
       //check reply subject
       assertEquals(rawMime, "Re: $SUBJECT_EXISTING_STANDARD", mimeMessage.subject)
+
+      //check recipients
+      compareAddresses(
+        arrayOf(EXISTING_MESSAGE_FROM_RECIPIENT),
+        getEmailAddresses(mimeMessage, Message.RecipientType.TO)
+      )
+      compareAddresses(
+        arrayOf(),
+        getEmailAddresses(mimeMessage, Message.RecipientType.CC)
+      )
+      compareAddresses(
+        arrayOf(),
+        getEmailAddresses(mimeMessage, Message.RecipientType.BCC)
+      )
 
       //check reply text
       val multipart = mimeMessage.content as MimeMultipart
