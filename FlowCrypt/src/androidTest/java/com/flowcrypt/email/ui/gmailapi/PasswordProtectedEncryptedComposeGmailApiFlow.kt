@@ -73,15 +73,15 @@ import java.util.Properties
 @FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 @OutgoingMessageConfiguration(
   to = [
-    BaseComposeGmailFlow.TO_RECIPIENT,
+    BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT,
     PasswordProtectedEncryptedComposeGmailApiFlow.TO_RECIPIENT_WITHOUT_PUBLIC_KEY
   ],
   cc = [
-    BaseComposeGmailFlow.CC_RECIPIENT,
+    BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT,
     PasswordProtectedEncryptedComposeGmailApiFlow.CC_RECIPIENT_WITHOUT_PUBLIC_KEY
   ],
   bcc = [
-    BaseComposeGmailFlow.BCC_RECIPIENT,
+    BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT,
     PasswordProtectedEncryptedComposeGmailApiFlow.BCC_RECIPIENT_WITHOUT_PUBLIC_KEY
   ],
   message = BaseComposeScreenTest.MESSAGE,

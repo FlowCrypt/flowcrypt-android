@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.gmailapi
 
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
@@ -14,7 +13,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -22,13 +20,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
-import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
-import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -56,9 +49,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
-  to = [BaseComposeGmailFlow.TO_RECIPIENT],
-  cc = [BaseComposeGmailFlow.CC_RECIPIENT],
-  bcc = [BaseComposeGmailFlow.BCC_RECIPIENT],
+  to = [BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT],
+  cc = [BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT],
+  bcc = [BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
   isNew = false

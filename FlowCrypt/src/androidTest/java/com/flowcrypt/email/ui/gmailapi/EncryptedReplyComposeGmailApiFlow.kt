@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.gmailapi
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
@@ -14,17 +15,18 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -33,7 +35,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import jakarta.mail.internet.InternetAddress
+import jakarta.mail.Message
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -52,14 +54,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
-  to = [BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT],
-  cc = [BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT],
-  bcc = [BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT],
+  to = [],
+  cc = [],
+  bcc = [],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
   isNew = false
 )
-class StandardForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
+class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -85,27 +87,28 @@ class StandardForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGma
     //need to wait while the app loads the messages list
     Thread.sleep(2000)
 
-    //click on the standard message
+    //click on a message
     onView(withId(R.id.recyclerViewMsgs))
       .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
 
     //wait the message details rendering
     Thread.sleep(1000)
 
-    //click on forward
-    onView(withId(R.id.layoutFwdButton))
+    //click on replyAll
+    onView(withId(R.id.layoutReplyButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
+
+    //switch to encrypted mode
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.switch_to_secure_email))
+      .check(matches(isDisplayed()))
+      .perform(click())
 
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
-    //need to wait while all action for forward case will be applied
-    Thread.sleep(1000)
-
     fillData(outgoingMessageConfiguration)
-
-    Thread.sleep(5000)
 
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))
@@ -116,36 +119,36 @@ class StandardForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGma
     pressBack()
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->
-      //check forward subject
-      assertEquals(rawMime, "Fwd: $SUBJECT_EXISTING_STANDARD", mimeMessage.subject)
+      //check reply subject
+      assertEquals(rawMime, "Re: $SUBJECT_EXISTING_STANDARD", mimeMessage.subject)
 
-      //check forward text
+      //check recipients
+      compareAddresses(
+        arrayOf(DEFAULT_FROM_RECIPIENT),
+        getEmailAddresses(mimeMessage, Message.RecipientType.TO)
+      )
+      compareAddresses(
+        arrayOf(),
+        getEmailAddresses(mimeMessage, Message.RecipientType.CC)
+      )
+      compareAddresses(
+        arrayOf(),
+        getEmailAddresses(mimeMessage, Message.RecipientType.BCC)
+      )
+
+      //check reply text
       val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(3, multipart.count)
-      val fwdTextPart = multipart.getBodyPart(0)
-      assertEquals(
-        outgoingMessageConfiguration.message + IncomingMessageInfo(
+      assertEquals(1, multipart.count)
+      val encryptedMessagePart = multipart.getBodyPart(0)
+      val expectedText = MESSAGE + EmailUtil.genReplyContent(
+        IncomingMessageInfo(
           msgEntity = MessageEntity(
             email = "",
             folder = "",
             uid = 0,
             fromAddress = DEFAULT_FROM_RECIPIENT,
-            subject = SUBJECT_EXISTING_STANDARD,
-            receivedDate = DATE_EXISTING_STANDARD,
-            toAddress = InternetAddress.toString(
-              arrayOf(
-                InternetAddress(
-                  EXISTING_MESSAGE_TO_RECIPIENT
-                )
-              )
-            ),
-            ccAddress = InternetAddress.toString(
-              arrayOf(
-                InternetAddress(
-                  EXISTING_MESSAGE_CC_RECIPIENT
-                )
-              )
-            )
+            receivedDate = DATE_EXISTING_STANDARD
+
           ),
           encryptionType = MessageEncryptionType.STANDARD,
           msgBlocks = emptyList(),
@@ -159,18 +162,17 @@ class StandardForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGma
             keyIdOfSigningKeys = emptyList(),
             hasBadSignatures = false
           )
-        ).toInitializationData(
-          context = getTargetContext(),
-          messageType = MessageType.FORWARD,
-          accountEmail = addAccountToDatabaseRule.account.email,
-          aliases = emptyList()
-        ).body,
-        fwdTextPart.content as String
+        )
       )
-
-      //check forwarded attachments
-      checkStandardAttachment(multipart.getBodyPart(1), ATTACHMENT_NAME_1, attachmentsDataCache[0])
-      checkStandardAttachment(multipart.getBodyPart(2), ATTACHMENT_NAME_3, attachmentsDataCache[2])
+      checkEncryptedMessagePart(
+        bodyPart = encryptedMessagePart,
+        expectedText = expectedText,
+        expectedIds = mutableListOf<Long>().apply {
+          add(extractKeyId(addPrivateKeyToDatabaseRule.pgpKeyRingDetails))
+          add(extractKeyId(defaultFromPgpKeyDetails))
+          //need to think here. Need to arrange recipients
+        }.toTypedArray().sortedArray()
+      )
     }
   }
 }

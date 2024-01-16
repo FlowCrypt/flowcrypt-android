@@ -28,6 +28,7 @@ import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.matchers.ToolBarTitleMatcher.Companion.withText
@@ -42,7 +43,6 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
-import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
@@ -82,6 +82,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
+import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import rawhttp.core.RawHttp
@@ -125,12 +126,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   abstract val mockWebServerRule: FlowCryptMockWebServerRule
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
-  protected val toPgpKeyDetails =
-    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/attested_user@flowcrypt.test_prv_default_strong.asc")
-  protected val ccPgpKeyDetails =
-    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/user_without_letters@flowcrypt.test_prv_strong.asc")
-  protected val bccPgpKeyDetails =
-    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/not_attested_user@flowcrypt.test-pub.asc")
 
   @get:Rule
   val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
@@ -173,45 +168,39 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
             .toPublicKeyEntity(accountEntity.email)
             .copy(id = 1)
         )
-      ),
-      RecipientWithPubKeys(
-        RecipientEntity(
-          email = requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address),
-          name = "TO"
-        ),
-        listOf(
-          toPgpKeyDetails
-            .toPublicKeyEntity(requireNotNull(toPgpKeyDetails.primaryMimeAddress?.address))
-            .copy(id = 2)
-        )
-      ),
-      RecipientWithPubKeys(
-        RecipientEntity(
-          email = requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address),
-          name = "CC"
-        ),
-        listOf(
-          ccPgpKeyDetails
-            .toPublicKeyEntity(requireNotNull(ccPgpKeyDetails.primaryMimeAddress?.address))
-            .copy(id = 3)
-        )
-      ),
-      RecipientWithPubKeys(
-        RecipientEntity(
-          email = requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address),
-          name = "BCC"
-        ),
-        listOf(
-          bccPgpKeyDetails
-            .toPublicKeyEntity(requireNotNull(bccPgpKeyDetails.primaryMimeAddress?.address))
-            .copy(id = 4)
-        )
       )
     )
   }
 
   protected fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
     return when {
+      request.path?.startsWith("/attester/pub", ignoreCase = true) == true -> {
+        val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+
+        return when {
+          lastSegment?.lowercase() in arrayOf(
+            DEFAULT_FROM_RECIPIENT,
+            DEFAULT_TO_RECIPIENT,
+            DEFAULT_CC_RECIPIENT,
+            DEFAULT_BCC_RECIPIENT,
+          ) -> {
+            MockResponse()
+              .setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(
+                when (lastSegment?.lowercase()) {
+                  DEFAULT_FROM_RECIPIENT -> defaultFromPgpKeyDetails.publicKey
+                  DEFAULT_TO_RECIPIENT -> defaultToPgpKeyDetails.publicKey
+                  DEFAULT_CC_RECIPIENT -> defaultCcPgpKeyDetails.publicKey
+                  DEFAULT_BCC_RECIPIENT -> defaultBccPgpKeyDetails.publicKey
+                  else -> ""
+                }
+              )
+          }
+
+          else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        }
+      }
+
       request.path == "/v1/keys/private" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
           ApiHelper.getInstance(getTargetContext()).gson
@@ -499,7 +488,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     )
   }
 
-  private fun extractKeyId(pgpKeyRingDetails: PgpKeyRingDetails): Long {
+  protected fun extractKeyId(pgpKeyRingDetails: PgpKeyRingDetails): Long {
     return PgpKey.parseKeys(pgpKeyRingDetails.publicKey)
       .pgpKeyRingCollection
       .pgpPublicKeyRingCollection
@@ -509,7 +498,11 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       .toList()[1].keyID
   }
 
-  protected fun checkEncryptedMessagePart(bodyPart: BodyPart, expectedText: String? = null) {
+  protected fun checkEncryptedMessagePart(
+    bodyPart: BodyPart,
+    expectedText: String? = null,
+    expectedIds: Array<Long>? = null
+  ) {
     val buffer = ByteArrayOutputStream()
 
     val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
@@ -528,15 +521,15 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     assertEquals(true, messageMetadata.isSigned)
     assertEquals(expectedText ?: outgoingMessageConfiguration.message, String(buffer.toByteArray()))
 
-    val expectedIds = mutableListOf<Long>().apply {
+    val finalExpectedIds = expectedIds ?: mutableListOf<Long>().apply {
       add(extractKeyId(addPrivateKeyToDatabaseRule.pgpKeyRingDetails))
-      if (outgoingMessageConfiguration.to.contains(TO_RECIPIENT)) {
-        add(extractKeyId(toPgpKeyDetails))
+      if (outgoingMessageConfiguration.to.contains(DEFAULT_TO_RECIPIENT)) {
+        add(extractKeyId(defaultToPgpKeyDetails))
       }
-      if (outgoingMessageConfiguration.cc.contains(CC_RECIPIENT)) {
-        add(extractKeyId(ccPgpKeyDetails))
+      if (outgoingMessageConfiguration.cc.contains(DEFAULT_CC_RECIPIENT)) {
+        add(extractKeyId(defaultCcPgpKeyDetails))
       }
-      if (outgoingMessageConfiguration.bcc.contains(BCC_RECIPIENT)) {
+      if (outgoingMessageConfiguration.bcc.contains(DEFAULT_BCC_RECIPIENT)) {
         add(0)
       }
     }.toTypedArray().sortedArray()
@@ -545,14 +538,14 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       messageMetadata.recipientKeyIds.toTypedArray().sortedArray()
 
     assertArrayEquals(
-      "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
-      expectedIds,
+      "Expected = ${finalExpectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
+      finalExpectedIds,
       actualIds
     )
 
     if (outgoingMessageConfiguration.bcc.isNotEmpty()) {
       //https://github.com/FlowCrypt/flowcrypt-android/issues/2306
-      assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(bccPgpKeyDetails)))
+      assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(defaultBccPgpKeyDetails)))
     }
   }
 
@@ -817,7 +810,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     },
     MessagePartHeader().apply {
       name = "From"
-      value = EXISTING_MESSAGE_FROM_RECIPIENT
+      value = DEFAULT_FROM_RECIPIENT
     },
     MessagePartHeader().apply {
       name = "To"
@@ -869,7 +862,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   }
 
   companion object {
-    const val EXISTING_MESSAGE_FROM_RECIPIENT = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER
     const val EXISTING_MESSAGE_TO_RECIPIENT = "default@flowcrypt.test"
     const val EXISTING_MESSAGE_CC_RECIPIENT = "denbond7@flowcrypt.test"
 
@@ -896,9 +888,27 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     const val ATTACHMENT_NAME_2 = "text1.txt"
     const val ATTACHMENT_NAME_3 = "binary_key.key"
 
-    const val TO_RECIPIENT = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER
-    const val CC_RECIPIENT = "user_without_letters@flowcrypt.test"
-    const val BCC_RECIPIENT = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+    const val DEFAULT_FROM_RECIPIENT = "default_from@flowcrypt.test"
+    const val DEFAULT_TO_RECIPIENT = "default_to@flowcrypt.test"
+    const val DEFAULT_CC_RECIPIENT = "default_cc@flowcrypt.test"
+    const val DEFAULT_BCC_RECIPIENT = "default_bcc@flowcrypt.test"
+
+    val defaultFromPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      DEFAULT_FROM_RECIPIENT,
+      TestConstants.DEFAULT_PASSWORD
+    ).toPgpKeyRingDetails()
+    val defaultToPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      DEFAULT_TO_RECIPIENT,
+      TestConstants.DEFAULT_PASSWORD
+    ).toPgpKeyRingDetails()
+    val defaultCcPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      DEFAULT_CC_RECIPIENT,
+      TestConstants.DEFAULT_PASSWORD
+    ).toPgpKeyRingDetails()
+    val defaultBccPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      DEFAULT_BCC_RECIPIENT,
+      TestConstants.DEFAULT_PASSWORD
+    ).toPgpKeyRingDetails()
 
     var attachments: MutableList<File> = mutableListOf()
 

@@ -42,9 +42,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
-  to = [BaseComposeGmailFlow.TO_RECIPIENT],
-  cc = [BaseComposeGmailFlow.CC_RECIPIENT],
-  bcc = [BaseComposeGmailFlow.BCC_RECIPIENT],
+  to = [BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT],
+  cc = [BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT],
+  bcc = [BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )

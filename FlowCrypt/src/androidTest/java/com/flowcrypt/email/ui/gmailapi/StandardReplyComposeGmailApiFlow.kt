@@ -119,7 +119,7 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
 
       //check recipients
       compareAddresses(
-        arrayOf(EXISTING_MESSAGE_FROM_RECIPIENT),
+        arrayOf(DEFAULT_FROM_RECIPIENT),
         getEmailAddresses(mimeMessage, Message.RecipientType.TO)
       )
       compareAddresses(
@@ -141,7 +141,7 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
               email = "",
               folder = "",
               uid = 0,
-              fromAddress = EXISTING_MESSAGE_FROM_RECIPIENT,
+              fromAddress = DEFAULT_FROM_RECIPIENT,
               receivedDate = DATE_EXISTING_STANDARD
 
             ),
