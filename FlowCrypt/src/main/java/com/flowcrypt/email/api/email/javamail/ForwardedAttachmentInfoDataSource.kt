@@ -42,7 +42,8 @@ class ForwardedAttachmentInfoDataSource(
         srcInputStream = srcInputStream,
         destOutputStream = tempByteArrayOutputStream,
         pubKeys = requireNotNull(publicKeys),
-        fileName = if (att.decryptWhenForward) FilenameUtils.removeExtension(name) else name,
+        //at this stage we will always have .PGP in the and of the attachment name. Need to drop it.
+        fileName = FilenameUtils.removeExtension(name),
       )
 
       tempByteArrayOutputStream.toByteArray().inputStream()

@@ -509,7 +509,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
       .toList()[1].keyID
   }
 
-  protected fun checkEncryptedMessagePart(bodyPart: BodyPart) {
+  protected fun checkEncryptedMessagePart(bodyPart: BodyPart, expectedText: String? = null) {
     val buffer = ByteArrayOutputStream()
 
     val pgpSecretKeyRing = PgpKey.extractSecretKeyRing(
@@ -526,7 +526,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     )
     assertEquals(true, messageMetadata.isEncrypted)
     assertEquals(true, messageMetadata.isSigned)
-    assertEquals(outgoingMessageConfiguration.message, String(buffer.toByteArray()))
+    assertEquals(expectedText ?: outgoingMessageConfiguration.message, String(buffer.toByteArray()))
 
     val expectedIds = mutableListOf<Long>().apply {
       add(extractKeyId(addPrivateKeyToDatabaseRule.pgpKeyRingDetails))
