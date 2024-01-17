@@ -8,7 +8,9 @@ package com.flowcrypt.email.util
 import android.content.Context
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -88,4 +90,25 @@ object OutgoingMessageInfoManager {
         }
       }
     }
+
+  /**
+   * This method check existing cache and delete unused stored [OutgoingMessageInfo] object
+   *
+   * @param context Interface to global information about an application environment.
+   */
+  suspend fun checkAndCleanCache(context: Context) = withContext(Dispatchers.IO) {
+    val outgoingMessageIds =
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().getAllOutboxMessages()
+        .mapNotNull { it.id }
+
+    FileAndDirectoryUtils.getFilesInDir(getOutgoingInfoDirectory(context)).forEach {
+      if (it.name.toLong() !in outgoingMessageIds) {
+        try {
+          FileAndDirectoryUtils.deleteFile(it)
+        } catch (e: Exception) {
+          e.printStackTraceIfDebugOnly()
+        }
+      }
+    }
+  }
 }

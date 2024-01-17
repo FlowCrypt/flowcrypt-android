@@ -33,6 +33,8 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
   override suspend fun doWork(): Result {
     LogsUtil.d(TAG, "doWork")
 
+    OutgoingMessageInfoManager.checkAndCleanCache(applicationContext)
+
     val id = inputData.getLong(KEY_ID, NO_ID).takeIf { it != NO_ID } ?: return Result.success()
     val messageEntity = roomDatabase.msgDao().getMsgById(id)
 

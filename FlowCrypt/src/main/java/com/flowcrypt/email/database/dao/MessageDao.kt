@@ -142,6 +142,11 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     label: String = JavaEmailConstants.FOLDER_OUTBOX
   ): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE folder = :label")
+  abstract suspend fun getAllOutboxMessages(
+    label: String = JavaEmailConstants.FOLDER_OUTBOX
+  ): List<MessageEntity>
+
   @Query(
     "SELECT * FROM messages " +
         "WHERE email = :account AND folder = :label AND state IN (:msgStates)"
