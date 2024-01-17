@@ -43,7 +43,15 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
       }
 
       if (file == null) {
-        //update message entity
+        //looks like unexpected error has occurred. Need to update the given message entity
+        roomDatabase.msgDao().getMsgById(id)?.let {
+          roomDatabase.msgDao().updateSuspend(
+            it.copy(
+              state = MessageState.ERROR_DURING_CREATION.value,
+              errorMsg = "Unexpected error. The outgoing info source is missed!"
+            )
+          )
+        }
         return Result.success()
       }
 
