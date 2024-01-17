@@ -30,7 +30,6 @@ import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSetting
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
-import com.google.gson.annotations.Expose
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Message
@@ -56,10 +55,10 @@ import java.util.Properties
 )
 @Parcelize
 data class MessageEntity(
-  @Expose @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
-  @Expose val email: String,
-  @Expose val folder: String,
-  @Expose val uid: Long,
+  @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
+  val email: String,
+  val folder: String,
+  val uid: Long,
   @ColumnInfo(name = "received_date", defaultValue = "NULL") val receivedDate: Long? = null,
   @ColumnInfo(name = "sent_date", defaultValue = "NULL") val sentDate: Long? = null,
   @ColumnInfo(name = "from_address", defaultValue = "NULL") val fromAddress: String? = null,
@@ -67,7 +66,7 @@ data class MessageEntity(
   @ColumnInfo(name = "cc_address", defaultValue = "NULL") val ccAddress: String? = null,
   @ColumnInfo(defaultValue = "NULL") val subject: String? = null,
   @ColumnInfo(defaultValue = "NULL") val flags: String? = null,
-  @Expose @ColumnInfo(
+  @ColumnInfo(
     name = "raw_message_without_attachments",
     defaultValue = "NULL"
   ) val rawMessageWithoutAttachments: String? = null,
@@ -80,7 +79,7 @@ data class MessageEntity(
   @ColumnInfo(defaultValue = "-1") val state: Int? = null,
   @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
   @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
-  @Expose @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
+  @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,

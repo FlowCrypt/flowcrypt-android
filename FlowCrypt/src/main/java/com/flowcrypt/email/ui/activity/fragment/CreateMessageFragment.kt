@@ -295,10 +295,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
         messageType = args.messageType,
-        replyToMsgEntity = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
+        replyToMessageEntityId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
           null
         } else {
-          args.incomingMessageInfo?.msgEntity
+          args.incomingMessageInfo?.msgEntity?.id
         },
       )
     )

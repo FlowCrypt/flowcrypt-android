@@ -146,9 +146,13 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
               val outgoingMessageInfo =
                 outgoingMessageInfoStateFlow.value.copy(password = password)
 
+              val replyTo = outgoingMessageInfo.replyToMessageEntityId?.let {
+                roomDatabase.msgDao().getMsgById(it)?.replyTo
+              }
               messageEntity = outgoingMessageInfo.toMessageEntity(
                 folder = JavaEmailConstants.FOLDER_OUTBOX,
                 flags = Flags(Flags.Flag.SEEN),
+                replyTo = replyTo,
                 password = outgoingMessageInfo.password?.let {
                   KeyStoreCryptoManager.encrypt(String(it)).toByteArray()
                 }

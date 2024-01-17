@@ -35,7 +35,7 @@ data class OutgoingMessageInfo(
   @Expose val forwardedAtts: List<AttachmentInfo>? = null,
   @Expose val encryptionType: MessageEncryptionType? = null,
   @Expose @MessageType val messageType: Int = MessageType.NEW,
-  @Expose val replyToMsgEntity: MessageEntity? = null,
+  @Expose val replyToMessageEntityId: Long? = null,
   @Expose val uid: Long = 0,
   @Expose val password: CharArray? = null,
   @Expose val timestamp: Long = System.currentTimeMillis(),
@@ -77,7 +77,7 @@ data class OutgoingMessageInfo(
     if (forwardedAtts != other.forwardedAtts) return false
     if (encryptionType != other.encryptionType) return false
     if (messageType != other.messageType) return false
-    if (replyToMsgEntity != other.replyToMsgEntity) return false
+    if (replyToMessageEntityId != other.replyToMessageEntityId) return false
     if (uid != other.uid) return false
     if (password != null) {
       if (other.password == null) return false
@@ -98,16 +98,16 @@ data class OutgoingMessageInfo(
     result = 31 * result + (forwardedAtts?.hashCode() ?: 0)
     result = 31 * result + (encryptionType?.hashCode() ?: 0)
     result = 31 * result + messageType
-    result = 31 * result + (replyToMsgEntity?.hashCode() ?: 0)
+    result = 31 * result + (replyToMessageEntityId?.hashCode() ?: 0)
     result = 31 * result + uid.hashCode()
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + timestamp.hashCode()
     return result
   }
-
   fun toMessageEntity(
     folder: String,
     flags: Flags,
+    replyTo: String? = null,
     password: ByteArray? = null,
   ): MessageEntity {
     return MessageEntity(
@@ -115,7 +115,7 @@ data class OutgoingMessageInfo(
       folder = folder,
       uid = uid,
       fromAddress = from.toString(),
-      replyTo = replyToMsgEntity?.replyTo,
+      replyTo = replyTo,
       toAddress = InternetAddress.toString(toRecipients?.toTypedArray()),
       ccAddress = InternetAddress.toString(ccRecipients?.toTypedArray()),
       flags = flags.toString().uppercase(),
