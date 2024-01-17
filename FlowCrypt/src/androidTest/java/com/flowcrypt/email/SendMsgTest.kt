@@ -79,7 +79,8 @@ import kotlin.random.Random
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @DependsOnMailServer
-@Ignore("should be fixed")
+@Ignore("This one is not relevant today. But I'd like to keep it for now. " +
+    "It will be used as a template when a new UI test for IMAP will be added.")
 class SendMsgTest {
   private val context: Context = ApplicationProvider.getApplicationContext()
   private val account = AccountDaoManager.getUserWithoutLetters()
