@@ -26,8 +26,10 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -45,7 +47,6 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -64,7 +65,7 @@ import java.util.UUID
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
+@FlowCryptTestSettings(useCommonIdling = false)
 class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   override val activeActivityRule =
     lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
@@ -101,6 +102,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(mockWebServerRule)
     .around(AddAccountToDatabaseRule())
+    .around(AddPrivateKeyToDatabaseRule())
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
@@ -128,7 +130,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   @Test
   fun testEmptyUri() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, null))
-    registerAllIdlingResources()
     checkViewsOnScreen()
   }
 
@@ -140,7 +141,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
             + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       to = arrayOf(recipients[0]),
       subject = ENCODED_SUBJECT,
@@ -156,7 +156,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
             + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       to = arrayOf(recipients[0]),
       subject = ENCODED_SUBJECT,
@@ -172,7 +171,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
             + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       to = recipients,
       subject = ENCODED_SUBJECT,
@@ -188,7 +186,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
             + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       to = recipients,
       subject = ENCODED_SUBJECT,
@@ -204,7 +201,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
             + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       to = recipients,
       subject = ENCODED_SUBJECT,
@@ -220,7 +216,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
             + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       to = recipients,
       subject = ENCODED_SUBJECT,
@@ -231,14 +226,12 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   @Test
   fun testEmptyMailToSchema() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, MailTo.MAILTO_SCHEME))
-    registerAllIdlingResources()
     checkViewsOnScreen()
   }
 
   @Test
   fun testSendEmptyExtras() {
     activeActivityRule.launch(generateIntentWithExtras(action = Intent.ACTION_SEND))
-    registerAllIdlingResources()
     checkViewsOnScreen()
   }
 
@@ -247,7 +240,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     activeActivityRule.launch(
       generateIntentWithExtras(action = Intent.ACTION_SEND, extraSubject = Intent.EXTRA_SUBJECT)
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT)
   }
 
@@ -256,7 +248,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     activeActivityRule.launch(
       generateIntentWithExtras(action = Intent.ACTION_SEND, extraMsg = Intent.EXTRA_TEXT)
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(body = Intent.EXTRA_TEXT)
   }
 
@@ -265,7 +256,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     activeActivityRule.launch(
       generateIntentWithExtras(action = Intent.ACTION_SEND, attachmentsCount = 1)
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(attachmentsCount = 1)
   }
 
@@ -278,7 +268,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         extraMsg = Intent.EXTRA_TEXT
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, body = Intent.EXTRA_TEXT)
   }
 
@@ -291,7 +280,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         attachmentsCount = 1
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, attachmentsCount = 1)
   }
 
@@ -304,7 +292,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         attachmentsCount = 1
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(body = Intent.EXTRA_TEXT, attachmentsCount = 1)
   }
 
@@ -318,7 +305,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         attachmentsCount = 1
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       subject = Intent.EXTRA_SUBJECT,
       body = Intent.EXTRA_TEXT,
@@ -334,7 +320,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         attachmentsCount = atts.size
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(attachmentsCount = atts.size)
   }
 
@@ -347,7 +332,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         extraMsg = Intent.EXTRA_TEXT, attachmentsCount = atts.size
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       subject = Intent.EXTRA_SUBJECT,
       body = Intent.EXTRA_TEXT,
@@ -368,7 +352,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         bcc = arrayOf(bcc)
       )
     )
-    registerAllIdlingResources()
     checkViewsOnScreen(
       to = arrayOf(to),
       cc = arrayOf(cc),
@@ -387,7 +370,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       ).apply {
         putExtra(Intent.EXTRA_STREAM, atts.first())
       })
-    registerAllIdlingResources()
     checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, body = Intent.EXTRA_TEXT)
   }
 
@@ -438,6 +420,8 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     cc: Array<String> = arrayOf(),
     bcc: Array<String> = arrayOf()
   ) {
+    Thread.sleep(2000)
+
     onView(withText(R.string.compose))
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
