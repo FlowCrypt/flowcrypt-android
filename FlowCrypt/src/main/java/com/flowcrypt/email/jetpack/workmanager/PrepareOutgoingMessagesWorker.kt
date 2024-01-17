@@ -12,6 +12,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
@@ -22,6 +23,7 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.OutgoingMessageInfoManager
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
+import java.io.File
 
 /**
  * @author Denys Bondarenko
@@ -79,7 +81,8 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
             roomDatabase.msgDao().updateSuspend(
               existingMessageEntity.copy(
                 state = MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-                errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
+                errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias,
+                rawMessageWithoutAttachments = null
               )
             )
           }
@@ -88,10 +91,33 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
             roomDatabase.msgDao().updateSuspend(
               existingMessageEntity.copy(
                 state = MessageState.ERROR_DURING_CREATION.value,
-                errorMsg = e.message
+                errorMsg = e.message,
+                rawMessageWithoutAttachments = null
               )
             )
           }
+        }
+
+        //need to delete unused cache
+        roomDatabase.attachmentDao().deleteSuspend(
+          roomDatabase.attachmentDao().getAttachmentsSuspend(
+            existingMessageEntity.email,
+            existingMessageEntity.folder,
+            existingMessageEntity.uid
+          )
+        )
+
+        try {
+          if (existingMessageEntity.attachmentsDirectory != null) {
+            val cacheDirectory = File(
+              existingMessageEntity.attachmentsDirectory,
+              Constants.ATTACHMENTS_CACHE_DIR
+            )
+
+            FileAndDirectoryUtils.cleanDir(cacheDirectory)
+          }
+        } catch (e: Exception) {
+          e.printStackTraceIfDebugOnly()
         }
       }
 
