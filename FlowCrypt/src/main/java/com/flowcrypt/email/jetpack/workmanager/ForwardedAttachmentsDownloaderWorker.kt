@@ -194,7 +194,6 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
                   GmailApiHelper.getAttInputStream(
                     applicationContext,
                     account,
-                    //check it twice
                     requireNotNull(attachmentEntity.forwardedUid?.toHex()),
                     attPart.body.attachmentId
                   )
