@@ -6,6 +6,7 @@
 package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
+import android.text.TextUtils
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -16,9 +17,11 @@ import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.OutgoingMessageInfoManager
+import com.flowcrypt.email.util.exception.NoKeyAvailableException
 
 /**
  * @author Denys Bondarenko
@@ -68,13 +71,38 @@ class PrepareOutgoingMessagesWorker(context: Context, params: WorkerParameters) 
       }
     } catch (e: Exception) {
       e.printStackTraceIfDebugOnly()
+      val existingMessageEntity = roomDatabase.msgDao().getMsgById(id)
 
-      roomDatabase.msgDao().getMsgById(id)?.let {
-        roomDatabase.msgDao().updateSuspend(
-          it.copy(
-            state = MessageState.ERROR_DURING_CREATION.value,
-            errorMsg = e.message
-          )
+      if (existingMessageEntity != null) {
+        when (e) {
+          is NoKeyAvailableException -> {
+            roomDatabase.msgDao().updateSuspend(
+              existingMessageEntity.copy(
+                state = MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
+                errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
+              )
+            )
+          }
+
+          else -> {
+            roomDatabase.msgDao().updateSuspend(
+              existingMessageEntity.copy(
+                state = MessageState.ERROR_DURING_CREATION.value,
+                errorMsg = e.message
+              )
+            )
+          }
+        }
+      }
+
+      val accountEntity =
+        roomDatabase.accountDao().getActiveAccountSuspend() ?: return Result.failure()
+      val failedOutgoingMessagesCount =
+        roomDatabase.msgDao().getFailedOutgoingMessagesCountSuspend(accountEntity.email)
+      if (failedOutgoingMessagesCount > 0) {
+        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMessages(
+          accountEntity,
+          failedOutgoingMessagesCount
         )
       }
 

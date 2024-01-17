@@ -7,7 +7,6 @@ package com.flowcrypt.email.service
 
 import android.content.Context
 import android.net.Uri
-import android.text.TextUtils
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
@@ -27,11 +26,7 @@ import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
-import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
-import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.ForceHandlingException
-import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
@@ -57,94 +52,56 @@ object ProcessingOutgoingMessageInfoHelper {
       outgoingMsgInfo.account?.lowercase() ?: ""
     )?.withDecryptedInfo() ?: throw IllegalStateException("Account is not defined")
 
-    try {
-      updateContactsLastUseDateTime(context, outgoingMsgInfo)
+    updateContactsLastUseDateTime(context, outgoingMsgInfo)
 
-      val mimeMessageAsByteArray = ByteArrayOutputStream().apply {
-        EmailUtil.genMessage(
-          context = context,
-          accountEntity = accountEntity,
-          outgoingMsgInfo = outgoingMsgInfo,
-          signingRequired = true,
-          hideArmorMeta = accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
-        ).writeTo(this)
-      }.toByteArray()
+    val mimeMessageAsByteArray = ByteArrayOutputStream().apply {
+      EmailUtil.genMessage(
+        context = context,
+        accountEntity = accountEntity,
+        outgoingMsgInfo = outgoingMsgInfo,
+        signingRequired = true,
+        hideArmorMeta = accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
+      ).writeTo(this)
+    }.toByteArray()
 
-      //todo-denbond7 need to think about that. It'll be better to store a message as a file
-      roomDatabase.msgDao().updateSuspend(
-        messageEntity.copy(rawMessageWithoutAttachments = String(mimeMessageAsByteArray))
+    //todo-denbond7 need to think about that. It'll be better to store a message as a file
+    roomDatabase.msgDao().updateSuspend(
+      messageEntity.copy(rawMessageWithoutAttachments = String(mimeMessageAsByteArray))
+    )
+
+    val hasAtts =
+      outgoingMsgInfo.atts?.isNotEmpty() == true || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
+
+    if (hasAtts) {
+      val msgAttsCacheDir = File(
+        getAttsCacheDir(context), requireNotNull(messageEntity.attachmentsDirectory)
       )
-
-      val hasAtts = outgoingMsgInfo.atts?.isNotEmpty() == true
-          || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
-
-      if (hasAtts) {
-        val msgAttsCacheDir = File(
-          getAttsCacheDir(context), requireNotNull(messageEntity.attachmentsDirectory)
-        )
-        if (!msgAttsCacheDir.exists()) {
-          if (!msgAttsCacheDir.mkdir()) {
-            throw IOException("Create cache directory for outgoing attachments failed!")
-          }
-        }
-
-        addAttsToCache(context, outgoingMsgInfo, msgAttsCacheDir)
-      }
-
-      if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
-        ForwardedAttachmentsDownloaderWorker.enqueue(context)
-      } else {
-        val existingMsgEntity = roomDatabase.msgDao().getMsg(
-          messageEntity.email, messageEntity.folder, messageEntity.uid
-        ) ?: throw IllegalStateException("A message is not exist")
-        if (outgoingMsgInfo.encryptionType == MessageEncryptionType.ENCRYPTED
-          && outgoingMsgInfo.isPasswordProtected == true
-        ) {
-          roomDatabase.msgDao()
-            .update(existingMsgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
-          HandlePasswordProtectedMsgWorker.enqueue(context)
-        } else {
-          roomDatabase.msgDao().update(existingMsgEntity.copy(state = MessageState.QUEUED.value))
-          MessagesSenderWorker.enqueue(context)
+      if (!msgAttsCacheDir.exists()) {
+        if (!msgAttsCacheDir.mkdir()) {
+          throw IOException("Create cache directory for outgoing attachments failed!")
         }
       }
 
-      doLastAction.invoke()
-    } catch (e: Exception) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(ForceHandlingException(e))
-
-      when (e) {
-        is NoKeyAvailableException -> {
-          roomDatabase.msgDao().update(
-            messageEntity.copy(
-              state = MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-              errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
-            )
-          )
-        }
-
-        else -> {
-          roomDatabase.msgDao().update(
-            messageEntity.copy(
-              state = MessageState.ERROR_DURING_CREATION.value,
-              errorMsg = e.message
-            )
-          )
-        }
-      }
-
-      val failedOutgoingMsgsCount =
-        roomDatabase.msgDao().getFailedOutgoingMsgsCount(accountEntity.email)
-      if (failedOutgoingMsgsCount > 0) {
-        ErrorNotificationManager(context).notifyUserAboutProblemWithOutgoingMsgs(
-          accountEntity,
-          failedOutgoingMsgsCount
-        )
-      }
-
-      throw e
+      addAttsToCache(context, outgoingMsgInfo, msgAttsCacheDir)
     }
+
+    if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
+      ForwardedAttachmentsDownloaderWorker.enqueue(context)
+    } else {
+      val existingMsgEntity = roomDatabase.msgDao().getMsg(
+        messageEntity.email, messageEntity.folder, messageEntity.uid
+      ) ?: throw IllegalStateException("A message is not exist")
+      if (outgoingMsgInfo.encryptionType == MessageEncryptionType.ENCRYPTED && outgoingMsgInfo.isPasswordProtected == true) {
+        roomDatabase.msgDao()
+          .update(existingMsgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
+        HandlePasswordProtectedMsgWorker.enqueue(context)
+      } else {
+        roomDatabase.msgDao().update(existingMsgEntity.copy(state = MessageState.QUEUED.value))
+        MessagesSenderWorker.enqueue(context)
+      }
+    }
+
+    doLastAction.invoke()
   }
 
   private fun getAttsCacheDir(context: Context): File {
