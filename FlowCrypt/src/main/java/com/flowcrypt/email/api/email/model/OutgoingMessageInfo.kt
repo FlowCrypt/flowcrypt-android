@@ -83,8 +83,7 @@ data class OutgoingMessageInfo(
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
-    if (timestamp != other.timestamp) return false
-    return isPasswordProtected == other.isPasswordProtected
+    return timestamp == other.timestamp
   }
 
   override fun hashCode(): Int {
@@ -103,7 +102,6 @@ data class OutgoingMessageInfo(
     result = 31 * result + uid.hashCode()
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + timestamp.hashCode()
-    result = 31 * result + (isPasswordProtected?.hashCode() ?: 0)
     return result
   }
 
