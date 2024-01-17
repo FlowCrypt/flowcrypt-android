@@ -44,6 +44,8 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.OutgoingMessageInfoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
@@ -695,6 +697,14 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
         getEmailAddresses(mimeMessage, Message.RecipientType.BCC)
       )
     }
+
+    //check that outgoing info was deleted
+    assertEquals(
+      0,
+      FileAndDirectoryUtils.getFilesInDir(
+        OutgoingMessageInfoManager.getOutgoingInfoDirectory(getTargetContext())
+      ).size
+    )
 
     //do external checks
     action.invoke(outgoingMessageConfiguration, rawMime, mimeMessage)
