@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.gmailapi
 
 import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
@@ -16,6 +17,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -59,9 +61,10 @@ import org.junit.runner.RunWith
   bcc = [BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
-  isNew = false
+  isNew = false,
+  timeoutToWaitSendingInMilliseconds = 15000L
 )
-class EncryptedForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
+class StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
@@ -87,9 +90,9 @@ class EncryptedForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGm
     //need to wait while the app loads the messages list
     Thread.sleep(2000)
 
-    //click on the standard message
+    //click on the encrypted message
     onView(withId(R.id.recyclerViewMsgs))
-      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
 
     //wait the message details rendering
     Thread.sleep(1000)
@@ -99,21 +102,18 @@ class EncryptedForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGm
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
 
+    //switch to standard mode
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.switch_to_standard_email))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
     //need to wait while all action for forward case will be applied
     Thread.sleep(1000)
-
-    //switch to encrypted mode
-    openActionBarOverflowOrOptionsMenu(getTargetContext())
-    onView(ViewMatchers.withText(R.string.switch_to_secure_email))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
     fillData(outgoingMessageConfiguration)
-
-    Thread.sleep(5000)
 
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))
@@ -125,60 +125,60 @@ class EncryptedForwardWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGm
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->
       //check forward subject
-      assertEquals(rawMime, "Fwd: $SUBJECT_EXISTING_STANDARD", mimeMessage.subject)
-      val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(3, multipart.count)
+      assertEquals(rawMime, "Fwd: $SUBJECT_EXISTING_ENCRYPTED", mimeMessage.subject)
 
       //check forward text
-      val encryptedMessagePart = multipart.getBodyPart(0)
-      val expectedText = outgoingMessageConfiguration.message + IncomingMessageInfo(
-        msgEntity = MessageEntity(
-          email = "",
-          folder = "",
-          uid = 0,
-          fromAddress = DEFAULT_FROM_RECIPIENT,
-          subject = SUBJECT_EXISTING_STANDARD,
-          receivedDate = DATE_EXISTING_STANDARD,
-          toAddress = InternetAddress.toString(
-            arrayOf(
-              InternetAddress(
-                EXISTING_MESSAGE_TO_RECIPIENT
+      val multipart = mimeMessage.content as MimeMultipart
+      assertEquals(3, multipart.count)
+      val fwdTextPart = multipart.getBodyPart(0)
+      assertEquals(
+        outgoingMessageConfiguration.message + IncomingMessageInfo(
+          msgEntity = MessageEntity(
+            email = "",
+            folder = "",
+            uid = 0,
+            fromAddress = DEFAULT_FROM_RECIPIENT,
+            subject = SUBJECT_EXISTING_ENCRYPTED,
+            receivedDate = DATE_EXISTING_ENCRYPTED,
+            toAddress = InternetAddress.toString(
+              arrayOf(
+                InternetAddress(
+                  EXISTING_MESSAGE_TO_RECIPIENT
+                )
+              )
+            ),
+            ccAddress = InternetAddress.toString(
+              arrayOf(
+                InternetAddress(
+                  EXISTING_MESSAGE_CC_RECIPIENT
+                )
               )
             )
           ),
-          ccAddress = InternetAddress.toString(
-            arrayOf(
-              InternetAddress(
-                EXISTING_MESSAGE_CC_RECIPIENT
-              )
-            )
+          encryptionType = MessageEncryptionType.STANDARD,
+          msgBlocks = emptyList(),
+          subject = SUBJECT_EXISTING_ENCRYPTED,
+          text = MESSAGE_EXISTING_ENCRYPTED,
+          verificationResult = VerificationResult(
+            hasEncryptedParts = false,
+            hasSignedParts = false,
+            hasMixedSignatures = false,
+            isPartialSigned = false,
+            keyIdOfSigningKeys = emptyList(),
+            hasBadSignatures = false
           )
-        ),
-        encryptionType = MessageEncryptionType.STANDARD,
-        msgBlocks = emptyList(),
-        subject = SUBJECT_EXISTING_STANDARD,
-        text = MESSAGE_EXISTING_STANDARD,
-        verificationResult = VerificationResult(
-          hasEncryptedParts = false,
-          hasSignedParts = false,
-          hasMixedSignatures = false,
-          isPartialSigned = false,
-          keyIdOfSigningKeys = emptyList(),
-          hasBadSignatures = false
-        )
-      ).toInitializationData(
-        context = getTargetContext(),
-        messageType = MessageType.FORWARD,
-        accountEmail = addAccountToDatabaseRule.account.email,
-        aliases = emptyList()
-      ).body
-      checkEncryptedMessagePart(
-        bodyPart = encryptedMessagePart, expectedText = expectedText
+        ).toInitializationData(
+          context = getTargetContext(),
+          messageType = MessageType.FORWARD,
+          accountEmail = addAccountToDatabaseRule.account.email,
+          aliases = emptyList()
+        ).body,
+        fwdTextPart.content as String
       )
 
       //check forwarded attachments
-      checkEncryptedAttachment(multipart.getBodyPart(1), ATTACHMENT_NAME_1, attachmentsDataCache[0])
-      checkEncryptedAttachment(multipart.getBodyPart(2), ATTACHMENT_NAME_3, attachmentsDataCache[2])
+      checkStandardAttachment(multipart.getBodyPart(1), ATTACHMENT_NAME_1, attachmentsDataCache[0])
+      checkStandardAttachment(multipart.getBodyPart(2), ATTACHMENT_NAME_3, attachmentsDataCache[2])
     }
   }
 }
