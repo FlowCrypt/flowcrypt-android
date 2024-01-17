@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -53,6 +54,7 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     accountEntity = addAccountToDatabaseRule.account,
@@ -93,8 +95,6 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   @Test
-  @FlakyTest
-  @Ignore("fix me")
   fun testUpdatePrvKeyFromEkmSuccessSilent() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(
@@ -106,7 +106,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
     val existingPgpKeyDetailsBeforeUpdating = checkExistingKeyBeforeUpdating(keysStorage)
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(5000)
 
     //check existing key after updating
     val existingPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList().first()
@@ -141,7 +141,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
       .perform(click())
 
     //we need to make a delay to wait while [KeysStorageImpl] will update internal data
-    Thread.sleep(2000)
+    Thread.sleep(5000)
 
     //check existing key after updating
     val existingPgpKeyDetailsAfterUpdating = keysStorage.getPgpKeyDetailsList().first()
