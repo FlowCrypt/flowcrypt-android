@@ -30,7 +30,7 @@ class ForwardedAttachmentInfoDataSource(
     val inputStream = super.getInputStream() ?: return null
     val srcInputStream = if (att.decryptWhenForward) {
       //due to PGPainless(or maybe BC) we have to read a stream fully before using here
-      //Because JavaMail tries to identify encoding and do some manipulation with the input stream
+      //Because JavaMail tries to identify encoding and does some manipulation with the input stream
       val decryptedBytes = PgpDecryptAndOrVerify.genDecryptionStream(
         srcInputStream = inputStream,
         secretKeys = secretKeys,
