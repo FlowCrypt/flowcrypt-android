@@ -35,6 +35,7 @@ import jakarta.mail.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -208,6 +209,10 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
             }
           }
         }
+
+      //clear the last status
+      delay(500)
+      addOutgoingMessageInfoToQueueMutableStateFlow.value = Result.none()
     }
   }
 
