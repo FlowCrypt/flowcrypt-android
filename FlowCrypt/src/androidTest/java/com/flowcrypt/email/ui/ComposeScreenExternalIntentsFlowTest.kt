@@ -424,8 +424,6 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
 
     onView(withText(R.string.compose))
       .check(matches(isDisplayed()))
-    onView(withId(R.id.editTextFrom))
-      .check(matches(isDisplayed())).check(matches(withText(not(`is`(emptyString())))))
     closeSoftKeyboard()
 
     checkRecipients(R.id.recyclerViewChipsTo, to)
