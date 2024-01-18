@@ -131,8 +131,6 @@ blocks:
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
-            # Export full logs
-            - adb logcat -d | gzip > ~/logcat.txt.gz
 
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
@@ -148,8 +146,6 @@ blocks:
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
-            # Export full logs
-            - adb logcat -d | gzip > ~/logcat.txt.gz
 
         - name: 'Instrumentation tests(enterprise)'
           execution_time_limit:
@@ -163,8 +159,7 @@ blocks:
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-enterprise.sh
-            # Export full logs
-            - adb logcat -d | gzip > ~/logcat.txt.gz
+
       epilogue:
         always:
           commands:
@@ -188,11 +183,4 @@ blocks:
             - artifact push job --expire-in 1w FlowCrypt/build/reports/
 
             # store full logcat log
-            - echo "Store full logcat log"
-            - artifact push job --expire-in 1w ~/logcat.txt.gz
-
-            # store the device's screenshot. it may help to debug a failure
-            - echo "Store the device's screenshot"
-            - adb shell screencap -p /sdcard/screencap.png
-            - adb pull "/sdcard/screencap.png"
-            - artifact push job --expire-in 1w screencap.png
+            - ./script/ci-get-and-publish-debug-info-as-artifact.sh
