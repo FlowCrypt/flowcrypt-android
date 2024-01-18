@@ -116,6 +116,7 @@ blocks:
             # Run logging
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             - adb logcat -d > ~/logcat_log_full.txt
+            - adb logcat -d | gzip > ~/logcat.txt.gz
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
 
@@ -129,6 +130,8 @@ blocks:
             # store logcat log
             - echo "Store logcat log"
             - artifact push job --expire-in 1w ~/logcat_log.txt
+            - artifact push job --expire-in 1w ~/logcat_log_full.txt
+            - artifact push job --expire-in 1w ~/logcat.txt.gz
 
             # store screenshots
             - echo "Store screenshots"
