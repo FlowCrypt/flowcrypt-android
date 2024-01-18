@@ -95,7 +95,8 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
 
   @Test
   fun testDisallowUpdateRevokedKeyFromLookup() {
-    val userWithRevokedKey = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
+    val primaryInternetAddress = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress())
+    val userWithRevokedKey = primaryInternetAddress.address
 
     //check the recipient pub key before call lookupEmail
     val existingRecipientBefore = roomDatabase.recipientDao()
@@ -106,7 +107,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
       .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyRingDetails()
     assertTrue(pgpKeyDetailsBefore.isRevoked)
 
-    fillInAllFields(userWithRevokedKey)
+    fillInAllFields(to = setOf(primaryInternetAddress))
 
     //check that UI shows a revoked key after call lookupEmail
     onView(withId(R.id.recyclerViewChipsTo))

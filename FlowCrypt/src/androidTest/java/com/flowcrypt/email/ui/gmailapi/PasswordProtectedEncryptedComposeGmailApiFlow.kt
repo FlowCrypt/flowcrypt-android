@@ -3,30 +3,32 @@
  * Contributors: denbond7
  */
 
-package com.flowcrypt.email.ui
+package com.flowcrypt.email.ui.gmailapi
 
-import android.content.Context
-import android.os.Environment
-import androidx.core.content.FileProvider
-import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.MessageUploadRequest
 import com.flowcrypt.email.api.retrofit.response.api.MessageReplyTokenResponse
 import com.flowcrypt.email.api.retrofit.response.api.MessageUploadResponse
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
-import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -34,41 +36,33 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
-import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
-import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
-import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
+import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.GsonBuilder
-import jakarta.mail.BodyPart
 import jakarta.mail.Message
 import jakarta.mail.Multipart
-import jakarta.mail.Part
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
+import jakarta.mail.internet.MimeMultipart
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartReader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.pgpainless.PGPainless
-import org.pgpainless.key.util.UserId
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
 import java.net.HttpURLConnection
 import java.nio.charset.StandardCharsets
 import java.util.Base64
@@ -76,7 +70,25 @@ import java.util.Properties
 
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
+@OutgoingMessageConfiguration(
+  to = [
+    BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT,
+    PasswordProtectedEncryptedComposeGmailApiFlow.TO_RECIPIENT_WITHOUT_PUBLIC_KEY
+  ],
+  cc = [
+    BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT,
+    PasswordProtectedEncryptedComposeGmailApiFlow.CC_RECIPIENT_WITHOUT_PUBLIC_KEY
+  ],
+  bcc = [
+    BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT,
+    PasswordProtectedEncryptedComposeGmailApiFlow.BCC_RECIPIENT_WITHOUT_PUBLIC_KEY
+  ],
+  message = BaseComposeScreenTest.MESSAGE,
+  subject = BaseComposeScreenTest.SUBJECT,
+  timeoutToWaitSendingInMilliseconds = 10000
+)
+class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -101,36 +113,6 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       }
     })
 
-  private val recipientWithPubKeys = listOf(
-    RecipientWithPubKeys(
-      RecipientEntity(
-        email = TO_RECIPIENT_WITHOUT_PUBLIC_KEY,
-        name = null
-      ),
-      emptyList()
-    ), RecipientWithPubKeys(
-      RecipientEntity(
-        email = CC_RECIPIENT_WITHOUT_PUBLIC_KEY,
-        name = null
-      ),
-      emptyList()
-    ),
-    RecipientWithPubKeys(
-      RecipientEntity(
-        email = BCC_RECIPIENT_WITHOUT_PUBLIC_KEY,
-        name = null
-      ),
-      emptyList()
-    )
-  )
-
-  private val pubKeyAttachmentInfo = requireNotNull(
-    EmailUtil.genAttInfoFromPubKey(
-      addPrivateKeyToDatabaseRule.pgpKeyRingDetails,
-      addPrivateKeyToDatabaseRule.accountEntity.email
-    )
-  )
-
   @get:Rule
   var ruleChain: TestRule =
     RuleChain.outerRule(RetryRule.DEFAULT)
@@ -139,48 +121,112 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       .around(mockWebServerRule)
       .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
+      .around(AddRecipientsToDatabaseRule(prepareRecipientsForTest()))
       .around(addLabelsToDatabaseRule)
-      .around(AddRecipientsToDatabaseRule(recipientWithPubKeys))
+      .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
   private var isRequestToMessageAPITested = false
+
+  override fun prepareRecipientsForTest(): List<RecipientWithPubKeys> {
+    return super.prepareRecipientsForTest().toMutableList().apply {
+      addAll(
+        listOf(
+          RecipientWithPubKeys(
+            RecipientEntity(
+              email = TO_RECIPIENT_WITHOUT_PUBLIC_KEY,
+              name = null
+            ),
+            emptyList()
+          ), RecipientWithPubKeys(
+            RecipientEntity(
+              email = CC_RECIPIENT_WITHOUT_PUBLIC_KEY,
+              name = null
+            ),
+            emptyList()
+          ),
+          RecipientWithPubKeys(
+            RecipientEntity(
+              email = BCC_RECIPIENT_WITHOUT_PUBLIC_KEY,
+              name = null
+            ),
+            emptyList()
+          )
+        )
+      )
+    }
+  }
 
   @Test
   fun testSendPasswordProtectedMessageWithFewAttachments() {
     isRequestToMessageAPITested = false
 
-    val context: Context = ApplicationProvider.getApplicationContext()
-    val uid = EmailUtil.genOutboxUID(context)
-    val outgoingMessageInfo = OutgoingMessageInfo(
-      account = addAccountToDatabaseRule.account.email,
-      subject = MESSAGE_SUBJECT,
-      msg = MESSAGE_TEXT,
-      toRecipients = listOf(InternetAddress(TO_RECIPIENT_WITHOUT_PUBLIC_KEY)),
-      ccRecipients = listOf(InternetAddress(CC_RECIPIENT_WITHOUT_PUBLIC_KEY)),
-      bccRecipients = listOf(InternetAddress(BCC_RECIPIENT_WITHOUT_PUBLIC_KEY)),
-      from = InternetAddress(addAccountToDatabaseRule.account.email),
-      encryptionType = MessageEncryptionType.ENCRYPTED,
-      messageType = MessageType.NEW,
-      uid = uid,
-      password = WEB_PORTAL_PASSWORD.toCharArray(),
-      atts = attachments.mapIndexedNotNull { index, file ->
-        EmailUtil.getAttInfoFromUri(
-          context = context,
-          uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, file)
-        )?.copy(
-          email = addAccountToDatabaseRule.account.email,
-          uid = uid,
-          folder = JavaEmailConstants.FOLDER_OUTBOX,
-          path = index.toString()
-        )
-      }.toMutableList().apply {
-        add(pubKeyAttachmentInfo.copy(path = 3.toString()))
-      }.toList()
-    )
+    //add attachments
+    attachments.forEach {
+      addAttachment(it)
+    }
 
-    ProcessingOutgoingMessageInfoHelper.process(context, outgoingMessageInfo)
-    //need to wait sometime until all processes will be completed
-    Thread.sleep(5000)
+    //attach a public key
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.include_public_key))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    //add password-protected logic
+    onView(withId(R.id.btnSetWebPortalPassword))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    onView(withId(R.id.eTPassphrase))
+      .perform(
+        replaceText(WEB_PORTAL_PASSWORD),
+        closeSoftKeyboard()
+      )
+    onView(withId(R.id.btSetPassword))
+      .perform(click())
+
+    Thread.sleep(2000)
+
+    //enqueue outgoing message
+    onView(withId(R.id.menuActionSend))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    doAfterSendingChecks { _, _, mimeMessage ->
+      val multipart = mimeMessage.content as MimeMultipart
+      assertEquals(
+        1 // Part with FES message link
+            + 1   // Encrypted by default method message
+            + 3   // Attachments
+            + 1,  // Pub key
+        multipart.count
+      )
+
+      //check the FES message link part
+      val fesLinkMessagePart = multipart.getBodyPart(0)
+      assertEquals(
+        getResString(
+          R.string.password_protected_msg_promo,
+          addAccountToDatabaseRule.account.email,
+          WEB_PORTAL_URL
+        ),
+        fesLinkMessagePart.content as String
+      )
+
+      //check encrypted by default method message
+      val encryptedMessagePart = multipart.getBodyPart(1)
+      checkEncryptedMessagePart(encryptedMessagePart)
+
+      //check encrypted attachments
+      attachments.forEachIndexed { index, file ->
+        val attachmentPart = multipart.getBodyPart(index + 2)
+        checkEncryptedAttachment(attachmentPart, file.name, attachmentsDataCache[index])
+      }
+
+      //check public key
+      val publicKeyPart = multipart.getBodyPart(attachments.size + 2)
+      checkAttachedPublicKey(publicKeyPart)
+    }
+
     assertTrue(isRequestToMessageAPITested)
   }
 
@@ -217,25 +263,24 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
       assertNotNull(messageUploadRequest)
       assertEquals(REPLY_TOKEN, messageUploadRequest.associateReplyToken)
-      assertEquals(addAccountToDatabaseRule.account.email, messageUploadRequest.from)
-      assertArrayEquals(
-        arrayOf(TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
-        messageUploadRequest.to.toTypedArray()
+      assertEquals(
+        addAccountToDatabaseRule.account.email.asInternetAddress(),
+        messageUploadRequest.from.asInternetAddress()
       )
-      assertArrayEquals(
-        arrayOf(CC_RECIPIENT_WITHOUT_PUBLIC_KEY),
-        messageUploadRequest.cc.toTypedArray()
-      )
-      assertArrayEquals(
-        arrayOf(BCC_RECIPIENT_WITHOUT_PUBLIC_KEY),
-        messageUploadRequest.bcc.toTypedArray()
-      )
+      val outgoingMessageConfiguration =
+        requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
+
+      compareAddresses(outgoingMessageConfiguration.to, messageUploadRequest.to.toTypedArray())
+      compareAddresses(outgoingMessageConfiguration.cc, messageUploadRequest.cc.toTypedArray())
+      compareAddresses(outgoingMessageConfiguration.bcc, messageUploadRequest.bcc.toTypedArray())
     }
   }
 
   private fun checkSecondPartOfRequestToMessageAPI(multipartReader: MultipartReader) {
     val secondPart = multipartReader.nextPart()
     assertNotNull(secondPart)
+    val outgoingMessageConfiguration =
+      requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
     secondPart?.use {
       val sentPgpMessage = secondPart.body.readString(StandardCharsets.UTF_8)
@@ -249,12 +294,7 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       assertFalse(decryptionResult.isSigned)
       //check that message was not encrypted by public keys
       //ref https://github.com/pgpainless/pgpainless/issues/376
-      assertTrue(
-        decryptionResult.messageMetadata?.encryptionLayers
-          ?.asSequence()
-          ?.toList()
-          ?.flatMap { it.recipients }?.isEmpty() == true
-      )
+      assertTrue(decryptionResult.messageMetadata?.recipientKeyIds?.isEmpty() == true)
 
       val decryptedContent = decryptionResult.content
       assertNotNull(decryptedContent)
@@ -270,15 +310,15 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
         addAccountToDatabaseRule.account.email,
         (mimeMessage.from.first() as InternetAddress).address
       )
-      assertArrayEquals(
-        arrayOf(TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
+      compareAddresses(
+        outgoingMessageConfiguration.to,
         getEmailAddresses(mimeMessage, Message.RecipientType.TO)
       )
-      assertArrayEquals(
-        arrayOf(CC_RECIPIENT_WITHOUT_PUBLIC_KEY),
+      compareAddresses(
+        outgoingMessageConfiguration.cc,
         getEmailAddresses(mimeMessage, Message.RecipientType.CC)
       )
-      assertArrayEquals(
+      compareAddresses(
         emptyArray(),
         getEmailAddresses(mimeMessage, Message.RecipientType.BCC)
       )
@@ -290,12 +330,15 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
 
       val replyInfoData = HandlePasswordProtectedMsgWorker.ReplyInfoData(
         sender = addAccountToDatabaseRule.account.email.lowercase(),
-        recipient = listOf(
-          CC_RECIPIENT_WITHOUT_PUBLIC_KEY,
-          BCC_RECIPIENT_WITHOUT_PUBLIC_KEY,
-          TO_RECIPIENT_WITHOUT_PUBLIC_KEY
-        ),
-        subject = MESSAGE_SUBJECT,
+        recipient = (outgoingMessageConfiguration.to
+            + outgoingMessageConfiguration.cc
+            + outgoingMessageConfiguration.bcc)
+          .mapNotNull { it.asInternetAddress()?.address?.lowercase() }
+          .filterNot {
+            it.equals(addAccountToDatabaseRule.account.email.lowercase(), true)
+          }.toHashSet()
+          .sorted(),
+        subject = SUBJECT,
         token = REPLY_TOKEN
       )
 
@@ -304,88 +347,34 @@ class SendPasswordProtectedMessageFlowTest : BaseDraftsGmailAPIFlowTest() {
       )
 
       val infoDiv = HandlePasswordProtectedMsgWorker.genInfoDiv(replyInfo)
-      val bodyWithReplyToken = MESSAGE_TEXT + "\n\n" + infoDiv
+      val bodyWithReplyToken = MESSAGE + "\n\n" + infoDiv
 
       //check parts content. Check that content is the same as source
       val textBodyPart = multipart.getBodyPart(0)
-      assertEquals(bodyWithReplyToken, textBodyPart.content.toString())
-      checkAttachmentPart(multipart.getBodyPart(1), 0)
-      checkAttachmentPart(multipart.getBodyPart(2), 1)
-      checkAttachmentPart(multipart.getBodyPart(3), 2)
+      assertEquals(
+        textBodyPart.content.toString(),
+        bodyWithReplyToken,
+        textBodyPart.content.toString()
+      )
+
+      //check attachments
+      attachments.forEachIndexed { index, file ->
+        val attachmentPart = multipart.getBodyPart(index + 1)
+        checkStandardAttachment(attachmentPart, file.name, attachmentsDataCache[index])
+      }
 
       //check pub key
-      val bodyPart = multipart.getBodyPart(4)
-      assertEquals(Part.ATTACHMENT, bodyPart.disposition)
-      assertEquals(pubKeyAttachmentInfo.name, bodyPart.fileName)
-      assertArrayEquals(pubKeyAttachmentInfo.rawData, bodyPart.inputStream.readBytes())
+      val publicKeyPart = multipart.getBodyPart(4)
+      checkAttachedPublicKey(publicKeyPart)
     }
-  }
-
-  private fun getEmailAddresses(mimeMessage: MimeMessage, type: Message.RecipientType) =
-    mimeMessage.getRecipients(type)
-      ?.map { (it as InternetAddress).address }
-      ?.toTypedArray() ?: emptyArray()
-
-  private fun checkAttachmentPart(bodyPart: BodyPart, position: Int) {
-    assertEquals(Part.ATTACHMENT, bodyPart.disposition)
-    assertEquals(attachments[position].name, bodyPart.fileName)
-    assertArrayEquals(attachmentsDataCache[position], bodyPart.inputStream.readBytes())
   }
 
   companion object {
-    private const val TO_RECIPIENT_WITHOUT_PUBLIC_KEY = "to_no_key@flowcrypt.test"
-    private const val CC_RECIPIENT_WITHOUT_PUBLIC_KEY = "cc_no_key@flowcrypt.test"
-    private const val BCC_RECIPIENT_WITHOUT_PUBLIC_KEY = "bcc_no_key@flowcrypt.test"
+    const val TO_RECIPIENT_WITHOUT_PUBLIC_KEY = "to_no_key@flowcrypt.test"
+    const val CC_RECIPIENT_WITHOUT_PUBLIC_KEY = "cc_no_key@flowcrypt.test"
+    const val BCC_RECIPIENT_WITHOUT_PUBLIC_KEY = "bcc_no_key@flowcrypt.test"
     private const val WEB_PORTAL_PASSWORD = "Qwerty1234@"
-    private const val MESSAGE_SUBJECT = "Subject"
-    private const val MESSAGE_TEXT = "Some text"
-    private const val ATTACHMENT_NAME_1 = "text.txt"
-    private const val ATTACHMENT_NAME_2 = "text1.txt"
-    private const val ATTACHMENT_NAME_3 = "binary_key.key"
     private const val REPLY_TOKEN = "some_reply_token"
     private const val WEB_PORTAL_URL = "https://fes.flowcrypt.test/message/some_id"
-    private var attachmentsDataCache: MutableList<ByteArray> = mutableListOf()
-    private var attachments: MutableList<File> = mutableListOf()
-    private val pgpSecretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(
-      UserId.nameAndEmail(TO_RECIPIENT_WITHOUT_PUBLIC_KEY, TO_RECIPIENT_WITHOUT_PUBLIC_KEY),
-      TestConstants.DEFAULT_PASSWORD
-    )
-
-    @BeforeClass
-    @JvmStatic
-    fun setUp() {
-      val directory = InstrumentationRegistry.getInstrumentation().targetContext
-        .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
-        ?: File(Environment.DIRECTORY_DOCUMENTS)
-
-      attachmentsDataCache.addAll(
-        listOf(
-          "Text attachment 1".toByteArray(),//text data
-          "Text attachment 2".toByteArray(),//text data
-          ByteArrayOutputStream().apply { pgpSecretKeyRing.encode(this) }.toByteArray(),
-          //binary data
-        )
-      )
-
-      attachments.addAll(
-        listOf(
-          TestGeneralUtil.createFileWithContent(
-            directory = directory,
-            fileName = ATTACHMENT_NAME_1,
-            inputStream = attachmentsDataCache[0].inputStream()
-          ),
-          TestGeneralUtil.createFileWithContent(
-            directory = directory,
-            fileName = ATTACHMENT_NAME_2,
-            inputStream = attachmentsDataCache[1].inputStream()
-          ),
-          TestGeneralUtil.createFileWithContent(
-            directory = directory,
-            fileName = ATTACHMENT_NAME_3,
-            inputStream = attachmentsDataCache[2].inputStream()
-          )
-        )
-      )
-    }
   }
 }
