@@ -84,10 +84,10 @@ class ComposeScreenReloadPublicKeyFlowTest : BaseComposeScreenTest() {
 
   @Test
   fun testDisallowUpdateRevokedKeyFromLookup() {
-    val userWithMissingPublicKey =
-      requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress()?.address)
+    val primaryInternetAddress = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress())
+    val userWithMissingPublicKey = primaryInternetAddress.address
 
-    fillInAllFields(userWithMissingPublicKey)
+    fillInAllFields(to = setOf(primaryInternetAddress))
 
     Thread.sleep(1000)
 

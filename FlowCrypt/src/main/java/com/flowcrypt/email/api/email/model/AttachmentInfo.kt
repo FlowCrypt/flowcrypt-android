@@ -10,6 +10,7 @@ import android.os.Parcelable
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.security.SecurityUtils
+import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -19,24 +20,24 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class AttachmentInfo(
-  val rawData: ByteArray? = null,
-  val email: String? = null,
-  val folder: String? = null,
-  val uid: Long = 0,
-  val fwdFolder: String? = null,
-  val fwdUid: Long = 0,
-  val name: String? = null,
-  val encodedSize: Long = 0,
-  val type: String = Constants.MIME_TYPE_BINARY_DATA,
-  val id: String? = null,
-  val path: String = "0",
-  val uri: Uri? = null,
-  val isProtected: Boolean = false,
-  val isForwarded: Boolean = false,
-  val isDecrypted: Boolean = false,
-  val isEncryptionAllowed: Boolean = true,
-  val orderNumber: Int = 0,
-  val decryptWhenForward: Boolean = false,
+  @Expose val rawData: ByteArray? = null,
+  @Expose val email: String? = null,
+  @Expose val folder: String? = null,
+  @Expose val uid: Long = 0,
+  @Expose val fwdFolder: String? = null,
+  @Expose val fwdUid: Long = 0,
+  @Expose val name: String? = null,
+  @Expose val encodedSize: Long = 0,
+  @Expose val type: String = Constants.MIME_TYPE_BINARY_DATA,
+  @Expose val id: String? = null,
+  @Expose val path: String = "0",
+  @Expose val uri: Uri? = null,
+  @Expose val isProtected: Boolean = false,
+  @Expose val isForwarded: Boolean = false,
+  @Expose val isDecrypted: Boolean = false,
+  @Expose val isEncryptionAllowed: Boolean = true,
+  @Expose val orderNumber: Int = 0,
+  @Expose val decryptWhenForward: Boolean = false,
 ) : Parcelable {
 
   val uniqueStringId: String

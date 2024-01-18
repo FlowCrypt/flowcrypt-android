@@ -637,13 +637,13 @@ class EmailUtil {
      * an outgoing message.
      * @return The generated raw MIME message.
      */
-    fun genMessage(
+    suspend fun genMessage(
       context: Context,
       accountEntity: AccountEntity,
       outgoingMsgInfo: OutgoingMessageInfo,
       signingRequired: Boolean = true,
       hideArmorMeta: Boolean = false,
-    ): Message {
+    ): Message = withContext(Dispatchers.IO) {
       val session = Session.getInstance(Properties())
       val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
       var pubKeys: List<String>? = null
@@ -671,7 +671,7 @@ class EmailUtil {
         }
       }
 
-      return when (outgoingMsgInfo.messageType) {
+      return@withContext when (outgoingMsgInfo.messageType) {
         MessageType.NEW, MessageType.FORWARD, MessageType.DRAFT -> {
           prepareNewMsg(
             session = session,
@@ -699,24 +699,6 @@ class EmailUtil {
         }
 
         else -> throw IllegalStateException("Unsupported message type")
-      }
-    }
-
-    /**
-     * Get next [UID] value for the outgoing message.
-     *
-     * @param context Interface to global information about an application environment.
-     * @return The next [UID] value for the outgoing message.
-     */
-    fun genOutboxUID(context: Context): Long {
-      return SharedPreferencesHelper.getLong(
-        PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREF_KEY_LAST_OUTBOX_UID, 0
-      ).inc().apply {
-        SharedPreferencesHelper.setLong(
-          PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_OUTBOX_UID, this
-        )
       }
     }
 
@@ -990,7 +972,7 @@ class EmailUtil {
       }
     }
 
-    fun prepareNewMsg(
+    suspend fun prepareNewMsg(
       session: Session,
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
@@ -998,7 +980,7 @@ class EmailUtil {
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
-    ): MimeMessage {
+    ): MimeMessage = withContext(Dispatchers.IO) {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
       msg.setFrom(info.from)
@@ -1017,7 +999,7 @@ class EmailUtil {
           )
         )
       })
-      return msg
+      return@withContext msg
     }
 
     fun genReplyMessage(
@@ -1152,7 +1134,7 @@ class EmailUtil {
       )
     }
 
-    private fun prepareReplyMsg(
+    private suspend fun prepareReplyMsg(
       context: Context,
       accountEntity: AccountEntity,
       session: Session,
@@ -1162,12 +1144,16 @@ class EmailUtil {
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
-    ): Message {
-      val replyToMessageEntity = info.replyToMsgEntity
-        ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
+    ): Message = withContext(Dispatchers.IO) {
+      val replyToMessageEntityId = info.replyToMessageEntityId
+        ?: throw IllegalArgumentException("replyToMessageEntityId is null")
 
       val keys = PGPainless.readKeyRing()
         .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
+
+      val replyToMessageEntity =
+        FlowCryptRoomDatabase.getDatabase(context).msgDao().getMsgById(replyToMessageEntityId)
+          ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
 
       val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
         ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
@@ -1184,7 +1170,7 @@ class EmailUtil {
         )
       )
 
-      return genReplyMessage(
+      return@withContext genReplyMessage(
         replyToMsg = FlowCryptMimeMessage(session, decryptionStream),
         info = info,
         pubKeys = pubKeys,

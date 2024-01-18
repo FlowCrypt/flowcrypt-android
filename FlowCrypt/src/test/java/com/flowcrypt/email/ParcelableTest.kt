@@ -66,7 +66,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
         forwardedAtts = listOf(),
         encryptionType = MessageEncryptionType.STANDARD,
         messageType = MessageType.NEW,
-        replyToMsgEntity = null,
+        replyToMessageEntityId = null,
         uid = 1000
       )
     )

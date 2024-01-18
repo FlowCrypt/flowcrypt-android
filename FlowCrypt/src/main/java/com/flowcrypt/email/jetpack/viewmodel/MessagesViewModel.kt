@@ -40,6 +40,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.OutgoingMessageInfoManager
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
@@ -269,6 +270,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         }
 
         if (isMsgDeleted) {
+          //delete outgoing info if exist
+          entity.id?.let { id ->
+            OutgoingMessageInfoManager.deleteOutgoingMessageInfo(getApplication(), id)
+          }
+
           needUpdateOutboxLabel = true
           if (entity.hasAttachments == true) {
             try {

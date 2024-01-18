@@ -156,7 +156,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
                   it.equals(fromAddress.address, true)
                 }
                 .toHashSet()
-                .toList(),
+                .sorted(),
               subject = mimeMsgWithEncryptedContent.subject,
               token = replyToken
             )
