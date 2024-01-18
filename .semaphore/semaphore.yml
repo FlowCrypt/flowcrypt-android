@@ -102,6 +102,37 @@ blocks:
   - name: 'Testing'
     task:
       jobs:
+        - name: 'Lint(structural quality)'
+          execution_time_limit:
+            minutes: 15
+          commands:
+            # run Lint checks
+            - ./script/ci-lint-checks.sh
+
+        - name: 'JUnit tests'
+          execution_time_limit:
+            minutes: 15
+          commands:
+            # run JUnit tests
+            - ./script/ci-junit-tests.sh
+
+        - name: 'Instrumentation tests(No email server)'
+          execution_time_limit:
+            minutes: 45
+          matrix:
+            - env_var: EMULATOR
+              values: [ "0", "1", "2", "3" ]
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            # wait until ready
+            - ./script/ci-wait-for-emulator.sh
+            # Run filtered logging for TestRunner
+            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
+            # Export full logs
+            - adb logcat -d | gzip > ~/logcat.txt.gz
 
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
@@ -118,9 +149,22 @@ blocks:
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
             # Export full logs
-            - adb logcat -d > ~/logcat_log_full.txt
             - adb logcat -d | gzip > ~/logcat.txt.gz
 
+        - name: 'Instrumentation tests(enterprise)'
+          execution_time_limit:
+            minutes: 45
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            #wait until ready
+            - ./script/ci-wait-for-emulator.sh
+            # Run filtered logging for TestRunner
+            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-enterprise.sh
+            # Export full logs
+            - adb logcat -d | gzip > ~/logcat.txt.gz
       epilogue:
         always:
           commands:
@@ -130,8 +174,6 @@ blocks:
 
             # store logcat log
             - echo "Store logcat log"
-            - artifact push job --expire-in 1w ~/logcat_log.txt
-            - artifact push job --expire-in 1w ~/logcat_log_full.txt
             - artifact push job --expire-in 1w ~/logcat.txt.gz
 
             # store screenshots
@@ -144,6 +186,10 @@ blocks:
             # store tests results
             - echo "Store tests results"
             - artifact push job --expire-in 1w FlowCrypt/build/reports/
+
+            # store full logcat log
+            - echo "Store full logcat log"
+            - artifact push job --expire-in 1w ~/logcat.txt.gz
 
             # store the device's screenshot. it may help to debug a failure
             - echo "Store the device's screenshot"
