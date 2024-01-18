@@ -52,7 +52,6 @@ class AttesterSettingsFragment : BaseFragment<FragmentAttesterSettingsBinding>()
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
     setupAccountKeysInfoViewModel()
-    throw IllegalStateException("HOHOHOH")
   }
 
   private fun initViews(view: View) {
