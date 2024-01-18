@@ -575,6 +575,7 @@ class SendMsgTest {
 
   private fun processOutgoingMessageInfo(outgoingMessageInfo: OutgoingMessageInfo) {
     //later we will replace it with Worker checking
+    outgoingMessageInfo.toString()
     runBlocking {
       val worker = TestListenableWorkerBuilder<PrepareOutgoingMessagesWorker>(context).build()
       val result = worker.doWork()

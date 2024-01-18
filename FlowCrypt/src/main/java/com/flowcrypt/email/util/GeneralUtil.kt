@@ -469,7 +469,7 @@ class GeneralUtil {
     suspend fun notifyUserAboutProblemWithOutgoingMsgs(context: Context, account: AccountEntity) =
       withContext(Dispatchers.IO) {
         val failedOutgoingMsgsCount = FlowCryptRoomDatabase.getDatabase(context).msgDao()
-          .getFailedOutgoingMessagesCountSuspend(account.email) ?: 0
+          .getFailedOutgoingMessagesCountSuspend(account.email)
         if (failedOutgoingMsgsCount > 0) {
           ErrorNotificationManager(context).notifyUserAboutProblemWithOutgoingMessages(
             account,
