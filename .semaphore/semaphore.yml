@@ -182,5 +182,5 @@ blocks:
             - echo "Store tests results"
             - artifact push job --expire-in 1w FlowCrypt/build/reports/
 
-            # store full logcat log
+            # collect and store debug info as artifacts
             - ./script/ci-get-and-publish-debug-info-as-artifact.sh
