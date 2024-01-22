@@ -52,14 +52,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
-  to = [BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT],
-  cc = [BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT],
+  to = [],
+  cc = [],
   bcc = [BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
   isNew = false
 )
-@Ignore("fix me after https://github.com/FlowCrypt/flowcrypt-android/issues/2553")
 class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -105,8 +104,6 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     Thread.sleep(1000)
 
     fillData(outgoingMessageConfiguration)
-
-    Thread.sleep(50000)
 
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))

@@ -72,6 +72,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
       onView(withId(R.id.editTextEmailMessage))
         .perform(
           scrollTo(),
+          click(),
           typeTextIntoFocusedView(message),
           closeSoftKeyboard()
         )
