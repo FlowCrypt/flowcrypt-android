@@ -68,16 +68,6 @@ abstract class BaseComposeScreenTest : BaseTest() {
     message: String = MESSAGE,
     isNew: Boolean = true
   ) {
-    if (!isNew) {
-      onView(withId(R.id.editTextEmailMessage))
-        .perform(
-          scrollTo(),
-          click(),
-          typeTextIntoFocusedView(message),
-          closeSoftKeyboard()
-        )
-    }
-
     onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())
     for (recipient in to) {
@@ -127,16 +117,16 @@ abstract class BaseComposeScreenTest : BaseTest() {
         scrollTo(),
         click(),
         typeText(subject),
+        pressImeActionButton(),
         closeSoftKeyboard()
       )
-    if (isNew) {
-      onView(withId(R.id.editTextEmailMessage))
-        .perform(
-          scrollTo(),
-          typeText(message),
-          closeSoftKeyboard()
-        )
-    }
+
+    onView(withId(R.id.editTextEmailMessage))
+      .perform(
+        scrollTo(),
+        typeTextIntoFocusedView(message),
+        closeSoftKeyboard()
+      )
   }
 
   protected fun addAttachment(att: File) {
