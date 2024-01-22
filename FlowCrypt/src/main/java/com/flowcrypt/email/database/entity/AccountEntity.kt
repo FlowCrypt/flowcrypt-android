@@ -338,6 +338,11 @@ data class AccountEntity(
       )
     }
 
+  fun toAccountSettingsEntity(): AccountSettingsEntity = AccountSettingsEntity(
+    account = email,
+    accountType = accountType
+  )
+
   companion object {
     const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
