@@ -163,6 +163,9 @@ blocks:
       epilogue:
         always:
           commands:
+            # export tests result
+            - pwd
+            - test-results publish FlowCrypt/build/outputs/androidTest-results/connected/
             # print debug info about connected device
             - echo "Print connected devices"
             - adb devices
@@ -184,3 +187,10 @@ blocks:
 
             # collect and store debug info as artifacts
             - ./script/ci-get-and-publish-debug-info-as-artifact.sh
+
+after_pipeline:
+  task:
+    jobs:
+      - name: Publish Results
+        commands:
+          - test-results gen-pipeline-report
