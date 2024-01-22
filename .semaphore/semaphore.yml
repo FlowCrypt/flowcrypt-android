@@ -127,7 +127,7 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             # wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Run logging
+            # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
@@ -142,7 +142,7 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Run logging
+            # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
@@ -155,10 +155,11 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Run logging
+            # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-enterprise.sh
+
       epilogue:
         always:
           commands:
@@ -181,8 +182,5 @@ blocks:
             - echo "Store tests results"
             - artifact push job --expire-in 1w FlowCrypt/build/reports/
 
-            # store the device's screenshot. it may help to debug a failure
-            - echo "Store the device's screenshot"
-            - adb shell screencap -p /sdcard/screencap.png
-            - adb pull "/sdcard/screencap.png"
-            - artifact push job --expire-in 1w screencap.png
+            # collect and store debug info as artifacts
+            - ./script/ci-get-and-publish-debug-info-as-artifact.sh
