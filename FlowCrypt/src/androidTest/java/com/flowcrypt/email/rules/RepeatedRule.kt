@@ -15,10 +15,10 @@ import org.junit.runners.model.Statement
 class RepeatedRule : BaseRule() {
   override fun execute() {}
 
-  override fun apply(statement: Statement, description: Description): Statement {
-    val repeat = description.getAnnotation(Repeat::class.java) ?: return statement
+  override fun apply(base: Statement, description: Description): Statement {
+    val repeat = description.getAnnotation(Repeat::class.java) ?: return base
     val times = repeat.value
-    return RepeatStatement(statement, times)
+    return RepeatStatement(base, times)
   }
 
   private class RepeatStatement(
