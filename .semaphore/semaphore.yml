@@ -163,9 +163,9 @@ blocks:
       epilogue:
         always:
           commands:
-            # export tests result
-            - pwd
-            - test-results publish FlowCrypt/build/outputs/androidTest-results/connected/
+            # export tests result if needed
+            - ./script/ci-publish-test-results.sh
+
             # print debug info about connected device
             - echo "Print connected devices"
             - adb devices
