@@ -16,6 +16,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -61,7 +62,11 @@ class ComposeScreenTestPassInRamFlowTest : BaseComposeScreenTest() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
 
-    fillInAllFields(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER)
+    fillInAllFields(
+      to = setOf(
+        requireNotNull(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
+      )
+    )
 
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))

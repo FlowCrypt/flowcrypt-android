@@ -8,6 +8,8 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.ContentResolver
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
@@ -16,18 +18,24 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
+import com.flowcrypt.email.util.OutgoingMessageInfoManager
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
+import jakarta.mail.Flags
 import jakarta.mail.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,13 +51,16 @@ import java.util.concurrent.ConcurrentHashMap
  * @author Denys Bondarenko
  */
 class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Application) :
-  RoomBasicViewModel(application) {
-  private val recipientLookUpManager =
-    RecipientLookUpManager(application, roomDatabase, viewModelScope) {
-      replaceRecipient(Message.RecipientType.TO, it)
-      replaceRecipient(Message.RecipientType.CC, it)
-      replaceRecipient(Message.RecipientType.BCC, it)
-    }
+  AccountViewModel(application) {
+  private val recipientLookUpManager = RecipientLookUpManager(
+    application = application,
+    roomDatabase = roomDatabase,
+    viewModelScope = viewModelScope
+  ) {
+    replaceRecipient(Message.RecipientType.TO, it)
+    replaceRecipient(Message.RecipientType.CC, it)
+    replaceRecipient(Message.RecipientType.BCC, it)
+  }
 
   private val messageEncryptionTypeMutableStateFlow: MutableStateFlow<MessageEncryptionType> =
     MutableStateFlow(
@@ -116,6 +127,95 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val attachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
     attachmentsMutableStateFlow.asStateFlow()
 
+  private val addOutgoingMessageInfoToQueueMutableStateFlow: MutableStateFlow<Result<MessageEntity?>> =
+    MutableStateFlow(Result.none())
+  val addOutgoingMessageInfoToQueueStateFlow: StateFlow<Result<MessageEntity?>> =
+    addOutgoingMessageInfoToQueueMutableStateFlow.asStateFlow()
+  private val controlledRunnerForAddingOutgoingMessageInfoToQueue =
+    ControlledRunner<Result<MessageEntity?>>()
+
+  fun enqueueOutgoingMessage(password: CharArray?) {
+    viewModelScope.launch {
+      addOutgoingMessageInfoToQueueMutableStateFlow.value = Result.loading()
+      addOutgoingMessageInfoToQueueMutableStateFlow.value =
+        controlledRunnerForAddingOutgoingMessageInfoToQueue.joinPreviousOrRun {
+          withContext(Dispatchers.IO) {
+            var messageEntity: MessageEntity? = null
+            try {
+              val activeAccount = getActiveAccountSuspend()
+                ?: throw IllegalStateException("No active account")
+              val outgoingMessageInfo =
+                outgoingMessageInfoStateFlow.value.copy(password = password)
+
+              val replyTo = outgoingMessageInfo.replyToMessageEntityId?.let {
+                roomDatabase.msgDao().getMsgById(it)?.replyTo
+              }
+              messageEntity = outgoingMessageInfo.toMessageEntity(
+                folder = JavaEmailConstants.FOLDER_OUTBOX,
+                flags = Flags(Flags.Flag.SEEN),
+                replyTo = replyTo,
+                password = outgoingMessageInfo.password?.let {
+                  KeyStoreCryptoManager.encrypt(String(it)).toByteArray()
+                }
+              )
+              val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
+              messageEntity = messageEntity.copy(id = messageId, uid = messageId)
+              roomDatabase.msgDao().updateSuspend(messageEntity)
+
+              OutgoingMessageInfoManager.enqueueOutgoingMessageInfo(
+                context = getApplication(),
+                messageEntity = messageEntity,
+                outgoingMessageInfo = outgoingMessageInfo.copy(
+                  uid = messageId,
+                  password = password,
+                  atts = outgoingMessageInfo.atts?.map {
+                    it.copy(
+                      email = outgoingMessageInfo.account,
+                      folder = JavaEmailConstants.FOLDER_OUTBOX,
+                      uid = messageId,
+                      type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
+                    )
+                  },
+                  forwardedAtts = outgoingMessageInfo.forwardedAtts?.map {
+                    it.copy(
+                      email = outgoingMessageInfo.account,
+                      folder = JavaEmailConstants.FOLDER_OUTBOX,
+                      uid = messageId,
+                      fwdFolder = it.folder,
+                      fwdUid = it.uid,
+                      type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
+                    )
+                  },
+                )
+              )
+              updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
+              Result.success(messageEntity)
+            } catch (e: Exception) {
+              try {
+                //delete unused resources if any exception has occurred
+                messageEntity?.let {
+                  if (messageEntity.id != null) {
+                    roomDatabase.msgDao().deleteSuspend(messageEntity)
+                    OutgoingMessageInfoManager.deleteOutgoingMessageInfo(
+                      context = getApplication(),
+                      id = requireNotNull(messageEntity.id),
+                    )
+                  }
+                }
+              } catch (e: Exception) {
+                e.printStackTrace()
+              }
+              Result.exception(e)
+            }
+          }
+        }
+
+      //clear the last status
+      delay(500)
+      addOutgoingMessageInfoToQueueMutableStateFlow.value = Result.none()
+    }
+  }
+
   fun addAttachments(attachments: List<AttachmentInfo>) {
     attachmentsMutableStateFlow.update { existingAttachments ->
       existingAttachments.toMutableList().apply {
@@ -133,7 +233,9 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   }
 
   fun updateOutgoingMessageInfo(outgoingMessageInfo: OutgoingMessageInfo) {
-    outgoingMessageInfoMutableStateFlow.update { outgoingMessageInfo }
+    outgoingMessageInfoMutableStateFlow.update {
+      outgoingMessageInfo.copy(timestamp = System.currentTimeMillis())
+    }
   }
 
   fun switchMessageEncryptionType(messageEncryptionType: MessageEncryptionType) {
@@ -223,6 +325,22 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
+  fun callLookUpForMissedPubKeys() {
+    viewModelScope.launch {
+      allRecipients.forEach { entry ->
+        recipientLookUpManager.enqueue(entry.value)
+      }
+    }
+  }
+
+  fun callLookUpForRecipientIfNeeded(email: String?) {
+    viewModelScope.launch {
+      allRecipients.entries
+        .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
+        ?.value?.let { recipientLookUpManager.enqueue(it) }
+    }
+  }
+
   private fun replaceRecipient(
     recipientType: Message.RecipientType,
     recipientInfo: RecipientInfo
@@ -240,19 +358,16 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     }
   }
 
-  fun callLookUpForMissedPubKeys() {
-    viewModelScope.launch {
-      allRecipients.forEach { entry ->
-        recipientLookUpManager.enqueue(entry.value)
-      }
-    }
-  }
+  private suspend fun updateOutgoingMsgCount(
+    email: String,
+    accountType: String?
+  ) {
+    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(email).size
+    val outboxLabel =
+      roomDatabase.labelDao().getLabelSuspend(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
 
-  fun callLookUpForRecipientIfNeeded(email: String?) {
-    viewModelScope.launch {
-      allRecipients.entries
-        .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
-        ?.value?.let { recipientLookUpManager.enqueue(it) }
+    outboxLabel?.let {
+      roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
     }
   }
 

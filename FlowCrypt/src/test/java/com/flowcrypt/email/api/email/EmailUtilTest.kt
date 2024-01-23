@@ -17,6 +17,7 @@ import jakarta.mail.Multipart
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -65,10 +66,12 @@ class EmailUtilTest {
       messageType = MessageType.NEW,
       uid = 1000
     )
-    val newMsg = EmailUtil.prepareNewMsg(
-      session = Session.getInstance(Properties()),
-      info = outgoingMessageInfo
-    )
+    val newMsg = runBlocking {
+      EmailUtil.prepareNewMsg(
+        session = Session.getInstance(Properties()),
+        info = outgoingMessageInfo
+      )
+    }
     newMsg.saveChanges()
 
     assertEquals(subject, newMsg.subject)

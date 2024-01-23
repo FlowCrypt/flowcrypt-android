@@ -142,6 +142,11 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     label: String = JavaEmailConstants.FOLDER_OUTBOX
   ): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE folder = :label")
+  abstract suspend fun getAllOutboxMessages(
+    label: String = JavaEmailConstants.FOLDER_OUTBOX
+  ): List<MessageEntity>
+
   @Query(
     "SELECT * FROM messages " +
         "WHERE email = :account AND folder = :label AND state IN (:msgStates)"
@@ -178,7 +183,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     "SELECT COUNT(*) FROM messages WHERE email = :account " +
         "AND folder = :label AND (state IN (:msgStates) OR state IS NULL)"
   )
-  abstract fun getFailedOutgoingMsgsCount(
+  abstract suspend fun getFailedOutgoingMessagesCountSuspend(
     account: String?,
     label: String = JavaEmailConstants.FOLDER_OUTBOX,
     msgStates: Collection<Int> = listOf(
@@ -192,25 +197,6 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       MessageState.ERROR_PASSWORD_PROTECTED.value
     )
   ): Int
-
-  @Query(
-    "SELECT COUNT(*) FROM messages WHERE email = :account " +
-        "AND folder = :label AND (state IN (:msgStates) OR state IS NULL)"
-  )
-  abstract suspend fun getFailedOutgoingMsgsCountSuspend(
-    account: String?,
-    label: String = JavaEmailConstants.FOLDER_OUTBOX,
-    msgStates: Collection<Int> = listOf(
-      MessageState.ERROR_CACHE_PROBLEM.value,
-      MessageState.ERROR_DURING_CREATION.value,
-      MessageState.ERROR_ORIGINAL_MESSAGE_MISSING.value,
-      MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND.value,
-      MessageState.ERROR_SENDING_FAILED.value,
-      MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
-      MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
-      MessageState.ERROR_PASSWORD_PROTECTED.value
-    )
-  ): Int?
 
   @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun count(account: String?, folder: String?): Int

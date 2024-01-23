@@ -22,9 +22,11 @@ fun CountingIdlingResource?.incrementSafely(any: Any, msg: String = "") {
 }
 
 fun CountingIdlingResource?.decrementSafely(any: Any, msg: String = "") {
-  if (GeneralUtil.isDebugBuild() && this?.isIdleNow == false) {
+  if (GeneralUtil.isDebugBuild()) {
     LogsUtil.d("CountingIdlingResource", "$this:decrementSafely from ${any.javaClass.name}: $msg")
-    decrement()
+    if (this?.isIdleNow == false) {
+      decrement()
+    }
     (any as? IdlingCountListener)?.decrementIdlingCount()
   }
 }

@@ -29,7 +29,7 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
   override val groupName: String = GROUP_NAME_ERRORS
   override val groupId: Int = NOTIFICATIONS_GROUP_ERROR
 
-  fun notifyUserAboutProblemWithOutgoingMsgs(account: AccountEntity, messageCount: Int) {
+  fun notifyUserAboutProblemWithOutgoingMessages(account: AccountEntity, messageCount: Int) {
     val pendingIntent = NavDeepLinkBuilder(context)
       .setGraph(R.navigation.nav_graph)
       .setDestination(R.id.messagesListFragment)

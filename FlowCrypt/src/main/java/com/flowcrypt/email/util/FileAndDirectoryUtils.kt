@@ -82,7 +82,7 @@ class FileAndDirectoryUtils {
      * @param directory The input directory.
      * @return The the directory files or an empty array.
      */
-    private fun getFilesInDir(directory: File): Array<File> {
+    fun getFilesInDir(directory: File): Array<File> {
       return if (directory.exists() && directory.isDirectory) {
         directory.listFiles() ?: return arrayOf()
       } else {
