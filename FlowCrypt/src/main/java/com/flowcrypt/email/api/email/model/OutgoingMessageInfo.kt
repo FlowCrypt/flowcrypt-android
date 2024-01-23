@@ -6,12 +6,16 @@
 package com.flowcrypt.email.api.email.model
 
 import android.os.Parcelable
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.google.gson.annotations.Expose
+import jakarta.mail.Flags
 import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
+import java.util.UUID
 
 /**
  * Simple POJO class which describe an outgoing message model.
@@ -19,21 +23,22 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class OutgoingMessageInfo constructor(
-  val account: String? = null,
-  val subject: String? = null,
-  val msg: String? = null,
-  val toRecipients: List<InternetAddress>? = null,
-  val ccRecipients: List<InternetAddress>? = null,
-  val bccRecipients: List<InternetAddress>? = null,
-  val from: InternetAddress? = null,
-  val atts: List<AttachmentInfo>? = null,
-  val forwardedAtts: List<AttachmentInfo>? = null,
-  val encryptionType: MessageEncryptionType? = null,
-  @MessageType val messageType: Int = MessageType.NEW,
-  val replyToMsgEntity: MessageEntity? = null,
-  val uid: Long = 0,
-  val password: CharArray? = null
+data class OutgoingMessageInfo(
+  @Expose val account: String? = null,
+  @Expose val subject: String? = null,
+  @Expose val msg: String? = null,
+  @Expose val toRecipients: List<InternetAddress>? = null,
+  @Expose val ccRecipients: List<InternetAddress>? = null,
+  @Expose val bccRecipients: List<InternetAddress>? = null,
+  @Expose val from: InternetAddress? = null,
+  @Expose val atts: List<AttachmentInfo>? = null,
+  @Expose val forwardedAtts: List<AttachmentInfo>? = null,
+  @Expose val encryptionType: MessageEncryptionType? = null,
+  @Expose @MessageType val messageType: Int = MessageType.NEW,
+  @Expose val replyToMessageEntityId: Long? = null,
+  @Expose val uid: Long = 0,
+  @Expose val password: CharArray? = null,
+  @Expose val timestamp: Long = System.currentTimeMillis(),
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -55,7 +60,6 @@ data class OutgoingMessageInfo constructor(
   }
 
   fun getProtectedRecipients() = bccRecipients?.map { it.address } ?: emptyList()
-
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
@@ -73,15 +77,13 @@ data class OutgoingMessageInfo constructor(
     if (forwardedAtts != other.forwardedAtts) return false
     if (encryptionType != other.encryptionType) return false
     if (messageType != other.messageType) return false
-    if (replyToMsgEntity != other.replyToMsgEntity) return false
+    if (replyToMessageEntityId != other.replyToMessageEntityId) return false
     if (uid != other.uid) return false
     if (password != null) {
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
-    if (isPasswordProtected != other.isPasswordProtected) return false
-
-    return true
+    return timestamp == other.timestamp
   }
 
   override fun hashCode(): Int {
@@ -96,10 +98,37 @@ data class OutgoingMessageInfo constructor(
     result = 31 * result + (forwardedAtts?.hashCode() ?: 0)
     result = 31 * result + (encryptionType?.hashCode() ?: 0)
     result = 31 * result + messageType
-    result = 31 * result + (replyToMsgEntity?.hashCode() ?: 0)
+    result = 31 * result + (replyToMessageEntityId?.hashCode() ?: 0)
     result = 31 * result + uid.hashCode()
     result = 31 * result + (password?.contentHashCode() ?: 0)
-    result = 31 * result + (isPasswordProtected?.hashCode() ?: 0)
+    result = 31 * result + timestamp.hashCode()
     return result
+  }
+  fun toMessageEntity(
+    folder: String,
+    flags: Flags,
+    replyTo: String? = null,
+    password: ByteArray? = null,
+  ): MessageEntity {
+    return MessageEntity(
+      email = requireNotNull(account),
+      folder = folder,
+      uid = uid,
+      fromAddress = from.toString(),
+      replyTo = replyTo,
+      toAddress = InternetAddress.toString(toRecipients?.toTypedArray()),
+      ccAddress = InternetAddress.toString(ccRecipients?.toTypedArray()),
+      flags = flags.toString().uppercase(),
+      hasAttachments = atts?.isNotEmpty() == true || forwardedAtts?.isNotEmpty() == true,
+      isNew = false,
+      isEncrypted = encryptionType == MessageEncryptionType.ENCRYPTED,
+      state = if (messageType == MessageType.FORWARD) {
+        MessageState.NEW_FORWARDED.value
+      } else {
+        MessageState.NEW.value
+      },
+      password = password,
+      attachmentsDirectory = UUID.randomUUID().toString()
+    )
   }
 }

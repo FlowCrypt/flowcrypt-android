@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
+import android.net.Uri
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -13,8 +14,13 @@ import com.flowcrypt.email.api.retrofit.okhttp.ApiVersionInterceptor
 import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.flowcrypt.email.util.google.gson.ByteArrayJsonSerializerDeserializer
+import com.flowcrypt.email.util.google.gson.CharArrayJsonSerializerDeserializer
+import com.flowcrypt.email.util.google.gson.InternetAddressJsonSerializerDeserializer
+import com.flowcrypt.email.util.google.gson.UriJsonSerializerDeserializer
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import jakarta.mail.internet.InternetAddress
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
@@ -46,6 +52,10 @@ class ApiHelper private constructor(context: Context) {
 
     okHttpClient = okHttpClientBuilder.build()
     gson = GsonBuilder()
+      .registerTypeAdapter(Uri::class.java, UriJsonSerializerDeserializer())
+      .registerTypeAdapter(InternetAddress::class.java, InternetAddressJsonSerializerDeserializer())
+      .registerTypeAdapter(CharArray::class.java, CharArrayJsonSerializerDeserializer())
+      .registerTypeAdapter(ByteArray::class.java, ByteArrayJsonSerializerDeserializer())
       .excludeFieldsWithoutExposeAnnotation()
       .serializeNulls()
       .create()

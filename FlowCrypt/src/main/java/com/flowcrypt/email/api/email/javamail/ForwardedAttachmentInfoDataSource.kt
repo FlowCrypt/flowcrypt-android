@@ -28,21 +28,28 @@ class ForwardedAttachmentInfoDataSource(
 ) : AttachmentInfoDataSource(context, att) {
   override fun getInputStream(): InputStream? {
     val inputStream = super.getInputStream() ?: return null
-    val srcInputStream = if (att.decryptWhenForward) PgpDecryptAndOrVerify.genDecryptionStream(
-      srcInputStream = inputStream,
-      secretKeys = secretKeys,
-      protector = protector
-    ) else inputStream
+    val srcInputStream = if (att.decryptWhenForward) {
+      //due to PGPainless(or maybe BC) we have to read a stream fully before using here
+      //Because JavaMail tries to identify encoding and does some manipulation with the input stream
+      val decryptedBytes = PgpDecryptAndOrVerify.genDecryptionStream(
+        srcInputStream = inputStream,
+        secretKeys = secretKeys,
+        protector = protector
+      ).readBytes()
+
+      decryptedBytes.inputStream()
+    } else inputStream
 
     return if (shouldBeEncrypted) {
-      //here we use [ByteArrayOutputStream] as a temp destination of encrypted data.
+      //The same situation here.
       //todo-denbond7 it should be improved in the future for better performance
       val tempByteArrayOutputStream = ByteArrayOutputStream()
       PgpEncryptAndOrSign.encryptAndOrSign(
         srcInputStream = srcInputStream,
         destOutputStream = tempByteArrayOutputStream,
         pubKeys = requireNotNull(publicKeys),
-        fileName = if (att.decryptWhenForward) FilenameUtils.removeExtension(name) else name,
+        //at this stage we will always have .PGP in the and of the attachment name. Need to drop it.
+        fileName = FilenameUtils.removeExtension(name),
       )
 
       tempByteArrayOutputStream.toByteArray().inputStream()

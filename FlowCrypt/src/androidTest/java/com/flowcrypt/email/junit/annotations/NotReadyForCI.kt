@@ -12,4 +12,4 @@ package com.flowcrypt.email.junit.annotations
  * @author Denys Bondarenko
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class NotReadyForCI
+annotation class NotReadyForCI(val message: String = "")

@@ -64,6 +64,9 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
 
         if (existingAccount == null) {
           roomDatabase.accountDao().addAccountSuspend(accountEntity)
+          roomDatabase.accountSettingsDao().insertSuspend(
+            accountEntity.toAccountSettingsEntity()
+          )
         } else {
           roomDatabase.accountDao().updateAccountSuspend(
             accountEntity.copy(

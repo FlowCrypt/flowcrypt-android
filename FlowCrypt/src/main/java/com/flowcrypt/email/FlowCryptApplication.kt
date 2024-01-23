@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncInboxWorker
-import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
@@ -83,7 +82,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun getWorkManagerConfiguration() =
     Configuration.Builder()
-      .setJobSchedulerJobIdRange(JobIdManager.JOB_MAX_ID, JobIdManager.JOB_MAX_ID + 10000)
+      .setJobSchedulerJobIdRange(10, 10000)
       .build()
 
   /**
