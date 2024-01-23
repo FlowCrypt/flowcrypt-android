@@ -187,6 +187,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
             DEFAULT_TO_RECIPIENT,
             DEFAULT_CC_RECIPIENT,
             DEFAULT_BCC_RECIPIENT,
+            EXISTING_MESSAGE_CC_RECIPIENT,
           ) -> {
             MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
@@ -196,6 +197,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
                   DEFAULT_TO_RECIPIENT -> defaultToPgpKeyDetails.publicKey
                   DEFAULT_CC_RECIPIENT -> defaultCcPgpKeyDetails.publicKey
                   DEFAULT_BCC_RECIPIENT -> defaultBccPgpKeyDetails.publicKey
+                  EXISTING_MESSAGE_CC_RECIPIENT -> existingCcPgpKeyDetails.publicKey
                   else -> ""
                 }
               )
@@ -1058,7 +1060,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
 
   companion object {
     const val EXISTING_MESSAGE_TO_RECIPIENT = "default@flowcrypt.test"
-    const val EXISTING_MESSAGE_CC_RECIPIENT = "denbond7@flowcrypt.test"
+    const val EXISTING_MESSAGE_CC_RECIPIENT = "android@flowcrypt.test"
 
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111111"
