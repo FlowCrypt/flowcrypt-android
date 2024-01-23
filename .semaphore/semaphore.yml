@@ -166,24 +166,13 @@ blocks:
             # export tests result if needed
             - ./script/ci-publish-test-results.sh
 
-            # print debug info about connected device
-            - echo "Print connected devices"
-            - adb devices
+            # do additional actions if needed
+            - ./script/ci-after-success-actions-for-instrumentation-tests.sh
 
-            # store logcat log
-            - echo "Store logcat log"
-            - artifact push job --expire-in 1w ~/logcat_log.txt
-
-            # store screenshots
-            - echo "Store screenshots"
-            - adb pull "/sdcard/Pictures"
-            - adb shell ls /sdcard/Pictures
-            - artifact push job --expire-in 1w Pictures
         on_fail:
           commands:
             # store tests results
-            - echo "Store tests results"
-            - artifact push job --expire-in 1w FlowCrypt/build/reports/
+
 
             # collect and store debug info as artifacts
             - ./script/ci-get-and-publish-debug-info-as-artifact.sh
