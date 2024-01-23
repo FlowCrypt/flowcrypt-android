@@ -1274,7 +1274,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         binding?.chipLayoutCc?.visibleOrGone(recipients.isNotEmpty())
-        binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.CC, recipients)
         updateAutoCompleteAdapter(recipients)
       }
@@ -1294,7 +1293,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         binding?.chipLayoutBcc?.visibleOrGone(recipients.isNotEmpty())
-        binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.BCC, recipients)
         updateAutoCompleteAdapter(recipients)
       }
