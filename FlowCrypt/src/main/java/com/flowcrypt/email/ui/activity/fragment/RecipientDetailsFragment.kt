@@ -29,7 +29,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 /**
  * @author Denys Bondarenko
  */
-@ExperimentalCoroutinesApi
 class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>(),
   ListProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
@@ -73,6 +72,7 @@ class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>()
     setupRecipientDetailsViewModel()
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   private fun setupRecipientDetailsViewModel() {
     launchAndRepeatWithViewLifecycle {
       recipientDetailsViewModel.recipientPubKeysFlow.collect {

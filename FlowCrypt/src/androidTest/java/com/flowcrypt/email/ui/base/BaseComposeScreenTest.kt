@@ -65,8 +65,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
     cc: Collection<InternetAddress>? = null,
     bcc: Collection<InternetAddress>? = null,
     subject: String = SUBJECT,
-    message: String = MESSAGE,
-    isNew: Boolean = true
+    message: String = MESSAGE
   ) {
     onView(withId(R.id.chipLayoutTo))
       .perform(scrollTo())

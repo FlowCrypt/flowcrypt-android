@@ -31,7 +31,6 @@ if (propertiesFile?.exists() == true) {
 
 android {
   compileSdk = extra["compileSdkVersion"] as Int
-  buildToolsVersion = extra["buildToolsVersion"] as String
   namespace = "com.flowcrypt.email"
 
   defaultConfig {

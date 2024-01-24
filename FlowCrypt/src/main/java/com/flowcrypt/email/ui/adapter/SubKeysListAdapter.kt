@@ -113,7 +113,9 @@ class SubKeysListAdapter(private var keyRingInfo: KeyRingInfo? = null) :
         oldItem: PGPPublicKey,
         newItem: PGPPublicKey
       ): Boolean {
-        return OpenPgpFingerprint.of(oldItem).equals(OpenPgpFingerprint.of(newItem))
+        OpenPgpFingerprint.of(oldItem).toString()
+
+        return OpenPgpFingerprint.of(oldItem).toString() == OpenPgpFingerprint.of(newItem).toString()
             && oldItem.getLastModificationDate() == newItem.getLastModificationDate()
       }
     }
