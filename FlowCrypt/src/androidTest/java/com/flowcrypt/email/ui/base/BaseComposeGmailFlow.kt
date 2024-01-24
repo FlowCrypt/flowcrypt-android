@@ -1053,8 +1053,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
         requireNotNull(it.asInternetAddress())
       },
       subject = outgoingMessageConfiguration.subject,
-      message = outgoingMessageConfiguration.message,
-      isNew = outgoingMessageConfiguration.isNew
+      message = outgoingMessageConfiguration.message
     )
   }
 

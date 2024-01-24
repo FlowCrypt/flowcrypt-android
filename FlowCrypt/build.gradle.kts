@@ -31,7 +31,6 @@ if (propertiesFile?.exists() == true) {
 
 android {
   compileSdk = extra["compileSdkVersion"] as Int
-  buildToolsVersion = extra["buildToolsVersion"] as String
   namespace = "com.flowcrypt.email"
 
   defaultConfig {
@@ -450,7 +449,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.2.0")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20231106-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20231218-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
