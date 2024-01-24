@@ -7,6 +7,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.database.sqlite.SQLiteException
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
@@ -202,13 +203,19 @@ class CheckPrivateKeysViewModel(
       )
 
     return@withContext existingAccountSettings ?: run {
-      val newAccountSettings = AccountSettingsEntity(
-        account = activeAccount.email,
-        accountType = activeAccount.accountType
-      )
-      newAccountSettings.copy(
-        id = roomDatabase.accountSettingsDao().insertSuspend(newAccountSettings)
-      )
+      val newAccountSettings = activeAccount.toAccountSettingsEntity()
+      try {
+        newAccountSettings.copy(
+          id = roomDatabase.accountSettingsDao().insertSuspend(newAccountSettings)
+        )
+      } catch (e: SQLiteException) {
+        //it looks like [AccountSettingsEntity] was added from another thread. Just try to get it.
+        roomDatabase.accountSettingsDao()
+          .getAccountSettings(
+            account = activeAccount.email,
+            accountType = activeAccount.accountType
+          )
+      }
     }
   }
 

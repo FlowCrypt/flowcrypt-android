@@ -371,7 +371,7 @@ dependencies {
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
   ksp("com.google.auto.service:auto-service:1.1.1")
 
-  devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+  devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
   uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
@@ -402,7 +402,7 @@ dependencies {
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.21")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.22")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -455,7 +455,7 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
   implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-  implementation("com.squareup.okio:okio:3.6.0")
+  implementation("com.squareup.okio:okio:3.7.0")
   implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
   implementation("com.sun.mail:jakarta.mail:2.0.1")
@@ -465,7 +465,7 @@ dependencies {
     exclude("com.sun.mail")
   }
 
-  implementation("org.pgpainless:pgpainless-core:1.6.4")
+  implementation("org.pgpainless:pgpainless-core:1.6.5")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
@@ -475,7 +475,7 @@ dependencies {
   implementation("org.bitbucket.b_c:jose4j:0.9.4")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1")
-  implementation("org.jsoup:jsoup:1.17.1")
+  implementation("org.jsoup:jsoup:1.17.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("ch.acra:acra-http:5.11.3")

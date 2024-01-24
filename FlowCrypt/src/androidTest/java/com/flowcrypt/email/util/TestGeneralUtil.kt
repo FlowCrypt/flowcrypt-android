@@ -91,12 +91,16 @@ object TestGeneralUtil {
   }
 
   fun createFileWithTextContent(fileName: String, fileText: String): File {
+    return createFileWithContent(fileName,fileText.toByteArray())
+  }
+
+  fun createFileWithContent(fileName: String, byteArray: ByteArray): File {
     val file = File(
       InstrumentationRegistry.getInstrumentation().targetContext
         .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName
     )
     try {
-      FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
+      FileOutputStream(file).use { outputStream -> outputStream.write(byteArray) }
     } catch (e: Exception) {
       e.printStackTrace()
     }

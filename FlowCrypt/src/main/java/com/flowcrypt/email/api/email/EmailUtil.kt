@@ -33,10 +33,10 @@ import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -85,7 +85,10 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -634,12 +637,13 @@ class EmailUtil {
      * an outgoing message.
      * @return The generated raw MIME message.
      */
-    fun genMessage(
-      context: Context, accountEntity: AccountEntity,
+    suspend fun genMessage(
+      context: Context,
+      accountEntity: AccountEntity,
       outgoingMsgInfo: OutgoingMessageInfo,
       signingRequired: Boolean = true,
       hideArmorMeta: Boolean = false,
-    ): Message {
+    ): Message = withContext(Dispatchers.IO) {
       val session = Session.getInstance(Properties())
       val senderEmail = requireNotNull(outgoingMsgInfo.from?.address)
       var pubKeys: List<String>? = null
@@ -667,7 +671,7 @@ class EmailUtil {
         }
       }
 
-      return when (outgoingMsgInfo.messageType) {
+      return@withContext when (outgoingMsgInfo.messageType) {
         MessageType.NEW, MessageType.FORWARD, MessageType.DRAFT -> {
           prepareNewMsg(
             session = session,
@@ -683,6 +687,7 @@ class EmailUtil {
         MessageType.REPLY, MessageType.REPLY_ALL -> {
           prepareReplyMsg(
             context = context,
+            accountEntity = accountEntity,
             session = session,
             info = outgoingMsgInfo,
             pubKeys = pubKeys,
@@ -694,24 +699,6 @@ class EmailUtil {
         }
 
         else -> throw IllegalStateException("Unsupported message type")
-      }
-    }
-
-    /**
-     * Get next [UID] value for the outgoing message.
-     *
-     * @param context Interface to global information about an application environment.
-     * @return The next [UID] value for the outgoing message.
-     */
-    fun genOutboxUID(context: Context): Long {
-      return SharedPreferencesHelper.getLong(
-        PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREF_KEY_LAST_OUTBOX_UID, 0
-      ).inc().apply {
-        SharedPreferencesHelper.setLong(
-          PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_OUTBOX_UID, this
-        )
       }
     }
 
@@ -988,7 +975,7 @@ class EmailUtil {
       }
     }
 
-    fun prepareNewMsg(
+    suspend fun prepareNewMsg(
       session: Session,
       info: OutgoingMessageInfo,
       pubKeys: List<String>? = null,
@@ -996,7 +983,7 @@ class EmailUtil {
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
-    ): MimeMessage {
+    ): MimeMessage = withContext(Dispatchers.IO) {
       val msg = FlowCryptMimeMessage(session)
       msg.subject = info.subject
       msg.setFrom(info.from)
@@ -1015,7 +1002,7 @@ class EmailUtil {
           )
         )
       })
-      return msg
+      return@withContext msg
     }
 
     fun genReplyMessage(
@@ -1150,8 +1137,9 @@ class EmailUtil {
       )
     }
 
-    private fun prepareReplyMsg(
+    private suspend fun prepareReplyMsg(
       context: Context,
+      accountEntity: AccountEntity,
       session: Session,
       info: OutgoingMessageInfo,
       pubKeys: List<String>?,
@@ -1159,29 +1147,34 @@ class EmailUtil {
       prvKeys: List<String>? = null,
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
-    ): Message {
-      val replyToMessageEntity = info.replyToMsgEntity
-        ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
-      val msg = if (replyToMessageEntity.rawMessageWithoutAttachments.isNullOrEmpty()) {
-        val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
-          ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
+    ): Message = withContext(Dispatchers.IO) {
+      val replyToMessageEntityId = info.replyToMessageEntityId
+        ?: throw IllegalArgumentException("replyToMessageEntityId is null")
 
-        val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
-        val input = context.contentResolver?.openInputStream(uri)
-          ?: throw IllegalArgumentException("InputStream not found")
-        FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
-      } else {
-        val input = replyToMessageEntity.rawMessageWithoutAttachments.toInputStream()
-        try {
-          FlowCryptMimeMessage(session, KeyStoreCryptoManager.getCipherInputStream(input))
-        } catch (e: Exception) {
-          //added for compatibility to previous versions
-          FlowCryptMimeMessage(session, input)
-        }
-      }
+      val keys = PGPainless.readKeyRing()
+        .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
 
-      return genReplyMessage(
-        replyToMsg = msg,
+      val replyToMessageEntity =
+        FlowCryptRoomDatabase.getDatabase(context).msgDao().getMsgById(replyToMessageEntityId)
+          ?: throw IllegalArgumentException("Empty replyTo MessageEntity")
+
+      val snapshot = MsgsCacheManager.getMsgSnapshot(replyToMessageEntity.id.toString())
+        ?: throw IllegalArgumentException("Snapshot of replyTo message not found")
+
+      val uri = snapshot.getUri(0) ?: throw IllegalArgumentException("Uri not found")
+      val inputStream = context.contentResolver?.openInputStream(uri)
+        ?: throw IllegalArgumentException("InputStream not found")
+      val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
+        srcInputStream = inputStream,
+        secretKeys = keys,
+        protector = PasswordBasedSecretKeyRingProtector.forKey(
+          keys.first(),
+          Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
+        )
+      )
+
+      return@withContext genReplyMessage(
+        replyToMsg = FlowCryptMimeMessage(session, decryptionStream),
         info = info,
         pubKeys = pubKeys,
         protectedPubKeys = protectedPubKeys,

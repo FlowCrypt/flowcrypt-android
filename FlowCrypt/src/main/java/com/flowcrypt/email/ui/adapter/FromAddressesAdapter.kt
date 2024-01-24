@@ -19,15 +19,12 @@ import com.flowcrypt.email.util.UIUtil
  *
  * @author Denys Bondarenko
  */
-class FromAddressesAdapter<T>(
+class FromAddressesAdapter(
   context: Context,
   resource: Int,
   textViewResId: Int,
-  val objects: List<T>
-) : ArrayAdapter<T>(
-  context, resource,
-  textViewResId, objects
-) {
+  val objects: List<String>
+) : ArrayAdapter<String>(context, resource, textViewResId, objects) {
   private val keysAvailability: MutableMap<String, Boolean> = HashMap()
   private var originalColor: Int = 0
   private var useKeysInfo: Boolean = false
@@ -54,7 +51,7 @@ class FromAddressesAdapter<T>(
 
     return if (useKeysInfo && getItem(position) is String) {
       val email = getItem(position) as String
-      val result = keysAvailability[email]
+      val result = keysAvailability[email.lowercase()]
       result ?: super.isEnabled(position)
     } else {
       super.isEnabled(position)
@@ -84,7 +81,7 @@ class FromAddressesAdapter<T>(
    * @param hasPgp       true if we have a private key for the given email address, otherwise false
    */
   fun updateKeyAvailability(emailAddress: String, hasPgp: Boolean) {
-    keysAvailability[emailAddress] = hasPgp
+    keysAvailability[emailAddress.lowercase()] = hasPgp
   }
 
   /**
@@ -94,7 +91,7 @@ class FromAddressesAdapter<T>(
    * @return true if the given email address has a private key, otherwise false.
    */
   fun hasPrvKey(emailAddress: String): Boolean {
-    val result = keysAvailability[emailAddress]
-    return keysAvailability.containsKey(emailAddress) && result != null && result
+    val result = keysAvailability[emailAddress.lowercase()]
+    return keysAvailability.containsKey(emailAddress.lowercase()) && result != null && result
   }
 }

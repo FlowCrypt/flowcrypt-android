@@ -11,7 +11,6 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -38,7 +37,7 @@ object IMAPStoreManager {
     val activeAccountLiveData: LiveData<AccountEntity?> =
       pureActiveAccountLiveData.switchMap { accountEntity ->
         liveData {
-          emit(AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+          emit(accountEntity?.withDecryptedInfo())
         }
       }
 

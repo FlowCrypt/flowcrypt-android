@@ -22,7 +22,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -70,9 +69,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
           }
         }
 
-        val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
-          roomDatabase.accountDao().getActiveAccountSuspend()
-        )
+        val account = roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
           ?: return@withContext Result.success()
 
         val newMsgs = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
@@ -197,7 +194,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
                   GmailApiHelper.getAttInputStream(
                     applicationContext,
                     account,
-                    attachmentEntity.uid.toHex(),
+                    requireNotNull(attachmentEntity.forwardedUid?.toHex()),
                     attPart.body.attachmentId
                   )
                 }

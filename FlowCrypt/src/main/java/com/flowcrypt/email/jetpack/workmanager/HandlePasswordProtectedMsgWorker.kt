@@ -23,7 +23,6 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFromAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -72,9 +71,8 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     }
 
     try {
-      val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
-        roomDatabase.accountDao().getActiveAccountSuspend()
-      ) ?: return@withContext Result.success()
+      val account = roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
+        ?: return@withContext Result.success()
 
       val passwordProtectedCandidates = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
         account = account.email,
@@ -158,7 +156,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
                   it.equals(fromAddress.address, true)
                 }
                 .toHashSet()
-                .toList(),
+                .sorted(),
               subject = mimeMsgWithEncryptedContent.subject,
               token = replyToken
             )

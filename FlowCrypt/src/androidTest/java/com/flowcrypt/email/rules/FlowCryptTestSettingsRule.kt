@@ -15,9 +15,6 @@ import org.junit.runner.Description
  * @author Denys Bondarenko
  */
 class FlowCryptTestSettingsRule : TestWatcher() {
-  /**
-   * @return the name of the currently-running test method
-   */
   @Volatile
   var flowCryptTestSettings: FlowCryptTestSettings? = null
     private set

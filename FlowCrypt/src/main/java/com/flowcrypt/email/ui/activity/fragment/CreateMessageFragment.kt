@@ -80,10 +80,10 @@ import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
+import com.flowcrypt.email.jetpack.workmanager.PrepareOutgoingMessagesWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -126,6 +126,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     FragmentCreateMessageBinding.inflate(inflater, container, false)
 
   private lateinit var draftCacheDir: File
+  private var menu: Menu? = null
 
   private val args by navArgs<CreateMessageFragmentArgs>()
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
@@ -266,7 +267,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     })
 
   private var folderType: FoldersManager.FolderType? = null
-  private var fromAddressesAdapter: FromAddressesAdapter<String>? = null
+  private var fromAddressesAdapter: FromAddressesAdapter? = null
   private var cachedRecipientWithoutPubKeys: RecipientWithPubKeys? = null
   private var extraActionInfo: ExtraActionInfo? = null
   private var nonEncryptedHintView: View? = null
@@ -294,10 +295,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
         messageType = args.messageType,
-        replyToMsgEntity = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
+        replyToMessageEntityId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
           null
         } else {
-          args.incomingMessageInfo?.msgEntity
+          args.incomingMessageInfo?.msgEntity?.id
         },
       )
     )
@@ -375,6 +376,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     menuHost.addMenuProvider(object : MenuProvider {
       override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menuInflater.inflate(R.menu.fragment_compose, menu)
+        this@CreateMessageFragment.menu = menu
       }
 
       override fun onPrepareMenu(menu: Menu) {
@@ -537,7 +539,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       )
     )
 
-    accountEntity?.email?.let { email ->
+    accountEntity?.email?.lowercase()?.let { email ->
       if (fromAddressesAdapter?.objects?.contains(email) == false) {
         fromAddressesAdapter?.add(email)
       }
@@ -1061,27 +1063,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   /**
    * Send a message.
    */
-  @OptIn(DelicateCoroutinesApi::class)
   private fun sendMsg() {
     dismissCurrentSnackBar()
-    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
-    PrepareOutgoingMessagesJobIntentService.enqueueWork(
-      context = requireContext(),
-      outgoingMsgInfo = outgoingMessageInfo.copy(
-        uid = EmailUtil.genOutboxUID(requireContext()),
-        password = usePasswordIfNeeded()
-      )
-    )
-
-    draftViewModel.deleteDraft(GlobalScope)
-
-    toast(
-      if (GeneralUtil.isConnected(requireContext()))
-        R.string.sending
-      else
-        R.string.no_conn_msg_sent_later
-    )
-    activity?.finish()
+    composeMsgViewModel.enqueueOutgoingMessage(password = usePasswordIfNeeded())
   }
 
   /**
@@ -1112,7 +1096,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
 
       fromAddressesAdapter?.clear()
-      fromAddressesAdapter?.addAll(aliases)
+      fromAddressesAdapter?.addAll(aliases.map { alias -> alias.lowercase() })
 
       updateFromAddressAdapter(
         KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings()
@@ -1156,11 +1140,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   private fun updateFromAddressAdapter(list: List<PGPSecretKeyRing>) {
     val setOfUsers = list.map { keyRing -> keyRing.toPgpKeyRingDetails().mimeAddresses }
       .flatten()
-      .map { mimeAddress -> mimeAddress.address }
+      .map { mimeAddress -> mimeAddress.address.lowercase() }
 
     fromAddressesAdapter?.let { adapter ->
       for (email in adapter.objects) {
-        adapter.updateKeyAvailability(email, setOfUsers.contains(email))
+        val formattedEmail = email.lowercase()
+        adapter.updateKeyAvailability(formattedEmail, setOfUsers.contains(formattedEmail))
       }
     }
   }
@@ -1289,7 +1274,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         binding?.chipLayoutCc?.visibleOrGone(recipients.isNotEmpty())
-        binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.CC, recipients)
         updateAutoCompleteAdapter(recipients)
       }
@@ -1309,7 +1293,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         binding?.chipLayoutBcc?.visibleOrGone(recipients.isNotEmpty())
-        binding?.imageButtonAdditionalRecipientsVisibility?.visibleOrGone(recipients.isEmpty())
         updateChipAdapter(Message.RecipientType.BCC, recipients)
         updateAutoCompleteAdapter(recipients)
       }
@@ -1363,6 +1346,43 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         attachmentsRecyclerViewAdapter.submitList(allAttachments)
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      composeMsgViewModel.addOutgoingMessageInfoToQueueStateFlow.collect {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            menu?.findItem(R.id.menuActionSend)?.setEnabled(false)
+          }
+
+          Result.Status.SUCCESS -> {
+            @Suppress("OPT_IN_USAGE")
+            draftViewModel.deleteDraft(GlobalScope)
+
+            it.data?.id?.let { id -> PrepareOutgoingMessagesWorker.enqueue(requireContext(), id) }
+
+            toast(
+              if (GeneralUtil.isConnected(requireContext())) {
+                R.string.sending
+              } else {
+                R.string.no_conn_msg_sent_later
+              }
+            )
+            activity?.finish()
+          }
+
+          Result.Status.EXCEPTION, Result.Status.ERROR -> {
+            menu?.findItem(R.id.menuActionSend)?.setEnabled(true)
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = it.exceptionMsg,
+              isCancelable = true
+            )
+          }
+
+          else -> {}
+        }
       }
     }
   }
@@ -1514,12 +1534,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.editTextEmailMessage?.requestFocus()
       return false
     }
-    if (composeMsgViewModel.attachmentsStateFlow.value.isEmpty()
-      || !composeMsgViewModel.hasAttachmentsWithExternalStorageUri
-    ) {
-      return true
-    }
-    return false
+    return (composeMsgViewModel.attachmentsStateFlow.value.isEmpty()
+        || !composeMsgViewModel.hasAttachmentsWithExternalStorageUri)
   }
 
   private fun usePasswordIfNeeded(): CharArray? {

@@ -18,11 +18,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.LoadRecipientsWorker
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.service.IdleService
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * @author Denys Bondarenko
@@ -36,7 +33,7 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
   val activeAccountLiveData: LiveData<AccountEntity?> =
     pureActiveAccountLiveData.distinctUntilChanged().switchMap { accountEntity ->
       liveData {
-        emit(getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+        emit(accountEntity?.withDecryptedInfo())
       }
     }
 
@@ -45,10 +42,8 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
   val nonActiveAccountsLiveData: LiveData<List<AccountEntity>> =
     pureNonActiveAccountsLiveData.switchMap { accountEntities ->
       liveData {
-        emit(accountEntities.mapNotNull { accountEntity ->
-          getAccountEntityWithDecryptedInfoSuspend(
-            accountEntity
-          )
+        emit(accountEntities.map {
+          it.withDecryptedInfo()
         })
       }
     }
@@ -58,9 +53,7 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
 
   suspend fun getActiveAccountSuspend(): AccountEntity? {
     return activeAccountLiveData.value
-      ?: return getAccountEntityWithDecryptedInfoSuspend(
-        roomDatabase.accountDao().getActiveAccountSuspend()
-      )
+      ?: return roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
   }
 
   fun addNewAccount(accountEntity: AccountEntity) {
@@ -71,6 +64,9 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
 
         if (existingAccount == null) {
           roomDatabase.accountDao().addAccountSuspend(accountEntity)
+          roomDatabase.accountSettingsDao().insertSuspend(
+            accountEntity.toAccountSettingsEntity()
+          )
         } else {
           roomDatabase.accountDao().updateAccountSuspend(
             accountEntity.copy(
@@ -114,24 +110,5 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
     viewModelScope.launch {
       accountEntity?.let { roomDatabase.accountDao().deleteSuspend(it) }
     }
-  }
-
-  companion object {
-    fun getAccountEntityWithDecryptedInfo(accountEntity: AccountEntity?): AccountEntity? {
-      return accountEntity?.copy(
-        password = KeyStoreCryptoManager.decrypt(accountEntity.password),
-        smtpPassword = KeyStoreCryptoManager.decrypt(accountEntity.smtpPassword),
-      )
-    }
-
-    suspend fun getAccountEntityWithDecryptedInfoSuspend(accountEntity: AccountEntity?): AccountEntity? =
-      withContext(Dispatchers.IO) {
-        return@withContext accountEntity?.copy(
-          password = KeyStoreCryptoManager.decryptSuspend(accountEntity.password),
-          smtpPassword = KeyStoreCryptoManager.decryptSuspend(accountEntity.smtpPassword),
-          servicePgpPassphrase = KeyStoreCryptoManager.decryptSuspend(accountEntity.servicePgpPassphrase),
-          servicePgpPrivateKey = KeyStoreCryptoManager.decryptSuspend(accountEntity.servicePgpPrivateKey)
-        )
-      }
   }
 }

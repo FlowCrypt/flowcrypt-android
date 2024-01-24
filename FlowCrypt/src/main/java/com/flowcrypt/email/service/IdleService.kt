@@ -21,7 +21,6 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsAddedWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsRemovedWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
@@ -112,7 +111,7 @@ class IdleService : LifecycleService() {
     val activeAccountLiveData: LiveData<AccountEntity?> =
       roomDatabase.accountDao().getActiveAccountLD().switchMap { accountEntity ->
         liveData {
-          emit(AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(accountEntity))
+          emit(accountEntity?.withDecryptedInfo())
         }
       }
 

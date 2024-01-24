@@ -82,7 +82,7 @@ class FileAndDirectoryUtils {
      * @param directory The input directory.
      * @return The the directory files or an empty array.
      */
-    private fun getFilesInDir(directory: File): Array<File> {
+    fun getFilesInDir(directory: File): Array<File> {
       return if (directory.exists() && directory.isDirectory) {
         directory.listFiles() ?: return arrayOf()
       } else {
@@ -130,15 +130,6 @@ class FileAndDirectoryUtils {
         }
       }
     }
-
-    /**
-     * Normalize the given filename. We leave only Latin letters, digits and chars: '.', '_', '-'
-     *
-     * @param fileName The input filename.
-     * @return normalized file name.
-     */
-    fun normalizeFileName(fileName: String?) =
-      fileName?.replace("[^\\w._-]".toRegex(), "")
 
     /**
      * Get a directory. Create a new directory if it doesn't exist

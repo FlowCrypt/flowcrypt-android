@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.email.IMAPStoreConnection
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.workmanager.BaseWorker
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ManualHandledException
@@ -37,27 +36,24 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
 
     try {
       val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
-      activeAccountEntity?.let {
+      activeAccountEntity?.withDecryptedInfo()?.let { accountWithDecryptedInfo ->
         if (useIndependentConnection()) {
-          AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(it)
-            ?.let { accountWithDecryptedInfo ->
-              if (accountWithDecryptedInfo.useAPI) {
-                when (accountWithDecryptedInfo.accountType) {
-                  AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-                    runAPIAction(accountWithDecryptedInfo)
-                  }
+          if (accountWithDecryptedInfo.useAPI) {
+            when (accountWithDecryptedInfo.accountType) {
+              AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+                runAPIAction(accountWithDecryptedInfo)
+              }
 
-                  else -> throw ManualHandledException("Unsupported provider")
-                }
-              } else {
-                val connection = IMAPStoreConnection(applicationContext, accountWithDecryptedInfo)
-                connection.store.use { store ->
-                  connection.executeIMAPAction {
-                    runIMAPAction(activeAccountEntity, store)
-                  }
-                }
+              else -> throw ManualHandledException("Unsupported provider")
+            }
+          } else {
+            val connection = IMAPStoreConnection(applicationContext, accountWithDecryptedInfo)
+            connection.store.use { store ->
+              connection.executeIMAPAction {
+                runIMAPAction(activeAccountEntity, store)
               }
             }
+          }
         } else {
           if (activeAccountEntity.useAPI) {
             runAPIAction(activeAccountEntity)
