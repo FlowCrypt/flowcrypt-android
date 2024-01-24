@@ -17,7 +17,6 @@ import com.flowcrypt.email.security.pgp.PgpArmor
 import com.sun.mail.util.BASE64DecoderStream
 import jakarta.mail.Part
 import jakarta.mail.internet.MimeBodyPart
-import jakarta.mail.internet.MimeMultipart
 import jakarta.mail.internet.MimePart
 import java.io.FilterInputStream
 import java.io.InputStream
@@ -76,12 +75,19 @@ object RawBlockParser {
   ): Collection<RawBlock> {
     val mimePart = (part as? MimePart) ?: return emptyList()
     return when {
-      mimePart.isAttachment() || isOpenPGPMimeEncrypted -> {
+      isOpenPGPMimeEncrypted -> {
+        listOf(
+          RawBlock(
+            RawBlockType.PGP_MSG,
+            mimePart.inputStream.readBytes(),
+            isOpenPGPMimeSigned
+          )
+        )
+      }
+
+      mimePart.isAttachment() -> {
         when (treatAs(mimePart)) {
-          TreatAs.HIDDEN -> {
-            // ignore
-            emptyList()
-          }
+          TreatAs.HIDDEN -> emptyList()
 
           TreatAs.PGP_MSG -> {
             listOf(
@@ -113,13 +119,15 @@ object RawBlockParser {
             )
           }
 
-          else -> listOf(
-            RawBlock(
-              RawBlockType.ATTACHMENT,
-              mimePart.inputStream.readBytes(),
-              isOpenPGPMimeSigned
+          else -> {
+            listOf(
+              RawBlock(
+                RawBlockType.ATTACHMENT,
+                mimePart.inputStream.readBytes(),
+                isOpenPGPMimeSigned
+              )
             )
-          )
+          }
         }
       }
 
@@ -159,14 +167,6 @@ object RawBlockParser {
       else -> when {
         "text/rfc822-headers" == mimePart.baseContentType() -> {
           emptyList() //we skip this type of content
-        }
-
-        //https://github.com/FlowCrypt/flowcrypt-android/issues/2402
-        "application/pgp-encrypted" == mimePart.baseContentType() &&
-            "multipart/encrypted" == ((mimePart as? MimeBodyPart)?.parent as? MimeMultipart)?.baseContentType()
-        -> {
-          //we skip part with content type "application/pgp-encrypted" as not informative for a user
-          emptyList()
         }
 
         "text/html" == mimePart.baseContentType() -> listOf(
