@@ -23,6 +23,7 @@ class ToastMatcher @RemoteMsgConstructor constructor() : TypeSafeMatcher<Root?>(
     description.appendText("is toast")
   }
 
+  @Suppress("DEPRECATION")
   @SuppressWarnings("deprecation")
   public override fun matchesSafely(root: Root?): Boolean {
     val type = root?.windowLayoutParams?.get()?.type

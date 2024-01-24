@@ -49,7 +49,25 @@ class MsgDetailsRecyclerViewAdapter :
     }
 
     override fun areContentsTheSame(oldItem: Header, newItem: Header): Boolean {
-      return oldItem.name == newItem.name && oldItem.value.equals(newItem.value)
+
+      fun compareChars(): Boolean {
+        try {
+          for (i in oldItem.value.indices) {
+            if (oldItem.value[i] != newItem.value[i]) {
+              return false
+            }
+          }
+          return true
+        } catch (e: Exception) {
+          e.printStackTrace()
+          return false
+        }
+      }
+
+      return oldItem.name == newItem.name
+          && oldItem::class == newItem::class
+          && oldItem.value.length == newItem.value.length
+          && compareChars()
     }
   }
 }
