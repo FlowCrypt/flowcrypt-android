@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui
 
 import android.text.format.DateUtils
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
@@ -14,10 +15,12 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollToHolder
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -45,6 +48,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
@@ -1159,11 +1163,13 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
-    assertEquals(4, msgInfo?.msgBlocks?.size)
-    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo?.msgBlocks?.get(0)?.type)
-    assertEquals(MsgBlock.Type.ENCRYPTED_SUBJECT, msgInfo?.msgBlocks?.get(1)?.type)
-    assertEquals(MsgBlock.Type.DECRYPTED_ATT, msgInfo?.msgBlocks?.get(2)?.type)
-    assertEquals(MsgBlock.Type.PUBLIC_KEY, msgInfo?.msgBlocks?.get(3)?.type)
+    val attachmentMessageBlock = msgInfo?.msgBlocks?.get(2) as DecryptedAttMsgBlock
+
+    assertEquals(4, msgInfo.msgBlocks?.size)
+    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo.msgBlocks?.get(0)?.type)
+    assertEquals(MsgBlock.Type.ENCRYPTED_SUBJECT, msgInfo.msgBlocks?.get(1)?.type)
+    assertEquals(MsgBlock.Type.DECRYPTED_ATT, attachmentMessageBlock.type)
+    assertEquals(MsgBlock.Type.PUBLIC_KEY, msgInfo.msgBlocks?.get(3)?.type)
 
     baseCheck(msgInfo)
 
@@ -1174,6 +1180,28 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
           elementByXPath(
             "/html/body",
             withTextContent(not(containsString("Version: 1")))
+          )
+        )
+      )
+
+    Thread.sleep(1000)
+
+    //check that we have only one attachment
+    onView(withId(R.id.rVAttachments))
+      .check(matches(withRecyclerViewItemCount(1)))
+
+    onView(withId(R.id.rVAttachments))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            hasDescendant(
+              allOf(
+                withId(R.id.textViewAttachmentName),
+                withText(attachmentMessageBlock.attMeta.name)
+              )
+            ),
+            hasDescendant(withId(R.id.imageButtonPreviewAtt)),
+            hasDescendant(withId(R.id.imageButtonDownloadAtt)),
           )
         )
       )

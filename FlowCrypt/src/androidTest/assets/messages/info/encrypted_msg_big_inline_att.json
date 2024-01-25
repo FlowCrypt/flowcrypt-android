@@ -15,7 +15,7 @@
       },
       "complete": true,
       "content": "",
-      "fileUri": {},
+      "fileUri": null,
       "type": "decryptedAtt"
     }
   ],

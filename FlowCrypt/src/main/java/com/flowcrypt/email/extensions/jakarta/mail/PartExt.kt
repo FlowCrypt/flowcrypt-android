@@ -86,6 +86,16 @@ fun Part.isOpenPGPMimeSigned(): Boolean {
     ?.lowercase() == "application/pgp-signature"
 }
 
+fun Part.isOpenPGPMimeEncrypted(): Boolean {
+  val type = try {
+    ContentType(contentType)
+  } catch (e: Exception) {
+    null
+  }
+  return isMimeType("multipart/encrypted") && type?.getParameter("protocol")
+    ?.lowercase() == "application/pgp-encrypted"
+}
+
 fun Part.hasPgpThings(): Boolean {
   val detectedBlocks = RawBlockParser.detectBlocks(this)
   return detectedBlocks.any { it.type in RawBlockParser.PGP_BLOCK_TYPES }

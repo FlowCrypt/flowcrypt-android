@@ -69,15 +69,26 @@ object RawBlockParser {
     "openpgp-encrypted-message.asc"
   )
 
-  fun detectBlocks(part: Part, isOpenPGPMimeSigned: Boolean = false): Collection<RawBlock> {
+  fun detectBlocks(
+    part: Part,
+    isOpenPGPMimeSigned: Boolean = false,
+    isOpenPGPMimeEncrypted: Boolean = false
+  ): Collection<RawBlock> {
     val mimePart = (part as? MimePart) ?: return emptyList()
     return when {
+      isOpenPGPMimeEncrypted -> {
+        listOf(
+          RawBlock(
+            RawBlockType.PGP_MSG,
+            mimePart.inputStream.readBytes(),
+            isOpenPGPMimeSigned
+          )
+        )
+      }
+
       mimePart.isAttachment() -> {
         when (treatAs(mimePart)) {
-          TreatAs.HIDDEN -> {
-            // ignore
-            emptyList()
-          }
+          TreatAs.HIDDEN -> emptyList()
 
           TreatAs.PGP_MSG -> {
             listOf(
@@ -109,13 +120,15 @@ object RawBlockParser {
             )
           }
 
-          else -> listOf(
-            RawBlock(
-              RawBlockType.ATTACHMENT,
-              mimePart.inputStream.readBytes(),
-              isOpenPGPMimeSigned
+          else -> {
+            listOf(
+              RawBlock(
+                RawBlockType.ATTACHMENT,
+                mimePart.inputStream.readBytes(),
+                isOpenPGPMimeSigned
+              )
             )
-          )
+          }
         }
       }
 
