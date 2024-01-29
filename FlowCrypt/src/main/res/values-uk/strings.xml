@@ -457,6 +457,7 @@
     <string name="downloading">Завантаження&#8230;</string>
     <string name="decrypting">Розшифрування&#8230;</string>
     <string name="error_occurred_during_downloading_att">Сталася помилка при завантаженні.\n\nПодробиці:  %1$s</string>
+    <string name="error_occurred_during_decrypting_att">Сталася помилка при розшифруванні.\n\nПодробиці:  %1$s</string>
     <string name="no_apps_that_can_handle_intent">Вибачте, у Вас немає застосунку, який міг би відкрити цей файл</string>
     <string name="warning_don_not_have_content_app">Перегляд вкладення неможливий. Ваша організація вимагає використовувати Content для перегляду вкладень, але застосунок Content не встановлено.\n\nБудь ласка, зверніться до служби підтримки.</string>
     <string name="error">Помилка</string>
