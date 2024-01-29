@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
 import com.flowcrypt.email.util.UIUtil
+import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.InternetAddress
 import org.json.JSONObject
 import java.io.InputStream
@@ -160,4 +161,12 @@ fun String?.asInternetAddress(): InternetAddress? {
   } catch (e: Exception) {
     emptyArray<InternetAddress>()
   }.firstOrNull()
+}
+
+fun String?.asContentTypeOrNull(): ContentType? {
+  return try {
+    ContentType(this)
+  } catch (e: Exception) {
+    null
+  }
 }

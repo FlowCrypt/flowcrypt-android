@@ -8,6 +8,7 @@ package com.flowcrypt.email.extensions.jakarta.mail
 
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.core.msg.RawBlockParser
+import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import jakarta.mail.Part
 import jakarta.mail.internet.ContentType
 import java.util.regex.Matcher
@@ -69,29 +70,17 @@ fun Part.isPlainText(): Boolean {
 }
 
 fun Part.baseContentType(): String? {
-  return try {
-    ContentType(contentType).baseType
-  } catch (e: Exception) {
-    null
-  }
+  return contentType?.asContentTypeOrNull()?.baseType
 }
 
 fun Part.isOpenPGPMimeSigned(): Boolean {
-  val type = try {
-    ContentType(contentType)
-  } catch (e: Exception) {
-    null
-  }
+  val type = contentType?.asContentTypeOrNull()
   return isMimeType("multipart/signed") && type?.getParameter("protocol")
     ?.lowercase() == "application/pgp-signature"
 }
 
 fun Part.isOpenPGPMimeEncrypted(): Boolean {
-  val type = try {
-    ContentType(contentType)
-  } catch (e: Exception) {
-    null
-  }
+  val type = contentType?.asContentTypeOrNull()
   return isMimeType("multipart/encrypted") && type?.getParameter("protocol")
     ?.lowercase() == "application/pgp-encrypted"
 }
