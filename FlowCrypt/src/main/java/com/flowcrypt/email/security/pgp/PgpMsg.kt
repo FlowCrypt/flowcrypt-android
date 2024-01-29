@@ -393,7 +393,7 @@ object PgpMsg {
           inlineAttachmentRawBlock?.let {
             blocks.add(
               MsgBlockFactory.fromAttachment(
-                type = MsgBlock.Type.INLINE_PLAIN_ATT,
+                type = MsgBlock.Type.INLINE_ATT,
                 rawBlock = it,
                 mimePart = part as MimePart,
                 isOpenPGPMimeSigned = isOpenPGPMimeSigned

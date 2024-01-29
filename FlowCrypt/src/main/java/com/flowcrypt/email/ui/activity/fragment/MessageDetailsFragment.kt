@@ -58,6 +58,7 @@ import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
@@ -1022,6 +1023,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
           } else {
             handleOtherBlock(block, layoutInflater)
+          }
+        }
+
+        MsgBlock.Type.INLINE_ATT -> {
+          val decryptAtt = block as? InlineAttMsgBlock
+          if (decryptAtt != null) {
+            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
           }
         }
 

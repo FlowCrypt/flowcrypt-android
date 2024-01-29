@@ -120,7 +120,7 @@ object MsgBlockFactory {
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
         )
 
-        MsgBlock.Type.INLINE_PLAIN_ATT -> InlinePlaneAttMsgBlock(
+        MsgBlock.Type.INLINE_ATT -> InlineAttMsgBlock(
           content = content,
           attMeta = attMeta,
           isOpenPGPMimeSigned = isOpenPGPMimeSigned
