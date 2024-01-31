@@ -50,6 +50,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
@@ -1198,6 +1199,46 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
               allOf(
                 withId(R.id.textViewAttachmentName),
                 withText(attachmentMessageBlock.attMeta.name)
+              )
+            ),
+            hasDescendant(withId(R.id.imageButtonPreviewAtt)),
+            hasDescendant(withId(R.id.imageButtonDownloadAtt)),
+          )
+        )
+      )
+  }
+
+  @Test
+  fun testCorrectHandlingOfOpenPGPInlineWithInlineImage() {
+    val msgInfo = getMsgInfo(
+      path = "messages/info/open_pgp_inline_with_inline_image.json",
+      mimeMsgPath = "messages/mime/open_pgp_inline_with_inline_image.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    )
+
+    val inlineAttachmentMessageBlock =
+      msgInfo?.msgBlocks?.filterIsInstance(InlineAttMsgBlock::class.java)?.first()
+
+    assertEquals(2, msgInfo?.msgBlocks?.size)
+    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo?.msgBlocks?.get(0)?.type)
+    assertEquals(MsgBlock.Type.INLINE_ATT, msgInfo?.msgBlocks?.get(1)?.type)
+
+    baseCheck(msgInfo)
+
+    Thread.sleep(1000)
+
+    //check that we have only one attachment
+    onView(withId(R.id.rVAttachments))
+      .check(matches(withRecyclerViewItemCount(1)))
+
+    onView(withId(R.id.rVAttachments))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            hasDescendant(
+              allOf(
+                withId(R.id.textViewAttachmentName),
+                withText(inlineAttachmentMessageBlock?.attMeta?.name)
               )
             ),
             hasDescendant(withId(R.id.imageButtonPreviewAtt)),

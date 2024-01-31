@@ -8,6 +8,7 @@ package com.flowcrypt.email.util.gson
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.google.gson.JsonDeserializationContext
@@ -43,6 +44,11 @@ class MsgBlockAdapter : JsonDeserializer<MsgBlock> {
       MsgBlock.Type.DECRYPT_ERROR -> context.deserialize<MsgBlock>(
         json,
         DecryptErrorMsgBlock::class.java
+      )
+
+      MsgBlock.Type.INLINE_ATT -> context.deserialize<MsgBlock>(
+        json,
+        InlineAttMsgBlock::class.java
       )
 
       else -> context.deserialize<MsgBlock>(json, GenericMsgBlock::class.java)

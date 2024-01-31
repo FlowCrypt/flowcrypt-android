@@ -390,6 +390,9 @@
             android:id="@+id/action_messageDetailsFragment_to_downloadAttachmentDialogFragment"
             app:destination="@id/downloadAttachmentDialogFragment" />
         <action
+            android:id="@+id/action_messageDetailsFragment_to_decryptAttachmentDialogFragment"
+            app:destination="@id/decryptAttachmentDialogFragment" />
+        <action
             android:id="@+id/action_messageDetailsFragment_to_importAdditionalPrivateKeysFragment"
             app:destination="@id/importAdditionalPrivateKeysFragment" />
         <action
@@ -601,6 +604,22 @@
         android:id="@+id/downloadAttachmentDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment"
         tools:layout="@layout/fragment_download_attachment">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="attachmentInfo"
+            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/decryptAttachmentDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment"
+        tools:layout="@layout/fragment_decrypt_attachment">
         <argument
             android:name="requestKey"
             app:argType="string" />

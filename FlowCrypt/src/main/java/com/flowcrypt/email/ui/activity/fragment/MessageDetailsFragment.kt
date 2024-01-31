@@ -58,6 +58,7 @@ import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
@@ -111,6 +112,7 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
@@ -228,10 +230,30 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-          previewAttachment(
-            attachmentInfo = attachmentInfo,
-            useContentApp = account?.isHandlingAttachmentRestricted() == true
-          )
+          if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name) && attachmentInfo.uri == null) {
+            val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
+            if (fingerprintList?.isNotEmpty() == true) {
+              showNeedPassphraseDialog(
+                requestKey = "",
+                fingerprints = fingerprintList
+              )
+            } else {
+              val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
+              navController?.navigate(
+                MessageDetailsFragmentDirections
+                  .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
+                    attachmentInfo = attachmentInfo.copy(uri = uri),
+                    requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
+                    requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
+                  )
+              )
+            }
+          } else {
+            previewAttachment(
+              attachmentInfo = attachmentInfo,
+              useContentApp = account?.isHandlingAttachmentRestricted() == true
+            )
+          }
         } else {
           navController?.navigate(
             MessageDetailsFragmentDirections
@@ -287,6 +309,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     subscribeToDownloadAttachmentViaDialog()
+    subscribeToDecryptAttachmentViaDialog()
     subscribeToImportingAdditionalPrivateKeys()
     updateActionsVisibility(args.localFolder, null)
   }
@@ -1022,6 +1045,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
           } else {
             handleOtherBlock(block, layoutInflater)
+          }
+        }
+
+        MsgBlock.Type.INLINE_ATT -> {
+          val decryptAtt = block as? InlineAttMsgBlock
+          if (decryptAtt != null) {
+            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
           }
         }
 
@@ -1838,6 +1868,21 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  private fun subscribeToDecryptAttachmentViaDialog() {
+    setFragmentResultListener(REQUEST_KEY_DECRYPT_ATTACHMENT) { _, bundle ->
+      val attachmentInfo =
+        bundle.getParcelableViaExt<AttachmentInfo>(DecryptAttachmentDialogFragment.KEY_ATTACHMENT)
+
+      attachmentInfo?.let {
+        previewAttachment(
+          attachmentInfo = it,
+          useContentApp =
+          account?.isHandlingAttachmentRestricted() == true
+        )
+      }
+    }
+  }
+
   private fun subscribeToImportingAdditionalPrivateKeys() {
     setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
@@ -1897,6 +1942,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
+    private const val REQUEST_CODE_DECRYPT_ATTACHMENT = 1002
 
     private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
@@ -1905,6 +1951,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     private val REQUEST_KEY_DOWNLOAD_ATTACHMENT = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_DOWNLOAD_ATTACHMENT",
+      MessageDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_DECRYPT_ATTACHMENT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_DECRYPT_ATTACHMENT",
       MessageDetailsFragment::class.java
     )
 

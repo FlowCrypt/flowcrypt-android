@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.encryption_signing.EncryptionOptions
+import org.pgpainless.encryption_signing.EncryptionResult
 import org.pgpainless.encryption_signing.EncryptionStream
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
@@ -63,7 +64,8 @@ object PgpEncryptAndOrSign {
     hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null,
     fileName: String? = null,
-  ) {
+    generateDetachedSignatures: Boolean = false,
+  ): EncryptionResult {
     val pgpPublicKeyRingCollection = pubKeys?.toPGPPublicKeyRingCollection()
     val protectedPgpPublicKeyRingCollection = protectedPubKeys?.toPGPPublicKeyRingCollection()
 
@@ -78,7 +80,7 @@ object PgpEncryptAndOrSign {
       }
     }
 
-    encryptAndOrSign(
+    return encryptAndOrSign(
       srcInputStream = srcInputStream,
       destOutputStream = destOutputStream,
       pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
@@ -89,6 +91,7 @@ object PgpEncryptAndOrSign {
       hideArmorMeta = hideArmorMeta,
       passphrase = passphrase,
       fileName = fileName,
+      generateDetachedSignatures = generateDetachedSignatures
     )
   }
 
@@ -104,9 +107,10 @@ object PgpEncryptAndOrSign {
     hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null,
     fileName: String? = null,
-  ) {
+    generateDetachedSignatures: Boolean = false,
+  ): EncryptionResult {
     srcInputStream.use { srcStream ->
-      encryptAndOrSign(
+      return encryptAndOrSign(
         destOutputStream = destOutputStream,
         pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
         protectedPgpPublicKeyRingCollection = protectedPgpPublicKeyRingCollection,
@@ -116,6 +120,7 @@ object PgpEncryptAndOrSign {
         hideArmorMeta = hideArmorMeta,
         passphrase = passphrase,
         fileName = fileName,
+        generateDetachedSignatures = generateDetachedSignatures,
       ) { encryptionStream ->
         srcStream.copyTo(encryptionStream)
       }
@@ -133,9 +138,10 @@ object PgpEncryptAndOrSign {
     hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null,
     fileName: String? = null,
+    generateDetachedSignatures: Boolean = false,
     action: (outputStream: OutputStream) -> Unit
-  ) {
-    genEncryptionStreamInternal(
+  ): EncryptionResult {
+    return genEncryptionStreamInternal(
       destOutputStream = destOutputStream,
       pgpPublicKeyRingCollection = pgpPublicKeyRingCollection,
       protectedPgpPublicKeyRingCollection = protectedPgpPublicKeyRingCollection,
@@ -145,9 +151,12 @@ object PgpEncryptAndOrSign {
       hideArmorMeta = hideArmorMeta,
       passphrase = passphrase,
       fileName = fileName,
-    ).use { encryptionStream ->
-      action.invoke(encryptionStream)
-    }
+      generateDetachedSignatures = generateDetachedSignatures,
+    ).apply {
+      this.use { encryptionStream ->
+        action.invoke(encryptionStream)
+      }
+    }.result
   }
 
   private fun genEncryptionStreamInternal(
@@ -160,6 +169,7 @@ object PgpEncryptAndOrSign {
     hideArmorMeta: Boolean = false,
     passphrase: Passphrase? = null,
     fileName: String? = null,
+    generateDetachedSignatures: Boolean = false,
   ): EncryptionStream {
     val encOpt = EncryptionOptions().apply {
       passphrase?.let { addPassphrase(passphrase) }
@@ -177,7 +187,19 @@ object PgpEncryptAndOrSign {
         ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
           pgpSecretKeyRingCollection.forEach { pgpSecretKeyRing ->
             secretKeyRingProtector?.let { protector ->
-              addInlineSignature(protector, pgpSecretKeyRing, DocumentSignatureType.BINARY_DOCUMENT)
+              if (generateDetachedSignatures) {
+                addDetachedSignature(
+                  protector,
+                  pgpSecretKeyRing,
+                  DocumentSignatureType.BINARY_DOCUMENT
+                )
+              } else {
+                addInlineSignature(
+                  protector,
+                  pgpSecretKeyRing,
+                  DocumentSignatureType.BINARY_DOCUMENT
+                )
+              }
             }
           }
         })
