@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
+import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import com.flowcrypt.email.security.SecurityUtils
 import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
@@ -98,8 +99,16 @@ data class AttachmentInfo(
     return SecurityUtils.sanitizeFileName(name)
   }
 
-  fun isHidden() =
-    name.isNullOrEmpty() && type.lowercase() == "application/pgp-encrypted; name=\"\""
+  fun isHidden() = when {
+    //https://github.com/FlowCrypt/flowcrypt-android/issues/1475
+    name.isNullOrEmpty() && type.lowercase() == "application/pgp-encrypted; name=\"\"" -> true
+
+    //https://github.com/FlowCrypt/flowcrypt-android/issues/2540
+    "application/pgp-signature" == type.asContentTypeOrNull()?.baseType -> true
+
+    else -> false
+  }
+
 
   fun isPossiblyEncrypted(): Boolean {
     return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")

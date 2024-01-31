@@ -157,6 +157,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
 
   @Before
   fun prepareTest() {
+    sentCache.clear()
     openComposeScreenAndFillDataIfNeeded()
   }
 

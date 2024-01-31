@@ -17,7 +17,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class InlinePlaneAttMsgBlock(
+data class InlineAttMsgBlock(
   @Expose override val content: String?,
   @Expose override val attMeta: AttMeta,
   @Expose override val error: MsgBlockError? = null,
@@ -28,7 +28,7 @@ data class InlinePlaneAttMsgBlock(
 
   @IgnoredOnParcel
   @Expose
-  override val type: MsgBlock.Type = MsgBlock.Type.PLAIN_ATT
+  override val type: MsgBlock.Type = MsgBlock.Type.INLINE_ATT
 
   constructor(source: Parcel) : this(
     source.readString(),
@@ -39,9 +39,9 @@ data class InlinePlaneAttMsgBlock(
     fileUri = source.readParcelableViaExt(Uri::class.java)
   }
 
-  companion object : Parceler<InlinePlaneAttMsgBlock> {
+  companion object : Parceler<InlineAttMsgBlock> {
 
-    override fun InlinePlaneAttMsgBlock.write(parcel: Parcel, flags: Int) = with(parcel) {
+    override fun InlineAttMsgBlock.write(parcel: Parcel, flags: Int) = with(parcel) {
       writeParcelable(type, flags)
       writeString(content)
       writeParcelable(attMeta, flags)
@@ -50,9 +50,9 @@ data class InlinePlaneAttMsgBlock(
       writeParcelable(fileUri, flags)
     }
 
-    override fun create(parcel: Parcel): InlinePlaneAttMsgBlock {
+    override fun create(parcel: Parcel): InlineAttMsgBlock {
       parcel.readParcelableViaExt(MsgBlock.Type::class.java)
-      return InlinePlaneAttMsgBlock(parcel)
+      return InlineAttMsgBlock(parcel)
     }
   }
 }

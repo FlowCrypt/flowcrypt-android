@@ -6,7 +6,7 @@
 
 package com.flowcrypt.email.core.msg
 
-import com.flowcrypt.email.api.retrofit.response.model.InlinePlaneAttMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import jakarta.mail.Session
@@ -31,7 +31,7 @@ object MimeUtils {
 
   fun isPlainImgAtt(block: MsgBlock): Boolean {
     return try {
-      ((block is InlinePlaneAttMsgBlock)
+      ((block is InlineAttMsgBlock)
           && ContentType(block.attMeta.type ?: "").match("image/*"))
     } catch (e: Exception) {
       e.printStackTrace()

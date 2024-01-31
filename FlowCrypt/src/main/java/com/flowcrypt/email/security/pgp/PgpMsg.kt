@@ -32,6 +32,7 @@ import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeEncrypted
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.jakarta.mail.isPlainText
+import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import com.flowcrypt.email.extensions.kotlin.decodeFcHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.escapeHtmlAttr
 import com.flowcrypt.email.extensions.kotlin.stripHtmlRootTags
@@ -392,7 +393,7 @@ object PgpMsg {
           inlineAttachmentRawBlock?.let {
             blocks.add(
               MsgBlockFactory.fromAttachment(
-                type = MsgBlock.Type.INLINE_PLAIN_ATT,
+                type = MsgBlock.Type.INLINE_ATT,
                 rawBlock = it,
                 mimePart = part as MimePart,
                 isOpenPGPMimeSigned = isOpenPGPMimeSigned
@@ -857,7 +858,7 @@ object PgpMsg {
           contentBlocks.add(block)
         }
 
-        else -> {
+        else -> if (canBeAddedToResultContent(block)) {
           resultBlocks.add(block)
         }
       }
@@ -903,6 +904,19 @@ object PgpMsg {
 
   private fun canBeAddedToCombinedContent(block: MsgBlock): Boolean =
     (block.type.isContentBlockType() || MimeUtils.isPlainImgAtt(block)) && block.error == null
+
+  private fun canBeAddedToResultContent(block: MsgBlock): Boolean {
+    return when (block.type) {
+      MsgBlock.Type.PLAIN_ATT -> {
+        //https://github.com/FlowCrypt/flowcrypt-android/issues/2540
+        "application/pgp-signature" !=
+            (block as? PlainAttMsgBlock)?.attMeta?.type?.asContentTypeOrNull()?.baseType
+      }
+
+      else -> true
+    }
+  }
+
 
   private fun processPgpPublicKeyRawBlock(
     rawBlock: RawBlockParser.RawBlock

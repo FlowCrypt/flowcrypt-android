@@ -16,9 +16,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
@@ -32,7 +30,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
@@ -40,7 +37,7 @@ import java.io.InputStream
  * @author Denys Bondarenko
  */
 class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, application: Application) :
-  AccountViewModel(application) {
+  DecryptDataViewModel(application) {
   private val controlledRunnerForDownloading = ControlledRunner<Result<ByteArray>>()
   private val downloadAttachmentMutableStateFlow: MutableStateFlow<Result<ByteArray>> =
     MutableStateFlow(Result.loading())
@@ -151,7 +148,7 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
     }
   }
 
-  private suspend fun decryptDataIfNeeded(context: Context, inputStream: InputStream): ByteArray =
+  override suspend fun decryptDataIfNeeded(context: Context, inputStream: InputStream): ByteArray =
     withContext(Dispatchers.IO) {
       if (!SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
         return@withContext inputStream.readBytes()
@@ -160,21 +157,7 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
       downloadAttachmentMutableStateFlow.value =
         Result.loading(progressMsg = context.getString(R.string.decrypting))
 
-      inputStream.use {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()
-        val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(pgpSecretKeyRings)
-        val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()
-
-        PgpDecryptAndOrVerify.decrypt(
-          srcInputStream = inputStream,
-          destOutputStream = byteArrayOutputStream,
-          secretKeys = pgpSecretKeyRingCollection,
-          protector = protector
-        )
-
-        return@withContext byteArrayOutputStream.toByteArray()
-      }
+      return@withContext decryptDataIfNeeded(context, inputStream)
     }
 
   private suspend fun downloadFile(inputStream: InputStream): ByteArray =
