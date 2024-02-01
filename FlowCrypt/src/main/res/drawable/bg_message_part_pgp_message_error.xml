@@ -4,10 +4,17 @@
   -->
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingLeft="@dimen/padding_pgp_message_error_big"
     android:paddingTop="@dimen/padding_pgp_message_error_small"
     android:paddingRight="@dimen/padding_pgp_message_error_big"
     android:paddingBottom="@dimen/padding_pgp_message_error_small">
+
+    <item android:gravity="left">
+        <shape>
+            <solid android:color="?attr/colorSurface" />
+        </shape>
+    </item>
 
     <item>
         <bitmap
@@ -19,7 +26,7 @@
         <shape android:shape="rectangle">
             <stroke
                 android:width="@dimen/default_single_dip"
-                android:color="@color/light" />
+                android:color="?attr/colorSurface" />
         </shape>
     </item>
 

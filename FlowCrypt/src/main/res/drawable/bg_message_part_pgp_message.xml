@@ -9,6 +9,12 @@
     android:paddingRight="@dimen/padding_pgp_message_error_small"
     android:paddingBottom="@dimen/padding_pgp_message_error_small">
 
+    <item android:gravity="left">
+        <shape>
+            <solid android:color="?attr/colorSurface" />
+        </shape>
+    </item>
+
     <item>
         <bitmap
             android:src="@drawable/bg_lock_seamless"
