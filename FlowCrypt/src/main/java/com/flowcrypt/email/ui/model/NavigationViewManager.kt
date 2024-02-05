@@ -50,7 +50,7 @@ class NavigationViewManager(
 
     navHeaderBinding?.imageViewActiveUserPhoto?.useGlideToApplyImageFromSource(
       source = accountEntity.avatarResource,
-      placeholderId = R.mipmap.ic_account_default_photo,
+      placeholderId = R.drawable.ic_account_default_photo,
       applyCircleTransformation = true
     )
 
@@ -60,7 +60,7 @@ class NavigationViewManager(
 
       override fun onClick(v: View) {
         navHeaderBinding?.imageViewExpandAccountManagement?.setImageResource(
-          if (isExpanded) R.mipmap.ic_arrow_drop_down else R.mipmap.ic_arrow_drop_up
+          if (isExpanded) R.drawable.ic_arrow_drop_down else R.drawable.ic_arrow_drop_up
         )
         accountManagementLayout.visibleOrGone(!isExpanded)
         navHeaderActionsListener.onAccountsMenuExpanded(isExpanded)
@@ -109,7 +109,7 @@ class NavigationViewManager(
 
     imageViewActiveUserPhoto.useGlideToApplyImageFromSource(
       source = account.avatarResource,
-      placeholderId = R.mipmap.ic_account_default_photo,
+      placeholderId = R.drawable.ic_account_default_photo,
       applyCircleTransformation = true
     )
 

@@ -40,7 +40,7 @@
                     android:contentDescription="@string/avatar"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/view"
-                    app:srcCompat="@mipmap/ic_account_default_photo" />
+                    app:srcCompat="@drawable/ic_account_default_photo" />
 
                 <TextView
                     android:id="@+id/textViewSenderAddress"
@@ -70,8 +70,9 @@
                     android:visibility="invisible"
                     app:layout_constraintEnd_toStartOf="@+id/imageButtonMoreOptions"
                     app:layout_constraintTop_toBottomOf="@+id/view"
+                    app:srcCompat="@drawable/ic_reply_all"
                     app:layout_goneMarginRight="@dimen/default_margin_medium"
-                    app:srcCompat="@mipmap/ic_reply_all_red"
+                    tools:tint="@color/gray"
                     tools:visibility="visible" />
 
                 <ImageButton
@@ -170,7 +171,8 @@
                     android:layout_marginEnd="@dimen/default_margin_small"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/details"
-                    android:src="@mipmap/ic_arrow_drop_down_grey"
+                    app:srcCompat="@drawable/ic_arrow_drop_down"
+                    app:tint="@color/gray"
                     app:layout_constraintBottom_toBottomOf="@+id/tVTo"
                     app:layout_constraintEnd_toEndOf="@+id/textViewSenderAddress"
                     app:layout_constraintEnd_toStartOf="@+id/textViewDate"

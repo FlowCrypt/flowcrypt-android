@@ -1,0 +1,31 @@
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:fillColor="#4285f4"
+      android:pathData="M110.85,800.66L246.85,800.66v-330.29L52.56,324.65v417.72c0,32.25 26.13,58.29 58.29,58.29"
+      android:strokeWidth="9.71446" />
+  <path
+      android:fillColor="#34a853"
+      android:pathData="m713.15,800.66h136c32.25,0 58.29,-26.13 58.29,-58.29v-417.72l-194.29,145.72"
+      android:strokeWidth="9.71446" />
+  <path
+      android:fillColor="#fbbc04"
+      android:pathData="m713.15,217.79v252.58l194.29,-145.72L907.44,246.94c0,-72.08 -82.28,-113.17 -139.89,-69.94"
+      android:strokeWidth="9.71446" />
+  <path
+      android:fillColor="#ea4335"
+      android:pathData="m246.85,470.37v-252.58l233.15,174.86 233.15,-174.86v252.58l-233.15,174.86"
+      android:strokeWidth="9.71446" />
+  <path
+      android:fillColor="#c5221f"
+      android:pathData="m52.56,246.94v77.72L246.85,470.37v-252.58l-54.4,-40.8C134.75,133.76 52.56,174.85 52.56,246.94"
+      android:strokeWidth="9.71446" />
+</vector>

@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -1133,25 +1134,26 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       val textViewReplyAll = binding?.layoutReplyButtons?.textViewReplyAll
       val textViewFwd = binding?.layoutReplyButtons?.textViewFwd
 
-      if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-        imageViewReply?.setImageResource(R.mipmap.ic_reply_green)
-        imageViewReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
-        binding?.imageButtonReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
-        imageViewFwd?.setImageResource(R.mipmap.ic_forward_green)
+      val buttonsColorId: Int
 
+      if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
+        buttonsColorId = R.color.colorPrimary
         textViewReply?.setText(R.string.reply_encrypted)
         textViewReplyAll?.setText(R.string.reply_all_encrypted)
         textViewFwd?.setText(R.string.forward_encrypted)
       } else {
-        imageViewReply?.setImageResource(R.mipmap.ic_reply_red)
-        imageViewReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
-        binding?.imageButtonReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
-        imageViewFwd?.setImageResource(R.mipmap.ic_forward_red)
-
+        buttonsColorId = R.color.red
         textViewReply?.setText(R.string.reply)
         textViewReplyAll?.setText(R.string.reply_all)
         textViewFwd?.setText(R.string.forward)
       }
+
+      val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
+
+      binding?.imageButtonReplyAll?.imageTintList = colorStateList
+      imageViewReply?.imageTintList = colorStateList
+      imageViewReplyAll?.imageTintList = colorStateList
+      imageViewFwd?.imageTintList = colorStateList
 
       binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)

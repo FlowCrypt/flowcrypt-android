@@ -22,7 +22,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/ic_account_default_photo" />
+        app:srcCompat="@drawable/ic_account_default_photo" />
 
     <TextView
         android:id="@+id/textViewSenderAddress"
@@ -51,7 +51,7 @@
         app:layout_constraintEnd_toStartOf="@+id/textViewDate"
         app:layout_constraintStart_toEndOf="@+id/textViewSenderAddress"
         app:layout_constraintTop_toTopOf="@+id/guidelineTop"
-        app:srcCompat="@mipmap/ic_attachment" />
+        app:srcCompat="@drawable/ic_attachment" />
 
     <TextView
         android:id="@+id/textViewDate"

@@ -6,6 +6,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -29,7 +30,8 @@
             app:layout_constraintStart_toStartOf="@+id/textViewReply"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:srcCompat="@mipmap/ic_reply_green" />
+            app:srcCompat="@drawable/ic_reply"
+            tools:tint="@color/colorPrimary" />
 
         <TextView
             android:id="@+id/textViewReply"
@@ -66,7 +68,8 @@
             app:layout_constraintStart_toStartOf="@+id/textViewReplyAll"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:srcCompat="@mipmap/ic_reply_all_green" />
+            app:srcCompat="@drawable/ic_reply_all"
+            tools:tint="@color/colorPrimary" />
 
         <TextView
             android:id="@+id/textViewReplyAll"
@@ -101,7 +104,8 @@
             app:layout_constraintStart_toStartOf="@+id/textViewFwd"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:srcCompat="@mipmap/ic_forward_green" />
+            app:srcCompat="@drawable/ic_forward"
+            tools:tint="@color/colorPrimary" />
 
         <TextView
             android:id="@+id/textViewFwd"

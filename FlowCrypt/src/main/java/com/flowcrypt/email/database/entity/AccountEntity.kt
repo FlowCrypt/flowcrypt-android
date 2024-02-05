@@ -95,7 +95,7 @@ data class AccountEntity(
 
   @Ignore
   @IgnoredOnParcel
-  val avatarResource: Any = photoUrl ?: R.mipmap.ic_account_default_photo
+  val avatarResource: Any = photoUrl ?: R.drawable.ic_account_default_photo
 
   val useOAuth2: Boolean
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms

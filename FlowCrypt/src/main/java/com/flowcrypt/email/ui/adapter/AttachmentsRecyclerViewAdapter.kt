@@ -86,7 +86,7 @@ class AttachmentsRecyclerViewAdapter(
         val animationDrawable = imageViewAttIcon.drawable as? AnimationDrawable
         animationDrawable?.let { animationDrawable.start() }
       } else {
-        imageViewAttIcon.setImageResource(R.mipmap.ic_attachment)
+        imageViewAttIcon.setImageResource(R.drawable.ic_attachment)
       }
     }
   }

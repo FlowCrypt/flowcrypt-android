@@ -164,7 +164,7 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
     unregisterCountingIdlingResource()
 
     onView(withId(R.id.imageViewAttIcon))
-      .check(matches(withDrawable(R.mipmap.ic_attachment)))
+      .check(matches(withDrawable(R.drawable.ic_attachment)))
 
     onView(withId(R.id.imageButtonDownloadAtt))
       .check(matches(isDisplayed()))
@@ -178,7 +178,7 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
     Thread.sleep(5000)
 
     onView(withId(R.id.imageViewAttIcon))
-      .check(matches(withDrawable(R.mipmap.ic_attachment)))
+      .check(matches(withDrawable(R.drawable.ic_attachment)))
   }
 
   companion object {

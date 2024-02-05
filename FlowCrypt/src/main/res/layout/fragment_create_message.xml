@@ -80,7 +80,8 @@
                     android:contentDescription="@string/show_aliases"
                     android:padding="@dimen/default_margin_content_small"
                     android:visibility="invisible"
-                    app:srcCompat="@mipmap/ic_arrow_drop_down_grey"
+                    app:srcCompat="@drawable/ic_arrow_drop_down"
+                    app:tint="@color/gray"
                     tools:visibility="visible" />
             </FrameLayout>
 
@@ -132,7 +133,8 @@
                     android:padding="@dimen/default_margin_content_small"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/textViewTo"
-                    app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
+                    app:srcCompat="@drawable/ic_arrow_drop_down"
+                    app:tint="@color/gray" />
 
                 <View
                     android:layout_width="match_parent"
