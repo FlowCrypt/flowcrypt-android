@@ -12,3 +12,6 @@ assignees: DenBond7
 - [ ] build release
 - [ ] release consumer 20%
 - [ ] release enterprise in 2 weeks
+
+Diff between releases
+https://github.com/FlowCrypt/flowcrypt-android/compare/0.0.1...0.0.2
