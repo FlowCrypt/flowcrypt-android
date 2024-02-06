@@ -8,6 +8,7 @@ package com.flowcrypt.email.matchers
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.view.View
 import androidx.annotation.ColorRes
@@ -23,6 +24,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.chip.Chip
 import org.hamcrest.BaseMatcher
 import org.hamcrest.Matcher
+import org.hamcrest.TypeSafeMatcher
 
 /**
  * @author Denys Bondarenko
@@ -30,8 +32,12 @@ import org.hamcrest.Matcher
 
 class CustomMatchers {
   companion object {
-    fun withDrawable(resourceId: Int): Matcher<View> {
-      return DrawableMatcher(resourceId)
+    fun withDrawable(
+      @DrawableRes resId: Int,
+      @ColorRes tintColor: Int? = null,
+      tintMode: PorterDuff.Mode = PorterDuff.Mode.SRC_IN
+    ): TypeSafeMatcher<View> {
+      return DrawableMatcher(expectedId = resId, tintColor = tintColor, tintMode = tintMode)
     }
 
     fun withBitmap(bitmap: Bitmap): Matcher<View> {

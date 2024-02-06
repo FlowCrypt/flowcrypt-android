@@ -125,35 +125,31 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     onView(withId(R.id.layoutFwdButton))
       .check(matches(isDisplayed()))
 
+    val buttonsColorId: Int
     if (msgEntity.isEncrypted == true) {
+      buttonsColorId = R.color.colorPrimary
       onView(withId(R.id.textViewReply))
         .check(matches(withText(getResString(R.string.reply_encrypted))))
       onView(withId(R.id.textViewReplyAll))
         .check(matches(withText(getResString(R.string.reply_all_encrypted))))
       onView(withId(R.id.textViewFwd))
         .check(matches(withText(getResString(R.string.forward_encrypted))))
-
-      onView(withId(R.id.imageViewReply))
-        .check(matches(withDrawable(R.mipmap.ic_reply_green)))
-      onView(withId(R.id.imageViewReplyAll))
-        .check(matches(withDrawable(R.mipmap.ic_reply_all_green)))
-      onView(withId(R.id.imageViewFwd))
-        .check(matches(withDrawable(R.mipmap.ic_forward_green)))
     } else {
+      buttonsColorId = R.color.red
       onView(withId(R.id.textViewReply))
         .check(matches(withText(getResString(R.string.reply))))
       onView(withId(R.id.textViewReplyAll))
         .check(matches(withText(getResString(R.string.reply_all))))
       onView(withId(R.id.textViewFwd))
         .check(matches(withText(getResString(R.string.forward))))
-
-      onView(withId(R.id.imageViewReply))
-        .check(matches(withDrawable(R.mipmap.ic_reply_red)))
-      onView(withId(R.id.imageViewReplyAll))
-        .check(matches(withDrawable(R.mipmap.ic_reply_all_red)))
-      onView(withId(R.id.imageViewFwd))
-        .check(matches(withDrawable(R.mipmap.ic_forward_red)))
     }
+
+    onView(withId(R.id.imageViewReply))
+      .check(matches(withDrawable(resId = R.drawable.ic_reply, tintColor = buttonsColorId)))
+    onView(withId(R.id.imageViewReplyAll))
+      .check(matches(withDrawable(resId = R.drawable.ic_reply_all, tintColor = buttonsColorId)))
+    onView(withId(R.id.imageViewFwd))
+      .check(matches(withDrawable(resId = R.drawable.ic_forward, tintColor = buttonsColorId)))
   }
 
   protected fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, att: AttachmentInfo?) {

@@ -5,11 +5,14 @@
 
 package com.flowcrypt.email.matchers
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.Drawable
+import android.content.res.ColorStateList
+import android.graphics.PorterDuff
 import android.view.View
 import android.widget.ImageView
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
 
@@ -17,15 +20,22 @@ import org.hamcrest.TypeSafeMatcher
  * See details here https://github.com/dbottillo/Blog/blob/espresso_match_imageview/app/src/androidTest/java/com
  * /danielebottillo/blog/config/DrawableMatcher.java
  *
+ * and here https://medium.com/@miloszlewandowski/espresso-matcher-for-imageview-made-easy-with-android-ktx-977374ca3391
+ *
  * @author Denys Bondarenko
  */
-class DrawableMatcher(private val expectedId: Int) : TypeSafeMatcher<View>(View::class.java) {
+class DrawableMatcher(
+  @DrawableRes private val expectedId: Int,
+  @ColorRes private val tintColor: Int? = null,
+  private val tintMode: PorterDuff.Mode = PorterDuff.Mode.SRC_IN
+) : TypeSafeMatcher<View>(View::class.java) {
   private var resourceName: String? = null
 
   override fun describeTo(description: Description) {
     description.appendText("with drawable from resource id: ")
     description.appendValue(expectedId)
-    resourceName?.let { description.appendText("[").appendText(it).appendText("]") }
+    resourceName?.let { description.appendText("[resourceName = $resourceName]") }
+    tintColor?.let { description.appendText(",[tintColor = $tintColor, mode = $tintMode]") }
   }
 
   override fun matchesSafely(target: View): Boolean {
@@ -33,32 +43,28 @@ class DrawableMatcher(private val expectedId: Int) : TypeSafeMatcher<View>(View:
       return false
     }
 
+    val context = target.getContext()
+
     when (expectedId) {
       EMPTY -> return target.drawable == null
       ANY -> return target.drawable != null
       else -> {
-        val resources = target.getContext().resources
-        val expectedDrawable =
-          resources.getDrawable(expectedId, target.getContext().theme) ?: return false
+        val resources = context.resources
         resourceName = resources.getResourceEntryName(expectedId)
 
-        val bitmap = getBitmap(target.drawable)
-        val otherBitmap = getBitmap(expectedDrawable)
-        return bitmap.sameAs(otherBitmap)
+        val expectedDrawable = resources.getDrawable(expectedId, context.theme)?.apply {
+          tintColor?.let {
+            setTintList(ColorStateList.valueOf(ContextCompat.getColor(context, tintColor)))
+            setTintMode(tintMode)
+          }
+        } ?: return false
+
+        val actualBitmap = target.drawable.toBitmap()
+        val expectedBitmap = expectedDrawable.toBitmap()
+
+        return actualBitmap.sameAs(expectedBitmap)
       }
     }
-  }
-
-  private fun getBitmap(drawable: Drawable): Bitmap {
-    val bitmap = Bitmap.createBitmap(
-      drawable.intrinsicWidth,
-      drawable.intrinsicHeight,
-      Bitmap.Config.ARGB_8888
-    )
-    val canvas = Canvas(bitmap)
-    drawable.setBounds(0, 0, canvas.width, canvas.height)
-    drawable.draw(canvas)
-    return bitmap
   }
 
   companion object {
