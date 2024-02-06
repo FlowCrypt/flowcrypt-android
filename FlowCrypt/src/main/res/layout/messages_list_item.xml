@@ -114,8 +114,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/security"
-        android:src="@mipmap/ic_security"
+        android:src="@drawable/ic_security"
         android:visibility="visible"
+        app:tint="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="@+id/textViewSubject"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintTop_toTopOf="@+id/textViewSubject" />
