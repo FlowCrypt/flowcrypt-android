@@ -494,7 +494,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
           else -> senderAddress?.let {
             AvatarModelLoader.SCHEMA_AVATAR + it
-          } ?: R.mipmap.ic_account_default_photo
+          } ?: R.drawable.ic_account_default_photo
         },
         transitionOptions = if (itemView.isActivated && useAnimationForCheckedState) {
           DrawableTransitionOptions.with(

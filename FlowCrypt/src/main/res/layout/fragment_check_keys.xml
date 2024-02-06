@@ -51,7 +51,7 @@
                 android:layout_gravity="center_vertical"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/see_choosing_secure_pass_phrases"
-                app:srcCompat="@mipmap/ic_help_grey" />
+                app:srcCompat="@drawable/ic_help" />
 
         </LinearLayout>
 
@@ -95,7 +95,7 @@
                 android:layout_gravity="center_vertical"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/see_choosing_secure_pass_phrases"
-                app:srcCompat="@mipmap/ic_help_grey" />
+                app:srcCompat="@drawable/ic_help" />
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
