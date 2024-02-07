@@ -14,6 +14,8 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.graphics.Shader
+import android.graphics.drawable.LayerDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -123,6 +125,7 @@ import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
+import com.flowcrypt.email.ui.widget.TileDrawable
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -1010,11 +1013,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           }
         }
 
-        MsgBlock.Type.DECRYPTED_TEXT -> {
-          msgEncryptType = MessageEncryptionType.ENCRYPTED
-          binding?.layoutMessageParts?.addView(genDecryptedTextPart(block, layoutInflater))
-        }
-
         MsgBlock.Type.PLAIN_TEXT -> {
           binding?.layoutMessageParts?.addView(genTextPart(block, layoutInflater))
           if (isFirstMsgPartText) {
@@ -1323,15 +1321,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     )
   }
 
-  private fun genDecryptedTextPart(block: MsgBlock, layoutInflater: LayoutInflater): View {
-    return genDefPart(
-      block,
-      layoutInflater,
-      R.layout.message_part_pgp_message,
-      binding?.layoutMessageParts
-    )
-  }
-
   private fun genDecryptErrorPart(
     block: DecryptErrorMsgBlock,
     layoutInflater: LayoutInflater
@@ -1419,6 +1408,16 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       R.layout.message_part_pgp_message_error,
       binding?.layoutMessageParts, false
     ) as ViewGroup
+    val container = viewGroup.findViewById<ViewGroup>(R.id.container)
+    val existingBackground = container.background as LayerDrawable
+
+    //use SVG as a repeatable drawable
+    val drawable =
+      ContextCompat.getDrawable(requireContext(), R.drawable.bg_security_repeat_template)
+    if (drawable != null && existingBackground.numberOfLayers > 1) {
+      existingBackground.setDrawable(1, TileDrawable(drawable, Shader.TileMode.REPEAT))
+    }
+
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
     ExceptionUtil.handleError(ManualHandledException(errorMsg))
     textViewErrorMsg.text = errorMsg

@@ -5,4 +5,5 @@
 
 <resources>
     <color name="messageSubTitleColor">#66989898</color>
+    <color name="seamless_bg_color">#66000000</color>
 </resources>

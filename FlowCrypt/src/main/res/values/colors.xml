@@ -22,4 +22,5 @@
 
     <!--Used in themes-->
     <color name="messageSubTitleColor">@color/gray</color>
+    <color name="seamless_bg_color">#B3ECECEC</color>
 </resources>

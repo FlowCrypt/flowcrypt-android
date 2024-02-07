@@ -163,10 +163,6 @@
         <item name="android:background">@drawable/bg_message_part_pgp_message_error</item>
     </style>
 
-    <style name="AppWidget.TextInputLayout.PgpBlock.Message">
-        <item name="android:background">@drawable/bg_message_part_pgp_message</item>
-    </style>
-
     <style name="AppWidget.TextInputLayout.PgpBlock.Other">
         <item name="android:background">@drawable/bg_message_part_other</item>
     </style>
