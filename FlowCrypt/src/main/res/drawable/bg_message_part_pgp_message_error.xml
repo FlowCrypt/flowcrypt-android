@@ -4,7 +4,6 @@
   -->
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingLeft="@dimen/padding_pgp_message_error_big"
     android:paddingTop="@dimen/padding_pgp_message_error_small"
     android:paddingRight="@dimen/padding_pgp_message_error_big"
@@ -17,9 +16,10 @@
     </item>
 
     <item>
-        <bitmap
-            android:src="@drawable/bg_lock_seamless"
-            android:tileMode="repeat" />
+        <!--this one will be updated programmatically to use SVG-->
+        <shape>
+            <solid android:color="?attr/colorSurface" />
+        </shape>
     </item>
 
     <item android:gravity="left">
