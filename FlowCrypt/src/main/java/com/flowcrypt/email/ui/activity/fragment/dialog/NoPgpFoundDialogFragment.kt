@@ -33,7 +33,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
 
     dialogItems.add(
       DialogItem(
-        iconResourceId = R.drawable.ic_refresh_gray_48,
+        iconResourceId = R.drawable.ic_refresh_gray,
         title = getString(R.string.re_fetch_public_key),
         id = RESULT_CODE_RE_FETCH_PUBLIC_KEY
       )
@@ -41,7 +41,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
 
     dialogItems.add(
       DialogItem(
-        iconResourceId = R.drawable.ic_password_protected_gray_48,
+        iconResourceId = R.drawable.ic_password_protected_gray,
         title = getString(R.string.protect_with_password),
         id = RESULT_CODE_PROTECT_WITH_PASSWORD
       )
@@ -49,21 +49,21 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
 
     dialogItems.add(
       DialogItem(
-        iconResourceId = R.mipmap.ic_switch,
+        iconResourceId = R.drawable.ic_switch,
         title = getString(R.string.switch_to_standard_email),
         id = RESULT_CODE_SWITCH_TO_STANDARD_EMAIL
       )
     )
     dialogItems.add(
       DialogItem(
-        iconResourceId = R.mipmap.ic_document,
+        iconResourceId = R.drawable.ic_import_user_public_key,
         title = getString(R.string.import_their_public_key),
         id = RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY
       )
     )
     dialogItems.add(
       DialogItem(
-        iconResourceId = R.mipmap.ic_content_copy,
+        iconResourceId = R.drawable.ic_content_copy,
         title = getString(R.string.copy_from_other_contact),
         id = RESULT_CODE_COPY_FROM_OTHER_CONTACT
       )
@@ -72,7 +72,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
     if (args.isRemoveActionEnabled) {
       dialogItems.add(
         DialogItem(
-          iconResourceId = R.mipmap.ic_remove_recipient,
+          iconResourceId = R.drawable.ic_remove_recipient,
           title = getString(
             R.string.template_remove_recipient,
             args.recipientWithPubKeys.recipient.email

@@ -42,7 +42,7 @@
             android:layout_marginEnd="@dimen/default_twice_dip"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/download"
-            app:srcCompat="@mipmap/ic_file_download" />
+            app:srcCompat="@drawable/ic_file_download" />
 
         <ImageButton
             android:id="@+id/imageButtonDeleteAtt"
@@ -54,7 +54,7 @@
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/download"
             android:visibility="gone"
-            app:srcCompat="@mipmap/ic_clear"
+            app:srcCompat="@drawable/ic_clear"
             tools:visibility="visible" />
 
     </LinearLayout>
@@ -67,7 +67,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/ic_attachment" />
+        app:srcCompat="@drawable/ic_attachment" />
 
     <TextView
         android:id="@+id/textViewAttachmentName"

@@ -48,7 +48,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/see_choosing_secure_pass_phrases"
                 android:padding="@dimen/default_margin_content_small"
-                app:srcCompat="@mipmap/ic_help_grey" />
+                app:srcCompat="@drawable/ic_help" />
 
         </LinearLayout>
 
