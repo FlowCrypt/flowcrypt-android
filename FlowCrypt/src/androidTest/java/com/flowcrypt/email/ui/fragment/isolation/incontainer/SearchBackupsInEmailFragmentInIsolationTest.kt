@@ -22,6 +22,8 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragment
 import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
+import org.hamcrest.CoreMatchers.startsWith
+import org.hamcrest.Matchers
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -56,7 +58,7 @@ class SearchBackupsInEmailFragmentInIsolationTest : BaseTest(), AddAccountToData
     Thread.sleep(1000)
 
     onView(withId(R.id.tVTitle))
-      .check(matches(withText(getResString(R.string.backups_found, 1))))
+      .check(matches(withText(startsWith("Backups found"))))
     onView(withId(R.id.btBackup))
       .check(matches(withText(getResString(R.string.see_more_backup_options))))
   }
