@@ -5,8 +5,17 @@
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
+import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.*
+import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.assertion.ViewAssertions.*
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.R
+import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -14,9 +23,13 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.ui.activity.fragment.PrivateToPublicKeyDetailsFragment
-import com.flowcrypt.email.ui.activity.fragment.PrivateToPublicKeyDetailsFragmentArgs
-import com.flowcrypt.email.ui.base.BasePublicKeyDetailsTest
+import com.flowcrypt.email.ui.activity.fragment.UpdatePrivateKeyFragment
+import com.flowcrypt.email.ui.activity.fragment.UpdatePrivateKeyFragmentArgs
+import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.Matchers
+import org.hamcrest.Matchers.emptyString
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -31,7 +44,7 @@ import org.pgpainless.key.info.KeyRingInfo
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
-class PrivateToPublicKeyDetailsFragmentInIsolationTest : BasePublicKeyDetailsTest() {
+class UpdatePrivateKeyFragmentInIsolationTest : BaseTest(), AddAccountToDatabaseRuleInterface {
 
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
   private val keyRingInfo = KeyRingInfo(
@@ -52,19 +65,27 @@ class PrivateToPublicKeyDetailsFragmentInIsolationTest : BasePublicKeyDetailsTes
 
   @Before
   fun launchFragmentInContainerWithPredefinedArgs() {
-    launchFragmentInContainer<PrivateToPublicKeyDetailsFragment>(
-      PrivateToPublicKeyDetailsFragmentArgs(
-        fingerprint = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.fingerprint
+    launchFragmentInContainer<UpdatePrivateKeyFragment>(
+      UpdatePrivateKeyFragmentArgs(
+        accountEntity = addAccountToDatabaseRule.account,
+        existingPgpKeyRingDetails = addPrivateKeyToDatabaseRule.pgpKeyRingDetails,
       ).toBundle()
     )
   }
 
   @Test
-  fun testPublicKeyDetails() {
+  fun testBaseInfo() {
     Thread.sleep(1000)
 
-    testPrimaryKeyDetails(keyRingInfo)
-    testUserIds(keyRingInfo)
-    testSubKeys(keyRingInfo)
+    onView(withId(R.id.editTextNewPrivateKey))
+      .check(matches(withText(`is`(emptyString()))))
+    onView(withId(R.id.buttonCheck))
+      .check(matches(isNotEnabled()))
+
+    onView(withId(R.id.editTextNewPrivateKey))
+      .perform(ViewActions.replaceText("Some text"))
+
+    onView(withId(R.id.buttonCheck))
+      .check(matches(isEnabled()))
   }
 }
