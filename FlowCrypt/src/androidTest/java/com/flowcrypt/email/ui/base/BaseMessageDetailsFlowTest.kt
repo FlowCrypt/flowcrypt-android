@@ -71,7 +71,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     get() = activeActivityRule.scenario
   protected open val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
-  private val localFolder: LocalFolder
+  protected val localFolder: LocalFolder
     get() = LocalFolder(
       addAccountToDatabaseRule.account.email,
       fullName = "INBOX",
