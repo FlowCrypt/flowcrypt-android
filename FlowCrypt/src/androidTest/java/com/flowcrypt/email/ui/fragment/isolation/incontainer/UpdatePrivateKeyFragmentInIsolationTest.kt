@@ -47,12 +47,6 @@ import org.pgpainless.key.info.KeyRingInfo
 class UpdatePrivateKeyFragmentInIsolationTest : BaseTest(), AddAccountToDatabaseRuleInterface {
 
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-  private val keyRingInfo = KeyRingInfo(
-    requireNotNull(
-      PgpKey.parseKeys(source = addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey.toByteArray())
-        .getAllKeys().firstOrNull()
-    )
-  )
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
