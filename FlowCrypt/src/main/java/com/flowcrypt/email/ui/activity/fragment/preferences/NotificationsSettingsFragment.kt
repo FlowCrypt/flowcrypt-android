@@ -63,7 +63,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    (activity as AppCompatActivity?)?.supportActionBar?.title = getString(R.string.notifications)
+    (activity as? AppCompatActivity)?.supportActionBar?.title = getString(R.string.notifications)
 
     subscribeToTwoWayDialog()
   }
