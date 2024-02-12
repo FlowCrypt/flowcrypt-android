@@ -762,6 +762,33 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  fun testKeepPublicKeysFreshFewKeysFromServer() {
+    activeActivityRule?.launch(intent)
+    registerAllIdlingResources()
+
+    fillInAllFields(to = setOf(requireNotNull(USER_WITH_FEW_KEYS_FROM_WKD.asInternetAddress())))
+
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(USER_WITH_FEW_KEYS_FROM_WKD),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              R.color.colorPrimary
+            )
+          )
+        )
+      )
+
+    val existingRecipientAfterUpdate =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(USER_WITH_FEW_KEYS_FROM_WKD)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    assertEquals(2, existingRecipientAfterUpdate.publicKeys.size)
+  }
+
+  @Test
   fun testWebPortalPasswordButtonIsVisibleForUserWithoutCustomerFesUrl() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -847,6 +874,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     private const val ATTACHMENTS_COUNT = 3
     private const val EMAIL_SUBJECT = "Test subject"
+    private const val USER_WITH_FEW_KEYS_FROM_WKD = "user_with_few_keys_from_wkd@flowcrypt.test"
 
     private var atts: MutableList<File> = mutableListOf()
 
@@ -895,6 +923,16 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
                   .setBody(
                     TestGeneralUtil.readFileFromAssetsAsString(
                       "pgp/old_key_on_wkd@flowcrypt.test_pub_0.asc"
+                    )
+                  )
+              }
+
+              USER_WITH_FEW_KEYS_FROM_WKD.equals(lastSegment, true) -> {
+                return MockResponse()
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
+                  .setBody(
+                    TestGeneralUtil.readFileFromAssetsAsString(
+                      "pgp/user_with_few_keys_from_wkd@flowcrypt.test_pub.asc"
                     )
                   )
               }
