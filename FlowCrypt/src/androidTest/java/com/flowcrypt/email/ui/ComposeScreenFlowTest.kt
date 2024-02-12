@@ -695,6 +695,17 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
           )
         )
       )
+
+    val existingRecipientAfterUpdate =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existingKeyExpirationAfterUpdate =
+      PgpKey.parseKeys(String(existingRecipientAfterUpdate.publicKeys.first().publicKey))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
+        ?: throw IllegalArgumentException("No expiration date")
+
+    assertTrue(existingKeyExpirationAfterUpdate.isAfter(Instant.now()))
   }
 
   @Test
