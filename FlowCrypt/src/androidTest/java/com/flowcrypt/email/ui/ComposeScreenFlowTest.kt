@@ -73,6 +73,7 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -82,6 +83,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.pgpainless.key.info.KeyRingInfo
 import java.io.File
 import java.net.HttpURLConnection
 import java.time.Instant
@@ -709,6 +711,57 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  fun testKeepPublicKeysFreshDoNotUpdateIfReceivedOlderKey() {
+    val keyDetailsFromAssets =
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/old_key_on_wkd@flowcrypt.test_pub_1.asc")
+    val internetAddress = requireNotNull(keyDetailsFromAssets.getPrimaryInternetAddress())
+    val recipientEntity = keyDetailsFromAssets.toRecipientEntity()
+    roomDatabase.recipientDao().insert(requireNotNull(recipientEntity))
+    roomDatabase.pubKeyDao().insert(
+      requireNotNull(keyDetailsFromAssets.toPublicKeyEntity(recipientEntity.email))
+    )
+    val existingRecipient =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existingKeyBeforeUpdate =
+      PgpKey.parseKeys(String(existingRecipient.publicKeys.first().publicKey))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
+    val keyRingInfoBeforeUpdate = KeyRingInfo(existingKeyBeforeUpdate)
+
+    assertEquals(2, keyRingInfoBeforeUpdate.userIds.size)
+
+    activeActivityRule?.launch(intent)
+    registerAllIdlingResources()
+
+    fillInAllFields(to = setOf(internetAddress))
+
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(internetAddress.address),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              R.color.colorPrimary
+            )
+          )
+        )
+      )
+
+    val existingRecipientAfterUpdate =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existingKeyBeforeUpdateUpdate =
+      PgpKey.parseKeys(String(existingRecipientAfterUpdate.publicKeys.first().publicKey))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
+    val keyRingInfoAfterUpdate = KeyRingInfo(existingKeyBeforeUpdateUpdate)
+
+    assertEquals(2, keyRingInfoAfterUpdate.userIds.size)
+  }
+
+  @Test
   fun testWebPortalPasswordButtonIsVisibleForUserWithoutCustomerFesUrl() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -832,6 +885,16 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
                   .setBody(
                     TestGeneralUtil.readFileFromAssetsAsString(
                       "pgp/expired_fixed@flowcrypt.test_not_expired_pub.asc"
+                    )
+                  )
+              }
+
+              "old_key_on_wkd@flowcrypt.test".equals(lastSegment, true) -> {
+                return MockResponse()
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
+                  .setBody(
+                    TestGeneralUtil.readFileFromAssetsAsString(
+                      "pgp/old_key_on_wkd@flowcrypt.test_pub_0.asc"
                     )
                   )
               }
