@@ -625,7 +625,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  //fun testShowWarningIfFoundNotUsableKeySHA1() {
   fun testAcceptIfFoundKeySHA1() {
     val keyWithSHA1Algo =
       TestGeneralUtil.readFileFromAssetsAsByteArray("pgp/sha1@flowcrypt.test_pub.asc")
@@ -656,14 +655,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
           )
         )
       )
-
-    /*temporary disabled due too https://github.com/FlowCrypt/flowcrypt-android/issues/1478
-    onView(withId(R.id.menuActionSend))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(R.string.warning_one_of_pub_keys_is_not_usable))
-      .check(matches(isDisplayed()))
-      .perform(click())*/
   }
 
   @Test

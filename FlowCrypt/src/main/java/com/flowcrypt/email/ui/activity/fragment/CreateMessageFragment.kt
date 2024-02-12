@@ -746,6 +746,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         } else continue
       }
 
+      if (!recipientWithPubKeys.hasUsablePubKey()) {
+        showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_not_usable_pub_key))
+        return true
+      }
+
       if (!recipientWithPubKeys.hasNotExpiredPubKey()) {
         showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_expired_pub_key))
         return true
@@ -753,11 +758,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       if (!recipientWithPubKeys.hasNotRevokedPubKey()) {
         showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_revoked_pub_key))
-        return true
-      }
-
-      if (!recipientWithPubKeys.hasUsablePubKey()) {
-        showInfoDialog(dialogMsg = getString(R.string.warning_one_of_recipients_has_not_usable_pub_key))
         return true
       }
     }
