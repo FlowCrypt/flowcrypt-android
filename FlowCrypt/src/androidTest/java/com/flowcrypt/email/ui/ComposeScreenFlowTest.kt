@@ -73,6 +73,7 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -82,6 +83,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.pgpainless.key.info.KeyRingInfo
 import java.io.File
 import java.net.HttpURLConnection
 import java.time.Instant
@@ -625,7 +627,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  //fun testShowWarningIfFoundNotUsableKeySHA1() {
   fun testAcceptIfFoundKeySHA1() {
     val keyWithSHA1Algo =
       TestGeneralUtil.readFileFromAssetsAsByteArray("pgp/sha1@flowcrypt.test_pub.asc")
@@ -656,14 +657,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
           )
         )
       )
-
-    /*temporary disabled due too https://github.com/FlowCrypt/flowcrypt-android/issues/1478
-    onView(withId(R.id.menuActionSend))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    onView(withText(R.string.warning_one_of_pub_keys_is_not_usable))
-      .check(matches(isDisplayed()))
-      .perform(click())*/
   }
 
   @Test
@@ -704,6 +697,95 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
           )
         )
       )
+
+    val existingRecipientAfterUpdate =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existingKeyExpirationAfterUpdate =
+      PgpKey.parseKeys(String(existingRecipientAfterUpdate.publicKeys.first().publicKey))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().expiration
+        ?: throw IllegalArgumentException("No expiration date")
+
+    assertTrue(existingKeyExpirationAfterUpdate.isAfter(Instant.now()))
+  }
+
+  @Test
+  fun testKeepPublicKeysFreshDoNotUpdateIfReceivedOlderKey() {
+    val keyDetailsFromAssets =
+      PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/old_key_on_wkd@flowcrypt.test_pub_1.asc")
+    val internetAddress = requireNotNull(keyDetailsFromAssets.getPrimaryInternetAddress())
+    val recipientEntity = keyDetailsFromAssets.toRecipientEntity()
+    roomDatabase.recipientDao().insert(requireNotNull(recipientEntity))
+    roomDatabase.pubKeyDao().insert(
+      requireNotNull(keyDetailsFromAssets.toPublicKeyEntity(recipientEntity.email))
+    )
+    val existingRecipient =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existingKeyBeforeUpdate =
+      PgpKey.parseKeys(String(existingRecipient.publicKeys.first().publicKey))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
+    val keyRingInfoBeforeUpdate = KeyRingInfo(existingKeyBeforeUpdate)
+
+    assertEquals(2, keyRingInfoBeforeUpdate.userIds.size)
+
+    activeActivityRule?.launch(intent)
+    registerAllIdlingResources()
+
+    fillInAllFields(to = setOf(internetAddress))
+
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(internetAddress.address),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              R.color.colorPrimary
+            )
+          )
+        )
+      )
+
+    val existingRecipientAfterUpdate =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(internetAddress.address)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    val existingKeyBeforeUpdateUpdate =
+      PgpKey.parseKeys(String(existingRecipientAfterUpdate.publicKeys.first().publicKey))
+        .pgpKeyRingCollection.pgpPublicKeyRingCollection.first()
+    val keyRingInfoAfterUpdate = KeyRingInfo(existingKeyBeforeUpdateUpdate)
+
+    assertEquals(2, keyRingInfoAfterUpdate.userIds.size)
+  }
+
+  @Test
+  fun testKeepPublicKeysFreshFewKeysFromServer() {
+    activeActivityRule?.launch(intent)
+    registerAllIdlingResources()
+
+    fillInAllFields(to = setOf(requireNotNull(USER_WITH_FEW_KEYS_FROM_WKD.asInternetAddress())))
+
+    onView(withId(R.id.recyclerViewChipsTo))
+      .perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+          allOf(
+            withText(USER_WITH_FEW_KEYS_FROM_WKD),
+            withChipsBackgroundColor(
+              getTargetContext(),
+              R.color.colorPrimary
+            )
+          )
+        )
+      )
+
+    val existingRecipientAfterUpdate =
+      roomDatabase.recipientDao().getRecipientWithPubKeysByEmail(USER_WITH_FEW_KEYS_FROM_WKD)
+        ?: throw IllegalArgumentException("Contact not found")
+
+    assertEquals(2, existingRecipientAfterUpdate.publicKeys.size)
   }
 
   @Test
@@ -792,6 +874,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     private const val ATTACHMENTS_COUNT = 3
     private const val EMAIL_SUBJECT = "Test subject"
+    private const val USER_WITH_FEW_KEYS_FROM_WKD = "user_with_few_keys_from_wkd@flowcrypt.test"
 
     private var atts: MutableList<File> = mutableListOf()
 
@@ -830,6 +913,26 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
                   .setBody(
                     TestGeneralUtil.readFileFromAssetsAsString(
                       "pgp/expired_fixed@flowcrypt.test_not_expired_pub.asc"
+                    )
+                  )
+              }
+
+              "old_key_on_wkd@flowcrypt.test".equals(lastSegment, true) -> {
+                return MockResponse()
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
+                  .setBody(
+                    TestGeneralUtil.readFileFromAssetsAsString(
+                      "pgp/old_key_on_wkd@flowcrypt.test_pub_0.asc"
+                    )
+                  )
+              }
+
+              USER_WITH_FEW_KEYS_FROM_WKD.equals(lastSegment, true) -> {
+                return MockResponse()
+                  .setResponseCode(HttpURLConnection.HTTP_OK)
+                  .setBody(
+                    TestGeneralUtil.readFileFromAssetsAsString(
+                      "pgp/user_with_few_keys_from_wkd@flowcrypt.test_pub.asc"
                     )
                   )
               }
