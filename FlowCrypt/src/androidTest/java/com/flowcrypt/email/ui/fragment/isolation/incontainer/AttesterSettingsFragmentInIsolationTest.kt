@@ -22,6 +22,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
@@ -51,6 +52,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -74,6 +76,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
     )
 
     launchFragmentInContainer<AttesterSettingsFragment>()
+    Thread.sleep(2000)
 
     onView(withId(R.id.empty))
       .check(matches(not(isDisplayed())))
@@ -93,7 +96,6 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @FlakyTest
   fun testDifferentKeysOnAttester() {
     runBlocking {
       FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
@@ -114,6 +116,8 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
 
     launchFragmentInContainer<AttesterSettingsFragment>()
 
+    Thread.sleep(2000)
+
     onView(withId(R.id.empty))
       .check(matches(not(isDisplayed())))
 
@@ -132,7 +136,6 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @FlakyTest
   fun testAccountWithNoKeysOnAttester() {
     runBlocking {
       FlowCryptRoomDatabase.getDatabase(getTargetContext()).accountDao()
@@ -152,6 +155,7 @@ class AttesterSettingsFragmentInIsolationTest : BaseTest() {
     )
 
     launchFragmentInContainer<AttesterSettingsFragment>()
+    Thread.sleep(2000)
 
     onView(withId(R.id.empty))
       .check(matches(isDisplayed()))
