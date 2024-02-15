@@ -848,7 +848,7 @@ object PgpMsg {
           for (innerBlock in innerBlocks) {
             if (canBeAddedToCombinedContent(innerBlock)) {
               contentBlocks.add(innerBlock)
-            } else {
+            } else if (canBeAddedToResultBlocks(innerBlock)) {
               resultBlocks.add(innerBlock)
             }
           }
@@ -917,6 +917,16 @@ object PgpMsg {
     }
   }
 
+  private fun canBeAddedToResultBlocks(block: MsgBlock): Boolean {
+    return when (block.type) {
+      MsgBlock.Type.DECRYPTED_ATT -> {
+        "application/pgp-signature" !=
+            (block as? DecryptedAttMsgBlock)?.attMeta?.type?.asContentTypeOrNull()?.baseType
+      }
+
+      else -> true
+    }
+  }
 
   private fun processPgpPublicKeyRawBlock(
     rawBlock: RawBlockParser.RawBlock

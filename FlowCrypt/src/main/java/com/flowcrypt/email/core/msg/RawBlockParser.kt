@@ -205,7 +205,7 @@ object RawBlockParser {
   }
 
   private fun treatAs(mimePart: MimePart): TreatAs {
-    val name = mimePart.getFileNameWithCarefully()?.lowercase() ?: ""
+    val name = mimePart.getFileNameWithCarefully() ?: ""
     val baseContentType = mimePart.baseContentType()
     val length = mimePart.size
     when {
@@ -219,11 +219,13 @@ object RawBlockParser {
         return if (length < 100) TreatAs.SIGNATURE else TreatAs.PGP_MSG
       }
 
-      "signature.asc" == name || "application/pgp-signature" == baseContentType -> {
+      "signature.asc".equals(name, ignoreCase = true)
+          || "application/pgp-signature" == baseContentType -> {
         return TreatAs.SIGNATURE
       }
 
-      "msg.asc" == name && length < 100 && "application/pgp-encrypted" == baseContentType -> {
+      "msg.asc".equals(name, ignoreCase = true)
+          && length < 100 && "application/pgp-encrypted" == baseContentType -> {
         // mail.ch does this - although it looks like encrypted msg,
         // it will just contain PGP version eg "Version: 1"
         return TreatAs.SIGNATURE

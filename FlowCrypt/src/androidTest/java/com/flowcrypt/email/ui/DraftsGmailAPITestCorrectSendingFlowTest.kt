@@ -210,6 +210,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     //open created draft and send
     onView(withId(R.id.recyclerViewMsgs))
       .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
+    Thread.sleep(1000)
     onView(withId(R.id.imageButtonEditDraft))
       .check(matches(isDisplayed()))
       .perform(click())
