@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.DownloadForwardedAttachmentsWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -35,7 +35,7 @@ class LauncherViewModel(application: Application) : AccountViewModel(application
         R.xml.preferences_notifications_settings,
         false
       )
-      ForwardedAttachmentsDownloaderWorker.enqueue(application)
+      DownloadForwardedAttachmentsWorker.enqueue(application)
       MessagesSenderWorker.enqueue(application)
       FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(application))
 

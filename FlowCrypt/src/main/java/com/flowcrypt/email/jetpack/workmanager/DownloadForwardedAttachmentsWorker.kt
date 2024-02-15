@@ -44,7 +44,7 @@ import java.util.UUID
  *
  * @author Denys Bondarenko
  */
-class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) :
+class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {
   private val attCacheDir = File(applicationContext.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
   private val fwdAttsCacheDir = File(attCacheDir, Constants.FORWARDED_ATTACHMENTS_CACHE_DIR)
@@ -281,11 +281,11 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
   }
 
   companion object {
-    private val TAG = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
+    private val TAG = DownloadForwardedAttachmentsWorker::class.java.simpleName
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".DOWNLOAD_FORWARDED_ATTACHMENTS"
 
     fun enqueue(context: Context) {
-      enqueueWithDefaultParameters<ForwardedAttachmentsDownloaderWorker>(
+      enqueueWithDefaultParameters<DownloadForwardedAttachmentsWorker>(
         context = context,
         uniqueWorkName = GROUP_UNIQUE_TAG,
         existingWorkPolicy = ExistingWorkPolicy.KEEP
