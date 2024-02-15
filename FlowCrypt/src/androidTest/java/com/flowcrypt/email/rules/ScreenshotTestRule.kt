@@ -40,6 +40,8 @@ class ScreenshotTestRule : TestWatcher() {
             description?.methodName +
             "-" +
             UUID.randomUUID() +
+            "_" +
+            System.currentTimeMillis() +
             "." +
             Bitmap.CompressFormat.PNG.toString().lowercase()
 
