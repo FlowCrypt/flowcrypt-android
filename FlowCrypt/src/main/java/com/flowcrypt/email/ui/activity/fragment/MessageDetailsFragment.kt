@@ -59,6 +59,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
@@ -1048,16 +1049,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
-            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            inlineEncryptedAtts.add(convertToAttachmentInfo(decryptAtt))
           } else {
             handleOtherBlock(block, layoutInflater)
           }
         }
 
         MsgBlock.Type.INLINE_ATT -> {
-          val decryptAtt = block as? InlineAttMsgBlock
-          if (decryptAtt != null) {
-            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+          (block as? InlineAttMsgBlock)?.let {
+            inlineEncryptedAtts.add(convertToAttachmentInfo(it))
           }
         }
 
@@ -1075,6 +1075,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     if (inlineEncryptedAtts.isNotEmpty()) {
       msgDetailsViewModel.updateInlinedAttachments(inlineEncryptedAtts)
     }
+  }
+
+  private fun convertToAttachmentInfo(attMsgBlock: AttMsgBlock): AttachmentInfo {
+    return attMsgBlock.toAttachmentInfo().copy(
+      email = account?.email,
+      uid = msgInfo?.msgEntity?.uid ?: -1,
+      folder = msgInfo?.msgEntity?.folder,
+    )
   }
 
   private fun handleOtherBlock(
