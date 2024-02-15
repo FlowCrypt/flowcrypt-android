@@ -519,18 +519,25 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
 
       R.id.layoutFwdButton -> {
-        if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          msgInfo?.atts =
-            attachmentsRecyclerViewAdapter.currentList.map {
-              it.copy(
-                isForwarded = true,
-                name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
-                decryptWhenForward = it.isPossiblyEncrypted()
-              )
-            }
-        } else {
-          msgInfo?.atts =
-            attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
+        val isMessageEncrypted = MessageEncryptionType.ENCRYPTED == msgEncryptType
+        msgInfo?.atts = attachmentsRecyclerViewAdapter.currentList.map {
+          it.copy(
+            isForwarded = true,
+            //we have to drop this value as here can be large data
+            rawData = null,
+            //this flag will not be useful in the compose message screen
+            isDecrypted = false,
+            name = if (isMessageEncrypted && it.isPossiblyEncrypted()) {
+              FilenameUtils.removeExtension(it.name)
+            } else {
+              it.name
+            },
+            decryptWhenForward = if (isMessageEncrypted) {
+              it.isPossiblyEncrypted()
+            } else {
+              it.decryptWhenForward
+            },
+          )
         }
 
         startActivity(
