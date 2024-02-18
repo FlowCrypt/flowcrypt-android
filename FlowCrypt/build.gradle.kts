@@ -441,7 +441,7 @@ dependencies {
 
   implementation("com.google.android.gms:play-services-base:18.2.0")
   implementation("com.google.android.gms:play-services-auth:20.6.0")
-  implementation("com.google.android.material:material:1.9.0")
+  implementation("com.google.android.material:material:1.11.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
