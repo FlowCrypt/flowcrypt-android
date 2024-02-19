@@ -252,6 +252,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           } catch (e: ActivityNotFoundException) {
             toast(getString(R.string.no_apps_that_can_handle_intent))
           }
+        } else {
+          toast(getString(R.string.sorry_preview_is_not_available, attachmentInfo.name))
         }
       }
 

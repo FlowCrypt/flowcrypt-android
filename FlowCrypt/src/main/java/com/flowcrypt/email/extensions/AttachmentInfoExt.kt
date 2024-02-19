@@ -17,10 +17,12 @@ import java.io.File
 /**
  * @author Denys Bondarenko
  */
-fun AttachmentInfo.useFileProviderToGenerateUri(context: Context): Pair<File, Uri> {
-  val tempDir = CacheManager.getCurrentMsgTempDirectory(context)
+fun AttachmentInfo.useFileProviderToGenerateUri(
+  context: Context,
+  directory: File = CacheManager.getCurrentMsgTempDirectory(context)
+): Pair<File, Uri> {
   val fileName = getSafeName()
-  val file = File(tempDir, fileName)
+  val file = File(directory, fileName)
   if (!file.exists()) {
     FileUtils.writeByteArrayToFile(file, rawData)
   }
