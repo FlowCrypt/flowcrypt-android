@@ -13,7 +13,12 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
+import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
 import com.flowcrypt.email.util.OutgoingMessageInfoManager
@@ -25,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 /**
  * @author Denys Bondarenko
@@ -98,7 +104,35 @@ class CreateOutgoingMessageViewModel(
             },
           ),
           messageEntity = messageEntity
-        ) { }
+        ) { mimeMessage ->
+          val mimeMessageAsByteArray = ByteArrayOutputStream().apply {
+            mimeMessage.writeTo(this)
+          }.toByteArray()
+
+          //todo-denbond7 need to think about that. It'll be better to store a message as a file
+          roomDatabase.msgDao().updateSuspend(
+            messageEntity.copy(rawMessageWithoutAttachments = String(mimeMessageAsByteArray))
+          )
+
+          if (outgoingMessageInfo.forwardedAtts?.isNotEmpty() == true) {
+            ForwardedAttachmentsDownloaderWorker.enqueue(context)
+          } else {
+            val existingMsgEntity = roomDatabase.msgDao().getMsg(
+              messageEntity.email, messageEntity.folder, messageEntity.uid
+            ) ?: throw IllegalStateException("A message is not exist")
+            if (outgoingMessageInfo.encryptionType == MessageEncryptionType.ENCRYPTED
+              && outgoingMessageInfo.isPasswordProtected == true
+            ) {
+              roomDatabase.msgDao()
+                .update(existingMsgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
+              HandlePasswordProtectedMsgWorker.enqueue(context)
+            } else {
+              roomDatabase.msgDao()
+                .update(existingMsgEntity.copy(state = MessageState.QUEUED.value))
+              MessagesSenderWorker.enqueue(context)
+            }
+          }
+        }
         Result.success(Unit)
       } catch (e: Exception) {
         try {
