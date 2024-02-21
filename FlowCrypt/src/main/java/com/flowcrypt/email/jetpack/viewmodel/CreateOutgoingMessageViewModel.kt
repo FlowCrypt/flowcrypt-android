@@ -21,7 +21,7 @@ import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
-import com.flowcrypt.email.util.OutgoingMessageInfoManager
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import jakarta.mail.Flags
 import kotlinx.coroutines.Dispatchers
@@ -140,7 +140,7 @@ class CreateOutgoingMessageViewModel(
           messageEntity?.let {
             if (messageEntity.id != null) {
               roomDatabase.msgDao().deleteSuspend(messageEntity)
-              OutgoingMessageInfoManager.deleteOutgoingMessageInfo(
+              OutgoingMessagesManager.deleteOutgoingMessageInfo(
                 context = getApplication(),
                 id = requireNotNull(messageEntity.id),
               )

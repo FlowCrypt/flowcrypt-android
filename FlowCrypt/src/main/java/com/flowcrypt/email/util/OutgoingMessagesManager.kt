@@ -19,7 +19,7 @@ import java.io.File
 /**
  * @author Denys Bondarenko
  */
-object OutgoingMessageInfoManager {
+object OutgoingMessagesManager {
   private const val DIRECTORY_OUTGOING_INFO = "outgoing_info"
 
   fun getOutgoingInfoDirectory(context: Context): File {
