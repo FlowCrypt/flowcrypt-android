@@ -7,11 +7,11 @@ package com.flowcrypt.email.util
 
 import android.content.Context
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -20,14 +20,14 @@ import java.io.File
  * @author Denys Bondarenko
  */
 object OutgoingMessagesManager {
-  private const val DIRECTORY_OUTGOING_INFO = "outgoing_info"
+  private const val DIRECTORY_OUTGOING = "outgoing"
 
-  fun getOutgoingInfoDirectory(context: Context): File {
-    return FileAndDirectoryUtils.getDir(DIRECTORY_OUTGOING_INFO, context.filesDir)
+  fun getOutgoingMessagesDirectory(context: Context): File {
+    return FileAndDirectoryUtils.getDir(DIRECTORY_OUTGOING, context.filesDir)
   }
 
   /**
-   * Store [OutgoingMessageInfo] as JSON in [DIRECTORY_OUTGOING_INFO] folder.
+   * Store [OutgoingMessageInfo] as JSON in [DIRECTORY_OUTGOING] folder.
    * This folder is located in the 'files' folder in the app private root directory.
    * Later this JSON will be converted to [OutgoingMessageInfo] back and the last one will be used
    * to create a new outgoing message.
@@ -39,19 +39,30 @@ object OutgoingMessagesManager {
   the given [OutgoingMessageInfo]
    * @param outgoingMessageInfo the message outgoing info
    */
-  suspend fun enqueueOutgoingMessageInfo(
+  suspend fun enqueueOutgoingMessage(
     context: Context,
     messageEntity: MessageEntity,
-    outgoingMessageInfo: OutgoingMessageInfo
+    mimeMessage: Message
   ) = withContext(Dispatchers.IO) {
-    val directory = getOutgoingInfoDirectory(context)
+    val directory = getOutgoingMessagesDirectory(context)
     val file = File(directory, "${messageEntity.id}")
     file.outputStream().use { outputStream ->
       KeyStoreCryptoManager.encryptOutputStream(outputStream) { cipherOutputStream ->
-        cipherOutputStream.bufferedWriter().use { bufferedWriter ->
-          val gson = ApiHelper.getInstance(context).gson
-          gson.toJson(outgoingMessageInfo, bufferedWriter)
-        }
+        cipherOutputStream.use { mimeMessage.writeTo(it) }
+      }
+    }
+  }
+
+  suspend fun updatedOutgoingMessage(
+    context: Context,
+    id: Long,
+    mimeMessage: Message
+  ) = withContext(Dispatchers.IO) {
+    val directory = getOutgoingMessagesDirectory(context)
+    val file = File(directory, "$id")
+    file.outputStream().use { outputStream ->
+      KeyStoreCryptoManager.encryptOutputStream(outputStream) { cipherOutputStream ->
+        cipherOutputStream.use { mimeMessage.writeTo(it) }
       }
     }
   }
@@ -62,11 +73,11 @@ object OutgoingMessagesManager {
    * @param context  Interface to global information about an application environment.
    * @param id       This value will be used as a file name.
    */
-  suspend fun deleteOutgoingMessageInfo(
+  suspend fun deleteOutgoingMessage(
     context: Context,
     id: Long
   ) = withContext(Dispatchers.IO) {
-    val directory = getOutgoingInfoDirectory(context)
+    val directory = getOutgoingMessagesDirectory(context)
     val file = File(directory, "$id")
     FileAndDirectoryUtils.deleteFile(file)
   }
@@ -79,16 +90,19 @@ object OutgoingMessagesManager {
    * @param context Interface to global information about an application environment.
    * @param file    A file that contains encrypted JSON of [OutgoingMessageInfo] object
    */
-  suspend fun getOutgoingMessageInfoFromFile(context: Context, file: File): OutgoingMessageInfo =
+  suspend fun getOutgoingMessageFromFile(context: Context, id: Long): ByteArray? =
     withContext(Dispatchers.IO) {
-      file.inputStream().use { inputStream ->
-        KeyStoreCryptoManager.getCipherInputStream(inputStream).use { cipherInputStream ->
-          cipherInputStream.bufferedReader().use { bufferedReader ->
-            val gson = ApiHelper.getInstance(context).gson
-            return@withContext gson.fromJson(bufferedReader, OutgoingMessageInfo::class.java)
-          }
-        }
+      val file = FileAndDirectoryUtils.getFilesInDir(
+        getOutgoingMessagesDirectory(context)
+      ).firstOrNull {
+        it.name == id.toString()
       }
+
+      file?.inputStream()?.use { inputStream ->
+        KeyStoreCryptoManager.getCipherInputStream(inputStream).use { cipherInputStream ->
+          return@withContext cipherInputStream.readBytes()
+        }
+      } ?: return@withContext null
     }
 
   /**
@@ -101,7 +115,7 @@ object OutgoingMessagesManager {
       FlowCryptRoomDatabase.getDatabase(context).msgDao().getAllOutboxMessages()
         .mapNotNull { it.id }
 
-    FileAndDirectoryUtils.getFilesInDir(getOutgoingInfoDirectory(context)).forEach {
+    FileAndDirectoryUtils.getFilesInDir(getOutgoingMessagesDirectory(context)).forEach {
       if (it.name.toLong() !in outgoingMessageIds) {
         try {
           FileAndDirectoryUtils.deleteFile(it)
@@ -109,6 +123,12 @@ object OutgoingMessagesManager {
           e.printStackTraceIfDebugOnly()
         }
       }
+    }
+  }
+
+  fun isMessageExist(context: Context, id: Long): Boolean {
+    return FileAndDirectoryUtils.getFilesInDir(getOutgoingMessagesDirectory(context)).any {
+      it.name == id.toString()
     }
   }
 }

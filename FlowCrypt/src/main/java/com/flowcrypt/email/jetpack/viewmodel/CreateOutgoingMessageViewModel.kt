@@ -105,14 +105,7 @@ class CreateOutgoingMessageViewModel(
           ),
           messageEntity = messageEntity
         ) { mimeMessage ->
-          val mimeMessageAsByteArray = ByteArrayOutputStream().apply {
-            mimeMessage.writeTo(this)
-          }.toByteArray()
-
-          //todo-denbond7 need to think about that. It'll be better to store a message as a file
-          roomDatabase.msgDao().updateSuspend(
-            messageEntity.copy(rawMessageWithoutAttachments = String(mimeMessageAsByteArray))
-          )
+          OutgoingMessagesManager.enqueueOutgoingMessage(context, messageEntity, mimeMessage)
 
           if (outgoingMessageInfo.forwardedAtts?.isNotEmpty() == true) {
             ForwardedAttachmentsDownloaderWorker.enqueue(context)
@@ -140,7 +133,7 @@ class CreateOutgoingMessageViewModel(
           messageEntity?.let {
             if (messageEntity.id != null) {
               roomDatabase.msgDao().deleteSuspend(messageEntity)
-              OutgoingMessagesManager.deleteOutgoingMessageInfo(
+              OutgoingMessagesManager.deleteOutgoingMessage(
                 context = getApplication(),
                 id = requireNotNull(messageEntity.id),
               )

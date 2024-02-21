@@ -36,6 +36,7 @@ import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.exception.CopyNotSavedInSentFolderException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
@@ -76,6 +77,8 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
       if (isStopped) {
         return@withContext Result.success()
       }
+
+      OutgoingMessagesManager.checkAndCleanCache(applicationContext)
 
       try {
         val account = roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
@@ -254,6 +257,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
           if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
             roomDatabase.msgDao().deleteSuspend(msgEntity)
+            OutgoingMessagesManager.deleteOutgoingMessage(
+              applicationContext,
+              requireNotNull(msgEntity.id)
+            )
 
             if (!CollectionUtils.isEmpty(attachments)) {
               deleteMsgAtts(account, attsCacheDir, msgEntity)

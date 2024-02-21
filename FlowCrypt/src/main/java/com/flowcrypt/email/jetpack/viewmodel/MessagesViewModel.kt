@@ -272,7 +272,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         if (isMsgDeleted) {
           //delete outgoing info if exist
           entity.id?.let { id ->
-            OutgoingMessagesManager.deleteOutgoingMessageInfo(getApplication(), id)
+            OutgoingMessagesManager.deleteOutgoingMessage(getApplication(), id)
           }
 
           needUpdateOutboxLabel = true

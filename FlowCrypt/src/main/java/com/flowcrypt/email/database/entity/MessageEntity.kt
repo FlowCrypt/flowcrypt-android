@@ -66,6 +66,7 @@ data class MessageEntity(
   @ColumnInfo(name = "cc_address", defaultValue = "NULL") val ccAddress: String? = null,
   @ColumnInfo(defaultValue = "NULL") val subject: String? = null,
   @ColumnInfo(defaultValue = "NULL") val flags: String? = null,
+  @Deprecated("deprecated and should be removed in this milestone")
   @ColumnInfo(
     name = "raw_message_without_attachments",
     defaultValue = "NULL"
