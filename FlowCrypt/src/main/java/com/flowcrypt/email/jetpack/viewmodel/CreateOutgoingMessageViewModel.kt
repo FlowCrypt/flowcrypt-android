@@ -14,8 +14,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.jetpack.workmanager.PrepareOutgoingMessagesWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
 import com.flowcrypt.email.util.OutgoingMessageInfoManager
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import jakarta.mail.Flags
@@ -73,10 +73,10 @@ class CreateOutgoingMessageViewModel(
         messageEntity = messageEntity.copy(id = messageId, uid = messageId)
         roomDatabase.msgDao().updateSuspend(messageEntity)
 
-        OutgoingMessageInfoManager.enqueueOutgoingMessageInfo(
-          context = getApplication(),
-          messageEntity = messageEntity,
-          outgoingMessageInfo = outgoingMessageInfo.copy(
+        updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
+        ProcessingOutgoingMessageInfoHelper.process(
+          context = context,
+          originalOutgoingMessageInfo = outgoingMessageInfo.copy(
             uid = messageId,
             atts = outgoingMessageInfo.atts?.map {
               it.copy(
@@ -96,10 +96,9 @@ class CreateOutgoingMessageViewModel(
                 type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
               )
             },
-          )
-        )
-        updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
-        PrepareOutgoingMessagesWorker.enqueue(context, requireNotNull(messageEntity.id))
+          ),
+          messageEntity = messageEntity
+        ) { }
         Result.success(Unit)
       } catch (e: Exception) {
         try {
