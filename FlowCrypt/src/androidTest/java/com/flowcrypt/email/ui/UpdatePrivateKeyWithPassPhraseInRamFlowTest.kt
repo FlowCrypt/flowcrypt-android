@@ -186,7 +186,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
 
-    Thread.sleep(20000)
+    Thread.sleep(30000)
     //do checks after update
     onView(
       withText(
