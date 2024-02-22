@@ -21,6 +21,7 @@ import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.service.ProcessingOutgoingMessageInfoHelper
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import jakarta.mail.Flags
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
  * @author Denys Bondarenko
@@ -140,6 +142,10 @@ class CreateOutgoingMessageViewModel(
                 context = getApplication(),
                 id = requireNotNull(messageEntity.id),
               )
+              val attachmentsCacheDir = File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
+              messageEntity.attachmentsDirectory?.let {
+                FileAndDirectoryUtils.deleteDir(File(attachmentsCacheDir, it))
+              }
             }
           }
         } catch (e: Exception) {

@@ -84,6 +84,7 @@ import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.CreateOutgoingMessageDialogFragment
@@ -96,6 +97,7 @@ import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDeco
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
@@ -402,39 +404,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       override fun onMenuItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
           R.id.menuActionSend -> {
-            snackBar?.dismiss()
-
-            view?.hideKeyboard()
-            if (isDataCorrect()) {
-              if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
-                val keysStorage = KeysStorageImpl.getInstance(requireContext())
-                val senderEmail = binding?.editTextFrom?.text.toString()
-                val usableSecretKey =
-                  keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
-                if (usableSecretKey != null) {
-                  val openPgpV4Fingerprint = OpenPgpV4Fingerprint(usableSecretKey)
-                  val fingerprint = openPgpV4Fingerprint.toString()
-                  val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
-                  if (passphrase?.isEmpty == true) {
-                    showNeedPassphraseDialog(
-                      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
-                      fingerprints = listOf(fingerprint)
-                    )
-                    return true
-                  }
-                } else {
-                  val dialogMsg = GeneralUtil.prepareWarningTextAboutUnusableForEncryptionKeys(
-                    context = requireContext(),
-                    keysStorage = keysStorage
-                  )
-                  showInfoDialog(dialogMsg = dialogMsg, hasHtml = true)
-                  return true
-                }
-              }
-
-              sendMsg()
-              isMsgSentToQueue = true
-            }
+            tryToSendMessage()
             return true
           }
 
@@ -1673,11 +1643,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           }
 
           Result.Status.EXCEPTION -> {
-            showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = it.exceptionMsg,
-              isCancelable = true
-            )
+            if (it.exception is DecryptionException && it.exception.decryptionErrorType ==
+              PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE
+            ) {
+              tryToSendMessage()
+            } else {
+              showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = it.exceptionMsg,
+                isCancelable = true
+              )
+            }
           }
 
           else -> {
@@ -1755,6 +1731,42 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           else -> {}
         }
       }
+    }
+  }
+
+  private fun tryToSendMessage() {
+    snackBar?.dismiss()
+
+    view?.hideKeyboard()
+    if (isDataCorrect()) {
+      if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
+        val keysStorage = KeysStorageImpl.getInstance(requireContext())
+        val senderEmail = binding?.editTextFrom?.text.toString()
+        val usableSecretKey =
+          keysStorage.getFirstUsableForEncryptionPGPSecretKeyRing(senderEmail)
+        if (usableSecretKey != null) {
+          val openPgpV4Fingerprint = OpenPgpV4Fingerprint(usableSecretKey)
+          val fingerprint = openPgpV4Fingerprint.toString()
+          val passphrase = keysStorage.getPassphraseByFingerprint(fingerprint)
+          if (passphrase?.isEmpty == true) {
+            showNeedPassphraseDialog(
+              requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+              fingerprints = listOf(fingerprint)
+            )
+            return
+          }
+        } else {
+          val dialogMsg = GeneralUtil.prepareWarningTextAboutUnusableForEncryptionKeys(
+            context = requireContext(),
+            keysStorage = keysStorage
+          )
+          showInfoDialog(dialogMsg = dialogMsg, hasHtml = true)
+          return
+        }
+      }
+
+      sendMsg()
+      isMsgSentToQueue = true
     }
   }
 
