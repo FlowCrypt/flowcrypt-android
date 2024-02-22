@@ -66,11 +66,6 @@ data class MessageEntity(
   @ColumnInfo(name = "cc_address", defaultValue = "NULL") val ccAddress: String? = null,
   @ColumnInfo(defaultValue = "NULL") val subject: String? = null,
   @ColumnInfo(defaultValue = "NULL") val flags: String? = null,
-  @Deprecated("deprecated and should be removed in this milestone")
-  @ColumnInfo(
-    name = "raw_message_without_attachments",
-    defaultValue = "NULL"
-  ) val rawMessageWithoutAttachments: String? = null,
   @ColumnInfo(
     name = "is_message_has_attachments",
     defaultValue = "0"
@@ -169,7 +164,6 @@ data class MessageEntity(
     if (ccAddress != other.ccAddress) return false
     if (subject != other.subject) return false
     if (flags != other.flags) return false
-    if (rawMessageWithoutAttachments != other.rawMessageWithoutAttachments) return false
     if (hasAttachments != other.hasAttachments) return false
     if (isEncrypted != other.isEncrypted) return false
     if (isNew != other.isNew) return false
@@ -209,7 +203,6 @@ data class MessageEntity(
     result = 31 * result + (ccAddress?.hashCode() ?: 0)
     result = 31 * result + (subject?.hashCode() ?: 0)
     result = 31 * result + (flags?.hashCode() ?: 0)
-    result = 31 * result + (rawMessageWithoutAttachments?.hashCode() ?: 0)
     result = 31 * result + (hasAttachments?.hashCode() ?: 0)
     result = 31 * result + (isEncrypted?.hashCode() ?: 0)
     result = 31 * result + (isNew?.hashCode() ?: 0)

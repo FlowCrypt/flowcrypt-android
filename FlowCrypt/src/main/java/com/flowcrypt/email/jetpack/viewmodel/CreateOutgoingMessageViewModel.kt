@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 
 /**
  * @author Denys Bondarenko
@@ -105,7 +104,11 @@ class CreateOutgoingMessageViewModel(
           ),
           messageEntity = messageEntity
         ) { mimeMessage ->
-          OutgoingMessagesManager.enqueueOutgoingMessage(context, messageEntity, mimeMessage)
+          OutgoingMessagesManager.enqueueOutgoingMessage(
+            context,
+            requireNotNull(messageEntity.id),
+            mimeMessage
+          )
 
           if (outgoingMessageInfo.forwardedAtts?.isNotEmpty() == true) {
             ForwardedAttachmentsDownloaderWorker.enqueue(context)

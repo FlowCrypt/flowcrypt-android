@@ -28,17 +28,16 @@ object OutgoingMessagesManager {
    * and the file will use [MessageEntity.id] as a name.
    *
    * @param context              Interface to global information about an application environment.
-   * @param messageEntity        [MessageEntity] object that contains a base info about
-  the given [Message]
+   * @param id                   This value will be used as a file name.
    * @param mimeMessage          the outgoing MIME message
    */
   suspend fun enqueueOutgoingMessage(
     context: Context,
-    messageEntity: MessageEntity,
+    id: Long,
     mimeMessage: Message
   ) = withContext(Dispatchers.IO) {
     val directory = getOutgoingMessagesDirectory(context)
-    val file = File(directory, "${messageEntity.id}")
+    val file = File(directory, "$id")
     file.outputStream().use { outputStream ->
       KeyStoreCryptoManager.encryptOutputStream(outputStream) { cipherOutputStream ->
         cipherOutputStream.use { mimeMessage.writeTo(it) }

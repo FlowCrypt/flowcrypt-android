@@ -40,10 +40,15 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.pgp.PgpKey
+import com.flowcrypt.email.util.OutgoingMessagesManager
+import jakarta.mail.Session
+import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.runBlocking
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import java.util.Properties
 import java.util.UUID
 
 
@@ -100,7 +105,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 42
+    const val DB_VERSION = 43
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1464,10 +1469,104 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_39_40,
           MIGRATION_40_41,
           MIGRATION_41_42,
+          Migration42to43(context.applicationContext),
         ).build()
         INSTANCE = instance
         return instance
       }
+    }
+  }
+
+  class Migration42to43(private val context: Context) : FlowCryptMigration(42, 43) {
+    override fun doMigration(database: SupportSQLiteDatabase) {
+      //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2593
+
+      //move MIME messages from the database to files
+      val cursor = database.query("SELECT * FROM messages WHERE folder = 'Outbox';")
+      if (cursor.count > 0) {
+        while (cursor.moveToNext()) {
+          val id = cursor.getLong(cursor.getColumnIndexOrThrow(BaseColumns._ID))
+          val mimeMessage =
+            cursor.getString(cursor.getColumnIndexOrThrow("raw_message_without_attachments"))
+              ?: continue
+
+          if (mimeMessage.isNotEmpty()) {
+            val message =
+              MimeMessage(Session.getInstance(Properties()), mimeMessage.toInputStream())
+            runBlocking {
+              OutgoingMessagesManager.enqueueOutgoingMessage(context, id, message)
+            }
+          }
+        }
+      }
+
+      val tempTableName = "messages_temp"
+      database.execSQL(
+        "CREATE TEMP TABLE IF NOT EXISTS $tempTableName AS SELECT * FROM messages;"
+      )
+      database.execSQL("DROP TABLE IF EXISTS messages;")
+      database.execSQL(
+        "CREATE TABLE IF NOT EXISTS `messages` (" +
+            "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "`email` TEXT NOT NULL, " +
+            "`folder` TEXT NOT NULL, " +
+            "`uid` INTEGER NOT NULL, " +
+            "`received_date` INTEGER DEFAULT NULL, " +
+            "`sent_date` INTEGER DEFAULT NULL, " +
+            "`from_address` TEXT DEFAULT NULL, " +
+            "`to_address` TEXT DEFAULT NULL, " +
+            "`cc_address` TEXT DEFAULT NULL, " +
+            "`subject` TEXT DEFAULT NULL, " +
+            "`flags` TEXT DEFAULT NULL, " +
+            "`is_message_has_attachments` INTEGER DEFAULT 0, " +
+            "`is_encrypted` INTEGER DEFAULT -1, " +
+            "`is_new` INTEGER DEFAULT -1, " +
+            "`state` INTEGER DEFAULT -1, " +
+            "`attachments_directory` TEXT, " +
+            "`error_msg` TEXT DEFAULT NULL, " +
+            "`reply_to` TEXT DEFAULT NULL, " +
+            "`thread_id` TEXT DEFAULT NULL, " +
+            "`history_id` TEXT DEFAULT NULL, " +
+            "`password` BLOB DEFAULT NULL, " +
+            "`draft_id` TEXT DEFAULT NULL, " +
+            "`label_ids` TEXT DEFAULT NULL)"
+      )
+      database.execSQL(
+        "CREATE INDEX IF NOT EXISTS `email_in_messages` ON `messages` (`email`)"
+      )
+      database.execSQL(
+        "CREATE UNIQUE INDEX IF NOT EXISTS `email_uid_folder_in_messages` " +
+            "ON `messages` (`email`, `uid`, `folder`)"
+      )
+
+      database.execSQL(
+        "INSERT INTO messages SELECT " +
+            "`_id`, " +
+            "`email`, " +
+            "`folder`, " +
+            "`uid`, " +
+            "`received_date`, " +
+            "`sent_date`, " +
+            "`from_address`, " +
+            "`to_address`, " +
+            "`cc_address`, " +
+            "`subject`, " +
+            "`flags`, " +
+            "`is_message_has_attachments`, " +
+            "`is_encrypted`, " +
+            "`is_new`, " +
+            "`state`, " +
+            "`attachments_directory`, " +
+            "`error_msg`, " +
+            "`reply_to`, " +
+            "`thread_id`, " +
+            "`history_id`, " +
+            "`password`, " +
+            "`draft_id`, " +
+            "`label_ids` " +
+            "FROM $tempTableName;"
+      )
+      database.execSQL("DROP TABLE IF EXISTS $tempTableName;")
     }
   }
 }
