@@ -21,6 +21,10 @@ import java.io.File
 object OutgoingMessagesManager {
   private const val DIRECTORY_OUTGOING = "outgoing"
 
+  fun getOutgoingMessagesDirectory(context: Context): File {
+    return FileAndDirectoryUtils.getDir(DIRECTORY_OUTGOING, context.filesDir)
+  }
+
   /**
    * Store [Message] in [DIRECTORY_OUTGOING] folder.
    * This folder is located in the 'files' folder in the app private root directory.
@@ -137,9 +141,5 @@ object OutgoingMessagesManager {
     return FileAndDirectoryUtils.getFilesInDir(getOutgoingMessagesDirectory(context)).any {
       it.name == id.toString()
     }
-  }
-
-  private fun getOutgoingMessagesDirectory(context: Context): File {
-    return FileAndDirectoryUtils.getDir(DIRECTORY_OUTGOING, context.filesDir)
   }
 }
