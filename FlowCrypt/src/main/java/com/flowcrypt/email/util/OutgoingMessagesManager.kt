@@ -6,7 +6,6 @@
 package com.flowcrypt.email.util
 
 import android.content.Context
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
@@ -22,22 +21,16 @@ import java.io.File
 object OutgoingMessagesManager {
   private const val DIRECTORY_OUTGOING = "outgoing"
 
-  fun getOutgoingMessagesDirectory(context: Context): File {
-    return FileAndDirectoryUtils.getDir(DIRECTORY_OUTGOING, context.filesDir)
-  }
-
   /**
-   * Store [OutgoingMessageInfo] as JSON in [DIRECTORY_OUTGOING] folder.
+   * Store [Message] in [DIRECTORY_OUTGOING] folder.
    * This folder is located in the 'files' folder in the app private root directory.
-   * Later this JSON will be converted to [OutgoingMessageInfo] back and the last one will be used
-   * to create a new outgoing message.
-   * Need to add that JSON will be encrypted by Android KeyStore via [KeyStoreCryptoManager]
+   * Need to add that [Message] will be encrypted by Android KeyStore via [KeyStoreCryptoManager]
    * and the file will use [MessageEntity.id] as a name.
    *
    * @param context              Interface to global information about an application environment.
    * @param messageEntity        [MessageEntity] object that contains a base info about
-  the given [OutgoingMessageInfo]
-   * @param outgoingMessageInfo the message outgoing info
+  the given [Message]
+   * @param mimeMessage          the outgoing MIME message
    */
   suspend fun enqueueOutgoingMessage(
     context: Context,
@@ -53,6 +46,15 @@ object OutgoingMessagesManager {
     }
   }
 
+  /**
+   * Update existing [Message] in [DIRECTORY_OUTGOING] folder.
+   * [Message] will be encrypted by Android KeyStore via [KeyStoreCryptoManager]
+   * and the file will use [MessageEntity.id] as a name.
+   *
+   * @param context              Interface to global information about an application environment.
+   * @param id                   This value will be used as a file name.
+   * @param mimeMessage          the outgoing MIME message
+   */
   suspend fun updatedOutgoingMessage(
     context: Context,
     id: Long,
@@ -68,7 +70,7 @@ object OutgoingMessagesManager {
   }
 
   /**
-   * Delete [OutgoingMessageInfo] after creating a new outgoing message.
+   * Delete a source of [Message].
    *
    * @param context  Interface to global information about an application environment.
    * @param id       This value will be used as a file name.
@@ -83,12 +85,12 @@ object OutgoingMessagesManager {
   }
 
   /**
-   * Convert stored JSON as a file back to [OutgoingMessageInfo] object. Need to add that JSON
-   * was encrypted by Android KeyStore via [KeyStoreCryptoManager]. JSON should be decrypted before
-   * converting to [OutgoingMessageInfo] object.
+   * Get stored MIME message as a bytes array.
+   * Need to add that the MIME message was encrypted by Android KeyStore via [KeyStoreCryptoManager].
+   * Data should be decrypted before usage.
    *
    * @param context Interface to global information about an application environment.
-   * @param file    A file that contains encrypted JSON of [OutgoingMessageInfo] object
+   * @param id      This value will be used as a file name.
    */
   suspend fun getOutgoingMessageFromFile(context: Context, id: Long): ByteArray? =
     withContext(Dispatchers.IO) {
@@ -106,7 +108,7 @@ object OutgoingMessagesManager {
     }
 
   /**
-   * This method check existing cache and delete unused stored [OutgoingMessageInfo] object
+   * This method check existing cache and delete unused stored [Message] objects
    *
    * @param context Interface to global information about an application environment.
    */
@@ -126,9 +128,19 @@ object OutgoingMessagesManager {
     }
   }
 
+  /**
+   * Check if a [Message] with the given name exists.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param id      This value will be used as a file name.
+   */
   fun isMessageExist(context: Context, id: Long): Boolean {
     return FileAndDirectoryUtils.getFilesInDir(getOutgoingMessagesDirectory(context)).any {
       it.name == id.toString()
     }
+  }
+
+  private fun getOutgoingMessagesDirectory(context: Context): File {
+    return FileAndDirectoryUtils.getDir(DIRECTORY_OUTGOING, context.filesDir)
   }
 }
