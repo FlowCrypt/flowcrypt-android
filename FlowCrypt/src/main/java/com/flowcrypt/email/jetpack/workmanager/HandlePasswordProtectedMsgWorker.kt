@@ -366,7 +366,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     //todo-denbond7 need to add HTML version
     mimeMsgWithoutAttachments.saveChanges()
 
-    OutgoingMessagesManager.updatedOutgoingMessage(
+    OutgoingMessagesManager.updateOutgoingMessage(
       applicationContext, requireNotNull(msgEntity.id),
       mimeMsgWithoutAttachments
     )

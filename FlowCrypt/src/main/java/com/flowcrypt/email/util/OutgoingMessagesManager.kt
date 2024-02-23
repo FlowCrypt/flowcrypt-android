@@ -58,7 +58,7 @@ object OutgoingMessagesManager {
    * @param id                   This value will be used as a file name.
    * @param mimeMessage          the outgoing MIME message
    */
-  suspend fun updatedOutgoingMessage(
+  suspend fun updateOutgoingMessage(
     context: Context,
     id: Long,
     mimeMessage: Message
