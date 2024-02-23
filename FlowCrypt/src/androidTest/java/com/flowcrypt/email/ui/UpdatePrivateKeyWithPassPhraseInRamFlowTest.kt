@@ -57,6 +57,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -190,8 +191,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
 
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    device.wait(Until.hasObject(By.text(getResString(R.string.key_details))), 20000)
+    waitForObjectWithText(getResString(R.string.key_details), TimeUnit.SECONDS.toMillis(20))
 
     //do checks after update
     onView(
