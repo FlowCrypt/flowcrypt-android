@@ -22,7 +22,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFromAddress
-import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.workmanager.base.BaseMsgWorker
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -30,6 +29,7 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.GsonBuilder
 import com.sun.mail.util.MailConnectException
@@ -353,8 +353,11 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   ) = withContext(Dispatchers.IO) {
     val mimeMsgWithoutAttachments = MimeMessage(
       Session.getDefaultInstance(Properties()),
-      msgEntity.rawMessageWithoutAttachments?.toInputStream()
+      OutgoingMessagesManager.getOutgoingMessageFromFile(
+        applicationContext, requireNotNull(msgEntity.id)
+      )?.inputStream()
     )
+
     val fromAddress = (mimeMsgWithoutAttachments.from.first() as InternetAddress).address
     val multipart = mimeMsgWithoutAttachments.content as Multipart
     multipart.addBodyPart(MimeBodyPart().apply {
@@ -363,15 +366,12 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
     //todo-denbond7 need to add HTML version
     mimeMsgWithoutAttachments.saveChanges()
 
-    val out = ByteArrayOutputStream()
-    mimeMsgWithoutAttachments.writeTo(out)
-
-    roomDatabase.msgDao().updateSuspend(
-      msgEntity.copy(
-        rawMessageWithoutAttachments = String(out.toByteArray()),
-        state = MessageState.QUEUED.value
-      )
+    OutgoingMessagesManager.updateOutgoingMessage(
+      applicationContext, requireNotNull(msgEntity.id),
+      mimeMsgWithoutAttachments
     )
+
+    roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
   }
 
   private suspend fun uploadMsgToFESAndReturnUrl(

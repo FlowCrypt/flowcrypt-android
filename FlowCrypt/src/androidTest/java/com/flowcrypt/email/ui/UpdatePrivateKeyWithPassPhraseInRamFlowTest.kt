@@ -21,6 +21,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -53,11 +57,12 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
-@FlowCryptTestSettings(useIntents = true)
+@FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
@@ -104,6 +109,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
 
   @Test
   fun testUpdateSuccess() {
+    Thread.sleep(1000)
     val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
     val originalKeyDetails = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
     val updatedKeyDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
@@ -154,6 +160,8 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
       )
     onView(withId(R.id.btnUpdatePassphrase))
       .perform(click())
+
+    Thread.sleep(1000)
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
       .check(matches(hasTextColor(R.color.colorPrimaryLight)))
@@ -172,6 +180,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
+    Thread.sleep(1000)
     //click on 'use this key'
     onView(withId(android.R.id.button1))
       .perform(click())
@@ -181,6 +190,8 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
       .perform(scrollTo(), replaceText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
+
+    waitForObjectWithText(getResString(R.string.key_details), TimeUnit.SECONDS.toMillis(20))
 
     //do checks after update
     onView(
@@ -223,6 +234,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
         )
       onView(withId(R.id.btnUpdatePassphrase))
         .perform(click())
+      Thread.sleep(2000)
       if (i == AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE - 1) {
         onView(withId(R.id.tILKeyPassword))
           .check(
