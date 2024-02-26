@@ -26,7 +26,6 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
@@ -84,7 +83,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
                 downloadForwardedAtts(account)
               }
 
-              else -> throw ManualHandledException("Unsupported provider")
+              else -> throw IllegalStateException("Unsupported provider")
             }
           } else {
             OpenStoreHelper.openStore(
@@ -201,7 +200,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
             }
           }
 
-          else -> throw ManualHandledException("Unsupported provider")
+          else -> throw IllegalStateException("Unsupported provider")
         }
       } else {
         store?.let {
