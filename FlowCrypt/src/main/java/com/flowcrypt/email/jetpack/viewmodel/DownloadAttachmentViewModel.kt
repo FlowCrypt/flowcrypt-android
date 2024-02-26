@@ -157,7 +157,7 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
       downloadAttachmentMutableStateFlow.value =
         Result.loading(progressMsg = context.getString(R.string.decrypting))
 
-      return@withContext decryptDataIfNeeded(context, inputStream)
+      return@withContext super.decryptDataIfNeeded(context, inputStream)
     }
 
   private suspend fun downloadFile(inputStream: InputStream): ByteArray =

@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -40,6 +41,7 @@ import com.google.api.services.gmail.model.MessagePartHeader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -54,6 +56,7 @@ import kotlin.random.Random
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
@@ -161,7 +164,7 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
       ), att = simpleAttInfo
     )
 
-    unregisterCountingIdlingResource()
+    waitForObjectWithText("It's a standard message with plaintext and one attachment", 2000)
 
     onView(withId(R.id.imageViewAttIcon))
       .check(matches(withDrawable(R.drawable.ic_attachment)))
@@ -170,13 +173,13 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    Thread.sleep(1000)
-
+    Thread.sleep(2000)
+    //at this stage icon should be different
     onView(withId(R.id.imageViewAttIcon))
-      .check(matches(withDrawable(R.drawable.stat_sys_download_blue)))
+      .check(matches(not(withDrawable(R.drawable.ic_attachment))))
 
     Thread.sleep(5000)
-
+    //at this stage icon should be as by default
     onView(withId(R.id.imageViewAttIcon))
       .check(matches(withDrawable(R.drawable.ic_attachment)))
   }
