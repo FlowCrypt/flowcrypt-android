@@ -19,7 +19,6 @@ import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +31,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.lang.IllegalArgumentException
 
 /**
  * @author Denys Bondarenko
@@ -79,7 +79,7 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
               return@withContext Result.success(downloadAttachmentViaGmailAPI(context, account))
             }
 
-            else -> throw ManualHandledException("Unsupported provider")
+            else -> throw IllegalStateException("Unsupported provider")
           }
         } else {
           return@withContext Result.success(downloadAttachmentViaIMAP(context, account, email))
@@ -102,7 +102,7 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
       format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
     )
     val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = attachmentInfo.path)
-      ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
+      ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))
 
     GmailApiHelper.getAttInputStream(
       context = context,
@@ -128,12 +128,12 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
         .getLabel(email, account.accountType, requireNotNull(attachmentInfo.folder))
         ?: if (roomDatabase.accountDao().getAccount(email) == null) {
           return@withContext byteArrayOf()
-        } else throw ManualHandledException("Folder \"" + attachmentInfo.folder + "\" not found in the local cache")
+        } else throw IllegalArgumentException("Folder \"" + attachmentInfo.folder + "\" not found in the local cache")
 
       store.getFolder(label.name).use { folder ->
         val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
         val msg = remoteFolder.getMessageByUID(attachmentInfo.uid)
-          ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
+          ?: throw IllegalStateException(context.getString(R.string.no_message_with_this_attachment))
 
         ImapProtocolUtil.getAttPartByPath(
           part = msg,
@@ -143,7 +143,7 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
             context = context,
             inputStream = downloadFile(inputStream).inputStream()
           )
-        } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
+        } ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))
       }
     }
   }
