@@ -220,6 +220,7 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     val details = incomingMsgInfo!!.msgEntity
 
     launchActivity(details)
+    Thread.sleep(2000)
     matchHeader(incomingMsgInfo)
 
     val block = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock

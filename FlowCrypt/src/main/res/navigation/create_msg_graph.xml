@@ -51,6 +51,9 @@
         <action
             android:id="@+id/action_createMessageFragment_to_noPgpFoundDialogFragment"
             app:destination="@id/noPgpFoundDialogFragment" />
+        <action
+            android:id="@+id/action_createMessageFragment_to_createOutgoingMessageDialogFragment"
+            app:destination="@id/createOutgoingMessageDialogFragment" />
     </fragment>
 
     <fragment
@@ -110,5 +113,17 @@
         <argument
             android:name="isRemoveActionEnabled"
             app:argType="boolean" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/createOutgoingMessageDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.CreateOutgoingMessageDialogFragment"
+        tools:layout="@layout/fragment_create_outgoing_message">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="outgoingMessageInfo"
+            app:argType="com.flowcrypt.email.api.email.model.OutgoingMessageInfo" />
     </dialog>
 </navigation>

@@ -37,8 +37,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
+import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -273,6 +275,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
       .executeShellCommand("svc wifi $state")
     InstrumentationRegistry.getInstrumentation().uiAutomation
       .executeShellCommand("svc data $state")
+  }
+
+  protected fun waitForObjectWithText(text: String, timeoutInMilliseconds: Long = 0) {
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    device.wait(Until.hasObject(By.text(text)), timeoutInMilliseconds)
   }
 
   fun getTargetContext(): Context {
