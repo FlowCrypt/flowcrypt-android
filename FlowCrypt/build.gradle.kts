@@ -435,7 +435,7 @@ dependencies {
   implementation("androidx.fragment:fragment-ktx:1.6.2")
   implementation("androidx.work:work-runtime-ktx:2.8.1")
   implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
-  implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
+  implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
   implementation("androidx.navigation:navigation-runtime-ktx:2.6.0")
   implementation("androidx.webkit:webkit:1.7.0")
 

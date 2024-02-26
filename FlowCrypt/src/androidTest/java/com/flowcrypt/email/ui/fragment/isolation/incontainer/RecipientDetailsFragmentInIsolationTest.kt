@@ -21,6 +21,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextViewDrawable
@@ -51,6 +52,7 @@ import java.util.Date
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class RecipientDetailsFragmentInIsolationTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val firstKeyDetails =
@@ -93,6 +95,8 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
       ).toBundle()
     )
 
+    Thread.sleep(1000)
+
     onView(withId(R.id.tVName))
       .check(matches(isDisplayed()))
       .check(matches(withText(TestConstants.DEFAULT_PASSWORD)))
@@ -112,6 +116,8 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
       ).toBundle()
     )
 
+    Thread.sleep(1000)
+
     onView(withId(R.id.tVName))
       .check(matches(isDisplayed()))
       .check(matches(withText("...")))
@@ -130,6 +136,8 @@ class RecipientDetailsFragmentInIsolationTest : BaseTest() {
         )
       ).toBundle()
     )
+
+    Thread.sleep(1000)
 
     onView(withId(R.id.rVPubKeys))
       .check(matches(isDisplayed()))
