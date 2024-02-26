@@ -91,6 +91,7 @@ import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
@@ -385,7 +386,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
     val isOutbox = currentFolder?.isOutbox ?: false
     val isDraft = msgEntity.isDraft
-    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
+    val isRawMsgAvailable =
+      OutgoingMessagesManager.isMessageExist(requireContext(), msgEntity.id ?: -1)
     if (isDraft || isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
       when (msgEntity.msgState) {
         MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,

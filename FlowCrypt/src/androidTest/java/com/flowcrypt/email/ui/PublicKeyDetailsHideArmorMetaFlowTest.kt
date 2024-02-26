@@ -41,6 +41,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import jakarta.mail.Message
@@ -58,9 +59,9 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Properties
+import kotlin.random.Random
 
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/1532
@@ -158,7 +159,6 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
         setFrom(InternetAddress(addAccountToDatabaseRule.account.email))
         setRecipients(Message.RecipientType.TO, arrayOf(InternetAddress("user@flowcrypt.test")))
       }
-      val rawMimeMessage = ByteArrayOutputStream().apply { mimeMessage.writeTo(this) }.toByteArray()
       val messageEntity = MessageEntity.genMsgEntity(
         email = addAccountToDatabaseRule.account.email,
         label = JavaEmailConstants.FOLDER_OUTBOX,
@@ -168,7 +168,13 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
         isEncrypted = false,
         hasAttachments = false
       ).copy(
-        rawMessageWithoutAttachments = String(rawMimeMessage)
+        id = Random.nextLong()
+      )
+
+      OutgoingMessagesManager.enqueueOutgoingMessage(
+        getTargetContext(),
+        requireNotNull(messageEntity.id),
+        mimeMessage
       )
 
       EmailUtil.createMimeMsg(

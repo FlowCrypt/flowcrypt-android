@@ -30,7 +30,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
-import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -39,6 +38,7 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthException
@@ -1053,7 +1053,12 @@ class EmailUtil {
       msgEntity: MessageEntity,
       atts: List<AttachmentEntity>
     ): MimeMessage = withContext(Dispatchers.IO) {
-      val mimeMsg = MimeMessage(sess, msgEntity.rawMessageWithoutAttachments?.toInputStream())
+      val mimeMsg = MimeMessage(
+        sess,
+        OutgoingMessagesManager.getOutgoingMessageFromFile(
+          context, requireNotNull(msgEntity.id)
+        )?.inputStream()
+      )
 
       val account =
         FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccountSuspend()
