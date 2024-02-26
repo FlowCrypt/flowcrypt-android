@@ -13,25 +13,21 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.BaseDao
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.replaceWithCachedRecipients
-import com.flowcrypt.email.jetpack.workmanager.DownloadForwardedAttachmentsWorker
-import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
-import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -44,7 +40,7 @@ object ProcessingOutgoingMessageInfoHelper {
     context: Context,
     originalOutgoingMessageInfo: OutgoingMessageInfo,
     messageEntity: MessageEntity,
-    doLastAction: () -> Unit = {}
+    afterMimeMessageCreatingAction: suspend (message: Message) -> Unit = {}
   ) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val outgoingMsgInfo = originalOutgoingMessageInfo.replaceWithCachedRecipients(context)
@@ -54,20 +50,15 @@ object ProcessingOutgoingMessageInfoHelper {
 
     updateContactsLastUseDateTime(context, outgoingMsgInfo)
 
-    val mimeMessageAsByteArray = ByteArrayOutputStream().apply {
-      EmailUtil.genMessage(
-        context = context,
-        accountEntity = accountEntity,
-        outgoingMsgInfo = outgoingMsgInfo,
-        signingRequired = true,
-        hideArmorMeta = accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
-      ).writeTo(this)
-    }.toByteArray()
-
-    //todo-denbond7 need to think about that. It'll be better to store a message as a file
-    roomDatabase.msgDao().updateSuspend(
-      messageEntity.copy(rawMessageWithoutAttachments = String(mimeMessageAsByteArray))
+    val mimeMessage = EmailUtil.genMessage(
+      context = context,
+      accountEntity = accountEntity,
+      outgoingMsgInfo = outgoingMsgInfo,
+      signingRequired = true,
+      hideArmorMeta = accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
     )
+
+    //todo-denbond7 need to think about storing attachment inside in the MIME message
 
     val hasAtts =
       outgoingMsgInfo.atts?.isNotEmpty() == true || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
@@ -85,23 +76,7 @@ object ProcessingOutgoingMessageInfoHelper {
       addAttsToCache(context, outgoingMsgInfo, msgAttsCacheDir)
     }
 
-    if (outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true) {
-      DownloadForwardedAttachmentsWorker.enqueue(context)
-    } else {
-      val existingMsgEntity = roomDatabase.msgDao().getMsg(
-        messageEntity.email, messageEntity.folder, messageEntity.uid
-      ) ?: throw IllegalStateException("A message is not exist")
-      if (outgoingMsgInfo.encryptionType == MessageEncryptionType.ENCRYPTED && outgoingMsgInfo.isPasswordProtected == true) {
-        roomDatabase.msgDao()
-          .update(existingMsgEntity.copy(state = MessageState.NEW_PASSWORD_PROTECTED.value))
-        HandlePasswordProtectedMsgWorker.enqueue(context)
-      } else {
-        roomDatabase.msgDao().update(existingMsgEntity.copy(state = MessageState.QUEUED.value))
-        MessagesSenderWorker.enqueue(context)
-      }
-    }
-
-    doLastAction.invoke()
+    afterMimeMessageCreatingAction.invoke(mimeMessage)
   }
 
   private fun getAttsCacheDir(context: Context): File {

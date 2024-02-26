@@ -21,7 +21,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.com.sun.mail.imap.canBeUsedToSearchBackups
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.Session
@@ -50,7 +49,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
                   })
                 }
 
-                else -> throw ManualHandledException("Unsupported provider")
+                else -> throw IllegalStateException("Unsupported provider")
               }
             } else {
               val connection = IMAPStoreManager.getConnection(accountEntity.id)
@@ -103,7 +102,7 @@ class BackupsViewModel(application: Application) : AccountViewModel(application)
               }
             }
 
-            else -> throw ManualHandledException("Unsupported provider")
+            else -> throw IllegalStateException("Unsupported provider")
           }
         } else {
           val connection = IMAPStoreManager.getConnection(accountEntity.id)

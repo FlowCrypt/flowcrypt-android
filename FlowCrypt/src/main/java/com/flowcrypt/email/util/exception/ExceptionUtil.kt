@@ -24,7 +24,7 @@ class ExceptionUtil {
       e ?: return
       if (ExceptionResolver.isHandlingNeeded(e)) {
         if (ACRA.isInitialised) {
-          ACRA.errorReporter.handleException(ManualHandledException(e))
+          ACRA.errorReporter.handleException(e)
         }
       }
     }

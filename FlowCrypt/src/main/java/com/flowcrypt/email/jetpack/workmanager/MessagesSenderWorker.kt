@@ -36,10 +36,10 @@ import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.exception.CopyNotSavedInSentFolderException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
@@ -76,6 +76,8 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
       if (isStopped) {
         return@withContext Result.success()
       }
+
+      OutgoingMessagesManager.checkAndCleanCache(applicationContext)
 
       try {
         val account = roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
@@ -121,7 +123,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                 }
               }
 
-              else -> throw ManualHandledException("Unsupported provider")
+              else -> throw IllegalArgumentException("Unsupported provider")
             }
           } else {
             val session = OpenStoreHelper.getAccountSess(applicationContext, account)
@@ -254,6 +256,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
           if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
             roomDatabase.msgDao().deleteSuspend(msgEntity)
+            OutgoingMessagesManager.deleteOutgoingMessage(
+              applicationContext,
+              requireNotNull(msgEntity.id)
+            )
 
             if (!CollectionUtils.isEmpty(attachments)) {
               deleteMsgAtts(account, attsCacheDir, msgEntity)

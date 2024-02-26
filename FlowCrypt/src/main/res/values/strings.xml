@@ -625,5 +625,11 @@
         <item quantity="other">For your protection and data security, there are currently only %1$d attempts left, followed by a 5-minute cooldown period.</item>
     </plurals>
     <string name="error_occurred_during_decrypting_att">An error occurred during decrypting.\n\nDetails:  %1$s</string>
+    <string name="pass_phrase_service_explanation" translatable="false">
+        This service helps to manage passphrases stored in RAM.
+        Based on the settings it checks(once per minute) and erases passphrases after some time to
+        provide a more secure way of storing the sensitive data. Also, thanks to visible
+        notification for foreground services, a user can erase all passphrases stored
+        in RAM at any time.</string>
     <string name="sorry_preview_is_not_available">Sorry, preview is not available for \'%1$s\'</string>
 </resources>

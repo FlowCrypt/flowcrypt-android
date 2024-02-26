@@ -52,6 +52,7 @@ import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -151,8 +152,11 @@ class MsgDetailsViewModel(
         if (messageEntity?.isOutboxMsg == true) {
           emit(Result.loading())
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-          val processingResult =
-            processingByteArray(messageEntity.rawMessageWithoutAttachments?.toByteArray())
+          val byteArray = OutgoingMessagesManager.getOutgoingMessageFromFile(
+            application,
+            requireNotNull(messageEntity.id)
+          )
+          val processingResult = processingByteArray(byteArray)
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
           emit(processingResult)
         }

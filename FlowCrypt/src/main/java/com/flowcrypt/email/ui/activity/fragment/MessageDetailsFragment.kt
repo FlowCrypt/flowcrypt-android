@@ -134,7 +134,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
@@ -1448,7 +1447,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
 
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
-    ExceptionUtil.handleError(ManualHandledException(errorMsg))
     textViewErrorMsg.text = errorMsg
     if (originalMsg != null) {
       viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup))
