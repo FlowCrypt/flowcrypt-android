@@ -28,7 +28,6 @@
     <!--Starting from Android 13 (API level 33) the app has to ask a user permission to show any notifications
     https://developer.android.com/develop/ui/views/notifications/notification-permission-->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
     <!--https://developer.android.com/about/versions/14/changes/fgs-types-required#special-use-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
@@ -148,6 +147,7 @@
             android:name=".service.PassPhrasesInRAMService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
+            <!--https://developer.android.com/about/versions/14/changes/fgs-types-required#special-use-->
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="@string/pass_phrase_service_explanation" />
