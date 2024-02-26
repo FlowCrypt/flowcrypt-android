@@ -373,7 +373,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.6.1")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.6.2")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
@@ -432,10 +432,10 @@ dependencies {
   implementation("androidx.core:core-ktx:1.10.1")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.7.2")
-  implementation("androidx.fragment:fragment-ktx:1.6.1")
+  implementation("androidx.fragment:fragment-ktx:1.6.2")
   implementation("androidx.work:work-runtime-ktx:2.8.1")
   implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
-  implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
+  implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
   implementation("androidx.navigation:navigation-runtime-ktx:2.6.0")
   implementation("androidx.webkit:webkit:1.7.0")
 
@@ -476,7 +476,7 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1")
   implementation("org.jsoup:jsoup:1.17.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
   implementation("ch.acra:acra-http:5.11.3")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")

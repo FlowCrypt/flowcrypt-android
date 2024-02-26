@@ -45,7 +45,7 @@ import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
-import com.flowcrypt.email.util.OutgoingMessageInfoManager
+import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
@@ -705,7 +705,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     assertEquals(
       0,
       FileAndDirectoryUtils.getFilesInDir(
-        OutgoingMessageInfoManager.getOutgoingInfoDirectory(getTargetContext())
+        OutgoingMessagesManager.getOutgoingMessagesDirectory(getTargetContext())
       ).size
     )
 
