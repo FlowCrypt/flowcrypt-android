@@ -15,7 +15,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.DownloadForwardedAttachmentsWorker
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -113,7 +113,7 @@ class CreateOutgoingMessageViewModel(
           )
 
           if (outgoingMessageInfo.forwardedAtts?.isNotEmpty() == true) {
-            ForwardedAttachmentsDownloaderWorker.enqueue(context)
+            DownloadForwardedAttachmentsWorker.enqueue(context)
           } else {
             val existingMsgEntity = roomDatabase.msgDao().getMsg(
               messageEntity.email, messageEntity.folder, messageEntity.uid
