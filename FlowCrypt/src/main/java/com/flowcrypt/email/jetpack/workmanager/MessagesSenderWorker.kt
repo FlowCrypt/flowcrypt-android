@@ -40,7 +40,6 @@ import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.exception.CopyNotSavedInSentFolderException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ForceHandlingException
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
@@ -124,7 +123,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                 }
               }
 
-              else -> throw ManualHandledException("Unsupported provider")
+              else -> throw IllegalArgumentException("Unsupported provider")
             }
           } else {
             val session = OpenStoreHelper.getAccountSess(applicationContext, account)

@@ -38,55 +38,48 @@ object ExceptionResolver {
    * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
   fun isHandlingNeeded(t: Throwable): Boolean {
-    val e =
-      if (t is ManualHandledException) {
-        t.cause ?: t
-      } else {
-        t
-      }
-
-    if (e is UserRecoverableAuthException) {
-      if ("BadAuthentication" == e.message) {
+    if (t is UserRecoverableAuthException) {
+      if ("BadAuthentication" == t.message) {
         return true
       }
     }
 
-    if (e is MailConnectException
-      || e is SMTPSendFailedException
-      || e is UnknownHostException
-      || e is SocketTimeoutException
-      || e is ConnectionException
-      || e is java.net.ConnectException
-      || e is UserRecoverableAuthException
-      || e is AuthenticationFailedException
-      || e is UserRecoverableAuthIOException
-      || e is FlowCryptException
+    if (t is MailConnectException
+      || t is SMTPSendFailedException
+      || t is UnknownHostException
+      || t is SocketTimeoutException
+      || t is ConnectionException
+      || t is java.net.ConnectException
+      || t is UserRecoverableAuthException
+      || t is AuthenticationFailedException
+      || t is UserRecoverableAuthIOException
+      || t is FlowCryptException
     ) {
       return false
     }
 
-    if (e is IOException) {
+    if (t is IOException) {
       //Google network errors.
-      if ("NetworkError".equals(e.message, ignoreCase = true)
-        || "Error on service connection.".equals(e.message, ignoreCase = true)
+      if ("NetworkError".equals(t.message, ignoreCase = true)
+        || "Error on service connection.".equals(t.message, ignoreCase = true)
       ) {
         return false
       }
 
-      if ("Connection dropped by server?".equals(e.message, ignoreCase = true)) {
+      if ("Connection dropped by server?".equals(t.message, ignoreCase = true)) {
         return false
       }
 
-      if (e is GoogleJsonResponseException) {
+      if (t is GoogleJsonResponseException) {
         return false
       }
     }
 
-    if (e is SSLHandshakeException
-      || e is SSLProtocolException
-      || e is MessagingException
+    if (t is SSLHandshakeException
+      || t is SSLProtocolException
+      || t is MessagingException
     ) {
-      e.message?.let {
+      t.message?.let {
         if (it.contains("Connection closed by peer")
           || it.contains("I/O error during system call")
           || it.contains("Failure in SSL library, usually a protocol error")
@@ -100,36 +93,36 @@ object ExceptionResolver {
       }
     }
 
-    if (e is StoreClosedException || e is FolderClosedException) {
+    if (t is StoreClosedException || t is FolderClosedException) {
       //Connection limit exceeded
-      if ("failed to create new store connection".equals(e.message, ignoreCase = true)) {
+      if ("failed to create new store connection".equals(t.message, ignoreCase = true)) {
         return false
       }
 
-      if ("Lost folder connection to server".equals(e.message, ignoreCase = true)) {
+      if ("Lost folder connection to server".equals(t.message, ignoreCase = true)) {
         return false
       }
 
-      if ("* BYE System Error".equals(e.message, ignoreCase = true)) {
+      if ("* BYE System Error".equals(t.message, ignoreCase = true)) {
         return false
       }
 
-      if ("Error reading input stream;".equals(e.message, ignoreCase = true)) {
+      if ("Error reading input stream;".equals(t.message, ignoreCase = true)) {
         return false
       }
     }
 
-    if (e is GoogleAuthException) {
-      if ("InternalError".equals(e.message, ignoreCase = true) ||
-        "ServiceDisabled".equals(e.message, ignoreCase = true)
+    if (t is GoogleAuthException) {
+      if ("InternalError".equals(t.message, ignoreCase = true) ||
+        "ServiceDisabled".equals(t.message, ignoreCase = true)
       ) {
         return false
       }
     }
 
-    if (e is RuntimeException) {
+    if (t is RuntimeException) {
       if ("error:04000044:RSA routines:OPENSSL_internal:internal error".equals(
-          e.message,
+          t.message,
           ignoreCase = true
         )
       ) {
@@ -137,23 +130,23 @@ object ExceptionResolver {
       }
     }
 
-    if (e is BadPaddingException) {
+    if (t is BadPaddingException) {
       val errorMsg =
         "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error"
-      return !errorMsg.equals(e.message, ignoreCase = true)
+      return !errorMsg.equals(t.message, ignoreCase = true)
     }
 
-    if (e is IllegalStateException) {
-      if ("This operation is not allowed on a closed folder".equals(e.message, ignoreCase = true)) {
+    if (t is IllegalStateException) {
+      if ("This operation is not allowed on a closed folder".equals(t.message, ignoreCase = true)) {
         return false
       }
 
-      if ("Not connected".equals(e.message, ignoreCase = true)) {
+      if ("Not connected".equals(t.message, ignoreCase = true)) {
         return false
       }
     }
 
-    if (e is CancellationException) {
+    if (t is CancellationException) {
       //we can drop such an error because we always use [CoroutineScope]
       return false
     }

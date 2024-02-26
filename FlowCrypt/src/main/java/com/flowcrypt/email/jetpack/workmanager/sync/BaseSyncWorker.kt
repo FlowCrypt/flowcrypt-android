@@ -15,7 +15,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.BaseWorker
 import com.flowcrypt.email.util.exception.CommonConnectionException
-import com.flowcrypt.email.util.exception.ManualHandledException
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -44,7 +43,7 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
                 runAPIAction(accountWithDecryptedInfo)
               }
 
-              else -> throw ManualHandledException("Unsupported provider")
+              else -> throw IllegalArgumentException("Unsupported provider")
             }
           } else {
             val connection = IMAPStoreConnection(applicationContext, accountWithDecryptedInfo)
