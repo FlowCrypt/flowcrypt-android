@@ -243,7 +243,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                 fingerprints = fingerprintList
               )
             } else {
-              val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
+              val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(
+                requireContext(),
+                CacheManager.getCurrentMsgTempDirectory(requireContext())
+              )
               navController?.navigate(
                 MessageDetailsFragmentDirections
                   .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
@@ -1824,7 +1827,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     val intent = if (attachmentInfo.uri != null) {
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
-      val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
+      val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(
+        requireContext(), CacheManager.getCurrentMsgTempDirectory(requireContext())
+      )
       GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
     }
 
@@ -1848,7 +1853,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
-    val (file, uri) = attInfo.useFileProviderToGenerateUri(requireContext())
+    val (file, uri) = attInfo.useFileProviderToGenerateUri(
+      requireContext(),
+      CacheManager.getCurrentMsgTempDirectory(requireContext())
+    )
     context?.startService(
       AttachmentDownloadManagerService.newIntent(
         context,

@@ -94,6 +94,7 @@ import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
+import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -243,7 +244,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         val uri = attachmentInfo.uri ?: attachmentInfo.rawData?.let {
-          val (_, generatedUri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
+          val (_, generatedUri) = attachmentInfo.useFileProviderToGenerateUri(
+            requireContext(),
+            CacheManager.getCurrentMsgTempDirectory(requireContext())
+          )
           generatedUri
         }
 
