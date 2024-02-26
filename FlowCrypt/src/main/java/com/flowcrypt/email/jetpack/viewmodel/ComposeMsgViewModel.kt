@@ -8,8 +8,6 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.ContentResolver
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.Constants
-import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.ApiClientRepository
@@ -18,24 +16,18 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
-import com.flowcrypt.email.util.OutgoingMessageInfoManager
-import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
-import jakarta.mail.Flags
 import jakarta.mail.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -126,95 +118,6 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     MutableStateFlow(emptyList())
   val attachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
     attachmentsMutableStateFlow.asStateFlow()
-
-  private val addOutgoingMessageInfoToQueueMutableStateFlow: MutableStateFlow<Result<MessageEntity?>> =
-    MutableStateFlow(Result.none())
-  val addOutgoingMessageInfoToQueueStateFlow: StateFlow<Result<MessageEntity?>> =
-    addOutgoingMessageInfoToQueueMutableStateFlow.asStateFlow()
-  private val controlledRunnerForAddingOutgoingMessageInfoToQueue =
-    ControlledRunner<Result<MessageEntity?>>()
-
-  fun enqueueOutgoingMessage(password: CharArray?) {
-    viewModelScope.launch {
-      addOutgoingMessageInfoToQueueMutableStateFlow.value = Result.loading()
-      addOutgoingMessageInfoToQueueMutableStateFlow.value =
-        controlledRunnerForAddingOutgoingMessageInfoToQueue.joinPreviousOrRun {
-          withContext(Dispatchers.IO) {
-            var messageEntity: MessageEntity? = null
-            try {
-              val activeAccount = getActiveAccountSuspend()
-                ?: throw IllegalStateException("No active account")
-              val outgoingMessageInfo =
-                outgoingMessageInfoStateFlow.value.copy(password = password)
-
-              val replyTo = outgoingMessageInfo.replyToMessageEntityId?.let {
-                roomDatabase.msgDao().getMsgById(it)?.replyTo
-              }
-              messageEntity = outgoingMessageInfo.toMessageEntity(
-                folder = JavaEmailConstants.FOLDER_OUTBOX,
-                flags = Flags(Flags.Flag.SEEN),
-                replyTo = replyTo,
-                password = outgoingMessageInfo.password?.let {
-                  KeyStoreCryptoManager.encrypt(String(it)).toByteArray()
-                }
-              )
-              val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
-              messageEntity = messageEntity.copy(id = messageId, uid = messageId)
-              roomDatabase.msgDao().updateSuspend(messageEntity)
-
-              OutgoingMessageInfoManager.enqueueOutgoingMessageInfo(
-                context = getApplication(),
-                messageEntity = messageEntity,
-                outgoingMessageInfo = outgoingMessageInfo.copy(
-                  uid = messageId,
-                  password = password,
-                  atts = outgoingMessageInfo.atts?.map {
-                    it.copy(
-                      email = outgoingMessageInfo.account,
-                      folder = JavaEmailConstants.FOLDER_OUTBOX,
-                      uid = messageId,
-                      type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
-                    )
-                  },
-                  forwardedAtts = outgoingMessageInfo.forwardedAtts?.map {
-                    it.copy(
-                      email = outgoingMessageInfo.account,
-                      folder = JavaEmailConstants.FOLDER_OUTBOX,
-                      uid = messageId,
-                      fwdFolder = it.folder,
-                      fwdUid = it.uid,
-                      type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
-                    )
-                  },
-                )
-              )
-              updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
-              Result.success(messageEntity)
-            } catch (e: Exception) {
-              try {
-                //delete unused resources if any exception has occurred
-                messageEntity?.let {
-                  if (messageEntity.id != null) {
-                    roomDatabase.msgDao().deleteSuspend(messageEntity)
-                    OutgoingMessageInfoManager.deleteOutgoingMessageInfo(
-                      context = getApplication(),
-                      id = requireNotNull(messageEntity.id),
-                    )
-                  }
-                }
-              } catch (e: Exception) {
-                e.printStackTrace()
-              }
-              Result.exception(e)
-            }
-          }
-        }
-
-      //clear the last status
-      delay(500)
-      addOutgoingMessageInfoToQueueMutableStateFlow.value = Result.none()
-    }
-  }
 
   fun addAttachments(attachments: List<AttachmentInfo>) {
     attachmentsMutableStateFlow.update { existingAttachments ->
@@ -355,19 +258,6 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
       }.update { map ->
         map.toMutableMap().apply { replace(normalizedEmail, recipientInfo) }
       }
-    }
-  }
-
-  private suspend fun updateOutgoingMsgCount(
-    email: String,
-    accountType: String?
-  ) {
-    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(email).size
-    val outboxLabel =
-      roomDatabase.labelDao().getLabelSuspend(email, accountType, JavaEmailConstants.FOLDER_OUTBOX)
-
-    outboxLabel?.let {
-      roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
     }
   }
 
