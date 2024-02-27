@@ -398,6 +398,9 @@
         <action
             android:id="@+id/action_messageDetailsFragment_to_changeGmailLabelsForSingleMessageDialogFragment"
             app:destination="@id/changeGmailLabelsForSingleMessageDialogFragment" />
+        <action
+            android:id="@+id/action_messageDetailsFragment_to_prepareDownloadedAttachmentsForForwardingDialogFragment"
+            app:destination="@id/prepareDownloadedAttachmentsForForwardingDialogFragment" />
     </fragment>
 
     <fragment
@@ -690,6 +693,17 @@
             app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
     </dialog>
 
+    <dialog
+        android:id="@+id/prepareDownloadedAttachmentsForForwardingDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.PrepareDownloadedAttachmentsForForwardingDialogFragment"
+        tools:layout="@layout/fragment_create_outgoing_message">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="attachments"
+            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo[]" />
+    </dialog>
 
     <action
         android:id="@+id/action_global_lookUpPubKeysDialogFragment"

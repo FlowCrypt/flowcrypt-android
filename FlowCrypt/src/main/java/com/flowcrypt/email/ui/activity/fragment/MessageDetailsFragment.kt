@@ -72,6 +72,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
+import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
@@ -118,6 +119,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareDownloadedAttachmentsForForwardingDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
@@ -335,6 +337,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     collectReVerifySignaturesStateFlow()
     subscribeToTwoWayDialog()
     subscribeToChoosePublicKeyDialogFragment()
+    subscribeToPrepareDownloadedAttachmentsForForwardingDialogFragment()
     collectMessageActionsVisibilityStateFlow()
   }
 
@@ -543,7 +546,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             )
           )
         } else {
-          toast("need to prepare attachments before sending")
+          navController?.navigate(
+            MessageDetailsFragmentDirections
+              .actionMessageDetailsFragmentToPrepareDownloadedAttachmentsForForwardingDialogFragment(
+                requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING,
+                attachments = attachmentsRecyclerViewAdapter.currentList.filter {
+                  it.rawData != null
+                }.toTypedArray()
+              )
+          )
         }
       }
     }
@@ -1782,6 +1793,43 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  private fun subscribeToPrepareDownloadedAttachmentsForForwardingDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING) { _, bundle ->
+      val result: Result<List<AttachmentInfo>>? = bundle.getSerializableViaExt(
+        PrepareDownloadedAttachmentsForForwardingDialogFragment.KEY_RESULT
+      ) as? Result<List<AttachmentInfo>>
+
+      result?.let {
+        when (result.status) {
+          Result.Status.SUCCESS -> {
+            startActivity(
+              CreateMessageActivity.generateIntent(
+                context = context,
+                messageType = MessageType.FORWARD,
+                msgEncryptionType = msgEncryptType,
+                msgInfo = prepareMsgInfoForReply()?.copy(
+                  atts = it.data
+                )
+              )
+            )
+          }
+
+          Result.Status.EXCEPTION -> {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = it.exceptionMsg,
+              isCancelable = true
+            )
+          }
+
+          else -> {
+            toast(getString(R.string.unknown_error))
+          }
+        }
+      }
+    }
+  }
+
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
       if (attInfo.rawData?.isNotEmpty() == true) {
@@ -1987,5 +2035,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
       MessageDetailsFragment::class.java
     )
+
+    private val REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING =
+      GeneralUtil.generateUniqueExtraKey(
+        "REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING",
+        MessageDetailsFragment::class.java
+      )
   }
 }
