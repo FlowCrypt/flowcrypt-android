@@ -413,7 +413,7 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.6.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.5.0")
+  implementation("androidx.browser:browser:1.7.0")
   implementation("androidx.recyclerview:recyclerview:1.3.2")
   implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
@@ -439,7 +439,7 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.6.0")
   implementation("androidx.webkit:webkit:1.7.0")
 
-  implementation("com.google.android.gms:play-services-base:18.2.0")
+  implementation("com.google.android.gms:play-services-base:18.3.0")
   implementation("com.google.android.gms:play-services-auth:20.6.0")
   implementation("com.google.android.material:material:1.11.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
