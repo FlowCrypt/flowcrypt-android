@@ -413,14 +413,14 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.6.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.5.0")
+  implementation("androidx.browser:browser:1.7.0")
   implementation("androidx.recyclerview:recyclerview:1.3.2")
   implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
   implementation("androidx.test.espresso:espresso-idling-resource:3.5.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
   implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
+  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
   implementation("androidx.lifecycle:lifecycle-process:2.7.0")
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
   implementation("androidx.room:room-runtime:2.5.2")
@@ -439,9 +439,9 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.6.0")
   implementation("androidx.webkit:webkit:1.7.0")
 
-  implementation("com.google.android.gms:play-services-base:18.2.0")
+  implementation("com.google.android.gms:play-services-base:18.3.0")
   implementation("com.google.android.gms:play-services-auth:20.6.0")
-  implementation("com.google.android.material:material:1.9.0")
+  implementation("com.google.android.material:material:1.11.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
