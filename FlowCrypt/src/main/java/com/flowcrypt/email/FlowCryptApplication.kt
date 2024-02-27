@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit
  *
  * @author Denys Bondarenko
  */
-class FlowCryptApplication : Application(), Configuration.Provider {
+class FlowCryptApplication : Application() {
   override fun onCreate() {
     super.onCreate()
     setupGlobalSettingsForJavaMail()
@@ -80,17 +80,13 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     initACRA()
   }
 
-  override fun getWorkManagerConfiguration() =
-    Configuration.Builder()
-      .setJobSchedulerJobIdRange(10, 10000)
-      .build()
-
   /**
    * Allow sha1 for all builds except enterprise. It's a temporary solution.
    * More details here https://github.com/FlowCrypt/flowcrypt-android/issues/1478 and here
    * https://github.com/pgpainless/pgpainless/issues/158
    */
   private fun enableDeprecatedSHA1ForPGPainlessPolicy() {
+    @Suppress("KotlinConstantConditions")
     if (BuildConfig.FLAVOR != Constants.FLAVOR_NAME_ENTERPRISE) {
       PGPainless.getPolicy().signatureHashAlgorithmPolicy = HashAlgorithmPolicy(
         HashAlgorithm.SHA512, listOf(
@@ -133,6 +129,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   }
 
   private fun setupACRA() {
+    @Suppress("KotlinConstantConditions")
     if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) return
 
     initAcra {
