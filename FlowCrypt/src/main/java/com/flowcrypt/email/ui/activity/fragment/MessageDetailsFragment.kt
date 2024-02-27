@@ -522,25 +522,29 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
 
       R.id.layoutFwdButton -> {
-        if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          msgInfo?.atts =
-            attachmentsRecyclerViewAdapter.currentList.map {
-              it.copy(
-                isForwarded = true,
-                name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
-                decryptWhenForward = it.isPossiblyEncrypted()
-              )
-            }
-        } else {
-          msgInfo?.atts =
-            attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
-        }
+        if (attachmentsRecyclerViewAdapter.currentList.none { it.rawData != null }) {
+          if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
+            msgInfo?.atts =
+              attachmentsRecyclerViewAdapter.currentList.map {
+                it.copy(
+                  isForwarded = true,
+                  name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
+                  decryptWhenForward = it.isPossiblyEncrypted()
+                )
+              }
+          } else {
+            msgInfo?.atts =
+              attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
+          }
 
-        startActivity(
-          CreateMessageActivity.generateIntent(
-            context, MessageType.FORWARD, msgEncryptType, prepareMsgInfoForReply()
+          startActivity(
+            CreateMessageActivity.generateIntent(
+              context, MessageType.FORWARD, msgEncryptType, prepareMsgInfoForReply()
+            )
           )
-        )
+        } else {
+          toast("need to prepare attachments before sending")
+        }
       }
     }
   }
