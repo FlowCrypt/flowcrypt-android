@@ -146,7 +146,6 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FilenameUtils
-import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
@@ -523,38 +522,18 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
 
       R.id.layoutFwdButton -> {
-        val isMessageEncrypted = MessageEncryptionType.ENCRYPTED == msgEncryptType
-        val attCacheDir = File(requireContext().cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
-        val msgId = msgInfo?.msgEntity?.id ?: return
-        val msgAttCacheDir = File(requireContext().cacheDir, msgId.toString())
-        msgInfo?.atts = attachmentsRecyclerViewAdapter.currentList.map { attachmentInfo ->
-          attachmentInfo.copy(
-            isForwarded = true,
-            //we have to drop this value as here can be large data
-            rawData = null,
-            //we store bytes to temp file
-            uri = if (attachmentInfo.uri == null && attachmentInfo.rawData != null) {
-              val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(
-                requireContext(),
-                msgAttCacheDir
+        if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
+          msgInfo?.atts =
+            attachmentsRecyclerViewAdapter.currentList.map {
+              it.copy(
+                isForwarded = true,
+                name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
+                decryptWhenForward = it.isPossiblyEncrypted()
               )
-              uri
-            } else {
-              attachmentInfo.uri
-            },
-            //this flag will not be useful in the compose message screen
-            isDecrypted = false,
-            name = if (isMessageEncrypted && attachmentInfo.isPossiblyEncrypted()) {
-              FilenameUtils.removeExtension(attachmentInfo.name)
-            } else {
-              attachmentInfo.name
-            },
-            decryptWhenForward = if (isMessageEncrypted) {
-              attachmentInfo.isPossiblyEncrypted()
-            } else {
-              attachmentInfo.decryptWhenForward
-            },
-          )
+            }
+        } else {
+          msgInfo?.atts =
+            attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
         }
 
         startActivity(

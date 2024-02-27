@@ -10,7 +10,6 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.util.CacheManager
 import org.apache.commons.io.FileUtils
 import java.io.File
 
