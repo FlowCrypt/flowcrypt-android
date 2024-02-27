@@ -44,7 +44,6 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Folder
@@ -533,7 +532,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
                 format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
               )
               val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = att.path)
-                ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
+                ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))
 
               GmailApiHelper.getAttInputStream(
                 context,
@@ -548,7 +547,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
               }
             }
 
-            else -> throw ManualHandledException("Unsupported provider")
+            else -> throw IllegalStateException("Unsupported provider")
           }
         } else {
           val session = OpenStoreHelper.getAttsSess(context, account)
@@ -558,12 +557,12 @@ class AttachmentDownloadManagerService : LifecycleService() {
                 listener?.onCanceled(att.copy(name = finalFileName))
                 store.close()
                 return
-              } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
+              } else throw IllegalStateException("Folder \"" + att.folder + "\" not found in the local cache")
 
             store.getFolder(label.name).use { folder ->
               val remoteFolder = (folder as IMAPFolder).apply { open(Folder.READ_ONLY) }
               val msg = remoteFolder.getMessageByUID(att.uid)
-                ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
+                ?: throw IllegalStateException(context.getString(R.string.no_message_with_this_attachment))
 
               ImapProtocolUtil.getAttPartByPath(
                 msg, neededPath = this.att.path
@@ -572,7 +571,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
                   inputStream = inputStream,
                   useContentApp = account.isHandlingAttachmentRestricted()
                 )
-              } ?: throw ManualHandledException(context.getString(R.string.attachment_not_found))
+              } ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))
             }
           }
         }
