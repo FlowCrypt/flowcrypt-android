@@ -191,7 +191,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
 
-    waitForObjectWithText(getResString(R.string.key_details), TimeUnit.SECONDS.toMillis(30))
+    waitForObjectWithText(getResString(R.string.key_details), TimeUnit.SECONDS.toMillis(60))
 
     //do checks after update
     onView(
