@@ -18,7 +18,8 @@ import java.io.File
  * @author Denys Bondarenko
  */
 fun AttachmentInfo.useFileProviderToGenerateUri(context: Context): Pair<File, Uri> {
-  val tempDir = CacheManager.getCurrentMsgTempDirectory(context)
+  //todo-denbond7 fix me
+  val tempDir = File("")//CacheManager.getCurrentMsgTempDirectory(context)
   val fileName = getSafeName()
   val file = File(tempDir, fileName)
   if (!file.exists()) {

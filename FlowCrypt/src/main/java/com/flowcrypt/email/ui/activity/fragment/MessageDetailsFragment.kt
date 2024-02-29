@@ -107,6 +107,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -342,7 +343,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onDestroy() {
     super.onDestroy()
-    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(requireContext()))
+    EmbeddedAttachmentsProvider.Cache.getInstance().clear()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -1040,7 +1041,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
-            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            inlineEncryptedAtts.add(
+              EmbeddedAttachmentsProvider.Cache.getInstance()
+                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            )
           } else {
             handleOtherBlock(block, layoutInflater)
           }
@@ -1049,7 +1053,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.INLINE_ATT -> {
           val decryptAtt = block as? InlineAttMsgBlock
           if (decryptAtt != null) {
-            inlineEncryptedAtts.add(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            inlineEncryptedAtts.add(
+              EmbeddedAttachmentsProvider.Cache.getInstance()
+                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            )
           }
         }
 
