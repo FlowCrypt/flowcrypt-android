@@ -1144,7 +1144,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun addAttachmentInfoFromUri(uri: Uri) {
     val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
-      ?.copy(uri = Uri.parse("content://${BuildConfig.APPLICATION_ID}.embedded.attachments/document/temp_file.txt"))
     if (hasAbilityToAddAtt(attachmentInfo)) {
       try {
         context?.contentResolver?.takePersistableUriPermission(
