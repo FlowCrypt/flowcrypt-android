@@ -135,11 +135,7 @@
             android:authorities="${applicationId}.virtualfiles"
             android:grantUriPermissions="true"
             android:exported="true"
-            android:permission="android.permission.MANAGE_DOCUMENTS">
-            <intent-filter>
-                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
-            </intent-filter>
-        </provider>
+            android:permission="android.permission.MANAGE_DOCUMENTS" />
 
         <!-- Services -->
         <service
