@@ -16,7 +16,7 @@ import java.io.FileNotFoundException
 /**
  * @author Denys Bondarenko
  */
-class VirtualFilesProvider : DocumentsProvider() {
+class EmbeddedAttachmentsProvider : DocumentsProvider() {
 
   override fun onCreate(): Boolean {
     return true

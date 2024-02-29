@@ -41,6 +41,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -1143,7 +1144,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun addAttachmentInfoFromUri(uri: Uri) {
     val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
-      ?.copy(uri = Uri.parse("content://com.flowcrypt.email.debug.virtualfiles/document/temp_file.txt"))
+      ?.copy(uri = Uri.parse("content://${BuildConfig.APPLICATION_ID}.embedded.attachments/document/temp_file.txt"))
     if (hasAbilityToAddAtt(attachmentInfo)) {
       try {
         context?.contentResolver?.takePersistableUriPermission(
