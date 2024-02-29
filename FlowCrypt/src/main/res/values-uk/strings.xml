@@ -610,6 +610,7 @@
     <string name="usable_for_signing">Можна використовувати для підпису: %1$s</string>
     <string name="algorithm">Алгоритм: %1$s</string>
     <string name="key_info">Інформація про ключ</string>
+    <string name="preview_is_not_available">Попередній перегляд недоступний</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

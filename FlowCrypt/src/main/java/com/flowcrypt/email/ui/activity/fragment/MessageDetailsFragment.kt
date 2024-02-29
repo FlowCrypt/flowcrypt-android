@@ -1802,8 +1802,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     val intent = if (attachmentInfo.uri != null) {
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
-      val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
-      GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+      toast(getString(R.string.preview_is_not_available))
+      return
     }
 
     if (useContentApp) {
