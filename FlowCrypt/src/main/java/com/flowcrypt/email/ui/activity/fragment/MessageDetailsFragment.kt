@@ -89,7 +89,6 @@ import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -131,7 +130,6 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
@@ -1786,21 +1784,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
-      if (attInfo.rawData?.isNotEmpty() == true) {
-        downloadInlinedAtt(attInfo)
+      if (account?.isHandlingAttachmentRestricted() == true) {
+        navController?.navigate(
+          MessageDetailsFragmentDirections
+            .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+              attachmentInfo = attInfo,
+              requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+              requestCode = REQUEST_CODE_SAVE_ATTACHMENT
+            )
+        )
       } else {
-        if (account?.isHandlingAttachmentRestricted() == true) {
-          navController?.navigate(
-            MessageDetailsFragmentDirections
-              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                attachmentInfo = attInfo,
-                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
-                requestCode = REQUEST_CODE_SAVE_ATTACHMENT
-              )
-          )
-        } else {
-          context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
-        }
+        context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
       }
     }
   }
@@ -1833,19 +1827,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         toast(getString(R.string.no_apps_that_can_handle_intent))
       }
     }
-  }
-
-  private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
-    val (file, uri) = attInfo.useFileProviderToGenerateUri(requireContext())
-    context?.startService(
-      AttachmentDownloadManagerService.newIntent(
-        context,
-        attInfo.copy(rawData = null, name = file.name, uri = uri)
-      )
-    )
-  } catch (e: Exception) {
-    e.printStackTrace()
-    ExceptionUtil.handleError(e)
   }
 
   private fun subscribeToDownloadAttachmentViaDialog() {
