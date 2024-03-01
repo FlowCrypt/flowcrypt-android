@@ -50,12 +50,12 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     return requireNotNull(attachmentInfo?.rawData)
   }
 
-  private fun getFileDescriptor(fileData: ByteArray): ParcelFileDescriptor? {
+  private fun getFileDescriptor(bytes: ByteArray): ParcelFileDescriptor? {
     val pipe = ParcelFileDescriptor.createPipe()
     val readParcelFileDescriptor = pipe[0]
     val writeParcelFileDescriptor = pipe[1]
 
-    ByteArrayInputStream(fileData).use { inputStream ->
+    ByteArrayInputStream(bytes).use { inputStream ->
       ParcelFileDescriptor.AutoCloseOutputStream(writeParcelFileDescriptor).use { outputStream ->
         inputStream.copyTo(outputStream)
       }
