@@ -127,9 +127,7 @@ import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDeco
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.ui.widget.TileDrawable
-import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.DateTimeUtil
-import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
@@ -233,24 +231,36 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
-        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-          if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name) && attachmentInfo.uri == null) {
-            val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
-            if (fingerprintList?.isNotEmpty() == true) {
-              showNeedPassphraseDialog(
-                requestKey = "",
-                fingerprints = fingerprintList
-              )
+        if (attachmentInfo.uri != null) {
+          if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
+            val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
+            val existingDocumentIdForDecryptedVersion = embeddedAttachmentsCache
+              .getDocumentId(attachmentInfo.copy(name = FilenameUtils.getBaseName(attachmentInfo.name)))
+
+            if (existingDocumentIdForDecryptedVersion != null) {
+              embeddedAttachmentsCache.getUriVersion(existingDocumentIdForDecryptedVersion)?.let {
+                previewAttachment(
+                  attachmentInfo = it,
+                  useContentApp = account?.isHandlingAttachmentRestricted() == true
+                )
+              }
             } else {
-              val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
-              navController?.navigate(
-                MessageDetailsFragmentDirections
-                  .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
-                    attachmentInfo = attachmentInfo.copy(uri = uri),
-                    requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
-                    requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
-                  )
-              )
+              val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
+              if (fingerprintList?.isNotEmpty() == true) {
+                showNeedPassphraseDialog(
+                  requestKey = "",
+                  fingerprints = fingerprintList
+                )
+              } else {
+                navController?.navigate(
+                  MessageDetailsFragmentDirections
+                    .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
+                      attachmentInfo = attachmentInfo.copy(uri = attachmentInfo.uri),
+                      requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
+                      requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
+                    )
+                )
+              }
             }
           } else {
             previewAttachment(
@@ -1878,14 +1888,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     setFragmentResultListener(REQUEST_KEY_DECRYPT_ATTACHMENT) { _, bundle ->
       val attachmentInfo =
         bundle.getParcelableViaExt<AttachmentInfo>(DecryptAttachmentDialogFragment.KEY_ATTACHMENT)
+          ?: return@setFragmentResultListener
 
-      attachmentInfo?.let {
-        previewAttachment(
-          attachmentInfo = it,
-          useContentApp =
-          account?.isHandlingAttachmentRestricted() == true
-        )
-      }
+      previewAttachment(
+        attachmentInfo = EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(attachmentInfo),
+        useContentApp =
+        account?.isHandlingAttachmentRestricted() == true
+      )
     }
   }
 

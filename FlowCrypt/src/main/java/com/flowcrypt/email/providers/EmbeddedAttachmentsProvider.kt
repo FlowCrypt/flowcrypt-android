@@ -71,21 +71,46 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
       return map[documentId]
     }
 
-    fun add(attachmentInfo: AttachmentInfo): Uri? {
-      return if (attachmentInfo.rawData != null) {
-        val documentId = UUID.randomUUID().toString()
-        map[documentId] = attachmentInfo
-        DocumentsContract.buildDocumentUri(AUTHORITY, documentId)
-      } else null
+    fun getUriVersion(documentId: String): AttachmentInfo? {
+      return map[documentId]?.copy(
+        rawData = null,
+        uri = getUriByDocumentId(documentId)
+      )
+    }
+
+    fun getUriByDocumentId(documentId: String): Uri {
+      return DocumentsContract.buildDocumentUri(AUTHORITY, documentId)
+    }
+
+    fun getDocumentId(attachmentInfo: AttachmentInfo): String? {
+      return map.filter { entry ->
+        entry.value.uniqueStringId == attachmentInfo.uniqueStringId
+            && entry.value.name == attachmentInfo.name
+      }.map { it.key }.firstOrNull()
     }
 
     fun addAndGet(attachmentInfo: AttachmentInfo): AttachmentInfo {
-      val uri = add(attachmentInfo)
+      val uri = addOrReplace(attachmentInfo)
       return attachmentInfo.copy(rawData = null, uri = uri)
     }
 
     fun clear() {
       map.clear()
+    }
+
+    private fun addOrReplace(attachmentInfo: AttachmentInfo): Uri? {
+      val existingAttachmentInfoKey = getDocumentId(attachmentInfo)
+
+      return if (attachmentInfo.rawData != null) {
+        val documentId = existingAttachmentInfoKey ?: UUID.randomUUID().toString()
+        map[documentId] = attachmentInfo
+        getUriByDocumentId(documentId)
+      } else {
+        if (existingAttachmentInfoKey != null) {
+          map.remove(existingAttachmentInfoKey)
+        }
+        null
+      }
     }
 
     companion object {
