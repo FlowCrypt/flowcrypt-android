@@ -42,12 +42,6 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     mode: String,
     signal: CancellationSignal?
   ): ParcelFileDescriptor? {
-    return getParcelFileDescriptorForDocument(documentId)
-  }
-
-  private fun getParcelFileDescriptorForDocument(
-    documentId: String
-  ): ParcelFileDescriptor? {
     return getFileDescriptor(getBytesForDocumentId(documentId))
   }
 
