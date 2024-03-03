@@ -428,7 +428,7 @@ dependencies {
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
-  implementation("androidx.preference:preference-ktx:1.2.0")
+  implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.10.1")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.7.2")
