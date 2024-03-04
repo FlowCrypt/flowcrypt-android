@@ -5,24 +5,22 @@
 
 package com.flowcrypt.email.providers
 
-import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
-import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
-import android.util.Log
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-
 
 /**
  * @author Denys Bondarenko
@@ -38,33 +36,7 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
   }
 
   override fun queryDocument(documentId: String?, projection: Array<String>?): Cursor {
-    val finalProjection = projection ?: DEFAULT_DOCUMENT_PROJECTION
-    return MatrixCursor(finalProjection).apply {
-      documentId?.let { id ->
-        getAttachmentByDocumentId(id)?.let { attachmentInfo ->
-          newRow().apply {
-            if (DocumentsContract.Document.COLUMN_DOCUMENT_ID in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, id)
-            }
-            if (DocumentsContract.Document.COLUMN_DISPLAY_NAME in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, attachmentInfo.getSafeName())
-            }
-            if (DocumentsContract.Document.COLUMN_MIME_TYPE in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_MIME_TYPE, attachmentInfo.type)
-            }
-            if (DocumentsContract.Document.COLUMN_FLAGS in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_FLAGS, 0)
-            }
-            if (DocumentsContract.Document.COLUMN_SIZE in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_SIZE, attachmentInfo.rawData?.size ?: 0)
-            }
-            if (DocumentsContract.Document.COLUMN_LAST_MODIFIED in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, null)
-            }
-          }
-        }
-      }
-    }
+    return MatrixCursor(emptyArray())
   }
 
   override fun queryChildDocuments(
@@ -82,19 +54,6 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     return getFileDescriptor(getBytesForDocumentId(documentId))
   }
 
-  override fun openTypedDocument(
-    documentId: String?,
-    mimeTypeFilter: String?,
-    opts: Bundle?,
-    signal: CancellationSignal?
-  ): AssetFileDescriptor {
-    return AssetFileDescriptor(
-      openDocument(documentId = documentId!!, mode = "r", signal),
-      0,
-      AssetFileDescriptor.UNKNOWN_LENGTH
-    )
-  }
-
   private fun getBytesForDocumentId(documentId: String): ByteArray {
     val attachmentInfo = Cache.getInstance().get(documentId)
     return requireNotNull(attachmentInfo?.rawData)
@@ -104,13 +63,10 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     val pipe = ParcelFileDescriptor.createPipe()
     val readParcelFileDescriptor = pipe[0]
     val writeParcelFileDescriptor = pipe[1]
-
-    ByteArrayInputStream(bytes).use { inputStream ->
-      ParcelFileDescriptor.AutoCloseOutputStream(writeParcelFileDescriptor).use { outputStream ->
-        inputStream.copyTo(outputStream)
-      }
-    }
-
+    TransferThread(
+      ByteArrayInputStream(bytes),
+      ParcelFileDescriptor.AutoCloseOutputStream(writeParcelFileDescriptor)
+    ).start()
     return readParcelFileDescriptor
   }
 
@@ -118,20 +74,38 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     return Cache.getInstance().get(documentId)
   }
 
-  internal class TransferThread(var bytes: ByteArray, var outputStream: OutputStream) : Thread() {
+
+  internal class TransferThread(var inputStream: InputStream, var outputStream: OutputStream) :
+    Thread() {
     override fun run() {
+      val buf = ByteArray(1024)
+      var len: Int
       try {
-        outputStream.write(bytes)
-        outputStream.flush()
-        outputStream.close()
+        while (inputStream.read(buf).also { len = it } >= 0) {
+          outputStream.write(buf, 0, len)
+        }
       } catch (e: IOException) {
-        Log.e(
-          javaClass.getSimpleName(),
-          "Exception transferring file", e
-        )
+        e.printStackTraceIfDebugOnly()
+      } finally {
+        try {
+          inputStream.close()
+        } catch (e: Exception) {
+          e.printStackTraceIfDebugOnly()
+        }
+        try {
+          outputStream.flush()
+        } catch (e: Exception) {
+          e.printStackTraceIfDebugOnly()
+        }
+        try {
+          outputStream.close()
+        } catch (e: Exception) {
+          e.printStackTraceIfDebugOnly()
+        }
       }
     }
   }
+
 
   class Cache private constructor() {
     private val map: ConcurrentHashMap<String, AttachmentInfo> = ConcurrentHashMap()
