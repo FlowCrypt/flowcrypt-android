@@ -7,12 +7,14 @@ package com.flowcrypt.email.api.email.model
 
 import android.net.Uri
 import android.os.Parcelable
+import android.webkit.MimeTypeMap
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import com.flowcrypt.email.security.SecurityUtils
 import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
+import org.apache.commons.io.FilenameUtils
 
 /**
  * Simple POJO which defines information about email attachments.
@@ -97,6 +99,10 @@ data class AttachmentInfo(
 
   fun getSafeName(): String {
     return SecurityUtils.sanitizeFileName(name)
+  }
+
+  fun getAndroidMimeType(): String? {
+    return MimeTypeMap.getSingleton().getMimeTypeFromExtension(FilenameUtils.getExtension(name))
   }
 
   fun isHidden() = when {

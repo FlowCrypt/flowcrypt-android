@@ -5,18 +5,21 @@
 
 package com.flowcrypt.email.providers
 
+import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
+import android.util.Log
+import android.widget.Toast
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import java.io.ByteArrayInputStream
-import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
@@ -36,7 +39,33 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
   }
 
   override fun queryDocument(documentId: String?, projection: Array<String>?): Cursor {
-    return MatrixCursor(emptyArray())
+    val finalProjection = projection ?: DEFAULT_DOCUMENT_PROJECTION
+    return MatrixCursor(finalProjection).apply {
+      documentId?.let { id ->
+        getAttachmentByDocumentId(id)?.let { attachmentInfo ->
+          newRow().apply {
+            if (DocumentsContract.Document.COLUMN_DOCUMENT_ID in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, id)
+            }
+            if (DocumentsContract.Document.COLUMN_DISPLAY_NAME in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, attachmentInfo.getSafeName())
+            }
+            if (DocumentsContract.Document.COLUMN_MIME_TYPE in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_MIME_TYPE, attachmentInfo.getAndroidMimeType())
+            }
+            if (DocumentsContract.Document.COLUMN_FLAGS in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_FLAGS, 0)
+            }
+            if (DocumentsContract.Document.COLUMN_SIZE in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_SIZE, attachmentInfo.rawData?.size ?: 0)
+            }
+            if (DocumentsContract.Document.COLUMN_LAST_MODIFIED in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, null)
+            }
+          }
+        }
+      }
+    }
   }
 
   override fun queryChildDocuments(
@@ -74,34 +103,20 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     return Cache.getInstance().get(documentId)
   }
 
-
-  internal class TransferThread(var inputStream: InputStream, var outputStream: OutputStream) :
-    Thread() {
+  internal class TransferThread(
+    val inputStream: InputStream,
+    val outputStream: OutputStream
+  ) : Thread() {
     override fun run() {
-      val buf = ByteArray(1024)
-      var len: Int
       try {
-        while (inputStream.read(buf).also { len = it } >= 0) {
-          outputStream.write(buf, 0, len)
+        inputStream.use {
+          outputStream.use {
+            inputStream.copyTo(outputStream)
+            outputStream.flush()
+          }
         }
-      } catch (e: IOException) {
+      } catch (e: Exception) {
         e.printStackTraceIfDebugOnly()
-      } finally {
-        try {
-          inputStream.close()
-        } catch (e: Exception) {
-          e.printStackTraceIfDebugOnly()
-        }
-        try {
-          outputStream.flush()
-        } catch (e: Exception) {
-          e.printStackTraceIfDebugOnly()
-        }
-        try {
-          outputStream.close()
-        } catch (e: Exception) {
-          e.printStackTraceIfDebugOnly()
-        }
       }
     }
   }
@@ -119,10 +134,6 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
         rawData = null,
         uri = getUriByDocumentId(documentId)
       )
-    }
-
-    fun getUriByDocumentId(documentId: String): Uri {
-      return DocumentsContract.buildDocumentUri(AUTHORITY, documentId)
     }
 
     fun getDocumentId(attachmentInfo: AttachmentInfo): String? {
@@ -154,6 +165,10 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
         }
         null
       }
+    }
+
+    private fun getUriByDocumentId(documentId: String): Uri {
+      return DocumentsContract.buildDocumentUri(AUTHORITY, documentId)
     }
 
     companion object {
