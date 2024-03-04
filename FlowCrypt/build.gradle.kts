@@ -425,7 +425,6 @@ dependencies {
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
   implementation("androidx.room:room-runtime:2.6.1")
   implementation("androidx.room:room-ktx:2.6.1")
-
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
