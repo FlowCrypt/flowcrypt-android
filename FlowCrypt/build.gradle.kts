@@ -385,7 +385,7 @@ dependencies {
   androidTestImplementation("androidx.test:core-ktx:1.5.0")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.1.5")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-  androidTestImplementation("androidx.room:room-testing:2.5.2")
+  androidTestImplementation("androidx.room:room-testing:2.6.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.8.1")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
@@ -395,7 +395,7 @@ dependencies {
 
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
-  testImplementation("androidx.room:room-testing:2.5.2")
+  testImplementation("androidx.room:room-testing:2.6.1")
   testImplementation("org.robolectric:robolectric:4.11.1")
   testImplementation("io.github.classgraph:classgraph:4.8.165")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
