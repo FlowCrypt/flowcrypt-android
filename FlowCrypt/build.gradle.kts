@@ -364,7 +364,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.16.0")
   ksp("androidx.annotation:annotation:1.6.0")
-  ksp("androidx.room:room-compiler:2.5.2")
+  ksp("androidx.room:room-compiler:2.6.1")
   //ACRA needs the following dependency to use a custom report sender
 
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
@@ -423,8 +423,9 @@ dependencies {
   implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
   implementation("androidx.lifecycle:lifecycle-process:2.7.0")
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-  implementation("androidx.room:room-runtime:2.5.2")
-  implementation("androidx.room:room-ktx:2.5.2")
+  implementation("androidx.room:room-runtime:2.6.1")
+  implementation("androidx.room:room-ktx:2.6.1")
+
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
