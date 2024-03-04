@@ -5,18 +5,24 @@
 
 package com.flowcrypt.email.providers
 
+import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
+import android.util.Log
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+
 
 /**
  * @author Denys Bondarenko
@@ -27,15 +33,46 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     return true
   }
 
-  override fun queryRoots(projection: Array<String>?): Cursor = MatrixCursor(emptyArray())
+  override fun queryRoots(projection: Array<String>?): Cursor {
+    return MatrixCursor(emptyArray())
+  }
 
-  override fun queryDocument(documentId: String?, projection: Array<String>?): Cursor =
-    MatrixCursor(emptyArray())
+  override fun queryDocument(documentId: String?, projection: Array<String>?): Cursor {
+    val finalProjection = projection ?: DEFAULT_DOCUMENT_PROJECTION
+    return MatrixCursor(finalProjection).apply {
+      documentId?.let { id ->
+        getAttachmentByDocumentId(id)?.let { attachmentInfo ->
+          newRow().apply {
+            if (DocumentsContract.Document.COLUMN_DOCUMENT_ID in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, id)
+            }
+            if (DocumentsContract.Document.COLUMN_DISPLAY_NAME in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, attachmentInfo.getSafeName())
+            }
+            if (DocumentsContract.Document.COLUMN_MIME_TYPE in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_MIME_TYPE, attachmentInfo.type)
+            }
+            if (DocumentsContract.Document.COLUMN_FLAGS in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_FLAGS, 0)
+            }
+            if (DocumentsContract.Document.COLUMN_SIZE in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_SIZE, attachmentInfo.rawData?.size ?: 0)
+            }
+            if (DocumentsContract.Document.COLUMN_LAST_MODIFIED in finalProjection) {
+              add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, null)
+            }
+          }
+        }
+      }
+    }
+  }
 
   override fun queryChildDocuments(
     parentDocumentId: String, projection: Array<String>?,
     sortOrder: String
-  ): Cursor = MatrixCursor(emptyArray())
+  ): Cursor {
+    return MatrixCursor(emptyArray())
+  }
 
   override fun openDocument(
     documentId: String,
@@ -43,6 +80,19 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     signal: CancellationSignal?
   ): ParcelFileDescriptor? {
     return getFileDescriptor(getBytesForDocumentId(documentId))
+  }
+
+  override fun openTypedDocument(
+    documentId: String?,
+    mimeTypeFilter: String?,
+    opts: Bundle?,
+    signal: CancellationSignal?
+  ): AssetFileDescriptor {
+    return AssetFileDescriptor(
+      openDocument(documentId = documentId!!, mode = "r", signal),
+      0,
+      AssetFileDescriptor.UNKNOWN_LENGTH
+    )
   }
 
   private fun getBytesForDocumentId(documentId: String): ByteArray {
@@ -62,6 +112,25 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     }
 
     return readParcelFileDescriptor
+  }
+
+  private fun getAttachmentByDocumentId(documentId: String): AttachmentInfo? {
+    return Cache.getInstance().get(documentId)
+  }
+
+  internal class TransferThread(var bytes: ByteArray, var outputStream: OutputStream) : Thread() {
+    override fun run() {
+      try {
+        outputStream.write(bytes)
+        outputStream.flush()
+        outputStream.close()
+      } catch (e: IOException) {
+        Log.e(
+          javaClass.getSimpleName(),
+          "Exception transferring file", e
+        )
+      }
+    }
   }
 
   class Cache private constructor() {
@@ -126,5 +195,16 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
         }
       }
     }
+  }
+
+  companion object {
+    private val DEFAULT_DOCUMENT_PROJECTION = arrayOf(
+      DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+      DocumentsContract.Document.COLUMN_MIME_TYPE,
+      DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+      DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+      DocumentsContract.Document.COLUMN_FLAGS,
+      DocumentsContract.Document.COLUMN_SIZE
+    )
   }
 }
