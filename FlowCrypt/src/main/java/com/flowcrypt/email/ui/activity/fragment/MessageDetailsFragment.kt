@@ -220,12 +220,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-          previewAttachment(
-            attachmentInfo = attachmentInfo,
-            useContentApp = account?.isHandlingAttachmentRestricted() == true
-          )
-        }
+        onPreviewClick(attachmentInfo)
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
@@ -1832,8 +1827,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun subscribeToDownloadAttachmentViaDialog() {
     setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
-      val attachmentInfo =
-        bundle.getParcelableViaExt<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
+      val attachmentInfo = bundle.getParcelableViaExt<AttachmentInfo>(
+        DownloadAttachmentDialogFragment.KEY_ATTACHMENT
+      )?.let { EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(it) }
 
       val existingList = attachmentsRecyclerViewAdapter.currentList.toMutableList()
       existingList.replaceAll {
