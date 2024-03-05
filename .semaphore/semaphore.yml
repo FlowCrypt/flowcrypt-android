@@ -2,7 +2,7 @@ version: v1.0
 name: FlowCrypt Android App
 agent:
   machine:
-    type: e1-standard-8 #4
+    type: e1-standard-8 #5
     os_image: ubuntu2004
 execution_time_limit:
   minutes: 60
