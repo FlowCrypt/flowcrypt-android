@@ -45,13 +45,12 @@ import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.livedata.SkipInitialValueObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
-import com.flowcrypt.email.util.CacheManager
-import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
@@ -520,7 +519,7 @@ class MsgDetailsViewModel(
     if (uri != null) {
       val context: Context = getApplication()
       try {
-        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
+        EmbeddedAttachmentsProvider.Cache.getInstance().clear()
 
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
@@ -559,7 +558,7 @@ class MsgDetailsViewModel(
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       try {
-        FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(getApplication()))
+        EmbeddedAttachmentsProvider.Cache.getInstance().clear()
 
         val processedMimeMessageResult =
           PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())

@@ -15,18 +15,7 @@ import java.io.File
  * @author Denys Bondarenko
  */
 object CacheManager {
-  private const val DIRECTORY_CURRENT_MESSAGE = "current_msg"
   private const val DIRECTORY_DRAFTS = "drafts"
-
-  /**
-   * Get a temp directory for the current active message
-   *
-   * @param context Interface to global information about an application environment;
-   * @return directory
-   */
-  fun getCurrentMsgTempDirectory(context: Context): File {
-    return FileAndDirectoryUtils.getDir(DIRECTORY_CURRENT_MESSAGE, context.cacheDir)
-  }
 
   fun getDraftDirectory(context: Context): File {
     return FileAndDirectoryUtils.getDir(DIRECTORY_DRAFTS, context.cacheDir)

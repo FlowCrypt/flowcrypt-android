@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -53,6 +54,7 @@ import kotlin.random.Random
 /**
  * @author Denys Bondarenko
  */
+@FlowCryptTestSettings(useCommonIdling = false)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
@@ -165,8 +167,10 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
       mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_missing_key.txt",
       accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )?.msgEntity
-    requireNotNull(details)
-    launchActivity(details)
+    launchActivity(requireNotNull(details))
+
+    waitForObjectWithText(getResString(R.string.your_keys_cannot_open_this_message), 2000)
+
     onView(withId(R.id.textViewErrorMessage))
       .check(matches(withText(getResString(R.string.your_keys_cannot_open_this_message))))
     onView(withId(R.id.buttonImportPrivateKey))
@@ -185,14 +189,12 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
       ), att = simpleAttInfo
     )
 
-    unregisterCountingIdlingResource()
-
     onView(withId(R.id.imageButtonPreviewAtt))
       .check(matches(isDisplayed()))
       .perform(click())
-    Thread.sleep(2000)
+
     //as the Content app is not installed on a device the app should show the warning
-    isDialogWithTextDisplayed(decorView, getResString(R.string.warning_don_not_have_content_app))
+    waitForObjectWithText(getResString(R.string.warning_don_not_have_content_app), 2000)
   }
 
   companion object {
