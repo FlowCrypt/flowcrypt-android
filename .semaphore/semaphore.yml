@@ -9,7 +9,7 @@ execution_time_limit:
 
 fail_fast:
   stop:
-    when: "branch != 'master'" # Stopping all jobs on the first failure
+    when: "branch != 'master'" # Stopping all jobs on the first  failure
 
 auto_cancel:
   running:
