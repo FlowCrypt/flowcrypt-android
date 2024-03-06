@@ -11,6 +11,7 @@ import android.webkit.MimeTypeMap
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
+import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.SecurityUtils
 import com.google.gson.annotations.Expose
 import kotlinx.parcelize.Parcelize
@@ -119,6 +120,15 @@ data class AttachmentInfo(
   fun isPossiblyEncrypted(): Boolean {
     return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
   }
+
+  fun isEmbeddedAndPossiblyEncrypted(): Boolean {
+    return EmbeddedAttachmentsProvider.Cache.AUTHORITY.equals(
+      uri?.authority,
+      ignoreCase = true
+    ) && isPossiblyEncrypted()
+  }
+
+
 
   @Suppress("ArrayInDataClass")
   data class Builder(

@@ -228,7 +228,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null) {
-          if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
+          if (attachmentInfo.isPossiblyEncrypted()) {
             val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
             val existingDocumentIdForDecryptedVersion = embeddedAttachmentsCache
               .getDocumentId(attachmentInfo.copy(name = FilenameUtils.getBaseName(attachmentInfo.name)))
@@ -526,7 +526,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
 
       R.id.layoutFwdButton -> {
-        if (attachmentsRecyclerViewAdapter.currentList.none { it.rawData != null }) {
+        if (attachmentsRecyclerViewAdapter.currentList.none {
+            it.isEmbeddedAndPossiblyEncrypted()
+          }) {
           if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
             msgInfo?.atts =
               attachmentsRecyclerViewAdapter.currentList.map {
@@ -552,7 +554,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               .actionMessageDetailsFragmentToPrepareDownloadedAttachmentsForForwardingDialogFragment(
                 requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING,
                 attachments = attachmentsRecyclerViewAdapter.currentList.filter {
-                  it.rawData != null
+                  it.isEmbeddedAndPossiblyEncrypted()
                 }.toTypedArray()
               )
           )

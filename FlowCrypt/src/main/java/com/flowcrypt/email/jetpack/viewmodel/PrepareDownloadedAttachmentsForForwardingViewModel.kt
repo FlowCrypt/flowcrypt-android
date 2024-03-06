@@ -7,17 +7,12 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
-import androidx.core.content.FileProvider
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
-import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
-import com.flowcrypt.email.util.CacheManager
-import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +21,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
-import java.io.File
 
 /**
  * @author Denys Bondarenko
@@ -34,7 +28,7 @@ import java.io.File
 class PrepareDownloadedAttachmentsForForwardingViewModel(
   private val attachments: Array<AttachmentInfo>,
   application: Application
-) : AccountViewModel(application) {
+) : DecryptDataViewModel(application) {
   private val controlledRunnerForPreparingAttachmentsForForwarding =
     ControlledRunner<Result<List<AttachmentInfo>>>()
   private val preparingAttachmentsForForwardingMutableStateFlow: MutableStateFlow<Result<List<AttachmentInfo>>> =
@@ -57,62 +51,42 @@ class PrepareDownloadedAttachmentsForForwardingViewModel(
   private suspend fun prepareInternal(context: Context): Result<List<AttachmentInfo>> =
     withContext(Dispatchers.IO) {
       val list = mutableListOf<AttachmentInfo>()
+      val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
+
       for (attachmentInfo in attachments) {
         try {
-          if (attachmentInfo.rawData == null) {
-            throw NullPointerException("attachmentInfo.rawData == null")
+          if (attachmentInfo.uri == null) {
+            throw NullPointerException("attachmentInfo.uri == null")
           }
 
-          val isAttachmentEncrypted =
-            FilenameUtils.getExtension(attachmentInfo.name).equals(Constants.PGP_FILE_EXT, true)
-          val cacheDirectory = File("")//CacheManager.getCurrentMsgTempDirectory(context)
-          val originalAttName = attachmentInfo.getSafeName()
-          var tempFile = File(
-            cacheDirectory, originalAttName +
-                if (isAttachmentEncrypted) {
-                  ""
-                } else {
-                  "." + Constants.PGP_FILE_EXT
-                }
-          )
+          val existingDocumentIdForDecryptedVersion = embeddedAttachmentsCache
+            .getDocumentId(attachmentInfo.copy(name = FilenameUtils.getBaseName(attachmentInfo.name)))
 
+          if (existingDocumentIdForDecryptedVersion != null) {
+            val existingDecryptedVersion =
+              embeddedAttachmentsCache.getUriVersion(existingDocumentIdForDecryptedVersion)
 
-          if (tempFile.exists()) {
-            tempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(
-              cacheDirectory, tempFile.name
-            )
-          }
-
-          if (isAttachmentEncrypted) {
-            tempFile.outputStream().use { outputStream ->
-              attachmentInfo.rawData.inputStream().use { inputStream ->
-                inputStream.copyTo(outputStream)
-              }
+            if (existingDecryptedVersion != null) {
+              list.add(existingDecryptedVersion)
+              continue
             }
-          } else {
-            val account = getActiveAccountSuspend()
-              ?: throw NullPointerException("active account is null")
-            val pubKeys = SecurityUtils.getSenderPublicKeys(context, account.email)
-
-            PgpEncryptAndOrSign.encryptAndOrSign(
-              srcInputStream = attachmentInfo.rawData.inputStream(),
-              destOutputStream = tempFile.outputStream(),
-              pubKeys = pubKeys,
-              fileName = originalAttName,
-            )
           }
 
-          val uri = FileProvider.getUriForFile(
-            context, Constants.FILE_PROVIDER_AUTHORITY, tempFile
-          )
-          list.add(
+          val originalAttName = attachmentInfo.getSafeName()
+
+          val inputStream =
+            context.contentResolver.openInputStream(attachmentInfo.uri)
+              ?: throw IllegalStateException("Uri is not defined")
+          val decryptedData = decryptDataIfNeeded(context, inputStream)
+
+          /*list.add(
             attachmentInfo.copy(
               rawData = null,
               type = Constants.MIME_TYPE_BINARY_DATA,
               uri = uri,
               name = tempFile.name
             )
-          )
+          )*/
         } catch (e: Exception) {
           e.printStackTraceIfDebugOnly()
         }
