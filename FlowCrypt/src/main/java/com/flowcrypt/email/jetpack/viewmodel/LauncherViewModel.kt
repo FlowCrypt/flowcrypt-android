@@ -37,7 +37,6 @@ class LauncherViewModel(application: Application) : AccountViewModel(application
       )
       ForwardedAttachmentsDownloaderWorker.enqueue(application)
       MessagesSenderWorker.enqueue(application)
-      FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(application))
 
       isInitLoadingCompletedMutableStateFlow.value =
         InitData(roomDatabase.accountDao().getActiveAccountSuspend())

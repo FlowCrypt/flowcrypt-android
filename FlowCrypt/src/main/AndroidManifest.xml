@@ -130,6 +130,13 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
+        <provider
+            android:name="com.flowcrypt.email.providers.EmbeddedAttachmentsProvider"
+            android:authorities="${applicationId}.embedded.attachments"
+            android:grantUriPermissions="true"
+            android:exported="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS" />
+
         <!-- Services -->
         <service
             android:name=".service.PassPhrasesInRAMService"

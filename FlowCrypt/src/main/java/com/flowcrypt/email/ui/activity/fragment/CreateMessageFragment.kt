@@ -72,7 +72,6 @@ import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -242,12 +241,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
-        val uri = attachmentInfo.uri ?: attachmentInfo.rawData?.let {
-          val (_, generatedUri) = attachmentInfo.useFileProviderToGenerateUri(requireContext())
-          generatedUri
-        }
-
-        if (uri != null) {
+        attachmentInfo.uri?.let { uri ->
           val intent = GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
           try {
             startActivity(intent)
