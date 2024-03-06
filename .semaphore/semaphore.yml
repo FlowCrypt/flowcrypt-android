@@ -130,7 +130,7 @@ blocks:
             # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 8 $EMULATOR
 
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
