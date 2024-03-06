@@ -93,7 +93,6 @@ import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
-import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -242,15 +241,15 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
-        attachmentInfo.uri?.let { uri ->
-          val intent = GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+        if (attachmentInfo.uri != null) {
+          val intent = GeneralUtil.genViewAttachmentIntent(attachmentInfo.uri, attachmentInfo)
           try {
             startActivity(intent)
           } catch (e: ActivityNotFoundException) {
             toast(getString(R.string.no_apps_that_can_handle_intent))
           }
         } else {
-          toast(getString(R.string.sorry_preview_is_not_available, attachmentInfo.name))
+          toast(getString(R.string.preview_is_not_available))
         }
       }
 
