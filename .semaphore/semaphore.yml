@@ -117,7 +117,7 @@ blocks:
             minutes: 45
           matrix:
             - env_var: EMULATOR
-              values: [ "0", "1", "2", "3", "4", "5" ]
+              values: [ "0", "1", "2", "3" ]
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -126,7 +126,7 @@ blocks:
             # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 6 $EMULATOR
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
