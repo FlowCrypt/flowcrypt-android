@@ -91,7 +91,6 @@ import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.extensions.useFileProviderToGenerateUri
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -109,6 +108,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -129,13 +129,10 @@ import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDeco
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.ui.widget.TileDrawable
-import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.DateTimeUtil
-import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
@@ -226,36 +223,40 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
       override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-          previewAttachment(
-            attachmentInfo = attachmentInfo,
-            useContentApp = account?.isHandlingAttachmentRestricted() == true
-          )
-        }
+        onPreviewClick(attachmentInfo)
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
-        if (attachmentInfo.uri != null || attachmentInfo.rawData?.isNotEmpty() == true) {
-          if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name) && attachmentInfo.uri == null) {
-            val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
-            if (fingerprintList?.isNotEmpty() == true) {
-              showNeedPassphraseDialog(
-                requestKey = "",
-                fingerprints = fingerprintList
-              )
+        if (attachmentInfo.uri != null) {
+          if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
+            val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
+            val existingDocumentIdForDecryptedVersion = embeddedAttachmentsCache
+              .getDocumentId(attachmentInfo.copy(name = FilenameUtils.getBaseName(attachmentInfo.name)))
+
+            if (existingDocumentIdForDecryptedVersion != null) {
+              embeddedAttachmentsCache.getUriVersion(existingDocumentIdForDecryptedVersion)?.let {
+                previewAttachment(
+                  attachmentInfo = it,
+                  useContentApp = account?.isHandlingAttachmentRestricted() == true
+                )
+              }
             } else {
-              val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(
-                requireContext(),
-                CacheManager.getCurrentMsgTempDirectory(requireContext())
-              )
-              navController?.navigate(
-                MessageDetailsFragmentDirections
-                  .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
-                    attachmentInfo = attachmentInfo.copy(uri = uri),
-                    requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
-                    requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
-                  )
-              )
+              val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
+              if (fingerprintList?.isNotEmpty() == true) {
+                showNeedPassphraseDialog(
+                  requestKey = "",
+                  fingerprints = fingerprintList
+                )
+              } else {
+                navController?.navigate(
+                  MessageDetailsFragmentDirections
+                    .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
+                      attachmentInfo = attachmentInfo.copy(uri = attachmentInfo.uri),
+                      requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
+                      requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
+                    )
+                )
+              }
             }
           } else {
             previewAttachment(
@@ -349,7 +350,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onDestroy() {
     super.onDestroy()
-    FileAndDirectoryUtils.cleanDir(CacheManager.getCurrentMsgTempDirectory(requireContext()))
+    EmbeddedAttachmentsProvider.Cache.getInstance().clear()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -1059,6 +1060,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         MsgBlock.Type.DECRYPTED_ATT -> {
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
+            inlineEncryptedAtts.add(
+              EmbeddedAttachmentsProvider.Cache.getInstance()
+                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            )
             inlineEncryptedAtts.add(convertToAttachmentInfo(decryptAtt))
           } else {
             handleOtherBlock(block, layoutInflater)
@@ -1066,6 +1071,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         MsgBlock.Type.INLINE_ATT -> {
+          val decryptAtt = block as? InlineAttMsgBlock
+          if (decryptAtt != null) {
+            inlineEncryptedAtts.add(
+              EmbeddedAttachmentsProvider.Cache.getInstance()
+                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+            )
           (block as? InlineAttMsgBlock)?.let {
             inlineEncryptedAtts.add(convertToAttachmentInfo(it))
           }
@@ -1832,21 +1843,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
-      if (attInfo.rawData?.isNotEmpty() == true) {
-        downloadInlinedAtt(attInfo)
+      if (account?.isHandlingAttachmentRestricted() == true) {
+        navController?.navigate(
+          MessageDetailsFragmentDirections
+            .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+              attachmentInfo = attInfo,
+              requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+              requestCode = REQUEST_CODE_SAVE_ATTACHMENT
+            )
+        )
       } else {
-        if (account?.isHandlingAttachmentRestricted() == true) {
-          navController?.navigate(
-            MessageDetailsFragmentDirections
-              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
-                attachmentInfo = attInfo,
-                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
-                requestCode = REQUEST_CODE_SAVE_ATTACHMENT
-              )
-          )
-        } else {
-          context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
-        }
+        context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
       }
     }
   }
@@ -1858,10 +1865,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     val intent = if (attachmentInfo.uri != null) {
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
-      val (_, uri) = attachmentInfo.useFileProviderToGenerateUri(
-        requireContext(), CacheManager.getCurrentMsgTempDirectory(requireContext())
-      )
-      GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+      toast(getString(R.string.preview_is_not_available))
+      return
     }
 
     if (useContentApp) {
@@ -1902,8 +1907,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun subscribeToDownloadAttachmentViaDialog() {
     setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
-      val attachmentInfo =
-        bundle.getParcelableViaExt<AttachmentInfo>(DownloadAttachmentDialogFragment.KEY_ATTACHMENT)
+      val attachmentInfo = bundle.getParcelableViaExt<AttachmentInfo>(
+        DownloadAttachmentDialogFragment.KEY_ATTACHMENT
+      )?.let { EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(it) }
 
       val existingList = attachmentsRecyclerViewAdapter.currentList.toMutableList()
       existingList.replaceAll {
@@ -1939,14 +1945,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     setFragmentResultListener(REQUEST_KEY_DECRYPT_ATTACHMENT) { _, bundle ->
       val attachmentInfo =
         bundle.getParcelableViaExt<AttachmentInfo>(DecryptAttachmentDialogFragment.KEY_ATTACHMENT)
+          ?: return@setFragmentResultListener
 
-      attachmentInfo?.let {
-        previewAttachment(
-          attachmentInfo = it,
-          useContentApp =
-          account?.isHandlingAttachmentRestricted() == true
-        )
-      }
+      previewAttachment(
+        attachmentInfo = EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(attachmentInfo),
+        useContentApp =
+        account?.isHandlingAttachmentRestricted() == true
+      )
     }
   }
 

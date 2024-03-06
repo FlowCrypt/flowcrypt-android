@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.database.dao
 
-import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
@@ -63,9 +62,6 @@ interface RecipientDao : BaseDao<RecipientEntity> {
   @Query("SELECT * FROM recipients WHERE email IN (:emails)")
   suspend fun getRecipientsWithPubKeysByEmailsSuspend(emails: Collection<String>):
       List<RecipientWithPubKeys>
-
-  @Query("SELECT * FROM recipients WHERE email LIKE :searchPattern ORDER BY last_use DESC")
-  fun getFilteredCursor(searchPattern: String): Cursor?
 
   @Transaction
   @Query("SELECT * FROM recipients WHERE email LIKE :searchPattern ORDER BY last_use DESC")
