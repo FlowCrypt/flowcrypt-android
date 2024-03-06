@@ -65,7 +65,7 @@ class PrepareDownloadedAttachmentsForForwardingViewModel(
 
           val isAttachmentEncrypted =
             FilenameUtils.getExtension(attachmentInfo.name).equals(Constants.PGP_FILE_EXT, true)
-          val cacheDirectory = CacheManager.getCurrentMsgTempDirectory(context)
+          val cacheDirectory = File("")//CacheManager.getCurrentMsgTempDirectory(context)
           val originalAttName = attachmentInfo.getSafeName()
           var tempFile = File(
             cacheDirectory, originalAttName +

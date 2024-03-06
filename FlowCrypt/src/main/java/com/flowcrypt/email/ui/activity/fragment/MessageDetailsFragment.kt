@@ -1061,24 +1061,22 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
             inlineEncryptedAtts.add(
-              EmbeddedAttachmentsProvider.Cache.getInstance()
-                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+              EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(
+                convertToAttachmentInfo(decryptAtt)
+              )
             )
-            inlineEncryptedAtts.add(convertToAttachmentInfo(decryptAtt))
           } else {
             handleOtherBlock(block, layoutInflater)
           }
         }
 
         MsgBlock.Type.INLINE_ATT -> {
-          val decryptAtt = block as? InlineAttMsgBlock
-          if (decryptAtt != null) {
-            inlineEncryptedAtts.add(
-              EmbeddedAttachmentsProvider.Cache.getInstance()
-                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
-            )
           (block as? InlineAttMsgBlock)?.let {
-            inlineEncryptedAtts.add(convertToAttachmentInfo(it))
+            inlineEncryptedAtts.add(
+              EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(
+                convertToAttachmentInfo(it)
+              )
+            )
           }
         }
 
@@ -1886,22 +1884,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         toast(getString(R.string.no_apps_that_can_handle_intent))
       }
     }
-  }
-
-  private fun downloadInlinedAtt(attInfo: AttachmentInfo) = try {
-    val (file, uri) = attInfo.useFileProviderToGenerateUri(
-      requireContext(),
-      CacheManager.getCurrentMsgTempDirectory(requireContext())
-    )
-    context?.startService(
-      AttachmentDownloadManagerService.newIntent(
-        context,
-        attInfo.copy(rawData = null, name = file.name, uri = uri)
-      )
-    )
-  } catch (e: Exception) {
-    e.printStackTrace()
-    ExceptionUtil.handleError(e)
   }
 
   private fun subscribeToDownloadAttachmentViaDialog() {
