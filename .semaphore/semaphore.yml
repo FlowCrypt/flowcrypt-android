@@ -167,8 +167,7 @@ blocks:
             # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./gradlew --console=plain :FlowCrypt:connectedEnterpriseUiTestsAndroidTest \
-              -Pandroid.testInstrumentationRunnerArguments.annotation=com.flowcrypt.email.junit.annotations.DebugTest
+            - ./gradlew --console=plain :FlowCrypt:connectedEnterpriseUiTestsAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=com.flowcrypt.email.junit.annotations.DebugTest
 
       epilogue:
         always:
