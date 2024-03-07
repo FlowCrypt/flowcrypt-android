@@ -251,7 +251,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                 navController?.navigate(
                   MessageDetailsFragmentDirections
                     .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
-                      attachmentInfo = attachmentInfo.copy(uri = attachmentInfo.uri),
+                      attachmentInfo = attachmentInfo.copy(),
                       requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
                       requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
                     )

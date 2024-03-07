@@ -7,7 +7,9 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.webkit.MimeTypeMap
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -25,24 +27,24 @@ import org.apache.commons.io.FilenameUtils
 /**
  * @author Denys Bondarenko
  */
-class PrepareDownloadedAttachmentsForForwardingViewModel(
+class DecryptDownloadedAttachmentsBeforeForwardingViewModel(
   private val attachments: Array<AttachmentInfo>,
   application: Application
 ) : DecryptDataViewModel(application) {
-  private val controlledRunnerForPreparingAttachmentsForForwarding =
+  private val controlledRunnerForDecryptingAttachmentsBeforeForwarding =
     ControlledRunner<Result<List<AttachmentInfo>>>()
-  private val preparingAttachmentsForForwardingMutableStateFlow: MutableStateFlow<Result<List<AttachmentInfo>>> =
+  private val decryptAttachmentsBeforeForwardingMutableStateFlow: MutableStateFlow<Result<List<AttachmentInfo>>> =
     MutableStateFlow(Result.none())
-  val preparingAttachmentsForForwardingStateFlow: StateFlow<Result<List<AttachmentInfo>>> =
-    preparingAttachmentsForForwardingMutableStateFlow.asStateFlow()
+  val decryptAttachmentsBeforeForwardingStateFlow: StateFlow<Result<List<AttachmentInfo>>> =
+    decryptAttachmentsBeforeForwardingMutableStateFlow.asStateFlow()
 
-  fun prepare() {
+  fun decrypt() {
     viewModelScope.launch {
       val context: Context = getApplication()
-      preparingAttachmentsForForwardingMutableStateFlow.value =
+      decryptAttachmentsBeforeForwardingMutableStateFlow.value =
         Result.loading(progressMsg = context.getString(R.string.processing_please_wait))
-      preparingAttachmentsForForwardingMutableStateFlow.value =
-        controlledRunnerForPreparingAttachmentsForForwarding.cancelPreviousThenRun {
+      decryptAttachmentsBeforeForwardingMutableStateFlow.value =
+        controlledRunnerForDecryptingAttachmentsBeforeForwarding.cancelPreviousThenRun {
           return@cancelPreviousThenRun prepareInternal(context)
         }
     }
@@ -72,21 +74,21 @@ class PrepareDownloadedAttachmentsForForwardingViewModel(
             }
           }
 
-          val originalAttName = attachmentInfo.getSafeName()
-
+          val newFileName = FilenameUtils.getBaseName(attachmentInfo.getSafeName())
           val inputStream =
             context.contentResolver.openInputStream(attachmentInfo.uri)
               ?: throw IllegalStateException("Uri is not defined")
           val decryptedData = decryptDataIfNeeded(context, inputStream)
 
-          /*list.add(
-            attachmentInfo.copy(
-              rawData = null,
-              type = Constants.MIME_TYPE_BINARY_DATA,
-              uri = uri,
-              name = tempFile.name
-            )
-          )*/
+          val attachmentInfoWithDecryptedData = attachmentInfo.copy(
+            rawData = decryptedData,
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+              FilenameUtils.getExtension(newFileName).lowercase()
+            ) ?: Constants.MIME_TYPE_BINARY_DATA,
+            name = newFileName
+          )
+
+          list.add(embeddedAttachmentsCache.addAndGet(attachmentInfoWithDecryptedData))
         } catch (e: Exception) {
           e.printStackTraceIfDebugOnly()
         }

@@ -22,7 +22,7 @@ import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
-import com.flowcrypt.email.jetpack.viewmodel.PrepareDownloadedAttachmentsForForwardingViewModel
+import com.flowcrypt.email.jetpack.viewmodel.DecryptDownloadedAttachmentsBeforeForwardingViewModel
 
 /**
  * @author Denys Bondarenko
@@ -30,12 +30,12 @@ import com.flowcrypt.email.jetpack.viewmodel.PrepareDownloadedAttachmentsForForw
 class PrepareDownloadedAttachmentsForForwardingDialogFragment : BaseDialogFragment() {
   private var binding: FragmentPrepareDownloadedAttachmentsForForwardingBinding? = null
   private val args by navArgs<PrepareDownloadedAttachmentsForForwardingDialogFragmentArgs>()
-  private val prepareDownloadedAttachmentsForForwardingViewModel:
-      PrepareDownloadedAttachmentsForForwardingViewModel by viewModels {
+  private val decryptDownloadedAttachmentsBeforeForwardingViewModel:
+      DecryptDownloadedAttachmentsBeforeForwardingViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return PrepareDownloadedAttachmentsForForwardingViewModel(
+        return DecryptDownloadedAttachmentsBeforeForwardingViewModel(
           args.attachments,
           requireActivity().application
         ) as T
@@ -47,7 +47,7 @@ class PrepareDownloadedAttachmentsForForwardingDialogFragment : BaseDialogFragme
     super.onCreate(savedInstanceState)
     isCancelable = false
     collectCreateOutgoingMessageStateFlow()
-    prepareDownloadedAttachmentsForForwardingViewModel.prepare()
+    decryptDownloadedAttachmentsBeforeForwardingViewModel.decrypt()
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -69,7 +69,7 @@ class PrepareDownloadedAttachmentsForForwardingDialogFragment : BaseDialogFragme
 
   private fun collectCreateOutgoingMessageStateFlow() {
     launchAndRepeatWithLifecycle {
-      prepareDownloadedAttachmentsForForwardingViewModel.preparingAttachmentsForForwardingStateFlow.collect {
+      decryptDownloadedAttachmentsBeforeForwardingViewModel.decryptAttachmentsBeforeForwardingStateFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
             binding?.progressBar?.visible()

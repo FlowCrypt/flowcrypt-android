@@ -128,8 +128,6 @@ data class AttachmentInfo(
     ) && isPossiblyEncrypted()
   }
 
-
-
   @Suppress("ArrayInDataClass")
   data class Builder(
     var rawData: ByteArray? = null,
