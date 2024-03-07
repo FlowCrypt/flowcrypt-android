@@ -118,8 +118,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
@@ -1064,7 +1064,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           if (decryptAtt != null) {
             inlineEncryptedAtts.add(
               EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(
-                convertToAttachmentInfo(decryptAtt)
+                convertToAttachmentInfo(decryptAtt).copy(
+                  //we need a unique path. But it doesn't matter what exactly at this point
+                  path = UUID.randomUUID().toString()
+                )
               )
             )
           } else {
