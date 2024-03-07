@@ -27,9 +27,9 @@ import com.flowcrypt.email.jetpack.viewmodel.DecryptDownloadedAttachmentsBeforeF
 /**
  * @author Denys Bondarenko
  */
-class PrepareDownloadedAttachmentsForForwardingDialogFragment : BaseDialogFragment() {
+class DecryptDownloadedAttachmentsBeforeForwardingDialogFragment : BaseDialogFragment() {
   private var binding: FragmentDecryptDownloadedAttachmentsBeforeForwardingBinding? = null
-  private val args by navArgs<PrepareDownloadedAttachmentsForForwardingDialogFragmentArgs>()
+  private val args by navArgs<DecryptDownloadedAttachmentsBeforeForwardingDialogFragmentArgs>()
   private val decryptDownloadedAttachmentsBeforeForwardingViewModel:
       DecryptDownloadedAttachmentsBeforeForwardingViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {

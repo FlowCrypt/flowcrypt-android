@@ -119,7 +119,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.dialog.PrepareDownloadedAttachmentsForForwardingDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
@@ -1807,7 +1807,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun subscribeToPrepareDownloadedAttachmentsForForwardingDialogFragment() {
     setFragmentResultListener(REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING) { _, bundle ->
       val result: Result<List<AttachmentInfo>>? = bundle.getSerializableViaExt(
-        PrepareDownloadedAttachmentsForForwardingDialogFragment.KEY_RESULT
+        DecryptDownloadedAttachmentsBeforeForwardingDialogFragment.KEY_RESULT
       ) as? Result<List<AttachmentInfo>>
 
       result?.let {

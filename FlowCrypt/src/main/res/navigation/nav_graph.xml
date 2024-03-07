@@ -695,7 +695,7 @@
 
     <dialog
         android:id="@+id/prepareDownloadedAttachmentsForForwardingDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.PrepareDownloadedAttachmentsForForwardingDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragment"
         tools:layout="@layout/fragment_create_outgoing_message">
         <argument
             android:name="requestKey"
