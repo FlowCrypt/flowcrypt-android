@@ -42,17 +42,19 @@ import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
-@FlowCryptTestSettings(useIntents = true)
+@FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
@@ -97,6 +99,11 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
+  @Before
+  fun waitForUIInit() {
+    waitForObjectWithText(getResString(R.string.public_key_below_is_safe_to_share), TimeUnit.SECONDS.toMillis(10))
+  }
+
   @Test
   fun testUpdateSuccess() {
     val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())
@@ -140,6 +147,8 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
       .perform(scrollTo(), replaceText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard())
     onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
+
+    waitForObjectWithText(getResString(R.string.key_details), TimeUnit.SECONDS.toMillis(60))
 
     //do checks after update
     onView(
