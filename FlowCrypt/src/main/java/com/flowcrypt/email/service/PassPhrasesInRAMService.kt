@@ -65,6 +65,7 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
           startForeground(
             R.id.notification_id_passphrase_service, notification,
+            //https://developer.android.com/about/versions/14/changes/fgs-types-required#permission-for-fgs-type
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
           )
         } else {
