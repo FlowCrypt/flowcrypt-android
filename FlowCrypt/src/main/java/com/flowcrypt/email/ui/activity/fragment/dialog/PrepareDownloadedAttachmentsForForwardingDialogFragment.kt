@@ -17,7 +17,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.databinding.FragmentPrepareDownloadedAttachmentsForForwardingBinding
+import com.flowcrypt.email.databinding.FragmentDecryptDownloadedAttachmentsBeforeForwardingBinding
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.visible
@@ -28,7 +28,7 @@ import com.flowcrypt.email.jetpack.viewmodel.DecryptDownloadedAttachmentsBeforeF
  * @author Denys Bondarenko
  */
 class PrepareDownloadedAttachmentsForForwardingDialogFragment : BaseDialogFragment() {
-  private var binding: FragmentPrepareDownloadedAttachmentsForForwardingBinding? = null
+  private var binding: FragmentDecryptDownloadedAttachmentsBeforeForwardingBinding? = null
   private val args by navArgs<PrepareDownloadedAttachmentsForForwardingDialogFragmentArgs>()
   private val decryptDownloadedAttachmentsBeforeForwardingViewModel:
       DecryptDownloadedAttachmentsBeforeForwardingViewModel by viewModels {
@@ -51,7 +51,7 @@ class PrepareDownloadedAttachmentsForForwardingDialogFragment : BaseDialogFragme
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    binding = FragmentPrepareDownloadedAttachmentsForForwardingBinding.inflate(
+    binding = FragmentDecryptDownloadedAttachmentsBeforeForwardingBinding.inflate(
       LayoutInflater.from(requireContext()),
       if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null,
       false
