@@ -12,6 +12,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -57,11 +58,21 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
         updateNotification(useActionButton = false)
       }
 
-      else -> startForeground(
-        R.id.notification_id_passphrase_service, prepareNotification(
+      else -> {
+        val notification = prepareNotification(
           useActionButton = keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM)
         )
-      )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+          startForeground(
+            R.id.notification_id_passphrase_service, notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+          )
+        } else {
+          startForeground(
+            R.id.notification_id_passphrase_service, notification
+          )
+        }
+      }
     }
     return superStartedState
   }
