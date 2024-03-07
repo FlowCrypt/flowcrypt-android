@@ -16,6 +16,7 @@ import com.flowcrypt.email.ui.gmailapi.EncryptedWithAttachmentsAndOwnPublicKeyCo
 import com.flowcrypt.email.ui.gmailapi.PasswordProtectedEncryptedComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow
+import com.flowcrypt.email.ui.gmailapi.StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardReplyAllComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardReplyComposeGmailApiFlow
@@ -37,6 +38,7 @@ import org.junit.runners.Suite
   StandardReplyAllComposeGmailApiFlow::class,
   StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
   StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
+  StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
   EncryptedComposeGmailApiFlow::class,
   EncryptedWithAttachmentsComposeGmailApiFlow::class,
   EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow::class,

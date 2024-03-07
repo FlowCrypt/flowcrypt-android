@@ -16,6 +16,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.ApiHelper
@@ -57,6 +58,7 @@ import com.google.api.services.gmail.model.ListSendAsResponse
 import com.google.api.services.gmail.model.MessagePart
 import com.google.api.services.gmail.model.MessagePartBody
 import com.google.api.services.gmail.model.MessagePartHeader
+import jakarta.activation.DataHandler
 import jakarta.activation.DataSource
 import jakarta.mail.BodyPart
 import jakarta.mail.Message
@@ -129,7 +131,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
   protected val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
   abstract val mockWebServerRule: FlowCryptMockWebServerRule
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
-
 
   @get:Rule
   val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
@@ -248,6 +249,9 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
               },
               com.google.api.services.gmail.model.Message().apply {
                 id = MESSAGE_ID_EXISTING_ENCRYPTED
+              },
+              com.google.api.services.gmail.model.Message().apply {
+                id = MESSAGE_ID_EXISTING_PGP_MIME
               }
             )
           }.toString()
@@ -296,6 +300,14 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           .setBody(genExistingEncryptedMessage())
       }
 
+      request.method == "GET" && request.path == genPathForMessageWithSomeFilds(
+        MESSAGE_ID_EXISTING_PGP_MIME
+      ) -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setHeader("Content-Type", Json.MEDIA_TYPE)
+          .setBody(genExistingPGPMimeMessage())
+      }
+
       request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_STANDARD}?format=full" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -306,6 +318,12 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
           .setBody(genExistingEncryptedMessage(isFullFormat = true))
+      }
+
+      request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_PGP_MIME}?format=full" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setHeader("Content-Type", Json.MEDIA_TYPE)
+          .setBody(genExistingPGPMimeMessage(isFullFormat = true))
       }
 
       request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_STANDARD}?format=minimal" -> {
@@ -402,6 +420,14 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
           )
       }
 
+      request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_PGP_MIME}?fields=raw&format=raw" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(
+            Base64.getEncoder()
+              .encodeToString(preparePgpMimeMessage(preparePgpMessageWithMimeContent()).toByteArray())
+          )
+      }
+
       request.method == "POST" && request.path == "/gmail/v1/users/me/messages/batchModify" -> {
         val source = GzipSource(request.body)
         val batchModifyMessagesRequest = GsonFactory.getDefaultInstance().fromInputStream(
@@ -411,6 +437,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
 
         if (batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_STANDARD)
           || batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_ENCRYPTED)
+          || batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_PGP_MIME)
         ) {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         } else {
@@ -985,6 +1012,60 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     return byteArrayOutputStream
   }
 
+  private fun preparePgpMessageWithMimeContent(): String {
+    val mimeMessage = FlowCryptMimeMessage(Session.getInstance(Properties()))
+    mimeMessage.subject = SUBJECT_EXISTING_PGP_MIME
+    mimeMessage.setFrom(addAccountToDatabaseRule.account.email)
+    mimeMessage.setRecipients(Message.RecipientType.TO, addAccountToDatabaseRule.account.email)
+    mimeMessage.setContent(MimeMultipart().apply {
+      addBodyPart(
+        MimeBodyPart().apply {
+          setText(MESSAGE_EXISTING_PGP_MIME)
+        }
+      )
+
+      for ((index, attachment) in attachments.withIndex()) {
+        addBodyPart(
+          MimeBodyPart().apply {
+            dataHandler = DataHandler(object : DataSource {
+              override fun getInputStream(): InputStream = attachmentsDataCache[index].inputStream()
+
+              override fun getOutputStream(): OutputStream? = null
+
+              override fun getContentType(): String {
+                return if (index == 2) {
+                  Constants.MIME_TYPE_BINARY_DATA
+                } else {
+                  JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
+                }
+              }
+
+              override fun getName(): String = attachment.name
+            })
+
+            fileName = attachment.name
+            contentID = EmailUtil.generateContentId()
+          })
+      }
+    })
+
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    mimeMessage.writeTo(byteArrayOutputStream)
+
+    return PgpEncryptAndOrSign.encryptAndOrSignMsg(
+      msg = byteArrayOutputStream.toString(),
+      pubKeys = listOf(
+        addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey,
+        defaultFromPgpKeyDetails.publicKey,
+        existingCcPgpKeyDetails.publicKey,
+      ),
+      prvKeys = listOf(
+        requireNotNull(defaultFromPgpKeyDetails.privateKey)
+      ),
+      secretKeyRingProtector = secretKeyRingProtector
+    )
+  }
+
   private fun prepareMessageHeaders(
     subject: String,
     dateInMilliseconds: Long,
@@ -1058,6 +1139,121 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     )
   }
 
+  private fun genExistingPGPMimeMessage(isFullFormat: Boolean = false) =
+    com.google.api.services.gmail.model.Message().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = MESSAGE_ID_EXISTING_PGP_MIME
+      threadId = THREAD_ID_EXISTING_PGP_MIME
+      labelIds = listOf(JavaEmailConstants.FOLDER_INBOX)
+      snippet = SUBJECT_EXISTING_PGP_MIME
+      historyId = HISTORY_ID_PGP_MIME
+      val boundary = "000000000000fbd8c4060ea7c69b"
+      payload = MessagePart().apply {
+        partId = ""
+        mimeType = "multipart/encrypted"
+        filename = ""
+        headers = prepareMessageHeaders(
+          SUBJECT_EXISTING_PGP_MIME,
+          DATE_EXISTING_PGP_MIME,
+          boundary
+        ).filterNot {
+          it.name == "Content-Type"
+        }.toMutableList().apply {
+          MessagePartHeader().apply {
+            name = "Content-Type"
+            value = "multipart/encrypted;\n" +
+                " protocol=\"application/pgp-encrypted\";\n" +
+                " boundary=\\\"$boundary\\\""
+          }
+        }
+        body = MessagePartBody().apply {
+          setSize(0)
+        }
+        parts = listOf(
+          MessagePart().apply {
+            partId = "0"
+            mimeType = "application/pgp-encrypted"
+            filename = ""
+            headers = listOf(
+              MessagePartHeader().apply {
+                name = "Content-Type"
+                value = "application/pgp-encrypted"
+              },
+              MessagePartHeader().apply {
+                name = "Content-Description"
+                value = "PGP/MIME version identification"
+              }
+            )
+            body = MessagePartBody().apply {
+              val versionMessage = "Version: 1"
+              setSize(versionMessage.length)
+              if (isFullFormat) {
+                data = Base64.getEncoder().encodeToString(versionMessage.toByteArray())
+              }
+            }
+          },
+          MessagePart().apply {
+            partId = "1"
+            mimeType = "application/octet-stream"
+            val fileName = ATTACHMENT_PGP_MIME
+            filename = fileName
+            headers = listOf(
+              MessagePartHeader().apply {
+                name = "Content-Type"
+                value = "application/octet-stream; name=\\\"$fileName\\\""
+              },
+              MessagePartHeader().apply {
+                name = "Content-Description"
+                value = "OpenPGP encrypted message"
+              },
+              MessagePartHeader().apply {
+                name = "Content-Disposition"
+                value = "inline; filename=\\\"$fileName\\\""
+              },
+            )
+            body = MessagePartBody().apply {
+              val pgpMessageWithMimeContent = preparePgpMessageWithMimeContent()
+              setSize(pgpMessageWithMimeContent.length)
+            }
+          }
+        )
+      }
+      internalDate = DATE_EXISTING_PGP_MIME
+      sizeEstimate = 0 // we don't care about this parameter
+    }.toString()
+
+  private fun preparePgpMimeMessage(pgpMessage: String): String {
+    return "Return-Path: <default@flowcrypt.test>\n" +
+        "Delivered-To: default@flowcrypt.test\n" +
+        "Message-ID: <0af3b089-d018-42ba-b897-c1553caae9d5@flowcrypt.test>\n" +
+        "Date: Thu, 7 Mar 2024 18:00:18 +0200\n" +
+        "Mime-Version: 1.0\n" +
+        "Content-Language: en-US\n" +
+        "To: default@flowcrypt.test\n" +
+        "From: Default User <default@flowcrypt.test>\n" +
+        "Subject: ...\n" +
+        "Content-Type: multipart/encrypted;\n" +
+        " protocol=\"application/pgp-encrypted\";\n" +
+        " boundary=\"------------vjUmb0D80S09zqu10qP9Vv0s\"\n" +
+        "\n" +
+        "This is an OpenPGP/MIME encrypted message (RFC 4880 and 3156)\n" +
+        "--------------vjUmb0D80S09zqu10qP9Vv0s\n" +
+        "Content-Type: application/pgp-encrypted\n" +
+        "Content-Description: PGP/MIME version identification\n" +
+        "\n" +
+        "Version: 1\n" +
+        "\n" +
+        "--------------vjUmb0D80S09zqu10qP9Vv0s\n" +
+        "Content-Type: application/octet-stream; name=\"encrypted.asc\"\n" +
+        "Content-Description: OpenPGP encrypted message\n" +
+        "Content-Disposition: inline; filename=\"encrypted.asc\"\n" +
+        "\n" +
+        pgpMessage +
+        "\n" +
+        "\n" +
+        "--------------vjUmb0D80S09zqu10qP9Vv0s--\n"
+  }
+
   companion object {
     const val EXISTING_MESSAGE_TO_RECIPIENT = "default@flowcrypt.test"
     const val EXISTING_MESSAGE_CC_RECIPIENT = "android@flowcrypt.test"
@@ -1070,7 +1266,6 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     const val ATTACHMENT_FIRST_OF_EXISTING_STANDARD = "22222222222222221"
     const val ATTACHMENT_SECOND_OF_EXISTING_STANDARD = "22222222222222222"
 
-
     const val MESSAGE_ID_EXISTING_ENCRYPTED = "5555555555555552"
     const val THREAD_ID_EXISTING_ENCRYPTED = "1111v111111111112"
     const val DATE_EXISTING_ENCRYPTED = 1704963599000
@@ -1079,8 +1274,15 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     const val ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED = "22222222222222223"
     const val ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED = "22222222222222224"
 
+    const val MESSAGE_ID_EXISTING_PGP_MIME = "5555555555555553"
+    const val THREAD_ID_EXISTING_PGP_MIME = "1111v111111111113"
+    const val DATE_EXISTING_PGP_MIME = 1704963581000
+    const val SUBJECT_EXISTING_PGP_MIME = "PGP/MIME Encrypted"
+    const val MESSAGE_EXISTING_PGP_MIME = "PGP/MIME"
+
     val HISTORY_ID_STANDARD = BigInteger("53163127")
     val HISTORY_ID_ENCRYPTED = BigInteger("53163327")
+    val HISTORY_ID_PGP_MIME = BigInteger("53163027")
 
     const val MESSAGE_ID_SENT = "5555555555555553"
     const val THREAD_ID_SENT = "1111111111111113"
@@ -1090,6 +1292,7 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
     const val ATTACHMENT_NAME_1 = "text.txt"
     const val ATTACHMENT_NAME_2 = "text1.txt"
     const val ATTACHMENT_NAME_3 = "binary_key.key"
+    const val ATTACHMENT_PGP_MIME = "encrypted.asc"
 
     const val DEFAULT_FROM_RECIPIENT = "default_from@flowcrypt.test"
     const val DEFAULT_TO_RECIPIENT = "default_to@flowcrypt.test"
