@@ -125,11 +125,11 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->
       //check forward subject
-      assertEquals(rawMime, "Fwd: $SUBJECT_EXISTING_ENCRYPTED", mimeMessage.subject)
+      assertEquals(rawMime, "Fwd: $SUBJECT_EXISTING_PGP_MIME", mimeMessage.subject)
 
       //check forward text
       val multipart = mimeMessage.content as MimeMultipart
-      assertEquals(3, multipart.count)
+      assertEquals(4, multipart.count)
       val fwdTextPart = multipart.getBodyPart(0)
       assertEquals(
         outgoingMessageConfiguration.message + IncomingMessageInfo(
@@ -138,8 +138,8 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
             folder = "",
             uid = 0,
             fromAddress = DEFAULT_FROM_RECIPIENT,
-            subject = SUBJECT_EXISTING_ENCRYPTED,
-            receivedDate = DATE_EXISTING_ENCRYPTED,
+            subject = SUBJECT_EXISTING_PGP_MIME,
+            receivedDate = DATE_EXISTING_PGP_MIME,
             toAddress = InternetAddress.toString(
               arrayOf(
                 InternetAddress(
@@ -150,8 +150,8 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
           ),
           encryptionType = MessageEncryptionType.STANDARD,
           msgBlocks = emptyList(),
-          subject = SUBJECT_EXISTING_ENCRYPTED,
-          text = MESSAGE_EXISTING_ENCRYPTED,
+          subject = SUBJECT_EXISTING_PGP_MIME,
+          text = MESSAGE_EXISTING_PGP_MIME,
           verificationResult = VerificationResult(
             hasEncryptedParts = false,
             hasSignedParts = false,
@@ -171,7 +171,8 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
 
       //check forwarded attachments
       checkStandardAttachment(multipart.getBodyPart(1), ATTACHMENT_NAME_1, attachmentsDataCache[0])
-      checkStandardAttachment(multipart.getBodyPart(2), ATTACHMENT_NAME_3, attachmentsDataCache[2])
+      checkStandardAttachment(multipart.getBodyPart(2), ATTACHMENT_NAME_2, attachmentsDataCache[1])
+      checkStandardAttachment(multipart.getBodyPart(3), ATTACHMENT_NAME_3, attachmentsDataCache[2])
     }
   }
 }
