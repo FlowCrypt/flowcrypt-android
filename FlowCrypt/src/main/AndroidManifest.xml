@@ -171,6 +171,12 @@
                 android:resource="@xml/authenticator" />
         </service>
 
+        <!--https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running#foreground-service-type-->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="specialUse"
+            tools:node="merge" />
+
         <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
 
         <receiver
