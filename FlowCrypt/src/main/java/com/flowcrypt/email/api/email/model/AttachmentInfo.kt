@@ -14,6 +14,8 @@ import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.SecurityUtils
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import org.apache.commons.io.FilenameUtils
 
@@ -37,13 +39,26 @@ data class AttachmentInfo(
   @Expose val path: String = "0",
   @Expose val uri: Uri? = null,
   @Expose val isProtected: Boolean = false,
-  @Expose val isForwarded: Boolean = false,
+  @Expose @SerializedName(
+    value = "isLazyForwarded",
+    alternate = ["isForwarded"]
+  ) val isLazyForwarded: Boolean = false,
   @Expose val isDecrypted: Boolean = false,
   @Expose val isEncryptionAllowed: Boolean = true,
   @Expose val orderNumber: Int = 0,
   @Expose val decryptWhenForward: Boolean = false,
 ) : Parcelable {
 
+  @IgnoredOnParcel
+  val isEmbedded = EmbeddedAttachmentsProvider.Cache.AUTHORITY.equals(
+    uri?.authority,
+    ignoreCase = true
+  )
+
+  @IgnoredOnParcel
+  val isPossiblyEncrypted = RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
+
+  @IgnoredOnParcel
   val uniqueStringId: String
     get() = uid.toString() + "_" + id + "_" + path
 
@@ -69,7 +84,7 @@ data class AttachmentInfo(
     if (path != other.path) return false
     if (uri != other.uri) return false
     if (isProtected != other.isProtected) return false
-    if (isForwarded != other.isForwarded) return false
+    if (isLazyForwarded != other.isLazyForwarded) return false
     if (isDecrypted != other.isDecrypted) return false
     if (isEncryptionAllowed != other.isEncryptionAllowed) return false
     if (orderNumber != other.orderNumber) return false
@@ -90,7 +105,7 @@ data class AttachmentInfo(
     result = 31 * result + path.hashCode()
     result = 31 * result + (uri?.hashCode() ?: 0)
     result = 31 * result + isProtected.hashCode()
-    result = 31 * result + isForwarded.hashCode()
+    result = 31 * result + isLazyForwarded.hashCode()
     result = 31 * result + isDecrypted.hashCode()
     result = 31 * result + isEncryptionAllowed.hashCode()
     result = 31 * result + orderNumber
@@ -116,16 +131,8 @@ data class AttachmentInfo(
     else -> false
   }
 
-
-  fun isPossiblyEncrypted(): Boolean {
-    return RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
-  }
-
   fun isEmbeddedAndPossiblyEncrypted(): Boolean {
-    return EmbeddedAttachmentsProvider.Cache.AUTHORITY.equals(
-      uri?.authority,
-      ignoreCase = true
-    ) && isPossiblyEncrypted()
+    return isEmbedded && isPossiblyEncrypted
   }
 
   @Suppress("ArrayInDataClass")
@@ -143,7 +150,7 @@ data class AttachmentInfo(
     var path: String = "0",
     var uri: Uri? = null,
     var isProtected: Boolean = false,
-    var isForwarded: Boolean = false,
+    var isLazyForwarded: Boolean = false,
     var isDecrypted: Boolean = false,
     var isEncryptionAllowed: Boolean = true,
     var orderNumber: Int = 0,
@@ -164,7 +171,7 @@ data class AttachmentInfo(
         path = path,
         uri = uri,
         isProtected = isProtected,
-        isForwarded = isForwarded,
+        isLazyForwarded = isLazyForwarded,
         isDecrypted = isDecrypted,
         isEncryptionAllowed = isEncryptionAllowed,
         orderNumber = orderNumber,

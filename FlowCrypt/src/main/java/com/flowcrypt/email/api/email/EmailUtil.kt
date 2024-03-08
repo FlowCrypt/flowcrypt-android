@@ -1109,7 +1109,7 @@ class EmailUtil {
     ): BodyPart {
       val attBodyPart = MimeBodyPart()
       val attInfo = att.toAttInfo()
-      attBodyPart.dataHandler = if (attInfo.isForwarded) {
+      attBodyPart.dataHandler = if (attInfo.isLazyForwarded) {
         DataHandler(
           ForwardedAttachmentInfoDataSource(
             context,

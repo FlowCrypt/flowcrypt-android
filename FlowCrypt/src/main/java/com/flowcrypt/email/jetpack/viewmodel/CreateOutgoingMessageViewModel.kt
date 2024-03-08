@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.DownloadForwardedAttachmentsWorker
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
@@ -133,6 +134,7 @@ class CreateOutgoingMessageViewModel(
         }
         Result.success(Unit)
       } catch (e: Exception) {
+        e.printStackTraceIfDebugOnly()
         try {
           //delete unused resources if any exception has occurred
           messageEntity?.let {
@@ -149,7 +151,7 @@ class CreateOutgoingMessageViewModel(
             }
           }
         } catch (e: Exception) {
-          e.printStackTrace()
+          e.printStackTraceIfDebugOnly()
         }
         Result.exception(e)
       }

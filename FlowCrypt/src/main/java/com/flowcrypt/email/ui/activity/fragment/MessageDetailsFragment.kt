@@ -228,7 +228,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null) {
-          if (attachmentInfo.isPossiblyEncrypted()) {
+          if (attachmentInfo.isPossiblyEncrypted) {
             val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
             val existingDocumentIdForDecryptedVersion = embeddedAttachmentsCache
               .getDocumentId(attachmentInfo.copy(name = FilenameUtils.getBaseName(attachmentInfo.name)))
@@ -529,23 +529,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         if (attachmentsRecyclerViewAdapter.currentList.none {
             it.isEmbeddedAndPossiblyEncrypted()
           }) {
-          if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
-            msgInfo?.atts =
-              attachmentsRecyclerViewAdapter.currentList.map {
-                it.copy(
-                  isForwarded = true,
-                  name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
-                  decryptWhenForward = it.isPossiblyEncrypted()
-                )
-              }
-          } else {
-            msgInfo?.atts =
-              attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
-          }
-
           startActivity(
             CreateMessageActivity.generateIntent(
-              context, MessageType.FORWARD, msgEncryptType, prepareMsgInfoForReply()
+              context = context,
+              messageType = MessageType.FORWARD,
+              msgEncryptionType = msgEncryptType,
+              msgInfo = prepareMsgInfoForReply()?.copy(
+                atts = prepareAttachmentsForForwarding()
+              )
             )
           )
         } else {
@@ -1065,8 +1056,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             inlineEncryptedAtts.add(
               EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(
                 convertToAttachmentInfo(decryptAtt).copy(
-                  //we need a unique path. But it doesn't matter what exactly at this point
-                  path = UUID.randomUUID().toString()
+                  path = "${inlineEncryptedAtts.size}"
                 )
               )
             )
@@ -1816,14 +1806,20 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       result?.let {
         when (result.status) {
           Result.Status.SUCCESS -> {
+            val decryptedAttachments = it.data ?: emptyList()
+            val encryptedAttachments =
+              attachmentsRecyclerViewAdapter.currentList.filter { attachmentInfo ->
+                attachmentInfo.isEmbeddedAndPossiblyEncrypted()
+              }
+            val attachmentsForForwarding = prepareAttachmentsForForwarding() -
+                encryptedAttachments.toSet() + decryptedAttachments
+
             startActivity(
               CreateMessageActivity.generateIntent(
                 context = context,
                 messageType = MessageType.FORWARD,
                 msgEncryptionType = msgEncryptType,
-                msgInfo = prepareMsgInfoForReply()?.copy(
-                  atts = it.data
-                )
+                msgInfo = prepareMsgInfoForReply()?.copy(atts = attachmentsForForwarding)
               )
             )
           }
@@ -1993,6 +1989,19 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       )
     }
   }
+
+  private fun prepareAttachmentsForForwarding() =
+    if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
+      attachmentsRecyclerViewAdapter.currentList.map {
+        it.copy(
+          isLazyForwarded = !it.isEmbedded,
+          name = if (it.isPossiblyEncrypted) FilenameUtils.removeExtension(it.name) else it.name,
+          decryptWhenForward = it.isPossiblyEncrypted
+        )
+      }
+    } else {
+      attachmentsRecyclerViewAdapter.currentList.map { it.copy(isLazyForwarded = !it.isEmbedded) }
+    }
 
   companion object {
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103

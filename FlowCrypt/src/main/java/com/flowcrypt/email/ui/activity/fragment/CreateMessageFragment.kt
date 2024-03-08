@@ -1306,7 +1306,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.attachmentsStateFlow.collect { allAttachments ->
-        val forwardedAttachments = allAttachments.filter { it.id != null && it.isForwarded }
+        val forwardedAttachments = allAttachments.filter { it.id != null && it.isLazyForwarded }
         val addedAttachments = (allAttachments - forwardedAttachments.toSet())
           .mapIndexed { index, attachmentInfo ->
             attachmentInfo.copy(path = index.toString())

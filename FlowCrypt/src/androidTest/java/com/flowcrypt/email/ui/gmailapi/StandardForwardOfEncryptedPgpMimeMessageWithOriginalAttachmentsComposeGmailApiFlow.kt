@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.gmailapi
 
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
@@ -14,7 +13,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -56,7 +54,6 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
-@Ignore("temp")
 @OutgoingMessageConfiguration(
   to = [BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT],
   cc = [],
@@ -133,41 +130,50 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(4, multipart.count)
       val fwdTextPart = multipart.getBodyPart(0)
-      assertEquals(
-        outgoingMessageConfiguration.message + IncomingMessageInfo(
-          msgEntity = MessageEntity(
-            email = "",
-            folder = "",
-            uid = 0,
-            fromAddress = DEFAULT_FROM_RECIPIENT,
-            subject = SUBJECT_EXISTING_PGP_MIME,
-            receivedDate = DATE_EXISTING_PGP_MIME,
-            toAddress = InternetAddress.toString(
-              arrayOf(
-                InternetAddress(
-                  EXISTING_MESSAGE_TO_RECIPIENT
-                )
+      val expectedMessageText = outgoingMessageConfiguration.message + IncomingMessageInfo(
+        msgEntity = MessageEntity(
+          email = "",
+          folder = "",
+          uid = 0,
+          fromAddress = DEFAULT_FROM_RECIPIENT,
+          subject = SUBJECT_EXISTING_PGP_MIME,
+          receivedDate = DATE_EXISTING_PGP_MIME,
+          toAddress = InternetAddress.toString(
+            arrayOf(
+              InternetAddress(
+                EXISTING_MESSAGE_TO_RECIPIENT
               )
             )
           ),
-          encryptionType = MessageEncryptionType.STANDARD,
-          msgBlocks = emptyList(),
-          subject = SUBJECT_EXISTING_PGP_MIME,
-          text = MESSAGE_EXISTING_PGP_MIME,
-          verificationResult = VerificationResult(
-            hasEncryptedParts = false,
-            hasSignedParts = false,
-            hasMixedSignatures = false,
-            isPartialSigned = false,
-            keyIdOfSigningKeys = emptyList(),
-            hasBadSignatures = false
+          ccAddress = InternetAddress.toString(
+            arrayOf(
+              InternetAddress(
+                EXISTING_MESSAGE_CC_RECIPIENT
+              )
+            )
           )
-        ).toInitializationData(
-          context = getTargetContext(),
-          messageType = MessageType.FORWARD,
-          accountEmail = addAccountToDatabaseRule.account.email,
-          aliases = emptyList()
-        ).body,
+        ),
+        encryptionType = MessageEncryptionType.STANDARD,
+        msgBlocks = emptyList(),
+        subject = SUBJECT_EXISTING_PGP_MIME,
+        text = MESSAGE_EXISTING_PGP_MIME,
+        verificationResult = VerificationResult(
+          hasEncryptedParts = false,
+          hasSignedParts = false,
+          hasMixedSignatures = false,
+          isPartialSigned = false,
+          keyIdOfSigningKeys = emptyList(),
+          hasBadSignatures = false
+        )
+      ).toInitializationData(
+        context = getTargetContext(),
+        messageType = MessageType.FORWARD,
+        accountEmail = addAccountToDatabaseRule.account.email,
+        aliases = emptyList()
+      ).body
+
+      assertEquals(
+        expectedMessageText,
         fwdTextPart.content as String
       )
 

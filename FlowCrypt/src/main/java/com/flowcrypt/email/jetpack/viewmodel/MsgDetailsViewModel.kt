@@ -519,8 +519,6 @@ class MsgDetailsViewModel(
     if (uri != null) {
       val context: Context = getApplication()
       try {
-        EmbeddedAttachmentsProvider.Cache.getInstance().clear()
-
         val inputStream =
           context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
@@ -558,8 +556,6 @@ class MsgDetailsViewModel(
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       try {
-        EmbeddedAttachmentsProvider.Cache.getInstance().clear()
-
         val processedMimeMessageResult =
           PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
         preResultsProcessing(processedMimeMessageResult.blocks)
