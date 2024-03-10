@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.workmanager
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
@@ -43,7 +44,7 @@ import java.util.UUID
  *
  * @author Denys Bondarenko
  */
-class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) :
+class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParameters) :
   BaseWorker(context, params) {
   private val attCacheDir = File(applicationContext.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
   private val fwdAttsCacheDir = File(attCacheDir, Constants.FORWARDED_ATTACHMENTS_CACHE_DIR)
@@ -235,36 +236,48 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       val attFile = File(msgAttsDir, attName)
       val exists = attFile.exists()
 
-      var uri: Uri? = null
-      if (exists) {
-        uri =
-          FileProvider.getUriForFile(applicationContext, Constants.FILE_PROVIDER_AUTHORITY, attFile)
-      } else if (attachmentEntity.fileUri == null) {
-        FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
-        val inputStream = action.invoke(attachmentEntity)
-        val tempFile = File(fwdAttsCacheDir, UUID.randomUUID().toString())
-        if (inputStream != null) {
-          inputStream.use { srcStream ->
-            FileOutputStream(tempFile).use { destStream ->
-              srcStream.copyTo(destStream)
-            }
-          }
-
-          if (msgAttsDir.exists()) {
-            FileUtils.moveFile(tempFile, attFile)
-            uri = FileProvider.getUriForFile(
+      var uri: Uri?
+      when {
+        exists -> {
+          uri =
+            FileProvider.getUriForFile(
               applicationContext,
               Constants.FILE_PROVIDER_AUTHORITY,
               attFile
             )
+        }
+
+        attachmentEntity.fileUri == null -> {
+          FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
+          val inputStream = action.invoke(attachmentEntity)
+          val tempFile = File(fwdAttsCacheDir, UUID.randomUUID().toString())
+          if (inputStream != null) {
+            inputStream.use { srcStream ->
+              FileOutputStream(tempFile).use { destStream ->
+                srcStream.copyTo(destStream)
+              }
+            }
+
+            if (msgAttsDir.exists()) {
+              FileUtils.moveFile(tempFile, attFile)
+              uri = FileProvider.getUriForFile(
+                applicationContext,
+                Constants.FILE_PROVIDER_AUTHORITY,
+                attFile
+              )
+            } else {
+              FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
+              //It means the user has already deleted the current message. We don't need to download other attachments.
+              break
+            }
           } else {
-            FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
-            //It means the user has already deleted the current message. We don't need to download other attachments.
+            msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND
             break
           }
-        } else {
-          msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND
-          break
+        }
+
+        else -> {
+          uri = attachmentEntity.fileUri.toUri()
         }
       }
 
@@ -280,11 +293,11 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
   }
 
   companion object {
-    private val TAG = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
+    private val TAG = DownloadForwardedAttachmentsWorker::class.java.simpleName
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".DOWNLOAD_FORWARDED_ATTACHMENTS"
 
     fun enqueue(context: Context) {
-      enqueueWithDefaultParameters<ForwardedAttachmentsDownloaderWorker>(
+      enqueueWithDefaultParameters<DownloadForwardedAttachmentsWorker>(
         context = context,
         uniqueWorkName = GROUP_UNIQUE_TAG,
         existingWorkPolicy = ExistingWorkPolicy.KEEP

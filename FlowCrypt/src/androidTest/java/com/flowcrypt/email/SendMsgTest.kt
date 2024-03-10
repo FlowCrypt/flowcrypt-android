@@ -236,7 +236,7 @@ class SendMsgTest {
         uid = Random.nextLong(),
         atts = listOf(attachmentInfo)
       )
-    )?.copy(isForwarded = true)
+    )?.copy(isLazyForwarded = true)
     assertNotNull(forwardedAttachmentInfo)
 
     val outgoingMessageInfo = OutgoingMessageInfo(
@@ -383,7 +383,7 @@ class SendMsgTest {
     )?.copy(
       name = attachmentInfo.name,
       decryptWhenForward = true,
-      isForwarded = true
+      isLazyForwarded = true
     )
     assertNotNull(encryptedForwardedAttachmentInfo)
 

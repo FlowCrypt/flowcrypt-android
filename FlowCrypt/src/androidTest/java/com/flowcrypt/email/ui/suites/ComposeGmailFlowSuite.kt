@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.suites
 
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.ui.gmailapi.EncryptedComposeGmailApiFlow
+import com.flowcrypt.email.ui.gmailapi.EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.EncryptedReplyAllComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.EncryptedReplyComposeGmailApiFlow
@@ -15,6 +16,7 @@ import com.flowcrypt.email.ui.gmailapi.EncryptedWithAttachmentsAndOwnPublicKeyCo
 import com.flowcrypt.email.ui.gmailapi.PasswordProtectedEncryptedComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow
+import com.flowcrypt.email.ui.gmailapi.StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardReplyAllComposeGmailApiFlow
 import com.flowcrypt.email.ui.gmailapi.StandardReplyComposeGmailApiFlow
@@ -36,12 +38,14 @@ import org.junit.runners.Suite
   StandardReplyAllComposeGmailApiFlow::class,
   StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
   StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
+  StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
   EncryptedComposeGmailApiFlow::class,
   EncryptedWithAttachmentsComposeGmailApiFlow::class,
   EncryptedWithAttachmentsAndOwnPublicKeyComposeGmailApiFlow::class,
   EncryptedReplyComposeGmailApiFlow::class,
   EncryptedReplyAllComposeGmailApiFlow::class,
   EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
+  EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow::class,
   PasswordProtectedEncryptedComposeGmailApiFlow::class,
 )
 class ComposeGmailFlowSuite

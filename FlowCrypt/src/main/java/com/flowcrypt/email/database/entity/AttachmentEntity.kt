@@ -68,7 +68,7 @@ data class AttachmentEntity(
       fwdFolder = forwardedFolder,
       fwdUid = forwardedUid ?: -1,
       path = path,
-      isForwarded = isForwarded,
+      isLazyForwarded = isForwarded,
       isEncryptionAllowed = true,
       decryptWhenForward = decryptWhenForward
     ).build()
