@@ -20,7 +20,6 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentScreenshotEditorBinding
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import ja.burhanrashid52.photoeditor.OnSaveBitmap
@@ -65,16 +64,12 @@ class EditScreenshotDialogFragment : BaseDialogFragment() {
     binding?.imageButtonCancel?.setOnClickListener { navController?.navigateUp() }
     binding?.imageButtonSave?.setOnClickListener {
       photoEditor?.saveAsBitmap(object : OnSaveBitmap {
-        override fun onBitmapReady(saveBitmap: Bitmap?) {
+        override fun onBitmapReady(saveBitmap: Bitmap) {
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
             bundleOf(KEY_SCREENSHOT to UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100))
           )
-        }
-
-        override fun onFailure(e: Exception?) {
-          toast(e?.message ?: e?.javaClass?.simpleName ?: getString(R.string.unknown_error))
         }
       })
     }
