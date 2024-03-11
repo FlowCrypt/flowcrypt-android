@@ -387,7 +387,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.6.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.8.1")
+  androidTestImplementation("androidx.work:work-testing:2.9.0")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
