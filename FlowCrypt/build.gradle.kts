@@ -387,7 +387,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.6.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.8.1")
+  androidTestImplementation("androidx.work:work-testing:2.9.0")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -401,7 +401,7 @@ dependencies {
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.22")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.23")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -413,7 +413,7 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.6.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.7.0")
+  implementation("androidx.browser:browser:1.8.0")
   implementation("androidx.recyclerview:recyclerview:1.3.2")
   implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
