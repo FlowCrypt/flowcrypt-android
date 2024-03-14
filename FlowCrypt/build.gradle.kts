@@ -24,8 +24,8 @@ plugins {
 }
 
 val keystoreProperties = Properties()
-val propertiesFile: File? = project.file("keystore.properties")
-if (propertiesFile?.exists() == true) {
+val propertiesFile = project.file("keystore.properties")
+if (propertiesFile.exists()) {
   keystoreProperties.load(FileInputStream(propertiesFile))
 }
 
@@ -323,6 +323,12 @@ easylauncher {
         )
       )
     }
+  }
+}
+
+tasks.register("checkCorrectBranch") {
+  if (!grgit.branch.current().name.equals("master")) {
+    throw GradleException("Please use 'master' branch to generate a release build")
   }
 }
 
