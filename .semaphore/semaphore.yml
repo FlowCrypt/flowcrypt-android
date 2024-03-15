@@ -4,6 +4,9 @@ agent:
   machine:
     type: e1-standard-4
     os_image: ubuntu2004
+  containers:
+    - name: main
+      image: 'registry.semaphoreci.com/android:34'
 execution_time_limit:
   minutes: 60
 
@@ -22,7 +25,7 @@ global_job_config:
     - name: SEMAPHORE_GIT_DIR
       value: /home/semaphore/git/flowcrypt-android
     - name: ANDROID_SDK_ROOT
-      value: /home/semaphore/Android/Sdk
+      value: /opt/android-sdk-linux
   prologue:
     commands:
       # fix DNS to ping *.localhost and *.flowcrypt.test
@@ -40,7 +43,6 @@ global_job_config:
       # use JAVA 17 by default
       - sem-version java 17
       # general settings
-      - export PATH=${ANDROID_SDK_ROOT}/emulator:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
       # init environment variables
