@@ -241,13 +241,15 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
-        attachmentInfo.uri?.let { uri ->
-          val intent = GeneralUtil.genViewAttachmentIntent(uri, attachmentInfo)
+        if (attachmentInfo.uri != null) {
+          val intent = GeneralUtil.genViewAttachmentIntent(attachmentInfo.uri, attachmentInfo)
           try {
             startActivity(intent)
           } catch (e: ActivityNotFoundException) {
             toast(getString(R.string.no_apps_that_can_handle_intent))
           }
+        } else {
+          toast(getString(R.string.preview_is_not_available))
         }
       }
 
@@ -1304,7 +1306,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     launchAndRepeatWithViewLifecycle {
       composeMsgViewModel.attachmentsStateFlow.collect { allAttachments ->
-        val forwardedAttachments = allAttachments.filter { it.id != null && it.isForwarded }
+        val forwardedAttachments = allAttachments.filter { it.id != null && it.isLazyForwarded }
         val addedAttachments = (allAttachments - forwardedAttachments.toSet())
           .mapIndexed { index, attachmentInfo ->
             attachmentInfo.copy(path = index.toString())

@@ -45,12 +45,15 @@
         tools:replace="android:allowBackup">
 
         <!-- Activities -->
+        <!--We can use tools:ignore="DiscouragedApi" to prevent warnings
+        about screenOrientation="portrait" because we don't support landscape yet.-->
         <activity
             android:name=".ui.activity.MainActivity"
             android:exported="true"
             android:launchMode="singleInstancePerTask"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Starting">
+            android:theme="@style/AppTheme.Starting"
+            tools:ignore="DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -60,13 +63,16 @@
             <nav-graph android:value="@navigation/nav_graph" />
         </activity>
 
+        <!--We can use tools:ignore="DiscouragedApi" to prevent warnings
+        about screenOrientation="portrait" because we don't support landscape yet.-->
         <activity
             android:name=".ui.activity.CreateMessageActivity"
             android:autoRemoveFromRecents="true"
             android:documentLaunchMode="intoExisting"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+            tools:ignore="DiscouragedApi">
             <nav-graph android:value="@navigation/create_msg_graph" />
 
             <intent-filter>
@@ -133,8 +139,8 @@
         <provider
             android:name="com.flowcrypt.email.providers.EmbeddedAttachmentsProvider"
             android:authorities="${applicationId}.embedded.attachments"
-            android:grantUriPermissions="true"
             android:exported="true"
+            android:grantUriPermissions="true"
             android:permission="android.permission.MANAGE_DOCUMENTS" />
 
         <!-- Services -->
@@ -170,6 +176,12 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
+
+        <!--https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running#foreground-service-type-->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="specialUse"
+            tools:node="merge" />
 
         <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
 

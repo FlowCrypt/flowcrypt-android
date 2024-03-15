@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.workmanager
 import android.accounts.AuthenticatorException
 import android.app.ForegroundServiceStartNotAllowedException
 import android.content.Context
+import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
@@ -199,7 +200,16 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
         }
       }.build()
 
-    return ForegroundInfo(NOTIFICATION_ID, notification)
+    return ForegroundInfo(
+      NOTIFICATION_ID,
+      notification,
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        //https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running#specify-foreground-service-types-runtime
+        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+      } else {
+        0
+      }
+    )
   }
 
   private suspend fun sendQueuedMsgs(

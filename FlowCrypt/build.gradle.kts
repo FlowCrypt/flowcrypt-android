@@ -24,8 +24,8 @@ plugins {
 }
 
 val keystoreProperties = Properties()
-val propertiesFile: File? = project.file("keystore.properties")
-if (propertiesFile?.exists() == true) {
+val propertiesFile = project.file("keystore.properties")
+if (propertiesFile.exists()) {
   keystoreProperties.load(FileInputStream(propertiesFile))
 }
 
@@ -326,6 +326,12 @@ easylauncher {
   }
 }
 
+tasks.register("checkCorrectBranch") {
+  if (!grgit.branch.current().name.equals("master")) {
+    throw GradleException("Please use 'master' branch to generate a release build")
+  }
+}
+
 tasks.register("renameReleaseBuilds") {
   doLast {
     android.applicationVariants.forEach { applicationVariant ->
@@ -387,7 +393,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.6.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.8.1")
+  androidTestImplementation("androidx.work:work-testing:2.9.0")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -401,7 +407,7 @@ dependencies {
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.22")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.23")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -413,7 +419,7 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.6.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.7.0")
+  implementation("androidx.browser:browser:1.8.0")
   implementation("androidx.recyclerview:recyclerview:1.3.2")
   implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
@@ -429,15 +435,15 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.10.1")
+  implementation("androidx.core:core-ktx:1.12.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.8.2")
   implementation("androidx.fragment:fragment-ktx:1.6.2")
   implementation("androidx.work:work-runtime-ktx:2.9.0")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
   implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
   implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
-  implementation("androidx.webkit:webkit:1.7.0")
+  implementation("androidx.webkit:webkit:1.10.0")
 
   implementation("com.google.android.gms:play-services-base:18.3.0")
   implementation("com.google.android.gms:play-services-auth:21.0.0")
@@ -469,9 +475,9 @@ dependencies {
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
   implementation("commons-io:commons-io:2.15.1")
-  implementation("com.burhanrashid52:photoeditor:3.0.1")
+  implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("net.openid:appauth:0.11.1")
-  implementation("org.bitbucket.b_c:jose4j:0.9.5")
+  implementation("org.bitbucket.b_c:jose4j:0.9.6")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1")
   implementation("org.jsoup:jsoup:1.17.2")

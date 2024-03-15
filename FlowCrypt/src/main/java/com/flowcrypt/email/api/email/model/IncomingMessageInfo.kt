@@ -52,13 +52,6 @@ data class IncomingMessageInfo constructor(
 
   fun getCc(): List<InternetAddress> = msgEntity.cc
 
-  fun getHtmlMsgBlock(): MsgBlock? {
-    return msgBlocks?.firstOrNull { part ->
-      part.type == MsgBlock.Type.PLAIN_HTML || part.type == MsgBlock.Type.DECRYPTED_HTML
-    }
-  }
-
-  fun getUid(): Int = msgEntity.uid.toInt()
 
   constructor(
     msgEntity: MessageEntity, text: String?, subject: String?, msgBlocks: List<MsgBlock>,
@@ -73,14 +66,6 @@ data class IncomingMessageInfo constructor(
     encryptionType,
     verificationResult
   )
-
-  fun hasHtmlText(): Boolean {
-    return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML)
-  }
-
-  fun hasPlainText(): Boolean {
-    return hasSomePart(MsgBlock.Type.PLAIN_TEXT)
-  }
 
   fun toInitializationData(
     context: Context,

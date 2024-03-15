@@ -59,6 +59,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
@@ -71,6 +72,7 @@ import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentMessageDetailsBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
+import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
@@ -116,6 +118,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
@@ -225,7 +228,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null) {
-          if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
+          if (attachmentInfo.isPossiblyEncrypted) {
             val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
             val existingDocumentIdForDecryptedVersion = embeddedAttachmentsCache
               .getDocumentId(attachmentInfo.copy(name = FilenameUtils.getBaseName(attachmentInfo.name)))
@@ -248,7 +251,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                 navController?.navigate(
                   MessageDetailsFragmentDirections
                     .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
-                      attachmentInfo = attachmentInfo.copy(uri = attachmentInfo.uri),
+                      attachmentInfo = attachmentInfo.copy(),
                       requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
                       requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
                     )
@@ -335,6 +338,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     collectReVerifySignaturesStateFlow()
     subscribeToTwoWayDialog()
     subscribeToChoosePublicKeyDialogFragment()
+    subscribeToPrepareDownloadedAttachmentsForForwardingDialogFragment()
     collectMessageActionsVisibilityStateFlow()
   }
 
@@ -522,25 +526,30 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
 
       R.id.layoutFwdButton -> {
-        if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          msgInfo?.atts =
-            attachmentsRecyclerViewAdapter.currentList.map {
-              it.copy(
-                isForwarded = true,
-                name = if (it.isPossiblyEncrypted()) FilenameUtils.removeExtension(it.name) else it.name,
-                decryptWhenForward = it.isPossiblyEncrypted()
+        if (attachmentsRecyclerViewAdapter.currentList.none {
+            it.isEmbeddedAndPossiblyEncrypted()
+          }) {
+          startActivity(
+            CreateMessageActivity.generateIntent(
+              context = context,
+              messageType = MessageType.FORWARD,
+              msgEncryptionType = msgEncryptType,
+              msgInfo = prepareMsgInfoForReply()?.copy(
+                atts = prepareAttachmentsForForwarding()
               )
-            }
-        } else {
-          msgInfo?.atts =
-            attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
-        }
-
-        startActivity(
-          CreateMessageActivity.generateIntent(
-            context, MessageType.FORWARD, msgEncryptType, prepareMsgInfoForReply()
+            )
           )
-        )
+        } else {
+          navController?.navigate(
+            MessageDetailsFragmentDirections
+              .actionMessageDetailsFragmentToPrepareDownloadedAttachmentsForForwardingDialogFragment(
+                requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING,
+                attachments = attachmentsRecyclerViewAdapter.currentList.filter {
+                  it.isEmbeddedAndPossiblyEncrypted()
+                }.toTypedArray()
+              )
+          )
+        }
       }
     }
   }
@@ -1045,8 +1054,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           val decryptAtt = block as? DecryptedAttMsgBlock
           if (decryptAtt != null) {
             inlineEncryptedAtts.add(
-              EmbeddedAttachmentsProvider.Cache.getInstance()
-                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+              EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(
+                convertToAttachmentInfo(decryptAtt).copy(
+                  path = "${inlineEncryptedAtts.size}"
+                )
+              )
             )
           } else {
             handleOtherBlock(block, layoutInflater)
@@ -1054,11 +1066,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
 
         MsgBlock.Type.INLINE_ATT -> {
-          val decryptAtt = block as? InlineAttMsgBlock
-          if (decryptAtt != null) {
+          (block as? InlineAttMsgBlock)?.let {
             inlineEncryptedAtts.add(
-              EmbeddedAttachmentsProvider.Cache.getInstance()
-                .addAndGet(decryptAtt.toAttachmentInfo().copy(email = account?.email))
+              EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(
+                convertToAttachmentInfo(it)
+              )
             )
           }
         }
@@ -1077,6 +1089,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     if (inlineEncryptedAtts.isNotEmpty()) {
       msgDetailsViewModel.updateInlinedAttachments(inlineEncryptedAtts)
     }
+  }
+
+  private fun convertToAttachmentInfo(attMsgBlock: AttMsgBlock): AttachmentInfo {
+    return attMsgBlock.toAttachmentInfo().copy(
+      email = account?.email,
+      uid = msgInfo?.msgEntity?.uid ?: -1,
+      folder = msgInfo?.msgEntity?.folder,
+    )
   }
 
   private fun handleOtherBlock(
@@ -1777,6 +1797,49 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  private fun subscribeToPrepareDownloadedAttachmentsForForwardingDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING) { _, bundle ->
+      val result: Result<List<AttachmentInfo>>? = bundle.getSerializableViaExt(
+        DecryptDownloadedAttachmentsBeforeForwardingDialogFragment.KEY_RESULT
+      ) as? Result<List<AttachmentInfo>>
+
+      result?.let {
+        when (result.status) {
+          Result.Status.SUCCESS -> {
+            val decryptedAttachments = it.data ?: emptyList()
+            val encryptedAttachments =
+              attachmentsRecyclerViewAdapter.currentList.filter { attachmentInfo ->
+                attachmentInfo.isEmbeddedAndPossiblyEncrypted()
+              }
+            val attachmentsForForwarding = prepareAttachmentsForForwarding() -
+                encryptedAttachments.toSet() + decryptedAttachments
+
+            startActivity(
+              CreateMessageActivity.generateIntent(
+                context = context,
+                messageType = MessageType.FORWARD,
+                msgEncryptionType = msgEncryptType,
+                msgInfo = prepareMsgInfoForReply()?.copy(atts = attachmentsForForwarding)
+              )
+            )
+          }
+
+          Result.Status.EXCEPTION -> {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = it.exceptionMsg,
+              isCancelable = true
+            )
+          }
+
+          else -> {
+            toast(getString(R.string.unknown_error))
+          }
+        }
+      }
+    }
+  }
+
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
       if (account?.isHandlingAttachmentRestricted() == true) {
@@ -1927,6 +1990,19 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
+  private fun prepareAttachmentsForForwarding() =
+    if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
+      attachmentsRecyclerViewAdapter.currentList.map {
+        it.copy(
+          isLazyForwarded = !it.isEmbedded,
+          name = if (it.isPossiblyEncrypted) FilenameUtils.removeExtension(it.name) else it.name,
+          decryptWhenForward = it.isPossiblyEncrypted
+        )
+      }
+    } else {
+      attachmentsRecyclerViewAdapter.currentList.map { it.copy(isLazyForwarded = !it.isEmbedded) }
+    }
+
   companion object {
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
@@ -1960,5 +2036,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
       MessageDetailsFragment::class.java
     )
+
+    private val REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING =
+      GeneralUtil.generateUniqueExtraKey(
+        "REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING",
+        MessageDetailsFragment::class.java
+      )
   }
 }
