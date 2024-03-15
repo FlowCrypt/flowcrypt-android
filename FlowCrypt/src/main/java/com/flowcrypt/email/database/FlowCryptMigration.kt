@@ -29,12 +29,12 @@ abstract class FlowCryptMigration(startVersion: Int, endVersion: Int) :
    */
   abstract fun doMigration(database: SupportSQLiteDatabase)
 
-  override fun migrate(database: SupportSQLiteDatabase) {
+  override fun migrate(db: SupportSQLiteDatabase) {
     LogsUtil.d(
       FlowCryptMigration::class.java.simpleName,
       "Begin migration from $startVersion to $endVersion"
     )
-    doMigration(database)
+    doMigration(db)
     LogsUtil.d(
       FlowCryptMigration::class.java.simpleName,
       "End migration from $startVersion to $endVersion"
