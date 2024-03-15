@@ -21,7 +21,7 @@ global_job_config:
       value: "10"
     - name: SEMAPHORE_GIT_DIR
       value: /home/semaphore/git/flowcrypt-android
-    - name: ANDROID_SDK_ROOT
+    - name: ANDROID_HOME
       value: /home/semaphore/Android/Sdk
   prologue:
     commands:
@@ -40,7 +40,7 @@ global_job_config:
       # use JAVA 17 by default
       - sem-version java 17
       # general settings
-      - export PATH=${ANDROID_SDK_ROOT}/emulator:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}
+      - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
       # init environment variables
@@ -91,7 +91,7 @@ blocks:
             # clean and store global cache
             - echo "Store the global cache"
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
-            - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE $ANDROID_SDK_ROOT
+            - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE $ANDROID_HOME
             - cache delete gradle-wrapper
             - cache delete gradle-cache
             - cache delete android-build-cache
