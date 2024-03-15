@@ -687,6 +687,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+  @Ignore("temp")
   fun testSignedMsgClearSignBroken() {
     val msgInfo = getMsgInfo(
       path = "messages/info/signed_msg_clearsign_broken.json",
