@@ -30,6 +30,7 @@ global_job_config:
     commands:
       # fix DNS to ping *.localhost and *.flowcrypt.test
       - sudo apt-get update
+      - sudo apt install -f
       - sudo apt install -y dnsmasq resolvconf
       - echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
       - echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
