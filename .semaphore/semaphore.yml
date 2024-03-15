@@ -31,8 +31,6 @@ global_job_config:
       # fix DNS to ping *.localhost and *.flowcrypt.test
       - sudo apt-get update
       # print some debug info
-      - ping fel.localhost -c 1
-      - ping fel.flowcrypt.test -c 1
       # use JAVA 17 by default
       - sem-version java 17
       # general settings
