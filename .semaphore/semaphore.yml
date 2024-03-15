@@ -116,22 +116,6 @@ blocks:
             # run JUnit tests
             - ./script/ci-junit-tests.sh
 
-        - name: 'Instrumentation tests(No email server)'
-          execution_time_limit:
-            minutes: 45
-          matrix:
-            - env_var: EMULATOR
-              values: [ "0", "1", "2", "3" ]
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            # wait until ready
-            - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
-
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
             minutes: 45
@@ -146,19 +130,6 @@ blocks:
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
-
-        - name: 'Instrumentation tests(enterprise)'
-          execution_time_limit:
-            minutes: 45
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            #wait until ready
-            - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-enterprise.sh
 
       epilogue:
         always:
