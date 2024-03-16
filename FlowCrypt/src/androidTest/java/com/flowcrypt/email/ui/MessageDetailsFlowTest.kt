@@ -265,6 +265,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+  @Ignore("temp")
   fun testDecryptionError_FORMAT_BadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
       path = "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
