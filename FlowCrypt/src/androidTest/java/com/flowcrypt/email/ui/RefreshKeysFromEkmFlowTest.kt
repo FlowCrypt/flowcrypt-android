@@ -118,7 +118,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
   }
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testUpdatePrvKeyFromEkmShowFixMissingPassphrase() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
 

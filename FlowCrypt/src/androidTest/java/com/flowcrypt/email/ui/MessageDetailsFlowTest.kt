@@ -216,7 +216,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testDecryptionError_KEY_MISMATCH_MissingKeyErrorImportKey() {
     testMissingKey(
       getMsgInfo(
@@ -266,7 +266,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testDecryptionError_FORMAT_BadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
       path = "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
@@ -690,7 +690,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testSignedMsgClearSignBroken() {
     val msgInfo = getMsgInfo(
       path = "messages/info/signed_msg_clearsign_broken.json",

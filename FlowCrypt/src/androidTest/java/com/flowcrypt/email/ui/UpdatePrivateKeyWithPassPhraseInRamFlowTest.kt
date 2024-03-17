@@ -105,7 +105,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testUpdateSuccess() {
     Thread.sleep(1000)
     val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())

@@ -140,7 +140,7 @@ class ParseAndSavePubKeysFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testIsDisplayedLabelAlreadyImported() {
     launchFragmentInContainer<ParseAndSavePubKeysFragment>(
       fragmentArgs = ParseAndSavePubKeysFragmentArgs(

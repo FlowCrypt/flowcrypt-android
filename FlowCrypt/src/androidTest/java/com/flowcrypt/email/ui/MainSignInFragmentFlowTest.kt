@@ -296,7 +296,7 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
   }
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testFailAttesterSubmit() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_ENFORCE_ATTESTER_SUBMIT))
     unregisterCountingIdlingResource()

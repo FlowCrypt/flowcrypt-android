@@ -85,7 +85,7 @@ class StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlo
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("temp")
+  @Ignore("Should be fixed before the next release")
   fun testSending() {
     //need to wait while the app loads the messages list
     Thread.sleep(2000)
