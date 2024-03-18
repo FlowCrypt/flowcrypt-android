@@ -13,7 +13,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import com.flowcrypt.email.R
+import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -21,7 +25,6 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
-import com.flowcrypt.email.ui.base.RestrictedByDefaultNotificationPermissionBaseTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.Rule
 import org.junit.Test
@@ -36,8 +39,7 @@ import org.junit.runner.RunWith
 @FlowCryptTestSettings(useCommonIdling = false)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class NotificationSettingsFragmentNotificationPermissionFlowTest :
-  RestrictedByDefaultNotificationPermissionBaseTest() {
+class NotificationSettingsFragmentNotificationPermissionFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
       destinationId = R.id.mainSettingsFragment
@@ -62,5 +64,19 @@ class NotificationSettingsFragmentNotificationPermissionFlowTest :
       .perform(click())
 
     isDialogWithTextDisplayed(decorView, getResString(R.string.need_post_notification_permission))
+  }
+
+  private fun disallowNotificationPermission() {
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    val disallowPermissions = device.findObject(
+      UiSelector()
+        .clickable(true)
+        .checkable(false)
+        .index(1)
+    )
+
+    if (disallowPermissions.exists()) {
+      disallowPermissions.click()
+    }
   }
 }
