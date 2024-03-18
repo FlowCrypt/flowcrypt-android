@@ -12,7 +12,7 @@ import android.os.Build
  */
 class TestConstants {
   companion object {
-    const val ANDROID_EMULATOR_VERSION = Build.VERSION_CODES.S_V2
+    const val ANDROID_EMULATOR_VERSION = Build.VERSION_CODES.UPSIDE_DOWN_CAKE
     const val MOCK_WEB_SERVER_PORT = 1212
 
     const val IMAP = "IMAP"
