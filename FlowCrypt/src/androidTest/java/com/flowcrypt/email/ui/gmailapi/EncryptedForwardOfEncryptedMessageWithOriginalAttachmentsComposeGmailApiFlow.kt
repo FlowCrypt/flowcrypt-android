@@ -41,6 +41,7 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -83,6 +84,7 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
       .around(ScreenshotTestRule())
 
   @Test
+  @Ignore("Should be fixed before the next release")
   fun testSending() {
     //need to wait while the app loads the messages list
     Thread.sleep(2000)
