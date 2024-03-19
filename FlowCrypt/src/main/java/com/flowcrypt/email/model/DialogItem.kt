@@ -14,7 +14,10 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class DialogItem constructor(
+data class DialogItem(
+  /**
+   * It should be an image 32*32
+   */
   val iconResourceId: Int = 0,
   val title: String = "",
   val id: Int = 0

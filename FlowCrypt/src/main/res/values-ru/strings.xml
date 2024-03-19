@@ -610,6 +610,7 @@
     <string name="algorithm">Алгоритм: %1$s</string>
     <string name="key_info">Информация о ключе</string>
     <string name="preview_is_not_available">Предварительный просмотр недоступен</string>
+    <string name="add_email_to_existing_key">Добавить адрес электронной почты к существующему ключу</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

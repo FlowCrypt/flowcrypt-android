@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/actions_dialog_graph"
+    app:startDestination="@id/actionsDialogFragment">
+
+    <dialog
+        android:id="@+id/actionsDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragment">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="dialogTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="isCancelable"
+            android:defaultValue="true"
+            app:argType="boolean" />
+        <argument
+            android:name="items"
+            app:argType="com.flowcrypt.email.model.DialogItem[]" />
+    </dialog>
+</navigation>

@@ -66,6 +66,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
+import com.flowcrypt.email.extensions.showActionDialogFragment
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
@@ -80,11 +81,13 @@ import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
+import com.flowcrypt.email.model.DialogItem
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.CreateOutgoingMessageDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -323,6 +326,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToAddMissingRecipientPublicKey()
     subscribeToFixNeedPassphraseIssueDialogFragment()
     subscribeToNoPgpFoundDialogFragment()
+    subscribeToActionsDialogFragment()
     subscribeToChoosePublicKeyDialogFragment()
     subscribeToCreateOutgoingMessageDialogFragment()
 
@@ -1408,7 +1412,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
       ) == false
     ) {
-      showInfoSnackbar(msgText = getString(R.string.no_key_available))
+      showActionDialogFragment(
+        navController,
+        requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
+        dialogTitle = getString(R.string.no_key_available),
+        isCancelable = true,
+        items = listOf(
+          DialogItem(
+            iconResourceId = R.drawable.ic_import_user_public_key,
+            title = getString(R.string.import_private_key),
+            id = RESULT_CODE_IMPORT_PRIVATE_KEY
+          ),
+          DialogItem(
+            iconResourceId = R.drawable.ic_edit_key_add_user_id,
+            title = getString(R.string.add_email_to_existing_key),
+            id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+          )
+        )
+      )
       return false
     }
 
@@ -1600,6 +1621,21 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           composeMsgViewModel.callLookUpForRecipientIfNeeded(recipientWithPubKeys?.recipient?.email)
         }
       }
+    }
+  }
+
+  private fun subscribeToActionsDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE) { _, bundle ->
+      val item = bundle.getParcelableViaExt<DialogItem>(
+        ActionsDialogFragment.KEY_REQUEST_RESULT
+      ) ?: return@setFragmentResultListener
+
+      when (item.id) {
+        RESULT_CODE_IMPORT_PRIVATE_KEY -> {}
+        RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY -> {}
+      }
+
+      toast("${item.id}")
     }
   }
 
@@ -1801,5 +1837,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     private val REQUEST_KEY_CREATE_OUTGOING_MESSAGE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CREATE_OUTGOING_MESSAGE", CreateMessageFragment::class.java
     )
+
+    private val REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE",
+      CreateMessageFragment::class.java
+    )
+
+    private const val RESULT_CODE_IMPORT_PRIVATE_KEY = 1
+    private const val RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY = 2
   }
 }

@@ -632,4 +632,5 @@
         notification for foreground services, a user can erase all passphrases stored
         in RAM at any time.</string>
     <string name="preview_is_not_available">The preview is not available</string>
+    <string name="add_email_to_existing_key">Add email to existing key</string>
 </resources>
