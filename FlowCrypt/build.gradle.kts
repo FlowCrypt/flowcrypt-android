@@ -453,14 +453,14 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
   implementation("com.google.code.gson:gson:2.10.1")
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-  implementation("com.google.api-client:google-api-client-android:2.3.0")
+  implementation("com.google.api-client:google-api-client-android:2.4.0")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20231218-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.9.0")
   implementation("com.squareup.retrofit2:converter-gson:2.9.0")
   implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-  implementation("com.squareup.okio:okio:3.8.0")
+  implementation("com.squareup.okio:okio:3.9.0")
   implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
   implementation("com.sun.mail:jakarta.mail:2.0.1")
