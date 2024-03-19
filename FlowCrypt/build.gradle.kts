@@ -369,7 +369,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.16.0")
-  ksp("androidx.annotation:annotation:1.6.0")
+  ksp("androidx.annotation:annotation:1.7.1")
   ksp("androidx.room:room-compiler:2.6.1")
   //ACRA needs the following dependency to use a custom report sender
 
