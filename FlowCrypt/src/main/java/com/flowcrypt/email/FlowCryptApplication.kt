@@ -7,6 +7,7 @@ package com.flowcrypt.email
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.preference.PreferenceManager
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -46,7 +47,17 @@ import java.util.concurrent.TimeUnit
  *
  * @author Denys Bondarenko
  */
-class FlowCryptApplication : Application() {
+class FlowCryptApplication : Application(), Configuration.Provider {
+  override val workManagerConfiguration: Configuration
+    get() = Configuration.Builder()
+      .setMinimumLoggingLevel(
+        if (GeneralUtil.isDebugBuild()) {
+          Log.DEBUG
+        } else {
+          Log.ERROR
+        }
+      ).build()
+
   override fun onCreate() {
     super.onCreate()
     setupGlobalSettingsForJavaMail()
