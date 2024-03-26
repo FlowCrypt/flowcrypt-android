@@ -17,6 +17,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavDirections
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
@@ -536,15 +537,17 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       }
     } else {
       navController?.navigate(
-        MainSignInFragmentDirections
-          .actionMainSignInFragmentToCheckKeysFragment(
+        object : NavDirections {
+          override val actionId = R.id.check_keys_graph
+          override val arguments = CheckKeysFragmentArgs(
             requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
             privateKeys = keyDetailsList.toTypedArray(),
             sourceType = KeyImportDetails.SourceType.EMAIL,
             positiveBtnTitle = getString(R.string.continue_),
             negativeBtnTitle = getString(R.string.use_another_account),
             initSubTitlePlurals = R.plurals.found_backup_of_your_account_key
-          )
+          ).toBundle()
+        }
       )
     }
   }
@@ -733,11 +736,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           importCandidates.clear()
           importCandidates.addAll(it?.data?.pgpKeyRingDetailsList ?: emptyList())
           navController?.navigate(
-            MainSignInFragmentDirections
-              .actionMainSignInFragmentToCheckPassphraseStrengthFragment(
+            object : NavDirections {
+              override val actionId = R.id.pass_phrase_strength_graph
+              override val arguments = CheckPassphraseStrengthFragmentArgs(
                 popBackStackIdIfSuccess = R.id.mainSignInFragment,
                 title = getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
-              )
+              ).toBundle()
+            }
           )
           ekmViewModel.ekmLiveData.value = Result.none()
           countingIdlingResource?.decrementSafely(this@MainSignInFragment)

@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.preferences
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.setFragmentResultListener
+import androidx.navigation.NavDirections
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -17,6 +18,7 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -100,12 +102,14 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
 
   private fun navigateToCheckPassphraseStrengthFragment() {
     navController?.navigate(
-      SecuritySettingsFragmentDirections
-        .actionSecuritySettingsFragmentToCheckPassphraseStrengthFragment(
+      object : NavDirections {
+        override val actionId = R.id.pass_phrase_strength_graph
+        override val arguments = CheckPassphraseStrengthFragmentArgs(
           popBackStackIdIfSuccess = R.id.securitySettingsFragment,
           title = getString(R.string.change_pass_phrase),
           lostPassphraseTitle = getString(R.string.loss_of_this_pass_phrase_cannot_be_recovered)
-        )
+        ).toBundle()
+      }
     )
   }
 

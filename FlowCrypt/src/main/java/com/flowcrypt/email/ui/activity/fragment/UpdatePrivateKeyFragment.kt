@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -143,8 +144,9 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
       ) ?: return@setFragmentResultListener
 
       navController?.navigate(
-        UpdatePrivateKeyFragmentDirections
-          .actionUpdatePrivateKeyFragmentToCheckKeysFragment(
+        object : NavDirections {
+          override val actionId = R.id.check_keys_graph
+          override val arguments = CheckKeysFragmentArgs(
             requestKey = REQUEST_KEY_CHECK_NEW_PRIVATE_KEY,
             privateKeys = arrayOf(newPrivateKey),
             sourceType = importSourceType,
@@ -152,7 +154,8 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
             negativeBtnTitle = getString(R.string.cancel),
             subTitle = getString(R.string.please_provide_passphrase_for_the_given_key),
             initSubTitlePlurals = 0
-          )
+          ).toBundle()
+        }
       )
     }
   }

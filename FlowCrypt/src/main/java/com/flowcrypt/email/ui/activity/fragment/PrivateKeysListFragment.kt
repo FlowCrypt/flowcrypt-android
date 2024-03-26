@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavDirections
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
@@ -132,11 +133,13 @@ class PrivateKeysListFragment : BaseFragment<FragmentPrivateKeysBinding>(), List
     binding?.floatActionButtonAddKey?.setOnClickListener {
       account?.let { accountEntity ->
         navController?.navigate(
-          PrivateKeysListFragmentDirections
-            .actionPrivateKeysListFragmentToImportAdditionalPrivateKeysFragment(
+          object : NavDirections {
+            override val actionId = R.id.import_additional_private_keys_graph
+            override val arguments = ImportAdditionalPrivateKeysFragmentArgs(
               requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
               accountEntity = accountEntity
-            )
+            ).toBundle()
+          }
         )
       }
     }

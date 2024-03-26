@@ -14,6 +14,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -169,8 +170,9 @@ class ImportAdditionalPrivateKeysFragment :
                 binding?.buttonImportBackup?.setOnClickListener {
                   importSourceType = KeyImportDetails.SourceType.EMAIL
                   navController?.navigate(
-                    ImportAdditionalPrivateKeysFragmentDirections
-                      .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
+                    object : NavDirections {
+                      override val actionId = R.id.check_keys_graph
+                      override val arguments = CheckKeysFragmentArgs(
                         requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
                         privateKeys = keys.toTypedArray(),
                         initSubTitlePlurals = R.plurals.found_backup_of_your_account_key,
@@ -178,7 +180,8 @@ class ImportAdditionalPrivateKeysFragment :
                         positiveBtnTitle = getString(R.string.continue_),
                         negativeBtnTitle = getString(R.string.choose_another_key),
                         skipImportedKeys = true
-                      )
+                      ).toBundle()
+                    }
                   )
                 }
               }
@@ -286,11 +289,13 @@ class ImportAdditionalPrivateKeysFragment :
       when (requestCode) {
         REQUEST_CODE_PROTECT_KEY_WITH_PASS_PHRASE -> if (result == TwoWayDialogFragment.RESULT_OK) {
           navController?.navigate(
-            ImportAdditionalPrivateKeysFragmentDirections
-              .actionImportAdditionalPrivateKeysFragmentToCheckPassphraseStrengthFragment(
+            object : NavDirections {
+              override val actionId = R.id.pass_phrase_strength_graph
+              override val arguments = CheckPassphraseStrengthFragmentArgs(
                 popBackStackIdIfSuccess = R.id.importAdditionalPrivateKeysFragment,
                 title = getString(R.string.set_up_flow_crypt, getString(R.string.app_name))
-              )
+              ).toBundle()
+            }
           )
         }
       }
@@ -375,8 +380,9 @@ class ImportAdditionalPrivateKeysFragment :
     }
 
     navController?.navigate(
-      ImportAdditionalPrivateKeysFragmentDirections
-        .actionImportAdditionalPrivateKeysFragmentToCheckKeysFragment(
+      object : NavDirections {
+        override val actionId = R.id.check_keys_graph
+        override val arguments = CheckKeysFragmentArgs(
           requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
           privateKeys = filteredKeys.toTypedArray(),
           subTitle = title,
@@ -385,7 +391,8 @@ class ImportAdditionalPrivateKeysFragment :
           negativeBtnTitle = getString(R.string.choose_another_key),
           initSubTitlePlurals = 0,
           skipImportedKeys = true
-        )
+        ).toBundle()
+      }
     )
   }
 

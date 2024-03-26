@@ -38,6 +38,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -85,6 +86,7 @@ import com.flowcrypt.email.model.DialogItem
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragment
@@ -327,6 +329,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToFixNeedPassphraseIssueDialogFragment()
     subscribeToNoPgpFoundDialogFragment()
     subscribeToActionsDialogFragment()
+    subscribeToImportingAdditionalPrivateKeys()
     subscribeToChoosePublicKeyDialogFragment()
     subscribeToCreateOutgoingMessageDialogFragment()
 
@@ -1631,11 +1634,37 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       ) ?: return@setFragmentResultListener
 
       when (item.id) {
-        RESULT_CODE_IMPORT_PRIVATE_KEY -> {}
-        RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY -> {}
+        RESULT_CODE_IMPORT_PRIVATE_KEY -> {
+          account?.let { accountEntity ->
+            navController?.navigate(
+              object : NavDirections {
+                override val actionId = R.id.import_additional_private_keys_graph
+                override val arguments = ImportAdditionalPrivateKeysFragmentArgs(
+                  requestKey = REQUEST_KEY_IMPORT_PRIVATE_KEY,
+                  accountEntity = accountEntity
+                ).toBundle()
+              }
+            )
+          }
+        }
+
+        RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY -> {
+          //todo-denbond7 need to add realization in a separate PR
+        }
       }
 
       toast("${item.id}")
+    }
+  }
+
+  private fun subscribeToImportingAdditionalPrivateKeys() {
+    setFragmentResultListener(REQUEST_KEY_IMPORT_PRIVATE_KEY) { _, bundle ->
+      val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
+        ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
+      )
+      if (keys?.isNotEmpty() == true) {
+        toast(R.string.key_successfully_imported)
+      }
     }
   }
 
@@ -1840,6 +1869,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     private val REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_IMPORT_PRIVATE_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_PRIVATE_KEY",
       CreateMessageFragment::class.java
     )
 

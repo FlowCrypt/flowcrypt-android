@@ -17,6 +17,9 @@
     <include app:graph="@navigation/find_keys_in_clipboard_dialog_graph" />
     <include app:graph="@navigation/choose_public_key_dialog_graph" />
     <include app:graph="@navigation/actions_dialog_graph" />
+    <include app:graph="@navigation/import_additional_private_keys_graph" />
+    <include app:graph="@navigation/check_keys_graph" />
+    <include app:graph="@navigation/pass_phrase_strength_graph" />
 
     <fragment
         android:id="@+id/createMessageFragment"

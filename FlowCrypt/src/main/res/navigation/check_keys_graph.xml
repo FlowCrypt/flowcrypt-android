@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/check_keys_graph"
+    app:startDestination="@id/checkKeysFragment">
+
+    <fragment
+        android:id="@+id/checkKeysFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment"
+        tools:layout="@layout/fragment_check_keys">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="privateKeys"
+            app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails[]" />
+        <argument
+            android:name="sourceType"
+            app:argType="com.flowcrypt.email.model.KeyImportDetails$SourceType" />
+        <argument
+            android:name="subTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="initSubTitlePlurals"
+            app:argType="reference" />
+        <argument
+            android:name="positiveBtnTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="negativeBtnTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="isExtraImportOpt"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="skipImportedKeys"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </fragment>
+</navigation>

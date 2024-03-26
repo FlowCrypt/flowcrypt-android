@@ -16,6 +16,9 @@
     <include app:graph="@navigation/parse_keys_from_source_dialog_graph" />
     <include app:graph="@navigation/find_keys_in_clipboard_dialog_graph" />
     <include app:graph="@navigation/choose_public_key_dialog_graph" />
+    <include app:graph="@navigation/import_additional_private_keys_graph" />
+    <include app:graph="@navigation/check_keys_graph" />
+    <include app:graph="@navigation/pass_phrase_strength_graph" />
 
     <fragment
         android:id="@+id/mainSignInFragment"
@@ -28,12 +31,6 @@
             android:id="@+id/action_mainSignInFragment_to_authorizeAndSearchBackupsFragment"
             app:destination="@id/authorizeAndSearchBackupsFragment" />
         <action
-            android:id="@+id/action_mainSignInFragment_to_checkPassphraseStrengthFragment"
-            app:destination="@id/checkPassphraseStrengthFragment" />
-        <action
-            android:id="@+id/action_mainSignInFragment_to_checkKeysFragment"
-            app:destination="@id/checkKeysFragment" />
-        <action
             android:id="@+id/action_mainSignInFragment_to_createOrImportPrivateKeyDuringSetupFragment"
             app:destination="@id/createOrImportPrivateKeyDuringSetupFragment" />
     </fragment>
@@ -45,9 +42,6 @@
         <action
             android:id="@+id/action_addOtherAccountFragment_to_authorizeAndSearchBackupsFragment"
             app:destination="@id/authorizeAndSearchBackupsFragment" />
-        <action
-            android:id="@+id/action_addOtherAccountFragment_to_checkKeysFragment"
-            app:destination="@id/checkKeysFragment" />
         <action
             android:id="@+id/action_addOtherAccountFragment_to_createOrImportPrivateKeyDuringSetupFragment"
             app:destination="@id/createOrImportPrivateKeyDuringSetupFragment" />
@@ -142,9 +136,6 @@
         <argument
             android:name="accountEntity"
             app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
-        <action
-            android:id="@+id/action_importPrivateKeysDuringSetupFragment_to_checkKeysFragment"
-            app:destination="@id/checkKeysFragment" />
     </fragment>
 
     <fragment
@@ -187,48 +178,8 @@
             android:id="@+id/deepLink"
             app:uri="flowcrypt://email.flowcrypt.com/settings/security" />
         <action
-            android:id="@+id/action_securitySettingsFragment_to_checkPassphraseStrengthFragment"
-            app:destination="@id/checkPassphraseStrengthFragment" />
-        <action
             android:id="@+id/action_securitySettingsFragment_to_changePassphraseOfImportedKeysFragment"
             app:destination="@id/changePassphraseOfImportedKeysFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/checkPassphraseStrengthFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment"
-        android:label="@string/security"
-        tools:layout="@layout/fragment_check_passphrase_strength">
-        <argument
-            android:name="popBackStackIdIfSuccess"
-            app:argType="integer" />
-        <argument
-            android:name="title"
-            app:argType="string" />
-        <argument
-            android:name="lostPassphraseTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <action
-            android:id="@+id/action_checkPassphraseStrengthFragment_to_recheckProvidedPassphraseFragment"
-            app:destination="@id/recheckProvidedPassphraseFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/recheckProvidedPassphraseFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment"
-        android:label="@string/security"
-        tools:layout="@layout/fragment_recheck_provided_passphrase">
-        <argument
-            android:name="popBackStackIdIfSuccess"
-            app:argType="integer" />
-        <argument
-            android:name="title"
-            app:argType="string" />
-        <argument
-            android:name="passphrase"
-            app:argType="string" />
     </fragment>
 
     <fragment
@@ -307,9 +258,6 @@
         <action
             android:id="@+id/action_privateKeysListFragment_to_privateKeyDetailsFragment"
             app:destination="@id/privateKeyDetailsFragment" />
-        <action
-            android:id="@+id/action_privateKeysListFragment_to_importAdditionalPrivateKeysFragment"
-            app:destination="@id/importAdditionalPrivateKeysFragment" />
     </fragment>
 
     <fragment
@@ -393,9 +341,6 @@
             android:id="@+id/action_messageDetailsFragment_to_decryptAttachmentDialogFragment"
             app:destination="@id/decryptAttachmentDialogFragment" />
         <action
-            android:id="@+id/action_messageDetailsFragment_to_importAdditionalPrivateKeysFragment"
-            app:destination="@id/importAdditionalPrivateKeysFragment" />
-        <action
             android:id="@+id/action_messageDetailsFragment_to_changeGmailLabelsForSingleMessageDialogFragment"
             app:destination="@id/changeGmailLabelsForSingleMessageDialogFragment" />
         <action
@@ -418,9 +363,6 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.BackupKeysFragment"
         android:label="@string/backup_options"
         tools:layout="@layout/fragment_backup_keys">
-        <action
-            android:id="@+id/action_backupKeysFragment_to_checkPassphraseStrengthFragment"
-            app:destination="@id/checkPassphraseStrengthFragment" />
         <action
             android:id="@+id/action_backupKeysFragment_to_changePassphraseOfImportedKeysFragment"
             app:destination="@id/changePassphraseOfImportedKeysFragment" />
@@ -481,47 +423,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/checkKeysFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment"
-        tools:layout="@layout/fragment_check_keys">
-        <argument
-            android:name="requestKey"
-            app:argType="string" />
-        <argument
-            android:name="privateKeys"
-            app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails[]" />
-        <argument
-            android:name="sourceType"
-            app:argType="com.flowcrypt.email.model.KeyImportDetails$SourceType" />
-        <argument
-            android:name="subTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="initSubTitlePlurals"
-            app:argType="reference" />
-        <argument
-            android:name="positiveBtnTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="negativeBtnTitle"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="isExtraImportOpt"
-            android:defaultValue="false"
-            app:argType="boolean" />
-        <argument
-            android:name="skipImportedKeys"
-            android:defaultValue="false"
-            app:argType="boolean" />
-    </fragment>
-
-    <fragment
         android:id="@+id/messagesListFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MessagesListFragment"
         android:label=""
@@ -529,24 +430,6 @@
         <action
             android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"
             app:destination="@id/messageDetailsFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/importAdditionalPrivateKeysFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.ImportAdditionalPrivateKeysFragment"
-        tools:layout="@layout/fragment_import_additional_private_keys">
-        <argument
-            android:name="requestKey"
-            app:argType="string" />
-        <argument
-            android:name="accountEntity"
-            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
-        <action
-            android:id="@+id/action_importAdditionalPrivateKeysFragment_to_checkKeysFragment"
-            app:destination="@id/checkKeysFragment" />
-        <action
-            android:id="@+id/action_importAdditionalPrivateKeysFragment_to_checkPassphraseStrengthFragment"
-            app:destination="@id/checkPassphraseStrengthFragment" />
     </fragment>
 
     <fragment
@@ -577,9 +460,6 @@
         <action
             android:id="@+id/action_updatePrivateKeyFragment_to_updatePrivateKeyDialogFragment"
             app:destination="@id/updatePrivateKeyDialogFragment" />
-        <action
-            android:id="@+id/action_updatePrivateKeyFragment_to_checkKeysFragment"
-            app:destination="@id/checkKeysFragment" />
     </fragment>
 
     <dialog
