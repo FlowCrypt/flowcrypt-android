@@ -30,6 +30,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -78,12 +79,15 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val exception = Assert.assertThrows(ComposeScreenNoSuitablePrivateKeysFlowTest::class.java) {
+    val exception = Assert.assertThrows(NoKeyAvailableException::class.java) {
       SecurityUtils.getSenderPublicKeys(getTargetContext(), addAccountToDatabaseRule.account.email)
     }
 
     assertEquals(
-      "There are no usable for encryption keys for " + addPrivateKeyToDatabaseRule.pgpKeyRingDetails.getPrimaryInternetAddress(),
+      getResString(
+        R.string.no_key_available_for_your_email_account,
+        getResString(R.string.support_email)
+      ),
       exception.message
     )
 
