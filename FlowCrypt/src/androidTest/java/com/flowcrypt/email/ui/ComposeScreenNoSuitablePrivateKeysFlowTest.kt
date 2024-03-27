@@ -78,7 +78,7 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    val exception = Assert.assertThrows(IllegalStateException::class.java) {
+    val exception = Assert.assertThrows(ComposeScreenNoSuitablePrivateKeysFlowTest::class.java) {
       SecurityUtils.getSenderPublicKeys(getTargetContext(), addAccountToDatabaseRule.account.email)
     }
 
