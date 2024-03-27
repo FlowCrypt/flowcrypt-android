@@ -1116,7 +1116,22 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun setupPrivateKeysViewModel() {
     KeysStorageImpl.getInstance(requireContext()).secretKeyRingsLiveData
-      .observe(viewLifecycleOwner) { updateFromAddressAdapter(it) }
+      .observe(viewLifecycleOwner) {
+        updateFromAddressAdapter(it)
+        if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
+          val from = binding?.editTextFrom?.text?.toString() ?: return@observe
+          val position = fromAddressesAdapter?.getPosition(from) ?: return@observe
+          binding?.editTextFrom?.setTextColor(
+            if (fromAddressesAdapter?.isEnabled(position) == true) {
+              originalColor
+            } else {
+              UIUtil.getColor(requireContext(), R.color.gray)
+            }
+          )
+        } else {
+          binding?.editTextFrom?.setTextColor(originalColor)
+        }
+      }
   }
 
   private fun updateFromAddressAdapter(list: List<PGPSecretKeyRing>) {
