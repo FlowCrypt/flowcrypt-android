@@ -281,7 +281,7 @@
     <string name="errors_notifications">Сповіщення про помилки</string>
     <string name="no_pub_keys">Немає відкритих ключів</string>
     <string name="no_message_with_this_attachment">Немає повідомлення з цим вкладенням</string>
-    <string name="no_key_available">Немає ключа для Вашого облікового запису електронної пошти</string>
+    <string name="no_key_available">Немає ключа для Вашого облікового запису електронної пошти %1$s</string>
     <string name="saved">Збережено</string>
     <string name="copied">Скопійовано</string>
     <string name="see_backups_to_save_your_private_keys">Ще не реалізовано, див. «Резервні копії», щоб зберегти закритий ключ у файл.</string>

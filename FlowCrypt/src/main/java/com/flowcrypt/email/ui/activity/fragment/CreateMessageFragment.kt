@@ -103,6 +103,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
@@ -1353,7 +1354,30 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           }
 
           Result.Status.EXCEPTION -> {
-            showInfoDialog(dialogMsg = getString(R.string.could_not_save_draft, it.exceptionMsg))
+            when (it.exception) {
+              is NoKeyAvailableException -> {
+                val email = it.exception.alias ?: it.exception.email
+                val text = getString(R.string.no_key_available, email)
+
+                if (fromAddressesAdapter?.hasPrvKey(email) != true) {
+                  showSnackbar(
+                    msgText = text,
+                    btnName = getString(R.string.fix),
+                    duration = Snackbar.LENGTH_LONG
+                  ) {
+                    fixNoKeyAvailableIssue(text)
+                  }
+                }
+              }
+
+              else -> showInfoDialog(
+                dialogMsg = getString(
+                  R.string.could_not_save_draft,
+                  it.exceptionMsg
+                )
+              )
+            }
+
             countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
           }
 
@@ -1415,24 +1439,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
       ) == false
     ) {
-      showActionDialogFragment(
-        navController,
-        requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
-        dialogTitle = getString(R.string.no_key_available),
-        isCancelable = true,
-        items = listOf(
-          DialogItem(
-            iconResourceId = R.drawable.ic_import_user_public_key,
-            title = getString(R.string.import_private_key),
-            id = RESULT_CODE_IMPORT_PRIVATE_KEY
-          ),
-          DialogItem(
-            iconResourceId = R.drawable.ic_edit_key_add_user_id,
-            title = getString(R.string.add_email_to_existing_key),
-            id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
-          )
-        )
-      )
+      val email = fromAddressesAdapter?.getItem(
+        binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
+      ) ?: ""
+      val text = getString(R.string.no_key_available, email)
+      fixNoKeyAvailableIssue(text)
       return false
     }
 
@@ -1652,8 +1663,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           //todo-denbond7 need to add realization in a separate PR
         }
       }
-
-      toast("${item.id}")
     }
   }
 
@@ -1829,6 +1838,27 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       sendMsg()
       isMsgSentToQueue = true
     }
+  }
+
+  private fun fixNoKeyAvailableIssue(text: String) {
+    showActionDialogFragment(
+      navController,
+      requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
+      dialogTitle = text,
+      isCancelable = true,
+      items = listOf(
+        DialogItem(
+          iconResourceId = R.drawable.ic_import_user_public_key,
+          title = getString(R.string.import_private_key),
+          id = RESULT_CODE_IMPORT_PRIVATE_KEY
+        ),
+        DialogItem(
+          iconResourceId = R.drawable.ic_edit_key_add_user_id,
+          title = getString(R.string.add_email_to_existing_key),
+          id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+        )
+      )
+    )
   }
 
   companion object {

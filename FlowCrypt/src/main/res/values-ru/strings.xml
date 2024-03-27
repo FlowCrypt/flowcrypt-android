@@ -280,7 +280,7 @@
     <string name="errors_notifications">Уведомления об ошибках</string>
     <string name="no_pub_keys">Нет открытых ключей</string>
     <string name="no_message_with_this_attachment">Нет сообщения с этим вложением</string>
-    <string name="no_key_available">Нет ключа для Вашей учетной записи электронной почты</string>
+    <string name="no_key_available">Нет ключа для Вашей учетной записи электронной почты %1$s</string>
     <string name="saved">Сохранено</string>
     <string name="copied">Скопировано</string>
     <string name="see_backups_to_save_your_private_keys">Еще не реализовано, см. «Резервные копии», чтобы сохранить закрытый ключ в файл.</string>
