@@ -7,36 +7,33 @@ package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.kotlin.asInternetAddress
-import com.flowcrypt.email.model.KeyImportDetails
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.hamcrest.CoreMatchers.not
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
@@ -50,10 +47,14 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
+@FlowCryptTestSettings(useCommonIdling = false)
+class ComposeScreenNoKeyAvailableFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
-    keyPath = "pgp/default@flowcrypt.test_secondKey_prv_strong_revoked.asc"
+    keyPath = "pgp/denbond7@flowcrypt.test_prv_strong_primary.asc"
   )
+
+  private val pgpKeyDetails =
+    PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc")
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -66,7 +67,7 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  fun testShowNoPrivateKeysSuitableForEncryptionWarning() {
+  fun testImportKey() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
     fillInAllFields(
@@ -75,81 +76,44 @@ class ComposeScreenNoSuitablePrivateKeysFlowTest : BaseComposeScreenTest() {
       )
     )
 
-    onView(withId(R.id.menuActionSend))
+    //check that editTextFrom has gray text color. It means a sender doesn't have a private key
+    onView(withId(R.id.editTextFrom))
       .check(matches(isDisplayed()))
-      .perform(click())
-
-    val exception = Assert.assertThrows(NoKeyAvailableException::class.java) {
-      SecurityUtils.getSenderPublicKeys(getTargetContext(), addAccountToDatabaseRule.account.email)
-    }
-
-    assertEquals(
-      getResString(
-        R.string.no_key_available_for_your_email_account,
-        getResString(R.string.support_email)
-      ),
-      exception.message
-    )
-
-    isDialogWithTextDisplayed(
-      decorView,
-      UIUtil.getHtmlSpannedFromText(
-        GeneralUtil.prepareWarningTextAboutUnusableForEncryptionKeys(
-          context = getTargetContext(),
-          keysStorage = KeysStorageImpl.getInstance(getTargetContext())
-        )
-      ).toString()
-    )
-  }
-
-  @Test
-  fun testDoNotShowNoPrivateKeysSuitableForEncryptionWarningIfAtLeastOneKeyAvailable() {
-    val details = PrivateKeysManager.getPgpKeyDetailsFromAssets(
-      "pgp/default@flowcrypt.test_fisrtKey_prv_strong.asc"
-    )
-    PrivateKeysManager.saveKeyToDatabase(
-      accountEntity = addAccountToDatabaseRule.account,
-      pgpKeyRingDetails = details,
-      passphrase = null,
-      sourceType = KeyImportDetails.SourceType.EMAIL,
-      passphraseType = KeyEntity.PassphraseType.RAM
-    )
-
-    activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
-    fillInAllFields(
-      to = setOf(
-        requireNotNull(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
-      )
-    )
+      .check(matches(hasTextColor(R.color.gray)))
 
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //the sender has 2 private keys. But one of them is revoked.
-    //Anyway at this point we should have a private key that is usable for signing
-    assertNotNull(
-      SecurityUtils.getSenderPgpKeyDetails(
-        getTargetContext(),
-        addAccountToDatabaseRule.account,
-        addAccountToDatabaseRule.account.email
-      )
-    )
-
-    //SecurityUtils.getSenderPublicKeys should = 1
-    assertEquals(
-      1,
-      SecurityUtils.getSenderPublicKeys(
-        getTargetContext(),
-        addAccountToDatabaseRule.account.email
-      ).size
-    )
-
     isDialogWithTextDisplayed(
       decorView,
-      getQuantityString(R.plurals.please_provide_passphrase_for_following_keys, 1)
+      getResString(R.string.no_key_available, addAccountToDatabaseRule.account.email)
     )
+
+    addTextToClipboard("private key", requireNotNull(pgpKeyDetails.privateKey))
+    onView(withText(R.string.import_private_key))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    Thread.sleep(1000)
+    onView(withText(R.string.load_from_clipboard))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    onView(withId(R.id.editTextKeyPassword))
+      .perform(
+        replaceText(TestConstants.DEFAULT_STRONG_PASSWORD),
+        closeSoftKeyboard()
+      )
+    onView(withId(R.id.buttonPositiveAction))
+      .perform(scrollTo(), click())
+
+    waitForObjectWithText(addAccountToDatabaseRule.account.email, 5000)
+
+    //check that editTextFrom doesn't have gray text color. It means a sender has a private key.
+    onView(withId(R.id.editTextFrom))
+      .check(matches(isDisplayed()))
+      .check(matches(not(hasTextColor(R.color.gray))))
   }
 
   companion object {

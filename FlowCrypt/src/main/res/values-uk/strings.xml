@@ -281,7 +281,7 @@
     <string name="errors_notifications">Сповіщення про помилки</string>
     <string name="no_pub_keys">Немає відкритих ключів</string>
     <string name="no_message_with_this_attachment">Немає повідомлення з цим вкладенням</string>
-    <string name="no_key_available">Немає ключа для Вашого облікового запису електронної пошти</string>
+    <string name="no_key_available">Немає ключа для Вашого облікового запису електронної пошти %1$s</string>
     <string name="saved">Збережено</string>
     <string name="copied">Скопійовано</string>
     <string name="see_backups_to_save_your_private_keys">Ще не реалізовано, див. «Резервні копії», щоб зберегти закритий ключ у файл.</string>
@@ -611,6 +611,7 @@
     <string name="algorithm">Алгоритм: %1$s</string>
     <string name="key_info">Інформація про ключ</string>
     <string name="preview_is_not_available">Попередній перегляд недоступний</string>
+    <string name="add_email_to_existing_key">Додати електронну адресу до існуючого ключа</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

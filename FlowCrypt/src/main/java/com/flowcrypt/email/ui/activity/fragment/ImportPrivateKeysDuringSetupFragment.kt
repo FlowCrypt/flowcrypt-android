@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportPrivateKeysDuringSetupBinding
@@ -91,8 +92,9 @@ class ImportPrivateKeysDuringSetupFragment :
       }
 
       navController?.navigate(
-        ImportPrivateKeysDuringSetupFragmentDirections
-          .actionImportPrivateKeysDuringSetupFragmentToCheckKeysFragment(
+        object : NavDirections {
+          override val actionId = R.id.check_keys_graph
+          override val arguments = CheckKeysFragmentArgs(
             requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
             privateKeys = keys.toTypedArray(),
             subTitle = title,
@@ -101,7 +103,8 @@ class ImportPrivateKeysDuringSetupFragment :
             negativeBtnTitle = getString(R.string.choose_another_key),
             initSubTitlePlurals = 0,
             skipImportedKeys = true
-          )
+          ).toBundle()
+        }
       )
     }
   }

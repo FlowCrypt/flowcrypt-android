@@ -295,7 +295,7 @@
     <string name="see_backups_to_save_your_private_keys">Not implemented yet, see \"Backups\" to save your private key to file</string>
     <string name="copied">Copied</string>
     <string name="saved">Saved</string>
-    <string name="no_key_available">No key available for your email account</string>
+    <string name="no_key_available">No key available for your email account %1$s</string>
     <string name="not_saved_file_already_exists">Not saved because the file already exists</string>
     <string name="no_message_with_this_attachment">No message with this attachment</string>
     <string name="attachment_not_found">The attachment not found</string>
@@ -632,4 +632,5 @@
         notification for foreground services, a user can erase all passphrases stored
         in RAM at any time.</string>
     <string name="preview_is_not_available">The preview is not available</string>
+    <string name="add_email_to_existing_key">Add email to existing key</string>
 </resources>

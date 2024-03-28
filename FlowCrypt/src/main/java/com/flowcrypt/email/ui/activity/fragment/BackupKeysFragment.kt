@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavDirections
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -295,12 +296,14 @@ class BackupKeysFragment : BaseFragment<FragmentBackupKeysBinding>(), ProgressBe
       duration = Snackbar.LENGTH_LONG
     ) {
       navController?.navigate(
-        BackupKeysFragmentDirections
-          .actionBackupKeysFragmentToCheckPassphraseStrengthFragment(
+        object : NavDirections {
+          override val actionId = R.id.pass_phrase_strength_graph
+          override val arguments = CheckPassphraseStrengthFragmentArgs(
             popBackStackIdIfSuccess = R.id.backupKeysFragment,
             title = getString(R.string.change_pass_phrase),
             lostPassphraseTitle = getString(R.string.loss_of_this_pass_phrase_cannot_be_recovered)
-          )
+          ).toBundle()
+        }
       )
     }
   }

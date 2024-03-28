@@ -18,6 +18,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
+import androidx.navigation.NavDirections
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -357,15 +358,17 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
           }
         } else {
           navController?.navigate(
-            AddOtherAccountFragmentDirections
-              .actionAddOtherAccountFragmentToCheckKeysFragment(
+            object : NavDirections {
+              override val actionId = R.id.check_keys_graph
+              override val arguments = CheckKeysFragmentArgs(
                 requestKey = REQUEST_KEY_CHECK_PRIVATE_KEYS,
                 privateKeys = (keyDetailsList ?: ArrayList()).toTypedArray(),
                 sourceType = KeyImportDetails.SourceType.EMAIL,
                 positiveBtnTitle = getString(R.string.continue_),
                 negativeBtnTitle = getString(R.string.use_another_account),
                 initSubTitlePlurals = R.plurals.found_backup_of_your_account_key
-              )
+              ).toBundle()
+            }
           )
         }
       }

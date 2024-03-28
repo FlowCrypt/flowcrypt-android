@@ -46,6 +46,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -1476,11 +1477,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     buttonImportPrivateKey?.setOnClickListener {
       account?.let { accountEntity ->
         navController?.navigate(
-          MessageDetailsFragmentDirections
-            .actionMessageDetailsFragmentToImportAdditionalPrivateKeysFragment(
+          object : NavDirections {
+            override val actionId = R.id.import_additional_private_keys_graph
+            override val arguments = ImportAdditionalPrivateKeysFragmentArgs(
               requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
               accountEntity = accountEntity
-            )
+            ).toBundle()
+          }
         )
       }
     }

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/pass_phrase_strength_graph"
+    app:startDestination="@id/checkPassphraseStrengthFragment">
+
+    <fragment
+        android:id="@+id/checkPassphraseStrengthFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragment"
+        android:label="@string/security"
+        tools:layout="@layout/fragment_check_passphrase_strength">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="lostPassphraseTitle"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_checkPassphraseStrengthFragment_to_recheckProvidedPassphraseFragment"
+            app:destination="@id/recheckProvidedPassphraseFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recheckProvidedPassphraseFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment"
+        android:label="@string/security"
+        tools:layout="@layout/fragment_recheck_provided_passphrase">
+        <argument
+            android:name="popBackStackIdIfSuccess"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
+    </fragment>
+</navigation>

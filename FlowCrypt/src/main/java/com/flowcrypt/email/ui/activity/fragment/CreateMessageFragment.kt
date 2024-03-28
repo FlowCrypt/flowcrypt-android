@@ -38,6 +38,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -66,6 +67,7 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
+import com.flowcrypt.email.extensions.showActionDialogFragment
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
@@ -80,11 +82,14 @@ import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
+import com.flowcrypt.email.model.DialogItem
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.CreateOutgoingMessageDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -98,6 +103,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
@@ -323,6 +329,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToAddMissingRecipientPublicKey()
     subscribeToFixNeedPassphraseIssueDialogFragment()
     subscribeToNoPgpFoundDialogFragment()
+    subscribeToActionsDialogFragment()
+    subscribeToImportingAdditionalPrivateKeys()
     subscribeToChoosePublicKeyDialogFragment()
     subscribeToCreateOutgoingMessageDialogFragment()
 
@@ -1108,7 +1116,22 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun setupPrivateKeysViewModel() {
     KeysStorageImpl.getInstance(requireContext()).secretKeyRingsLiveData
-      .observe(viewLifecycleOwner) { updateFromAddressAdapter(it) }
+      .observe(viewLifecycleOwner) {
+        updateFromAddressAdapter(it)
+        if (composeMsgViewModel.msgEncryptionType == MessageEncryptionType.ENCRYPTED) {
+          val from = binding?.editTextFrom?.text?.toString() ?: return@observe
+          val position = fromAddressesAdapter?.getPosition(from) ?: return@observe
+          binding?.editTextFrom?.setTextColor(
+            if (fromAddressesAdapter?.isEnabled(position) == true) {
+              originalColor
+            } else {
+              UIUtil.getColor(requireContext(), R.color.gray)
+            }
+          )
+        } else {
+          binding?.editTextFrom?.setTextColor(originalColor)
+        }
+      }
   }
 
   private fun updateFromAddressAdapter(list: List<PGPSecretKeyRing>) {
@@ -1346,7 +1369,30 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           }
 
           Result.Status.EXCEPTION -> {
-            showInfoDialog(dialogMsg = getString(R.string.could_not_save_draft, it.exceptionMsg))
+            when (it.exception) {
+              is NoKeyAvailableException -> {
+                val email = it.exception.alias ?: it.exception.email
+                val text = getString(R.string.no_key_available, email)
+
+                if (fromAddressesAdapter?.hasPrvKey(email) != true) {
+                  showSnackbar(
+                    msgText = text,
+                    btnName = getString(R.string.fix),
+                    duration = Snackbar.LENGTH_LONG
+                  ) {
+                    fixNoKeyAvailableIssue(text)
+                  }
+                }
+              }
+
+              else -> showInfoDialog(
+                dialogMsg = getString(
+                  R.string.could_not_save_draft,
+                  it.exceptionMsg
+                )
+              )
+            }
+
             countingIdlingResource?.decrementSafely(this@CreateMessageFragment)
           }
 
@@ -1408,7 +1454,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
       ) == false
     ) {
-      showInfoSnackbar(msgText = getString(R.string.no_key_available))
+      val email = fromAddressesAdapter?.getItem(
+        binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
+      ) ?: ""
+      val text = getString(R.string.no_key_available, email)
+      fixNoKeyAvailableIssue(text)
       return false
     }
 
@@ -1603,6 +1653,45 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private fun subscribeToActionsDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE) { _, bundle ->
+      val item = bundle.getParcelableViaExt<DialogItem>(
+        ActionsDialogFragment.KEY_REQUEST_RESULT
+      ) ?: return@setFragmentResultListener
+
+      when (item.id) {
+        RESULT_CODE_IMPORT_PRIVATE_KEY -> {
+          account?.let { accountEntity ->
+            navController?.navigate(
+              object : NavDirections {
+                override val actionId = R.id.import_additional_private_keys_graph
+                override val arguments = ImportAdditionalPrivateKeysFragmentArgs(
+                  requestKey = REQUEST_KEY_IMPORT_PRIVATE_KEY,
+                  accountEntity = accountEntity
+                ).toBundle()
+              }
+            )
+          }
+        }
+
+        RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY -> {
+          //todo-denbond7 need to add realization in a separate PR
+        }
+      }
+    }
+  }
+
+  private fun subscribeToImportingAdditionalPrivateKeys() {
+    setFragmentResultListener(REQUEST_KEY_IMPORT_PRIVATE_KEY) { _, bundle ->
+      val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
+        ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
+      )
+      if (keys?.isNotEmpty() == true) {
+        toast(R.string.key_successfully_imported)
+      }
+    }
+  }
+
   private fun subscribeToChoosePublicKeyDialogFragment() {
     setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
@@ -1766,6 +1855,27 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private fun fixNoKeyAvailableIssue(text: String) {
+    showActionDialogFragment(
+      navController,
+      requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
+      dialogTitle = text,
+      isCancelable = true,
+      items = listOf(
+        DialogItem(
+          iconResourceId = R.drawable.ic_import_user_public_key,
+          title = getString(R.string.import_private_key),
+          id = RESULT_CODE_IMPORT_PRIVATE_KEY
+        ),
+        DialogItem(
+          iconResourceId = R.drawable.ic_edit_key_add_user_id,
+          title = getString(R.string.add_email_to_existing_key),
+          id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+        )
+      )
+    )
+  }
+
   companion object {
     private val TAG = CreateMessageFragment::class.java.simpleName
 
@@ -1801,5 +1911,18 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     private val REQUEST_KEY_CREATE_OUTGOING_MESSAGE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CREATE_OUTGOING_MESSAGE", CreateMessageFragment::class.java
     )
+
+    private val REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_IMPORT_PRIVATE_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_PRIVATE_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private const val RESULT_CODE_IMPORT_PRIVATE_KEY = 1
+    private const val RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY = 2
   }
 }

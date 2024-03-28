@@ -12,8 +12,10 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import com.flowcrypt.email.R
+import com.flowcrypt.email.model.DialogItem
 import com.flowcrypt.email.model.Screenshot
 import com.flowcrypt.email.ui.activity.fragment.FeedbackFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragmentArgs
@@ -158,5 +160,25 @@ fun LifecycleOwner.showFeedbackFragment(
       ).toBundle()
     }
     navController?.navigate(navDirections)
+  }
+}
+
+fun LifecycleOwner.showActionDialogFragment(
+  navController: NavController?,
+  requestKey: String,
+  dialogTitle: String? = null,
+  isCancelable: Boolean = true,
+  items: List<DialogItem>
+) {
+  showDialogFragment(navController) {
+    return@showDialogFragment object : NavDirections {
+      override val actionId = R.id.actions_dialog_graph
+      override val arguments = ActionsDialogFragmentArgs(
+        requestKey = requestKey,
+        dialogTitle = dialogTitle,
+        isCancelable = isCancelable,
+        items = items.toTypedArray()
+      ).toBundle()
+    }
   }
 }
