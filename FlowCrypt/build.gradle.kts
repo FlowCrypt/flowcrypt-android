@@ -457,7 +457,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20231218-2.0.0")
 
-  implementation("com.squareup.retrofit2:retrofit:2.10.0")
+  implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
   implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
   implementation("com.squareup.okio:okio:3.9.0")
