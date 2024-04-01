@@ -402,7 +402,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("org.robolectric:robolectric:4.11.1")
+  testImplementation("org.robolectric:robolectric:4.12")
   testImplementation("io.github.classgraph:classgraph:4.8.168")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
@@ -458,8 +458,8 @@ dependencies {
   implementation("com.google.apis:google-api-services-gmail:v1-rev20231218-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.10.0")
-  implementation("com.squareup.retrofit2:converter-gson:2.10.0")
-  implementation("com.squareup.retrofit2:converter-scalars:2.10.0")
+  implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+  implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
   implementation("com.squareup.okio:okio:3.9.0")
   implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
@@ -474,7 +474,7 @@ dependencies {
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.8.2")
-  implementation("commons-io:commons-io:2.15.1")
+  implementation("commons-io:commons-io:2.16.0")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("net.openid:appauth:0.11.1")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
