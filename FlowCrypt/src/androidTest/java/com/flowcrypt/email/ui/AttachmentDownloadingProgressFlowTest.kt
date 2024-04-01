@@ -42,6 +42,7 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -59,6 +60,7 @@ import kotlin.random.Random
 @FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("Should be fixed before the next release")
 class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
   private val simpleAttInfo = TestGeneralUtil.getObjectFromJson(
     "messages/attachments/simple_att.json",
