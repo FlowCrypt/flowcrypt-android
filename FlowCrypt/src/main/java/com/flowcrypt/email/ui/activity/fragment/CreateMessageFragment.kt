@@ -69,6 +69,7 @@ import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.showActionDialogFragment
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
+import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -90,6 +91,8 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePrivateKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePrivateKeyDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.CreateOutgoingMessageDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
@@ -332,6 +335,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToActionsDialogFragment()
     subscribeToImportingAdditionalPrivateKeys()
     subscribeToChoosePublicKeyDialogFragment()
+    subscribeToChoosePrivateKeysDialogFragment()
     subscribeToCreateOutgoingMessageDialogFragment()
 
     val isEncryptedMode =
@@ -1675,7 +1679,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
 
         RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY -> {
-          //todo-denbond7 need to add realization in a separate PR
+          showDialogFragment(navController) {
+            return@showDialogFragment object : NavDirections {
+              override val actionId = R.id.choose_private_key_dialog_graph
+              override val arguments = ChoosePrivateKeyDialogFragmentArgs(
+                requestKey = REQUEST_KEY_CHOOSE_PRIVATE_KEYS,
+                choiceMode = ListView.CHOICE_MODE_SINGLE,
+                title = getString(R.string.please_choose_key_you_would_like_to_modify),
+              ).toBundle()
+            }
+          }
         }
       }
     }
@@ -1703,6 +1716,19 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           it.name == key.name && it.encodedSize == key.encodedSize
         }) {
         composeMsgViewModel.addAttachments(listOf(key))
+      }
+    }
+  }
+
+  private fun subscribeToChoosePrivateKeysDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PRIVATE_KEYS) { _, bundle ->
+      val keyList = bundle.getStringArray(ChoosePrivateKeyDialogFragment.KEY_RESULT)
+        ?: return@setFragmentResultListener
+
+      if (keyList.isEmpty()) {
+        toast(R.string.please_select_key)
+      } else {
+        toast(keyList.joinToString())
       }
     }
   }
@@ -1856,24 +1882,28 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun fixNoKeyAvailableIssue(text: String) {
-    showActionDialogFragment(
-      navController,
-      requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
-      dialogTitle = text,
-      isCancelable = true,
-      items = listOf(
-        DialogItem(
-          iconResourceId = R.drawable.ic_import_user_public_key,
-          title = getString(R.string.import_private_key),
-          id = RESULT_CODE_IMPORT_PRIVATE_KEY
-        ),
-        DialogItem(
-          iconResourceId = R.drawable.ic_edit_key_add_user_id,
-          title = getString(R.string.add_email_to_existing_key),
-          id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+    if (account?.clientConfiguration?.usesKeyManager() == true) {
+      toast(getString(R.string.no_prv_keys_ask_admin))
+    } else {
+      showActionDialogFragment(
+        navController,
+        requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
+        dialogTitle = text,
+        isCancelable = true,
+        items = listOf(
+          DialogItem(
+            iconResourceId = R.drawable.ic_import_user_public_key,
+            title = getString(R.string.import_private_key),
+            id = RESULT_CODE_IMPORT_PRIVATE_KEY
+          ),
+          DialogItem(
+            iconResourceId = R.drawable.ic_edit_key_add_user_id,
+            title = getString(R.string.add_email_to_existing_key),
+            id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+          )
         )
       )
-    )
+    }
   }
 
   companion object {
@@ -1919,6 +1949,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     private val REQUEST_KEY_IMPORT_PRIVATE_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_IMPORT_PRIVATE_KEY",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_CHOOSE_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PRIVATE_KEYS",
       CreateMessageFragment::class.java
     )
 

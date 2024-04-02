@@ -34,7 +34,7 @@ interface ListProgressBehaviour : ProgressBehaviour {
     super.showStatus(msg, resourcesId)
   }
 
-  fun showEmptyView(msg: String? = null, resourcesId: Int = 0) {
+  fun showEmptyView(msg: String? = null, imageResourcesId: Int = 0) {
     contentView?.visibility = View.GONE
     goneStatusView()
     goneProgressView()
@@ -44,9 +44,9 @@ interface ListProgressBehaviour : ProgressBehaviour {
       tVEmpty?.text = it
     }
 
-    if (resourcesId > 0) {
+    if (imageResourcesId > 0) {
       val iVEmptyImg = emptyView?.findViewById<ImageView>(R.id.iVEmptyImg)
-      iVEmptyImg?.setImageResource(resourcesId)
+      iVEmptyImg?.setImageResource(imageResourcesId)
     }
 
     emptyView?.visibility = View.VISIBLE
