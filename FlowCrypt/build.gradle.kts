@@ -457,7 +457,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20231218-2.0.0")
 
-  implementation("com.squareup.retrofit2:retrofit:2.10.0")
+  implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
   implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
   implementation("com.squareup.okio:okio:3.9.0")
@@ -479,7 +479,7 @@ dependencies {
   implementation("net.openid:appauth:0.11.1")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
-  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20220608.1")
+  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("org.jsoup:jsoup:1.17.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
