@@ -64,6 +64,7 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
@@ -91,6 +92,8 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.AddNewUserIdToPrivateKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.AddNewUserIdToPrivateKeyDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePrivateKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePrivateKeyDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
@@ -336,6 +339,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToImportingAdditionalPrivateKeys()
     subscribeToChoosePublicKeyDialogFragment()
     subscribeToChoosePrivateKeysDialogFragment()
+    subscribeToAddNewUserIdToPrivateKeyDialogFragment()
     subscribeToCreateOutgoingMessageDialogFragment()
 
     val isEncryptedMode =
@@ -1728,8 +1732,35 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       if (keyList.isEmpty()) {
         toast(R.string.please_select_key)
       } else {
-        toast(keyList.joinToString())
+        //need to ask passphrase
+
+        val email = fromAddressesAdapter?.getItem(
+          binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
+        ) ?: return@setFragmentResultListener
+
+        if (email.isValidEmail()) {
+          showDialogFragment(navController) {
+            return@showDialogFragment object : NavDirections {
+              override val actionId = R.id.add_new_userid_to_private_key_dialog_graph
+              override val arguments = AddNewUserIdToPrivateKeyDialogFragmentArgs(
+                requestKey = REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY,
+                fingerprint = keyList.first(),
+                userId = email,
+              ).toBundle()
+            }
+          }
+        } else {
+          toast(R.string.error_email_is_not_valid)
+        }
       }
+    }
+  }
+
+  private fun subscribeToAddNewUserIdToPrivateKeyDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY) { _, bundle ->
+      val fingerprint = bundle.getString(AddNewUserIdToPrivateKeyDialogFragment.KEY_RESULT)
+        ?: return@setFragmentResultListener
+      toast(getString(R.string.key_was_updated, fingerprint), Toast.LENGTH_LONG)
     }
   }
 
@@ -1954,6 +1985,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     private val REQUEST_KEY_CHOOSE_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHOOSE_PRIVATE_KEYS",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY",
       CreateMessageFragment::class.java
     )
 

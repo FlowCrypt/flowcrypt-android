@@ -21,6 +21,7 @@
     <include app:graph="@navigation/import_additional_private_keys_graph" />
     <include app:graph="@navigation/check_keys_graph" />
     <include app:graph="@navigation/pass_phrase_strength_graph" />
+    <include app:graph="@navigation/add_new_userid_to_private_key_dialog_graph" />
 
     <fragment
         android:id="@+id/createMessageFragment"
