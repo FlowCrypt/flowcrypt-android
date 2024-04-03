@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -63,8 +64,25 @@ class EditPrivateKeyViewModel(val fingerprint: String, application: Application)
         val encryptedPrvKey =
           KeyStoreCryptoManager.encryptSuspend(pgpKeyRingDetails.privateKey).toByteArray()
         roomDatabase.keysDao().updateSuspend(entity.copy(privateKey = encryptedPrvKey))
-        //update or remove public key
 
+        //update contacts and pub keys
+        val email = userId.email.lowercase()
+        var cachedRecipientWithPubKeys = roomDatabase.recipientDao()
+          .getRecipientWithPubKeysByEmailSuspend(email)
+
+        if (cachedRecipientWithPubKeys == null) {
+          roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = email))
+          cachedRecipientWithPubKeys =
+            roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(email)
+              ?: return@withContext Result.success(true)
+        }
+
+        if (cachedRecipientWithPubKeys.publicKeys.none {
+            it.fingerprint == pgpKeyRingDetails.fingerprint
+          }) {
+          roomDatabase.pubKeyDao()
+            .insertWithReplaceSuspend(pgpKeyRingDetails.toPublicKeyEntity(email))
+        }
         return@withContext Result.success(true)
       } catch (e: Exception) {
         return@withContext Result.exception(e)
