@@ -60,43 +60,12 @@ class ComposeScreenNoKeyAvailableMultipleKeysWithPassphraseInDatabaseFlowTest :
 
   @Test
   fun testAddEmailToExistingKey() {
-    activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
-    fillInAllFields(
-      to = setOf(
-        requireNotNull(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
-      )
-    )
+    doTestAddEmailToExistingKey {
+      waitForObjectWithText(getResString(android.R.string.ok), 2000)
 
-    //check that editTextFrom has gray text color. It means a sender doesn't have a private key
-    onView(withId(R.id.editTextFrom))
-      .check(matches(isDisplayed()))
-      .check(matches(hasTextColor(R.color.gray)))
-
-    onView(withId(R.id.menuActionSend))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    isDialogWithTextDisplayed(
-      decorView,
-      getResString(R.string.no_key_available, addAccountToDatabaseRule.account.email)
-    )
-
-    onView(withText(R.string.add_email_to_existing_key))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    waitForObjectWithText(getResString(android.R.string.ok), 2000)
-
-    onView(withId(R.id.buttonOk))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    Thread.sleep(2000)
-
-    //check that editTextFrom doesn't have gray text color. It means a sender has a private key.
-    onView(withId(R.id.editTextFrom))
-      .check(matches(isDisplayed()))
-      .check(matches(not(hasTextColor(R.color.gray))))
+      onView(withId(R.id.buttonOk))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    }
   }
 }

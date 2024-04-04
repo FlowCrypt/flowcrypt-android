@@ -12,16 +12,13 @@ import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
-import androidx.test.espresso.matcher.ViewMatchers.hasTextColor
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -29,7 +26,6 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeScreenNoKeyAvailableTest
-import org.hamcrest.CoreMatchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -67,53 +63,22 @@ class ComposeScreenNoKeyAvailableMultipleKeysWithPassphraseInRamFlowTest :
 
   @Test
   fun testAddEmailToExistingKey() {
-    activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
-    fillInAllFields(
-      to = setOf(
-        requireNotNull(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
-      )
-    )
+    doTestAddEmailToExistingKey {
+      waitForObjectWithText(getResString(android.R.string.ok), 2000)
 
-    //check that editTextFrom has gray text color. It means a sender doesn't have a private key
-    onView(withId(R.id.editTextFrom))
-      .check(matches(isDisplayed()))
-      .check(matches(hasTextColor(R.color.gray)))
+      onView(withId(R.id.buttonOk))
+        .check(matches(isDisplayed()))
+        .perform(click())
 
-    onView(withId(R.id.menuActionSend))
-      .check(matches(isDisplayed()))
-      .perform(click())
+      waitForObjectWithText(getResString(R.string.provide_passphrase), 2000)
 
-    isDialogWithTextDisplayed(
-      decorView,
-      getResString(R.string.no_key_available, addAccountToDatabaseRule.account.email)
-    )
-
-    onView(withText(R.string.add_email_to_existing_key))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    waitForObjectWithText(getResString(android.R.string.ok), 2000)
-
-    onView(withId(R.id.buttonOk))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    waitForObjectWithText(getResString(R.string.provide_passphrase), 2000)
-
-    onView(withId(R.id.eTKeyPassword))
-      .inRoot(RootMatchers.isDialog())
-      .perform(
-        clearText(),
-        replaceText(TestConstants.DEFAULT_STRONG_PASSWORD),
-        pressImeActionButton()
-      )
-
-    Thread.sleep(2000)
-
-    //check that editTextFrom doesn't have gray text color. It means a sender has a private key.
-    onView(withId(R.id.editTextFrom))
-      .check(matches(isDisplayed()))
-      .check(matches(not(hasTextColor(R.color.gray))))
+      onView(withId(R.id.eTKeyPassword))
+        .inRoot(RootMatchers.isDialog())
+        .perform(
+          clearText(),
+          replaceText(TestConstants.DEFAULT_STRONG_PASSWORD),
+          pressImeActionButton()
+        )
+    }
   }
 }
