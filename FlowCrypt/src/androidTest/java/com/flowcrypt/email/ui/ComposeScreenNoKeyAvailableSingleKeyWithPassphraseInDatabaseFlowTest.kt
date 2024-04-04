@@ -23,25 +23,17 @@ import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeScreenNoKeyAvailableTest
-import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.PrivateKeysManager
-import com.flowcrypt.email.util.TestGeneralUtil
-import okhttp3.mockwebserver.Dispatcher
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.CoreMatchers.not
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.net.HttpURLConnection
 
 /**
  * @author Denys Bondarenko
@@ -49,7 +41,7 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
-class ComposeScreenNoKeyAvailableFlowTest : BaseComposeScreenNoKeyAvailableTest() {
+class ComposeScreenNoKeyAvailableSingleKeyWithPassphraseInDatabaseFlowTest : BaseComposeScreenNoKeyAvailableTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     keyPath = "pgp/denbond7@flowcrypt.test_prv_strong_primary.asc"
   )
