@@ -91,14 +91,11 @@ class ChoosePrivateKeyDialogFragment : BaseDialogFragment(), ListProgressBehavio
               pgpKeyDetailsList,
               args.choiceMode
             )
+            binding?.listViewKeys?.setItemChecked(0, true)
 
-            if (pgpKeyDetailsList.size == 1) {
-              if (args.returnResultImmediatelyIfSingle) {
-                sendResult(listOf(pgpKeyDetailsList.first().fingerprint))
-                navController?.navigateUp()
-              }
+            if (pgpKeyDetailsList.size == 1 && args.returnResultImmediatelyIfSingle) {
+              sendResult()
             } else {
-              binding?.listViewKeys?.setItemChecked(0, true)
               showContent()
             }
           }

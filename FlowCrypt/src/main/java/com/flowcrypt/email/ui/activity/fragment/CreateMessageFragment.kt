@@ -1714,6 +1714,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 requestKey = REQUEST_KEY_CHOOSE_PRIVATE_KEYS,
                 choiceMode = ListView.CHOICE_MODE_SINGLE,
                 title = getString(R.string.please_choose_key_you_would_like_to_modify),
+                returnResultImmediatelyIfSingle = true
               ).toBundle()
             }
           }
