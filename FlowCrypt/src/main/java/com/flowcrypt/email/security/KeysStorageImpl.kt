@@ -12,6 +12,7 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
@@ -279,6 +280,8 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   }
 
   override fun getPassPhrasesUpdatesFlow(): Flow<Long> = passphrasesUpdatesLiveData.asFlow()
+
+  override fun getActiveAccount(): AccountEntity? = pureActiveAccountLiveData.value
 
   private fun preparePassphrasesMap(keyEntityList: List<KeyEntity>) {
     val existedIdList = passPhraseMap.keys

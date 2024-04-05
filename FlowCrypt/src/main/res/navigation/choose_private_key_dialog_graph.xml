@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/choose_private_key_dialog_graph"
+    app:startDestination="@id/choosePrivateKeyDialogFragment">
+
+    <dialog
+        android:id="@+id/choosePrivateKeyDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePrivateKeyDialogFragment"
+        android:label="ChoosePrivateKeyDialogFragment"
+        tools:layout="@layout/fragment_choose_private_key">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="preferableEmail"
+            app:argType="string"
+            android:defaultValue="@null"
+            app:nullable="true" />
+        <argument
+            android:name="choiceMode"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="returnResultImmediatelyIfSingle"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </dialog>
+</navigation>

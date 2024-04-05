@@ -64,11 +64,13 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.showActionDialogFragment
 import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
+import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.showNeedPassphraseDialog
@@ -90,8 +92,13 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ActionsDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.AddNewUserIdToPrivateKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.AddNewUserIdToPrivateKeyDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePrivateKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePrivateKeyDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.CreateOutgoingMessageDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
@@ -332,6 +339,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToActionsDialogFragment()
     subscribeToImportingAdditionalPrivateKeys()
     subscribeToChoosePublicKeyDialogFragment()
+    subscribeToChoosePrivateKeysDialogFragment()
+    subscribeToAddNewUserIdToPrivateKeyDialogFragment()
     subscribeToCreateOutgoingMessageDialogFragment()
 
     val isEncryptedMode =
@@ -1585,8 +1594,31 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
-    setFragmentResultListener(REQUEST_KEY_FIX_MISSING_PASSPHRASE) { _, _ ->
-      sendMsg()
+    setFragmentResultListener(REQUEST_KEY_FIX_MISSING_PASSPHRASE) { _, bundle ->
+      val requestCode = bundle.getInt(
+        FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE, Int.MIN_VALUE
+      )
+
+      when (requestCode) {
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_SENDER_EMAIL -> sendMsg()
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_FINGERPRINT -> {
+          val predefinedFingerprints = bundle.getStringArray(
+            FixNeedPassphraseIssueDialogFragment.KEY_PREDEFINED_FINGERPRINTS
+          ) ?: emptyArray()
+
+          val fingerprintsOfUnlockedKeys = bundle.getStringArray(
+            FixNeedPassphraseIssueDialogFragment.KEY_RESULT
+          ) ?: emptyArray()
+
+          if (predefinedFingerprints.contentEquals(fingerprintsOfUnlockedKeys)) {
+            addNewUserIdToPrivateKey(predefinedFingerprints.first())
+          } else {
+            toast(R.string.error_occurred_please_try_again)
+          }
+        }
+
+        else -> toast(R.string.unknown_error)
+      }
     }
   }
 
@@ -1675,7 +1707,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
 
         RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY -> {
-          //todo-denbond7 need to add realization in a separate PR
+          showDialogFragment(navController) {
+            return@showDialogFragment object : NavDirections {
+              override val actionId = R.id.choose_private_key_dialog_graph
+              override val arguments = ChoosePrivateKeyDialogFragmentArgs(
+                requestKey = REQUEST_KEY_CHOOSE_PRIVATE_KEYS,
+                choiceMode = ListView.CHOICE_MODE_SINGLE,
+                title = getString(R.string.please_choose_key_you_would_like_to_modify),
+                returnResultImmediatelyIfSingle = true
+              ).toBundle()
+            }
+          }
         }
       }
     }
@@ -1704,6 +1746,41 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }) {
         composeMsgViewModel.addAttachments(listOf(key))
       }
+    }
+  }
+
+  private fun subscribeToChoosePrivateKeysDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PRIVATE_KEYS) { _, bundle ->
+      val fingerprints = bundle.getStringArray(ChoosePrivateKeyDialogFragment.KEY_RESULT)
+        ?: return@setFragmentResultListener
+
+      if (fingerprints.isEmpty()) {
+        toast(R.string.please_select_key)
+      } else {
+        val fingerprint = fingerprints.first()
+
+        val passphrase =
+          KeysStorageImpl.getInstance(requireContext()).getPassphraseByFingerprint(fingerprint)
+
+        if (passphrase == null || passphrase.isEmpty) {
+          showNeedPassphraseDialog(
+            requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+            requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_FINGERPRINT,
+            fingerprints = listOf(fingerprint),
+            logicType = FixNeedPassphraseIssueDialogFragment.LogicType.ALL
+          )
+        } else {
+          addNewUserIdToPrivateKey(fingerprint)
+        }
+      }
+    }
+  }
+
+  private fun subscribeToAddNewUserIdToPrivateKeyDialogFragment() {
+    setFragmentResultListener(REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY) { _, bundle ->
+      val fingerprint = bundle.getString(AddNewUserIdToPrivateKeyDialogFragment.KEY_RESULT)
+        ?: return@setFragmentResultListener
+      toast(getString(R.string.key_was_updated, fingerprint), Toast.LENGTH_LONG)
     }
   }
 
@@ -1836,6 +1913,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           if (passphrase?.isEmpty == true) {
             showNeedPassphraseDialog(
               requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+              requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_SENDER_EMAIL,
               fingerprints = listOf(fingerprint)
             )
             return
@@ -1856,24 +1934,49 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun fixNoKeyAvailableIssue(text: String) {
-    showActionDialogFragment(
-      navController,
-      requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
-      dialogTitle = text,
-      isCancelable = true,
-      items = listOf(
-        DialogItem(
-          iconResourceId = R.drawable.ic_import_user_public_key,
-          title = getString(R.string.import_private_key),
-          id = RESULT_CODE_IMPORT_PRIVATE_KEY
-        ),
-        DialogItem(
-          iconResourceId = R.drawable.ic_edit_key_add_user_id,
-          title = getString(R.string.add_email_to_existing_key),
-          id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+    if (account?.clientConfiguration?.usesKeyManager() == true) {
+      toast(getString(R.string.no_prv_keys_ask_admin))
+    } else {
+      showActionDialogFragment(
+        navController,
+        requestKey = REQUEST_KEY_FIX_NO_PRIVATE_KEY_AVAILABLE,
+        dialogTitle = text,
+        isCancelable = true,
+        items = listOf(
+          DialogItem(
+            iconResourceId = R.drawable.ic_import_user_public_key,
+            title = getString(R.string.import_private_key),
+            id = RESULT_CODE_IMPORT_PRIVATE_KEY
+          ),
+          DialogItem(
+            iconResourceId = R.drawable.ic_edit_key_add_user_id,
+            title = getString(R.string.add_email_to_existing_key),
+            id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+          )
         )
       )
-    )
+    }
+  }
+
+  private fun addNewUserIdToPrivateKey(fingerprint: String) {
+    val email = fromAddressesAdapter?.getItem(
+      binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
+    ) ?: return
+
+    if (email.isValidEmail()) {
+      showDialogFragment(navController) {
+        return@showDialogFragment object : NavDirections {
+          override val actionId = R.id.add_new_userid_to_private_key_dialog_graph
+          override val arguments = AddNewUserIdToPrivateKeyDialogFragmentArgs(
+            requestKey = REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY,
+            fingerprint = fingerprint,
+            userId = email,
+          ).toBundle()
+        }
+      }
+    } else {
+      toast(R.string.error_email_is_not_valid)
+    }
   }
 
   companion object {
@@ -1922,7 +2025,20 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       CreateMessageFragment::class.java
     )
 
+    private val REQUEST_KEY_CHOOSE_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PRIVATE_KEYS",
+      CreateMessageFragment::class.java
+    )
+
+    private val REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_ADD_NEW_USER_ID_TO_PRIVATE_KEY",
+      CreateMessageFragment::class.java
+    )
+
     private const val RESULT_CODE_IMPORT_PRIVATE_KEY = 1
     private const val RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY = 2
+
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_SENDER_EMAIL = 1
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_FINGERPRINT = 2
   }
 }

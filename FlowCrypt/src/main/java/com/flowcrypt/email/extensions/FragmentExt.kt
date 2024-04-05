@@ -177,10 +177,12 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
   requestKey: String,
   fingerprints: List<String>,
+  requestCode: Int = Int.MIN_VALUE,
   logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
 ) {
   showNeedPassphraseDialog(
     requestKey = requestKey,
+    requestCode = requestCode,
     navController = navController,
     fingerprints = fingerprints,
     logicType = logicType

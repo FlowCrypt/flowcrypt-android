@@ -6,6 +6,7 @@
 package com.flowcrypt.email.model
 
 import androidx.annotation.Keep
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import kotlinx.coroutines.flow.Flow
@@ -56,4 +57,6 @@ interface KeysStorage {
   fun getFirstUsableForEncryptionPGPSecretKeyRing(user: String): PGPSecretKeyRing?
 
   fun getPassPhrasesUpdatesFlow(): Flow<Long>
+
+  fun getActiveAccount(): AccountEntity?
 }

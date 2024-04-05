@@ -100,6 +100,8 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
       }
     }
 
+  fun getActiveAccount(): AccountEntity? = keysStorage.getActiveAccount()
+
   @ExperimentalCoroutinesApi
   val secretKeyRingsInfoStateFlow: StateFlow<Result<List<KeyRingInfo>?>> =
     keysStorage.secretKeyRingsLiveData.asFlow().flatMapLatest {

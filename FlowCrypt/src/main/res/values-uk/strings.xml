@@ -612,6 +612,7 @@
     <string name="key_info">Інформація про ключ</string>
     <string name="preview_is_not_available">Попередній перегляд недоступний</string>
     <string name="add_email_to_existing_key">Додати електронну адресу до існуючого ключа</string>
+    <string name="please_choose_key_you_would_like_to_modify">Будь ласка, виберіть ключ, який ви хочете змінити</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

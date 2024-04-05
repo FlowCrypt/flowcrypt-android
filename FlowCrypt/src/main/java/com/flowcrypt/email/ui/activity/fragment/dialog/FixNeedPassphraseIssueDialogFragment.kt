@@ -223,14 +223,14 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           binding?.pBCheckPassphrase?.invisible()
           val checkResults = it.data ?: emptyList()
           var isWrongPassphraseExceptionFound = false
-          var countOfMatchedPassphrases = 0
+          val unlockedKeysFingerprints = mutableListOf<String>()
           for (checkResult in checkResults) {
             if (checkResult.e is WrongPassPhraseException) {
               isWrongPassphraseExceptionFound = true
             } else {
               val passphraseType = checkResult.pgpKeyRingDetails.passphraseType ?: continue
               val rawPassphrase = checkResult.pgpKeyRingDetails.tempPassphrase ?: continue
-              countOfMatchedPassphrases++
+              unlockedKeysFingerprints.add(checkResult.pgpKeyRingDetails.fingerprint)
               val passphrase = Passphrase(rawPassphrase)
               context?.let { nonNullContext ->
                 val keysStorage = KeysStorageImpl.getInstance(nonNullContext)
@@ -245,14 +245,18 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
           }
 
           when {
-            countOfMatchedPassphrases > 0 -> {
+            unlockedKeysFingerprints.size > 0 -> {
               when (args.logicType) {
                 ALL -> {
-                  if (countOfMatchedPassphrases == checkResults.size) {
+                  if (unlockedKeysFingerprints.size == checkResults.size) {
                     navController?.navigateUp()
                     setFragmentResult(
                       args.requestKey,
-                      bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
+                      bundleOf(
+                        KEY_RESULT to unlockedKeysFingerprints.toTypedArray(),
+                        KEY_PREDEFINED_FINGERPRINTS to args.fingerprints,
+                        KEY_REQUEST_CODE to args.requestCode
+                      )
                     )
                   }
                 }
@@ -261,7 +265,11 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                   navController?.navigateUp()
                   setFragmentResult(
                     args.requestKey,
-                    bundleOf(KEY_RESULT to 1, KEY_REQUEST_CODE to args.requestCode)
+                    bundleOf(
+                      KEY_RESULT to unlockedKeysFingerprints.toTypedArray(),
+                      KEY_PREDEFINED_FINGERPRINTS to args.fingerprints,
+                      KEY_REQUEST_CODE to args.requestCode
+                    )
                   )
                 }
               }
@@ -336,6 +344,10 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
 
     val KEY_REQUEST_CODE = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_CODE", FixNeedPassphraseIssueDialogFragment::class.java
+    )
+
+    val KEY_PREDEFINED_FINGERPRINTS = GeneralUtil.generateUniqueExtraKey(
+      "KEY_PREDEFINED_FINGERPRINTS", FixNeedPassphraseIssueDialogFragment::class.java
     )
   }
 }

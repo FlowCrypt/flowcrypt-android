@@ -8,7 +8,9 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.util.IdlingCountListener
 import java.util.concurrent.atomic.AtomicInteger
@@ -46,5 +48,9 @@ abstract class BaseDialogFragment : DialogFragment(), IdlingCountListener {
         movementMethod = LinkMovementMethod.getInstance()
       }
     }
+  }
+
+  protected fun getButton(whichButton: Int): Button? {
+    return (dialog as? AlertDialog)?.getButton(whichButton)
   }
 }

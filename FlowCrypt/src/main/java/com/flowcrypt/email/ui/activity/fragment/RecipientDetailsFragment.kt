@@ -78,7 +78,7 @@ class RecipientDetailsFragment : BaseFragment<FragmentRecipientDetailsBinding>()
       recipientDetailsViewModel.recipientPubKeysFlow.collect {
         it ?: return@collect
         if (it.isEmpty()) {
-          showEmptyView(resourcesId = R.drawable.ic_no_result_grey_24dp)
+          showEmptyView(imageResourcesId = R.drawable.ic_no_result_grey_24dp)
         } else {
           pubKeysRecyclerViewAdapter.submitList(it)
           showContent()
