@@ -473,7 +473,7 @@ dependencies {
   implementation("org.pgpainless:pgpainless-core:1.6.7")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
-  implementation("com.nulab-inc:zxcvbn:1.8.2")
+  implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("commons-io:commons-io:2.16.0")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("net.openid:appauth:0.11.1")
