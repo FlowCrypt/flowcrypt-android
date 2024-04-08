@@ -40,7 +40,8 @@ class ActionsDialogFragment : BaseDialogFragment() {
         setFragmentResult(
           args.requestKey,
           bundleOf(
-            KEY_REQUEST_RESULT to args.items[which]
+            KEY_REQUEST_RESULT to args.items[which],
+            KEY_REQUEST_INCOMING_BUNDLE to args.bundle
           )
         )
       }
@@ -50,6 +51,10 @@ class ActionsDialogFragment : BaseDialogFragment() {
   companion object {
     val KEY_REQUEST_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_RESULT", ActionsDialogFragment::class.java
+    )
+
+    val KEY_REQUEST_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_REQUEST_INCOMING_BUNDLE", ActionsDialogFragment::class.java
     )
   }
 }

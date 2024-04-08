@@ -168,7 +168,8 @@ fun LifecycleOwner.showActionDialogFragment(
   requestKey: String,
   dialogTitle: String? = null,
   isCancelable: Boolean = true,
-  items: List<DialogItem>
+  items: List<DialogItem>,
+  bundle: Bundle? = null
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
@@ -177,7 +178,8 @@ fun LifecycleOwner.showActionDialogFragment(
         requestKey = requestKey,
         dialogTitle = dialogTitle,
         isCancelable = isCancelable,
-        items = items.toTypedArray()
+        items = items.toTypedArray(),
+        bundle = bundle
       ).toBundle()
     }
   }

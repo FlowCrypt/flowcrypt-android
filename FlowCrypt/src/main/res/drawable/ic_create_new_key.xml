@@ -1,0 +1,22 @@
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:tint="@color/gray"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M654.45,443.76L654.45,323.76L534.45,323.76v-80h120v-120h80v120h120v80L734.45,323.76v120z" />
+
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="m324.77,836.24 l-82.21,-82.21v-254.85c-40.19,-11.87 -73.07,-34.48 -98.65,-67.82 -25.58,-33.34 -38.36,-71.93 -38.36,-115.78 0,-52.98 18.73,-98.19 56.18,-135.65C199.17,142.49 244.39,123.76 297.37,123.76c52.98,0 98.19,18.73 135.65,56.18 37.45,37.45 56.18,82.67 56.18,135.65 0,41.1 -11.65,77.64 -34.94,109.61 -23.29,31.97 -52.75,54.81 -88.37,68.51l68.51,68.51 -82.21,82.21 82.21,82.21zM297.37,342.98c15.53,0 28.54,-5.25 39.05,-15.76 10.5,-10.5 15.76,-23.52 15.76,-39.05 0,-15.53 -5.25,-28.54 -15.76,-39.05 -10.5,-10.5 -23.52,-15.76 -39.05,-15.76 -15.53,0 -28.54,5.25 -39.05,15.76 -10.5,10.5 -15.76,23.52 -15.76,39.05 0,15.53 5.25,28.54 15.76,39.05 10.5,10.5 23.52,15.76 39.05,15.76z"
+        android:strokeWidth="1.37015" />
+
+</vector>
