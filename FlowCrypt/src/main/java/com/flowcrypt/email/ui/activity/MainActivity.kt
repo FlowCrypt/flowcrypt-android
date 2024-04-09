@@ -107,7 +107,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onServiceDisconnected(arg0: ComponentName) {}
   }
 
-  private val onBackPressedCallback = object : OnBackPressedCallback(true) {
+  override val onBackPressedCallback = object : OnBackPressedCallback(true) {
     override fun handleOnBackPressed() {
       if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
         binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -153,7 +153,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       }
     }
     super.onCreate(savedInstanceState)
-    handleOnBackPressed()
     observeMovingToBackground()
 
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
@@ -436,10 +435,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     } as? MessagesListFragment
 
     fragment?.onDrawerStateChanged(slideOffset, isOpened)
-  }
-
-  private fun handleOnBackPressed() {
-    onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
   }
 
   private fun observeMovingToBackground() {

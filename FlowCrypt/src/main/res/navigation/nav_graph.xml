@@ -19,6 +19,7 @@
     <include app:graph="@navigation/import_additional_private_keys_graph" />
     <include app:graph="@navigation/check_keys_graph" />
     <include app:graph="@navigation/pass_phrase_strength_graph" />
+    <include app:graph="@navigation/create_new_private_key_graph" />
 
     <fragment
         android:id="@+id/mainSignInFragment"
