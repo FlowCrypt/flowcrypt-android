@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/create_new_private_key_graph"
+    app:startDestination="@id/createPrivateKeyFirstFragment">
+
+    <fragment
+        android:id="@+id/createPrivateKeyFirstFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeyFirstFragment"
+        tools:layout="@layout/fragment_create_private_key_first">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <action
+            android:id="@+id/action_createPrivateKeyFirstFragment_to_createPrivateKeySecondFragment"
+            app:destination="@id/createPrivateKeySecondFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPrivateKeySecondFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeySecondFragment"
+        android:label="@string/security"
+        tools:layout="@layout/fragment_create_private_key_second">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="passphrase"
+            app:argType="integer[]" />
+        <action
+            android:id="@+id/action_createPrivateKeySecondFragment_to_createPrivateKeyDialogFragment"
+            app:destination="@id/createPrivateKeyDialogFragment" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/createPrivateKeyDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.CreatePrivateKeyDialogFragment"
+        tools:layout="@layout/fragment_create_private_key_dialog">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+        <argument
+            android:name="passphrase"
+            app:argType="string" />
+    </dialog>
+
+</navigation>

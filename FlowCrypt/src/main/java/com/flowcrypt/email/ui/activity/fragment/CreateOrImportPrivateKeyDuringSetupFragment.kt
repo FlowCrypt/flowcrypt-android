@@ -13,6 +13,7 @@ import androidx.annotation.IntDef
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -68,11 +69,13 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
     } else {
       binding?.buttonCreateNewKey?.setOnClickListener {
         navController?.navigate(
-          CreateOrImportPrivateKeyDuringSetupFragmentDirections
-            .actionCreateOrImportPrivateKeyDuringSetupFragmentToCreatePrivateKeyFirstFragment(
+          object : NavDirections {
+            override val actionId = R.id.create_new_private_key_graph
+            override val arguments = CreatePrivateKeyFirstFragmentArgs(
               requestKey = REQUEST_KEY_CREATE_KEY,
               accountEntity = args.accountEntity
-            )
+            ).toBundle()
+          }
         )
       }
     }

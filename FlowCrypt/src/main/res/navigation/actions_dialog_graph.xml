@@ -26,5 +26,10 @@
         <argument
             android:name="items"
             app:argType="com.flowcrypt.email.model.DialogItem[]" />
+        <argument
+            android:name="bundle"
+            app:argType="android.os.Bundle"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </dialog>
 </navigation>
