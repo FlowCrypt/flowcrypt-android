@@ -116,7 +116,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           labelsEntities
         )
         holder.itemView.setOnClickListener {
-          messageEntity?.let { onMessageClickListener?.onMsgClick(it) }
+          messageEntity?.let { onMessageClickListener?.onMsgClick(position, it) }
         }
       }
     }
@@ -627,7 +627,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   }
 
   interface OnMessageClickListener {
-    fun onMsgClick(msgEntity: MessageEntity)
+    fun onMsgClick(position: Int, msgEntity: MessageEntity)
   }
 
   companion object {

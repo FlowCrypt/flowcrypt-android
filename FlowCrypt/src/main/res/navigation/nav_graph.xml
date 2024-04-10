@@ -292,6 +292,21 @@
     </fragment>
 
     <fragment
+        android:id="@+id/viewPagerMessageDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ViewPagerMessageDetailsFragment"
+        tools:layout="@layout/fragment_message_details">
+        <argument
+            android:name="initialPosition"
+            app:argType="long" />
+        <argument
+            android:name="messageEntityId"
+            app:argType="long" />
+        <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+    </fragment>
+
+    <fragment
         android:id="@+id/messageDetailsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
         tools:layout="@layout/fragment_message_details">
@@ -395,8 +410,8 @@
         android:label=""
         tools:layout="@layout/fragment_messages_list">
         <action
-            android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"
-            app:destination="@id/messageDetailsFragment" />
+            android:id="@+id/action_messagesListFragment_to_viewPagerMessageDetailsFragment"
+            app:destination="@id/viewPagerMessageDetailsFragment" />
     </fragment>
 
     <fragment

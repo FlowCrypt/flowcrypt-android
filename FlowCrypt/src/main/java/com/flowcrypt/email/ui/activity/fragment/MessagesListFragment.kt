@@ -378,7 +378,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
-  override fun onMsgClick(msgEntity: MessageEntity) {
+  override fun onMsgClick(position: Int, msgEntity: MessageEntity) {
     activeMsgEntity = msgEntity
     if (tracker?.hasSelection() == true) {
       return
@@ -416,8 +416,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               navController?.navigateSafe(
                 currentDestinationId = R.id.messagesListFragment,
                 directions = MessagesListFragmentDirections
-                  .actionMessagesListFragmentToMessageDetailsFragment(
-                    messageEntity = msgEntity,
+                  .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
+                    initialPosition = position.toLong(),
+                    messageEntityId = msgEntity.id ?: -1,
                     localFolder = localFolder
                   )
               )
