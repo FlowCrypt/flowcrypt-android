@@ -296,9 +296,6 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.ViewPagerMessageDetailsFragment"
         tools:layout="@layout/fragment_message_details">
         <argument
-            android:name="initialPosition"
-            app:argType="long" />
-        <argument
             android:name="messageEntityId"
             app:argType="long" />
         <argument

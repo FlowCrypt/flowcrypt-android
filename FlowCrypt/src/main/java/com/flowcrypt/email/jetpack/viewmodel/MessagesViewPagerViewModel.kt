@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -21,8 +22,7 @@ class MessagesViewPagerViewModel(
   private val messageEntityId: Long,
   private val localFolder: LocalFolder,
   application: Application
-) :
-  AccountViewModel(application) {
+) : AccountViewModel(application) {
   private val initialLiveData: LiveData<Result<List<MessageEntity>>> =
     activeAccountLiveData.switchMap { accountEntity ->
       liveData {
@@ -45,15 +45,46 @@ class MessagesViewPagerViewModel(
       }
     }
 
+  private val manuallySelectedMessageEntity: MutableLiveData<MessageEntity> = MutableLiveData()
+
+  private val fetchLiveData: LiveData<Result<List<MessageEntity>>> =
+    manuallySelectedMessageEntity.switchMap { messageEntity ->
+      liveData {
+        val activeAccount = getActiveAccountSuspend() ?: return@liveData
+        emit(
+          Result.success(
+            roomDatabase.msgDao()
+              .getMessagesForViewPager(
+                activeAccount.email,
+                localFolder.fullName,
+                messageEntity.receivedDate ?: 0,
+                PAGE_SIZE / 2
+              )
+          )
+        )
+      }
+    }
+
   val messageEntitiesLiveData = MediatorLiveData<Result<List<MessageEntity>>>()
 
   init {
     messageEntitiesLiveData.addSource(initialLiveData) {
       messageEntitiesLiveData.value = it
     }
+
+    messageEntitiesLiveData.addSource(fetchLiveData) {
+      messageEntitiesLiveData.value = it
+    }
+  }
+
+  fun onItemSelected(messageEntity: MessageEntity) {
+    val position = messageEntitiesLiveData.value?.data?.indexOf(messageEntity) ?: return
+    if (position <= PAGE_SIZE / 4 || position >= (PAGE_SIZE - PAGE_SIZE / 4)) {
+      manuallySelectedMessageEntity.value = messageEntity
+    }
   }
 
   companion object {
-    private const val PAGE_SIZE = 30
+    const val PAGE_SIZE = 10
   }
 }

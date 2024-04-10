@@ -417,7 +417,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 currentDestinationId = R.id.messagesListFragment,
                 directions = MessagesListFragmentDirections
                   .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
-                    initialPosition = position.toLong(),
                     messageEntityId = msgEntity.id ?: -1,
                     localFolder = localFolder
                   )
