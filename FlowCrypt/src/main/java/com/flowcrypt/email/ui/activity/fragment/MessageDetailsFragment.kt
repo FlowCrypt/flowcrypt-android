@@ -358,7 +358,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     super.onSetupActionBarMenu(menuHost)
     menuHost.addMenuProvider(object : MenuProvider {
       override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menuInflater.inflate(R.menu.fragment_message_details, menu)
+        if (!args.isViewPagerMode) {
+          menuInflater.inflate(R.menu.fragment_message_details, menu)
+        }
       }
 
       override fun onPrepareMenu(menu: Menu) {

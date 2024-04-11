@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
  * @author Denys Bondarenko
  */
 class MessagesViewPagerViewModel(
-  private val messageEntityId: Long,
+  private val initialMessageEntityId: Long,
   private val localFolder: LocalFolder,
   application: Application
 ) : AccountViewModel(application) {
@@ -27,20 +27,28 @@ class MessagesViewPagerViewModel(
     activeAccountLiveData.switchMap { accountEntity ->
       liveData {
         if (accountEntity != null) {
-          val middleMessageEntity =
-            roomDatabase.msgDao().getMsgById(messageEntityId) ?: return@liveData
+          emit(Result.loading())
 
-          emit(
-            Result.success(
-              roomDatabase.msgDao()
-                .getMessagesForViewPager(
-                  accountEntity.email,
-                  localFolder.fullName,
-                  middleMessageEntity.receivedDate ?: 0,
-                  PAGE_SIZE / 2
-                )
+          val middleMessageEntity =
+            roomDatabase.msgDao().getMsgById(initialMessageEntityId)
+
+          if (middleMessageEntity != null) {
+            emit(
+              Result.success(
+                roomDatabase.msgDao()
+                  .getMessagesForViewPager(
+                    accountEntity.email,
+                    localFolder.fullName,
+                    middleMessageEntity.receivedDate ?: 0,
+                    PAGE_SIZE / 2
+                  )
+              )
             )
-          )
+          } else {
+            emit(Result.success(emptyList()))
+          }
+        } else {
+          emit(Result.success(emptyList()))
         }
       }
     }
@@ -50,18 +58,23 @@ class MessagesViewPagerViewModel(
   private val fetchLiveData: LiveData<Result<List<MessageEntity>>> =
     manuallySelectedMessageEntity.switchMap { messageEntity ->
       liveData {
-        val activeAccount = getActiveAccountSuspend() ?: return@liveData
-        emit(
-          Result.success(
-            roomDatabase.msgDao()
-              .getMessagesForViewPager(
-                activeAccount.email,
-                localFolder.fullName,
-                messageEntity.receivedDate ?: 0,
-                PAGE_SIZE / 2
-              )
+        emit(Result.loading())
+        val activeAccount = getActiveAccountSuspend()
+        if (activeAccount != null) {
+          emit(
+            Result.success(
+              roomDatabase.msgDao()
+                .getMessagesForViewPager(
+                  activeAccount.email,
+                  localFolder.fullName,
+                  messageEntity.receivedDate ?: 0,
+                  PAGE_SIZE / 2
+                )
+            )
           )
-        )
+        } else {
+          emit(Result.success(emptyList()))
+        }
       }
     }
 
@@ -79,7 +92,12 @@ class MessagesViewPagerViewModel(
 
   fun onItemSelected(messageEntity: MessageEntity) {
     val position = messageEntitiesLiveData.value?.data?.indexOf(messageEntity) ?: return
-    if (position <= PAGE_SIZE / 4 || position >= (PAGE_SIZE - PAGE_SIZE / 4)) {
+    val listSize = messageEntitiesLiveData.value?.data?.size
+    if (listSize == null || listSize == 0) {
+      return
+    }
+
+    if (position <= listSize / 4 || position >= (listSize - listSize / 4)) {
       manuallySelectedMessageEntity.value = messageEntity
     }
   }

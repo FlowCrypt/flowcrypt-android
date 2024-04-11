@@ -325,6 +325,10 @@
         <action
             android:id="@+id/action_messageDetailsFragment_to_prepareDownloadedAttachmentsForForwardingDialogFragment"
             app:destination="@id/prepareDownloadedAttachmentsForForwardingDialogFragment" />
+        <argument
+            android:name="isViewPagerMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
 
     <fragment

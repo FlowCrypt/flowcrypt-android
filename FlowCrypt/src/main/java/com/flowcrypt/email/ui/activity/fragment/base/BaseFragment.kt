@@ -40,7 +40,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
   protected val account: AccountEntity?
     get() = accountViewModel.activeAccountLiveData.value
   protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
-  private val loggingTag: String = javaClass.simpleName
+  private val loggingTag: String = javaClass.simpleName + "_" + hashCode()
 
   protected abstract fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): T
 
