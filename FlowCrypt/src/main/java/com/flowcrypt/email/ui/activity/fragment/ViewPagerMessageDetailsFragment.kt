@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -15,25 +14,20 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.AsyncListDiffer
-import androidx.recyclerview.widget.DiffUtil
-import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentViewPagerMessageDetailsBinding
 import com.flowcrypt.email.extensions.supportActionBar
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewPagerViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.adapter.FragmentsAdapter
 
 /**
  * @author Denys Bondarenko
@@ -41,7 +35,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDetailsBinding>(),
   ProgressBehaviour {
   private val args by navArgs<ViewPagerMessageDetailsFragmentArgs>()
-  private lateinit var fragmentsAdapter: FragmentsAdapter
 
   private val messagesViewPagerViewModel: MessagesViewPagerViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
@@ -68,20 +61,6 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentViewPagerMessageDetailsBinding.inflate(inflater, container, false)
 
-  override fun onAttach(context: Context) {
-    super.onAttach(context)
-    fragmentsAdapter =
-      FragmentsAdapter(emptyList(), requireActivity()) { _, _ ->
-        showContent()
-        if (!isInitialPositionApplied) {
-          isInitialPositionApplied = true
-          val id = args.messageEntityId
-          val position = fragmentsAdapter.getItemPositionById(id)
-          binding?.viewPager2?.currentItem = position
-        }
-      }
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     isInitialPositionApplied =
@@ -95,19 +74,37 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     supportActionBar?.subtitle = null
 
     binding?.viewPager2?.apply {
-      adapter = fragmentsAdapter
+      adapter = FragmentsAdapter(
+        localFolder = args.localFolder,
+        initialList = emptyList(),
+        fragment = this@ViewPagerMessageDetailsFragment
+      ) { _, _ ->
+        showContent()
+        if (!isInitialPositionApplied) {
+          isInitialPositionApplied = true
+          val id = args.messageEntityId
+          val position = (adapter as FragmentsAdapter).getItemPositionById(id)
+          binding?.viewPager2?.currentItem = position
+        }
+      }
+
       setOffscreenPageLimit(1)
       registerOnPageChangeCallback(object : OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
           super.onPageSelected(position)
-          fragmentsAdapter.getItem(position)?.let { messageEntity ->
-            messagesViewPagerViewModel.onItemSelected(messageEntity)
-          }
+          /*(adapter as FragmentsAdapter).getItem(position)?.let { messageEntity ->
+            messagesViewPagerViewMode.onItemSelected(messageEntity)
+          }*/
         }
       })
     }
 
     setupMessagesViewPagerViewModel()
+  }
+
+  override fun onDestroyView() {
+    binding?.viewPager2?.adapter = null
+    super.onDestroyView()
   }
 
   /*
@@ -135,66 +132,11 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       when (it.status) {
         Result.Status.SUCCESS -> {
           val messages = it.data ?: emptyList()
-          fragmentsAdapter.submit(messages)
+          (binding?.viewPager2?.adapter as FragmentsAdapter).submit(messages)
         }
 
         else -> {}
       }
-    }
-  }
-
-  private inner class FragmentsAdapter(
-    initialList: List<MessageEntity>,
-    fragmentActivity: FragmentActivity,
-    listListener: AsyncListDiffer.ListListener<MessageEntity>
-  ) : FragmentStateAdapter(fragmentActivity) {
-    private val diffUtil = object : DiffUtil.ItemCallback<MessageEntity>() {
-      override fun areItemsTheSame(oldItem: MessageEntity, newItem: MessageEntity):
-          Boolean {
-        return oldItem.id == newItem.id
-      }
-
-      override fun areContentsTheSame(oldItem: MessageEntity, newItem: MessageEntity):
-          Boolean {
-        return oldItem == newItem
-      }
-    }
-
-    private val asyncListDiffer = AsyncListDiffer(this, diffUtil)
-
-    init {
-      asyncListDiffer.submitList(initialList)
-      asyncListDiffer.addListListener(listListener)
-    }
-
-    override fun getItemCount(): Int = asyncListDiffer.currentList.size
-    override fun createFragment(position: Int): Fragment =
-      MessageDetailsFragment().apply {
-        arguments = MessageDetailsFragmentArgs(
-          messageEntity = asyncListDiffer.currentList[position],
-          localFolder = args.localFolder,
-          isViewPagerMode = true
-        ).toBundle()
-      }
-
-    override fun getItemId(position: Int): Long {
-      return asyncListDiffer.currentList[position].id ?: 0
-    }
-
-    override fun containsItem(itemId: Long): Boolean {
-      return asyncListDiffer.currentList.any { it.id == itemId }
-    }
-
-    fun submit(newList: List<MessageEntity>) {
-      asyncListDiffer.submitList(newList)
-    }
-
-    fun getItem(position: Int): MessageEntity? {
-      return asyncListDiffer.currentList.getOrNull(position)
-    }
-
-    fun getItemPositionById(id: Long): Int {
-      return asyncListDiffer.currentList.indexOfFirst { item -> item.id == id }
     }
   }
 
