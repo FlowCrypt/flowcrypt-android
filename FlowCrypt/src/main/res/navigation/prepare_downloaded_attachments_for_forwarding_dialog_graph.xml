@@ -6,7 +6,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/change_gmail_labels_for_single_message_dialog_graph"
+    android:id="@+id/prepare_downloaded_attachments_for_forwarding_dialog_graph"
     app:startDestination="@id/changeGmailLabelsForSingleMessageDialogFragment">
 
     <dialog
