@@ -18,11 +18,16 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.viewpager2.widget.ViewPager2.ORIENTATION_HORIZONTAL
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentViewPagerMessageDetailsBinding
+import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.supportActionBar
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewPagerViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -80,21 +85,17 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
         fragment = this@ViewPagerMessageDetailsFragment
       ) { _, _ ->
         showContent()
-        if (!isInitialPositionApplied) {
-          isInitialPositionApplied = true
-          val id = args.messageEntityId
-          val position = (adapter as FragmentsAdapter).getItemPositionById(id)
-          binding?.viewPager2?.currentItem = position
-        }
       }
+
+      addItemDecoration(DividerItemDecoration(view.context, ORIENTATION_HORIZONTAL))
 
       setOffscreenPageLimit(1)
       registerOnPageChangeCallback(object : OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
           super.onPageSelected(position)
-          /*(adapter as FragmentsAdapter).getItem(position)?.let { messageEntity ->
-            messagesViewPagerViewMode.onItemSelected(messageEntity)
-          }*/
+          (adapter as FragmentsAdapter).getItem(position)?.let { messageEntity ->
+            messagesViewPagerViewModel.onItemSelected(messageEntity)
+          }
         }
       })
     }
@@ -128,11 +129,23 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
   }
 
   private fun setupMessagesViewPagerViewModel() {
+    messagesViewPagerViewModel.initialLiveData.observeOnce(viewLifecycleOwner) {
+      when (it.status) {
+        Result.Status.SUCCESS -> {
+          (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
+        }
+
+        else -> {
+          toast(R.string.message_not_found)
+          navController?.navigateUp()
+        }
+      }
+    }
+
     messagesViewPagerViewModel.messageEntitiesLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.SUCCESS -> {
-          val messages = it.data ?: emptyList()
-          (binding?.viewPager2?.adapter as FragmentsAdapter).submit(messages)
+          (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
         }
 
         else -> {}

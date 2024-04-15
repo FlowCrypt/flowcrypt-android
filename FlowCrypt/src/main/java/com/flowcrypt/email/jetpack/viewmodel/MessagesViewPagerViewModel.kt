@@ -23,39 +23,35 @@ class MessagesViewPagerViewModel(
   private val localFolder: LocalFolder,
   application: Application
 ) : AccountViewModel(application) {
-  private val initialLiveData: LiveData<Result<List<MessageEntity>>> =
+  val initialLiveData: LiveData<Result<List<MessageEntity>>> =
     activeAccountLiveData.switchMap { accountEntity ->
       liveData {
         if (accountEntity != null) {
-          emit(Result.loading())
-
           val middleMessageEntity =
             roomDatabase.msgDao().getMsgById(initialMessageEntityId)
 
           if (middleMessageEntity != null) {
             emit(
-              Result.success(
-                roomDatabase.msgDao()
-                  .getMessagesForViewPager(
-                    accountEntity.email,
-                    localFolder.fullName,
-                    middleMessageEntity.receivedDate ?: 0,
-                    PAGE_SIZE / 2
-                  )
-              )
+              Result.success(listOf(middleMessageEntity))
             )
           } else {
-            emit(Result.success(emptyList()))
+            emit(
+              Result.exception(
+                IllegalStateException(
+                  "MessageEntity with id = $initialMessageEntityId not found"
+                )
+              )
+            )
           }
         } else {
-          emit(Result.success(emptyList()))
+          emit(Result.exception(IllegalStateException("account is null")))
         }
       }
     }
 
   private val manuallySelectedMessageEntity: MutableLiveData<MessageEntity> = MutableLiveData()
 
-  private val fetchLiveData: LiveData<Result<List<MessageEntity>>> =
+  val messageEntitiesLiveData: LiveData<Result<List<MessageEntity>>> =
     manuallySelectedMessageEntity.switchMap { messageEntity ->
       liveData {
         emit(Result.loading())
@@ -78,19 +74,12 @@ class MessagesViewPagerViewModel(
       }
     }
 
-  val messageEntitiesLiveData = MediatorLiveData<Result<List<MessageEntity>>>()
-
-  init {
-    messageEntitiesLiveData.addSource(initialLiveData) {
-      messageEntitiesLiveData.value = it
-    }
-
-    messageEntitiesLiveData.addSource(fetchLiveData) {
-      messageEntitiesLiveData.value = it
-    }
-  }
-
   fun onItemSelected(messageEntity: MessageEntity) {
+    if (messageEntitiesLiveData.value?.data == null){
+      manuallySelectedMessageEntity.value = messageEntity
+      return
+    }
+
     val position = messageEntitiesLiveData.value?.data?.indexOf(messageEntity) ?: return
     val listSize = messageEntitiesLiveData.value?.data?.size
     if (listSize == null || listSize == 0) {
