@@ -17,9 +17,9 @@ import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportRecipientsFromSourceBinding
 import com.flowcrypt.email.extensions.hideKeyboard
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.showFindKeysInClipboardDialogFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.LookUpPubKeysDialogFragment

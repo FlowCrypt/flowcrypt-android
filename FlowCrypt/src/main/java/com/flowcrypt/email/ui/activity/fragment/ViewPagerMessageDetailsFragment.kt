@@ -24,10 +24,10 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentViewPagerMessageDetailsBinding
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.observeOnce
-import com.flowcrypt.email.extensions.supportActionBar
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewPagerViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment

@@ -17,7 +17,7 @@ import androidx.fragment.app.viewModels
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.doBaseUISetup
+import com.flowcrypt.email.extensions.androidx.fragment.app.doBaseUISetup
 import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel

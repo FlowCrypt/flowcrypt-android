@@ -10,7 +10,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import com.flowcrypt.email.R
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.util.GeneralUtil
 

@@ -32,8 +32,8 @@ import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListD
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPrimaryKey
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusIcon
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
-import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.ui.adapter.SubKeysListAdapter
 import com.flowcrypt.email.ui.adapter.UserIdListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration

@@ -27,12 +27,12 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentServerSettingsBinding
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.hideKeyboard
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.onItemSelected
-import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
-import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.viewmodel.AccountSettingsViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker

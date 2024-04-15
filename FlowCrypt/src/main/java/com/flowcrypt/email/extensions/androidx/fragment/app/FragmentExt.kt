@@ -1,15 +1,17 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
-package com.flowcrypt.email.extensions
+package com.flowcrypt.email.extensions.androidx.fragment.app
 
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -19,6 +21,14 @@ import androidx.navigation.Navigation
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.showDialogFragment
+import com.flowcrypt.email.extensions.showFeedbackFragment
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showInfoDialogWithExceptionDetails
+import com.flowcrypt.email.extensions.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.ui.activity.BaseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.UiUxSettings
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragmentArgs
@@ -257,6 +267,18 @@ fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
         returnResultImmediatelyIfSingle = returnResultImmediatelyIfSingle
       ).toBundle()
     }
+  }
+}
+
+fun Fragment.setFragmentResultListener(
+  requestKey: String,
+  useSuperParentFragmentManagerIfPossible: Boolean = false,
+  listener: ((requestKey: String, bundle: Bundle) -> Unit)
+) {
+  if (useSuperParentFragmentManagerIfPossible && parentFragment?.parentFragmentManager != null) {
+    parentFragment?.parentFragmentManager?.setFragmentResultListener(requestKey, this, listener)
+  } else {
+    setFragmentResultListener(requestKey, listener)
   }
 }
 

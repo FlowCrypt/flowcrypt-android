@@ -41,7 +41,6 @@ import androidx.core.text.toSpannable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
-import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -75,7 +74,17 @@ import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showChoosePublicKeyDialogFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.exceptionMsgWithStack
@@ -83,15 +92,6 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
-import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
-import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.extensions.showNeedPassphraseDialog
-import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.extensions.supportActionBar
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -1801,7 +1801,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
-    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY, args.isViewPagerMode) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       )?.map { attachmentInfo ->
@@ -1815,7 +1815,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToPrepareDownloadedAttachmentsForForwardingDialogFragment() {
-    setFragmentResultListener(REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING) { _, bundle ->
+    setFragmentResultListener(
+      REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING,
+      args.isViewPagerMode
+    ) { _, bundle ->
       val result: Result<List<AttachmentInfo>>? = bundle.getSerializableViaExt(
         DecryptDownloadedAttachmentsBeforeForwardingDialogFragment.KEY_RESULT
       ) as? Result<List<AttachmentInfo>>
@@ -1907,7 +1910,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToDownloadAttachmentViaDialog() {
-    setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT, args.isViewPagerMode) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
       val attachmentInfo = bundle.getParcelableViaExt<AttachmentInfo>(
         DownloadAttachmentDialogFragment.KEY_ATTACHMENT
@@ -1944,7 +1947,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToDecryptAttachmentViaDialog() {
-    setFragmentResultListener(REQUEST_KEY_DECRYPT_ATTACHMENT) { _, bundle ->
+    setFragmentResultListener(REQUEST_KEY_DECRYPT_ATTACHMENT, args.isViewPagerMode) { _, bundle ->
       val attachmentInfo =
         bundle.getParcelableViaExt<AttachmentInfo>(DecryptAttachmentDialogFragment.KEY_ATTACHMENT)
           ?: return@setFragmentResultListener
@@ -1958,7 +1961,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToImportingAdditionalPrivateKeys() {
-    setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(
+      REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+      args.isViewPagerMode
+    ) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
