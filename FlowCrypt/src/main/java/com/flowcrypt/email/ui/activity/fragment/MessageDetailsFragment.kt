@@ -117,10 +117,14 @@ import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
@@ -250,12 +254,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                 )
               } else {
                 navController?.navigate(
-                  MessageDetailsFragmentDirections
-                    .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
+                  object : NavDirections {
+                    override val actionId = R.id.decrypt_attachment_dialog_graph
+                    override val arguments = DecryptAttachmentDialogFragmentArgs(
                       attachmentInfo = attachmentInfo.copy(),
                       requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
                       requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
-                    )
+                    ).toBundle()
+                  }
                 )
               }
             }
@@ -267,12 +273,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           }
         } else {
           navController?.navigate(
-            MessageDetailsFragmentDirections
-              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+            object : NavDirections {
+              override val actionId = R.id.download_attachment_dialog_graph
+              override val arguments = DownloadAttachmentDialogFragmentArgs(
                 attachmentInfo = attachmentInfo,
                 requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
                 requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT
-              )
+              ).toBundle()
+            }
           )
         }
       }
@@ -544,13 +552,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           )
         } else {
           navController?.navigate(
-            MessageDetailsFragmentDirections
-              .actionMessageDetailsFragmentToPrepareDownloadedAttachmentsForForwardingDialogFragment(
+            object : NavDirections {
+              override val actionId =
+                R.id.prepare_downloaded_attachments_for_forwarding_dialog_graph
+              override val arguments =
+                DecryptDownloadedAttachmentsBeforeForwardingDialogFragmentArgs(
                 requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING,
                 attachments = attachmentsRecyclerViewAdapter.currentList.filter {
                   it.isEmbeddedAndPossiblyEncrypted()
                 }.toTypedArray()
-              )
+                ).toBundle()
+            }
           )
         }
       }
@@ -1849,12 +1861,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     lastClickedAtt?.let { attInfo ->
       if (account?.isHandlingAttachmentRestricted() == true) {
         navController?.navigate(
-          MessageDetailsFragmentDirections
-            .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+          object : NavDirections {
+            override val actionId = R.id.download_attachment_dialog_graph
+            override val arguments = DownloadAttachmentDialogFragmentArgs(
               attachmentInfo = attInfo,
               requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
               requestCode = REQUEST_CODE_SAVE_ATTACHMENT
-            )
+            ).toBundle()
+          }
         )
       } else {
         context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
@@ -1986,11 +2000,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun changeGmailLabels() {
     if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
       navController?.navigate(
-        MessageDetailsFragmentDirections
-          .actionMessageDetailsFragmentToChangeGmailLabelsForSingleMessageDialogFragment(
+        object : NavDirections {
+          override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
+          override val arguments = ChangeGmailLabelsForSingleMessageDialogFragmentArgs(
             requestKey = UUID.randomUUID().toString(),
             messageEntity = args.messageEntity
-          )
+          ).toBundle()
+        }
       )
     }
   }
