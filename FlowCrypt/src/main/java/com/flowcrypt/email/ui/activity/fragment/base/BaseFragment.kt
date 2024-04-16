@@ -40,7 +40,6 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
   protected val account: AccountEntity?
     get() = accountViewModel.activeAccountLiveData.value
   protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
-  private val loggingTag: String = javaClass.simpleName + "_" + hashCode()
 
   protected abstract fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): T
 
@@ -59,14 +58,14 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
-    LogsUtil.d(loggingTag, "onAttach")
+    LogsUtil.d(getLoggingTag(), "onAttach")
     connectionLifecycleObserver = ConnectionLifecycleObserver(context)
     lifecycle.addObserver(connectionLifecycleObserver)
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    LogsUtil.d(loggingTag, "onCreate")
+    LogsUtil.d(getLoggingTag(), "onCreate")
   }
 
   override fun onCreateView(
@@ -74,7 +73,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
     container: ViewGroup?,
     savedInstanceState: Bundle?
   ): View? {
-    LogsUtil.d(loggingTag, "onCreateView")
+    LogsUtil.d(getLoggingTag(), "onCreateView")
     binding = inflateBinding(inflater, container)
     return binding?.root
   }
@@ -82,56 +81,56 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     onSetupActionBarMenu(requireActivity())
-    LogsUtil.d(loggingTag, "onViewCreated")
+    LogsUtil.d(getLoggingTag(), "onViewCreated")
     doBaseUISetup(this)
     initAccountViewModel()
   }
 
   override fun onStart() {
     super.onStart()
-    LogsUtil.d(loggingTag, "onStart")
+    LogsUtil.d(getLoggingTag(), "onStart")
   }
 
   override fun onResume() {
     super.onResume()
-    LogsUtil.d(loggingTag, "onResume")
+    LogsUtil.d(getLoggingTag(), "onResume")
   }
 
   override fun onPause() {
     super.onPause()
-    LogsUtil.d(loggingTag, "onPause")
+    LogsUtil.d(getLoggingTag(), "onPause")
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
-    LogsUtil.d(loggingTag, "onSaveInstanceState")
+    LogsUtil.d(getLoggingTag(), "onSaveInstanceState")
   }
 
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
     super.onViewStateRestored(savedInstanceState)
-    LogsUtil.d(loggingTag, "onViewStateRestored")
+    LogsUtil.d(getLoggingTag(), "onViewStateRestored")
   }
 
   override fun onStop() {
     super.onStop()
-    LogsUtil.d(loggingTag, "onStop")
+    LogsUtil.d(getLoggingTag(), "onStop")
   }
 
   override fun onDestroyView() {
     super.onDestroyView()
-    LogsUtil.d(loggingTag, "onDestroyView")
+    LogsUtil.d(getLoggingTag(), "onDestroyView")
     binding = null
   }
 
   override fun onDestroy() {
     super.onDestroy()
-    LogsUtil.d(loggingTag, "onDestroy")
+    LogsUtil.d(getLoggingTag(), "onDestroy")
     IdlingCountListener.printIdlingStats(idlingCount, this.javaClass)
   }
 
   override fun onDetach() {
     super.onDetach()
-    LogsUtil.d(loggingTag, "onDetach")
+    LogsUtil.d(getLoggingTag(), "onDetach")
     lifecycle.removeObserver(connectionLifecycleObserver)
   }
 
