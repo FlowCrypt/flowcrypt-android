@@ -25,9 +25,9 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentViewPagerMessageDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
-import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewPagerViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -81,7 +81,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     binding?.viewPager2?.apply {
       adapter = FragmentsAdapter(
         localFolder = args.localFolder,
-        initialList = emptyList(),
+        initialList = messagesViewPagerViewModel.messageEntitiesLiveData.value?.data ?: emptyList(),
         fragment = this@ViewPagerMessageDetailsFragment
       ) { _, _ ->
         showContent()
@@ -133,6 +133,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       when (it.status) {
         Result.Status.SUCCESS -> {
           (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
+          showContent()
         }
 
         else -> {
@@ -146,6 +147,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       when (it.status) {
         Result.Status.SUCCESS -> {
           (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
+          showContent()
         }
 
         else -> {}
