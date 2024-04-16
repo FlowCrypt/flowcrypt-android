@@ -118,7 +118,8 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
   isCancelable: Boolean = true,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false,
-  useWebViewToRender: Boolean = false
+  useWebViewToRender: Boolean = false,
+  bundle: Bundle? = null
 ) {
   showInfoDialog(
     context = requireContext(),
@@ -131,7 +132,8 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
     isCancelable = isCancelable,
     hasHtml = hasHtml,
     useLinkify = useLinkify,
-    useWebViewToRender = useWebViewToRender
+    useWebViewToRender = useWebViewToRender,
+    bundle = bundle
   )
 }
 
@@ -147,7 +149,8 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
   negativeButtonTitle: String? = null,
   isCancelable: Boolean = true,
   hasHtml: Boolean = false,
-  useLinkify: Boolean = false
+  useLinkify: Boolean = false,
+  bundle: Bundle? = null
 ) {
   showTwoWayDialog(
     context = requireContext(),
@@ -160,18 +163,19 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
     negativeButtonTitle = negativeButtonTitle,
     isCancelable = isCancelable,
     hasHtml = hasHtml,
-    useLinkify = useLinkify
+    useLinkify = useLinkify,
+    bundle = bundle
   )
 }
 
 fun androidx.fragment.app.Fragment.setFragmentResultListenerForTwoWayDialog(
+  requestKey: String = GeneralUtil.generateUniqueExtraKey(
+    Constants.REQUEST_KEY_BUTTON_CLICK,
+    this::class.java
+  ),
   useSuperParentFragmentManagerIfPossible: Boolean = false,
   listener: ((requestKey: String, bundle: Bundle) -> Unit)
 ) {
-  val requestKey = GeneralUtil.generateUniqueExtraKey(
-    Constants.REQUEST_KEY_BUTTON_CLICK,
-    this::class.java
-  )
   setFragmentResultListener(requestKey, useSuperParentFragmentManagerIfPossible, listener)
 }
 

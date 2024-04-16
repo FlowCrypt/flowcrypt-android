@@ -50,7 +50,10 @@ class InfoDialogFragment : BaseDialogFragment() {
         args.requestKey?.let { requestKey ->
           setFragmentResult(
             requestKey,
-            bundleOf(KEY_REQUEST_CODE to args.requestCode)
+            bundleOf(
+              KEY_REQUEST_CODE to args.requestCode,
+              KEY_REQUEST_INCOMING_BUNDLE to args.bundle
+            )
           )
         }
       }
@@ -88,6 +91,10 @@ class InfoDialogFragment : BaseDialogFragment() {
   companion object {
     val KEY_REQUEST_CODE = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_CODE", InfoDialogFragment::class.java
+    )
+
+    val KEY_REQUEST_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_REQUEST_INCOMING_BUNDLE", InfoDialogFragment::class.java
     )
   }
 }

@@ -439,6 +439,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             } else {
               if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
+                  requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntity.id?.toString(),
                   requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
                   dialogTitle = "",
                   dialogMsg = requireContext().resources.getQuantityString(
@@ -1788,7 +1789,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToTwoWayDialog() {
-    setFragmentResultListenerForTwoWayDialog(args.isViewPagerMode) { _, bundle ->
+    setFragmentResultListenerForTwoWayDialog(
+      requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntity.id?.toString(),
+      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
+    ) { _, bundle ->
       val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
       val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
 
@@ -2069,5 +2073,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         "REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING",
         MessageDetailsFragment::class.java
       )
+
+    private val REQUEST_KEY_TWO_WAY_DIALOG_BASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_TWO_WAY_DIALOG_BASE",
+      MessageDetailsFragment::class.java
+    )
   }
 }
