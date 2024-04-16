@@ -1788,7 +1788,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToTwoWayDialog() {
-    setFragmentResultListenerForTwoWayDialog { _, bundle ->
+    setFragmentResultListenerForTwoWayDialog(args.isViewPagerMode) { _, bundle ->
       val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
       val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
 

@@ -165,23 +165,25 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
 }
 
 fun androidx.fragment.app.Fragment.setFragmentResultListenerForTwoWayDialog(
+  useSuperParentFragmentManagerIfPossible: Boolean = false,
   listener: ((requestKey: String, bundle: Bundle) -> Unit)
 ) {
   val requestKey = GeneralUtil.generateUniqueExtraKey(
     Constants.REQUEST_KEY_BUTTON_CLICK,
     this::class.java
   )
-  parentFragmentManager.setFragmentResultListener(requestKey, this, listener)
+  setFragmentResultListener(requestKey, useSuperParentFragmentManagerIfPossible, listener)
 }
 
 fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
+  useSuperParentFragmentManagerIfPossible: Boolean = false,
   listener: ((requestKey: String, bundle: Bundle) -> Unit)
 ) {
   val requestKey = GeneralUtil.generateUniqueExtraKey(
     Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
     this::class.java
   )
-  parentFragmentManager.setFragmentResultListener(requestKey, this, listener)
+  setFragmentResultListener(requestKey, useSuperParentFragmentManagerIfPossible, listener)
 }
 
 fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
