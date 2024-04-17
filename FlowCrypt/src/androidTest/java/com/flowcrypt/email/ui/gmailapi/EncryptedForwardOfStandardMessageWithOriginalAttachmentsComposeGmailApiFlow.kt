@@ -13,9 +13,12 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -40,6 +43,7 @@ import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -95,8 +99,23 @@ class EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlo
     Thread.sleep(1000)
 
     //click on forward
-    onView(withId(R.id.layoutFwdButton))
-      .check(matches(isDisplayed()))
+    onView(
+      allOf(
+        withId(R.id.layoutFwdButton),
+        withParent(
+          withParent(
+            withParent(
+              hasSibling(
+                allOf(
+                  withId(R.id.layoutHeader),
+                  withChild(allOf(withId(R.id.textViewSubject), withText(SUBJECT_EXISTING_STANDARD)))
+                )
+              )
+            )
+          )
+        )
+      )
+    ).check(matches(isDisplayed()))
       .perform(scrollTo(), click())
 
     val outgoingMessageConfiguration =
@@ -107,7 +126,7 @@ class EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlo
 
     //switch to encrypted mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
-    onView(ViewMatchers.withText(R.string.switch_to_secure_email))
+    onView(withText(R.string.switch_to_secure_email))
       .check(matches(isDisplayed()))
       .perform(click())
 

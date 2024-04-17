@@ -8,12 +8,14 @@ package com.flowcrypt.email.ui
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -33,6 +35,7 @@ import com.google.api.services.gmail.model.Message
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -141,7 +144,7 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
 
     openComposeScreenAndTypeSubject(MESSAGE_SUBJECT_FIRST)
     Thread.sleep(DraftViewModel.DELAY_TIMEOUT * 2)
-    Espresso.pressBack()
+    pressBack()
 
     //check that the first draft was created
     assertEquals(1, draftsCache.size)
@@ -152,7 +155,7 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
 
     openComposeScreenAndTypeSubject(MESSAGE_SUBJECT_SECOND)
     Thread.sleep(DraftViewModel.DELAY_TIMEOUT * 2)
-    Espresso.pressBack()
+    pressBack()
 
     //check that the second draft was created
     assertEquals(2, draftsCache.size)
@@ -166,8 +169,13 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
       .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
     //wait for the message details
     Thread.sleep(2000)
-    onView(withId(R.id.imageButtonEditDraft))
-      .check(matches(isDisplayed()))
+    onView(
+      allOf(
+        //as we have viewpager at this stage need to add additional selector
+        hasSibling(allOf(withId(R.id.textViewSubject), withText(MESSAGE_SUBJECT_FIRST))),
+        withId(R.id.imageButtonEditDraft)
+      )
+    ).check(matches(isDisplayed()))
       .perform(click())
     onView(withId(R.id.editTextEmailSubject))
       .check(matches(isDisplayed()))
@@ -179,8 +187,8 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
       )
 
     Thread.sleep(DraftViewModel.DELAY_TIMEOUT * 2)
-    Espresso.pressBack()//back to the message details screen
-    Espresso.pressBack()//back to the messages list screen
+    pressBack()//back to the message details screen
+    pressBack()//back to the messages list screen
 
     //check if 1st draft is updated correctly and 2nd draft remains same
     assertEquals(2, draftsCache.size)
