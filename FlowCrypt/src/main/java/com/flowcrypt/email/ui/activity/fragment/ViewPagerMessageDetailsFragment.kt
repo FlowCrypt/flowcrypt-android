@@ -54,8 +54,6 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     }
   }
 
-  private var isInitialPositionApplied = false
-
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
@@ -65,12 +63,6 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
 
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentViewPagerMessageDetailsBinding.inflate(inflater, container, false)
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    isInitialPositionApplied =
-      savedInstanceState?.getBoolean(KEY_IS_INITIAL_POSITION_APPLIED) ?: false
-  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -123,11 +115,6 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
-  override fun onSaveInstanceState(outState: Bundle) {
-    super.onSaveInstanceState(outState)
-    outState.putBoolean(KEY_IS_INITIAL_POSITION_APPLIED, isInitialPositionApplied)
-  }
-
   private fun setupMessagesViewPagerViewModel() {
     messagesViewPagerViewModel.initialLiveData.observeOnce(viewLifecycleOwner) {
       when (it.status) {
@@ -153,9 +140,5 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
         else -> {}
       }
     }
-  }
-
-  companion object {
-    private const val KEY_IS_INITIAL_POSITION_APPLIED = "KEY_IS_INITIAL_POSITION_APPLIED"
   }
 }
