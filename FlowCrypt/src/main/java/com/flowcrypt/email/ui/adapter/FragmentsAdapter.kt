@@ -43,6 +43,7 @@ class FragmentsAdapter(
   }
 
   override fun getItemCount(): Int = asyncListDiffer.currentList.size
+
   override fun createFragment(position: Int): Fragment =
     MessageDetailsFragment().apply {
       arguments = MessageDetailsFragmentArgs(
