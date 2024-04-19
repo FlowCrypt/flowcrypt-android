@@ -11,7 +11,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -28,6 +27,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.MainActivity
+import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
@@ -275,10 +275,12 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       NavDeepLinkBuilder(context)
         .setGraph(R.navigation.nav_graph)
         .setDestination(R.id.messageDetailsFragment)
-        .setArguments(Bundle().apply {
-          putParcelable("messageEntity", messageEntity)
-          putParcelable("localFolder", localFolder)
-        })
+        .setArguments(
+          MessageDetailsFragmentArgs(
+            messageEntity = messageEntity,
+            localFolder = localFolder
+          ).toBundle()
+        )
         .setComponentName(MainActivity::class.java)
         .createTaskStackBuilder()
         .getPendingIntent(

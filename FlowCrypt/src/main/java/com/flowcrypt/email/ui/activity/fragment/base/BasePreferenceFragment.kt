@@ -11,7 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.doBaseUISetup
+import com.flowcrypt.email.extensions.androidx.fragment.app.doBaseUISetup
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 
 /**

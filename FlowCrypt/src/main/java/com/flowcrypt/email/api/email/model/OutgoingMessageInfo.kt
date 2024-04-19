@@ -110,14 +110,18 @@ data class OutgoingMessageInfo(
     replyTo: String? = null,
     password: ByteArray? = null,
   ): MessageEntity {
+    val timestamp = System.currentTimeMillis()
     return MessageEntity(
       email = requireNotNull(account),
       folder = folder,
       uid = uid,
+      receivedDate = timestamp,
+      sentDate = timestamp,
       fromAddress = from.toString(),
       replyTo = replyTo,
       toAddress = InternetAddress.toString(toRecipients?.toTypedArray()),
       ccAddress = InternetAddress.toString(ccRecipients?.toTypedArray()),
+      subject = subject,
       flags = flags.toString().uppercase(),
       hasAttachments = atts?.isNotEmpty() == true || forwardedAtts?.isNotEmpty() == true,
       isNew = false,
