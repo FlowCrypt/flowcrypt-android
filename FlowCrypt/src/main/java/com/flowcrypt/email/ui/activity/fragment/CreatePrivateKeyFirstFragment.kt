@@ -20,7 +20,7 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentCreatePrivateKeyFirstBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BasePassphraseStrengthFragment
 import com.flowcrypt.email.util.GeneralUtil

@@ -16,10 +16,10 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentAuthorizeSearchPrivateKeyBackupsBinding
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment

@@ -8,6 +8,8 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import android.content.Context
 import android.text.TextUtils
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
@@ -45,7 +47,6 @@ import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.livedata.SkipInitialValueObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -96,7 +97,7 @@ class MsgDetailsViewModel(
   val localFolder: LocalFolder,
   val messageEntity: MessageEntity,
   application: Application
-) : AccountViewModel(application) {
+) : AccountViewModel(application), DefaultLifecycleObserver {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(application)
 
   private var msgSize: Int = 0
@@ -107,6 +108,9 @@ class MsgDetailsViewModel(
 
   val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
   val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
+
+  @Volatile
+  private var hasAbilityToChangeSeenStatus: Boolean = false
 
   private val freshMsgLiveData: LiveData<MessageEntity?> =
     roomDatabase.msgDao().getMsgLiveDataById(messageEntity.id ?: -1)
@@ -170,7 +174,6 @@ class MsgDetailsViewModel(
           val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
           if (existedMsgSnapshot != null) {
             emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-            setSeenStatusInternal(msgEntity = messageEntity, isSeen = true, usePending = true)
             UpdateMsgsSeenStateWorker.enqueue(application)
             val processingResult = processingMsgSnapshot(existedMsgSnapshot)
             emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
@@ -184,7 +187,9 @@ class MsgDetailsViewModel(
               emit(Result.exception(e))
               return@liveData
             }
-            setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
+            if (hasAbilityToChangeSeenStatus) {
+              setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
+            }
             emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
             val processingResult = processingMsgSnapshot(newMsgSnapshot)
             emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
@@ -404,6 +409,25 @@ class MsgDetailsViewModel(
     processingMsgLiveData.addSource(processingNonOutgoingMsgLiveData) {
       processingMsgLiveData.value = it
     }
+  }
+
+  override fun onResume(owner: LifecycleOwner) {
+    super.onResume(owner)
+    hasAbilityToChangeSeenStatus = true
+    MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())?.let {
+      viewModelScope.launch {
+        setSeenStatusInternal(
+          msgEntity = messageEntity,
+          isSeen = true,
+          usePending = true
+        )
+      }
+    }
+  }
+
+  override fun onPause(owner: LifecycleOwner) {
+    super.onPause(owner)
+    hasAbilityToChangeSeenStatus = false
   }
 
   fun updateInlinedAttachments(attachments: List<AttachmentInfo>) {
@@ -834,8 +858,8 @@ class MsgDetailsViewModel(
     msgEntity: MessageEntity,
     isSeen: Boolean,
     usePending: Boolean = false
-  ) {
-    if (msgEntity.isSeen == isSeen) return
+  ) = withContext(Dispatchers.IO) {
+    if (msgEntity.isSeen == isSeen) return@withContext
     roomDatabase.msgDao().updateSuspend(
       msgEntity.copy(
         state = if (usePending) {

@@ -18,12 +18,12 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportAllPubKeysFromSourceBinding
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ImportPubKeysFromSourceSharedViewModel
 

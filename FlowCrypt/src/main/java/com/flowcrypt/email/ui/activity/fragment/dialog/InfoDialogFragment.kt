@@ -15,7 +15,7 @@ import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import java.nio.charset.StandardCharsets
@@ -50,7 +50,10 @@ class InfoDialogFragment : BaseDialogFragment() {
         args.requestKey?.let { requestKey ->
           setFragmentResult(
             requestKey,
-            bundleOf(KEY_REQUEST_CODE to args.requestCode)
+            bundleOf(
+              KEY_REQUEST_CODE to args.requestCode,
+              KEY_REQUEST_INCOMING_BUNDLE to args.bundle
+            )
           )
         }
       }
@@ -88,6 +91,10 @@ class InfoDialogFragment : BaseDialogFragment() {
   companion object {
     val KEY_REQUEST_CODE = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_CODE", InfoDialogFragment::class.java
+    )
+
+    val KEY_REQUEST_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_REQUEST_INCOMING_BUNDLE", InfoDialogFragment::class.java
     )
   }
 }

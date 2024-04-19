@@ -99,6 +99,27 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     folder: String
   ): DataSource.Factory<Int, MessageEntity>
 
+  @Query(
+    "SELECT * FROM (" +
+        "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder AND received_date > :date " +
+        "ORDER BY received_date ASC " +
+        "LIMIT :limit) " +
+        "UNION " +
+        "SELECT * FROM (" +
+        "SELECT * FROM messages " +
+        "WHERE email = :account AND folder = :folder AND received_date <= :date " +
+        "ORDER BY received_date DESC " +
+        "LIMIT :limit) " +
+        "ORDER BY received_date DESC"
+  )
+  abstract suspend fun getMessagesForViewPager(
+    account: String,
+    folder: String,
+    date: Long,
+    limit: Int
+  ): List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
   abstract fun getMsgLiveData(account: String, folder: String, uid: Long): LiveData<MessageEntity?>
 

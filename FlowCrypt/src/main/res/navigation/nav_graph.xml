@@ -20,6 +20,10 @@
     <include app:graph="@navigation/check_keys_graph" />
     <include app:graph="@navigation/pass_phrase_strength_graph" />
     <include app:graph="@navigation/create_new_private_key_graph" />
+    <include app:graph="@navigation/download_attachment_dialog_graph" />
+    <include app:graph="@navigation/decrypt_attachment_dialog_graph" />
+    <include app:graph="@navigation/change_gmail_labels_for_single_message_dialog_graph" />
+    <include app:graph="@navigation/prepare_downloaded_attachments_for_forwarding_dialog_graph" />
 
     <fragment
         android:id="@+id/mainSignInFragment"
@@ -292,6 +296,18 @@
     </fragment>
 
     <fragment
+        android:id="@+id/viewPagerMessageDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ViewPagerMessageDetailsFragment"
+        tools:layout="@layout/fragment_message_details">
+        <argument
+            android:name="messageEntityId"
+            app:argType="long" />
+        <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+    </fragment>
+
+    <fragment
         android:id="@+id/messageDetailsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
         tools:layout="@layout/fragment_message_details">
@@ -301,18 +317,10 @@
         <argument
             android:name="localFolder"
             app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
-        <action
-            android:id="@+id/action_messageDetailsFragment_to_downloadAttachmentDialogFragment"
-            app:destination="@id/downloadAttachmentDialogFragment" />
-        <action
-            android:id="@+id/action_messageDetailsFragment_to_decryptAttachmentDialogFragment"
-            app:destination="@id/decryptAttachmentDialogFragment" />
-        <action
-            android:id="@+id/action_messageDetailsFragment_to_changeGmailLabelsForSingleMessageDialogFragment"
-            app:destination="@id/changeGmailLabelsForSingleMessageDialogFragment" />
-        <action
-            android:id="@+id/action_messageDetailsFragment_to_prepareDownloadedAttachmentsForForwardingDialogFragment"
-            app:destination="@id/prepareDownloadedAttachmentsForForwardingDialogFragment" />
+        <argument
+            android:name="isViewPagerMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
 
     <fragment
@@ -395,8 +403,8 @@
         android:label=""
         tools:layout="@layout/fragment_messages_list">
         <action
-            android:id="@+id/action_messagesListFragment_to_messageDetailsFragment"
-            app:destination="@id/messageDetailsFragment" />
+            android:id="@+id/action_messagesListFragment_to_viewPagerMessageDetailsFragment"
+            app:destination="@id/viewPagerMessageDetailsFragment" />
     </fragment>
 
     <fragment
@@ -451,38 +459,6 @@
     </dialog>
 
     <dialog
-        android:id="@+id/downloadAttachmentDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment"
-        tools:layout="@layout/fragment_download_attachment">
-        <argument
-            android:name="requestKey"
-            app:argType="string" />
-        <argument
-            android:name="attachmentInfo"
-            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
-        <argument
-            android:name="requestCode"
-            android:defaultValue="0"
-            app:argType="integer" />
-    </dialog>
-
-    <dialog
-        android:id="@+id/decryptAttachmentDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment"
-        tools:layout="@layout/fragment_decrypt_attachment">
-        <argument
-            android:name="requestKey"
-            app:argType="string" />
-        <argument
-            android:name="attachmentInfo"
-            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
-        <argument
-            android:name="requestCode"
-            android:defaultValue="0"
-            app:argType="integer" />
-    </dialog>
-
-    <dialog
         android:id="@+id/updateRecipientPublicKeyDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.UpdateRecipientPublicKeyDialogFragment"
         tools:layout="@layout/fragment_dialog_key_details">
@@ -510,31 +486,6 @@
         <argument
             android:name="newPgpKeyRingDetails"
             app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails" />
-    </dialog>
-
-    <dialog
-        android:id="@+id/changeGmailLabelsForSingleMessageDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragment"
-        android:label="ChangeGmailLabelsForSingleMessageDialogFragment"
-        tools:layout="@layout/fragment_change_gmail_labels_for_single_message">
-        <argument
-            android:name="requestKey"
-            app:argType="string" />
-        <argument
-            android:name="messageEntity"
-            app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
-    </dialog>
-
-    <dialog
-        android:id="@+id/prepareDownloadedAttachmentsForForwardingDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragment"
-        tools:layout="@layout/fragment_create_outgoing_message">
-        <argument
-            android:name="requestKey"
-            app:argType="string" />
-        <argument
-            android:name="attachments"
-            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo[]" />
     </dialog>
 
     <action

@@ -24,12 +24,12 @@ import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuringException

@@ -22,7 +22,7 @@ import com.flowcrypt.email.databinding.FragmentCommonProcessingBinding
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.EditPrivateKeyViewModel

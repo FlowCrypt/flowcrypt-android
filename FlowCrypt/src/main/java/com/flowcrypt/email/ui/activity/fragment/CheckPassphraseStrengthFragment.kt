@@ -18,7 +18,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentCheckPassphraseStrengthBinding
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BasePassphraseStrengthFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil

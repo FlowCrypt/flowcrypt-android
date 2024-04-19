@@ -23,7 +23,7 @@ import com.flowcrypt.email.databinding.FragmentDecryptAttachmentBinding
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.invisible
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.DecryptAttachmentViewModel

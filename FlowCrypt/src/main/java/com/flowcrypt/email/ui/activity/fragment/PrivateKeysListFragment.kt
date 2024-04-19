@@ -21,13 +21,13 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentPrivateKeysBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment

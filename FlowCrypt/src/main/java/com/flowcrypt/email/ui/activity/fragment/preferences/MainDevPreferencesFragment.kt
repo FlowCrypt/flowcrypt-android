@@ -18,7 +18,7 @@ import androidx.preference.SwitchPreference
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 
 /**
  * The main developer options fragment.

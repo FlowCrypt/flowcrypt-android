@@ -21,9 +21,9 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentProvidePasswordToProtectMsgBinding
 import com.flowcrypt.email.extensions.hideKeyboard
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.viewmodel.WebPortalPasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.UIUtil

@@ -28,10 +28,10 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentUserRecoverableAuthExceptionBinding
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.showFeedbackFragment
-import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour

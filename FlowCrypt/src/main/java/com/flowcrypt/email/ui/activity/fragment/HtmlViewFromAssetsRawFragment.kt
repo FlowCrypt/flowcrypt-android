@@ -12,7 +12,7 @@ import android.view.ViewGroup
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.databinding.FragmentHtmlViewFromAssetsRawBinding
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
-import com.flowcrypt.email.extensions.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 
 /**
