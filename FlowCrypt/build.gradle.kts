@@ -435,7 +435,7 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.12.0")
+  implementation("androidx.core:core-ktx:1.13.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.8.2")
   implementation("androidx.fragment:fragment-ktx:1.6.2")
