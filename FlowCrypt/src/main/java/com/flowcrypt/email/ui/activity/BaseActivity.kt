@@ -93,7 +93,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     initAccountViewModel()
   }
 
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     LogsUtil.d(tag, "onNewIntent = $intent")
   }
