@@ -19,7 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentDecryptDownloadedAttachmentsBeforeForwardingBinding
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.DecryptDownloadedAttachmentsBeforeForwardingViewModel

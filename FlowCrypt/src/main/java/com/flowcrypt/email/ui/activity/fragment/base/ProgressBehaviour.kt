@@ -9,6 +9,8 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.visible
 
 /**
  * This interface describes a situation when we should to show some progress while some operation
@@ -23,24 +25,24 @@ interface ProgressBehaviour {
   val statusView: View?
 
   fun showProgress(progressMsg: String? = null) {
-    contentView?.visibility = View.GONE
+    contentView?.gone()
     goneStatusView()
 
     val tVProgressMsg = progressView?.findViewById<TextView>(R.id.tVProgressMsg)
     tVProgressMsg?.text = progressMsg
 
-    progressView?.visibility = View.VISIBLE
+    progressView?.visible()
   }
 
   fun showContent() {
     goneStatusView()
     goneProgressView()
-    contentView?.visibility = View.VISIBLE
+    contentView?.visible()
   }
 
   fun showStatus(msg: String? = null, resourcesId: Int = R.drawable.ic_warning_red_24dp) {
     goneProgressView()
-    contentView?.visibility = View.GONE
+    contentView?.gone()
 
     val tvStatusMsg = statusView?.findViewById<TextView>(R.id.tVStatusMsg)
     tvStatusMsg?.text = msg
@@ -50,17 +52,17 @@ interface ProgressBehaviour {
       iVStatusImg?.setImageResource(resourcesId)
     }
 
-    statusView?.visibility = View.VISIBLE
+    statusView?.visible()
   }
 
   fun goneStatusView() {
-    statusView?.visibility = View.GONE
+    statusView?.gone()
     statusView?.findViewById<TextView>(R.id.tVStatusMsg)?.text = null
     statusView?.findViewById<ImageView>(R.id.iVStatusImg)?.setImageDrawable(null)
   }
 
   fun goneProgressView() {
-    progressView?.visibility = View.GONE
+    progressView?.gone()
     progressView?.findViewById<TextView>(R.id.tVProgressMsg)?.text = null
   }
 }

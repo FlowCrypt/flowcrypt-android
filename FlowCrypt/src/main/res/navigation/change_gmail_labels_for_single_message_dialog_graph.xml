@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/change_gmail_labels_for_single_message_dialog_graph"
+    app:startDestination="@id/changeGmailLabelsForSingleMessageDialogFragment">
+
+    <dialog
+        android:id="@+id/changeGmailLabelsForSingleMessageDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragment"
+        android:label="ChangeGmailLabelsForSingleMessageDialogFragment"
+        tools:layout="@layout/fragment_change_gmail_labels_for_single_message">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="messageEntity"
+            app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
+    </dialog>
+</navigation>

@@ -14,8 +14,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.databinding.FragmentPublicKeyDetailsBinding
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.armor
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeyDetailsViewModel

@@ -21,4 +21,6 @@ interface UiUxSettings {
     get() = true
 
   fun onSetupActionBarMenu(menuHost: MenuHost) {}
+
+  fun getLoggingTag(): String = javaClass.simpleName + "_" + hashCode()
 }

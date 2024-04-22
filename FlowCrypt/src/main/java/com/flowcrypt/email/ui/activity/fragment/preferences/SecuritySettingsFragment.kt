@@ -12,11 +12,11 @@ import androidx.navigation.NavDirections
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.extensions.getNavigationResult
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.extensions.showNeedPassphraseDialog
-import com.flowcrypt.email.extensions.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.getNavigationResult
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.CheckPassphraseStrengthFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.RecheckProvidedPassphraseFragment

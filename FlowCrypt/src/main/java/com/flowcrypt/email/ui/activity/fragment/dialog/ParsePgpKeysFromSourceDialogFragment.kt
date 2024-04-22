@@ -18,13 +18,13 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentParsePgpKeysFromSourceBinding
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
 import com.flowcrypt.email.ui.activity.fragment.dialog.ParsePgpKeysFromSourceDialogFragment.FilterType.Companion.ALL

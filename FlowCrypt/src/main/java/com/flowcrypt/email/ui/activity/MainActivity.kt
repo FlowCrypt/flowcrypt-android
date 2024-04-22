@@ -190,7 +190,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     super.finish()
   }
 
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     if (!handleLogoutFromSystemSettings(intent)) {
       navController.handleDeepLink(intent)

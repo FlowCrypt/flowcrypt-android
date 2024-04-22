@@ -14,8 +14,8 @@ import android.view.inputmethod.EditorInfo
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentRecheckProvidedPassphraseBinding
-import com.flowcrypt.email.extensions.getOnResultSavedStateHandle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.getOnResultSavedStateHandle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.GeneralUtil

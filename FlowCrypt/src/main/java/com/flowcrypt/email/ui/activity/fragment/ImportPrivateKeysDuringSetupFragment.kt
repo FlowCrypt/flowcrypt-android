@@ -18,9 +18,9 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentImportPrivateKeysDuringSetupBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.showFindKeysInClipboardDialogFragment
-import com.flowcrypt.email.extensions.showParsePgpKeysFromSourceDialogFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.showFindKeysInClipboardDialogFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment

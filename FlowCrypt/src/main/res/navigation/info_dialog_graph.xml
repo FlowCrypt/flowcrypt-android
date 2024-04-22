@@ -53,5 +53,10 @@
             android:name="useLinkify"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="bundle"
+            app:argType="android.os.Bundle"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </dialog>
 </navigation>
