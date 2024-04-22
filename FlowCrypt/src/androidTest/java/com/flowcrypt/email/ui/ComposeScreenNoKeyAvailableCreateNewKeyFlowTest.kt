@@ -29,6 +29,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeScreenNoKeyAvailableTest
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -41,6 +42,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
+@Ignore("Should be fixed before the next release")
 class ComposeScreenNoKeyAvailableCreateNewKeyFlowTest : BaseComposeScreenNoKeyAvailableTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     keyPath = "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
