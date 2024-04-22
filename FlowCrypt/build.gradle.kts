@@ -376,7 +376,7 @@ dependencies {
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
   ksp("com.google.auto.service:auto-service:1.1.1")
 
-  devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
+  devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
   uiTestsImplementation("androidx.fragment:fragment-testing:1.6.2")
