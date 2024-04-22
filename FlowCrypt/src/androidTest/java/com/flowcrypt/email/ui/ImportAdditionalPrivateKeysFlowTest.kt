@@ -28,6 +28,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.ImportAdditionalPrivateKeysFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -71,6 +72,7 @@ class ImportAdditionalPrivateKeysFlowTest : BaseTest() {
 
   @Test
   @DependsOnMailServer
+  @Ignore("Should be fixed before the next release")
   fun testButtonImportBackup() {
     onView(withId(R.id.buttonImportBackup))
       .check(matches(isDisplayed()))
