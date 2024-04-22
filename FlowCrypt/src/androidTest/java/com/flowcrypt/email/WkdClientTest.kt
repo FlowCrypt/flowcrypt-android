@@ -26,6 +26,7 @@ import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
 import org.junit.Assert.assertTrue
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -36,6 +37,10 @@ import java.net.HttpURLConnection
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
+@Ignore(
+  "Need to think about this test. " +
+      "It uses real API calls and sometimes it fails due to a server not available issue."
+)
 class WkdClientTest {
   private val context: Context = ApplicationProvider.getApplicationContext()
 
