@@ -57,31 +57,33 @@ import com.flowcrypt.email.databinding.FragmentCreateMessageBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
-import com.flowcrypt.email.extensions.appBarLayout
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.appBarLayout
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.showActionDialogFragment
-import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showDialogFragment
-import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.showKeyboard
-import com.flowcrypt.email.extensions.showNeedPassphraseDialog
-import com.flowcrypt.email.extensions.supportActionBar
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ComposeMsgViewModel
 import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.model.DialogItem
@@ -111,6 +113,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
+import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
@@ -154,6 +157,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       }
     }
   }
+  protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   private val draftViewModel: DraftViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
@@ -330,6 +334,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     setupRecipientsAutoCompleteViewModel()
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
+    observePrivateKeysChanges()
 
     subscribeToSetWebPortalPassword()
     subscribeToSelectRecipients()
@@ -342,6 +347,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     subscribeToChoosePrivateKeysDialogFragment()
     subscribeToAddNewUserIdToPrivateKeyDialogFragment()
     subscribeToCreateOutgoingMessageDialogFragment()
+    subscribeToCreatePrivateKey()
 
     val isEncryptedMode =
       composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED
@@ -1123,7 +1129,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun setupPrivateKeysViewModel() {
+  private fun observePrivateKeysChanges() {
     KeysStorageImpl.getInstance(requireContext()).secretKeyRingsLiveData
       .observe(viewLifecycleOwner) {
         updateFromAddressAdapter(it)
@@ -1389,7 +1395,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                     btnName = getString(R.string.fix),
                     duration = Snackbar.LENGTH_LONG
                   ) {
-                    fixNoKeyAvailableIssue(text)
+                    fixNoKeyAvailableIssue(text, email)
                   }
                 }
               }
@@ -1467,7 +1473,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         binding?.spinnerFrom?.selectedItemPosition ?: Spinner.INVALID_POSITION
       ) ?: ""
       val text = getString(R.string.no_key_available, email)
-      fixNoKeyAvailableIssue(text)
+      fixNoKeyAvailableIssue(text, email)
       return false
     }
 
@@ -1691,6 +1697,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         ActionsDialogFragment.KEY_REQUEST_RESULT
       ) ?: return@setFragmentResultListener
 
+      val email = bundle.getBundle(
+        ActionsDialogFragment.KEY_REQUEST_INCOMING_BUNDLE
+      )?.getString(EMAIL) ?: binding?.editTextFrom?.text.toString()
+
       when (item.id) {
         RESULT_CODE_IMPORT_PRIVATE_KEY -> {
           account?.let { accountEntity ->
@@ -1717,6 +1727,23 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 returnResultImmediatelyIfSingle = true
               ).toBundle()
             }
+          }
+        }
+
+        RESULT_CODE_CREATE_NEW_PRIVATE_KEY -> {
+          val existingAccount = account
+          if (existingAccount != null) {
+            navController?.navigate(
+              object : NavDirections {
+                override val actionId = R.id.create_new_private_key_graph
+                override val arguments = CreatePrivateKeyFirstFragmentArgs(
+                  requestKey = REQUEST_KEY_CREATE_NEW_KEY,
+                  accountEntity = existingAccount.copy(email = email)
+                ).toBundle()
+              }
+            )
+          } else {
+            toast(R.string.unknown_error)
           }
         }
       }
@@ -1826,6 +1853,15 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private fun subscribeToCreatePrivateKey() {
+    setFragmentResultListener(REQUEST_KEY_CREATE_NEW_KEY) { _, bundle ->
+      val pgpKeyRingDetails = bundle.getParcelableViaExt<PgpKeyRingDetails>(
+        CreatePrivateKeyFirstFragment.KEY_CREATED_KEY
+      ) ?: return@setFragmentResultListener
+      importCreatedPrivateKey(listOf(pgpKeyRingDetails))
+    }
+  }
+
   private fun setupRecipientsAutoCompleteViewModel() {
     launchAndRepeatWithViewLifecycle {
       recipientsAutoCompleteViewModel.autoCompleteResultStateFlow.collect {
@@ -1896,6 +1932,42 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner) {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            toast(R.string.processing)
+          }
+
+          Result.Status.SUCCESS -> {
+            it.data?.let { pair ->
+              if (pair.second.isNotEmpty()) {
+                toast(R.string.created_key_was_imported)
+              }
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            val exception = it.exception
+            if (exception is SavePrivateKeyToDatabaseException) {
+              showSnackbar(
+                msgText = exception.message ?: exception.javaClass.simpleName,
+                btnName = getString(R.string.retry),
+                duration = Snackbar.LENGTH_INDEFINITE,
+                onClickListener = { importCreatedPrivateKey(exception.keys) }
+              )
+            } else {
+              showInfoDialogWithExceptionDetails(it.exception, it.exceptionMsg)
+            }
+          }
+
+          else -> {}
+        }
+      }
+    }
+  }
+
   private fun tryToSendMessage() {
     snackBar?.dismiss()
 
@@ -1933,7 +2005,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun fixNoKeyAvailableIssue(text: String) {
+  private fun fixNoKeyAvailableIssue(text: String, email: String) {
     if (account?.clientConfiguration?.usesKeyManager() == true) {
       toast(getString(R.string.no_prv_keys_ask_admin))
     } else {
@@ -1952,8 +2024,14 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             iconResourceId = R.drawable.ic_edit_key_add_user_id,
             title = getString(R.string.add_email_to_existing_key),
             id = RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY
+          ),
+          DialogItem(
+            iconResourceId = R.drawable.ic_create_new_key,
+            title = getString(R.string.create_a_new_key),
+            id = RESULT_CODE_CREATE_NEW_PRIVATE_KEY
           )
-        )
+        ),
+        bundle = Bundle().apply { putString(EMAIL, email) }
       )
     }
   }
@@ -1979,8 +2057,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  private fun importCreatedPrivateKey(keys: List<PgpKeyRingDetails>) {
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(
+      accountEntity = account,
+      keys = keys
+    )
+  }
+
   companion object {
     private val TAG = CreateMessageFragment::class.java.simpleName
+
+    private const val EMAIL = "email"
 
     private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
@@ -2035,8 +2122,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       CreateMessageFragment::class.java
     )
 
+    private val REQUEST_KEY_CREATE_NEW_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CREATE_NEW_KEY", CreateMessageFragment::class.java
+    )
+
     private const val RESULT_CODE_IMPORT_PRIVATE_KEY = 1
     private const val RESULT_CODE_ADD_USER_ID_TO_EXISTING_PRIVATE_KEY = 2
+    private const val RESULT_CODE_CREATE_NEW_PRIVATE_KEY = 3
 
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_SENDER_EMAIL = 1
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_FOR_PRIVATE_KEY_BY_FINGERPRINT = 2

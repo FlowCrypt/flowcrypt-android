@@ -10,6 +10,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.navigation.NavHostController
 import androidx.navigation.ui.AppBarConfiguration
 import com.flowcrypt.email.R
@@ -46,6 +47,21 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
         false
       }
     })
+  }
+
+  override val onBackPressedCallback = object : OnBackPressedCallback(true) {
+    override fun handleOnBackPressed() {
+      if (navController.currentDestination?.id == R.id.createMessageFragment) {
+        onBackPressed()
+      } else {
+        navController.navigateUp()
+      }
+    }
+
+    private fun onBackPressed() {
+      isEnabled = false
+      onBackPressedDispatcher.onBackPressed()
+    }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {

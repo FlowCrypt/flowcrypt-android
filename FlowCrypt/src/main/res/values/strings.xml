@@ -634,4 +634,6 @@
     <string name="preview_is_not_available">The preview is not available</string>
     <string name="add_email_to_existing_key">Add email to existing key</string>
     <string name="please_choose_key_you_would_like_to_modify">Please choose a key you would like to modify</string>
+    <string name="created_key_was_imported">The created key was imported</string>
+    <string name="message_not_found">Message not found</string>
 </resources>

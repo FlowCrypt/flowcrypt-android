@@ -14,7 +14,7 @@ import androidx.fragment.app.viewModels
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.oauth.OAuth2Helper
-import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.OAuth2AuthCredentialsViewModel
 import com.flowcrypt.email.util.GeneralUtil
 import net.openid.appauth.AuthorizationException

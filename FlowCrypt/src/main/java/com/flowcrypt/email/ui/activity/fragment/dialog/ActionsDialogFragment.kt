@@ -12,7 +12,7 @@ import android.os.Bundle
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.ui.adapter.DialogItemAdapter
 import com.flowcrypt.email.util.GeneralUtil
 
@@ -40,7 +40,8 @@ class ActionsDialogFragment : BaseDialogFragment() {
         setFragmentResult(
           args.requestKey,
           bundleOf(
-            KEY_REQUEST_RESULT to args.items[which]
+            KEY_REQUEST_RESULT to args.items[which],
+            KEY_REQUEST_INCOMING_BUNDLE to args.bundle
           )
         )
       }
@@ -50,6 +51,10 @@ class ActionsDialogFragment : BaseDialogFragment() {
   companion object {
     val KEY_REQUEST_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_REQUEST_RESULT", ActionsDialogFragment::class.java
+    )
+
+    val KEY_REQUEST_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_REQUEST_INCOMING_BUNDLE", ActionsDialogFragment::class.java
     )
   }
 }

@@ -41,7 +41,6 @@ import androidx.core.text.toSpannable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
-import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -75,7 +74,17 @@ import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showChoosePublicKeyDialogFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.exceptionMsgWithStack
@@ -83,15 +92,6 @@ import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
-import com.flowcrypt.email.extensions.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
-import com.flowcrypt.email.extensions.showChoosePublicKeyDialogFragment
-import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.extensions.showNeedPassphraseDialog
-import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.extensions.supportActionBar
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -117,10 +117,14 @@ import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptDownloadedAttachmentsBeforeForwardingDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
@@ -202,7 +206,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
                 val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
                 showNeedPassphraseDialog(
-                  requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+                  requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
                   fingerprints = fingerprints
                 )
                 return
@@ -250,12 +254,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                 )
               } else {
                 navController?.navigate(
-                  MessageDetailsFragmentDirections
-                    .actionMessageDetailsFragmentToDecryptAttachmentDialogFragment(
+                  object : NavDirections {
+                    override val actionId = R.id.decrypt_attachment_dialog_graph
+                    override val arguments = DecryptAttachmentDialogFragmentArgs(
                       attachmentInfo = attachmentInfo.copy(),
-                      requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT,
+                      requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT + args.messageEntity.id?.toString(),
                       requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT
-                    )
+                    ).toBundle()
+                  }
                 )
               }
             }
@@ -267,12 +273,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           }
         } else {
           navController?.navigate(
-            MessageDetailsFragmentDirections
-              .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+            object : NavDirections {
+              override val actionId = R.id.download_attachment_dialog_graph
+              override val arguments = DownloadAttachmentDialogFragmentArgs(
                 attachmentInfo = attachmentInfo,
-                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntity.id?.toString(),
                 requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT
-              )
+              ).toBundle()
+            }
           )
         }
       }
@@ -319,6 +327,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    lifecycle.addObserver(msgDetailsViewModel)
+
     subscribeToDownloadAttachmentViaDialog()
     subscribeToDecryptAttachmentViaDialog()
     subscribeToImportingAdditionalPrivateKeys()
@@ -351,6 +361,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onDestroy() {
     super.onDestroy()
+    lifecycle.removeObserver(msgDetailsViewModel)
     EmbeddedAttachmentsProvider.Cache.getInstance().clear()
   }
 
@@ -358,7 +369,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     super.onSetupActionBarMenu(menuHost)
     menuHost.addMenuProvider(object : MenuProvider {
       override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menuInflater.inflate(R.menu.fragment_message_details, menu)
+        if (!args.isViewPagerMode) {
+          menuInflater.inflate(R.menu.fragment_message_details, menu)
+        }
       }
 
       override fun onPrepareMenu(menu: Menu) {
@@ -429,6 +442,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             } else {
               if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
+                  requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntity.id?.toString(),
                   requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
                   dialogTitle = "",
                   dialogMsg = requireContext().resources.getQuantityString(
@@ -542,13 +556,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           )
         } else {
           navController?.navigate(
-            MessageDetailsFragmentDirections
-              .actionMessageDetailsFragmentToPrepareDownloadedAttachmentsForForwardingDialogFragment(
-                requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING,
+            object : NavDirections {
+              override val actionId =
+                R.id.prepare_downloaded_attachments_for_forwarding_dialog_graph
+              override val arguments =
+                DecryptDownloadedAttachmentsBeforeForwardingDialogFragmentArgs(
+                  requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING + args.messageEntity.id?.toString(),
                 attachments = attachmentsRecyclerViewAdapter.currentList.filter {
                   it.isEmbeddedAndPossiblyEncrypted()
                 }.toTypedArray()
-              )
+                ).toBundle()
+            }
           )
         }
       }
@@ -663,7 +681,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
    */
   private fun showSendersPublicKeyDialog() {
     showChoosePublicKeyDialogFragment(
-      requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY,
+      requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY + args.messageEntity.id?.toString(),
       email = args.messageEntity.email,
       choiceMode = ListView.CHOICE_MODE_SINGLE,
       titleResourceId = R.plurals.tell_sender_to_update_their_settings
@@ -837,7 +855,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       val fingerprintList = msgDetailsViewModel.passphraseNeededLiveData.value
       if (fingerprintList?.isNotEmpty() == true) {
         showNeedPassphraseDialog(
-          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
           fingerprints = fingerprintList
         )
       } else {
@@ -1401,7 +1419,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           onClickListener = View.OnClickListener {
             val fingerprints = decryptError.fingerprints ?: return@OnClickListener
             showNeedPassphraseDialog(
-              requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+              requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
               fingerprints = fingerprints
             )
           }
@@ -1480,7 +1498,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           object : NavDirections {
             override val actionId = R.id.import_additional_private_keys_graph
             override val arguments = ImportAdditionalPrivateKeysFragmentArgs(
-              requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS,
+              requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS + args.messageEntity.id?.toString(),
               accountEntity = accountEntity
             ).toBundle()
           }
@@ -1729,7 +1747,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
       if (fingerprintList.isNotEmpty()) {
         showNeedPassphraseDialog(
-          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE,
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
           fingerprints = fingerprintList
         )
       }
@@ -1774,7 +1792,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToTwoWayDialog() {
-    setFragmentResultListenerForTwoWayDialog { _, bundle ->
+    setFragmentResultListenerForTwoWayDialog(
+      requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntity.id?.toString(),
+      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
+    ) { _, bundle ->
       val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
       val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
 
@@ -1787,7 +1808,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToChoosePublicKeyDialogFragment() {
-    setFragmentResultListener(REQUEST_KEY_CHOOSE_PUBLIC_KEY) { _, bundle ->
+    setFragmentResultListener(
+      REQUEST_KEY_CHOOSE_PUBLIC_KEY + args.messageEntity.id?.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
       val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
         ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
       )?.map { attachmentInfo ->
@@ -1801,7 +1825,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToPrepareDownloadedAttachmentsForForwardingDialogFragment() {
-    setFragmentResultListener(REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING) { _, bundle ->
+    setFragmentResultListener(
+      REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING + args.messageEntity.id?.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
       val result: Result<List<AttachmentInfo>>? = bundle.getSerializableViaExt(
         DecryptDownloadedAttachmentsBeforeForwardingDialogFragment.KEY_RESULT
       ) as? Result<List<AttachmentInfo>>
@@ -1847,12 +1874,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     lastClickedAtt?.let { attInfo ->
       if (account?.isHandlingAttachmentRestricted() == true) {
         navController?.navigate(
-          MessageDetailsFragmentDirections
-            .actionMessageDetailsFragmentToDownloadAttachmentDialogFragment(
+          object : NavDirections {
+            override val actionId = R.id.download_attachment_dialog_graph
+            override val arguments = DownloadAttachmentDialogFragmentArgs(
               attachmentInfo = attInfo,
-              requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT,
+              requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntity.id?.toString(),
               requestCode = REQUEST_CODE_SAVE_ATTACHMENT
-            )
+            ).toBundle()
+          }
         )
       } else {
         context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
@@ -1891,7 +1920,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToDownloadAttachmentViaDialog() {
-    setFragmentResultListener(REQUEST_KEY_DOWNLOAD_ATTACHMENT) { _, bundle ->
+    setFragmentResultListener(
+      REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntity.id?.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
       val attachmentInfo = bundle.getParcelableViaExt<AttachmentInfo>(
         DownloadAttachmentDialogFragment.KEY_ATTACHMENT
@@ -1928,7 +1960,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToDecryptAttachmentViaDialog() {
-    setFragmentResultListener(REQUEST_KEY_DECRYPT_ATTACHMENT) { _, bundle ->
+    setFragmentResultListener(
+      REQUEST_KEY_DECRYPT_ATTACHMENT + args.messageEntity.id?.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
       val attachmentInfo =
         bundle.getParcelableViaExt<AttachmentInfo>(DecryptAttachmentDialogFragment.KEY_ATTACHMENT)
           ?: return@setFragmentResultListener
@@ -1942,7 +1977,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun subscribeToImportingAdditionalPrivateKeys() {
-    setFragmentResultListener(REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS) { _, bundle ->
+    setFragmentResultListener(
+      REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS + args.messageEntity.id?.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
       val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
         ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
       )
@@ -1984,11 +2022,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun changeGmailLabels() {
     if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
       navController?.navigate(
-        MessageDetailsFragmentDirections
-          .actionMessageDetailsFragmentToChangeGmailLabelsForSingleMessageDialogFragment(
+        object : NavDirections {
+          override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
+          override val arguments = ChangeGmailLabelsForSingleMessageDialogFragmentArgs(
             requestKey = UUID.randomUUID().toString(),
             messageEntity = args.messageEntity
-          )
+          ).toBundle()
+        }
       )
     }
   }
@@ -2045,5 +2085,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         "REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING",
         MessageDetailsFragment::class.java
       )
+
+    private val REQUEST_KEY_TWO_WAY_DIALOG_BASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_TWO_WAY_DIALOG_BASE",
+      MessageDetailsFragment::class.java
+    )
   }
 }

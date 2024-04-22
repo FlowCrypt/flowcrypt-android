@@ -55,17 +55,17 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentMessagesListBinding
 import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
-import com.flowcrypt.email.extensions.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.setFragmentResultListenerForInfoDialog
-import com.flowcrypt.email.extensions.setFragmentResultListenerForTwoWayDialog
-import com.flowcrypt.email.extensions.showFeedbackFragment
-import com.flowcrypt.email.extensions.showInfoDialog
-import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.extensions.supportActionBar
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
@@ -378,7 +378,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
   }
 
-  override fun onMsgClick(msgEntity: MessageEntity) {
+  override fun onMsgClick(position: Int, msgEntity: MessageEntity) {
     activeMsgEntity = msgEntity
     if (tracker?.hasSelection() == true) {
       return
@@ -416,8 +416,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               navController?.navigateSafe(
                 currentDestinationId = R.id.messagesListFragment,
                 directions = MessagesListFragmentDirections
-                  .actionMessagesListFragmentToMessageDetailsFragment(
-                    messageEntity = msgEntity,
+                  .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
+                    messageEntityId = msgEntity.id ?: -1,
                     localFolder = localFolder
                   )
               )

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/download_attachment_dialog_graph"
+    app:startDestination="@id/downloadAttachmentDialogFragment">
+
+    <dialog
+        android:id="@+id/downloadAttachmentDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment"
+        tools:layout="@layout/fragment_download_attachment">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="attachmentInfo"
+            app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo" />
+        <argument
+            android:name="requestCode"
+            android:defaultValue="0"
+            app:argType="integer" />
+    </dialog>
+</navigation>

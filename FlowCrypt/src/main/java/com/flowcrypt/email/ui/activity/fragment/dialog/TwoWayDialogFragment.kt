@@ -11,7 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
-import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -65,7 +65,11 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     args.requestKey?.let { requestKey ->
       setFragmentResult(
         requestKey,
-        bundleOf(KEY_REQUEST_CODE to args.requestCode, KEY_RESULT to result)
+        bundleOf(
+          KEY_REQUEST_CODE to args.requestCode,
+          KEY_RESULT to result,
+          KEY_REQUEST_INCOMING_BUNDLE to args.bundle
+        )
       )
     }
   }
@@ -77,6 +81,10 @@ class TwoWayDialogFragment : BaseDialogFragment() {
 
     val KEY_RESULT = GeneralUtil.generateUniqueExtraKey(
       "KEY_RESULT", TwoWayDialogFragment::class.java
+    )
+
+    val KEY_REQUEST_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_REQUEST_INCOMING_BUNDLE", TwoWayDialogFragment::class.java
     )
 
     /** Result: operation canceled.  */

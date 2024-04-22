@@ -49,7 +49,8 @@ fun LifecycleOwner.showInfoDialog(
   isCancelable: Boolean = true,
   hasHtml: Boolean = false,
   useLinkify: Boolean = false,
-  useWebViewToRender: Boolean = false
+  useWebViewToRender: Boolean = false,
+  bundle: Bundle? = null
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
@@ -63,7 +64,8 @@ fun LifecycleOwner.showInfoDialog(
         isCancelable = isCancelable,
         hasHtml = hasHtml,
         useLinkify = useLinkify,
-        useWebViewToRender = useWebViewToRender
+        useWebViewToRender = useWebViewToRender,
+        bundle = bundle
       ).toBundle()
     }
   }
@@ -80,7 +82,8 @@ fun LifecycleOwner.showTwoWayDialog(
   negativeButtonTitle: String? = null,
   isCancelable: Boolean = true,
   hasHtml: Boolean = false,
-  useLinkify: Boolean = false
+  useLinkify: Boolean = false,
+  bundle: Bundle? = null
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
@@ -94,7 +97,8 @@ fun LifecycleOwner.showTwoWayDialog(
         negativeButtonTitle = negativeButtonTitle ?: context.getString(android.R.string.cancel),
         isCancelable = isCancelable,
         hasHtml = hasHtml,
-        useLinkify = useLinkify
+        useLinkify = useLinkify,
+        bundle = bundle
       ).toBundle()
     }
   }
@@ -168,7 +172,8 @@ fun LifecycleOwner.showActionDialogFragment(
   requestKey: String,
   dialogTitle: String? = null,
   isCancelable: Boolean = true,
-  items: List<DialogItem>
+  items: List<DialogItem>,
+  bundle: Bundle? = null
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
@@ -177,7 +182,8 @@ fun LifecycleOwner.showActionDialogFragment(
         requestKey = requestKey,
         dialogTitle = dialogTitle,
         isCancelable = isCancelable,
-        items = items.toTypedArray()
+        items = items.toTypedArray(),
+        bundle = bundle
       ).toBundle()
     }
   }

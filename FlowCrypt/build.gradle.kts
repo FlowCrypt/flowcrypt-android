@@ -376,7 +376,7 @@ dependencies {
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
   ksp("com.google.auto.service:auto-service:1.1.1")
 
-  devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
+  devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
   uiTestsImplementation("androidx.fragment:fragment-testing:1.6.2")
@@ -403,7 +403,7 @@ dependencies {
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
   testImplementation("org.robolectric:robolectric:4.12.1")
-  testImplementation("io.github.classgraph:classgraph:4.8.170")
+  testImplementation("io.github.classgraph:classgraph:4.8.172")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
@@ -435,9 +435,9 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.12.0")
+  implementation("androidx.core:core-ktx:1.13.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
-  implementation("androidx.activity:activity-ktx:1.8.2")
+  implementation("androidx.activity:activity-ktx:1.9.0")
   implementation("androidx.fragment:fragment-ktx:1.6.2")
   implementation("androidx.work:work-runtime-ktx:2.9.0")
   implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
@@ -445,8 +445,8 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
   implementation("androidx.webkit:webkit:1.10.0")
 
-  implementation("com.google.android.gms:play-services-base:18.3.0")
-  implementation("com.google.android.gms:play-services-auth:21.0.0")
+  implementation("com.google.android.gms:play-services-base:18.4.0")
+  implementation("com.google.android.gms:play-services-auth:21.1.0")
   implementation("com.google.android.material:material:1.11.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 

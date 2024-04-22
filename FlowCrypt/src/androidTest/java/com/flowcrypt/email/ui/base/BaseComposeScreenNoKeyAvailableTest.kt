@@ -30,6 +30,16 @@ import java.net.HttpURLConnection
 abstract class BaseComposeScreenNoKeyAvailableTest : BaseComposeScreenTest() {
 
   protected fun doTestAddEmailToExistingKey(action: () -> Unit) {
+    doBaseActions {
+      onView(withText(R.string.add_email_to_existing_key))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+      action.invoke()
+    }
+  }
+
+  protected fun doBaseActions(action: () -> Unit) {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
     fillInAllFields(
@@ -52,13 +62,9 @@ abstract class BaseComposeScreenNoKeyAvailableTest : BaseComposeScreenTest() {
       getResString(R.string.no_key_available, addAccountToDatabaseRule.account.email)
     )
 
-    onView(withText(R.string.add_email_to_existing_key))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
     action.invoke()
 
-    Thread.sleep(2000)
+    waitForObjectWithText(getResString(R.string.compose), 5000)
 
     //check that editTextFrom doesn't have gray text color. It means a sender has a private key.
     onView(withId(R.id.editTextFrom))

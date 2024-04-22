@@ -8,7 +8,9 @@ package com.flowcrypt.email.ui
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -305,11 +307,11 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withId(R.id.editTextKeyPassword))
-      .check(matches(isDisplayed()))
-      .perform(replaceText(passphrase), closeSoftKeyboard())
-    onView(withId(R.id.buttonSetPassPhrase))
-      .check(matches(isDisplayed()))
-      .perform(click())
+      .perform(click(), typeText(passphrase))
+    Thread.sleep(1000)
+    onView(withId(R.id.editTextKeyPassword))
+      .perform(pressImeActionButton())
+    Thread.sleep(1000)
     onView(withId(R.id.editTextKeyPasswordSecond))
       .check(matches(isDisplayed()))
       .perform(replaceText(passphrase), closeSoftKeyboard())

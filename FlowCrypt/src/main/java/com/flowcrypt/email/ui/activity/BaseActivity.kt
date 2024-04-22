@@ -14,6 +14,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -51,6 +52,8 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
   protected abstract fun inflateBinding(inflater: LayoutInflater): T
   protected abstract fun initAppBarConfiguration(): AppBarConfiguration
 
+  protected abstract val onBackPressedCallback: OnBackPressedCallback?
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     //https://github.com/FlowCrypt/flowcrypt-android/issues/2442
@@ -83,12 +86,14 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
       }
     })
 
+    onBackPressedCallback?.let { onBackPressedDispatcher.addCallback(this, it) }
+
     initViews()
     setupNavigation()
     initAccountViewModel()
   }
 
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     LogsUtil.d(tag, "onNewIntent = $intent")
   }
