@@ -28,10 +28,9 @@ import java.util.regex.Pattern
 @Parcelize
 data class IncomingMessageInfo constructor(
   val msgEntity: MessageEntity,
-  var atts: List<AttachmentInfo>? = null,
-  var localFolder: LocalFolder? = null,
-  var text: String? = null,
-  var inlineSubject: String? = null,
+  val localFolder: LocalFolder,
+  val text: String? = null,
+  val inlineSubject: String? = null,
   val msgBlocks: List<@JvmSuppressWildcards MsgBlock>? = null,
   val encryptionType: MessageEncryptionType,
   val verificationResult: VerificationResult
@@ -51,21 +50,6 @@ data class IncomingMessageInfo constructor(
   fun getTo(): List<InternetAddress> = msgEntity.to
 
   fun getCc(): List<InternetAddress> = msgEntity.cc
-
-
-  constructor(
-    msgEntity: MessageEntity, text: String?, subject: String?, msgBlocks: List<MsgBlock>,
-    encryptionType: MessageEncryptionType, verificationResult: VerificationResult
-  ) : this(
-    msgEntity,
-    null,
-    null,
-    text,
-    subject,
-    msgBlocks,
-    encryptionType,
-    verificationResult
-  )
 
   fun toInitializationData(
     context: Context,

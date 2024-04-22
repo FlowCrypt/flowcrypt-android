@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email
 
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -105,6 +106,10 @@ class EmailUtilTest {
         uid = 123,
         fromAddress = InternetAddress.toString(replyToMIME.from),
         receivedDate = receivedDate.toEpochMilli()
+      ),
+      localFolder = LocalFolder(
+        account = accountEntity.email,
+        fullName = JavaEmailConstants.FOLDER_INBOX
       ),
       text = replyToText,
       encryptionType = MessageEncryptionType.STANDARD,

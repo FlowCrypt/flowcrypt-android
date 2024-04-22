@@ -14,6 +14,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.navigation.NavHostController
 import androidx.navigation.ui.AppBarConfiguration
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -96,11 +97,13 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
       @MessageType messageType: Int,
       msgEncryptionType: MessageEncryptionType = MessageEncryptionType.ENCRYPTED,
       msgInfo: IncomingMessageInfo? = null,
+      attachments: Array<AttachmentInfo>? = null,
       serviceInfo: ServiceInfo? = null
     ): Intent {
       val intent = Intent(context, CreateMessageActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
       intent.putExtra("incomingMessageInfo", msgInfo)
+      intent.putExtra("attachments", attachments)
       intent.putExtra("messageType", messageType)
       intent.putExtra("encryptedByDefault", msgEncryptionType == MessageEncryptionType.ENCRYPTED)
       intent.putExtra("serviceInfo", serviceInfo)

@@ -14,7 +14,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asFlow
-import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -219,6 +218,7 @@ class MsgDetailsViewModel(
               try {
                 val msgInfo = IncomingMessageInfo(
                   msgEntity = mediatorMsgLiveData.value ?: messageEntity,
+                  localFolder = localFolder,
                   text = processedMimeMessageResult.text,
                   inlineSubject = processedMimeMessageResult.blocks.firstOrNull {
                     it.type == MsgBlock.Type.ENCRYPTED_SUBJECT
@@ -395,7 +395,15 @@ class MsgDetailsViewModel(
       }
     )
 
-    mediatorMsgLiveData.addSource(freshMsgLiveData.distinctUntilChanged()) {
+    //todo-denbond7 need to enable auto trigger for drafts
+    mediatorMsgLiveData.addSource(
+      //this live data will emit only once to trigger the processing job.
+      liveData {
+        emit(
+          roomDatabase.msgDao()
+            .getMsgSuspend(messageEntity.email, messageEntity.folder, messageEntity.uid)
+        )
+      }) {
       mediatorMsgLiveData.value = it
     }
     mediatorMsgLiveData.addSource(afterKeysStorageUpdatedMsgLiveData) {

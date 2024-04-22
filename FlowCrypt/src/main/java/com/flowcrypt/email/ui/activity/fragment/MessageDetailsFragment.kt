@@ -549,9 +549,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               context = context,
               messageType = MessageType.FORWARD,
               msgEncryptionType = msgEncryptType,
-              msgInfo = prepareMsgInfoForReply()?.copy(
-                atts = prepareAttachmentsForForwarding()
-              )
+              msgInfo = prepareMsgInfoForReply(),
+              attachments = prepareAttachmentsForForwarding().toTypedArray()
             )
           )
         } else {
@@ -594,7 +593,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     this.msgEncryptType = msgInfo.encryptionType
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
-    msgInfo.localFolder = args.localFolder
 
     if ("..." == msgInfo.getSubject()) {
       msgInfo.inlineSubject?.let {
@@ -702,9 +700,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
     startActivity(
       CreateMessageActivity.generateIntent(
-        context, MessageType.REPLY,
-        MessageEncryptionType.STANDARD, prepareMsgInfoForReply(),
-        ServiceInfo(
+        context = context,
+        messageType = MessageType.REPLY,
+        msgEncryptionType = MessageEncryptionType.STANDARD,
+        msgInfo = prepareMsgInfoForReply(),
+        serviceInfo = ServiceInfo(
           isToFieldEditable = false,
           isFromFieldEditable = false,
           isMsgEditable = false,
@@ -1849,7 +1849,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
                 context = context,
                 messageType = MessageType.FORWARD,
                 msgEncryptionType = msgEncryptType,
-                msgInfo = prepareMsgInfoForReply()?.copy(atts = attachmentsForForwarding)
+                msgInfo = prepareMsgInfoForReply(),
+                attachments = attachmentsForForwarding.toTypedArray()
               )
             )
           }
