@@ -402,7 +402,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("org.robolectric:robolectric:4.12")
+  testImplementation("org.robolectric:robolectric:4.12.1")
   testImplementation("io.github.classgraph:classgraph:4.8.172")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
@@ -474,7 +474,7 @@ dependencies {
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
-  implementation("commons-io:commons-io:2.16.0")
+  implementation("commons-io:commons-io:2.16.1")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("net.openid:appauth:0.11.1")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
