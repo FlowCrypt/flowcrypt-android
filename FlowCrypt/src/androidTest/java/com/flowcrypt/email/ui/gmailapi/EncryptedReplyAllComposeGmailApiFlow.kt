@@ -23,7 +23,9 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
@@ -174,7 +176,11 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
           ),
           encryptionType = MessageEncryptionType.ENCRYPTED,
           msgBlocks = emptyList(),
-          subject = SUBJECT_EXISTING_ENCRYPTED,
+          inlineSubject = SUBJECT_EXISTING_ENCRYPTED,
+          localFolder = LocalFolder(
+            account = addAccountToDatabaseRule.account.email,
+            fullName = JavaEmailConstants.FOLDER_INBOX
+          ),
           text = MESSAGE_EXISTING_ENCRYPTED,
           verificationResult = VerificationResult(
             hasEncryptedParts = true,

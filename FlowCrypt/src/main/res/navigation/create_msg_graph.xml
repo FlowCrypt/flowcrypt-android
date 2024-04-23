@@ -45,6 +45,7 @@
         <argument
             android:name="attachments"
             app:argType="com.flowcrypt.email.api.email.model.AttachmentInfo[]"
+            android:defaultValue="@null"
             app:nullable="true" />
         <argument
             android:name="messageType"
