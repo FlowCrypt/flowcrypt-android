@@ -59,5 +59,9 @@
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": false
   },
-  "text": "33333"
+  "text": "33333",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "fullName": "INBOX"
+  }
 }

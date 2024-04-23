@@ -65,5 +65,9 @@
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": false
   },
-  "text": ""
+  "text": "",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "fullName": "INBOX"
+  }
 }

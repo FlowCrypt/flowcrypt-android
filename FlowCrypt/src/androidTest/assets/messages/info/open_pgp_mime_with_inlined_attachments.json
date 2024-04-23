@@ -3787,5 +3787,9 @@
     "hasUnverifiedSignatures": false,
     "isPartialSigned": false,
     "keyIdOfSigningKeys": []
+  },
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "fullName": "INBOX"
   }
 }

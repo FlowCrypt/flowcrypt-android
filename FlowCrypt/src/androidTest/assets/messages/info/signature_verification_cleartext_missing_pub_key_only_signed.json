@@ -57,6 +57,10 @@
       -5209761791998677675
     ],
     "hasBadSignatures": false,
-    "hasUnverifiedSignatures": true
+    "hasUnverifiedSignatures": true,
+    "localFolder": {
+      "account": "default@flowcrypt.test",
+      "fullName": "INBOX"
+    }
   }
 }

@@ -49,5 +49,9 @@
     "keyIdOfSigningKeys": [],
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": false
+  },
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "fullName": "INBOX"
   }
 }
