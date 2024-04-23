@@ -402,8 +402,8 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("org.robolectric:robolectric:4.12")
-  testImplementation("io.github.classgraph:classgraph:4.8.170")
+  testImplementation("org.robolectric:robolectric:4.12.1")
+  testImplementation("io.github.classgraph:classgraph:4.8.172")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
@@ -435,9 +435,9 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.12.0")
+  implementation("androidx.core:core-ktx:1.13.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
-  implementation("androidx.activity:activity-ktx:1.8.2")
+  implementation("androidx.activity:activity-ktx:1.9.0")
   implementation("androidx.fragment:fragment-ktx:1.6.2")
   implementation("androidx.work:work-runtime-ktx:2.9.0")
   implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
@@ -474,7 +474,7 @@ dependencies {
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
-  implementation("commons-io:commons-io:2.16.0")
+  implementation("commons-io:commons-io:2.16.1")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("net.openid:appauth:0.11.1")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
