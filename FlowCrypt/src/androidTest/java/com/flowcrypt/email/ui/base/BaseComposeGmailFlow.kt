@@ -7,10 +7,15 @@ package com.flowcrypt.email.ui.base
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.ext.junit.rules.activityScenarioRule
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -79,6 +84,7 @@ import okio.GzipSource
 import okio.buffer
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
 import org.junit.AfterClass
 import org.junit.Assert.assertArrayEquals
@@ -738,6 +744,32 @@ abstract class BaseComposeGmailFlow : BaseComposeScreenTest() {
 
     //do external checks
     action.invoke(outgoingMessageConfiguration, rawMime, mimeMessage)
+  }
+
+  protected fun openReplyScreen(buttonId: Int, subjectText: String) {
+    onView(
+      allOf(
+        withId(buttonId),
+        withParent(
+          withParent(
+            withParent(
+              hasSibling(
+                allOf(
+                  withId(R.id.layoutHeader),
+                  withChild(
+                    allOf(
+                      withId(R.id.textViewSubject),
+                      ViewMatchers.withText(subjectText)
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    ).check(matches(isDisplayed()))
+      .perform(scrollTo(), click())
   }
 
   private fun genPathForMessageWithSomeFilds(messageId: String) =
