@@ -14,6 +14,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asFlow
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -107,6 +108,7 @@ class MsgDetailsViewModel(
 
   val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
   val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
+  private val internalMessageProcessingTriggerLiveData = MediatorLiveData<MessageEntity?>()
 
   @Volatile
   private var hasAbilityToChangeSeenStatus: Boolean = false
@@ -149,7 +151,7 @@ class MsgDetailsViewModel(
   private val processingProgressLiveData =
     MutableLiveData<Result<PgpMsg.ProcessedMimeMessageResult?>>()
   private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
-    mediatorMsgLiveData.switchMap { messageEntity ->
+    internalMessageProcessingTriggerLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg == true) {
           emit(Result.loading())
@@ -166,7 +168,7 @@ class MsgDetailsViewModel(
     }
 
   private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
-    mediatorMsgLiveData.switchMap { messageEntity ->
+    internalMessageProcessingTriggerLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg == false) {
           emit(Result.loading())
@@ -395,19 +397,18 @@ class MsgDetailsViewModel(
       }
     )
 
-    //todo-denbond7 need to enable auto trigger for drafts
-    mediatorMsgLiveData.addSource(
-      //this live data will emit only once to trigger the processing job.
-      liveData {
-        emit(
-          roomDatabase.msgDao()
-            .getMsgSuspend(messageEntity.email, messageEntity.folder, messageEntity.uid)
-        )
-      }) {
+    mediatorMsgLiveData.addSource(freshMsgLiveData.distinctUntilChanged()) {
       mediatorMsgLiveData.value = it
     }
     mediatorMsgLiveData.addSource(afterKeysStorageUpdatedMsgLiveData) {
       mediatorMsgLiveData.value = it
+    }
+
+    internalMessageProcessingTriggerLiveData.addSource(liveData { emit(messageEntity) }) {
+      internalMessageProcessingTriggerLiveData.value = it
+    }
+    internalMessageProcessingTriggerLiveData.addSource(afterKeysStorageUpdatedMsgLiveData) {
+      internalMessageProcessingTriggerLiveData.value = it
     }
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
