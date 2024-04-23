@@ -52,6 +52,13 @@
   },
   "localFolder": {
     "account": "default@flowcrypt.test",
-    "fullName": "INBOX"
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
   }
 }
