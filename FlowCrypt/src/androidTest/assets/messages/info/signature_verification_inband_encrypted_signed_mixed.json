@@ -52,5 +52,16 @@
     "keyIdOfSigningKeys": [],
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": true
+  },
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
   }
 }

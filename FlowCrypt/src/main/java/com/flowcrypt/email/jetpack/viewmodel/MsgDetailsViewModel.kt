@@ -108,6 +108,7 @@ class MsgDetailsViewModel(
 
   val passphraseNeededLiveData: MutableLiveData<List<String>> = MutableLiveData()
   val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
+  private val internalMessageProcessingTriggerLiveData = MediatorLiveData<MessageEntity?>()
 
   @Volatile
   private var hasAbilityToChangeSeenStatus: Boolean = false
@@ -150,7 +151,7 @@ class MsgDetailsViewModel(
   private val processingProgressLiveData =
     MutableLiveData<Result<PgpMsg.ProcessedMimeMessageResult?>>()
   private val processingOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
-    mediatorMsgLiveData.switchMap { messageEntity ->
+    internalMessageProcessingTriggerLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg == true) {
           emit(Result.loading())
@@ -167,7 +168,7 @@ class MsgDetailsViewModel(
     }
 
   private val processingNonOutgoingMsgLiveData: LiveData<Result<PgpMsg.ProcessedMimeMessageResult?>> =
-    mediatorMsgLiveData.switchMap { messageEntity ->
+    internalMessageProcessingTriggerLiveData.switchMap { messageEntity ->
       liveData {
         if (messageEntity?.isOutboxMsg == false) {
           emit(Result.loading())
@@ -219,6 +220,7 @@ class MsgDetailsViewModel(
               try {
                 val msgInfo = IncomingMessageInfo(
                   msgEntity = mediatorMsgLiveData.value ?: messageEntity,
+                  localFolder = localFolder,
                   text = processedMimeMessageResult.text,
                   inlineSubject = processedMimeMessageResult.blocks.firstOrNull {
                     it.type == MsgBlock.Type.ENCRYPTED_SUBJECT
@@ -400,6 +402,13 @@ class MsgDetailsViewModel(
     }
     mediatorMsgLiveData.addSource(afterKeysStorageUpdatedMsgLiveData) {
       mediatorMsgLiveData.value = it
+    }
+
+    internalMessageProcessingTriggerLiveData.addSource(liveData { emit(messageEntity) }) {
+      internalMessageProcessingTriggerLiveData.value = it
+    }
+    internalMessageProcessingTriggerLiveData.addSource(afterKeysStorageUpdatedMsgLiveData) {
+      internalMessageProcessingTriggerLiveData.value = it
     }
 
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }

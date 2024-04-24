@@ -76,5 +76,16 @@
     "hasUnverifiedSignatures": false
   },
   "origMsgHeaders": "Return-Path: \u003cdenbond7@flowcrypt.test\u003e\r\nDelivered-To: default@flowcrypt.test\r\nReceived: from mail.flowcrypt.test\r\n\tby mail.flowcrypt.test with LMTP\r\n\tid IE29GpAIe19wKAAAZlazJA\r\n\t(envelope-from \u003cdenbond7@flowcrypt.test\u003e)\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon, 05 Oct 2020 11:50:40 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.flowcrypt.test (Postfix) with ESMTP id 69234B2058E\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon,  5 Oct 2020 11:50:40 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-16018986371740.9899334451956217\"\r\nTo: default@flowcrypt.test\r\nFrom: denbond7@flowcrypt.test\r\nSubject: only one pubkey used for encryption - possibly sender\u0027s error.\r\nDate: Mon, 05 Oct 2020 11:50:37 +0000\r\nMessage-Id: \u003c1601898637180-545631c7-a98f62fb-091da09b@flowcrypt.test\u003e\r\nMime-Version: 1.0",
-  "text": "The message below should show a note telling the user that there was only one pubkey used for encryption - possibly sender\u0027s error.\n\nIt should also allow the user import a missing key if they have one."
+  "text": "The message below should show a note telling the user that there was only one pubkey used for encryption - possibly sender\u0027s error.\n\nIt should also allow the user import a missing key if they have one.",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
+  }
 }

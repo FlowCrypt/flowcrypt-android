@@ -51,5 +51,16 @@
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": false
   },
-  "text": "Signed text for default@flowcrypt.test"
+  "text": "Signed text for default@flowcrypt.test",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
+  }
 }
