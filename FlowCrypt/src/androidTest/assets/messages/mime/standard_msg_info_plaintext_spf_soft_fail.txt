@@ -1,0 +1,48 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id WF4PDSLael+dCQAAZlazJA
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Mon, 05 Oct 2020 08:32:34 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id 347E7A20940
+	for <default@flowcrypt.test>; Mon,  5 Oct 2020 08:32:34 +0000 (UTC)
+To: default@flowcrypt.test
+From: Denis Bondarenko <denbond7@flowcrypt.test>
+X-Pep-Version: 2.0
+Message-ID: <8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@flowcrypt.test>
+Date: Mon, 5 Oct 2020 11:32:34 +0300
+Mime-Version: 1.0
+Subject: Standard message - plaintext
+Content-Type: multipart/alternative;
+ boundary="------------D3F69D95534F587EC1BE35A3"
+Content-Language: en-US
+Received-SPF: softfail (a warning should be displayed)
+
+This is a multi-part message in MIME format.
+--------------D3F69D95534F587EC1BE35A3
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+It's a standard message with plaintext
+
+
+--------------D3F69D95534F587EC1BE35A3
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+  <head>
+
+    <meta http-equiv=3D"content-type" content=3D"text/html; charset=3DUTF=
+-8">
+  </head>
+  <body>
+    <pre style=3D"background-color:#ffffff;color:#000000;font-family:'Dej=
+aVu Sans Mono';font-size:12.0pt;">It's a standard message with plaintext=
+</pre>
+  </body>
+</html>
+
+--------------D3F69D95534F587EC1BE35A3--

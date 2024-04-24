@@ -1273,6 +1273,22 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       )
   }
 
+  @Test
+  fun testSPFSoftFail() {
+    val incomingMessageInfo = getMsgInfo(
+      //we don't care about a separate version for JSON as we will match only a TextView
+      path = "messages/info/standard_msg_info_plaintext.json",
+      mimeMsgPath = "messages/mime/standard_msg_info_plaintext_spf_soft_fail.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    )
+    baseCheck(incomingMessageInfo)
+    onView(withId(R.id.tVTo))
+      .check(matches(withText(getResString(R.string.to_receiver, getResString(R.string.me)))))
+
+    onView(withText(R.string.spf_soft_fail_warning))
+      .check(matches(isDisplayed()))
+  }
+
   private fun checkQuotesFunctionality(incomingMessageInfo: IncomingMessageInfo?) {
     onView(withId(R.id.iBShowQuotedText))
       .check(matches(isDisplayed()))
