@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.SecurityWarningMsgBlock
 
 /**
  * @author Denys Bondarenko
@@ -33,6 +34,7 @@ class MsgBlockTypeRelay : SpecimenBuilder {
             MsgBlock.Type.PUBLIC_KEY -> PublicKeyMsgBlock::class.java
             MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock::class.java
             MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock::class.java
+            MsgBlock.Type.SECURITY_WARNING -> SecurityWarningMsgBlock::class.java
             else -> GenericMsgBlock::class.java
           }
         context.resolve(classForSpecimen)

@@ -16,7 +16,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-class SecurityWarningMsgBlock(
+data class SecurityWarningMsgBlock(
   @Expose val warningType: WarningType,
   @Expose override val content: String? = null
 ) : MsgBlock {
