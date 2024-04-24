@@ -59,24 +59,24 @@ import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.appBarLayout
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.showChoosePublicKeyDialogFragment
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialogWithExceptionDetails
+import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
-import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.showActionDialogFragment
-import com.flowcrypt.email.extensions.androidx.fragment.app.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.showDialogFragment
-import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
-import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.showKeyboard
-import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
-import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
-import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -474,7 +474,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     return when (item.itemId) {
       R.id.menuDeleteQuotedText -> {
         binding?.iBShowQuotedText?.gone()
-        args.incomingMessageInfo?.text = ""
         true
       }
 
@@ -999,21 +998,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsIfFwdMode(initializationData: InitializationData) {
-    val originalMsgInfo = args.incomingMessageInfo ?: return
-
-    if (!CollectionUtils.isEmpty(originalMsgInfo.atts)) {
-      for (att in originalMsgInfo.atts!!) {
-        if (hasAbilityToAddAtt(att)) {
-          composeMsgViewModel.addAttachments(listOf(att))
-        } else {
-          showInfoSnackbar(
-            requireView(), getString(
-              R.string.template_warning_max_total_attachments_size,
-              FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
-            ),
-            Snackbar.LENGTH_LONG
-          )
-        }
+    args.attachments?.forEach { attachmentInfo ->
+      if (hasAbilityToAddAtt(attachmentInfo)) {
+        composeMsgViewModel.addAttachments(listOf(attachmentInfo))
+      } else {
+        showInfoSnackbar(
+          requireView(), getString(
+            R.string.template_warning_max_total_attachments_size,
+            FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
+          ),
+          Snackbar.LENGTH_LONG
+        )
       }
     }
 

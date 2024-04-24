@@ -115,5 +115,16 @@
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": false
   },
-  "text": "This message has an attached pub key that has no suitable encryption subkeys"
+  "text": "This message has an attached pub key that has no suitable encryption subkeys",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
+  }
 }

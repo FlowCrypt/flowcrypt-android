@@ -65,5 +65,16 @@
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": false
   },
-  "text": "This is an encrypted message with inline attachment"
+  "text": "This is an encrypted message with inline attachment",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
+  }
 }

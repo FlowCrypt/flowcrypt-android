@@ -51,5 +51,16 @@
     "hasBadSignatures": false,
     "hasUnverifiedSignatures": false
   },
-  "text": "It\u0027s a message with a missing key."
+  "text": "It\u0027s a message with a missing key.",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
+  }
 }

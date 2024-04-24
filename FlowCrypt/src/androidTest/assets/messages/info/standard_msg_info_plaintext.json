@@ -53,5 +53,16 @@
     "hasUnverifiedSignatures": false
   },
   "origMsgHeaders": "Return-Path: \u003cdenbond7@flowcrypt.test\u003e\r\nDelivered-To: default@flowcrypt.test\r\nReceived: from mail.flowcrypt.test\r\n\tby mail.flowcrypt.test with LMTP\r\n\tid WF4PDSLael+dCQAAZlazJA\r\n\t(envelope-from \u003cdenbond7@flowcrypt.test\u003e)\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon, 05 Oct 2020 08:32:34 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.flowcrypt.test (Postfix) with ESMTP id 347E7A20940\r\n\tfor \u003cdefault@flowcrypt.test\u003e; Mon,  5 Oct 2020 08:32:34 +0000 (UTC)\r\nTo: default@flowcrypt.test\r\nFrom: Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e\r\nX-Pep-Version: 2.0\r\nMessage-ID: \u003c8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@flowcrypt.test\u003e\r\nDate: Mon, 5 Oct 2020 11:32:34 +0300\r\nMime-Version: 1.0\r\nSubject: Standard message - plaintext\r\nContent-Type: multipart/alternative;\r\n boundary\u003d\"------------D3F69D95534F587EC1BE35A3\"\r\nContent-Language: en-US",
-  "text": "It\u0027s a standard message with plaintext"
+  "text": "It\u0027s a standard message with plaintext",
+  "localFolder": {
+    "account": "default@flowcrypt.test",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 25,
+    "labelListVisibility": "SHOW"
+  }
 }
