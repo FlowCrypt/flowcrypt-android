@@ -77,6 +77,7 @@ class JavaEmailConstants {
     const val HEADER_CONTENT_ID = "Content-ID"
     const val HEADER_IN_REPLY_TO = "In-Reply-To"
     const val HEADER_REFERENCES = "References"
+    const val HEADER_RECEIVED_SPF = "Received-SPF"
     const val FOLDER_INBOX = "INBOX"
     const val FOLDER_SENT = "SENT"
     const val FOLDER_TRASH = "TRASH"

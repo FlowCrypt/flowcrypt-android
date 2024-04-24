@@ -65,6 +65,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.SecurityWarningMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -1030,6 +1031,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
     binding?.emailWebView?.loadUrl("about:blank")
     binding?.layoutMessageParts?.removeAllViews()
+    binding?.layoutSecurityWarnings?.removeAllViews()
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
@@ -1037,6 +1039,22 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     for (block in msgInfo?.msgBlocks ?: emptyList()) {
       val layoutInflater = LayoutInflater.from(context)
       when (block.type) {
+        MsgBlock.Type.SECURITY_WARNING -> {
+          if (block is SecurityWarningMsgBlock) {
+            when (block.warningType) {
+              SecurityWarningMsgBlock.WarningType.RECEIVED_SPF_SOFT_FAIL -> {
+                binding?.layoutSecurityWarnings?.addView(
+                  getView(
+                    clipLargeText(block.content),
+                    getText(R.string.spf_soft_fail_warning),
+                    layoutInflater
+                  )
+                )
+              }
+            }
+          }
+        }
+
         MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
           if (!isHtmlDisplayed) {
             setupWebView(block)
@@ -1447,7 +1465,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun getView(
     originalMsg: String?,
-    errorMsg: String,
+    errorMsg: CharSequence,
     layoutInflater: LayoutInflater,
     buttonText: String? = null,
     onClickListener: View.OnClickListener? = null
