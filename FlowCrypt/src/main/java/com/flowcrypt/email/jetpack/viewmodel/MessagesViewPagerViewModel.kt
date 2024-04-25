@@ -7,10 +7,10 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -62,7 +62,11 @@ class MessagesViewPagerViewModel(
               roomDatabase.msgDao()
                 .getMessagesForViewPager(
                   activeAccount.email,
-                  localFolder.fullName,
+                  if (localFolder.searchQuery.isNullOrEmpty()) {
+                    localFolder.fullName
+                  } else {
+                    JavaEmailConstants.FOLDER_SEARCH
+                  },
                   messageEntity.receivedDate ?: 0,
                   PAGE_SIZE / 2
                 )

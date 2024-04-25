@@ -38,6 +38,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import com.flowcrypt.email.ui.base.BaseGmailApiTest
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.GsonBuilder
 import jakarta.mail.Message
@@ -74,15 +75,15 @@ import java.util.Properties
 @FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 @OutgoingMessageConfiguration(
   to = [
-    BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT,
+    BaseGmailApiTest.DEFAULT_TO_RECIPIENT,
     PasswordProtectedEncryptedComposeGmailApiFlow.TO_RECIPIENT_WITHOUT_PUBLIC_KEY
   ],
   cc = [
-    BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT,
+    BaseGmailApiTest.DEFAULT_CC_RECIPIENT,
     PasswordProtectedEncryptedComposeGmailApiFlow.CC_RECIPIENT_WITHOUT_PUBLIC_KEY
   ],
   bcc = [
-    BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT,
+    BaseGmailApiTest.DEFAULT_BCC_RECIPIENT,
     PasswordProtectedEncryptedComposeGmailApiFlow.BCC_RECIPIENT_WITHOUT_PUBLIC_KEY
   ],
   message = BaseComposeScreenTest.MESSAGE,
