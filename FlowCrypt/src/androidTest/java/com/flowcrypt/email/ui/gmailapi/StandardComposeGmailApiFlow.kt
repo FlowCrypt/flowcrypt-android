@@ -26,6 +26,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import com.flowcrypt.email.ui.base.BaseGmailApiTest
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -44,9 +45,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 @OutgoingMessageConfiguration(
-  to = [BaseComposeGmailFlow.DEFAULT_TO_RECIPIENT],
-  cc = [BaseComposeGmailFlow.DEFAULT_CC_RECIPIENT],
-  bcc = [BaseComposeGmailFlow.DEFAULT_BCC_RECIPIENT],
+  to = [BaseGmailApiTest.DEFAULT_TO_RECIPIENT],
+  cc = [BaseGmailApiTest.DEFAULT_CC_RECIPIENT],
+  bcc = [BaseGmailApiTest.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = BaseComposeScreenTest.SUBJECT
 )
