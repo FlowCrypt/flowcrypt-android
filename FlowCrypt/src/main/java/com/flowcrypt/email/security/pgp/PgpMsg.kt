@@ -8,6 +8,7 @@ package com.flowcrypt.email.security.pgp
 
 import android.content.Context
 import android.util.Base64
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
@@ -21,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlockError
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
 import com.flowcrypt.email.api.retrofit.response.model.PlainAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.SecurityWarningMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.SignedMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
@@ -254,6 +256,11 @@ object PgpMsg {
     isOpenPGPMimeEncrypted: Boolean = false
   ): Collection<MsgBlock> {
     val blocks = mutableListOf<MsgBlock>()
+
+    if (part is MimeMessage) {
+      blocks.addAll(extractMsgBlocksFromMimeMessage(part))
+    }
+
     when {
       //we found OpenPGP/MIME Signed message that should contain 2 parts.
       //See https://datatracker.ietf.org/doc/html/rfc3156#section-5 for more details
@@ -1380,6 +1387,27 @@ object PgpMsg {
         )
       )
     }
+    return blocks
+  }
+
+  private fun extractMsgBlocksFromMimeMessage(mimeMessage: MimeMessage): Collection<MsgBlock> {
+    val blocks = mutableListOf<MsgBlock>()
+
+    when {
+      mimeMessage.getHeader(JavaEmailConstants.HEADER_RECEIVED_SPF) != null -> {
+        val headerValue = mimeMessage.getMatchingHeaders(
+          arrayOf(JavaEmailConstants.HEADER_RECEIVED_SPF)
+        )?.toList()?.firstOrNull()?.value
+        if (headerValue?.startsWith("softfail") == true) {
+          blocks.add(
+            SecurityWarningMsgBlock(
+              warningType = SecurityWarningMsgBlock.WarningType.RECEIVED_SPF_SOFT_FAIL,
+            )
+          )
+        }
+      }
+    }
+
     return blocks
   }
 

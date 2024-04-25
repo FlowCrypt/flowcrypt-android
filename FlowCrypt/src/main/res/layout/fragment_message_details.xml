@@ -270,6 +270,12 @@
                     android:visibility="gone"
                     tools:visibility="visible">
 
+                    <LinearLayout
+                        android:id="@+id/layoutSecurityWarnings"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"/>
+
                     <com.flowcrypt.email.ui.widget.EmailWebView
                         android:id="@+id/emailWebView"
                         android:layout_width="match_parent"

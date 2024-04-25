@@ -15,6 +15,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Shader
+import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Build
 import android.os.Bundle
@@ -35,6 +36,7 @@ import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.ColorRes
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.text.toSpannable
@@ -65,6 +67,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.SecurityWarningMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -1030,6 +1033,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
     binding?.emailWebView?.loadUrl("about:blank")
     binding?.layoutMessageParts?.removeAllViews()
+    binding?.layoutSecurityWarnings?.removeAllViews()
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
@@ -1037,6 +1041,23 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     for (block in msgInfo?.msgBlocks ?: emptyList()) {
       val layoutInflater = LayoutInflater.from(context)
       when (block.type) {
+        MsgBlock.Type.SECURITY_WARNING -> {
+          if (block is SecurityWarningMsgBlock) {
+            when (block.warningType) {
+              SecurityWarningMsgBlock.WarningType.RECEIVED_SPF_SOFT_FAIL -> {
+                binding?.layoutSecurityWarnings?.addView(
+                  getView(
+                    originalMsg = clipLargeText(block.content),
+                    errorMsg = getText(R.string.spf_soft_fail_warning),
+                    layoutInflater = layoutInflater,
+                    leftBorderColor = R.color.orange
+                  )
+                )
+              }
+            }
+          }
+        }
+
         MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
           if (!isHtmlDisplayed) {
             setupWebView(block)
@@ -1447,9 +1468,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun getView(
     originalMsg: String?,
-    errorMsg: String,
+    errorMsg: CharSequence,
     layoutInflater: LayoutInflater,
     buttonText: String? = null,
+    @ColorRes
+    leftBorderColor: Int = R.color.red,
     onClickListener: View.OnClickListener? = null
   ): View {
     val viewGroup = layoutInflater.inflate(
@@ -1464,6 +1487,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       ContextCompat.getDrawable(requireContext(), R.drawable.bg_security_repeat_template)
     if (drawable != null && existingBackground.numberOfLayers > 1) {
       existingBackground.setDrawable(1, TileDrawable(drawable, Shader.TileMode.REPEAT))
+    }
+
+    val gradientDrawable = existingBackground.getDrawable(3)
+    if (gradientDrawable is GradientDrawable) {
+      gradientDrawable.setColor(ContextCompat.getColor(requireContext(), leftBorderColor))
     }
 
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
