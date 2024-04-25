@@ -15,6 +15,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Shader
+import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Build
 import android.os.Bundle
@@ -35,6 +36,7 @@ import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.ColorRes
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.text.toSpannable
@@ -1045,9 +1047,10 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               SecurityWarningMsgBlock.WarningType.RECEIVED_SPF_SOFT_FAIL -> {
                 binding?.layoutSecurityWarnings?.addView(
                   getView(
-                    clipLargeText(block.content),
-                    getText(R.string.spf_soft_fail_warning),
-                    layoutInflater
+                    originalMsg = clipLargeText(block.content),
+                    errorMsg = getText(R.string.spf_soft_fail_warning),
+                    layoutInflater = layoutInflater,
+                    leftBorderColor = R.color.orange
                   )
                 )
               }
@@ -1468,6 +1471,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     errorMsg: CharSequence,
     layoutInflater: LayoutInflater,
     buttonText: String? = null,
+    @ColorRes
+    leftBorderColor: Int = R.color.red,
     onClickListener: View.OnClickListener? = null
   ): View {
     val viewGroup = layoutInflater.inflate(
@@ -1482,6 +1487,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       ContextCompat.getDrawable(requireContext(), R.drawable.bg_security_repeat_template)
     if (drawable != null && existingBackground.numberOfLayers > 1) {
       existingBackground.setDrawable(1, TileDrawable(drawable, Shader.TileMode.REPEAT))
+    }
+
+    val gradientDrawable = existingBackground.getDrawable(3)
+    if (gradientDrawable is GradientDrawable) {
+      gradientDrawable.setColor(ContextCompat.getColor(requireContext(), leftBorderColor))
     }
 
     val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
