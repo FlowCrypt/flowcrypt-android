@@ -93,7 +93,8 @@ class EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlo
 
     //click on the standard message
     onView(withId(R.id.recyclerViewMsgs))
-      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click()))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
+        POSITION_EXISTING_STANDARD, click()))
 
     //wait the message details rendering
     Thread.sleep(1000)

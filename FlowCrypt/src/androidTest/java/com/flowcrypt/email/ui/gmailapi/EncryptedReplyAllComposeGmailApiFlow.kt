@@ -91,7 +91,8 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
-      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
+        POSITION_EXISTING_ENCRYPTED, click()))
 
     //wait the message details rendering
     Thread.sleep(1000)

@@ -93,7 +93,11 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
 
     //click on the encrypted message
     onView(withId(R.id.recyclerViewMsgs))
-      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(2, click()))
+      .perform(
+        RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
+          POSITION_EXISTING_PGP_MIME, click()
+        )
+      )
 
     //wait the message details rendering
     Thread.sleep(2000)

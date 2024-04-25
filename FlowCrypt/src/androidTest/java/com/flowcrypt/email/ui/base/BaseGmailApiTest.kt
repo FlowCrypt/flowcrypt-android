@@ -181,20 +181,7 @@ abstract class BaseGmailApiTest : BaseComposeScreenTest() {
 
       request.path == "/gmail/v1/users/me/messages?labelIds=${JavaEmailConstants.FOLDER_INBOX}&maxResults=45" -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListMessagesResponse().apply {
-            factory = GsonFactory.getDefaultInstance()
-            messages = listOf(
-              com.google.api.services.gmail.model.Message().apply {
-                id = MESSAGE_ID_EXISTING_STANDARD
-              },
-              com.google.api.services.gmail.model.Message().apply {
-                id = MESSAGE_ID_EXISTING_ENCRYPTED
-              },
-              com.google.api.services.gmail.model.Message().apply {
-                id = MESSAGE_ID_EXISTING_PGP_MIME
-              }
-            )
-          }.toString()
+          LIST_MESSAGES_RESPONSE_ALL_MESSAGE.toString()
         )
       }
 
@@ -926,6 +913,10 @@ abstract class BaseGmailApiTest : BaseComposeScreenTest() {
     const val EXISTING_MESSAGE_TO_RECIPIENT = "default@flowcrypt.test"
     const val EXISTING_MESSAGE_CC_RECIPIENT = "android@flowcrypt.test"
 
+    const val POSITION_EXISTING_ENCRYPTED = 0
+    const val POSITION_EXISTING_STANDARD = 1
+    const val POSITION_EXISTING_PGP_MIME = 2
+
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111111"
     const val DATE_EXISTING_STANDARD = 1704963592000
@@ -986,6 +977,21 @@ abstract class BaseGmailApiTest : BaseComposeScreenTest() {
     val secretKeyRingProtector = SecretKeyRingProtector.unlockAnyKeyWith(
       Passphrase.fromPassword(TestConstants.DEFAULT_PASSWORD)
     )
+
+    val LIST_MESSAGES_RESPONSE_ALL_MESSAGE = ListMessagesResponse().apply {
+      factory = GsonFactory.getDefaultInstance()
+      messages = listOf(
+        com.google.api.services.gmail.model.Message().apply {
+          id = MESSAGE_ID_EXISTING_STANDARD
+        },
+        com.google.api.services.gmail.model.Message().apply {
+          id = MESSAGE_ID_EXISTING_ENCRYPTED
+        },
+        com.google.api.services.gmail.model.Message().apply {
+          id = MESSAGE_ID_EXISTING_PGP_MIME
+        }
+      )
+    }
 
     var attachments: MutableList<File> = mutableListOf()
 
