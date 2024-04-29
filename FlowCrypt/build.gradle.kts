@@ -204,6 +204,7 @@ android {
       "META-INF/DEPENDENCIES",
       "META-INF/LICENSE.md",
       "META-INF/NOTICE.md",
+      "META-INF/INDEX.LIST",
       "META-INF/*.SF",
       "META-INF/*.DSA",
       "META-INF/*.RSA",
