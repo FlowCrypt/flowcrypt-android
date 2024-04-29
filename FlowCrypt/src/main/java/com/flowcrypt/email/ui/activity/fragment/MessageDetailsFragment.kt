@@ -1773,7 +1773,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun observerPassphraseNeededLiveData() {
     msgDetailsViewModel.passphraseNeededLiveData.observe(viewLifecycleOwner) { fingerprintList ->
-      if (fingerprintList.isNotEmpty()) {
+      if (fingerprintList.isNotEmpty() && (if (args.isViewPagerMode) isResumed else true)) {
         showNeedPassphraseDialog(
           requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
           fingerprints = fingerprintList
