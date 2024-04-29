@@ -204,6 +204,7 @@ android {
       "META-INF/DEPENDENCIES",
       "META-INF/LICENSE.md",
       "META-INF/NOTICE.md",
+      "META-INF/INDEX.LIST",
       "META-INF/*.SF",
       "META-INF/*.DSA",
       "META-INF/*.RSA",
@@ -455,7 +456,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.4.1")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20231218-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20240422-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
