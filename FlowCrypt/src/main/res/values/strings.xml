@@ -637,4 +637,5 @@
     <string name="created_key_was_imported">The created key was imported</string>
     <string name="message_not_found">Message not found</string>
     <string name="spf_soft_fail_warning"><b>Potentially suspicious message</b>\n\nIt wasn\'t properly verified by the sender, so its authenticity can\'t be confirmed.\nBe careful - avoid clicking links and downloading attachments, or sharing personal info.</string>
+    <string name="sending_message">Outbox: sending&#8230;</string>
 </resources>
