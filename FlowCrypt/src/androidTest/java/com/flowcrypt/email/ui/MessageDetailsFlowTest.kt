@@ -1289,6 +1289,34 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .check(matches(isDisplayed()))
   }
 
+  /**
+   * https://github.com/FlowCrypt/flowcrypt-android/issues/2135
+   */
+  @Test
+  fun testWarningPromptWhenUserWishesToDownloadPotentiallyDangerousFile() {
+    val dangerousAttachmentInfo = simpleAttInfo?.copy(
+      name = "android.apk",
+      type = "application/vnd.android.package-archive; name=\"android.apk\""
+    )
+    baseCheckWithAtt(
+      incomingMsgInfo = getMsgInfo(
+        path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
+        mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_dangerous_att.txt",
+        dangerousAttachmentInfo,
+        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+      ), att = dangerousAttachmentInfo
+    )
+
+    onView(withId(R.id.imageButtonDownloadAtt))
+      .check(matches(isDisplayed()))
+      .perform(scrollTo(), click())
+
+    isDialogWithTextDisplayed(
+      decorView,
+      getResString(R.string.download_dangerous_file_warning)
+    )
+  }
+
   private fun checkQuotesFunctionality(incomingMessageInfo: IncomingMessageInfo?) {
     onView(withId(R.id.iBShowQuotedText))
       .check(matches(isDisplayed()))

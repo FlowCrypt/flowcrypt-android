@@ -208,7 +208,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntity.id?.toString(),
             requestCode = REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE,
             dialogTitle = "",
-            dialogMsg = getString(R.string.download_or_preview_dangerous_file_warning),
+            dialogMsg = getString(R.string.download_dangerous_file_warning),
             positiveButtonTitle = getString(R.string.continue_),
             negativeButtonTitle = getString(android.R.string.cancel),
           )
