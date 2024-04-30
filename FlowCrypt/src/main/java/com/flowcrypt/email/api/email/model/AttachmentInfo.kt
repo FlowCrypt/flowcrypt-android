@@ -183,5 +183,11 @@ data class AttachmentInfo(
   companion object {
     const val DEPTH_SEPARATOR = "/"
     const val INNER_ATTACHMENT_PREFIX = "inner_"
+
+    val DANGEROUS_FILE_EXTENSIONS = arrayOf(
+      "apk",
+      "appx",
+      "appxbundle"
+    )
   }
 }
