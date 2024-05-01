@@ -1439,8 +1439,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
     } else null
 
-    isForceSendingEnabled = msgsCount > 0
-    isForceSendingEnabled = it.none { entity -> entity.msgState == MessageState.SENDING }
+    isForceSendingEnabled =
+      msgsCount > 0 && it.none { entity -> entity.msgState == MessageState.SENDING }
 
     if (currentFolder?.isOutbox == true) {
       activity?.invalidateOptionsMenu()
