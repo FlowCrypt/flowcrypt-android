@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
  */
 class GmailLabelsViewModel(
   application: Application,
-  private val messageEntity: MessageEntity,
+  private val messageEntityIds: LongArray,
 ) : AccountViewModel(application) {
 
   private val controlledRunnerForChangingLabels = ControlledRunner<Result<Boolean>>()
@@ -44,7 +44,8 @@ class GmailLabelsViewModel(
         val labelEntities =
           roomDatabase.labelDao().getLabelsSuspend(accountEntity.email, accountEntity.accountType)
             .filter { it.isCustom || it.name == GmailApiHelper.LABEL_INBOX }
-        val latestMessageEntityRecord = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
+        val latestMessageEntityRecord =
+          roomDatabase.msgDao().getMsgById(messageEntityIds.firstOrNull() ?: -1)
         val labelIds =
           latestMessageEntityRecord?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
         val initialList = labelEntities.map { entity ->
@@ -97,7 +98,8 @@ class GmailLabelsViewModel(
             .filter { !it.isCustom && it.name != GmailApiHelper.LABEL_INBOX }
             .map { it.name }
 
-          val latestMessageEntityRecord = roomDatabase.msgDao().getMsgById(messageEntity.id ?: -1)
+          val latestMessageEntityRecord =
+            roomDatabase.msgDao().getMsgById(messageEntityIds.firstOrNull() ?: -1)
             ?: return@cancelPreviousThenRun Result.success(true)
 
           val cachedLabelIds = latestMessageEntityRecord.labelIds.orEmpty()
@@ -110,16 +112,17 @@ class GmailLabelsViewModel(
           GmailApiHelper.changeLabels(
             context = getApplication(),
             accountEntity = activeAccount,
-            ids = listOf(messageEntity.uidAsHEX),
+            ids = listOf(latestMessageEntityRecord.uidAsHEX),
             addLabelIds = addLabelIds.toList(),
             removeLabelIds = removeLabelIds.toList()
           )
 
           //update the local cache
           val finalLabelIds = cachedLabelIds + addLabelIds - removeLabelIds
-          val folderLabel = messageEntity.folder
+          val folderLabel = latestMessageEntityRecord.folder
           val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
-          val folderType = foldersManager.getFolderByFullName(messageEntity.folder)?.getFolderType()
+          val folderType =
+            foldersManager.getFolderByFullName(latestMessageEntityRecord.folder)?.getFolderType()
 
           when {
             folderType in setOf(FoldersManager.FolderType.TRASH, FoldersManager.FolderType.SPAM)

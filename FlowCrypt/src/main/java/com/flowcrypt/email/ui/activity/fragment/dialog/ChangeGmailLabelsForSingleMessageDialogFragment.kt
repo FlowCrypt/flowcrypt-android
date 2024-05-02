@@ -39,7 +39,7 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return GmailLabelsViewModel(requireActivity().application, args.messageEntity) as T
+        return GmailLabelsViewModel(requireActivity().application, args.messageEntityIds) as T
       }
     }
   }

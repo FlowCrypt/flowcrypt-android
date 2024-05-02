@@ -18,7 +18,7 @@
             android:name="requestKey"
             app:argType="string" />
         <argument
-            android:name="messageEntity"
-            app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
+            android:name="messageEntityIds"
+            app:argType="long[]" />
     </dialog>
 </navigation>

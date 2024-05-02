@@ -2055,7 +2055,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
           override val arguments = ChangeGmailLabelsForSingleMessageDialogFragmentArgs(
             requestKey = UUID.randomUUID().toString(),
-            messageEntity = args.messageEntity
+            messageEntityIds = arrayOf(args.messageEntity.id ?: -1L).toLongArray()
           ).toBundle()
         }
       )
