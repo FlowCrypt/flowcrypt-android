@@ -31,6 +31,13 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menuActionChangeLabels"
+        android:icon="@drawable/ic_label_24dp"
+        android:title="@string/change_labels"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/menuActionMarkRead"
         android:icon="@drawable/selector_ic_mark_read_white"
         android:title="@string/mark_read"

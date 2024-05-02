@@ -18,10 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentChangeGmailLabelsForSingleMessageBinding
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.GmailLabelsViewModel
@@ -98,7 +98,11 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
           .filter { it.isChecked }
           .map { it.id }
           .toSet()
-        gmailLabelsViewModel.changeLabels(newLabels)
+        if (gmailApiLabelsWithChoiceListAdapter.hasChanges) {
+          gmailLabelsViewModel.changeLabels(newLabels)
+        } else {
+          navController?.navigateUp()
+        }
         this.gone()
       }
     }

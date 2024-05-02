@@ -44,31 +44,41 @@ class GmailLabelsViewModel(
         val labelEntities =
           roomDatabase.labelDao().getLabelsSuspend(accountEntity.email, accountEntity.accountType)
             .filter { it.isCustom || it.name == GmailApiHelper.LABEL_INBOX }
-        val latestMessageEntityRecord =
-          roomDatabase.msgDao().getMsgById(messageEntityIds.firstOrNull() ?: -1)
-        val labelIds =
-          latestMessageEntityRecord?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
-        val initialList = labelEntities.map { entity ->
+        val checkedStates = labelEntities.associateBy({ it.name }, { false }).toMutableMap()
+        val messageEntities = roomDatabase.msgDao().getMessagesByIDs(messageEntityIds.toList())
+        for (messageEntity in messageEntities) {
+          val labelIds =
+            messageEntity.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
+          val uncheckedItems = checkedStates.filter { entry -> !entry.value }.keys
+          if (uncheckedItems.isEmpty()) {
+            break
+          }
+
+          val checkedItems = labelIds.filter { it in uncheckedItems }
+          checkedStates.putAll(checkedItems.associateBy({ it }, { true }))
+        }
+
+        val resultsList = labelEntities.map { entity ->
           LabelWithChoice(
             name = entity.alias.orEmpty(),
             id = entity.name,
-            entity.labelColor,
-            entity.textColor,
-            labelIds.any { it == entity.name }
+            backgroundColor = entity.labelColor,
+            textColor = entity.textColor,
+            isChecked = checkedStates.getOrDefault(entity.name, false)
           )
         }
 
         val inbox =
-          (initialList.firstOrNull { it.id == GmailApiHelper.LABEL_INBOX } ?: LabelWithChoice(
+          (resultsList.firstOrNull { it.id == GmailApiHelper.LABEL_INBOX } ?: LabelWithChoice(
             name = GmailApiHelper.LABEL_INBOX,
             id = GmailApiHelper.LABEL_INBOX,
             isChecked = false
           )).copy(name = GmailApiHelper.LABEL_INBOX.capitalize())
         val checkedLabels =
-          initialList.filter { it.isChecked && it.id != GmailApiHelper.LABEL_INBOX }
+          resultsList.filter { it.isChecked && it.id != GmailApiHelper.LABEL_INBOX }
             .sortedBy { it.name.lowercase() }
         val uncheckedLabels =
-          initialList.filter { !it.isChecked && it.id != GmailApiHelper.LABEL_INBOX }
+          resultsList.filter { !it.isChecked && it.id != GmailApiHelper.LABEL_INBOX }
             .sortedBy { it.name.lowercase() }
 
         if (inbox.isChecked) {

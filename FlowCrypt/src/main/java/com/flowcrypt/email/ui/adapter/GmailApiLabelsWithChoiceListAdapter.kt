@@ -27,9 +27,13 @@ class GmailApiLabelsWithChoiceListAdapter :
   ListAdapter<LabelWithChoice, GmailApiLabelsWithChoiceListAdapter.ViewHolder>(
     DiffUtilCallBack()
   ) {
+  val hasChanges: Boolean
+    get() = hasChangesInternal
+  private var hasChangesInternal = false
 
   private val onLabelCheckedListener = object : OnLabelCheckedListener {
     override fun onLabelChecked(labelWithChoice: LabelWithChoice, isChecked: Boolean) {
+      hasChangesInternal = true
       val position = currentList.indexOf(labelWithChoice)
       if (position != -1) {
         submitList(currentList.toMutableList().apply {
