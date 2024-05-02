@@ -91,6 +91,7 @@ class GmailLabelsViewModel(
 
   fun changeLabels(labelIds: Set<String>) {
     viewModelScope.launch {
+      val sortedLabelIds = labelIds.toSortedSet()
       changeLabelsMutableStateFlow.value = Result.loading()
       changeLabelsMutableStateFlow.value = controlledRunnerForChangingLabels.cancelPreviousThenRun {
         return@cancelPreviousThenRun try {
@@ -99,6 +100,8 @@ class GmailLabelsViewModel(
               IllegalStateException("Account is not defined")
             )
 
+          val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
+
           val labelsEntities = roomDatabase.labelDao().getLabelsSuspend(
             account = activeAccount.email,
             accountType = activeAccount.accountType
@@ -106,55 +109,100 @@ class GmailLabelsViewModel(
 
           val protectedLabelIds = labelsEntities
             .filter { !it.isCustom && it.name != GmailApiHelper.LABEL_INBOX }
-            .map { it.name }
+            .map { it.name }.toSet()
 
-          val latestMessageEntityRecord =
-            roomDatabase.msgDao().getMsgById(messageEntityIds.firstOrNull() ?: -1)
-            ?: return@cancelPreviousThenRun Result.success(true)
+          val messageEntities = roomDatabase.msgDao().getMessagesByIDs(messageEntityIds.toList())
+          if (messageEntities.isEmpty()) {
+            return@cancelPreviousThenRun Result.success(true)
+          }
 
-          val cachedLabelIds = latestMessageEntityRecord.labelIds.orEmpty()
-            .split(MessageEntity.LABEL_IDS_SEPARATOR).toSet()
+          val mapToAdd = mutableMapOf<String, Set<String>>()
+          val mapToRemove = mutableMapOf<String, Set<String>>()
+          val toBeDeletedMessageEntities = mutableListOf<MessageEntity>()
+          val toBeUpdatedMessageEntities = mutableListOf<MessageEntity>()
 
-          val allowedToChangeLabelIds = cachedLabelIds.filter { it !in protectedLabelIds }.toSet()
-          val addLabelIds = labelIds - allowedToChangeLabelIds
-          val removeLabelIds = allowedToChangeLabelIds - labelIds
+          for (messageEntity in messageEntities) {
+            //firstly try to prepare candidates for Gmail API calls
+            val cachedLabelIds = messageEntity.labelIds.orEmpty()
+              .split(MessageEntity.LABEL_IDS_SEPARATOR).toSet()
 
-          GmailApiHelper.changeLabels(
-            context = getApplication(),
-            accountEntity = activeAccount,
-            ids = listOf(latestMessageEntityRecord.uidAsHEX),
-            addLabelIds = addLabelIds.toList(),
-            removeLabelIds = removeLabelIds.toList()
-          )
+            val allowedToChangeLabelIds =
+              cachedLabelIds.filter { it !in protectedLabelIds }.toSortedSet()
+            val addLabelIds = sortedLabelIds - allowedToChangeLabelIds
+            val removeLabelIds = allowedToChangeLabelIds - sortedLabelIds
 
-          //update the local cache
-          val finalLabelIds = cachedLabelIds + addLabelIds - removeLabelIds
-          val folderLabel = latestMessageEntityRecord.folder
-          val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
-          val folderType =
-            foldersManager.getFolderByFullName(latestMessageEntityRecord.folder)?.getFolderType()
-
-          when {
-            folderType in setOf(FoldersManager.FolderType.TRASH, FoldersManager.FolderType.SPAM)
-                && finalLabelIds.contains(GmailApiHelper.LABEL_INBOX) -> {
-              roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+            if (addLabelIds.isNotEmpty()) {
+              val keyForAdding =
+                addLabelIds.joinToString(separator = MessageEntity.LABEL_IDS_SEPARATOR)
+              val idsForAdding = mapToAdd.getOrDefault(keyForAdding, setOf())
+              mapToAdd[keyForAdding] =
+                idsForAdding.toMutableSet().apply { add(messageEntity.uidAsHEX) }.toSet()
             }
 
-            finalLabelIds.contains(folderLabel) || folderType in setOf(
-              FoldersManager.FolderType.DRAFTS,
-              FoldersManager.FolderType.All
-            ) -> {
-              roomDatabase.msgDao().updateSuspend(
-                latestMessageEntityRecord.copy(
-                  labelIds = finalLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+            if (removeLabelIds.isNotEmpty()) {
+              val keyForRemoving =
+                removeLabelIds.joinToString(separator = MessageEntity.LABEL_IDS_SEPARATOR)
+              val idsForRemoving = mapToRemove.getOrDefault(keyForRemoving, setOf())
+              mapToRemove[keyForRemoving] =
+                idsForRemoving.toMutableSet().apply { add(messageEntity.uidAsHEX) }.toSet()
+            }
+
+            //prepare candidates to update the local cache
+            val finalLabelIds = cachedLabelIds + addLabelIds - removeLabelIds
+            val folderLabel = messageEntity.folder
+            val folderType =
+              foldersManager.getFolderByFullName(messageEntity.folder)?.getFolderType()
+
+            when {
+              folderType in setOf(FoldersManager.FolderType.TRASH, FoldersManager.FolderType.SPAM)
+                  && finalLabelIds.contains(GmailApiHelper.LABEL_INBOX) -> {
+                toBeDeletedMessageEntities.add(messageEntity)
+              }
+
+              finalLabelIds.contains(folderLabel) || folderType in setOf(
+                FoldersManager.FolderType.DRAFTS,
+                FoldersManager.FolderType.All
+              ) -> {
+                toBeUpdatedMessageEntities.add(
+                  messageEntity.copy(
+                    labelIds = finalLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+                  )
                 )
-              )
-            }
+              }
 
-            else -> {
-              roomDatabase.msgDao().deleteSuspend(latestMessageEntityRecord)
+              else -> toBeDeletedMessageEntities.add(messageEntity)
             }
           }
+
+          mapToAdd.forEach { entry ->
+            //to decrease API calls count we will try to find candidates for removing at this stage
+            val entryForRemovingWithSameValue = mapToRemove.filter { innerEntry ->
+              innerEntry.value == entry.value
+            }.asSequence().firstOrNull()
+            GmailApiHelper.changeLabels(
+              context = getApplication(),
+              accountEntity = activeAccount,
+              ids = entry.value,
+              addLabelIds = entry.key.split(MessageEntity.LABEL_IDS_SEPARATOR),
+              removeLabelIds = entryForRemovingWithSameValue?.key?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+            )
+            entryForRemovingWithSameValue?.let {
+              mapToRemove.remove(entryForRemovingWithSameValue.key)
+            }
+          }
+
+          mapToRemove.forEach { entry ->
+            GmailApiHelper.changeLabels(
+              context = getApplication(),
+              accountEntity = activeAccount,
+              ids = entry.value,
+              removeLabelIds = entry.key.split(MessageEntity.LABEL_IDS_SEPARATOR)
+            )
+          }
+
+          //update the local cache
+          roomDatabase.msgDao().deleteSuspend(toBeDeletedMessageEntities)
+          roomDatabase.msgDao().updateSuspend(toBeUpdatedMessageEntities)
 
           Result.success(true)
         } catch (e: Exception) {
