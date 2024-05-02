@@ -54,10 +54,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentMessagesListBinding
-import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
@@ -66,6 +63,9 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
@@ -1137,17 +1137,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     }
 
     msgsViewModel.outboxMsgsLiveData.observe(viewLifecycleOwner) {
-      val msgsCount = it.size
-      supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox == false) {
-        resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
-      } else null
-
-      isForceSendingEnabled = msgsCount > 0
-      isForceSendingEnabled = it.none { entity -> entity.msgState == MessageState.SENDING }
-
-      if (currentFolder?.isOutbox == true) {
-        activity?.invalidateOptionsMenu()
-      }
+      handleOutboxMessagesChanges(it)
     }
   }
 
@@ -1391,6 +1381,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         deleteAllMsgs = deleteAllMsgs
       )
     } ?: labelsViewModel.loadLabels()
+
+    msgsViewModel.outboxMsgsLiveData.value?.let {
+      handleOutboxMessagesChanges(it)
+    }
   }
 
   private fun setActionProgress(progress: Int, message: String? = null) {
@@ -1428,6 +1422,28 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           requestPermissionLauncher.launch(permission)
         }
       }
+    }
+  }
+
+  private fun handleOutboxMessagesChanges(it: List<MessageEntity>) {
+    val msgsCount = it.size
+    supportActionBar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox == false) {
+      when {
+        it.any { messageEntity ->
+          messageEntity.msgState == MessageState.SENDING
+        } -> {
+          getString(R.string.sending_message)
+        }
+
+        else -> resources.getQuantityString(R.plurals.outbox_msgs_count, msgsCount, msgsCount)
+      }
+    } else null
+
+    isForceSendingEnabled =
+      msgsCount > 0 && it.none { entity -> entity.msgState == MessageState.SENDING }
+
+    if (currentFolder?.isOutbox == true) {
+      activity?.invalidateOptionsMenu()
     }
   }
 
