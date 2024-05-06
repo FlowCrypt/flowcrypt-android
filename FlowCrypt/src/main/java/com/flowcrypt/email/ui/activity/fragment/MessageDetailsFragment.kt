@@ -201,32 +201,19 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         lastClickedAtt =
           attachmentInfo.copy(orderNumber = GeneralUtil.genAttOrderId(requireContext()))
 
-        if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
-          for (block in msgInfo?.msgBlocks ?: emptyList()) {
-            if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
-              val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
-              val decryptErrorDetails = decryptErrorMsgBlock.decryptErr?.details ?: continue
-              if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
-                val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
-                showNeedPassphraseDialog(
-                  requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
-                  fingerprints = fingerprints
-                )
-                return
-              }
-            }
-          }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
-          ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-          ) == PackageManager.PERMISSION_GRANTED
+        if (FilenameUtils.getExtension(attachmentInfo.getSafeName())
+            ?.lowercase() in AttachmentInfo.DANGEROUS_FILE_EXTENSIONS
         ) {
-          downloadAttachment()
+          showTwoWayDialog(
+            requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntity.id?.toString(),
+            requestCode = REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE,
+            dialogTitle = "",
+            dialogMsg = getString(R.string.download_dangerous_file_warning),
+            positiveButtonTitle = getString(R.string.continue_),
+            negativeButtonTitle = getString(android.R.string.cancel),
+          )
         } else {
-          requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+          processDownloadAttachment(attachmentInfo)
         }
       }
 
@@ -1831,6 +1818,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         REQUEST_CODE_DELETE_MESSAGE_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
           msgDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
         }
+
+        REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE ->
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            lastClickedAtt?.let { processDownloadAttachment(it) }
+          }
       }
     }
   }
@@ -2075,8 +2067,39 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       attachmentsRecyclerViewAdapter.currentList.map { it.copy(isLazyForwarded = !it.isEmbedded) }
     }
 
+  private fun processDownloadAttachment(attachmentInfo: AttachmentInfo) {
+    if (SecurityUtils.isPossiblyEncryptedData(attachmentInfo.name)) {
+      for (block in msgInfo?.msgBlocks ?: emptyList()) {
+        if (block.type == MsgBlock.Type.DECRYPT_ERROR) {
+          val decryptErrorMsgBlock = block as? DecryptErrorMsgBlock ?: continue
+          val decryptErrorDetails = decryptErrorMsgBlock.decryptErr?.details ?: continue
+          if (decryptErrorDetails.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
+            val fingerprints = decryptErrorMsgBlock.decryptErr.fingerprints ?: continue
+            showNeedPassphraseDialog(
+              requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
+              fingerprints = fingerprints
+            )
+            return
+          }
+        }
+      }
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+      ContextCompat.checkSelfPermission(
+        requireContext(),
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+      ) == PackageManager.PERMISSION_GRANTED
+    ) {
+      downloadAttachment()
+    } else {
+      requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
+  }
+
   companion object {
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
+    private const val REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
     private const val MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE = 10
 

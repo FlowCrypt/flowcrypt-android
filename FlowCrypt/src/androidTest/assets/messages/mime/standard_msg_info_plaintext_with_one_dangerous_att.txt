@@ -1,0 +1,104 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Received: from mail.flowcrypt.test
+	by mail.flowcrypt.test with LMTP
+	id YISlMxbcel9GEwAAZlazJA
+	(envelope-from <denbond7@flowcrypt.test>)
+	for <default@flowcrypt.test>; Mon, 05 Oct 2020 08:40:54 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.flowcrypt.test (Postfix) with ESMTP id D03A0A2098A
+	for <default@flowcrypt.test>; Mon,  5 Oct 2020 08:40:54 +0000 (UTC)
+To: default@flowcrypt.test
+From: Denis Bondarenko <denbond7@flowcrypt.test>
+X-Pep-Version: 2.0
+Message-ID: <facd4f6d-9e74-977b-3f11-abbe7cd467eb@flowcrypt.test>
+Date: Mon, 5 Oct 2020 11:40:54 +0300
+Mime-Version: 1.0
+Subject: Standard message + one attachment
+Content-Type: multipart/mixed;
+ boundary="------------9575DD1DBF2C2FFA08F4568A"
+Content-Language: en-US
+
+This is a multi-part message in MIME format.
+--------------9575DD1DBF2C2FFA08F4568A
+Content-Type: multipart/alternative;
+ boundary="------------9BD0A609717171AC93BCB3E4"
+
+
+--------------9BD0A609717171AC93BCB3E4
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+It's a standard message with plaintext and one attachment
+
+
+--------------9BD0A609717171AC93BCB3E4
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+  <head>
+
+    <meta http-equiv=3D"content-type" content=3D"text/html; charset=3DUTF=
+-8">
+  </head>
+  <body>
+    <pre style=3D"background-color:#ffffff;color:#000000;font-family:'Dej=
+aVu Sans Mono';font-size:12.0pt;">It's a standard message with plaintext=
+ and one attachment</pre>
+  </body>
+</html>
+
+--------------9BD0A609717171AC93BCB3E4--
+
+--------------9575DD1DBF2C2FFA08F4568A
+Content-Type: application/vnd.android.package-archive; name="android.apk"
+Content-Disposition: attachment; filename="android.apk"
+Content-Transfer-Encoding: base64
+
+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
+--------------9575DD1DBF2C2FFA08F4568A--
