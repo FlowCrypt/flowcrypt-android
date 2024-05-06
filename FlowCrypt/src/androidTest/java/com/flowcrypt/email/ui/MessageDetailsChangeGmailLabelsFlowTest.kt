@@ -58,8 +58,12 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
               BatchModifyMessagesRequest::class.java
             )
 
-            lastLabelIds.addAll(batchModifyMessagesRequest.addLabelIds)
-            lastLabelIds.removeAll(batchModifyMessagesRequest.removeLabelIds)
+            batchModifyMessagesRequest.addLabelIds?.let {
+              lastLabelIds.addAll(it)
+            }
+            batchModifyMessagesRequest.removeLabelIds?.let {
+              lastLabelIds.removeAll(it)
+            }
 
             assertEquals(
               listOf(GmailApiHelper.LABEL_INBOX),
