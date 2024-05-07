@@ -12,9 +12,9 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.model.LabelWithChoice
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import com.google.android.material.checkbox.MaterialCheckBox
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,57 +41,60 @@ class GmailLabelsViewModel(
   val labelsInfoFlow: Flow<List<LabelWithChoice>> =
     activeAccountLiveData.asFlow().mapLatest { account ->
       account.takeIf { account?.isGoogleSignInAccount == true }?.let { accountEntity ->
-        val labelEntities =
-          roomDatabase.labelDao().getLabelsSuspend(accountEntity.email, accountEntity.accountType)
-            .filter { it.isCustom || it.name == GmailApiHelper.LABEL_INBOX }
-        val checkedStates = labelEntities.associateBy({ it.name }, { false }).toMutableMap()
-        val messageEntities = roomDatabase.msgDao().getMessagesByIDs(messageEntityIds.toList())
-        for (messageEntity in messageEntities) {
-          val labelIds =
-            messageEntity.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
-          val uncheckedItems = checkedStates.filter { entry -> !entry.value }.keys
-          if (uncheckedItems.isEmpty()) {
-            break
-          }
+        val labelEntities = roomDatabase.labelDao().getLabelsSuspend(
+          accountEntity.email, accountEntity.accountType
+        ).filter { it.isCustom }
 
-          val checkedItems = labelIds.filter { it in uncheckedItems }
-          checkedStates.putAll(checkedItems.associateBy({ it }, { true }))
-        }
+        val messageEntities = roomDatabase.msgDao().getMessagesByIDs(messageEntityIds.toList())
+        val checkedStates =
+          labelEntities.associateBy(
+            { it.name },
+            { labelEntity ->
+              var count = 0
+
+              messageEntities.forEach { messageEntity ->
+                val labelIds =
+                  messageEntity.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
+                if (labelEntity.name in labelIds) {
+                  count++
+                }
+              }
+
+              when {
+                count == messageEntities.size -> MaterialCheckBox.STATE_CHECKED
+                count > 0 -> MaterialCheckBox.STATE_INDETERMINATE
+                else -> MaterialCheckBox.STATE_UNCHECKED
+              }
+            })
 
         val resultsList = labelEntities.map { entity ->
+          val initialState = checkedStates.getOrDefault(entity.name, MaterialCheckBox.STATE_UNCHECKED)
           LabelWithChoice(
             name = entity.alias.orEmpty(),
             id = entity.name,
             backgroundColor = entity.labelColor,
             textColor = entity.textColor,
-            isChecked = checkedStates.getOrDefault(entity.name, false)
+            initialState = initialState,
+            state = initialState
           )
         }
 
-        val inbox =
-          (resultsList.firstOrNull { it.id == GmailApiHelper.LABEL_INBOX } ?: LabelWithChoice(
-            name = GmailApiHelper.LABEL_INBOX,
-            id = GmailApiHelper.LABEL_INBOX,
-            isChecked = false
-          )).copy(name = GmailApiHelper.LABEL_INBOX.capitalize())
         val checkedLabels =
-          resultsList.filter { it.isChecked && it.id != GmailApiHelper.LABEL_INBOX }
+          resultsList.filter { it.state == MaterialCheckBox.STATE_CHECKED }
+            .sortedBy { it.name.lowercase() }
+        val indeterminateLabels =
+          resultsList.filter { it.state == MaterialCheckBox.STATE_INDETERMINATE }
             .sortedBy { it.name.lowercase() }
         val uncheckedLabels =
-          resultsList.filter { !it.isChecked && it.id != GmailApiHelper.LABEL_INBOX }
+          resultsList.filter { it.state == MaterialCheckBox.STATE_UNCHECKED }
             .sortedBy { it.name.lowercase() }
 
-        if (inbox.isChecked) {
-          listOf(inbox) + checkedLabels + uncheckedLabels
-        } else {
-          checkedLabels + listOf(inbox) + uncheckedLabels
-        }
+        checkedLabels + indeterminateLabels + uncheckedLabels
       } ?: emptyList()
     }
 
-  fun changeLabels(labelIds: Set<String>) {
+  fun changeLabels(labels: Set<LabelWithChoice>) {
     viewModelScope.launch {
-      val sortedLabelIds = labelIds.toSortedSet()
       changeLabelsMutableStateFlow.value = Result.loading()
       changeLabelsMutableStateFlow.value = controlledRunnerForChangingLabels.cancelPreviousThenRun {
         return@cancelPreviousThenRun try {
@@ -102,52 +105,38 @@ class GmailLabelsViewModel(
 
           val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
 
-          val labelsEntities = roomDatabase.labelDao().getLabelsSuspend(
-            account = activeAccount.email,
-            accountType = activeAccount.accountType
-          )
-
-          val protectedLabelIds = labelsEntities
-            .filter { !it.isCustom && it.name != GmailApiHelper.LABEL_INBOX }
-            .map { it.name }.toSet()
-
           val messageEntities = roomDatabase.msgDao().getMessagesByIDs(messageEntityIds.toList())
           if (messageEntities.isEmpty()) {
             return@cancelPreviousThenRun Result.success(true)
           }
 
-          val mapToAdd = mutableMapOf<String, Set<String>>()
-          val mapToRemove = mutableMapOf<String, Set<String>>()
+          //update labels on server
+          val labelsToBeAdded = labels.filter {
+            it.initialState != MaterialCheckBox.STATE_CHECKED && it.state == MaterialCheckBox.STATE_CHECKED
+          }
+          val labelsToBeRemoved = labels.filter {
+            it.initialState != MaterialCheckBox.STATE_UNCHECKED && it.state == MaterialCheckBox.STATE_UNCHECKED
+          }
+
+          GmailApiHelper.changeLabels(
+            context = getApplication(),
+            accountEntity = activeAccount,
+            ids = messageEntities.map { it.uidAsHEX },
+            addLabelIds = labelsToBeAdded.map { it.id },
+            removeLabelIds = labelsToBeRemoved.map { it.id }
+          )
+
+          //update labels in the local cache
           val toBeDeletedMessageEntities = mutableListOf<MessageEntity>()
           val toBeUpdatedMessageEntities = mutableListOf<MessageEntity>()
 
           for (messageEntity in messageEntities) {
-            //firstly try to prepare candidates for Gmail API calls
             val cachedLabelIds = messageEntity.labelIds.orEmpty()
               .split(MessageEntity.LABEL_IDS_SEPARATOR).toSet()
 
-            val allowedToChangeLabelIds =
-              cachedLabelIds.filter { it !in protectedLabelIds }.toSortedSet()
-            val addLabelIds = sortedLabelIds - allowedToChangeLabelIds
-            val removeLabelIds = allowedToChangeLabelIds - sortedLabelIds
+            val addLabelIds = labelsToBeAdded.map { it.id }.toSet()
+            val removeLabelIds = labelsToBeRemoved.map { it.id }.toSet()
 
-            if (addLabelIds.isNotEmpty()) {
-              val keyForAdding =
-                addLabelIds.joinToString(separator = MessageEntity.LABEL_IDS_SEPARATOR)
-              val idsForAdding = mapToAdd.getOrDefault(keyForAdding, setOf())
-              mapToAdd[keyForAdding] =
-                idsForAdding.toMutableSet().apply { add(messageEntity.uidAsHEX) }.toSet()
-            }
-
-            if (removeLabelIds.isNotEmpty()) {
-              val keyForRemoving =
-                removeLabelIds.joinToString(separator = MessageEntity.LABEL_IDS_SEPARATOR)
-              val idsForRemoving = mapToRemove.getOrDefault(keyForRemoving, setOf())
-              mapToRemove[keyForRemoving] =
-                idsForRemoving.toMutableSet().apply { add(messageEntity.uidAsHEX) }.toSet()
-            }
-
-            //prepare candidates to update the local cache
             val finalLabelIds = cachedLabelIds + addLabelIds - removeLabelIds
             val folderLabel = messageEntity.folder
             val folderType =
@@ -173,34 +162,6 @@ class GmailLabelsViewModel(
               else -> toBeDeletedMessageEntities.add(messageEntity)
             }
           }
-
-          mapToAdd.forEach { entry ->
-            //to decrease API calls count we will try to find candidates for removing at this stage
-            val entryForRemovingWithSameValue = mapToRemove.filter { innerEntry ->
-              innerEntry.value == entry.value
-            }.asSequence().firstOrNull()
-            GmailApiHelper.changeLabels(
-              context = getApplication(),
-              accountEntity = activeAccount,
-              ids = entry.value,
-              addLabelIds = entry.key.split(MessageEntity.LABEL_IDS_SEPARATOR),
-              removeLabelIds = entryForRemovingWithSameValue?.key?.split(MessageEntity.LABEL_IDS_SEPARATOR)
-            )
-            entryForRemovingWithSameValue?.let {
-              mapToRemove.remove(entryForRemovingWithSameValue.key)
-            }
-          }
-
-          mapToRemove.forEach { entry ->
-            GmailApiHelper.changeLabels(
-              context = getApplication(),
-              accountEntity = activeAccount,
-              ids = entry.value,
-              removeLabelIds = entry.key.split(MessageEntity.LABEL_IDS_SEPARATOR)
-            )
-          }
-
-          //update the local cache
           roomDatabase.msgDao().deleteSuspend(toBeDeletedMessageEntities)
           roomDatabase.msgDao().updateSuspend(toBeUpdatedMessageEntities)
 

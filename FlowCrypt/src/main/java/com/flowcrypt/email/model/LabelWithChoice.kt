@@ -5,6 +5,9 @@
 
 package com.flowcrypt.email.model
 
+import androidx.annotation.IntRange
+import com.google.android.material.checkbox.MaterialCheckBox
+
 /**
  * @author Denys Bondarenko
  */
@@ -13,5 +16,14 @@ data class LabelWithChoice(
   val id: String,
   val backgroundColor: String? = null,
   val textColor: String? = null,
-  val isChecked: Boolean
+  @IntRange(
+    from = MaterialCheckBox.STATE_UNCHECKED * 1L,
+    to = MaterialCheckBox.STATE_INDETERMINATE * 1L
+  )
+  val initialState: Int,
+  @IntRange(
+    from = MaterialCheckBox.STATE_UNCHECKED * 1L,
+    to = MaterialCheckBox.STATE_INDETERMINATE * 1L
+  )
+  val state: Int
 )

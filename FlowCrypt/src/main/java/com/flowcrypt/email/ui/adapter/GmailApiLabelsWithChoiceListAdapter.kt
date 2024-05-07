@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.IntRange
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
@@ -19,6 +20,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.databinding.ItemGmailLabelWithCheckboxBinding
 import com.flowcrypt.email.extensions.kotlin.parseAsColorBasedOnDefaultSettings
 import com.flowcrypt.email.model.LabelWithChoice
+import com.google.android.material.checkbox.MaterialCheckBox
 
 /**
  * @author Denys Bondarenko
@@ -27,20 +29,19 @@ class GmailApiLabelsWithChoiceListAdapter :
   ListAdapter<LabelWithChoice, GmailApiLabelsWithChoiceListAdapter.ViewHolder>(
     DiffUtilCallBack()
   ) {
-  val hasChanges: Boolean
-    get() = hasChangesInternal
-  private var hasChangesInternal = false
+  //we use a separate value to store modified states to prevent UI blinking after 'submit' method.
+  private val statesSessionMap = mutableMapOf<String, Int>()
 
   private val onLabelCheckedListener = object : OnLabelCheckedListener {
-    override fun onLabelChecked(labelWithChoice: LabelWithChoice, isChecked: Boolean) {
-      hasChangesInternal = true
-      val position = currentList.indexOf(labelWithChoice)
-      if (position != -1) {
-        submitList(currentList.toMutableList().apply {
-          this[position] = labelWithChoice.copy(isChecked = isChecked)
-        })
-      }
+    override fun onLabelChecked(labelWithChoice: LabelWithChoice, state: Int) {
+      statesSessionMap[labelWithChoice.id] = state
     }
+  }
+
+  override fun submitList(list: List<LabelWithChoice>?) {
+    super.submitList(list)
+    statesSessionMap.clear()
+    list?.let { statesSessionMap.putAll(list.associateBy({ it.id }, { it.state })) }
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -54,6 +55,14 @@ class GmailApiLabelsWithChoiceListAdapter :
     holder.bindTo(getItem(position), onLabelCheckedListener)
   }
 
+  fun hasChanges(): Boolean {
+    return statesSessionMap != currentList.associateBy({ it.id }, { it.state })
+  }
+
+  fun getActualListWithModifications(): List<LabelWithChoice> {
+    return currentList.map { it.copy(state = statesSessionMap[it.id] ?: it.state) }
+  }
+
   inner class ViewHolder(itemView: View) :
     RecyclerView.ViewHolder(itemView) {
     val binding = ItemGmailLabelWithCheckboxBinding.bind(itemView)
@@ -61,9 +70,24 @@ class GmailApiLabelsWithChoiceListAdapter :
     fun bindTo(item: LabelWithChoice, onLabelCheckedListener: OnLabelCheckedListener) {
       itemView.setOnClickListener { binding.checkBox.toggle() }
       binding.textViewLabel.text = item.name
-      binding.checkBox.isChecked = item.isChecked
-      binding.checkBox.setOnCheckedChangeListener { _, isChecked ->
-        onLabelCheckedListener.onLabelChecked(labelWithChoice = item, isChecked = isChecked)
+      (binding.checkBox as? MaterialCheckBox)?.checkedState =
+        statesSessionMap[item.id] ?: MaterialCheckBox.STATE_UNCHECKED
+      (binding.checkBox as? MaterialCheckBox)?.clearOnCheckedStateChangedListeners()
+      (binding.checkBox as? MaterialCheckBox)?.addOnCheckedStateChangedListener { checkBox, state ->
+        val finalState = if (state == MaterialCheckBox.STATE_CHECKED
+          && statesSessionMap[item.id] == MaterialCheckBox.STATE_UNCHECKED
+          && item.initialState == MaterialCheckBox.STATE_INDETERMINATE
+        ) {
+          checkBox.checkedState = MaterialCheckBox.STATE_INDETERMINATE
+          MaterialCheckBox.STATE_INDETERMINATE
+        } else {
+          state
+        }
+
+        onLabelCheckedListener.onLabelChecked(
+          labelWithChoice = item,
+          state = finalState
+        )
       }
 
       val folderIconResourceId = R.drawable.ic_label_24dp
@@ -90,7 +114,14 @@ class GmailApiLabelsWithChoiceListAdapter :
   }
 
   interface OnLabelCheckedListener {
-    fun onLabelChecked(labelWithChoice: LabelWithChoice, isChecked: Boolean)
+    fun onLabelChecked(
+      labelWithChoice: LabelWithChoice,
+      @IntRange(
+        from = MaterialCheckBox.STATE_UNCHECKED * 1L,
+        to = MaterialCheckBox.STATE_INDETERMINATE * 1L
+      )
+      state: Int
+    )
   }
 
   class DiffUtilCallBack : DiffUtil.ItemCallback<LabelWithChoice>() {

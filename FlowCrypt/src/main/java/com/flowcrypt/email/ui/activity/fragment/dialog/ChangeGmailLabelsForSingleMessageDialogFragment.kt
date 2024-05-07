@@ -94,12 +94,10 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
       AlertDialog.BUTTON_POSITIVE
     )?.apply {
       setOnClickListener {
-        val newLabels = gmailApiLabelsWithChoiceListAdapter.currentList
-          .filter { it.isChecked }
-          .map { it.id }
-          .toSet()
-        if (gmailApiLabelsWithChoiceListAdapter.hasChanges) {
-          gmailLabelsViewModel.changeLabels(newLabels)
+        if (gmailApiLabelsWithChoiceListAdapter.hasChanges()) {
+          gmailLabelsViewModel.changeLabels(
+            gmailApiLabelsWithChoiceListAdapter.getActualListWithModifications().toSet()
+          )
         } else {
           navController?.navigateUp()
         }
