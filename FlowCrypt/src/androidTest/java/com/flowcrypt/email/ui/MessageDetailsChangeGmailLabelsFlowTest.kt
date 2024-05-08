@@ -6,17 +6,19 @@
 package com.flowcrypt.email.ui
 
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import androidx.test.espresso.Espresso.*
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.*
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.RootMatchers.isDialog
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -66,7 +68,7 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
             }
 
             assertEquals(
-              listOf(GmailApiHelper.LABEL_INBOX),
+              LABELS.take(1).map { it.name },
               batchModifyMessagesRequest.removeLabelIds
             )
             return MockResponse()
@@ -92,7 +94,7 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
 
   @Test
   fun testLabelsManagement() {
-    lastLabelIds = initLabelIds()
+    lastLabelIds = LABELS.map { it.name }.toMutableList()
     val details = genIncomingMessageInfo()?.msgEntity
     requireNotNull(details)
     launchActivity(details)
@@ -122,6 +124,6 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
 
     Thread.sleep(3000)
 
-    assertEquals(LABELS.map { it.name }, lastLabelIds)
+    assertEquals(LABELS.map { it.name }.slice(1..2), lastLabelIds)
   }
 }
