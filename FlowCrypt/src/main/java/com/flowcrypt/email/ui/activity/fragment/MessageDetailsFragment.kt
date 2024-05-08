@@ -120,7 +120,7 @@ import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
-import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragmentArgs
@@ -2045,9 +2045,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       navController?.navigate(
         object : NavDirections {
           override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
-          override val arguments = ChangeGmailLabelsForSingleMessageDialogFragmentArgs(
+          override val arguments = ChangeGmailLabelsDialogFragmentArgs(
             requestKey = UUID.randomUUID().toString(),
-            messageEntity = args.messageEntity
+            messageEntityIds = arrayOf(args.messageEntity.id ?: -1L).toLongArray()
           ).toBundle()
         }
       )
