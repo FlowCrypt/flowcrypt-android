@@ -31,10 +31,10 @@ import com.flowcrypt.email.ui.adapter.GmailApiLabelsWithChoiceListAdapter
 /**
  * @author Denys Bondarenko
  */
-class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
+class ChangeGmailLabelsDialogFragment : BaseDialogFragment(),
   ListProgressBehaviour {
   private var binding: FragmentChangeGmailLabelsForSingleMessageBinding? = null
-  private val args by navArgs<ChangeGmailLabelsForSingleMessageDialogFragmentArgs>()
+  private val args by navArgs<ChangeGmailLabelsDialogFragmentArgs>()
   private val gmailLabelsViewModel: GmailLabelsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")

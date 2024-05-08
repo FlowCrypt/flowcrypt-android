@@ -11,7 +11,7 @@
 
     <dialog
         android:id="@+id/changeGmailLabelsForSingleMessageDialogFragment"
-        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragment"
         android:label="ChangeGmailLabelsForSingleMessageDialogFragment"
         tools:layout="@layout/fragment_change_gmail_labels_for_single_message">
         <argument

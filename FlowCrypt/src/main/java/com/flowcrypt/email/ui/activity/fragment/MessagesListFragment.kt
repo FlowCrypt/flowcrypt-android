@@ -86,7 +86,7 @@ import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
-import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsForSingleMessageDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
@@ -921,7 +921,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 navController?.navigate(
                   object : NavDirections {
                     override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
-                    override val arguments = ChangeGmailLabelsForSingleMessageDialogFragmentArgs(
+                    override val arguments = ChangeGmailLabelsDialogFragmentArgs(
                       requestKey = UUID.randomUUID().toString(),
                       messageEntityIds = ids.toLongArray()
                     ).toBundle()

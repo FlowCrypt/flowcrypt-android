@@ -22,7 +22,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -142,9 +141,9 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
 
     //select the second and third labels
     onView(withId(R.id.recyclerViewLabels))
-      .perform(actionOnItemAtPosition<ViewHolder>(1, click()))
+      .perform(actionOnItemAtPosition<ViewHolder>(0, click()))
     onView(withId(R.id.recyclerViewLabels))
-      .perform(actionOnItemAtPosition<ViewHolder>(2, click()))
+      .perform(actionOnItemAtPosition<ViewHolder>(1, click()))
 
     onView(withText(R.string.change_labels))
       .inRoot(isDialog())
@@ -185,16 +184,6 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
           POSITION_EXISTING_PGP_MIME + 1L
         )
       }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
-    )
-  }
-
-  private fun genLocalFolder(accountEntity: AccountEntity, label: String): LocalFolder {
-    return LocalFolder(
-      account = accountEntity.email,
-      fullName = label,
-      folderAlias = label,
-      attributes = listOf("\\HasNoChildren"),
-      isCustom = true
     )
   }
 
