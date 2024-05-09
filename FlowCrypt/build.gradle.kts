@@ -447,7 +447,7 @@ dependencies {
   implementation("androidx.webkit:webkit:1.11.0")
 
   implementation("com.google.android.gms:play-services-base:18.4.0")
-  implementation("com.google.android.gms:play-services-auth:21.1.0")
+  implementation("com.google.android.gms:play-services-auth:21.1.1")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
