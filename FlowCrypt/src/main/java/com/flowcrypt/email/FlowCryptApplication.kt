@@ -117,7 +117,10 @@ class FlowCryptApplication : Application(), Configuration.Provider {
       val hasTemporaryPassPhrases =
         keysStorage.getRawKeys().any { it.passphraseType == KeyEntity.PassphraseType.RAM }
       if (hasTemporaryPassPhrases) {
-        PassPhrasesInRAMService.start(this)
+        if (GeneralUtil.isAppForegrounded()) {
+          //we can run a foreground service only if the app is visible for a user
+          PassPhrasesInRAMService.start(this)
+        }
       } else {
         PassPhrasesInRAMService.stop(this)
       }
