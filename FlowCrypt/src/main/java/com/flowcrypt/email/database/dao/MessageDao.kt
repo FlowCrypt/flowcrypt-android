@@ -52,6 +52,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     msgsID: Collection<Long>?
   ): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE _id IN (:msgsID)")
+  abstract suspend fun getMessagesByIDs(msgsID: Collection<Long>): List<MessageEntity>
+
   @Query(
     "SELECT * FROM messages " +
         "WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy"
