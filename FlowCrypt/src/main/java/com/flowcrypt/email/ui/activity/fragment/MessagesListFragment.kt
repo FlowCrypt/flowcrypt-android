@@ -36,6 +36,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavDirections
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -85,6 +86,7 @@ import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
@@ -104,6 +106,7 @@ import me.everything.android.ui.overscroll.IOverScrollState
 import me.everything.android.ui.overscroll.IOverScrollStateListener
 import me.everything.android.ui.overscroll.VerticalOverScrollBounceEffectDecorator
 import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorAdapter
+import java.util.UUID
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -913,6 +916,21 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               true
             }
 
+            R.id.menuActionChangeLabels -> {
+              if (account?.isGoogleSignInAccount == true) {
+                navController?.navigate(
+                  object : NavDirections {
+                    override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
+                    override val arguments = ChangeGmailLabelsDialogFragmentArgs(
+                      requestKey = UUID.randomUUID().toString(),
+                      messageEntityIds = ids.toLongArray()
+                    ).toBundle()
+                  }
+                )
+              }
+              true
+            }
+
             else -> false
           }
         }
@@ -934,6 +952,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           isMoveToInboxActionEnabled && !isArchiveActionEnabled
         menu?.findItem(R.id.menuActionMoveToSpam)?.isVisible = isSpamActionEnabled()
         menu?.findItem(R.id.menuActionMarkAsNotSpam)?.isVisible = isMarkNotSpamActionEnabled()
+        menu?.findItem(R.id.menuActionChangeLabels)?.isVisible =
+          account?.isGoogleSignInAccount == true
 
         val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
         menuActionMarkRead?.isVisible = isChangeSeenStateActionEnabled()
@@ -942,11 +962,13 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         menuActionMarkUnread?.isVisible = isChangeSeenStateActionEnabled()
 
         if (isChangeSeenStateActionEnabled()) {
-          val id = tracker?.selection?.firstOrNull() ?: return true
-          val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
+          val selection = tracker?.selection ?: return true
+          val hasMessagesWithUnreadState = selection.mapNotNull { id ->
+            adapter.getMsgEntity(keyProvider?.getPosition(id))
+          }.any { !it.isSeen }
 
-          menuActionMarkUnread?.isVisible = msgEntity?.isSeen == true
-          menuActionMarkRead?.isVisible = msgEntity?.isSeen != true
+          menuActionMarkUnread?.isVisible = !hasMessagesWithUnreadState
+          menuActionMarkRead?.isVisible = hasMessagesWithUnreadState
         }
 
         return true
