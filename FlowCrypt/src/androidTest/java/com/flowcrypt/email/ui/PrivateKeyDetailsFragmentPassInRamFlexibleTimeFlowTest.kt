@@ -96,6 +96,9 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeFlowTest : BaseTest() {
 
   @Test
   fun testInMemoryPassPhraseSessionLengthParameter() {
+    //as tests run a bit differently need to run PassPhrasesInRAMService manually at this stage
+    PassPhrasesInRAMService.start(getTargetContext())
+
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.pass_phrase_not_provided))))
       .check(matches(hasTextColor(R.color.red)))
