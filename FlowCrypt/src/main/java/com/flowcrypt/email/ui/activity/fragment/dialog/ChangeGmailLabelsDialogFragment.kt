@@ -18,10 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentChangeGmailLabelsForSingleMessageBinding
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.GmailLabelsViewModel
@@ -31,15 +31,15 @@ import com.flowcrypt.email.ui.adapter.GmailApiLabelsWithChoiceListAdapter
 /**
  * @author Denys Bondarenko
  */
-class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
+class ChangeGmailLabelsDialogFragment : BaseDialogFragment(),
   ListProgressBehaviour {
   private var binding: FragmentChangeGmailLabelsForSingleMessageBinding? = null
-  private val args by navArgs<ChangeGmailLabelsForSingleMessageDialogFragmentArgs>()
+  private val args by navArgs<ChangeGmailLabelsDialogFragmentArgs>()
   private val gmailLabelsViewModel: GmailLabelsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return GmailLabelsViewModel(requireActivity().application, args.messageEntity) as T
+        return GmailLabelsViewModel(requireActivity().application, args.messageEntityIds) as T
       }
     }
   }
@@ -94,11 +94,13 @@ class ChangeGmailLabelsForSingleMessageDialogFragment : BaseDialogFragment(),
       AlertDialog.BUTTON_POSITIVE
     )?.apply {
       setOnClickListener {
-        val newLabels = gmailApiLabelsWithChoiceListAdapter.currentList
-          .filter { it.isChecked }
-          .map { it.id }
-          .toSet()
-        gmailLabelsViewModel.changeLabels(newLabels)
+        if (gmailApiLabelsWithChoiceListAdapter.hasChanges()) {
+          gmailLabelsViewModel.changeLabels(
+            gmailApiLabelsWithChoiceListAdapter.getActualListWithModifications().toSet()
+          )
+        } else {
+          navController?.navigateUp()
+        }
         this.gone()
       }
     }

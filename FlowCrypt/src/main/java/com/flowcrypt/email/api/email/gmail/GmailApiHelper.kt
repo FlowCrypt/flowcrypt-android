@@ -360,7 +360,7 @@ class GmailApiHelper {
 
     suspend fun changeLabels(
       context: Context, accountEntity: AccountEntity,
-      ids: List<String>,
+      ids: Collection<String>,
       addLabelIds: List<String>? = null,
       removeLabelIds: List<String>? = null
     ) = withContext(Dispatchers.IO) {
@@ -371,7 +371,7 @@ class GmailApiHelper {
         .users()
         .messages()
         .batchModify(DEFAULT_USER_ID, BatchModifyMessagesRequest().apply {
-          this.ids = ids
+          this.ids = ids.toList()
           this.addLabelIds = addLabelIds
           this.removeLabelIds = removeLabelIds
         })
