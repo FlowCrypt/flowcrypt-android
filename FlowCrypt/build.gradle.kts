@@ -454,7 +454,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
   implementation("com.google.code.gson:gson:2.10.1")
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-  implementation("com.google.api-client:google-api-client-android:2.4.1")
+  implementation("com.google.api-client:google-api-client-android:2.5.0")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240422-2.0.0")
 
