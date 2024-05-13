@@ -408,7 +408,7 @@ dependencies {
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.23")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.9.24")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -483,7 +483,7 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("org.jsoup:jsoup:1.17.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
   implementation("ch.acra:acra-http:5.11.3")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
