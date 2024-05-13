@@ -71,6 +71,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.math.BigInteger
+import java.net.HttpURLConnection
 import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -139,6 +140,18 @@ class GmailApiHelper {
           when (val exception = processException(e)) {
             is CommonConnectionException -> Result.exception(exception)
 
+            is GmailAPIException -> {
+              when {
+                GmailAPIException.ENTITY_NOT_FOUND == exception.message
+                    && exception.code == HttpURLConnection.HTTP_NOT_FOUND -> {
+                  //we handle this error. No ACRA reports
+                }
+
+                else -> ExceptionUtil.handleError(exception)
+              }
+              Result.exception(exception)
+            }
+
             else -> {
               ExceptionUtil.handleError(exception)
               Result.exception(exception)
@@ -178,7 +191,7 @@ class GmailApiHelper {
       val rootUrl = FlavorSettings.getGmailAPIRootUrl()
       val builder = Gmail.Builder(transport, factory, credential).setApplicationName(appName)
 
-      @Suppress("UNNECESSARY_SAFE_CALL")
+      @Suppress("UNNECESSARY_SAFE_CALL", "KotlinRedundantDiagnosticSuppress")
       rootUrl?.let { builder.rootUrl = it }
 
       if (!FlavorSettings.isGMailAPIHttpRequestInitializerEnabled()) {

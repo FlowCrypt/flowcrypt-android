@@ -141,6 +141,7 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
+import com.flowcrypt.email.util.exception.GmailAPIException
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
@@ -153,6 +154,7 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FilenameUtils
+import java.net.HttpURLConnection
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
@@ -1703,6 +1705,17 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             is AuthenticatorException -> {
               showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
               showStatus(msg = it.exceptionMsg)
+            }
+
+            is GmailAPIException -> {
+              when {
+                GmailAPIException.ENTITY_NOT_FOUND == it.exception.message
+                    && it.exception.code == HttpURLConnection.HTTP_NOT_FOUND -> {
+                  toast(getString(R.string.message_not_found_or_labels_changed))
+                  msgDetailsViewModel.deleteMsg()
+                  navController?.navigateUp()
+                }
+              }
             }
 
             else -> showStatus(msg = it.exceptionMsgWithStack)
