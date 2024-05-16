@@ -12,6 +12,7 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -36,7 +37,6 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
-@Ignore("Should be fixed before the next release")
 class ComposeScreenNoKeyAvailableSingleKeyWithPassphraseInRamFlowTest : BaseComposeScreenNoKeyAvailableTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     keyPath = "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
@@ -54,6 +54,7 @@ class ComposeScreenNoKeyAvailableSingleKeyWithPassphraseInRamFlowTest : BaseComp
     .around(ScreenshotTestRule())
 
   @Test
+  @FlakyTest
   fun testAddEmailToExistingKey() {
     doTestAddEmailToExistingKey {
       onView(withId(R.id.buttonOk))

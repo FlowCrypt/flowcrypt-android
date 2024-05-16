@@ -14,6 +14,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -62,7 +63,6 @@ import org.junit.runner.RunWith
   subject = "",
   isNew = false
 )
-@Ignore("Should be fixed before the next release")
 class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -85,6 +85,7 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
       .around(ScreenshotTestRule())
 
   @Test
+  @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
     Thread.sleep(2000)
