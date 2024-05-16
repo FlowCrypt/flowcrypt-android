@@ -16,6 +16,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.GmailAPIException
 import com.google.api.services.gmail.model.History
 import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
@@ -25,6 +26,7 @@ import jakarta.mail.UIDFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
+import java.net.HttpURLConnection
 
 /**
  * This task does a job of loading all new messages which not exist in the cache but exist on the server and updates
@@ -120,14 +122,32 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
 
     executeGMailAPICall(applicationContext) {
       if (startHistoryId != BigInteger.ZERO) {
-        val historyList = GmailApiHelper.loadHistoryInfo(
-          context = applicationContext,
-          accountEntity = accountEntity,
-          localFolder = inboxLocalFolder,
-          historyId = labelEntityHistoryId.max(msgEntityHistoryId)
-        )
+        try {
+          val historyList = GmailApiHelper.loadHistoryInfo(
+            context = applicationContext,
+            accountEntity = accountEntity,
+            localFolder = inboxLocalFolder,
+            historyId = labelEntityHistoryId.max(msgEntityHistoryId)
+          )
 
-        handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
+          handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
+        } catch (e: Exception) {
+          if (e is GmailAPIException && e.code == HttpURLConnection.HTTP_NOT_FOUND) {
+            /*
+           Based on https://developers.google.com/gmail/api/reference/rest/v1/users.history/list
+
+           The supplied startHistoryId should be obtained from the historyId of a message, thread,
+           or previous list response. History IDs increase chronologically but are not contiguous
+           with random gaps in between valid IDs. Supplying an invalid or out of date
+           startHistoryId typically returns an HTTP 404 error code. A historyId is typically valid
+           for at least a week, but in some rare circumstances may be valid for only a few hours.
+           If an HTTP 404 error response is received, the app should perform a full sync.
+           */
+
+            labelEntity?.let { roomDatabase.labelDao().updateSuspend(it.copy(historyId = null)) }
+            roomDatabase.msgDao().delete(accountEntity.email, inboxLocalFolder.fullName)
+          }
+        }
       }
     }
   }

@@ -14,4 +14,10 @@ import java.io.IOException
 class GmailAPIException(cause: GoogleJsonResponseException?) : IOException(cause) {
   override val message: String?
     get() = (cause as? GoogleJsonResponseException)?.details?.message
+
+  val code: Int = cause?.details?.code ?: -1
+
+  companion object{
+    const val ENTITY_NOT_FOUND = "Requested entity was not found."
+  }
 }
