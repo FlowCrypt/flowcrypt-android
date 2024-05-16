@@ -18,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -42,7 +43,6 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
-@Ignore("Should be fixed before the next release")
 class ComposeScreenNoKeyAvailableCreateNewKeyFlowTest : BaseComposeScreenNoKeyAvailableTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
     keyPath = "pgp/key_testing@flowcrypt.test_keyA_strong.asc",
@@ -60,6 +60,7 @@ class ComposeScreenNoKeyAvailableCreateNewKeyFlowTest : BaseComposeScreenNoKeyAv
     .around(ScreenshotTestRule())
 
   @Test
+  @FlakyTest
   fun testCreatingNewKey() {
     doBaseActions {
       onView(withText(R.string.create_a_new_key))

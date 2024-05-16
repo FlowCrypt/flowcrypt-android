@@ -11,7 +11,7 @@ import org.junit.runner.Description
 /**
  * @author Denys Bondarenko
  */
-class EnterpriseTestsFilter : ReadyForCIFilter() {
+class EnterpriseTestsFilter : ReadyForCIAndNonFlakyFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = EnterpriseTest::class.java
     return super.evaluateTest(description)

@@ -60,7 +60,6 @@ import kotlin.random.Random
 @FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Should be fixed before the next release")
 class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
   private val simpleAttInfo = TestGeneralUtil.getObjectFromJson(
     "messages/attachments/simple_att.json",

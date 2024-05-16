@@ -17,6 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -36,6 +37,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.PrivateKeyDetailsFragmentArgs
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -44,13 +46,11 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-
 
 /**
  * @author Denys Bondarenko
@@ -58,7 +58,6 @@ import org.junit.runner.RunWith
 @FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Should be fixed before the next release")
 class EndPassPhraseSessionFlowTest : BaseTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
@@ -90,7 +89,11 @@ class EndPassPhraseSessionFlowTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  @FlakyTest
   fun testEndPassPhraseSessionButton() {
+    //as tests run a bit differently need to run PassPhrasesInRAMService manually at this stage
+    PassPhrasesInRAMService.start(getTargetContext())
+
     val timeout = 5000L
     val activePassPhraseSessionLabel = getResString(R.string.active_passphrase_session)
     val endPassPhraseSessionLabel = getResString(R.string.end_pass_phrase_session)

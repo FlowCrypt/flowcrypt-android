@@ -15,6 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.LargeTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -160,7 +161,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
   }
 
   @Test
-  @Ignore("Should be fixed before the next release")
+  @FlakyTest
   fun testSendPasswordProtectedMessageWithFewAttachments() {
     isRequestToMessageAPITested = false
 
