@@ -12,7 +12,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -29,13 +28,13 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.ImportAdditionalPrivateKeysFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -73,8 +72,9 @@ class ImportAdditionalPrivateKeysFlowTest : BaseTest() {
 
   @Test
   @DependsOnMailServer
-  @FlakyTest
   fun testButtonImportBackup() {
+    waitForObjectWithText(getQuantityString(R.plurals.import_keys, 1), TimeUnit.SECONDS.toMillis(5))
+
     onView(withId(R.id.buttonImportBackup))
       .check(matches(isDisplayed()))
       .perform(click())
