@@ -12,7 +12,7 @@ import org.junit.runner.Description
 /**
  * @author Denys Bondarenko
  */
-class DoesNotNeedMailServerFilter : ReadyForCIFilter() {
+class DoesNotNeedMailServerFilter : ReadyForCIAndNonFlakyFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClassDependsOnMailServer = DependsOnMailServer::class.java
     val annotationClassEnterpriseTest = EnterpriseTest::class.java
