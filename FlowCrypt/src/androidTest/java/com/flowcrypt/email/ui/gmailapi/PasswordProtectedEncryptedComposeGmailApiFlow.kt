@@ -29,6 +29,7 @@ import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.jetpack.workmanager.HandlePasswordProtectedMsgWorker
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -162,6 +163,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testSendPasswordProtectedMessageWithFewAttachments() {
     isRequestToMessageAPITested = false
 

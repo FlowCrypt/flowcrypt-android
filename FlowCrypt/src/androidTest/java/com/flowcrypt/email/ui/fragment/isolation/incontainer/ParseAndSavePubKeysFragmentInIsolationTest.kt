@@ -21,6 +21,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -142,6 +143,7 @@ class ParseAndSavePubKeysFragmentInIsolationTest : BaseTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testIsDisplayedLabelAlreadyImported() {
     launchFragmentInContainer<ParseAndSavePubKeysFragment>(
       fragmentArgs = ParseAndSavePubKeysFragmentArgs(

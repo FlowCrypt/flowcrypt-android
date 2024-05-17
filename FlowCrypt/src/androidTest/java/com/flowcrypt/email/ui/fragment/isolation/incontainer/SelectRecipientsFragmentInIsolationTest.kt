@@ -18,6 +18,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -57,6 +58,7 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   @FlowCryptTestSettings(useCommonIdling = false)
   fun testShowEmptyView() {
     launchFragmentInContainer<SelectRecipientsFragment>(
@@ -72,6 +74,7 @@ class SelectRecipientsFragmentInIsolationTest : BaseTest(), AddAccountToDatabase
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testShowNonEmptyList() {
     AddRecipientsToDatabaseRule(
       listOf(

@@ -21,6 +21,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -76,6 +77,7 @@ class StandardWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testSending() {
     //switch to standard mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())

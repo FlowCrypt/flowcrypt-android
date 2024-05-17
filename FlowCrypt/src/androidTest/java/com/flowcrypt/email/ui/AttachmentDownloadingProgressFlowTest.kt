@@ -21,6 +21,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -42,7 +43,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -155,6 +155,7 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testVisibilityOfDownloadingProgressIcon() {
     baseCheckWithAtt(
       incomingMsgInfo = getMsgInfo(

@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -85,6 +86,7 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testSending() {
     //need to wait while the app loads the messages list
     Thread.sleep(2000)

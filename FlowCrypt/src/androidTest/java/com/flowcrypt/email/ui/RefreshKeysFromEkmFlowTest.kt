@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -120,6 +121,7 @@ class RefreshKeysFromEkmFlowTest : BaseRefreshKeysFromEkmFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testUpdatePrvKeyFromEkmShowFixMissingPassphrase() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
 

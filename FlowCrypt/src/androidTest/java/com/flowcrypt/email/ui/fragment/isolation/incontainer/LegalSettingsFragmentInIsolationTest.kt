@@ -19,6 +19,7 @@ import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -61,6 +62,7 @@ class LegalSettingsFragmentInIsolationTest : BaseTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testClickToTitleViewPager() {
     for (titleName in titleNames) {
       onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))

@@ -12,13 +12,13 @@ import org.junit.runner.Description
 /**
  * @author Denys Bondarenko
  */
-open class ReadyForCIAndNonFlakyFilter : BaseCustomFilter() {
+open class ReadyForCIAndFlakyFilter : BaseCustomFilter() {
   override fun evaluateTest(description: Description?): Boolean {
     val annotationClass = NotReadyForCI::class.java
     val annotationClassFlakyTest = FlakyTest::class.java
     return !isAnnotationPresentAtClassOrMethod(description, annotationClass)
-        && !isAnnotationPresentAtClassOrMethod(description, annotationClassFlakyTest)
+        && isAnnotationPresentAtClassOrMethod(description, annotationClassFlakyTest)
   }
 
-  override fun describe() = "Filter not flaky tests that are ready to be run on a CI server"
+  override fun describe() = "Filter flaky tests that are ready to be run on a CI server"
 }
