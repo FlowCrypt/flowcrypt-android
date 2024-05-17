@@ -77,7 +77,6 @@ class StandardWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   @Test
   @FlakyTest
-  @NotReadyForCI
   fun testSending() {
     //switch to standard mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
