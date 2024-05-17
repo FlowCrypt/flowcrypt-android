@@ -160,6 +160,19 @@ blocks:
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-enterprise.sh
 
+        - name: 'Instrumentation tests(flaky)'
+          execution_time_limit:
+            minutes: 60
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            #wait until ready
+            - ./script/ci-wait-for-emulator.sh
+            # Run filtered logging for TestRunner
+            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-flaky.sh
+
       epilogue:
         always:
           commands:
@@ -171,9 +184,6 @@ blocks:
 
         on_fail:
           commands:
-            # store tests results
-
-
             # collect and store debug info as artifacts
             - ./script/ci-get-and-publish-debug-info-as-artifact.sh
 
