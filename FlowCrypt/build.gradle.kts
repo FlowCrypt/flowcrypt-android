@@ -370,7 +370,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.16.0")
-  ksp("androidx.annotation:annotation:1.7.1")
+  ksp("androidx.annotation:annotation:1.8.0")
   ksp("androidx.room:room-compiler:2.6.1")
   //ACRA needs the following dependency to use a custom report sender
 
@@ -403,7 +403,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("org.robolectric:robolectric:4.12.1")
+  testImplementation("org.robolectric:robolectric:4.12.2")
   testImplementation("io.github.classgraph:classgraph:4.8.172")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
