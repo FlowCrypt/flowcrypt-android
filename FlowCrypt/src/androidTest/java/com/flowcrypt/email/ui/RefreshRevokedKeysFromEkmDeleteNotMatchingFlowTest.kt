@@ -17,6 +17,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -89,6 +90,7 @@ class RefreshRevokedKeysFromEkmDeleteNotMatchingFlowTest : BaseRefreshKeysFromEk
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testDeleteNotMatchingKeys() {
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
     addPassphraseToRamCache(

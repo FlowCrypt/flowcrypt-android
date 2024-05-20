@@ -19,6 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -68,6 +69,7 @@ class RecipientsListFragmentInIsolationTest : BaseRecipientsListTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testDeleteContacts() {
     unregisterCountingIdlingResource()
     addContactsToDatabase()

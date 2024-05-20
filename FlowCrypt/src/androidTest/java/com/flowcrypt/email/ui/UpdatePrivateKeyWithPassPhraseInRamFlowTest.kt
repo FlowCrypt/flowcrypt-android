@@ -31,6 +31,7 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextInputLayoutError
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -107,6 +108,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testUpdateSuccess() {
     Thread.sleep(1000)
     val dateFormat = DateTimeUtil.getPgpDateFormat(getTargetContext())

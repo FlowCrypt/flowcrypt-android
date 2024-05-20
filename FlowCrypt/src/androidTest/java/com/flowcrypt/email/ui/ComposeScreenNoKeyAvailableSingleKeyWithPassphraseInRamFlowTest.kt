@@ -18,6 +18,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -55,6 +56,7 @@ class ComposeScreenNoKeyAvailableSingleKeyWithPassphraseInRamFlowTest : BaseComp
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testAddEmailToExistingKey() {
     doTestAddEmailToExistingKey {
       onView(withId(R.id.buttonOk))

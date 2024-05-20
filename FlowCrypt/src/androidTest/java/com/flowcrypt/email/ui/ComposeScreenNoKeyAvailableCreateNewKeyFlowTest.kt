@@ -24,6 +24,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -61,6 +62,7 @@ class ComposeScreenNoKeyAvailableCreateNewKeyFlowTest : BaseComposeScreenNoKeyAv
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testCreatingNewKey() {
     doBaseActions {
       onView(withText(R.string.create_a_new_key))

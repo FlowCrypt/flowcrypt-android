@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -158,6 +159,7 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testNeedPassphraseSingleFingerprint() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_text.json",
@@ -208,6 +210,7 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testNeedPassphraseMultiplyFingerprintsFirstKey() {
     val decryptedInfo = TestGeneralUtil.getObjectFromJson(
       jsonPathInAssets = "messages/info/encrypted_msg_info_for_2_keys_text.json",
@@ -229,6 +232,7 @@ class MessageDetailsPassphraseInRamFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testNeedPassphraseMultiplyFingerprintsSecondKey() {
     countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
 

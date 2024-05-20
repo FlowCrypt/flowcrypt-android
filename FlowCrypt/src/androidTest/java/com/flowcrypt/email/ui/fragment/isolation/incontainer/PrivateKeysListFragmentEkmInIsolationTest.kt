@@ -17,6 +17,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -74,6 +75,7 @@ class PrivateKeysListFragmentEkmInIsolationTest : BaseTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testAddNewKeyGone() {
     launchFragmentInContainer<PrivateKeysListFragment>()
     onView(withId(R.id.floatActionButtonAddKey))

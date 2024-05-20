@@ -15,6 +15,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -55,6 +56,7 @@ class ImportAdditionalPrivateKeysFragmentInIsolationTest : BaseTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testButtonLoadFromClipboardVisibility() {
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))

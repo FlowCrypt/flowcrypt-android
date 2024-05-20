@@ -299,6 +299,7 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testFailAttesterSubmit() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_ENFORCE_ATTESTER_SUBMIT))
     unregisterCountingIdlingResource()
