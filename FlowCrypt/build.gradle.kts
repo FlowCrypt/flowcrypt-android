@@ -370,7 +370,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.16.0")
-  ksp("androidx.annotation:annotation:1.7.1")
+  ksp("androidx.annotation:annotation:1.8.0")
   ksp("androidx.room:room-compiler:2.6.1")
   //ACRA needs the following dependency to use a custom report sender
 
@@ -380,7 +380,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.7.0")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.7.1")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
@@ -403,7 +403,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("org.robolectric:robolectric:4.12.1")
+  testImplementation("org.robolectric:robolectric:4.12.2")
   testImplementation("io.github.classgraph:classgraph:4.8.172")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
@@ -426,10 +426,10 @@ dependencies {
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
   implementation("androidx.test.espresso:espresso-idling-resource:3.5.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-process:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-process:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
   implementation("androidx.room:room-runtime:2.6.1")
   implementation("androidx.room:room-ktx:2.6.1")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
@@ -439,7 +439,7 @@ dependencies {
   implementation("androidx.core:core-ktx:1.13.1")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.9.0")
-  implementation("androidx.fragment:fragment-ktx:1.7.0")
+  implementation("androidx.fragment:fragment-ktx:1.7.1")
   implementation("androidx.work:work-runtime-ktx:2.9.0")
   implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
   implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
@@ -452,9 +452,9 @@ dependencies {
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
-  implementation("com.google.code.gson:gson:2.10.1")
+  implementation("com.google.code.gson:gson:2.11.0")
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-  implementation("com.google.api-client:google-api-client-android:2.5.0")
+  implementation("com.google.api-client:google-api-client-android:2.5.1")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240422-2.0.0")
 
