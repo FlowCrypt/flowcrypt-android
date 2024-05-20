@@ -380,7 +380,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.7.0")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.7.1")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
@@ -426,10 +426,10 @@ dependencies {
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
   implementation("androidx.test.espresso:espresso-idling-resource:3.5.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-process:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-process:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
   implementation("androidx.room:room-runtime:2.6.1")
   implementation("androidx.room:room-ktx:2.6.1")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
@@ -452,9 +452,9 @@ dependencies {
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
-  implementation("com.google.code.gson:gson:2.10.1")
+  implementation("com.google.code.gson:gson:2.11.0")
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-  implementation("com.google.api-client:google-api-client-android:2.5.0")
+  implementation("com.google.api-client:google-api-client-android:2.5.1")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240422-2.0.0")
 
