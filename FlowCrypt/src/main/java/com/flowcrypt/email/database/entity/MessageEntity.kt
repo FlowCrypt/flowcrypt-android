@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isEncrypted
 import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
@@ -327,7 +328,7 @@ data class MessageEntity(
           val isEncrypted: Boolean = if (areAllMsgsEncrypted) {
             true
           } else {
-            EmailUtil.hasEncryptedData(msg.snippet)
+            msg.isEncrypted()
           }
 
           if (onlyEncryptedMsgs && !isEncrypted) {
