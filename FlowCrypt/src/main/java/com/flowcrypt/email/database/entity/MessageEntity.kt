@@ -23,7 +23,7 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isEncrypted
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
@@ -82,6 +82,7 @@ data class MessageEntity(
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
   @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
   @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
+  //todo-denbond7 need to add a new field hasPgp
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -328,7 +329,7 @@ data class MessageEntity(
           val isEncrypted: Boolean = if (areAllMsgsEncrypted) {
             true
           } else {
-            msg.isEncrypted()
+            msg.hasPgp()
           }
 
           if (onlyEncryptedMsgs && !isEncrypted) {

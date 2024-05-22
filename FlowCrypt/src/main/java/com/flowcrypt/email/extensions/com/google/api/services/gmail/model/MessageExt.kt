@@ -12,19 +12,32 @@ import com.google.api.services.gmail.model.Message
 /**
  * @author Denys Bondarenko
  */
-fun Message.isEncrypted(): Boolean {
+fun Message.hasPgp(): Boolean {
   val baseContentType = payload?.headers?.firstOrNull {
     it.name == "Content-Type"
   }?.value?.asContentTypeOrNull()
 
   /**
+   * based on https://datatracker.ietf.org/doc/html/rfc3156#section-5
+   */
+  val isOpenPGPMimeSigned = payload?.parts?.size == 2
+      && "multipart/signed" == baseContentType?.baseType?.lowercase()
+      && baseContentType.getParameter("protocol")?.lowercase() == "application/pgp-signature"
+      && baseContentType.getParameter("micalg")?.lowercase()?.startsWith("pgp-") == true
+
+  /**
    * based on https://datatracker.ietf.org/doc/html/rfc3156#section-4
    */
-  val isPgpMime = payload?.parts?.size == 2
+  val isOpenPGPMimeEncrypted = !isOpenPGPMimeSigned
+      && payload?.parts?.size == 2
       && "multipart/encrypted" == baseContentType?.baseType?.lowercase()
       && baseContentType.getParameter("protocol")?.lowercase() == "application/pgp-encrypted"
 
-  val hasEncryptedParts = payload?.parts?.any { it.isEncrypted() } ?: false
+  val hasEncryptedParts = payload?.parts?.any { it.hasPgp() } ?: false
 
-  return EmailUtil.hasEncryptedData(snippet) || isPgpMime || hasEncryptedParts
+  return EmailUtil.hasEncryptedData(snippet)
+      || EmailUtil.hasSignedData(snippet)
+      || isOpenPGPMimeSigned
+      || isOpenPGPMimeEncrypted
+      || hasEncryptedParts
 }

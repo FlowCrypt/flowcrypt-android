@@ -15,7 +15,7 @@ import org.apache.commons.io.FilenameUtils
  * This checking is based only on comparing file extensions.
  * It doesn't check the file content to be sure 100%
  */
-fun MessagePart.isEncrypted(): Boolean {
-  return parts?.any { it.isEncrypted() } ?: false
+fun MessagePart.hasPgp(): Boolean {
+  return parts?.any { it.hasPgp() } ?: false
       || FilenameUtils.getExtension(filename)?.lowercase() in arrayOf("asc", "pgp")
 }

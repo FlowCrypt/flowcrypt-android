@@ -614,7 +614,11 @@ class EmailUtil {
       } as HashMap<Long, Boolean>
     }
 
-    fun hasEncryptedData(rawMsg: String) = rawMsg.contains("-----BEGIN PGP MESSAGE-----")
+    fun hasEncryptedData(rawMsg: String?) =
+      rawMsg?.contains("-----BEGIN PGP MESSAGE-----") == true
+
+    fun hasSignedData(rawMsg: String?) =
+      rawMsg?.contains("-----BEGIN PGP SIGNED MESSAGE-----") == true
 
     /**
      * Generate a [SearchTerm] for encrypted messages which depends on an input [AccountEntity].
