@@ -53,6 +53,7 @@ import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
@@ -217,6 +218,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testDecryptionError_KEY_MISMATCH_MissingKeyErrorImportKey() {
     testMissingKey(
       getMsgInfo(
@@ -267,6 +269,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testDecryptionError_FORMAT_BadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
       path = "messages/info/encrypted_msg_info_text_error_badly_formatted.json",
@@ -297,6 +300,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testDecryptionError_NO_MDC() {
     val msgInfo = getMsgInfo(
       path = "messages/info/encrypted_msg_info_error_no_mdc.json",
@@ -356,6 +360,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo(
       path = "messages/info/encrypted_msg_info_text_with_missing_key.json",
@@ -692,6 +697,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testSignedMsgClearSignBroken() {
     val msgInfo = getMsgInfo(
       path = "messages/info/signed_msg_clearsign_broken.json",

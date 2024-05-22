@@ -52,8 +52,8 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import okio.GzipSource
 import okio.buffer
-import org.junit.AfterClass
-import org.junit.BeforeClass
+import org.junit.After
+import org.junit.Before
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
@@ -74,6 +74,31 @@ import kotlin.random.Random
  * @author Denys Bondarenko
  */
 abstract class BaseGmailApiTest : BaseComposeScreenTest() {
+  val attachments: MutableList<File> = mutableListOf()
+
+  /**
+   * We need to have a cache of sent files to compare data after sending
+   */
+  val attachmentsDataCache = listOf(
+    "Text attachment 1".toByteArray(), //text data
+    "Text attachment 2".toByteArray(), //text data
+    Random.nextBytes(1024), //binary data 1Mb
+  )
+
+  /**
+   * Due to specific executing(instrumentation tests and cache releasing)
+   * we have to prepare temp files for every test instead of do that for a class only.
+   */
+  @Before
+  fun createTempFiles() {
+    createFilesForCommonAttachments()
+  }
+
+  @After
+  fun deleteTempFiles() {
+    TestGeneralUtil.deleteFiles(attachments)
+  }
+
   protected val accountEntity = AccountDaoManager.getDefaultAccountDao().copy(
     accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
       flags = listOf(
@@ -909,6 +934,26 @@ abstract class BaseGmailApiTest : BaseComposeScreenTest() {
         "--------------vjUmb0D80S09zqu10qP9Vv0s--\n"
   }
 
+  private fun createFilesForCommonAttachments() {
+    attachments.clear()
+    attachments.addAll(
+      listOf(
+        TestGeneralUtil.createFileWithContent(
+          fileName = ATTACHMENT_NAME_1,
+          byteArray = attachmentsDataCache[0]
+        ),
+        TestGeneralUtil.createFileWithContent(
+          fileName = ATTACHMENT_NAME_2,
+          byteArray = attachmentsDataCache[1]
+        ),
+        TestGeneralUtil.createFileWithContent(
+          fileName = ATTACHMENT_NAME_3,
+          byteArray = attachmentsDataCache[2]
+        )
+      )
+    )
+  }
+
   companion object {
     const val EXISTING_MESSAGE_TO_RECIPIENT = "default@flowcrypt.test"
     const val EXISTING_MESSAGE_CC_RECIPIENT = "android@flowcrypt.test"
@@ -990,52 +1035,6 @@ abstract class BaseGmailApiTest : BaseComposeScreenTest() {
         com.google.api.services.gmail.model.Message().apply {
           id = MESSAGE_ID_EXISTING_PGP_MIME
         }
-      )
-    }
-
-    var attachments: MutableList<File> = mutableListOf()
-
-    /**
-     * We need to have a cache of sent files to compare data after sending
-     */
-    var attachmentsDataCache: MutableList<ByteArray> = mutableListOf()
-
-    @BeforeClass
-    @JvmStatic
-    fun setUp() {
-      createFilesForCommonAtts()
-    }
-
-    @AfterClass
-    @JvmStatic
-    fun tearDown() {
-      TestGeneralUtil.deleteFiles(attachments)
-    }
-
-    private fun createFilesForCommonAtts() {
-      attachmentsDataCache.addAll(
-        listOf(
-          "Text attachment 1".toByteArray(), //text data
-          "Text attachment 2".toByteArray(), //text data
-          Random.nextBytes(1024), //binary data 1Mb
-        )
-      )
-
-      attachments.addAll(
-        listOf(
-          TestGeneralUtil.createFileWithContent(
-            fileName = ATTACHMENT_NAME_1,
-            byteArray = attachmentsDataCache[0]
-          ),
-          TestGeneralUtil.createFileWithContent(
-            fileName = ATTACHMENT_NAME_2,
-            byteArray = attachmentsDataCache[1]
-          ),
-          TestGeneralUtil.createFileWithContent(
-            fileName = ATTACHMENT_NAME_3,
-            byteArray = attachmentsDataCache[2]
-          )
-        )
       )
     }
   }

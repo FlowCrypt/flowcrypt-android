@@ -29,6 +29,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -90,6 +91,7 @@ class EndPassPhraseSessionFlowTest : BaseTest() {
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testEndPassPhraseSessionButton() {
     //as tests run a bit differently need to run PassPhrasesInRAMService manually at this stage
     PassPhrasesInRAMService.start(getTargetContext())

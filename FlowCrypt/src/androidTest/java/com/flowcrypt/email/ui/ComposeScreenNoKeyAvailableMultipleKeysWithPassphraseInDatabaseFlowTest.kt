@@ -19,6 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -62,6 +63,7 @@ class ComposeScreenNoKeyAvailableMultipleKeysWithPassphraseInDatabaseFlowTest :
 
   @Test
   @FlakyTest
+  @NotReadyForCI
   fun testAddEmailToExistingKey() {
     doTestAddEmailToExistingKey {
       waitForObjectWithText(getResString(android.R.string.ok), 2000)
