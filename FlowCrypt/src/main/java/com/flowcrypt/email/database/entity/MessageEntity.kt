@@ -224,7 +224,7 @@ data class MessageEntity(
       label: String,
       folder: IMAPFolder,
       msgs: Array<Message>?,
-      hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet(),
+      hasPgpAfterAdditionalSearchSet: Set<Long>,
       isNew: Boolean, areAllMsgsEncrypted: Boolean
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
