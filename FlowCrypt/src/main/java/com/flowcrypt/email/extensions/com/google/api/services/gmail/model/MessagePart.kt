@@ -17,5 +17,5 @@ import org.apache.commons.io.FilenameUtils
  */
 fun MessagePart.hasPgp(): Boolean {
   return parts?.any { it.hasPgp() } ?: false
-      || FilenameUtils.getExtension(filename)?.lowercase() in arrayOf("asc", "pgp")
+      || FilenameUtils.getExtension(filename)?.lowercase() in arrayOf("asc", "pgp", "gpg", "key")
 }

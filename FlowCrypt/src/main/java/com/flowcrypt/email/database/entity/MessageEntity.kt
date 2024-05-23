@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
+import com.flowcrypt.email.extensions.jakarta.mail.hasPgp
 import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
@@ -223,7 +224,7 @@ data class MessageEntity(
       label: String,
       folder: IMAPFolder,
       msgs: Array<Message>?,
-      msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
+      hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet(),
       isNew: Boolean, areAllMsgsEncrypted: Boolean
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
@@ -243,25 +244,20 @@ data class MessageEntity(
 
         for (msg in msgsList) {
           try {
-            var isEncrypted: Boolean? = null
             var isNewTemp = isNew
 
             if (isNotificationDisabled) {
               isNewTemp = false
             }
 
-            val isMsgEncrypted: Boolean? = if (areAllMsgsEncrypted) {
+            val hasPgp = if (areAllMsgsEncrypted) {
               true
             } else {
-              msgsEncryptionStates[folder.getUID(msg)]
+              msg.hasPgp() || hasPgpAfterAdditionalSearchSet.contains(folder.getUID(msg))
             }
 
-            isMsgEncrypted?.let {
-              isEncrypted = it
-
-              if (onlyEncryptedMsgs && !it) {
-                isNewTemp = false
-              }
+            if (onlyEncryptedMsgs && !hasPgp) {
+              isNewTemp = false
             }
 
             messageEntities.add(
@@ -271,7 +267,7 @@ data class MessageEntity(
                 msg = msg,
                 uid = folder.getUID(msg),
                 isNew = isNewTemp,
-                isEncrypted = isEncrypted
+                hasPgp = hasPgp
               )
             )
           } catch (e: MessageRemovedException) {

@@ -74,6 +74,7 @@ import jakarta.mail.internet.MimeMultipart
 import jakarta.mail.search.AndTerm
 import jakarta.mail.search.BodyTerm
 import jakarta.mail.search.FromStringTerm
+import jakarta.mail.search.HeaderTerm
 import jakarta.mail.search.OrTerm
 import jakarta.mail.search.RecipientStringTerm
 import jakarta.mail.search.SearchTerm
@@ -620,17 +621,29 @@ class EmailUtil {
     fun hasSignedData(rawMsg: String?) =
       rawMsg?.contains("-----BEGIN PGP SIGNED MESSAGE-----") == true
 
-    /**
-     * Generate a [SearchTerm] for encrypted messages which depends on an input [AccountEntity].
-     *
-     * @param account An input [AccountEntity]
-     * @return A generated [SearchTerm].
-     */
-    fun genEncryptedMsgsSearchTerm(account: AccountEntity): SearchTerm {
+    fun genPgpThingsSearchTerm(account: AccountEntity): SearchTerm {
       return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
-        GmailRawSearchTerm(GmailApiHelper.PATTERN_SEARCH_ENCRYPTED_MESSAGES)
+        GmailRawSearchTerm(GmailApiHelper.PATTERN_SEARCH_PGP)
       } else {
-        BodyTerm("-----BEGIN PGP MESSAGE-----")
+        OrTerm(
+          arrayOf(
+            AndTerm(
+              arrayOf(
+                BodyTerm("-----BEGIN PGP MESSAGE-----"),
+                BodyTerm("-----END PGP MESSAGE-----"),
+              )
+            ),
+            BodyTerm("-----BEGIN PGP SIGNED MESSAGE-----"),
+            AndTerm(
+              arrayOf(
+                HeaderTerm("Content-Disposition", ".asc"),
+                HeaderTerm("Content-Disposition", ".pgp"),
+                HeaderTerm("Content-Disposition", ".gpg"),
+                HeaderTerm("Content-Disposition", ".key"),
+              )
+            )
+          )
+        )
       }
     }
 
@@ -879,7 +892,7 @@ class EmailUtil {
       val isEncryptedModeEnabled = account.showOnlyEncrypted
 
       if (isEncryptedModeEnabled == true) {
-        val searchTerm = genEncryptedMsgsSearchTerm(account)
+        val searchTerm = genPgpThingsSearchTerm(account)
 
         return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(
             account.accountType,
