@@ -7,7 +7,7 @@
 
 plugins {
   id("com.android.application") version "8.4.1" apply false
-  id("org.jetbrains.kotlin.android") version "1.9.24" apply false
+  id("org.jetbrains.kotlin.android") version "2.0.0" apply false
   id("androidx.navigation.safeargs.kotlin") version "2.7.7" apply false
   id("com.starter.easylauncher") version "6.3.0" apply false
   id("org.jetbrains.kotlin.plugin.parcelize") version "1.9.24" apply false
