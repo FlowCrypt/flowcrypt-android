@@ -124,7 +124,10 @@ class StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlo
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //back to the message details screen
+    //wait for enqueuing an outgoing message and return back to the message details screen
+    waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))
+
+    //back to the messages list screen
     pressBack()
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->

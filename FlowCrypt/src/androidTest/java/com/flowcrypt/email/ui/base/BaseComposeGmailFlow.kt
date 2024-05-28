@@ -301,6 +301,12 @@ abstract class BaseComposeGmailFlow : BaseGmailApiTest() {
       }
     }
 
+    val finalCountOfOutgoingMessages = runBlocking {
+      roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
+    }
+
+    assertEquals(0, finalCountOfOutgoingMessages)
+
     //check that we have one message in the server cache and outbox label is not displayed
     assertEquals(1, sentCache.size)
     onView(withId(R.id.toolbar))
@@ -387,6 +393,7 @@ abstract class BaseComposeGmailFlow : BaseGmailApiTest() {
       )
     ).check(matches(isDisplayed()))
       .perform(scrollTo(), click())
+    Thread.sleep(TimeUnit.SECONDS.toMillis(1))
   }
 
   private fun preparePgpMessageWithMimeContent(): String {
