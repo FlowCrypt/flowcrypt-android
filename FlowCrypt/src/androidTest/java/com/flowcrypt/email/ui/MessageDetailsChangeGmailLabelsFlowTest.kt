@@ -68,8 +68,12 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
             }
 
             assertEquals(
-              LABELS.take(1).map { it.name },
+              LABELS.take(3).map { it.name },
               batchModifyMessagesRequest.removeLabelIds
+            )
+            assertEquals(
+              LABELS.filter { it.name == "Test9" }.map { it.name },
+              batchModifyMessagesRequest.addLabelIds
             )
             return MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
@@ -94,8 +98,9 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
 
   @Test
   fun testLabelsManagement() {
-    lastLabelIds = LABELS.map { it.name }.toMutableList()
-    val details = genIncomingMessageInfo()?.msgEntity
+    val allLabels = initLabelIds()
+    lastLabelIds = (allLabels.take(4) + allLabels.takeLast(1)).toMutableList()
+    val details = genIncomingMessageInfo(labelsIds = lastLabelIds)?.msgEntity
     requireNotNull(details)
     launchActivity(details)
     Thread.sleep(1000)
@@ -114,9 +119,36 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //deselect INBOX label
+    //deselect the first 3 labels
     onView(withId(R.id.recyclerViewLabels))
       .perform(RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(0, click()))
+    onView(withId(R.id.recyclerViewLabels))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(1, click()))
+    onView(withId(R.id.recyclerViewLabels))
+      .perform(RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(2, click()))
+
+    //scroll to the last label
+    onView(withId(R.id.recyclerViewLabels))
+      .perform(
+        RecyclerViewActions.scrollToPosition<ViewHolder>(
+          allLabels.size - 2 //as we don't show INBOX need to make offset == 2)
+        )
+      )
+
+    //scroll to the first label
+    onView(withId(R.id.recyclerViewLabels))
+      .perform(
+        RecyclerViewActions.scrollToPosition<ViewHolder>(0)
+      )
+
+    //select the last label. In our case it will be Test9
+    onView(withId(R.id.recyclerViewLabels))
+      .perform(
+        RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(
+          allLabels.size - 2, //as we don't show INBOX need to make offset == 2
+          click()
+        )
+      )
 
     onView(withText(R.string.change_labels))
       .inRoot(isDialog())
@@ -124,6 +156,11 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
 
     Thread.sleep(3000)
 
-    assertEquals(LABELS.map { it.name }.slice(1..2), lastLabelIds)
+    assertEquals(
+      allLabels.take(1) +
+          allLabels.takeLast(1) +
+          allLabels.filter { it == "Test9" },
+      lastLabelIds
+    )
   }
 }
