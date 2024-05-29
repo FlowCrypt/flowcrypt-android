@@ -61,8 +61,7 @@ import org.junit.runner.RunWith
   bcc = [],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
-  isNew = false,
-  timeoutToWaitSendingInMilliseconds = 15000L
+  isNew = false
 )
 class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =

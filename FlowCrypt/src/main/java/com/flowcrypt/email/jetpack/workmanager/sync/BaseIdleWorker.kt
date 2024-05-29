@@ -82,18 +82,22 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
     localFolder: LocalFolder, remoteFolder: IMAPFolder
   ) = withContext(Dispatchers.IO) {
     if (newMsgs.isNotEmpty()) {
+      //fetch base details
       EmailUtil.fetchMsgs(remoteFolder, newMsgs)
-      val msgsEncryptionStates =
-        EmailUtil.getMsgsEncryptionInfo(accountEntity.showOnlyEncrypted, remoteFolder, newMsgs)
+      //here we do additional search over fetched messages(over the content) to check PGP things
+      val hasPgpAfterAdditionalSearchSet =
+        remoteFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity), newMsgs)
+          .map { remoteFolder.getUID(it) }.toSet()
+
       val msgEntities = MessageEntity.genMessageEntities(
         context = applicationContext,
         email = accountEntity.email,
         label = localFolder.fullName,
         folder = remoteFolder,
         msgs = newMsgs,
-        msgsEncryptionStates = msgsEncryptionStates,
         isNew = !GeneralUtil.isAppForegrounded(),
-        areAllMsgsEncrypted = false
+        areAllMsgsEncrypted = false,
+        hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
       )
 
       processNewMsgs(accountEntity, localFolder, msgEntities)

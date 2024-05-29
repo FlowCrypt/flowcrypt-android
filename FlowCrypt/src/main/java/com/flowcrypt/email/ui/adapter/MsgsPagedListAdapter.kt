@@ -274,7 +274,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         }
 
         binding.imageViewAtts.visibleOrGone(messageEntity.hasAttachments == true)
-        binding.viewIsEncrypted.visibleOrGone(messageEntity.isEncrypted == true)
+        binding.viewHasPgp.visibleOrGone(
+          messageEntity.hasPgp == true || messageEntity.isEncrypted == true
+        )
 
         changeStatusView(messageEntity)
       } else {
@@ -285,7 +287,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         setMargins(
           0,
           0,
-          if (binding.viewIsEncrypted.isVisible || binding.imageViewStatus.isVisible) {
+          if (binding.viewHasPgp.isVisible || binding.imageViewStatus.isVisible) {
             itemView.context.resources.getDimension(R.dimen.default_margin_small).toInt()
           } else {
             0
@@ -516,7 +518,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       binding.textViewSubject.text = null
       binding.textViewDate.text = null
       binding.imageViewAtts.gone()
-      binding.viewIsEncrypted.gone()
+      binding.viewHasPgp.gone()
       binding.imageViewStatus.gone()
 
       changeViewsTypeface(Typeface.NORMAL)
