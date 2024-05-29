@@ -34,7 +34,6 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
-import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
@@ -390,7 +389,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       var msgsCount = 0
 
       if (isEncryptedModeEnabled == true) {
-        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+        foundMsgs = imapFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity))
         foundMsgs?.let {
           msgsCount = foundMsgs.size
         }
@@ -418,7 +417,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         )
       )
       if (end < 1) {
-        handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
+        handleReceivedMsgs(accountEntity, localFolder, imapFolder)
       } else {
         val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
           foundMsgs.copyOfRange(start - 1, end)
@@ -426,14 +425,21 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           imapFolder.getMessages(start, end)
         }
 
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(FetchProfile.Item.ENVELOPE)
-        fetchProfile.add(FetchProfile.Item.FLAGS)
-        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
-        imapFolder.fetch(msgs, fetchProfile)
+        //fetch base details
+        EmailUtil.fetchMsgs(imapFolder, msgs)
 
-        handleReceivedMsgs(accountEntity, localFolder, folder, msgs)
+        //here we do additional search over fetched messages(over the content) to check PGP things
+        val hasPgpAfterAdditionalSearchSet =
+          imapFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity), msgs)
+            .map { imapFolder.getUID(it) }.toSet()
+
+        handleReceivedMsgs(
+          account = accountEntity,
+          localFolder = localFolder,
+          remoteFolder = folder,
+          msgs = msgs,
+          hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
+        )
       }
     }
 
@@ -550,7 +556,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     account: AccountEntity,
     localFolder: LocalFolder,
     remoteFolder: IMAPFolder,
-    msgs: Array<Message>
+    msgs: Array<Message> = emptyArray(),
+    hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet()
   ) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
@@ -563,14 +570,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
-      areAllMsgsEncrypted = isEncryptedModeEnabled
+      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-
-    if (!isEncryptedModeEnabled) {
-      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
-    }
 
     identifyAttachments(msgEntities, msgs, remoteFolder, account, localFolder, roomDatabase)
     updateLocalContactsIfNeeded(remoteFolder, msgs)
@@ -748,19 +752,26 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       )
 
       if (end < 1) {
-        handleSearchResults(accountEntity, localFolder, imapFolder, arrayOf())
+        handleSearchResults(account = accountEntity, remoteFolder = imapFolder)
       } else {
         val bufferedMsgs = Arrays.copyOfRange(foundMsgs, start - 1, end)
 
-        val fetchProfile = FetchProfile()
-        fetchProfile.add(FetchProfile.Item.ENVELOPE)
-        fetchProfile.add(FetchProfile.Item.FLAGS)
-        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
-        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+        //fetch base details
+        EmailUtil.fetchMsgs(imapFolder, bufferedMsgs)
 
-        imapFolder.fetch(bufferedMsgs, fetchProfile)
+//here we do additional search over fetched messages(over the content) to check PGP things
+        val hasPgpAfterAdditionalSearchSet =
+          imapFolder.search(
+            EmailUtil.genPgpThingsSearchTerm(accountEntity),
+            bufferedMsgs
+          ).map { imapFolder.getUID(it) }.toSet()
 
-        handleSearchResults(accountEntity, localFolder, imapFolder, bufferedMsgs)
+        handleSearchResults(
+          account = accountEntity,
+          remoteFolder = imapFolder,
+          msgs = bufferedMsgs,
+          hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
+        )
       }
     }
 
@@ -768,8 +779,10 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   private suspend fun handleSearchResults(
-    account: AccountEntity, localFolder: LocalFolder,
-    remoteFolder: IMAPFolder, msgs: Array<Message>
+    account: AccountEntity,
+    remoteFolder: IMAPFolder,
+    msgs: Array<Message> = emptyArray(),
+    hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet()
   ) = withContext(Dispatchers.IO) {
     val email = account.email
     val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
@@ -782,14 +795,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
-      areAllMsgsEncrypted = isEncryptedModeEnabled
+      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-
-    if (!isEncryptedModeEnabled) {
-      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
-    }
 
     updateLocalContactsIfNeeded(remoteFolder, msgs)
   }
@@ -884,7 +894,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       )
 
       val newMsgsAfterLastInLocalCache = if (accountEntity.showOnlyEncrypted == true) {
-        val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+        val foundMsgs = imapFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity))
 
         val fetchProfile = FetchProfile()
         fetchProfile.add(UIDFolder.FetchProfileItem.UID)
@@ -910,12 +920,20 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         EmailUtil.fetchMsgs(imapFolder, msgs.toTypedArray())
       }
 
+      //here we do additional search over fetched messages(over the content) to check PGP things
+      val hasPgpAfterAdditionalSearchSet =
+        imapFolder.search(
+          EmailUtil.genPgpThingsSearchTerm(accountEntity),
+          newMsgsAfterLastInLocalCache
+        ).map { imapFolder.getUID(it) }.toSet()
+
       handleRefreshedMsgs(
-        accountEntity,
-        localFolder,
-        imapFolder,
-        newMsgsAfterLastInLocalCache,
-        updatedMsgs
+        accountEntity = accountEntity,
+        localFolder = localFolder,
+        remoteFolder = imapFolder,
+        newMsgs = newMsgsAfterLastInLocalCache,
+        hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet,
+        updatedMsgs = updatedMsgs
       )
     }
 
@@ -923,8 +941,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   private suspend fun handleRefreshedMsgs(
-    accountEntity: AccountEntity, localFolder: LocalFolder,
-    remoteFolder: IMAPFolder, newMsgs: Array<Message>,
+    accountEntity: AccountEntity,
+    localFolder: LocalFolder,
+    remoteFolder: IMAPFolder,
+    newMsgs: Array<Message>,
+    hasPgpAfterAdditionalSearchSet: Set<Long>,
     updatedMsgs: Array<Message>
   ) = withContext(Dispatchers.IO) {
     val email = accountEntity.email
@@ -956,14 +977,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       folder = remoteFolder,
       msgs = newCandidates,
       isNew = isNew,
-      areAllMsgsEncrypted = isEncryptedModeEnabled
+      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-
-    if (!isEncryptedModeEnabled) {
-      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
-    }
 
     val updateCandidates =
       EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs)

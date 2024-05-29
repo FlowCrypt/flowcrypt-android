@@ -86,8 +86,10 @@ import javax.net.ssl.SSLException
 class GmailApiHelper {
   companion object {
     const val DEFAULT_USER_ID = "me"
-    const val PATTERN_SEARCH_ENCRYPTED_MESSAGES =
-      "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg"
+    const val PATTERN_SEARCH_PGP =
+      "(\"-----BEGIN PGP MESSAGE-----\" AND \"-----END PGP MESSAGE-----\") " +
+          "OR (\"-----BEGIN PGP SIGNED MESSAGE-----\") " +
+          "OR filename:({asc pgp gpg key})"
 
     const val MESSAGE_RESPONSE_FORMAT_METADATA = "metadata"
 
@@ -266,7 +268,7 @@ class GmailApiHelper {
 
         if (accountEntity.showOnlyEncrypted == true) {
           request.q =
-            (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+            (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
         }
         return@withContext request.execute()
       } else {
@@ -287,7 +289,7 @@ class GmailApiHelper {
 
         if (accountEntity.showOnlyEncrypted == true) {
           request.q =
-            (EmailUtil.genEncryptedMsgsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+            (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
         }
         return@withContext request.execute()
       }

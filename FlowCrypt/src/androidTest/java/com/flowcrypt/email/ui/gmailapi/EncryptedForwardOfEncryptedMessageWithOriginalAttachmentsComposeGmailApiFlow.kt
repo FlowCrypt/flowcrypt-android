@@ -24,7 +24,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -48,6 +47,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -99,7 +99,7 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
       )
 
     //wait the message details rendering
-    Thread.sleep(1000)
+    waitForObjectWithText(getResString(R.string.forward_encrypted), TimeUnit.SECONDS.toMillis(10))
 
     //click on forward
     openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_ENCRYPTED)
@@ -117,7 +117,10 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //back to the message details screen
+    //wait for enqueuing an outgoing message and return back to the message details screen
+    waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))
+
+    //back to the messages list screen
     pressBack()
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->
