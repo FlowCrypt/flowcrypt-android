@@ -288,10 +288,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(applicationContext)) {
-            if (msgEntity.msgState !== MessageState.SENT) {
-              roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+            msgEntity?.let {
+              if (msgEntity.msgState !== MessageState.SENT) {
+                roomDatabase.msgDao()
+                  .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+              }
             }
-
             throw e
           } else {
             val newMsgState = when (e) {
@@ -318,8 +320,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
             }
 
-            roomDatabase.msgDao()
-              .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
+            msgEntity?.let {
+              roomDatabase.msgDao()
+                .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
+            }
           }
 
           delay(5000)
