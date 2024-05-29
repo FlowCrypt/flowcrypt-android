@@ -58,7 +58,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
         val cachedUIDSet = mapOfUIDAndMsgFlags.keys.toSet()
 
         if (accountEntity.showOnlyEncrypted == true) {
-          val foundMsgs = remoteFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+          val foundMsgs = remoteFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity))
           val fetchProfile = FetchProfile().apply {
             add(UIDFolder.FetchProfileItem.UID)
           }
