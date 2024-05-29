@@ -50,6 +50,7 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import jakarta.mail.internet.MimeMultipart
+import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -70,6 +71,7 @@ import java.net.HttpURLConnection
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -86,8 +88,8 @@ abstract class BaseComposeGmailFlow : BaseGmailApiTest() {
     openComposeScreenAndFillDataIfNeeded()
   }
 
-  open fun prepareRecipientsForTest(): List<RecipientWithPubKeys>{
-   return listOf(
+  open fun prepareRecipientsForTest(): List<RecipientWithPubKeys> {
+    return listOf(
       RecipientWithPubKeys(
         RecipientEntity(
           email = accountEntity.email,
@@ -283,7 +285,27 @@ abstract class BaseComposeGmailFlow : BaseGmailApiTest() {
     //need to wait some time while the app send a message
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
-    Thread.sleep(outgoingMessageConfiguration.timeoutToWaitSendingInMilliseconds)
+
+    var timeToWaitForSending = outgoingMessageConfiguration.timeoutToWaitSendingInMilliseconds
+    while (timeToWaitForSending > 0) {
+      val countOfOutgoingMessages = runBlocking {
+        roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
+      }
+      if (countOfOutgoingMessages == 0) {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1))
+        break
+      } else {
+        val step = TimeUnit.SECONDS.toMillis(1)
+        timeToWaitForSending -= step
+        Thread.sleep(step)
+      }
+    }
+
+    val finalCountOfOutgoingMessages = runBlocking {
+      roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
+    }
+
+    assertEquals(0, finalCountOfOutgoingMessages)
 
     //check that we have one message in the server cache and outbox label is not displayed
     assertEquals(1, sentCache.size)
@@ -371,6 +393,7 @@ abstract class BaseComposeGmailFlow : BaseGmailApiTest() {
       )
     ).check(matches(isDisplayed()))
       .perform(scrollTo(), click())
+    Thread.sleep(TimeUnit.SECONDS.toMillis(1))
   }
 
   private fun preparePgpMessageWithMimeContent(): String {

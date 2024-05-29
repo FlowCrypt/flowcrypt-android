@@ -87,8 +87,7 @@ import java.util.Properties
     PasswordProtectedEncryptedComposeGmailApiFlow.BCC_RECIPIENT_WITHOUT_PUBLIC_KEY
   ],
   message = BaseComposeScreenTest.MESSAGE,
-  subject = BaseComposeScreenTest.SUBJECT,
-  timeoutToWaitSendingInMilliseconds = 10000
+  subject = BaseComposeScreenTest.SUBJECT
 )
 class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
 

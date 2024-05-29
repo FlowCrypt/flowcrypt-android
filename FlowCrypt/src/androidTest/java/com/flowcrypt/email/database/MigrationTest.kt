@@ -48,6 +48,7 @@ class MigrationTest {
     FlowCryptRoomDatabase.MIGRATION_40_41,
     FlowCryptRoomDatabase.MIGRATION_41_42,
     FlowCryptRoomDatabase.Migration42to43(InstrumentationRegistry.getInstrumentation().targetContext),
+    FlowCryptRoomDatabase.MIGRATION_43_44,
   )
 
   @get:Rule

@@ -105,12 +105,12 @@
         android:contentDescription="@string/security"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/textViewSubject"
-        app:layout_constraintEnd_toStartOf="@+id/viewIsEncrypted"
+        app:layout_constraintEnd_toStartOf="@+id/viewHasPgp"
         app:layout_constraintTop_toTopOf="@+id/textViewSubject"
         tools:src="@drawable/ic_archive_blue_16dp" />
 
     <ImageView
-        android:id="@+id/viewIsEncrypted"
+        android:id="@+id/viewHasPgp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/security"

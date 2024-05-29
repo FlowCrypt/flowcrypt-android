@@ -49,6 +49,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -62,8 +63,7 @@ import org.junit.runner.RunWith
   bcc = [BaseGmailApiTest.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
   subject = "",
-  isNew = false,
-  timeoutToWaitSendingInMilliseconds = 15000L
+  isNew = false
 )
 class StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
   override val mockWebServerRule =
@@ -101,7 +101,7 @@ class StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlo
       )
 
     //wait the message details rendering
-    Thread.sleep(1000)
+    waitForObjectWithText(getResString(R.string.forward_encrypted), TimeUnit.SECONDS.toMillis(10))
 
     //click on forward
     openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_ENCRYPTED)
@@ -124,7 +124,10 @@ class StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlo
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //back to the message details screen
+    //wait for enqueuing an outgoing message and return back to the message details screen
+    waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))
+
+    //back to the messages list screen
     pressBack()
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->
