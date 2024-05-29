@@ -70,9 +70,9 @@ class GmailApiLabelsWithChoiceListAdapter :
     fun bindTo(item: LabelWithChoice, onLabelCheckedListener: OnLabelCheckedListener) {
       itemView.setOnClickListener { binding.checkBox.toggle() }
       binding.textViewLabel.text = item.name
+      (binding.checkBox as? MaterialCheckBox)?.clearOnCheckedStateChangedListeners()
       (binding.checkBox as? MaterialCheckBox)?.checkedState =
         statesSessionMap[item.id] ?: MaterialCheckBox.STATE_UNCHECKED
-      (binding.checkBox as? MaterialCheckBox)?.clearOnCheckedStateChangedListeners()
       (binding.checkBox as? MaterialCheckBox)?.addOnCheckedStateChangedListener { checkBox, state ->
         val finalState = if (state == MaterialCheckBox.STATE_CHECKED
           && statesSessionMap[item.id] == MaterialCheckBox.STATE_UNCHECKED
