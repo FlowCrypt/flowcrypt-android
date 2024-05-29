@@ -447,7 +447,7 @@ dependencies {
   implementation("androidx.webkit:webkit:1.11.0")
 
   implementation("com.google.android.gms:play-services-base:18.4.0")
-  implementation("com.google.android.gms:play-services-auth:21.1.1")
+  implementation("com.google.android.gms:play-services-auth:21.2.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
 
@@ -456,7 +456,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.5.1")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20240422-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
 
   implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
