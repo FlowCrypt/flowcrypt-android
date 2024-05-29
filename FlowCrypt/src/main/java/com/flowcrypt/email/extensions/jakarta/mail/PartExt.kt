@@ -9,8 +9,9 @@ package com.flowcrypt.email.extensions.jakarta.mail
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
+import jakarta.mail.Multipart
 import jakarta.mail.Part
-import jakarta.mail.internet.ContentType
+import org.apache.commons.io.FilenameUtils
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -88,4 +89,30 @@ fun Part.isOpenPGPMimeEncrypted(): Boolean {
 fun Part.hasPgpThings(): Boolean {
   val detectedBlocks = RawBlockParser.detectBlocks(this)
   return detectedBlocks.any { it.type in RawBlockParser.PGP_BLOCK_TYPES }
+}
+
+fun Part.hasPgp(): Boolean {
+  val hasPartWithPgp = when {
+    isMultipart() -> {
+      val multipart = content as? Multipart
+      var hasPgpInChild = false
+      for (index in 0 until (multipart?.count ?: 0)) {
+        hasPgpInChild = multipart?.getBodyPart(index)?.hasPgp() ?: false
+        if (hasPgpInChild) {
+          break
+        }
+      }
+      hasPgpInChild
+    }
+
+    isAttachment() -> {
+      FilenameUtils.getExtension(fileName)?.lowercase() in arrayOf("asc", "pgp", "key")
+    }
+
+    else -> false
+  }
+
+  return isOpenPGPMimeSigned()
+      || isOpenPGPMimeEncrypted()
+      || hasPartWithPgp
 }

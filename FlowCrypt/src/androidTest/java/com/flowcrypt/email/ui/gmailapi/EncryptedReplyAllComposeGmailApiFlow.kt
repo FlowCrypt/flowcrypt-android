@@ -47,6 +47,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -91,11 +92,14 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
-      .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
-        POSITION_EXISTING_ENCRYPTED, click()))
+      .perform(
+        RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
+          POSITION_EXISTING_ENCRYPTED, click()
+        )
+      )
 
     //wait the message details rendering
-    Thread.sleep(1000)
+    waitForObjectWithText(getResString(R.string.reply_all_encrypted), TimeUnit.SECONDS.toMillis(10))
 
     //click on replyAll
     openReplyScreen(R.id.layoutReplyAllButton, SUBJECT_EXISTING_ENCRYPTED)
@@ -113,7 +117,10 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //back to the message details screen
+    //wait for enqueuing an outgoing message and return back to the message details screen
+    waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))
+
+    //back to the messages list screen
     pressBack()
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->

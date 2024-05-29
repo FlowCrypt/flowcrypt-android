@@ -23,6 +23,8 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
+import com.flowcrypt.email.extensions.jakarta.mail.hasPgp
 import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
@@ -81,6 +83,7 @@ data class MessageEntity(
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
   @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
   @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
+  @ColumnInfo(name = "has_pgp", defaultValue = "0") val hasPgp: Boolean? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -179,16 +182,8 @@ data class MessageEntity(
     } else if (other.password != null) return false
     if (draftId != other.draftId) return false
     if (labelIds != other.labelIds) return false
-    if (from != other.from) return false
-    if (replyToAddress != other.replyToAddress) return false
-    if (to != other.to) return false
-    if (cc != other.cc) return false
-    if (msgState != other.msgState) return false
-    if (isSeen != other.isSeen) return false
-    if (isDraft != other.isDraft) return false
-    if (isOutboxMsg != other.isOutboxMsg) return false
-    if (uidAsHEX != other.uidAsHEX) return false
-    return isPasswordProtected == other.isPasswordProtected
+    if (hasPgp != other.hasPgp) return false
+    return true
   }
 
   override fun hashCode(): Int {
@@ -215,16 +210,7 @@ data class MessageEntity(
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + (draftId?.hashCode() ?: 0)
     result = 31 * result + (labelIds?.hashCode() ?: 0)
-    result = 31 * result + from.hashCode()
-    result = 31 * result + replyToAddress.hashCode()
-    result = 31 * result + to.hashCode()
-    result = 31 * result + cc.hashCode()
-    result = 31 * result + msgState.hashCode()
-    result = 31 * result + isSeen.hashCode()
-    result = 31 * result + isDraft.hashCode()
-    result = 31 * result + isOutboxMsg.hashCode()
-    result = 31 * result + uidAsHEX.hashCode()
-    result = 31 * result + isPasswordProtected.hashCode()
+    result = 31 * result + (hasPgp?.hashCode() ?: 0)
     return result
   }
 
@@ -233,9 +219,12 @@ data class MessageEntity(
     const val LABEL_IDS_SEPARATOR = " "
 
     fun genMessageEntities(
-      context: Context, email: String, label: String, folder: IMAPFolder,
+      context: Context,
+      email: String,
+      label: String,
+      folder: IMAPFolder,
       msgs: Array<Message>?,
-      msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
+      hasPgpAfterAdditionalSearchSet: Set<Long>,
       isNew: Boolean, areAllMsgsEncrypted: Boolean
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
@@ -255,31 +244,30 @@ data class MessageEntity(
 
         for (msg in msgsList) {
           try {
-            var isEncrypted: Boolean? = null
             var isNewTemp = isNew
 
             if (isNotificationDisabled) {
               isNewTemp = false
             }
 
-            val isMsgEncrypted: Boolean? = if (areAllMsgsEncrypted) {
+            val hasPgp = if (areAllMsgsEncrypted) {
               true
             } else {
-              msgsEncryptionStates[folder.getUID(msg)]
+              msg.hasPgp() || hasPgpAfterAdditionalSearchSet.contains(folder.getUID(msg))
             }
 
-            isMsgEncrypted?.let {
-              isEncrypted = it
-
-              if (onlyEncryptedMsgs && !it) {
-                isNewTemp = false
-              }
+            if (onlyEncryptedMsgs && !hasPgp) {
+              isNewTemp = false
             }
 
             messageEntities.add(
               genMsgEntity(
-                email, label, msg, folder.getUID(msg),
-                isNewTemp, isEncrypted
+                email = email,
+                label = label,
+                msg = msg,
+                uid = folder.getUID(msg),
+                isNew = isNewTemp,
+                hasPgp = hasPgp
               )
             )
           } catch (e: MessageRemovedException) {
@@ -324,13 +312,13 @@ data class MessageEntity(
             isNewTemp = false
           }
 
-          val isEncrypted: Boolean = if (areAllMsgsEncrypted) {
+          val hasPgp: Boolean = if (areAllMsgsEncrypted) {
             true
           } else {
-            EmailUtil.hasEncryptedData(msg.snippet)
+            msg.hasPgp()
           }
 
-          if (onlyEncryptedMsgs && !isEncrypted) {
+          if (onlyEncryptedMsgs && !hasPgp) {
             isNewTemp = false
           }
 
@@ -342,7 +330,7 @@ data class MessageEntity(
               msg = mimeMessage,
               uid = msg.uid,
               isNew = isNewTemp,
-              isEncrypted = isEncrypted,
+              hasPgp = hasPgp,
               hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
             ).copy(
               threadId = msg.threadId,
@@ -375,10 +363,15 @@ data class MessageEntity(
      * [Message] object
      */
     fun genMsgEntity(
-      email: String, label: String, msg: Message, uid: Long, isNew: Boolean,
-      isEncrypted: Boolean? = null, hasAttachments: Boolean? = null
-    ):
-        MessageEntity {
+      email: String,
+      label: String,
+      msg: Message,
+      uid: Long,
+      isNew: Boolean,
+      isEncrypted: Boolean? = null,
+      hasPgp: Boolean? = null,
+      hasAttachments: Boolean? = null
+    ): MessageEntity {
       return MessageEntity(email = email,
         folder = label,
         uid = uid,
@@ -396,7 +389,8 @@ data class MessageEntity(
         } else {
           null
         },
-        isEncrypted = isEncrypted
+        isEncrypted = isEncrypted,
+        hasPgp = hasPgp
       )
     }
 
