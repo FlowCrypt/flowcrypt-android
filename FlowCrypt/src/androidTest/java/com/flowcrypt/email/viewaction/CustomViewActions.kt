@@ -69,4 +69,11 @@ object CustomViewActions {
       }
     }
   }
+
+  /**
+   * @return a [WaitUntilGoneAction] instance created with the given [timeout] parameter.
+   */
+  fun waitUntilGone(timeout: Long): ViewAction {
+    return WaitUntilGoneAction(timeout)
+  }
 }

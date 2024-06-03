@@ -33,6 +33,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.viewaction.CustomViewActions.waitUntilGone
 import com.google.api.client.json.gson.GsonFactory
 import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
@@ -48,6 +49,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/2050
@@ -210,16 +212,18 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     //open created draft and send
     onView(withId(R.id.recyclerViewMsgs))
       .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
-    Thread.sleep(1000)
+    waitForObjectWithText(MESSAGE_SUBJECT_FIRST, TimeUnit.SECONDS.toMillis(2))
     onView(withId(R.id.imageButtonEditDraft))
       .check(matches(isDisplayed()))
       .perform(click())
+    //need to wait while the message details will be rendered
+    Thread.sleep(1000)
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
 
     //need to wait while a message will be sent
-    Thread.sleep(10000)
+    onView(withText(R.string.sending_message)).perform(waitUntilGone(TimeUnit.SECONDS.toMillis(10)))
 
     //check that we have a new sent message in the cache
     assertEquals(1, sentCache.size)
