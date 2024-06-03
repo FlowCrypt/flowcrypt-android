@@ -223,7 +223,12 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
       .perform(click())
 
     //need to wait while a message will be sent
-    onView(withText(R.string.sending_message)).perform(waitUntilGone(TimeUnit.SECONDS.toMillis(10)))
+    onView(withText(R.string.sending_message)).perform(
+      waitUntilGone(
+        text = getResString(R.string.sending_message),
+        timeout = TimeUnit.SECONDS.toMillis(10)
+      )
+    )
 
     //check that we have a new sent message in the cache
     assertEquals(1, sentCache.size)
