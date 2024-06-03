@@ -9,6 +9,7 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -109,6 +110,9 @@ abstract class BaseComposeScreenTest : BaseTest() {
         ).perform(replaceText(recipient.address), pressImeActionButton(), closeSoftKeyboard())
       }
     }
+
+    Thread.sleep(1000)
+    Espresso.closeSoftKeyboard()
 
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
