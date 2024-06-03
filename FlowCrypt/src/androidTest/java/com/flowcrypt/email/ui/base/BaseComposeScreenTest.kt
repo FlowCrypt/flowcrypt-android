@@ -9,13 +9,13 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.action.ViewActions.typeTextIntoFocusedView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
@@ -110,12 +110,15 @@ abstract class BaseComposeScreenTest : BaseTest() {
       }
     }
 
+    Thread.sleep(1000)
+    Espresso.closeSoftKeyboard()
+
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
       .perform(
         scrollTo(),
         click(),
-        typeText(subject),
+        replaceText(subject),
         pressImeActionButton(),
         closeSoftKeyboard()
       )
