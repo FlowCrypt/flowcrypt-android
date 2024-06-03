@@ -95,7 +95,7 @@ class StandardWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
     doAfterSendingChecks { _, _, mimeMessage ->
       val multipart = mimeMessage.content as MimeMultipart
       assertEquals(attachments.size + 1, multipart.count)
-      assertEquals(MESSAGE, multipart.getBodyPart(0).content as String)
+      assertEquals(MESSAGE, multipart.getBodyPart(0).content as String, multipart.getBodyPart(0).content)
 
       attachments.forEachIndexed { index, file ->
         val attachmentPart = multipart.getBodyPart(index + 1)
