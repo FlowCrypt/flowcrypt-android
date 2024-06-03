@@ -427,9 +427,9 @@ dependencies {
   implementation("androidx.test.espresso:espresso-idling-resource:3.5.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
   implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
-  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
-  implementation("androidx.lifecycle:lifecycle-process:2.8.0")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.1")
+  implementation("androidx.lifecycle:lifecycle-process:2.8.1")
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.1")
   implementation("androidx.room:room-runtime:2.6.1")
   implementation("androidx.room:room-ktx:2.6.1")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
@@ -446,7 +446,7 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
   implementation("androidx.webkit:webkit:1.11.0")
 
-  implementation("com.google.android.gms:play-services-base:18.4.0")
+  implementation("com.google.android.gms:play-services-base:18.5.0")
   implementation("com.google.android.gms:play-services-auth:21.2.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
