@@ -69,4 +69,11 @@ object CustomViewActions {
       }
     }
   }
+
+  /**
+   * @return a [WaitUntilTextGoneAction] instance created with the given [timeout] parameter.
+   */
+  fun waitUntilGone(text: String, timeout: Long): ViewAction {
+    return WaitUntilTextGoneAction(text, timeout)
+  }
 }

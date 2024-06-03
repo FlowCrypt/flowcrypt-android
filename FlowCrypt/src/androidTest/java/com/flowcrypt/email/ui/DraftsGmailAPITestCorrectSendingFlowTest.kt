@@ -12,6 +12,7 @@ import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -20,6 +21,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -37,17 +39,18 @@ import com.google.api.client.json.gson.GsonFactory
 import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMultipart
+import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/2050
@@ -160,13 +163,10 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
-  @Before
-  fun clearSentCache() {
-    sentCache.clear()
-  }
-
   @Test
+  @FlakyTest
   fun testCorrectDraftsSending() {
+    sentCache.clear()
     moveToDraftFolder()
 
     //create a new draft
@@ -186,7 +186,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
       )
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
     Thread.sleep(DraftViewModel.DELAY_TIMEOUT * 2)
@@ -210,16 +210,37 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     //open created draft and send
     onView(withId(R.id.recyclerViewMsgs))
       .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
-    Thread.sleep(1000)
+    waitForObjectWithText(MESSAGE_SUBJECT_FIRST, TimeUnit.SECONDS.toMillis(2))
     onView(withId(R.id.imageButtonEditDraft))
       .check(matches(isDisplayed()))
       .perform(click())
+    //need to wait while the message details will be rendered
+    Thread.sleep(1000)
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
 
     //need to wait while a message will be sent
-    Thread.sleep(10000)
+    var timeToWaitForSending = TimeUnit.SECONDS.toMillis(10)
+    while (timeToWaitForSending > 0) {
+      val countOfOutgoingMessages = runBlocking {
+        roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
+      }
+      if (countOfOutgoingMessages == 0) {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1))
+        break
+      } else {
+        val step = TimeUnit.SECONDS.toMillis(1)
+        timeToWaitForSending -= step
+        Thread.sleep(step)
+      }
+    }
+
+    val finalCountOfOutgoingMessages = runBlocking {
+      roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
+    }
+
+    assertEquals(0, finalCountOfOutgoingMessages)
 
     //check that we have a new sent message in the cache
     assertEquals(1, sentCache.size)
