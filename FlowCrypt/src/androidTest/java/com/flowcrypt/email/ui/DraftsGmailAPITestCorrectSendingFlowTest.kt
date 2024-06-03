@@ -31,13 +31,10 @@ import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
-import com.flowcrypt.email.rules.Repeat
-import com.flowcrypt.email.rules.RepeatRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
-import com.flowcrypt.email.viewaction.CustomViewActions.waitUntilGone
 import com.google.api.client.json.gson.GsonFactory
 import jakarta.mail.Message
 import jakarta.mail.internet.InternetAddress
@@ -47,7 +44,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -156,9 +152,6 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     })
 
   @get:Rule
-  val repeatRule: RepeatRule = RepeatRule()
-
-  @get:Rule
   var ruleChain: TestRule =
     RuleChain.outerRule(RetryRule.DEFAULT)
       .around(ClearAppSettingsRule())
@@ -172,7 +165,6 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
 
   @Test
   @FlakyTest
-  @Repeat(20)
   fun testCorrectDraftsSending() {
     sentCache.clear()
     moveToDraftFolder()
