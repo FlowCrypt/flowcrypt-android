@@ -31,8 +31,6 @@ import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
-import com.flowcrypt.email.rules.Repeat
-import com.flowcrypt.email.rules.RepeatRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
@@ -73,9 +71,6 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
     })
 
   @get:Rule
-  val repeatRule: RepeatRule = RepeatRule()
-
-  @get:Rule
   var ruleChain: TestRule =
     RuleChain.outerRule(RetryRule.DEFAULT)
       .around(ClearAppSettingsRule())
@@ -90,7 +85,6 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   @Test
   @FlakyTest
-  @Repeat(20)
   fun testSending() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))

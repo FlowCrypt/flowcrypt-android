@@ -507,6 +507,8 @@ abstract class BaseComposeGmailFlow : BaseGmailApiTest() {
       .perform(click())
 
     fillData(outgoingMessageConfiguration)
+
+    Thread.sleep(TimeUnit.SECONDS.toMillis(1))
   }
 
   protected fun fillData(outgoingMessageConfiguration: OutgoingMessageConfiguration) {
