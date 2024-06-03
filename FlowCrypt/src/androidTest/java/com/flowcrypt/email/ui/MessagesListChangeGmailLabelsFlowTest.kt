@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui
 
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import androidx.room.Ignore
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
@@ -17,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -48,13 +48,13 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@org.junit.Ignore("Should be fixed before the next release")
 class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
   private var lastLabelIds = mutableListOf<String>()
 
@@ -113,10 +113,11 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  @FlakyTest
   fun testLabelsManagement() {
     lastLabelIds.clear()
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))
 
     //click on the first avatar to open ActionMenu
     onView(withId(R.id.recyclerViewMsgs))
@@ -135,6 +136,13 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
         )
       )
 
+    val existingMessageEntities = runBlocking {
+      roomDatabase.msgDao().getMsgsSuspend(
+        addAccountToDatabaseRule.account.email,
+        JavaEmailConstants.FOLDER_INBOX
+      )
+    }
+
     //open dialog from the Action Bar menu
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.change_labels))
@@ -151,7 +159,7 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
       .inRoot(isDialog())
       .perform(click())
 
-    Thread.sleep(3000)
+    waitForObjectWithText(CUSTOM_LABELS.first().name, TimeUnit.SECONDS.toMillis(10))
 
     //check API call results
     assertEquals(
@@ -166,7 +174,7 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
       expectedLabelIds,
       runBlocking {
         FlowCryptRoomDatabase.getDatabase(getTargetContext()).msgDao().getMsgById(
-          POSITION_EXISTING_ENCRYPTED + 1L
+          requireNotNull(existingMessageEntities.first { it.subject == SUBJECT_EXISTING_ENCRYPTED }.id)
         )
       }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
     )
@@ -174,7 +182,7 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
       expectedLabelIds,
       runBlocking {
         FlowCryptRoomDatabase.getDatabase(getTargetContext()).msgDao().getMsgById(
-          POSITION_EXISTING_STANDARD + 1L
+          requireNotNull(existingMessageEntities.first { it.subject == SUBJECT_EXISTING_STANDARD }.id)
         )
       }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
     )
@@ -183,7 +191,7 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
       listOf(JavaEmailConstants.FOLDER_INBOX),
       runBlocking {
         FlowCryptRoomDatabase.getDatabase(getTargetContext()).msgDao().getMsgById(
-          POSITION_EXISTING_PGP_MIME + 1L
+          requireNotNull(existingMessageEntities.first { it.subject == SUBJECT_EXISTING_PGP_MIME }.id)
         )
       }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
     )
