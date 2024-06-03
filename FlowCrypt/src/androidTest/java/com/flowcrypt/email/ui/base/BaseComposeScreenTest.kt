@@ -16,6 +16,7 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.action.ViewActions.typeTextIntoFocusedView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
@@ -118,7 +119,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
       .perform(
         scrollTo(),
         click(),
-        replaceText(subject),
+        typeText(subject),
         pressImeActionButton(),
         closeSoftKeyboard()
       )
