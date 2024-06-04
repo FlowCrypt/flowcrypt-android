@@ -426,7 +426,7 @@ dependencies {
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
   implementation("androidx.test.espresso:espresso-idling-resource:3.5.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.1")
   implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.1")
   implementation("androidx.lifecycle:lifecycle-process:2.8.1")
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.1")
@@ -454,7 +454,7 @@ dependencies {
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
   implementation("com.google.code.gson:gson:2.11.0")
   //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
-  implementation("com.google.api-client:google-api-client-android:2.5.1")
+  implementation("com.google.api-client:google-api-client-android:2.6.0")
   //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
 
