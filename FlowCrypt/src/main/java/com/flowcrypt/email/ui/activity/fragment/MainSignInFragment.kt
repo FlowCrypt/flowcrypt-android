@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
 import android.content.Intent
-import android.content.IntentSender.SendIntentException
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -106,16 +105,17 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private var useStartTlsForSmtp = false
 
   private val forActivityResultSignIn = registerForActivityResult(
-    ActivityResultContracts.StartActivityForResult()
+    ActivityResultContracts.StartIntentSenderForResult()
   ) { result: ActivityResult ->
-    handleSignInResult(result.resultCode, GoogleSignIn.getSignedInAccountFromIntent(result.data))
+    toast("autorized!")
+    //handleSignIn(result.resultCode)
   }
 
   private val forActivityResultSignInError = registerForActivityResult(
     ActivityResultContracts.StartActivityForResult()
   ) { result: ActivityResult ->
     if (result.resultCode == Activity.RESULT_OK) {
-      signInWithGmail()
+      signInWithGoogle()
     }
   }
 
@@ -183,7 +183,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       importCandidates.clear()
-      signInWithGmail()
+      signInWithGoogle()
     }
 
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
@@ -218,7 +218,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun signInWithGmail() {
+  private fun signInWithGoogle() {
     cachedGoogleIdTokenCredential = null
 
     val getSignInWithGoogleOption =
@@ -239,7 +239,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           request = getCredentialRequest
         )
         withContext(Dispatchers.Main) {
-          handleSignIn(getCredentialResponse)
+          handleAuthentication(getCredentialResponse)
         }
       } catch (e: Exception) {
         e.printStackTraceIfDebugOnly()
@@ -255,68 +255,139 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {
-    try {
-      if (task.isSuccessful) {
-        cachedGoogleSignInAccount = task.getResult(ApiException::class.java)
+  private fun handleAuthentication(getCredentialResponse: GetCredentialResponse) {
+    when (val credential = getCredentialResponse.credential) {
+      is CustomCredential -> {
+        if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+          try {
+            cachedGoogleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+            val account = cachedGoogleIdTokenCredential?.id ?: return
+            cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
-        val account = cachedGoogleSignInAccount?.account?.name ?: return
-        cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
+            val publicEmailDomains = EmailUtil.getPublicEmailDomains()
+            val domain = EmailUtil.getDomain(account)
+            if (domain in publicEmailDomains) {
+              @Suppress("KotlinConstantConditions")
+              if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+                cachedGoogleIdTokenCredential = null
+                showInfoDialog(
+                  dialogTitle = "",
+                  dialogMsg = getString(
+                    R.string.enterprise_does_not_support_pub_domains,
+                    getString(R.string.app_name),
+                    domain
+                  ),
+                  isCancelable = true
+                )
+              } else {
+                val idToken = cachedGoogleIdTokenCredential?.idToken
+                if (idToken == null) {
+                  showInfoDialog(
+                    dialogTitle = "",
+                    dialogMsg = getString(
+                      R.string.error_occurred_with_details_please_try_again,
+                      "GoogleIdTokenCredential.idToken == null"
+                    ),
+                    isCancelable = true
+                  )
+                } else {
+                  val authorizationRequest: AuthorizationRequest = AuthorizationRequest.builder()
+                    .setRequestedScopes(listOf(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))).build()
+                  Identity.getAuthorizationClient(requireContext())
+                    .authorize(authorizationRequest)
+                    .addOnSuccessListener { authorizationResult ->
+                      if (authorizationResult.hasResolution()) {
+                        // Access needs to be granted by the user.
+                        // At this stage the grant access to Gmail API screen should be displayed
+                        val pendingIntent = authorizationResult.pendingIntent
 
-        val publicEmailDomains = EmailUtil.getPublicEmailDomains()
-        val domain = EmailUtil.getDomain(account)
-        if (domain in publicEmailDomains) {
-          if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-            cachedGoogleSignInAccount = null
-            showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = getString(
-                R.string.enterprise_does_not_support_pub_domains,
-                getString(R.string.app_name),
-                domain
-              ),
-              isCancelable = true
-            )
-          } else {
-            val idToken = cachedGoogleSignInAccount?.idToken
-            if (idToken == null) {
-              showInfoDialog(
-                dialogTitle = "",
-                dialogMsg = getString(
-                  R.string.error_occurred_with_details_please_try_again,
-                  "GoogleSignInAccount.idToken == null"
-                ),
-                isCancelable = true
-              )
+                        if (pendingIntent != null) {
+                          try {
+                            forActivityResultSignIn.launch(
+                              IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+                            )
+                          } catch (e: Exception) {
+                            //need to handle this case
+                            Log.e(TAG, "Couldn't start Authorization UI: " + e.localizedMessage)
+                          }
+                        } else {
+                          //need to handle this case
+                        }
+                      } else {
+                        val oldToken = idToken
+                        val newToken = authorizationResult.toGoogleSignInAccount()?.idToken
+                        val accesToken = authorizationResult.accessToken
+
+                        println(oldToken + newToken + accesToken)
+                        // Access already granted, continue with user action
+                        clientConfigurationViewModel.fetchClientConfiguration(
+                          idToken = accesToken!!,
+                          baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
+                          domain = domain
+                        )
+                      }
+                    }.addOnFailureListener { exception ->
+                      toast("addOnFailureListener")
+                      Log.e(
+                        TAG,
+                        "Failed to authorize",
+                        exception
+                      )
+                    }
+
+                  /*clientConfigurationViewModel.fetchClientConfiguration(
+                    idToken = idToken,
+                    baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
+                    domain = domain
+                  )*/
+                }
+              }
             } else {
-              clientConfigurationViewModel.fetchClientConfiguration(
-                idToken = idToken,
-                baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
-                domain = domain
-              )
+              val authorizationRequest: AuthorizationRequest = AuthorizationRequest.builder()
+                .setRequestedScopes(listOf(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))).build()
+              Identity.getAuthorizationClient(requireContext())
+                .authorize(authorizationRequest)
+                .addOnSuccessListener { authorizationResult ->
+                  if (authorizationResult.hasResolution()) {
+                    // Access needs to be granted by the user.
+                    // At this stage the grant access to Gmail API screen should be displayed
+                    val pendingIntent = authorizationResult.pendingIntent
+
+                    if (pendingIntent != null) {
+                      try {
+                        forActivityResultSignIn.launch(
+                          IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+                        )
+                      } catch (e: Exception) {
+                        //need to handle this case
+                        Log.e(TAG, "Couldn't start Authorization UI: " + e.localizedMessage)
+                      }
+                    } else {
+                      //need to handle this case
+                    }
+                  } else {
+                    // Access already granted, continue with user action
+                    checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
+                  }
+                }.addOnFailureListener { exception ->
+                  toast("addOnFailureListener")
+                  Log.e(
+                    TAG,
+                    "Failed to authorize",
+                    exception
+                  )
+                }
             }
+          } catch (e: GoogleIdTokenParsingException) {
+            Log.e(TAG, "Received an invalid google id token response", e)
           }
         } else {
-          checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
+          toast("Unsupported credentials")
         }
-      } else {
-        val error = task.exception
-
-        if (error is ApiException) {
-          throw error
-        }
-
-        showInfoSnackbar(
-          msgText = error?.message ?: error?.javaClass?.simpleName
-          ?: getString(R.string.unknown_error)
-        )
       }
-    } catch (e: ApiException) {
-      val msg = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
-      if (resultCode == Activity.RESULT_OK) {
-        showInfoSnackbar(msgText = msg)
-      } else {
-        toast(msg)
+
+      else -> {
+        toast("Unsupported credentials")
       }
     }
   }
