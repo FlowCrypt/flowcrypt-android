@@ -55,6 +55,7 @@ import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.viewmodel.CheckCustomerUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
+import com.flowcrypt.email.jetpack.viewmodel.SignInWithGoogleViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
@@ -102,6 +103,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private val checkCustomerUrlFesServerViewModel: CheckCustomerUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
+  private val signInWithGoogleViewModel: SignInWithGoogleViewModel by viewModels()
   private var useStartTlsForSmtp = false
 
   private val forActivityResultSignIn = registerForActivityResult(
@@ -219,6 +221,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun signInWithGoogle() {
+    signInWithGoogleViewModel.authenticateUser()
+    return
+
     cachedGoogleIdTokenCredential = null
 
     val getSignInWithGoogleOption =
@@ -231,7 +236,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       .addCredentialOption(getSignInWithGoogleOption)
       .build()
 
-   //need to test it with slow internet. Maybe need to use a dialog here
+    //need to test it with slow internet. Maybe need to use a dialog here
     lifecycleScope.launch {
       try {
         val getCredentialResponse = CredentialManager.create(requireContext()).getCredential(
