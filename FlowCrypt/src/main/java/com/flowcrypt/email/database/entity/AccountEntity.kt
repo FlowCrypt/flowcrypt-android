@@ -20,7 +20,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.parcelize.IgnoredOnParcel
@@ -101,20 +101,20 @@ data class AccountEntity(
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
 
   constructor(
-    googleSignInAccount: GoogleSignInAccount,
+    googleIdTokenCredential: GoogleIdTokenCredential,
     clientConfiguration: ClientConfiguration? = null,
     useCustomerFesUrl: Boolean,
     useStartTlsForSmtp: Boolean = false,
   ) : this(
-    email = requireNotNull(googleSignInAccount.email).lowercase(),
-    accountType = googleSignInAccount.account?.type?.lowercase(),
-    displayName = googleSignInAccount.displayName,
-    givenName = googleSignInAccount.givenName,
-    familyName = googleSignInAccount.familyName,
-    photoUrl = googleSignInAccount.photoUrl?.toString(),
+    email = requireNotNull(googleIdTokenCredential.id).lowercase(),
+    accountType = ACCOUNT_TYPE_GOOGLE,
+    displayName = googleIdTokenCredential.displayName,
+    givenName = googleIdTokenCredential.givenName,
+    familyName = googleIdTokenCredential.familyName,
+    photoUrl = googleIdTokenCredential.profilePictureUri?.toString(),
     isEnabled = true,
     isActive = false,
-    username = requireNotNull(googleSignInAccount.email),
+    username = requireNotNull(googleIdTokenCredential.id),
     password = "",
     imapServer = GmailConstants.GMAIL_IMAP_SERVER,
     imapPort = GmailConstants.GMAIL_IMAP_PORT,
@@ -346,6 +346,7 @@ data class AccountEntity(
   companion object {
     const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
+    const val ACCOUNT_TYPE_GOOGLE_SIGN_NEW = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
   }
 }

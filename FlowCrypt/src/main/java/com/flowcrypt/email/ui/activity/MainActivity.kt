@@ -30,6 +30,9 @@ import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -61,6 +64,7 @@ import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.kotlin.parseAsColorBasedOnDefaultSettings
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -81,16 +85,13 @@ import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /**
  * @author Denys Bondarenko
  */
 class MainActivity : BaseActivity<ActivityMainBinding>() {
-  private lateinit var client: GoogleSignInClient
   private var navigationViewManager: NavigationViewManager? = null
 
   private val launcherViewModel: LauncherViewModel by viewModels()
@@ -154,8 +155,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
     super.onCreate(savedInstanceState)
     observeMovingToBackground()
-
-    client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
     IdleService.start(this)
     IdleService.bind(this, idleServiceConnection)
@@ -393,7 +392,22 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private fun logout() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
-        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
+        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+          try {
+            CredentialManager.create(this@MainActivity).clearCredentialState(
+              ClearCredentialStateRequest()
+            )
+          } catch (e: ClearCredentialException) {
+            //need to test bad connection. Maybe it will be better to use dialog here.
+            e.printStackTraceIfDebugOnly()
+            showInfoDialog(
+              requestKey = UUID.randomUUID().toString(),
+              dialogMsg = e.errorMessage?.toString(),
+              dialogTitle = getString(R.string.error)
+            )
+            return@launch
+          }
+        }
 
         FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)
