@@ -99,10 +99,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     ActivityResultContracts.StartIntentSenderForResult()
   ) { result: ActivityResult ->
     if (result.resultCode == Activity.RESULT_OK) {
-      val authorizationResult = Identity.getAuthorizationClient(
-        requireContext()
-      ).getAuthorizationResultFromIntent(result.data)
-      onUserAuthorizedToGmailApi(authorizationResult)
+      onUserAuthorizedToGmailApi()
     } else {
       signInWithGoogleViewModel.resetCachedAuthenticateState()
     }
@@ -275,15 +272,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           }
         } else {
           // Access already granted, continue with user action
-          onUserAuthorizedToGmailApi(authorizationResult)
+          onUserAuthorizedToGmailApi()
         }
       }.addOnFailureListener { exception ->
         exception.showDialogWithErrorDetails(this)
       }
   }
 
-  private fun onUserAuthorizedToGmailApi(authorizationResult: AuthorizationResult) {
-    val account = cachedGoogleIdTokenCredential?.id
+  private fun onUserAuthorizedToGmailApi() {
+    val account = cachedGoogleIdTokenCredential?.id?.lowercase()
     val idToken = cachedGoogleIdTokenCredential?.idToken
 
     if (idToken == null) {
