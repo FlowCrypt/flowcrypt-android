@@ -525,7 +525,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {
-          //this.cachedGoogleIdTokenCredential = null
+          signInWithGoogleViewModel.resetAuthenticationState()
           showContent()
         }
       }
