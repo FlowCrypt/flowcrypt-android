@@ -346,7 +346,6 @@ data class AccountEntity(
   companion object {
     const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
-    const val ACCOUNT_TYPE_GOOGLE_SIGN_NEW = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
   }
 }
