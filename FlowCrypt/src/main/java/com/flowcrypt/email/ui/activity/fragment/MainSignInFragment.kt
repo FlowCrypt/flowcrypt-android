@@ -283,7 +283,29 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun onUserAuthorizedToGmailApi(authorizationResult: AuthorizationResult) {
-    toast("$authorizationResult")
+    val account = cachedGoogleIdTokenCredential?.id
+    val idToken = cachedGoogleIdTokenCredential?.idToken
+
+    if (idToken == null) {
+      IllegalStateException("idToken == null").showDialogWithErrorDetails(this)
+      return
+    }
+
+    if (account != null) {
+      val publicEmailDomains = EmailUtil.getPublicEmailDomains()
+      val domain = EmailUtil.getDomain(account)
+      if (domain in publicEmailDomains) {
+        clientConfigurationViewModel.fetchClientConfiguration(
+          idToken = idToken,
+          baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
+          domain = domain
+        )
+      } else {
+        checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
+      }
+    } else {
+      IllegalStateException("account == null").showDialogWithErrorDetails(this)
+    }
   }
 
   private fun onSignSuccess(googleIdTokenCredential: GoogleIdTokenCredential?) {
@@ -670,7 +692,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             if (it.data != null) {
               handleAuthentication(it.data)
             } else {
-              signInWithGoogleViewModel.resetCachedAuthenticateState()
               showInfoDialog(
                 dialogTitle = "",
                 dialogMsg = getString(
@@ -679,6 +700,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
                 )
               )
             }
+            signInWithGoogleViewModel.cacheAuthenticateState()
           }
 
           Result.Status.EXCEPTION -> {

@@ -261,7 +261,7 @@ class MsgDetailsViewModel(
             )
           }
 
-          Result.Status.NONE -> {
+          else -> {
             Result.none()
           }
         }
