@@ -67,7 +67,6 @@ import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
-import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -705,6 +704,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               it.exception is GetCredentialCancellationException
                   && "android.credentials.GetCredentialException.TYPE_USER_CANCELED" == it.exception.type -> {
                 //do nothing
+              }
+
+              it.exception is AccountAlreadyAddedException -> {
+                toast(it.exception.message)
               }
 
               else -> showInfoDialog(

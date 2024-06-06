@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -74,6 +75,19 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
                   val claims = jwtConsumerBuilder.processToClaims(idToken)
                   if (claims.getClaimValueAsString("nonce") != randomNonce) {
                     throw IllegalStateException("Security error: 'nonce' mismatch")
+                  }
+
+                  val existedAccount = roomDatabase.accountDao().getAccountsSuspend().firstOrNull {
+                    it.email.equals(googleIdTokenCredential.id, ignoreCase = true)
+                  }
+
+                  if (existedAccount != null) {
+                    throw AccountAlreadyAddedException(
+                      context.getString(
+                        R.string.template_email_already_added,
+                        existedAccount.email
+                      )
+                    )
                   }
 
                   return@cancelPreviousThenRun Result.success(googleIdTokenCredential)
