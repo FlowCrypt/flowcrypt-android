@@ -16,13 +16,8 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -71,23 +66,17 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.util.MailConnectException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
-import java.util.UUID
 import javax.net.ssl.SSLException
 
 /**
@@ -97,7 +86,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentMainSignInBinding.inflate(inflater, container, false)
 
-  private var cachedGoogleIdTokenCredential: GoogleIdTokenCredential? = null
   private var cachedClientConfiguration: ClientConfiguration? = null
   private var cachedBaseFesUrlPath: String? = null
 
@@ -118,7 +106,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     ActivityResultContracts.StartActivityForResult()
   ) { result: ActivityResult ->
     if (result.resultCode == Activity.RESULT_OK) {
-      signInWithGoogle()
+      binding?.buttonSignInWithGmail?.callOnClick()
     }
   }
 
@@ -131,9 +119,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
 
+  val cachedGoogleIdTokenCredential: GoogleIdTokenCredential?
+    get() = signInWithGoogleViewModel.googleIdTokenCredentialStateFlow.value.data
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews(view)
+    initViews()
 
     subscribeToCheckAccountSettingsAndSearchBackups()
     subscribeToCheckPrivateKeys()
@@ -182,15 +173,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     handleUnlockedKeys(accountEntity, keys)
   }
 
-  private fun initViews(view: View) {
-    view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
+  private fun initViews() {
+    binding?.buttonSignInWithGmail?.setOnClickListener {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       importCandidates.clear()
-      signInWithGoogle()
+      signInWithGoogleViewModel.authenticateUser()
     }
 
-    view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
+    binding?.buttonOtherEmailProvider?.setOnClickListener {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       navController?.navigateSafe(
@@ -199,15 +190,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       )
     }
 
-    view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
+    binding?.buttonPrivacy?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)
     }
 
-    view.findViewById<View>(R.id.buttonTerms)?.setOnClickListener {
+    binding?.buttonTerms?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
 
-    view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
+    binding?.buttonSecurity?.setOnClickListener {
       navController?.navigateSafe(
         R.id.mainSignInFragment,
         NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
@@ -217,48 +208,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       )
     }
 
-    view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
+    binding?.buttonHelp?.setOnClickListener {
       showFeedbackFragment()
-    }
-  }
-
-  private fun signInWithGoogle() {
-    signInWithGoogleViewModel.authenticateUser()
-    return
-
-    cachedGoogleIdTokenCredential = null
-
-    val getSignInWithGoogleOption =
-      GetSignInWithGoogleOption.Builder(GoogleApiClientHelper.SERVER_CLIENT_ID)
-        //need to think about nonce more
-        .setNonce(UUID.randomUUID().toString())
-        .build()
-
-    val getCredentialRequest = GetCredentialRequest.Builder()
-      .addCredentialOption(getSignInWithGoogleOption)
-      .build()
-
-    //need to test it with slow internet. Maybe need to use a dialog here
-    lifecycleScope.launch {
-      try {
-        val getCredentialResponse = CredentialManager.create(requireContext()).getCredential(
-          context = requireContext(),
-          request = getCredentialRequest
-        )
-        withContext(Dispatchers.Main) {
-          handleAuthentication(getCredentialResponse)
-        }
-      } catch (e: Exception) {
-        e.printStackTraceIfDebugOnly()
-        //need to test it
-        withContext(Dispatchers.Main) {
-          showInfoDialog(
-            dialogTitle = "",
-            dialogMsg = e.message ?: getString(R.string.unknown_error),
-            isCancelable = true
-          )
-        }
-      }
     }
   }
 
@@ -780,8 +731,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       signInWithGoogleViewModel.googleIdTokenCredentialStateFlow.collect {
         when (it.status) {
           Result.Status.SUCCESS -> {
-            toast(it.data?.displayName)
-            //we can do authorization here
+            if (it.data != null) {
+              authorizeUserToGmailApi(it.data)
+            } else {
+              signInWithGoogleViewModel.resetCachedAuthenticateState()
+              showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = getString(R.string.error_occurred_try_again_later)
+              )
+            }
           }
 
           Result.Status.EXCEPTION -> {
@@ -789,6 +747,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
               dialogTitle = "",
               dialogMsg = it.exceptionMsg
             )
+
+            (it.exception as? Exception)?.printStackTraceIfDebugOnly()
+            signInWithGoogleViewModel.resetCachedAuthenticateState()
           }
 
           else -> {}
