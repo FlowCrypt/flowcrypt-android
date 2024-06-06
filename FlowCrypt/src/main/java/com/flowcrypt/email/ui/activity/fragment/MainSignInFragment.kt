@@ -100,7 +100,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     if (result.resultCode == Activity.RESULT_OK) {
       onUserAuthorizedToGmailApi()
     } else {
-      signInWithGoogleViewModel.resetCachedAuthenticateState()
+      signInWithGoogleViewModel.resetAuthenticationState()
     }
   }
 
@@ -224,7 +224,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     if (domain in publicEmailDomains) {
       @Suppress("KotlinConstantConditions")
       if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-        signInWithGoogleViewModel.resetCachedAuthenticateState()
+        signInWithGoogleViewModel.resetAuthenticationState()
         showInfoDialog(
           dialogTitle = "",
           dialogMsg = getString(
@@ -696,7 +696,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
                 )
               )
             }
-            signInWithGoogleViewModel.cacheAuthenticateState()
+            signInWithGoogleViewModel.cacheAuthenticationState()
           }
 
           Result.Status.EXCEPTION -> {
@@ -717,7 +717,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
 
             (it.exception as? Exception)?.printStackTraceIfDebugOnly()
-            signInWithGoogleViewModel.resetCachedAuthenticateState()
+            signInWithGoogleViewModel.resetAuthenticationState()
           }
 
           else -> {}

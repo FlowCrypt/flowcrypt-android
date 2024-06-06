@@ -108,11 +108,11 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
     }
   }
 
-  fun resetCachedAuthenticateState() {
+  fun resetAuthenticationState() {
     googleIdTokenCredentialMutableStateFlow.value = Result.none()
   }
 
-  fun cacheAuthenticateState() {
+  fun cacheAuthenticationState() {
     googleIdTokenCredentialMutableStateFlow.value =
       googleIdTokenCredentialMutableStateFlow.value.toCached()
   }
