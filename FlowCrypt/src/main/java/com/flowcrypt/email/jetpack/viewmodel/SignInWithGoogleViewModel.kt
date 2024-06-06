@@ -40,19 +40,19 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
       googleIdTokenCredentialMutableStateFlow.value = Result.loading()
       googleIdTokenCredentialMutableStateFlow.value =
         controlledRunnerForGoogleIdTokenCredential.cancelPreviousThenRun {
-          val context: Context = getApplication()
+          try {
+            val context: Context = getApplication()
 
-          val nonce = UUID.randomUUID().toString()
-          val getSignInWithGoogleOption =
-            GetSignInWithGoogleOption.Builder(GoogleApiClientHelper.SERVER_CLIENT_ID)
-              .setNonce(nonce)
+            val randomNonce = UUID.randomUUID().toString()
+            val getSignInWithGoogleOption =
+              GetSignInWithGoogleOption.Builder(GoogleApiClientHelper.SERVER_CLIENT_ID)
+                .setNonce(randomNonce)
+                .build()
+
+            val getCredentialRequest = GetCredentialRequest.Builder()
+              .addCredentialOption(getSignInWithGoogleOption)
               .build()
 
-          val getCredentialRequest = GetCredentialRequest.Builder()
-            .addCredentialOption(getSignInWithGoogleOption)
-            .build()
-
-          try {
             val getCredentialResponse = CredentialManager.create(context).getCredential(
               context = context,
               request = getCredentialRequest
@@ -67,12 +67,13 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
                   //mode details cab be found here https://auth0.com/docs/get-started/authentication-and-authorization-flow/implicit-flow-with-form-post/mitigate-replay-attacks-when-using-the-implicit-flow
                   val idToken = googleIdTokenCredential.idToken
                   val jwtConsumerBuilder = JwtConsumerBuilder()
+                    //we don't need a verification. Just parse JWT and extract 'nonce' parameter
                     .setSkipSignatureVerification()
                     .setExpectedAudience(GoogleApiClientHelper.SERVER_CLIENT_ID)
                     .build()
                   val claims = jwtConsumerBuilder.processToClaims(idToken)
-                  if (claims.getClaimValueAsString("nonce") != nonce) {
-                    throw IllegalStateException("Security error: nonce mismatch")
+                  if (claims.getClaimValueAsString("nonce") != randomNonce) {
+                    throw IllegalStateException("Security error: 'nonce' mismatch")
                   }
 
                   return@cancelPreviousThenRun Result.success(googleIdTokenCredential)

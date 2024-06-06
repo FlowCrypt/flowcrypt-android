@@ -41,6 +41,7 @@ import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.androidx.fragment.app.getNavigationResult
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
@@ -144,6 +145,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     initEnterpriseViewModels()
     initPrivateKeysViewModel()
     initProtectPrivateKeysLiveData()
+    initSignInWithGoogleViewModel()
   }
 
   override fun getTempAccount(): AccountEntity? {
@@ -769,6 +771,28 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         else -> {}
+      }
+    }
+  }
+
+  private fun initSignInWithGoogleViewModel() {
+    launchAndRepeatWithViewLifecycle {
+      signInWithGoogleViewModel.googleIdTokenCredentialStateFlow.collect {
+        when (it.status) {
+          Result.Status.SUCCESS -> {
+            toast(it.data?.displayName)
+            //we can do authorization here
+          }
+
+          Result.Status.EXCEPTION -> {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = it.exceptionMsg
+            )
+          }
+
+          else -> {}
+        }
       }
     }
   }
