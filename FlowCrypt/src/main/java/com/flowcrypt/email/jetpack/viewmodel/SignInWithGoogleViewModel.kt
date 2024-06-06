@@ -77,6 +77,7 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
                     throw IllegalStateException("Security error: 'nonce' mismatch")
                   }
 
+                  //check that the given account is new, not added yet
                   val existedAccount = roomDatabase.accountDao().getAccountsSuspend().firstOrNull {
                     it.email.equals(googleIdTokenCredential.id, ignoreCase = true)
                   }
