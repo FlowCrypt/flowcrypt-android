@@ -702,7 +702,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           Result.Status.EXCEPTION -> {
             when {
               it.exception is GetCredentialCancellationException
-                  && "android.credentials.GetCredentialException.TYPE_USER_CANCELED" == it.exception.type -> {
+                  && "android.credentials.GetCredentialException.TYPE_USER_CANCELED" == it.exception.type
+                  && "[16] Cancelled by user." == it.exception.errorMessage -> {
                 //do nothing
               }
 

@@ -398,7 +398,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
               ClearCredentialStateRequest()
             )
           } catch (e: ClearCredentialException) {
-            //need to test bad connection. Maybe it will be better to use dialog here.
             e.printStackTraceIfDebugOnly()
             showInfoDialog(
               requestKey = UUID.randomUUID().toString(),
