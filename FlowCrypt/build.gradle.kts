@@ -374,7 +374,7 @@ dependencies {
   ksp("androidx.room:room-compiler:2.6.1")
   //ACRA needs the following dependency to use a custom report sender
 
-  ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
+  ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
   ksp("com.google.auto.service:auto-service:1.1.1")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
@@ -404,7 +404,7 @@ dependencies {
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
   testImplementation("org.robolectric:robolectric:4.12.2")
-  testImplementation("io.github.classgraph:classgraph:4.8.172")
+  testImplementation("io.github.classgraph:classgraph:4.8.173")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   //we need it to test Parcelable implementation
