@@ -18,8 +18,6 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28"
         tools:ignore="ScopedStorage" />
-    <!-- android.permission.RECEIVE_BOOT_COMPLETED will be used by JobScheduler to persists jobs after the device reboot -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- android.permission.WAKE_LOCK will be used by classes which extend JobIntentService -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Request the foreground service permission. Details here
