@@ -180,7 +180,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       importCandidates.clear()
-      signInWithGoogleViewModel.authenticateUser()
+      signInWithGoogleViewModel.authenticateUser(requireActivity())
     }
 
     binding?.buttonOtherEmailProvider?.setOnClickListener {
@@ -703,7 +703,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             when {
               it.exception is GetCredentialCancellationException
                   && "android.credentials.GetCredentialException.TYPE_USER_CANCELED" == it.exception.type
-                  && "[16] Cancelled by user." == it.exception.errorMessage -> {
+                  && isConnected() -> {
                 //do nothing
               }
 

@@ -36,14 +36,12 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
   val googleIdTokenCredentialStateFlow: StateFlow<Result<GoogleIdTokenCredential?>> =
     googleIdTokenCredentialMutableStateFlow.asStateFlow()
 
-  fun authenticateUser() {
+  fun authenticateUser(activityContext: Context) {
     viewModelScope.launch {
       googleIdTokenCredentialMutableStateFlow.value = Result.loading()
       googleIdTokenCredentialMutableStateFlow.value =
         controlledRunnerForGoogleIdTokenCredential.cancelPreviousThenRun {
           try {
-            val context: Context = getApplication()
-
             val randomNonce = UUID.randomUUID().toString()
             val getSignInWithGoogleOption =
               GetSignInWithGoogleOption.Builder(GoogleApiClientHelper.SERVER_CLIENT_ID)
@@ -54,8 +52,8 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
               .addCredentialOption(getSignInWithGoogleOption)
               .build()
 
-            val getCredentialResponse = CredentialManager.create(context).getCredential(
-              context = context,
+            val getCredentialResponse = CredentialManager.create(activityContext).getCredential(
+              context = activityContext,
               request = getCredentialRequest
             )
 
@@ -84,7 +82,7 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
 
                   if (existedAccount != null) {
                     throw AccountAlreadyAddedException(
-                      context.getString(
+                      activityContext.getString(
                         R.string.template_email_already_added,
                         existedAccount.email
                       )
@@ -93,12 +91,12 @@ class SignInWithGoogleViewModel(application: Application) : AccountViewModel(app
 
                   return@cancelPreviousThenRun Result.success(googleIdTokenCredential)
                 } else {
-                  throw IllegalStateException(context.getString(R.string.unsupported_credentials))
+                  throw IllegalStateException(activityContext.getString(R.string.unsupported_credentials))
                 }
               }
 
               else -> {
-                throw IllegalStateException(context.getString(R.string.unsupported_credentials))
+                throw IllegalStateException(activityContext.getString(R.string.unsupported_credentials))
               }
             }
           } catch (e: Exception) {
