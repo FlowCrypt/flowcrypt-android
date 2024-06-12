@@ -25,6 +25,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import org.hamcrest.Matchers.allOf
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -39,6 +40,7 @@ import org.junit.runner.RunWith
 @FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("Disabled due to migration to Credential Manager. More details can be found here https://stackoverflow.com/questions/78606467/")
 class SignInScreenFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
