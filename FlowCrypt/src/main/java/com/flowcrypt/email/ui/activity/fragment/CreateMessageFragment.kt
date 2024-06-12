@@ -908,7 +908,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           requireContext(),
           args.messageType,
           account?.email ?: "",
-          accountAliasesViewModel.accountAliasesLiveData.value?.map { it.sendAsEmail.lowercase() }
+          accountAliasesViewModel.accountAliasesLiveData.value?.mapNotNull { it.sendAsEmail?.lowercase() }
             ?: emptyList()
         ) ?: InitializationData()
       }
@@ -1083,12 +1083,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         aliases.add(accountEntity.email)
       }
 
-      for (accountAlias in it) {
-        aliases.add(accountAlias.sendAsEmail)
-      }
+      aliases.addAll(it.mapNotNull { accountAliasesEntity -> accountAliasesEntity.sendAsEmail })
 
       fromAddressesAdapter?.clear()
-      fromAddressesAdapter?.addAll(aliases.map { alias -> alias.lowercase() })
+      fromAddressesAdapter?.addAll(aliases.map { alias -> alias.lowercase() }.toSet())
 
       updateFromAddressAdapter(
         KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings()

@@ -105,7 +105,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 44
+    const val DB_VERSION = 45
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1426,6 +1426,39 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_44_45 = object : FlowCryptMigration(44, 45) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2712
+        //we need to delete the current version and create a new one
+        database.execSQL("DROP TABLE IF EXISTS `accounts_aliases`;")
+
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `accounts_aliases` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`email` TEXT NOT NULL, " +
+              "`account_type` TEXT NOT NULL, " +
+              "`send_as_email` TEXT DEFAULT NULL, " +
+              "`display_name` TEXT DEFAULT NULL, " +
+              "`reply_to_address` TEXT DEFAULT NULL, " +
+              "`signature` TEXT DEFAULT NULL, " +
+              "`is_primary` INTEGER DEFAULT NULL, " +
+              "`is_default` INTEGER DEFAULT NULL, " +
+              "`treat_as_alias` INTEGER DEFAULT NULL, " +
+              "`verification_status` TEXT DEFAULT NULL, " +
+              "FOREIGN KEY(`email`, `account_type`) " +
+              "REFERENCES `accounts`(`email`, `account_type`) " +
+              "ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS " +
+              "`email_account_type_send_as_email_in_accounts_aliases` ON `accounts_aliases` " +
+              "(`email`, `account_type`, `send_as_email`)"
+        )
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1484,6 +1517,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           MIGRATION_41_42,
           Migration42to43(context.applicationContext),
           MIGRATION_43_44,
+          MIGRATION_44_45,
         ).build()
         INSTANCE = instance
         return instance

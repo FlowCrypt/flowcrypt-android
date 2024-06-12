@@ -15,7 +15,7 @@ import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
-import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.toAccountAliasesEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,21 +55,7 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
         val gmailService = GmailApiHelper.generateGmailApiService(context, account)
         val response =
           gmailService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-        val aliases = ArrayList<AccountAliasesEntity>()
-        for (alias in response.sendAs) {
-          if (alias.verificationStatus != null) {
-            val accountAliasesDao = AccountAliasesEntity(
-              email = account.name.lowercase(),
-              accountType = account.type ?: AccountEntity.ACCOUNT_TYPE_GOOGLE,
-              sendAsEmail = alias.sendAsEmail.lowercase(),
-              displayName = alias.displayName,
-              isDefault = alias.isDefault,
-              verificationStatus = alias.verificationStatus
-            )
-            aliases.add(accountAliasesDao)
-          }
-        }
-        aliases
+        response.sendAs.map { it.toAccountAliasesEntity(account) }
       } catch (e: IOException) {
         e.printStackTrace()
         emptyList()

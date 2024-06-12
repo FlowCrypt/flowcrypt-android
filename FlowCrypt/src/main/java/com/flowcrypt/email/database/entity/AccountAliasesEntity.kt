@@ -32,8 +32,15 @@ data class AccountAliasesEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
   @ColumnInfo(name = "account_type") val accountType: String,
-  @ColumnInfo(name = "send_as_email") val sendAsEmail: String,
+  @ColumnInfo(name = "send_as_email", defaultValue = "NULL") val sendAsEmail: String? = null,
   @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
-  @ColumnInfo(name = "is_default", defaultValue = "0") val isDefault: Boolean? = null,
-  @ColumnInfo(name = "verification_status") val verificationStatus: String
+  @ColumnInfo(name = "reply_to_address", defaultValue = "NULL") val replyToAddress: String? = null,
+  @ColumnInfo(name = "signature", defaultValue = "NULL") val signature: String? = null,
+  @ColumnInfo(name = "is_primary", defaultValue = "NULL") val isPrimary: Boolean? = null,
+  @ColumnInfo(name = "is_default", defaultValue = "NULL") val isDefault: Boolean? = null,
+  @ColumnInfo(name = "treat_as_alias", defaultValue = "NULL") val treatAsAlias: Boolean? = null,
+  @ColumnInfo(
+    name = "verification_status",
+    defaultValue = "NULL"
+  ) val verificationStatus: String? = null,
 )
