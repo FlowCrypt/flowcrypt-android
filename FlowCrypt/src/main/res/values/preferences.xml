@@ -16,6 +16,7 @@
     <string name="pref_key_keys" translatable="false">pref_key_keys</string>
     <string name="pref_key_experimental" translatable="false">pref_key_experimental</string>
     <string name="pref_key_contacts" translatable="false">pref_key_contacts</string>
+    <string name="pref_key_signature" translatable="false">pref_key_signature</string>
 
     <string name="pref_title_allow_anonymous_crash_reports">Allow anonymous crash reports</string>
 </resources>

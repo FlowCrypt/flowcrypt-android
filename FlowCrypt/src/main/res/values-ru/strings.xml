@@ -618,6 +618,9 @@
     <string name="download_dangerous_file_warning">Этот исполняемый файл не был проверен на наличие вирусов, и его загрузка или запуск могут быть опасны.\n\nВсе равно продолжить?</string>
     <string name="sending_message">Исходящие: отправка&#8230;</string>
     <string name="message_not_found_or_labels_changed">Сообщение не найдено или ярлыки изменены</string>
+    <string name="signature">Подпись</string>
+    <string name="email_signature_explanation">What is an email signature?\n\nAn email signature is text, like your professional contact details and company branding or a favorite quote. It will be automatically added at the end of your outgoing messages as a footer on the compose message screen.</string>
+    <string name="please_specify_your_signature_here">Please specify your signature here</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

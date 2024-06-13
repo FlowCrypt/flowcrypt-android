@@ -140,6 +140,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_recipientsListFragment"
             app:destination="@id/recipientsListFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_signatureSettingsFragment"
+            app:destination="@id/signatureSettingsFragment" />
     </fragment>
 
     <fragment
@@ -434,6 +437,13 @@
         <action
             android:id="@+id/action_updatePrivateKeyFragment_to_updatePrivateKeyDialogFragment"
             app:destination="@id/updatePrivateKeyDialogFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signatureSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.SignatureSettingsFragment"
+        android:label="@string/signature"
+        tools:layout="@layout/fragment_signature_settings">
     </fragment>
 
     <dialog

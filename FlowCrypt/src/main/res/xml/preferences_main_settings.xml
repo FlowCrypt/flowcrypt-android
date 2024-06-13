@@ -36,6 +36,11 @@
         app:iconSpaceReserved="false" />
 
     <Preference
+        android:key="@string/pref_key_signature"
+        android:title="@string/signature"
+        app:iconSpaceReserved="false" />
+
+    <Preference
         android:key="@string/pref_key_server_settings"
         android:title="@string/server_settings"
         app:iconSpaceReserved="false"
