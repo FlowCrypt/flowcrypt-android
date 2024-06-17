@@ -619,8 +619,9 @@
     <string name="sending_message">Исходящие: отправка&#8230;</string>
     <string name="message_not_found_or_labels_changed">Сообщение не найдено или ярлыки изменены</string>
     <string name="signature">Подпись</string>
-    <string name="email_signature_explanation">What is an email signature?\n\nAn email signature is text, like your professional contact details and company branding or a favorite quote. It will be automatically added at the end of your outgoing messages as a footer on the compose message screen.</string>
-    <string name="please_specify_your_signature_here">Please specify your signature here</string>
+    <string name="email_signature_explanation">Что такое подпись электронного письма?\n\nПодпись электронного письма - это текст, где могут быть указаны ваши профессиональные контактные данные, фирменный знак компании или любимая цитата. Он будет автоматически добавлен в конец исходящих сообщений в виде нижнего колонтитула на экране создания сообщения.</string>
+    <string name="please_specify_your_signature_here">Пожалуйста, укажите здесь свою подпись</string>
+    <string name="use_gmail_alias_signatures">Используйте подписи псевдонимов Gmail</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

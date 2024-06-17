@@ -620,8 +620,9 @@
     <string name="sending_message">Вихідні: надсилання&#8230;</string>
     <string name="message_not_found_or_labels_changed">Повідомлення не знайдено або мітки змінено</string>
     <string name="signature">Підпис</string>
-    <string name="email_signature_explanation">What is an email signature?\n\nAn email signature is text, like your professional contact details and company branding or a favorite quote. It will be automatically added at the end of your outgoing messages as a footer on the compose message screen.</string>
-    <string name="please_specify_your_signature_here">Please specify your signature here</string>
+    <string name="email_signature_explanation">Що таке підпис електронної пошти?\n\nПідпис електронної пошти - це текст, де можуть бути вказані ваші професійні контактні дані та бренд компанії чи улюблена цитата. Його буде автоматично додано в кінці ваших вихідних повідомлень як нижній колонтитул на екрані створення повідомлення.</string>
+    <string name="please_specify_your_signature_here">Будь ласка, вкажіть свій підпис тут</string>
+    <string name="use_gmail_alias_signatures">Використовуйте підписи псевдонімів Gmail</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

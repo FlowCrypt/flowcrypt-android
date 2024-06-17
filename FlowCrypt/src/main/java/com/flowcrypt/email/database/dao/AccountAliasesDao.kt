@@ -34,6 +34,8 @@ interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
     newAliases: Collection<AccountAliasesEntity>
   ) {
     accountEntity?.let {
+      //need to think about smart updating here
+
       deleteByEmailSuspend(it.email, it.accountType ?: "")
       insertWithReplaceSuspend(newAliases)
     }

@@ -13,13 +13,14 @@
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        android:layout_gravity="center"/>
 
     <ScrollView
+        android:id="@+id/content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -57,7 +58,55 @@
                     android:gravity="start|top"
                     android:inputType="textMultiLine"
                     tools:text="Have a nice day\n\nFlowCrypt" />
+
             </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/textViewOr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/or"
+                android:textAllCaps="true"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textInputLayoutSignature" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchUseGmailAliases"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/use_gmail_alias_signatures"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textViewOr" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewAliasSignatures"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin_content"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/switchUseGmailAliases"
+                tools:itemCount="4"
+                tools:listitem="@layout/signature_item"
+                tools:orientation="vertical">
+
+            </androidx.recyclerview.widget.RecyclerView>
+
+            <androidx.constraintlayout.widget.Group
+                android:id="@+id/groupAliasSignatures"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:constraint_referenced_ids="textViewOr,switchUseGmailAliases,recyclerViewAliasSignatures"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+                app:layout_constraintTop_toBottomOf="@+id/textInputLayoutSignature"
+                tools:visibility="visible" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guidelineTop"

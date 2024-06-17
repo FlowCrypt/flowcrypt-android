@@ -10,6 +10,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
@@ -29,6 +30,7 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
   val accountAliasesLiveData: LiveData<List<AccountAliasesEntity>> =
     activeAccountLiveData.switchMap {
       roomDatabase.accountAliasesDao().getAliasesLD(it?.email ?: "", it?.accountType ?: "")
+        .distinctUntilChanged()
     }
 
   private val freshAccountAliasesLiveData: LiveData<Collection<AccountAliasesEntity>> =
