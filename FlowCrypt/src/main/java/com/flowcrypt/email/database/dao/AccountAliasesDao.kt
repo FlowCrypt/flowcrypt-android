@@ -31,13 +31,39 @@ interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
   @Transaction
   suspend fun updateAliases(
     accountEntity: AccountEntity?,
-    newAliases: Collection<AccountAliasesEntity>
+    freshestAliases: Collection<AccountAliasesEntity>
   ) {
     accountEntity?.let {
-      //need to think about smart updating here
+      val freshestUniqueSendAsSet = freshestAliases.map { entity ->
+        entity.sendAsEmail?.lowercase()
+      }.toSet()
+      val existingAliases = getAliases(
+        account = accountEntity.email,
+        accountType = accountEntity.accountType ?: ""
+      )
+      val existingUniqueSendAsSet = existingAliases.map { entity ->
+        entity.sendAsEmail?.lowercase()
+      }.toSet()
 
-      deleteByEmailSuspend(it.email, it.accountType ?: "")
-      insertWithReplaceSuspend(newAliases)
+      val toBeDeleted = existingAliases.filter { existingEntity ->
+        existingEntity.sendAsEmail !in freshestUniqueSendAsSet
+      }
+      deleteSuspend(toBeDeleted)
+
+      val toBeAdded = freshestAliases.filter { newEntity ->
+        newEntity.sendAsEmail !in existingUniqueSendAsSet
+      }
+      insertWithReplaceSuspend(freshestAliases)
+
+      val toBeUpdated = (freshestAliases - toBeAdded.toSet()).mapNotNull { toBeUpdatedEntity ->
+        val existingEntity = existingAliases.firstOrNull { existingEntity ->
+          existingEntity.sendAsEmail == toBeUpdatedEntity.sendAsEmail
+        }
+
+        val finalToBeUpdatedEntity = toBeUpdatedEntity.copy(id = existingEntity?.id)
+        finalToBeUpdatedEntity.takeIf { existingEntity != finalToBeUpdatedEntity }
+      }
+      updateSuspend(toBeUpdated)
     }
   }
 }
