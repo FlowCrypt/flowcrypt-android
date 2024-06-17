@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 45,
-    "identityHash": "919f9eacb0062eb6ce16f0df213864cf",
+    "identityHash": "107c978bea39f3971a61a615eb37a953",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -120,7 +120,7 @@
       },
       {
         "tableName": "accounts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `display_name` TEXT DEFAULT NULL, `given_name` TEXT DEFAULT NULL, `family_name` TEXT DEFAULT NULL, `photo_url` TEXT DEFAULT NULL, `is_enabled` INTEGER DEFAULT 1, `is_active` INTEGER DEFAULT 0, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `imap_server` TEXT NOT NULL, `imap_port` INTEGER DEFAULT 143, `imap_use_ssl_tls` INTEGER DEFAULT 0, `imap_use_starttls` INTEGER DEFAULT 0, `imap_auth_mechanisms` TEXT, `smtp_server` TEXT NOT NULL, `smtp_port` INTEGER DEFAULT 25, `smtp_use_ssl_tls` INTEGER DEFAULT 0, `smtp_use_starttls` INTEGER DEFAULT 0, `smtp_auth_mechanisms` TEXT, `smtp_use_custom_sign` INTEGER DEFAULT 0, `smtp_username` TEXT DEFAULT NULL, `smtp_password` TEXT DEFAULT NULL, `contacts_loaded` INTEGER DEFAULT 0, `show_only_encrypted` INTEGER DEFAULT 0, `client_configuration` TEXT DEFAULT NULL, `use_api` INTEGER NOT NULL DEFAULT 0, `use_customer_fes_url` INTEGER NOT NULL DEFAULT 0, `service_pgp_passphrase` TEXT NOT NULL, `service_pgp_private_key` BLOB NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `display_name` TEXT DEFAULT NULL, `given_name` TEXT DEFAULT NULL, `family_name` TEXT DEFAULT NULL, `photo_url` TEXT DEFAULT NULL, `is_enabled` INTEGER DEFAULT 1, `is_active` INTEGER DEFAULT 0, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `imap_server` TEXT NOT NULL, `imap_port` INTEGER DEFAULT 143, `imap_use_ssl_tls` INTEGER DEFAULT 0, `imap_use_starttls` INTEGER DEFAULT 0, `imap_auth_mechanisms` TEXT, `smtp_server` TEXT NOT NULL, `smtp_port` INTEGER DEFAULT 25, `smtp_use_ssl_tls` INTEGER DEFAULT 0, `smtp_use_starttls` INTEGER DEFAULT 0, `smtp_auth_mechanisms` TEXT, `smtp_use_custom_sign` INTEGER DEFAULT 0, `smtp_username` TEXT DEFAULT NULL, `smtp_password` TEXT DEFAULT NULL, `contacts_loaded` INTEGER DEFAULT 0, `show_only_encrypted` INTEGER DEFAULT 0, `client_configuration` TEXT DEFAULT NULL, `use_api` INTEGER NOT NULL DEFAULT 0, `use_customer_fes_url` INTEGER NOT NULL DEFAULT 0, `service_pgp_passphrase` TEXT NOT NULL, `service_pgp_private_key` BLOB NOT NULL, `signature` TEXT DEFAULT NULL, `use_alias_signatures` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "id",
@@ -328,6 +328,20 @@
             "columnName": "service_pgp_private_key",
             "affinity": "BLOB",
             "notNull": true
+          },
+          {
+            "fieldPath": "signature",
+            "columnName": "signature",
+            "affinity": "TEXT",
+            "notNull": false,
+            "defaultValue": "NULL"
+          },
+          {
+            "fieldPath": "useAliasSignatures",
+            "columnName": "use_alias_signatures",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {
@@ -1180,7 +1194,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '919f9eacb0062eb6ce16f0df213864cf')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '107c978bea39f3971a61a615eb37a953')"
     ]
   }
 }

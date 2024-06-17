@@ -58,6 +58,9 @@ abstract class AccountDao : BaseDao<AccountEntity> {
   @Query("SELECT * FROM accounts")
   abstract fun getAccountsLD(): LiveData<List<AccountEntity>>
 
+  @Query("UPDATE accounts SET use_alias_signatures = :newValues WHERE _id = :id")
+  abstract suspend fun updateAccountAliasSignatureUsage(id: Long?, newValues: Boolean): Int
+
   @Transaction
   open suspend fun addAccountSuspend(accountEntity: AccountEntity) {
     val availableAccounts = getAccountsSuspend()

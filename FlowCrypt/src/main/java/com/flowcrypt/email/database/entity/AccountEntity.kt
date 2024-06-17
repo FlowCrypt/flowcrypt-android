@@ -80,7 +80,9 @@ data class AccountEntity(
     defaultValue = "0"
   ) val useCustomerFesUrl: Boolean = false,
   @ColumnInfo(name = "service_pgp_passphrase") val servicePgpPassphrase: String,
-  @ColumnInfo(name = "service_pgp_private_key") val servicePgpPrivateKey: ByteArray
+  @ColumnInfo(name = "service_pgp_private_key") val servicePgpPrivateKey: ByteArray,
+  @ColumnInfo(name = "signature", defaultValue = "NULL") val signature: String? = null,
+  @ColumnInfo(name = "use_alias_signatures", defaultValue = "0") val useAliasSignatures: Boolean = false,
 ) : Parcelable {
 
   @IgnoredOnParcel

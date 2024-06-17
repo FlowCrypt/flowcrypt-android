@@ -16,11 +16,14 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentSignatureSettingsBinding
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.visibleOrGone
@@ -28,6 +31,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.adapter.SignaturesListAdapter
+import kotlinx.coroutines.launch
 
 /**
  * @author Denys Bondarenko
@@ -107,7 +111,12 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
+    if (binding?.editTextSignature?.text?.isEmpty() == true) {
+      binding?.editTextSignature?.setText(accountEntity?.signature)
+    }
+
     if (accountEntity?.isGoogleSignInAccount == true) {
+      binding?.switchUseGmailAliases?.isChecked = account?.useAliasSignatures == true
       accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
     } else {
       showContent()
@@ -121,14 +130,42 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
       layoutManager = manager
       adapter = signaturesListAdapter
     }
+
+    binding?.switchUseGmailAliases?.setOnCheckedChangeListener { _, isChecked ->
+      lifecycleScope.launch {
+        context?.applicationContext?.let { context ->
+          val dao = FlowCryptRoomDatabase.getDatabase(context).accountDao()
+          account?.id?.let { id -> dao.updateAccountAliasSignatureUsage(id, isChecked) }
+        }
+
+        binding?.editTextSignature?.apply {
+          isEnabled = !isChecked
+          if (isChecked) {
+            hideKeyboard()
+          }
+        }
+
+        binding?.recyclerViewAliasSignatures?.visibleOrGone(isChecked)
+      }
+    }
   }
 
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
       signaturesListAdapter.submitList(it)
-      showContent()
-
+      if (account?.useAliasSignatures == true) {
+        binding?.editTextSignature?.apply {
+          isEnabled = false
+          hideKeyboard()
+        }
+      }
       binding?.groupAliasSignatures?.visibleOrGone(it.isNotEmpty())
+
+      if (binding?.switchUseGmailAliases?.isChecked == false) {
+        binding?.recyclerViewAliasSignatures?.gone()
+      }
+
+      showContent()
     }
   }
 }
