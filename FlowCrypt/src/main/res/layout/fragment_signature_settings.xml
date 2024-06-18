@@ -21,8 +21,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center" />
 
-        <ScrollView
-            android:id="@+id/content"
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/contentView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone"
@@ -41,31 +41,48 @@
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/textInputLayoutSignature"
+                <FrameLayout
+                    android:id="@+id/frameLayoutSignature"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
                     android:layout_marginTop="@dimen/default_margin_content"
-                    android:hint="@string/please_specify_your_signature_here"
-                    android:orientation="horizontal"
-                    app:counterEnabled="true"
-                    app:counterMaxLength="1000"
-                    app:endIconMode="clear_text"
+                    android:layout_height="wrap_content"
                     app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
                     app:layout_constraintTop_toBottomOf="@+id/textViewSignatureExplanation">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/editTextSignature"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/textInputLayoutSignature"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:clickable="false"
                         android:enabled="false"
-                        android:gravity="start|top"
-                        android:inputType="textMultiLine"
-                        tools:text="Have a nice day\n\nFlowCrypt" />
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:hint="@string/please_specify_your_signature_here"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="1000"
+                        app:endIconMode="clear_text">
 
-                </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextSignature"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clickable="false"
+                            android:enabled="false"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:gravity="start|top"
+                            android:inputType="textMultiLine"
+                            tools:text="Have a nice day\n\nFlowCrypt" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <View
+                        android:id="@+id/signatureContainerForClick"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="?android:attr/selectableItemBackground" />
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/textViewOr"
@@ -76,7 +93,7 @@
                     android:textAllCaps="true"
                     app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                    app:layout_constraintTop_toBottomOf="@+id/textInputLayoutSignature" />
+                    app:layout_constraintTop_toBottomOf="@+id/frameLayoutSignature" />
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switchUseGmailAliases"
@@ -110,7 +127,7 @@
                     app:constraint_referenced_ids="textViewOr,switchUseGmailAliases,recyclerViewAliasSignatures"
                     app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                     app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                    app:layout_constraintTop_toBottomOf="@+id/textInputLayoutSignature"
+                    app:layout_constraintTop_toBottomOf="@+id/frameLayoutSignature"
                     tools:visibility="visible" />
 
                 <androidx.constraintlayout.widget.Guideline
@@ -142,7 +159,7 @@
                     app:layout_constraintGuide_end="@dimen/default_margin_content" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
-        </ScrollView>
+        </androidx.core.widget.NestedScrollView>
     </FrameLayout>
 
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,8 +19,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentSignatureSettingsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.gone
-import com.flowcrypt.email.extensions.hideKeyboard
-import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -46,7 +43,7 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
     get() = binding?.progressBar
 
   override val contentView: View?
-    get() = binding?.content
+    get() = binding?.contentView
 
   override val statusView: View? = null
 
@@ -58,21 +55,12 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
-    if (binding?.editTextSignature?.text?.isEmpty() == true) {
-      binding?.editTextSignature?.setText(accountEntity?.signature)
-    }
-
+    binding?.editTextSignature?.setText(accountEntity?.signature)
     binding?.swipeRefreshLayout?.isEnabled = accountEntity?.isGoogleSignInAccount == true
     if (accountEntity?.isGoogleSignInAccount == true) {
       binding?.switchUseGmailAliases?.isChecked = account?.useAliasSignatures == true
-      binding?.editTextSignature?.isEnabled = account?.useAliasSignatures == false
-      if (binding?.editTextSignature?.isEnabled == true) {
-        binding?.editTextSignature?.requestFocus()
-      }
       accountAliasesViewModel.fetchUpdates()
     } else {
-      binding?.editTextSignature?.isEnabled = true
-      binding?.editTextSignature?.requestFocus()
       showContent()
     }
   }
@@ -101,30 +89,12 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
           account?.id?.let { id -> dao.updateAccountAliasSignatureUsage(id, isChecked) }
         }
 
-        binding?.editTextSignature?.apply {
-          isEnabled = !isChecked
-          if (!isChecked) {
-            requestFocus()
-          }
-        }
-
         binding?.recyclerViewAliasSignatures?.visibleOrGone(isChecked)
       }
     }
 
-    binding?.editTextSignature?.apply {
-      setOnFocusChangeListener { view, hasFocus ->
-        binding?.swipeRefreshLayout?.isEnabled = !hasFocus
-        if (hasFocus) {
-          view.showKeyboard()
-        } else {
-          view.hideKeyboard()
-        }
-      }
+    binding?.signatureContainerForClick?.setOnClickListener {
 
-      doOnTextChanged { text, _, _, _ ->
-        accountViewModel.updateAccountSignature(text?.toString())
-      }
     }
   }
 
