@@ -19,6 +19,8 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.LoadRecipientsWorker
 import com.flowcrypt.email.service.IdleService
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -47,6 +49,8 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
         })
       }
     }
+
+  private val controlledRunnerForUpdatingSignature = ControlledRunner<Unit>()
 
   val pureAccountsLiveData: LiveData<List<AccountEntity>> =
     roomDatabase.accountDao().getAccountsLD()
@@ -102,6 +106,16 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
       } catch (e: Exception) {
         e.printStackTrace()
         updateAccountLiveData.value = Result.exception(e)
+      }
+    }
+  }
+
+  fun updateAccountSignature(signature: String?) {
+    viewModelScope.launch {
+      val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return@launch
+      controlledRunnerForUpdatingSignature.cancelPreviousThenRun {
+        delay(500)
+        roomDatabase.accountDao().updateAccountSuspend(activeAccount.copy(signature = signature))
       }
     }
   }

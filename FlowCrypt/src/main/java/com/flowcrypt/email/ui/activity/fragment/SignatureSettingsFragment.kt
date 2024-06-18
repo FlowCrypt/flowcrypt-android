@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -111,11 +112,18 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
       }
     }
 
-    binding?.editTextSignature?.setOnFocusChangeListener { view, hasFocus ->
-      if (hasFocus) {
-        view.showKeyboard()
-      } else {
-        view.hideKeyboard()
+    binding?.editTextSignature?.apply {
+      setOnFocusChangeListener { view, hasFocus ->
+        binding?.swipeRefreshLayout?.isEnabled = !hasFocus
+        if (hasFocus) {
+          view.showKeyboard()
+        } else {
+          view.hideKeyboard()
+        }
+      }
+
+      doOnTextChanged { text, _, _, _ ->
+        accountViewModel.updateAccountSignature(text?.toString())
       }
     }
   }
