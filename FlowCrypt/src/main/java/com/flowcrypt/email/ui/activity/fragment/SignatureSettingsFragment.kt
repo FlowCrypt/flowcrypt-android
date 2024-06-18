@@ -7,15 +7,9 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.MenuHost
-import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
@@ -61,56 +55,6 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
     setupAccountAliasesViewModel()
   }
 
-  override fun onSetupActionBarMenu(menuHost: MenuHost) {
-    super.onSetupActionBarMenu(menuHost)
-    menuHost.addMenuProvider(object : MenuProvider {
-      private var menuActionEdit: MenuItem? = null
-      private var menuActionSave: MenuItem? = null
-
-      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menuInflater.inflate(R.menu.fragment_signature_settings, menu)
-      }
-
-      override fun onPrepareMenu(menu: Menu) {
-        super.onPrepareMenu(menu)
-        menuActionEdit = menu.findItem(R.id.menuActionEdit)
-        menuActionSave = menu.findItem(R.id.menuActionSave)
-        if (binding?.editTextSignature?.text?.isEmpty() == true) {
-          menuActionEdit?.let { onMenuItemSelected(it) }
-        }
-      }
-
-      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return when (menuItem.itemId) {
-          R.id.menuActionEdit -> {
-            binding?.editTextSignature?.apply {
-              isEnabled = true
-              requestFocus()
-              showKeyboard()
-            }
-
-            menuItem.isVisible = false
-            menuActionSave?.isVisible = true
-            true
-          }
-
-          R.id.menuActionSave -> {
-            binding?.editTextSignature?.apply {
-              isEnabled = false
-              hideKeyboard()
-            }
-
-            menuItem.isVisible = false
-            menuActionEdit?.isVisible = true
-            true
-          }
-
-          else -> false
-        }
-      }
-    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
-  }
-
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     if (binding?.editTextSignature?.text?.isEmpty() == true) {
@@ -120,20 +64,22 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
     binding?.swipeRefreshLayout?.isEnabled = accountEntity?.isGoogleSignInAccount == true
     if (accountEntity?.isGoogleSignInAccount == true) {
       binding?.switchUseGmailAliases?.isChecked = account?.useAliasSignatures == true
+      binding?.editTextSignature?.isEnabled = account?.useAliasSignatures == false
+      if (binding?.editTextSignature?.isEnabled == true) {
+        binding?.editTextSignature?.requestFocus()
+      }
       accountAliasesViewModel.fetchUpdates()
     } else {
+      binding?.editTextSignature?.isEnabled = true
+      binding?.editTextSignature?.requestFocus()
       showContent()
     }
   }
 
   private fun initViews() {
-    binding?.swipeRefreshLayout?.setColorSchemeResources(
-      R.color.colorPrimary,
-      R.color.colorPrimary,
-      R.color.colorPrimary
-    )
-    binding?.swipeRefreshLayout?.setOnRefreshListener {
-      accountAliasesViewModel.fetchUpdates(monitorProgress = true)
+    binding?.swipeRefreshLayout?.apply {
+      setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
+      setOnRefreshListener { accountAliasesViewModel.fetchUpdates(monitorProgress = true) }
     }
 
     binding?.recyclerViewAliasSignatures?.apply {
@@ -156,12 +102,20 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
 
         binding?.editTextSignature?.apply {
           isEnabled = !isChecked
-          if (isChecked) {
-            hideKeyboard()
+          if (!isChecked) {
+            requestFocus()
           }
         }
 
         binding?.recyclerViewAliasSignatures?.visibleOrGone(isChecked)
+      }
+    }
+
+    binding?.editTextSignature?.setOnFocusChangeListener { view, hasFocus ->
+      if (hasFocus) {
+        view.showKeyboard()
+      } else {
+        view.hideKeyboard()
       }
     }
   }
@@ -173,15 +127,12 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
       }
     }
 
-    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
-      signaturesListAdapter.submitList(it.filter { entity -> entity.signature?.isNotEmpty() == true })
-      if (account?.useAliasSignatures == true) {
-        binding?.editTextSignature?.apply {
-          isEnabled = false
-          hideKeyboard()
-        }
+    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) { entities ->
+      val availableSignatures = entities.filter { entity ->
+        entity.signature?.isNotEmpty() == true
       }
-      binding?.groupAliasSignatures?.visibleOrGone(it.isNotEmpty())
+      signaturesListAdapter.submitList(availableSignatures)
+      binding?.groupAliasSignatures?.visibleOrGone(availableSignatures.isNotEmpty())
 
       if (binding?.switchUseGmailAliases?.isChecked == false) {
         binding?.recyclerViewAliasSignatures?.gone()
