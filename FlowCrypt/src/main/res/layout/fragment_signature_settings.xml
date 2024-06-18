@@ -55,20 +55,17 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:clickable="false"
-                        android:enabled="false"
                         android:focusable="false"
                         android:focusableInTouchMode="false"
-                        android:hint="@string/please_specify_your_signature_here"
+                        android:hint="@string/please_tap_to_edit"
                         app:counterEnabled="true"
-                        app:counterMaxLength="1000"
-                        app:endIconMode="clear_text">
+                        app:counterMaxLength="1000">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/editTextSignature"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:clickable="false"
-                            android:enabled="false"
                             android:focusable="false"
                             android:focusableInTouchMode="false"
                             android:gravity="start|top"
@@ -163,6 +160,3 @@
     </FrameLayout>
 
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-
-

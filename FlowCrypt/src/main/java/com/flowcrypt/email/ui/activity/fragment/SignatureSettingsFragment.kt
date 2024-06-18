@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,13 +19,17 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentSignatureSettingsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.UpdateSignatureDialogFragment
 import com.flowcrypt.email.ui.adapter.SignaturesListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
+import com.flowcrypt.email.util.GeneralUtil
 import kotlinx.coroutines.launch
 
 /**
@@ -51,6 +56,7 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
     super.onViewCreated(view, savedInstanceState)
     initViews()
     setupAccountAliasesViewModel()
+    subscribeToUpdateSignatureDialog()
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -89,12 +95,19 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
           account?.id?.let { id -> dao.updateAccountAliasSignatureUsage(id, isChecked) }
         }
 
+        binding?.signatureContainerForClick?.isEnabled = !isChecked
+        binding?.editTextSignature?.isEnabled = !isChecked
         binding?.recyclerViewAliasSignatures?.visibleOrGone(isChecked)
       }
     }
 
     binding?.signatureContainerForClick?.setOnClickListener {
-
+      navController?.navigate(
+        SignatureSettingsFragmentDirections.actionSignatureSettingsFragmentToUpdateSignatureDialogFragment(
+          REQUEST_KEY_UPDATE_SIGNATURE,
+          binding?.editTextSignature?.text?.toString()
+        )
+      )
     }
   }
 
@@ -118,5 +131,21 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
 
       showContent()
     }
+  }
+
+  private fun subscribeToUpdateSignatureDialog() {
+    setFragmentResultListener(REQUEST_KEY_UPDATE_SIGNATURE) { _, bundle ->
+      val signature = bundle.getString(UpdateSignatureDialogFragment.KEY_SIGNATURE)
+      accountViewModel.updateAccountSignature(signature)
+
+      binding?.editTextSignature?.setText(signature)
+    }
+  }
+
+  companion object {
+    val REQUEST_KEY_UPDATE_SIGNATURE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_UPDATE_SIGNATURE",
+      SignatureSettingsFragment::class.java
+    )
   }
 }

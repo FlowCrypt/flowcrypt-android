@@ -444,6 +444,9 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.SignatureSettingsFragment"
         android:label="@string/signature"
         tools:layout="@layout/fragment_signature_settings">
+        <action
+            android:id="@+id/action_signatureSettingsFragment_to_updateSignatureDialogFragment"
+            app:destination="@id/updateSignatureDialogFragment" />
     </fragment>
 
     <dialog
@@ -495,6 +498,20 @@
         <argument
             android:name="newPgpKeyRingDetails"
             app:argType="com.flowcrypt.email.security.model.PgpKeyRingDetails" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/updateSignatureDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.UpdateSignatureDialogFragment"
+        tools:layout="@layout/fragment_dialog_update_signature">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="signature"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </dialog>
 
     <action

@@ -642,6 +642,8 @@
     <string name="message_not_found_or_labels_changed">Message not found or labels changed</string>
     <string name="signature">Signature</string>
     <string name="email_signature_explanation"><b>What is an email signature?</b>\n\nAn email signature is text, like your professional contact details and company branding or a favorite quote. It will be automatically added at the end of your outgoing messages as a footer on the compose message screen.</string>
-    <string name="please_specify_your_signature_here">Please specify your signature here</string>
+    <string name="please_tap_to_edit">Please tap to edit</string>
     <string name="use_gmail_alias_signatures">Use Gmail alias signatures</string>
+    <string name="update">Update</string>
+    <string name="please_specify_your_signature_here">Please specify your signature here</string>
 </resources>
