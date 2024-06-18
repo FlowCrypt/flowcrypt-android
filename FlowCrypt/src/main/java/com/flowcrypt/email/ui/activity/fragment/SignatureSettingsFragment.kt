@@ -17,12 +17,13 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentSignatureSettingsBinding
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showKeyboard
@@ -31,6 +32,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.adapter.SignaturesListAdapter
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import kotlinx.coroutines.launch
 
 /**
@@ -115,18 +117,32 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
       binding?.editTextSignature?.setText(accountEntity?.signature)
     }
 
+    binding?.swipeRefreshLayout?.isEnabled = accountEntity?.isGoogleSignInAccount == true
     if (accountEntity?.isGoogleSignInAccount == true) {
       binding?.switchUseGmailAliases?.isChecked = account?.useAliasSignatures == true
-      accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
+      accountAliasesViewModel.fetchUpdates()
     } else {
       showContent()
     }
   }
 
   private fun initViews() {
+    binding?.swipeRefreshLayout?.setColorSchemeResources(
+      R.color.colorPrimary,
+      R.color.colorPrimary,
+      R.color.colorPrimary
+    )
+    binding?.swipeRefreshLayout?.setOnRefreshListener {
+      accountAliasesViewModel.fetchUpdates(monitorProgress = true)
+    }
+
     binding?.recyclerViewAliasSignatures?.apply {
       val manager = LinearLayoutManager(requireContext())
-      addItemDecoration(DividerItemDecoration(requireContext(), manager.orientation))
+      addItemDecoration(
+        MarginItemDecoration(
+          marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_big)
+        )
+      )
       layoutManager = manager
       adapter = signaturesListAdapter
     }
@@ -151,8 +167,14 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
   }
 
   private fun setupAccountAliasesViewModel() {
+    launchAndRepeatWithViewLifecycle {
+      accountAliasesViewModel.fetchFreshestAliasesStateFlow.collect {
+        binding?.swipeRefreshLayout?.isRefreshing = it.status == Result.Status.LOADING
+      }
+    }
+
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
-      signaturesListAdapter.submitList(it)
+      signaturesListAdapter.submitList(it.filter { entity -> entity.signature?.isNotEmpty() == true })
       if (account?.useAliasSignatures == true) {
         binding?.editTextSignature?.apply {
           isEnabled = false

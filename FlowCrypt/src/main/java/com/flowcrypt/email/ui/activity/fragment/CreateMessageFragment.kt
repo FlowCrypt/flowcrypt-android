@@ -1076,7 +1076,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupAccountAliasesViewModel() {
-    accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
+    accountAliasesViewModel.fetchUpdates()
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
