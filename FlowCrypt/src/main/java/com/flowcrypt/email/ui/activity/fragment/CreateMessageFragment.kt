@@ -494,22 +494,42 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           binding?.editTextFrom?.setTextColor(originalColor)
         }
 
-        if (composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature == null
-          && account?.useAliasSignatures == true
-        ) {
+        if (account?.useAliasSignatures == true) {
           val aliases = accountAliasesViewModel.accountAliasesLiveData.value ?: emptyList()
-          val accountAliasesEntitySignature = aliases.firstOrNull {
+          val newSignature = aliases.firstOrNull {
             it.sendAsEmail == sendAs
           }?.plainTextSignature ?: return
+          var useNewSignature = false
 
+          val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
+          val messageHasOldSignature = binding?.editTextEmailMessage?.text?.contains(
+            ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
+          ) == true
 
-          if (binding?.editTextEmailMessage?.text?.isEmpty() == true) {
-            composeMsgViewModel.updateOutgoingMessageInfo(
-              composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-                signature = accountAliasesEntitySignature
+          if (messageHasOldSignature && oldSignature != null) {
+            useNewSignature = true
+            binding?.editTextEmailMessage?.setText(
+              binding?.editTextEmailMessage?.text?.replaceFirst(
+                regex = oldSignature.toRegex(RegexOption.MULTILINE),
+                replacement = newSignature
               )
             )
-            binding?.editTextEmailMessage?.text?.append("\n\n" + accountAliasesEntitySignature)
+          } else if (oldSignature == null) {
+            useNewSignature = true
+            if (binding?.editTextEmailMessage?.text?.isEmpty() == true) {
+              binding?.editTextEmailMessage?.text?.append("\n\n" + newSignature)
+            } else {
+              binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + newSignature)
+            }
+            binding?.editTextEmailMessage?.setSelection(0)
+          }
+
+          if (useNewSignature) {
+            composeMsgViewModel.updateOutgoingMessageInfo(
+              composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+                signature = newSignature
+              )
+            )
           }
         }
       }
