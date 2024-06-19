@@ -17,7 +17,6 @@
         android:layout_margin="@dimen/default_margin_content"
         android:contentDescription="@string/user_photo"
         android:src="@drawable/ic_account_default_photo"
-        app:tint="@color/white"
         app:layout_constraintBottom_toTopOf="@+id/layoutUserDetails"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -75,7 +74,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5"
-            app:tint="@color/white"
             app:srcCompat="@drawable/ic_arrow_drop_down" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
