@@ -484,13 +484,33 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
     when (parent?.id) {
       R.id.spinnerFrom -> {
-        binding?.editTextFrom?.setText(parent.adapter.getItem(position) as CharSequence)
+        val sendAs = parent.adapter.getItem(position) as CharSequence
+        binding?.editTextFrom?.setText(sendAs)
         if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
           val adapter = parent.adapter as ArrayAdapter<*>
           val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
           binding?.editTextFrom?.setTextColor(if (adapter.isEnabled(position)) originalColor else colorGray)
         } else {
           binding?.editTextFrom?.setTextColor(originalColor)
+        }
+
+        if (composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature == null
+          && account?.useAliasSignatures == true
+        ) {
+          val aliases = accountAliasesViewModel.accountAliasesLiveData.value ?: emptyList()
+          val accountAliasesEntitySignature = aliases.firstOrNull {
+            it.sendAsEmail == sendAs
+          }?.plainTextSignature ?: return
+
+
+          if (binding?.editTextEmailMessage?.text?.isEmpty() == true) {
+            composeMsgViewModel.updateOutgoingMessageInfo(
+              composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+                signature = accountAliasesEntitySignature
+              )
+            )
+            binding?.editTextEmailMessage?.text?.append("\n\n" + accountAliasesEntitySignature)
+          }
         }
       }
     }
@@ -531,6 +551,18 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       if (fromAddressesAdapter?.objects?.contains(email) == false) {
         fromAddressesAdapter?.add(email)
       }
+    }
+
+    if (composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature == null
+      && accountEntity?.signature?.isNotEmpty() == true
+      && !accountEntity.useAliasSignatures
+    ) {
+      composeMsgViewModel.updateOutgoingMessageInfo(
+        composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+          signature = accountEntity.signature
+        )
+      )
+      binding?.editTextEmailMessage?.text?.append("\n\n" + accountEntity.signature)
     }
   }
 
@@ -905,11 +937,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       args.incomingMessageInfo != null -> {
         args.incomingMessageInfo?.toInitializationData(
-          requireContext(),
-          args.messageType,
-          account?.email ?: "",
-          accountAliasesViewModel.accountAliasesLiveData.value?.mapNotNull { it.sendAsEmail?.lowercase() }
-            ?: emptyList()
+          context = requireContext(),
+          messageType = args.messageType,
+          accountEmail = account?.email ?: "",
+          aliases = accountAliasesViewModel.accountAliasesLiveData.value?.mapNotNull {
+            it.sendAsEmail?.lowercase()
+          } ?: emptyList()
         ) ?: InitializationData()
       }
 

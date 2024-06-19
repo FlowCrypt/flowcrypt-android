@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.databinding.SignatureItemBinding
-import com.flowcrypt.email.util.UIUtil
 
 /**
  * @author Denys Bondarenko
@@ -35,8 +34,7 @@ class SignaturesListAdapter :
     val binding = SignatureItemBinding.bind(itemView)
     fun bind(accountAliasesEntity: AccountAliasesEntity) {
       binding.textViewSendAs.text = accountAliasesEntity.sendAsEmail
-      binding.textViewSignature.text =
-        UIUtil.getHtmlSpannedFromText(accountAliasesEntity.signature).toString().trimEnd()
+      binding.textViewSignature.text = accountAliasesEntity.plainTextSignature
     }
   }
 

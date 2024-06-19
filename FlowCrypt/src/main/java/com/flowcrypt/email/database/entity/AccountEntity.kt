@@ -141,7 +141,8 @@ data class AccountEntity(
     useAPI = true,
     useCustomerFesUrl = useCustomerFesUrl,
     servicePgpPassphrase = "",
-    servicePgpPrivateKey = byteArrayOf()
+    servicePgpPrivateKey = byteArrayOf(),
+    useAliasSignatures = true
   )
 
   constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :

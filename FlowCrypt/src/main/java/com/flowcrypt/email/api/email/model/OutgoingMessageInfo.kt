@@ -39,6 +39,7 @@ data class OutgoingMessageInfo(
   @Expose val uid: Long = 0,
   @Expose val password: CharArray? = null,
   @Expose val timestamp: Long = System.currentTimeMillis(),
+  @Expose val signature: String? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -83,7 +84,9 @@ data class OutgoingMessageInfo(
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
-    return timestamp == other.timestamp
+    if (timestamp != other.timestamp) return false
+    if (signature != other.signature) return false
+    return true
   }
 
   override fun hashCode(): Int {
@@ -102,8 +105,10 @@ data class OutgoingMessageInfo(
     result = 31 * result + uid.hashCode()
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + timestamp.hashCode()
+    result = 31 * result + (signature?.hashCode() ?: 0)
     return result
   }
+
   fun toMessageEntity(
     folder: String,
     flags: Flags,
