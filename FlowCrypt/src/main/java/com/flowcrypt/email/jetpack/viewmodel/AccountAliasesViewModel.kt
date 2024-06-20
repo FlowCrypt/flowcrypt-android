@@ -48,6 +48,16 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
         }
         val freshestAliases = fetchAliases(getApplication(), accountEntity.account)
         roomDatabase.accountAliasesDao().updateAliases(activeAccountLiveData.value, freshestAliases)
+
+        val hasAliasesSignature = roomDatabase.accountAliasesDao().getAliases(
+          account = accountEntity.email,
+          accountType = accountEntity.accountType ?: ""
+        ).any { it.signature?.isNotEmpty() == true }
+
+        if (!hasAliasesSignature) {
+          roomDatabase.accountDao().updateAccountAliasSignatureUsage(accountEntity.id, false)
+        }
+
         if (monitorProgress) {
           fetchFreshestAliasesMutableStateFlow.value = Result.success(true)
         }

@@ -21,7 +21,6 @@ import com.flowcrypt.email.databinding.FragmentSignatureSettingsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.gone
-import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -69,6 +68,8 @@ class SignatureSettingsFragment : BaseFragment<FragmentSignatureSettingsBinding>
     } else {
       showContent()
     }
+    binding?.signatureContainerForClick?.isEnabled =
+      accountEntity?.isGoogleSignInAccount == false || accountEntity?.useAliasSignatures != true
   }
 
   private fun initViews() {

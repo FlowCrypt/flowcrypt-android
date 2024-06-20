@@ -20,7 +20,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 @Dao
 interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
   @Query("SELECT * FROM accounts_aliases WHERE email = :account AND account_type = :accountType")
-  fun getAliases(account: String, accountType: String): List<AccountAliasesEntity>
+  suspend fun getAliases(account: String, accountType: String): List<AccountAliasesEntity>
 
   @Query("SELECT * FROM accounts_aliases WHERE email = :account AND account_type = :accountType")
   fun getAliasesLD(account: String, accountType: String): LiveData<List<AccountAliasesEntity>>

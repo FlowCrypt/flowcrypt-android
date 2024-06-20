@@ -152,10 +152,10 @@ class DraftViewModel(
       val textWithoutSignature = outgoingMessageInfo.msg?.replaceFirst(
         regex = ("\n\n" + outgoingMessageInfo.signature).toRegex(RegexOption.MULTILINE),
         replacement = ""
-      )
-      textWithoutSignature?.equals(draftFingerprint.msgText, true) == true
+      ) ?: ""
+      textWithoutSignature == draftFingerprint.msgText
     } else {
-      outgoingMessageInfo.msg?.equals(draftFingerprint.msgText, true) == true
+      (outgoingMessageInfo.msg ?: "") == draftFingerprint.msgText
     }
 
     if (!isTextTheSame

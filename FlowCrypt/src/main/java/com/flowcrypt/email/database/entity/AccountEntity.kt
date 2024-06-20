@@ -251,6 +251,21 @@ data class AccountEntity(
     )
   }
 
+  suspend fun withDecryptedInfo(): AccountEntity =
+    withContext(Dispatchers.IO) {
+      return@withContext copy(
+        password = KeyStoreCryptoManager.decryptSuspend(password),
+        smtpPassword = KeyStoreCryptoManager.decryptSuspend(smtpPassword),
+        servicePgpPassphrase = KeyStoreCryptoManager.decryptSuspend(servicePgpPassphrase),
+        servicePgpPrivateKey = KeyStoreCryptoManager.decryptSuspend(servicePgpPrivateKey)
+      )
+    }
+
+  fun toAccountSettingsEntity(): AccountSettingsEntity = AccountSettingsEntity(
+    account = email,
+    accountType = accountType
+  )
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
@@ -288,9 +303,10 @@ data class AccountEntity(
     if (useCustomerFesUrl != other.useCustomerFesUrl) return false
     if (servicePgpPassphrase != other.servicePgpPassphrase) return false
     if (!servicePgpPrivateKey.contentEquals(other.servicePgpPrivateKey)) return false
-    if (account != other.account) return false
-    if (isGoogleSignInAccount != other.isGoogleSignInAccount) return false
-    return avatarResource == other.avatarResource
+    if (signature != other.signature) return false
+    if (useAliasSignatures != other.useAliasSignatures) return false
+
+    return true
   }
 
   override fun hashCode(): Int {
@@ -325,26 +341,10 @@ data class AccountEntity(
     result = 31 * result + useCustomerFesUrl.hashCode()
     result = 31 * result + servicePgpPassphrase.hashCode()
     result = 31 * result + servicePgpPrivateKey.contentHashCode()
-    result = 31 * result + account.hashCode()
-    result = 31 * result + isGoogleSignInAccount.hashCode()
-    result = 31 * result + avatarResource.hashCode()
+    result = 31 * result + (signature?.hashCode() ?: 0)
+    result = 31 * result + useAliasSignatures.hashCode()
     return result
   }
-
-  suspend fun withDecryptedInfo(): AccountEntity =
-    withContext(Dispatchers.IO) {
-      return@withContext copy(
-        password = KeyStoreCryptoManager.decryptSuspend(password),
-        smtpPassword = KeyStoreCryptoManager.decryptSuspend(smtpPassword),
-        servicePgpPassphrase = KeyStoreCryptoManager.decryptSuspend(servicePgpPassphrase),
-        servicePgpPrivateKey = KeyStoreCryptoManager.decryptSuspend(servicePgpPrivateKey)
-      )
-    }
-
-  fun toAccountSettingsEntity(): AccountSettingsEntity = AccountSettingsEntity(
-    account = email,
-    accountType = accountType
-  )
 
   companion object {
     const val TABLE_NAME = "accounts"

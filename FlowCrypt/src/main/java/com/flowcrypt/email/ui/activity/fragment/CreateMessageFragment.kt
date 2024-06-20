@@ -2121,11 +2121,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     val aliases = accountAliasesViewModel.accountAliasesLiveData.value ?: emptyList()
     val newSignature = aliases.firstOrNull {
       it.sendAsEmail == sendAs
-    }?.plainTextSignature ?: return
+    }?.plainTextSignature?.takeIf { it.isNotEmpty() } ?: return
     var useNewSignature = false
 
     val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
-    val messageHasOldSignature = binding?.editTextEmailMessage?.text?.contains(
+    val messageHasOldSignature = oldSignature != null && binding?.editTextEmailMessage?.text?.contains(
       ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
     ) == true
 
