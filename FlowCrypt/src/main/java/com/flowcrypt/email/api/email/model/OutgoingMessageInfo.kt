@@ -40,6 +40,7 @@ data class OutgoingMessageInfo(
   @Expose val password: CharArray? = null,
   @Expose val timestamp: Long = System.currentTimeMillis(),
   @Expose val signature: String? = null,
+  @Expose val quotedTextForReply: String? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -86,6 +87,7 @@ data class OutgoingMessageInfo(
     } else if (other.password != null) return false
     if (timestamp != other.timestamp) return false
     if (signature != other.signature) return false
+    if (quotedTextForReply != other.quotedTextForReply) return false
     return true
   }
 
@@ -106,6 +108,7 @@ data class OutgoingMessageInfo(
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + timestamp.hashCode()
     result = 31 * result + (signature?.hashCode() ?: 0)
+    result = 31 * result + (quotedTextForReply?.hashCode() ?: 0)
     return result
   }
 

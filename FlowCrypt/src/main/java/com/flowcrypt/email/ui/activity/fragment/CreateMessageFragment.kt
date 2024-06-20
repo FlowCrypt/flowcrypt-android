@@ -138,7 +138,7 @@ import java.io.InvalidObjectException
  * @author Denys Bondarenko
  */
 class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
-  AdapterView.OnItemSelectedListener, View.OnClickListener {
+  AdapterView.OnItemSelectedListener {
 
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentCreateMessageBinding.inflate(inflater, container, false)
@@ -315,6 +315,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         } else {
           args.incomingMessageInfo?.msgEntity?.id
         },
+        quotedTextForReply = EmailUtil.genReplyContent(args.incomingMessageInfo).takeIf {
+          args.messageType in arrayOf(
+            MessageType.REPLY,
+            MessageType.REPLY_ALL
+          )
+        }
       )
     )
   }
@@ -473,6 +479,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   override fun onContextItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuDeleteQuotedText -> {
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(quotedTextForReply = null)
+        )
         binding?.iBShowQuotedText?.gone()
         true
       }
@@ -540,25 +549,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   }
 
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.imageButtonAliases -> if ((fromAddressesAdapter?.count ?: 0) > 1) {
-        binding?.spinnerFrom?.performClick()
-      }
-
-      R.id.iBShowQuotedText -> {
-        val currentCursorPosition = binding?.editTextEmailMessage?.selectionStart ?: 0
-        if (binding?.editTextEmailMessage?.text?.isNotEmpty() == true) {
-          binding?.editTextEmailMessage?.append("\n" + EmailUtil.genReplyContent(args.incomingMessageInfo))
-        } else {
-          binding?.editTextEmailMessage?.append(EmailUtil.genReplyContent(args.incomingMessageInfo))
-        }
-        binding?.editTextEmailMessage?.setSelection(currentCursorPosition)
-        v.visibility = View.GONE
-      }
-    }
-  }
-
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     composeMsgViewModel.updateOutgoingMessageInfo(
@@ -571,18 +561,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       if (fromAddressesAdapter?.objects?.contains(email) == false) {
         fromAddressesAdapter?.add(email)
       }
-    }
-
-    if (composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature == null
-      && accountEntity?.signature?.isNotEmpty() == true
-      && !accountEntity.useAliasSignatures
-    ) {
-      composeMsgViewModel.updateOutgoingMessageInfo(
-        composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-          signature = accountEntity.signature
-        )
-      )
-      binding?.editTextEmailMessage?.text?.append("\n\n" + accountEntity.signature)
     }
   }
 
@@ -820,7 +798,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       )
     }
 
-    binding?.imageButtonAliases?.setOnClickListener(this)
+    binding?.imageButtonAliases?.setOnClickListener {
+      if ((fromAddressesAdapter?.count ?: 0) > 1) {
+        binding?.spinnerFrom?.performClick()
+      }
+    }
 
     binding?.imageButtonAdditionalRecipientsVisibility?.setOnClickListener {
       it.gone()
@@ -855,20 +837,34 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
     binding?.editTextEmailMessage?.onFocusChangeListener = onFocusChangeListener
     binding?.editTextEmailMessage?.doOnTextChanged { _, _, _, _ ->
-      var msg = binding?.editTextEmailMessage?.text.toString()
-      if (args.messageType == MessageType.REPLY || args.messageType == MessageType.REPLY_ALL) {
-        if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
-          msg += EmailUtil.genReplyContent(args.incomingMessageInfo)
-        }
-      }
-
+      val msg = binding?.editTextEmailMessage?.text.toString()
       composeMsgViewModel.updateOutgoingMessageInfo(
         composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
           msg = msg
         )
       )
     }
-    binding?.iBShowQuotedText?.setOnClickListener(this)
+
+    binding?.iBShowQuotedText?.apply {
+      visibleOrGone(args.messageType in arrayOf(MessageType.REPLY, MessageType.REPLY_ALL))
+      registerForContextMenu(this)
+      setOnClickListener { v ->
+        val currentCursorPosition = binding?.editTextEmailMessage?.selectionStart ?: 0
+        if (binding?.editTextEmailMessage?.text?.isNotEmpty() == true) {
+          binding?.editTextEmailMessage?.append("\n" + EmailUtil.genReplyContent(args.incomingMessageInfo))
+        } else {
+          binding?.editTextEmailMessage?.append(EmailUtil.genReplyContent(args.incomingMessageInfo))
+        }
+        binding?.editTextEmailMessage?.setSelection(currentCursorPosition)
+
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(quotedTextForReply = null)
+        )
+
+        v.gone()
+      }
+    }
+
     binding?.btnSetWebPortalPassword?.setOnClickListener {
       navController?.navigate(
         CreateMessageFragmentDirections
@@ -947,6 +943,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         timeInMilliseconds = startOfSessionInMilliseconds
       )
     }
+
+    composeMsgViewModel.initSignature()
   }
 
   private fun parseInitializationData(): InitializationData {
@@ -1031,8 +1029,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsFromIncomingMsgInfo(initializationData: InitializationData) {
-    binding?.iBShowQuotedText?.visibleOrGone(args.messageType != MessageType.DRAFT)
-    binding?.iBShowQuotedText?.let { registerForContextMenu(it) }
     binding?.editTextEmailSubject?.setText(initializationData.subject)
     binding?.editTextEmailMessage?.requestFocus()
     binding?.editTextEmailMessage?.showKeyboard()
@@ -1102,12 +1098,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
+    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+
     navController?.navigate(
       CreateMessageFragmentDirections
         .actionCreateMessageFragmentToCreateOutgoingMessageDialogFragment(
           requestKey = REQUEST_KEY_CREATE_OUTGOING_MESSAGE,
-          outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-            password = usePasswordIfNeeded()
+          outgoingMessageInfo = outgoingMessageInfo.copy(
+            msg = if (outgoingMessageInfo.quotedTextForReply?.isNotEmpty() == true &&
+              args.messageType in arrayOf(
+                MessageType.REPLY,
+                MessageType.REPLY_ALL
+              )
+            ) {
+              outgoingMessageInfo.msg + EmailUtil.genReplyContent(args.incomingMessageInfo)
+            } else {
+              outgoingMessageInfo.msg
+            },
+            password = usePasswordIfNeeded(),
           )
         )
     )
@@ -1404,6 +1412,28 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         attachmentsRecyclerViewAdapter.submitList(allAttachments)
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      composeMsgViewModel.initSignatureStateFlow.collect {
+        when (it.status) {
+          Result.Status.SUCCESS -> {
+            val accountEntity = it.data ?: return@collect
+            val signature = accountEntity.signature ?: return@collect
+
+            composeMsgViewModel.updateOutgoingMessageInfo(
+              composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+                signature = signature
+              )
+            )
+            binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + signature)
+            binding?.editTextEmailMessage?.setSelection(0)
+            composeMsgViewModel.markSignatureUsed()
+          }
+
+          else -> {}
+        }
       }
     }
   }

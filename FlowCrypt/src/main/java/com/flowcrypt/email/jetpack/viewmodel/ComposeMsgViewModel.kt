@@ -119,12 +119,34 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val attachmentsStateFlow: StateFlow<List<AttachmentInfo>> =
     attachmentsMutableStateFlow.asStateFlow()
 
+  private val initSignatureMutableStateFlow: MutableStateFlow<Result<AccountEntity?>> =
+    MutableStateFlow(Result.none())
+  val initSignatureStateFlow: StateFlow<Result<AccountEntity?>> =
+    initSignatureMutableStateFlow.asStateFlow()
+
   fun addAttachments(attachments: List<AttachmentInfo>) {
     attachmentsMutableStateFlow.update { existingAttachments ->
       existingAttachments.toMutableList().apply {
         addAll(attachments)
       }
     }
+  }
+
+  fun initSignature() {
+    viewModelScope.launch {
+      val activeAccount = getActiveAccountSuspend()
+      val signature = activeAccount?.signature ?: return@launch
+      if (outgoingMessageInfoStateFlow.value.signature == null
+        && signature.isNotEmpty()
+        && !activeAccount.useAliasSignatures
+      ) {
+        initSignatureMutableStateFlow.value = Result.success(activeAccount)
+      }
+    }
+  }
+
+  fun markSignatureUsed() {
+    initSignatureMutableStateFlow.value = Result.none()
   }
 
   fun removeAttachments(attachments: List<AttachmentInfo>) {
