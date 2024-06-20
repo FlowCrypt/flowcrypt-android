@@ -504,42 +504,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
 
         if (account?.useAliasSignatures == true) {
-          val aliases = accountAliasesViewModel.accountAliasesLiveData.value ?: emptyList()
-          val newSignature = aliases.firstOrNull {
-            it.sendAsEmail == sendAs
-          }?.plainTextSignature ?: return
-          var useNewSignature = false
-
-          val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
-          val messageHasOldSignature = binding?.editTextEmailMessage?.text?.contains(
-            ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
-          ) == true
-
-          if (messageHasOldSignature && oldSignature != null) {
-            useNewSignature = true
-            binding?.editTextEmailMessage?.setText(
-              binding?.editTextEmailMessage?.text?.replaceFirst(
-                regex = oldSignature.toRegex(RegexOption.MULTILINE),
-                replacement = newSignature
-              )
-            )
-          } else if (oldSignature == null) {
-            useNewSignature = true
-            if (binding?.editTextEmailMessage?.text?.isEmpty() == true) {
-              binding?.editTextEmailMessage?.text?.append("\n\n" + newSignature)
-            } else {
-              binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + newSignature)
-            }
-            binding?.editTextEmailMessage?.setSelection(0)
-          }
-
-          if (useNewSignature) {
-            composeMsgViewModel.updateOutgoingMessageInfo(
-              composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-                signature = newSignature
-              )
-            )
-          }
+          applyAliasSignature(sendAs)
         }
       }
     }
@@ -1420,15 +1385,27 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         when (it.status) {
           Result.Status.SUCCESS -> {
             val accountEntity = it.data ?: return@collect
-            val signature = accountEntity.signature ?: return@collect
 
-            composeMsgViewModel.updateOutgoingMessageInfo(
-              composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-                signature = signature
-              )
-            )
-            binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + signature)
-            binding?.editTextEmailMessage?.setSelection(0)
+            if (accountEntity.useAliasSignatures) {
+              val position = binding?.spinnerFrom?.selectedItemPosition ?: return@collect
+              val sendAs =
+                (fromAddressesAdapter?.getItem(position) as? CharSequence) ?: return@collect
+              applyAliasSignature(sendAs)
+            } else {
+              val signature = accountEntity.signature ?: return@collect
+              if (composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature == null
+                && signature.isNotEmpty()
+              ) {
+                composeMsgViewModel.updateOutgoingMessageInfo(
+                  composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+                    signature = signature
+                  )
+                )
+                binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + signature)
+                binding?.editTextEmailMessage?.setSelection(0)
+              }
+            }
+
             composeMsgViewModel.markSignatureUsed()
           }
 
@@ -2138,6 +2115,43 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       accountEntity = account,
       keys = keys
     )
+  }
+
+  private fun applyAliasSignature(sendAs: CharSequence) {
+    val aliases = accountAliasesViewModel.accountAliasesLiveData.value ?: emptyList()
+    val newSignature = aliases.firstOrNull {
+      it.sendAsEmail == sendAs
+    }?.plainTextSignature ?: return
+    var useNewSignature = false
+
+    val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
+    val messageHasOldSignature = binding?.editTextEmailMessage?.text?.contains(
+      ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
+    ) == true
+
+    if (messageHasOldSignature && oldSignature != null) {
+      useNewSignature = true
+      binding?.editTextEmailMessage?.setText(
+        binding?.editTextEmailMessage?.text?.replaceFirst(
+          regex = oldSignature.toRegex(RegexOption.MULTILINE),
+          replacement = newSignature
+        )
+      )
+    } else if (oldSignature == null) {
+      useNewSignature = true
+      if (binding?.editTextEmailMessage?.text?.isEmpty() == true) {
+        binding?.editTextEmailMessage?.text?.append("\n\n" + newSignature)
+      } else {
+        binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + newSignature)
+      }
+      binding?.editTextEmailMessage?.setSelection(0)
+    }
+
+    if (useNewSignature) {
+      composeMsgViewModel.updateOutgoingMessageInfo(
+        composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(signature = newSignature)
+      )
+    }
   }
 
   companion object {

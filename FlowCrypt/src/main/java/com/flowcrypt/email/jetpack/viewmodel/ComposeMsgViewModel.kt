@@ -135,13 +135,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   fun initSignature() {
     viewModelScope.launch {
       val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
-      val signature = activeAccount?.signature ?: return@launch
-      if (outgoingMessageInfoStateFlow.value.signature == null
-        && signature.isNotEmpty()
-        && !activeAccount.useAliasSignatures
-      ) {
-        initSignatureMutableStateFlow.value = Result.success(activeAccount)
-      }
+      initSignatureMutableStateFlow.value = Result.success(activeAccount)
     }
   }
 
