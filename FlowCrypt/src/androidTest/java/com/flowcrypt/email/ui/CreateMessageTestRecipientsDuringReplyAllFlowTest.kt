@@ -22,7 +22,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.rules.AddGmailAliasToDatabaseRule
+import com.flowcrypt.email.rules.AddAccountAliasToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -45,14 +45,16 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-  private val addGmailAliasToDatabaseRule = AddGmailAliasToDatabaseRule(
-    AccountAliasesEntity(
+  private val addAccountAliasToDatabaseRule = AddAccountAliasToDatabaseRule(
+    listOf(
+      AccountAliasesEntity(
       email = addAccountToDatabaseRule.account.email,
       accountType = requireNotNull(addAccountToDatabaseRule.account.accountType),
       sendAsEmail = ALIAS.lowercase(),
       displayName = ALIAS,
       isDefault = false,
       verificationStatus = "accepted"
+      )
     )
   )
   private val INBOX = LocalFolder(
@@ -70,7 +72,7 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(addGmailAliasToDatabaseRule)
+    .around(addAccountAliasToDatabaseRule)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
