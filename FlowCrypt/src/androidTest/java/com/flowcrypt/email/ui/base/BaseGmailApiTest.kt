@@ -73,7 +73,8 @@ import kotlin.random.Random
 /**
  * @author Denys Bondarenko
  */
-abstract class BaseGmailApiTest : BaseComposeScreenTest() {
+abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_ENTITY) :
+  BaseComposeScreenTest() {
   val attachments: MutableList<File> = mutableListOf()
 
   /**
@@ -98,20 +99,6 @@ abstract class BaseGmailApiTest : BaseComposeScreenTest() {
   fun deleteTempFiles() {
     TestGeneralUtil.deleteFiles(attachments)
   }
-
-  protected val accountEntity = AccountDaoManager.getDefaultAccountDao().copy(
-    accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
-      flags = listOf(
-        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
-        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
-        ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
-        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
-        ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
-        ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
-      ),
-      keyManagerUrl = "https://flowcrypt.test/",
-    ), useAPI = true, useCustomerFesUrl = true
-  )
 
   final override val addAccountToDatabaseRule: AddAccountToDatabaseRule =
     AddAccountToDatabaseRule(accountEntity)
@@ -1037,5 +1024,19 @@ abstract class BaseGmailApiTest : BaseComposeScreenTest() {
         }
       )
     }
+
+    val BASE_ACCOUNT_ENTITY = AccountDaoManager.getDefaultAccountDao().copy(
+      accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
+        flags = listOf(
+          ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
+          ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
+          ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
+          ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
+          ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
+          ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
+        ),
+        keyManagerUrl = "https://flowcrypt.test/",
+      ), useAPI = true, useCustomerFesUrl = true
+    )
   }
 }

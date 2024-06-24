@@ -22,6 +22,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.java.io.readText
@@ -76,7 +77,8 @@ import java.util.concurrent.TimeUnit
 /**
  * @author Denys Bondarenko
  */
-abstract class BaseComposeGmailFlow : BaseGmailApiTest() {
+abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_ENTITY) :
+  BaseGmailApiTest(accountEntity) {
   protected val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
 
   @get:Rule
