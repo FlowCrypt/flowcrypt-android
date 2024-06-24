@@ -1431,7 +1431,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //ref https://github.com/FlowCrypt/flowcrypt-android/issues/2712
         database.execSQL("ALTER TABLE accounts ADD COLUMN `signature` TEXT DEFAULT NULL;")
-        database.execSQL("ALTER TABLE accounts ADD COLUMN `use_alias_signatures` INTEGER DEFAULT 0;")
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `use_alias_signatures` INTEGER NOT NULL DEFAULT 0;")
 
         //we need to delete the current version and create a new one
         database.execSQL("DROP TABLE IF EXISTS `accounts_aliases`;")
