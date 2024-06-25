@@ -624,6 +624,8 @@
     <string name="please_tap_to_edit">Будь ласка, натисніть, щоб редагувати</string>
     <string name="use_gmail_alias_signatures">Використовуйте підписи псевдонімів Gmail</string>
     <string name="update">Оновити</string>
+    <string name="make_backup_in_the_email_box">Make a bakup in the email box</string>
+    <string name="make_backup_expalanation_text">Save unlocked PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>

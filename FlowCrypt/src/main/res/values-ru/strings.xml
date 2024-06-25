@@ -623,6 +623,8 @@
     <string name="please_tap_to_edit">Пожалуйста, нажмите, чтобы изменить</string>
     <string name="use_gmail_alias_signatures">Используйте подписи псевдонимов Gmail</string>
     <string name="update">Обновить</string>
+    <string name="make_backup_in_the_email_box">Make a bakup in the email box</string>
+    <string name="make_backup_expalanation_text">Save unlocked PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытка, после чего следует 5-минутный период восстановления.</item>
         <item quantity="few">Для Вашей защиты и безопасности данных в настоящее время осталось только %1$d попытки, после чего следует 5-минутный период восстановления.</item>

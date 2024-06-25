@@ -30,7 +30,7 @@ import org.pgpainless.algorithm.KeyFlag
  * @author Denys Bondarenko
  */
 @Parcelize
-data class PgpKeyRingDetails constructor(
+data class PgpKeyRingDetails(
   @Expose val isFullyDecrypted: Boolean,
   @Expose val isFullyEncrypted: Boolean,
   @Expose val isRevoked: Boolean,
@@ -47,9 +47,9 @@ data class PgpKeyRingDetails constructor(
   @Expose val algo: Algo,
   @Expose val primaryKeyId: Long,
   @Expose val possibilities: Set<Int>,
-  var tempPassphrase: CharArray? = null,
-  var passphraseType: KeyEntity.PassphraseType? = null,
-  var importSourceType: KeyImportDetails.SourceType? = null
+  val tempPassphrase: CharArray? = null,
+  val passphraseType: KeyEntity.PassphraseType? = null,
+  val importInfo: ImportInfo? = null
 ) : Parcelable {
   val fingerprint: String
     get() = ids.first().fingerprint
@@ -201,7 +201,7 @@ data class PgpKeyRingDetails constructor(
       if (!tempPassphrase.contentEquals(other.tempPassphrase)) return false
     } else if (other.tempPassphrase != null) return false
     if (passphraseType != other.passphraseType) return false
-    if (importSourceType != other.importSourceType) return false
+    if (importInfo != other.importInfo) return false
 
     return true
   }
@@ -223,9 +223,14 @@ data class PgpKeyRingDetails constructor(
     result = 31 * result + algo.hashCode()
     result = 31 * result + primaryKeyId.hashCode()
     result = 31 * result + possibilities.hashCode()
-    result = 31 * result + (tempPassphrase?.contentHashCode() ?: 0)
     result = 31 * result + (passphraseType?.hashCode() ?: 0)
-    result = 31 * result + (importSourceType?.hashCode() ?: 0)
+    result = 31 * result + (importInfo?.hashCode() ?: 0)
     return result
   }
+
+  @Parcelize
+  data class ImportInfo(
+    val importSourceType: KeyImportDetails.SourceType? = null,
+    val shouldBeAddedToBackup: Boolean? = null
+  ) : Parcelable
 }

@@ -33,18 +33,18 @@ import com.flowcrypt.email.databinding.FragmentMainSignInBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
-import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.androidx.fragment.app.getNavigationResult
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.CheckCustomerUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
@@ -789,10 +789,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           importCandidates.clear()
-          importCandidates.addAll(it.data ?: emptyList())
-          importCandidates.forEach { pgpKeyRingDetails ->
-            pgpKeyRingDetails.passphraseType = KeyEntity.PassphraseType.RAM
+          it.data?.let { pgpKeyRingDetailsList ->
+            importCandidates.addAll(
+              pgpKeyRingDetailsList.map { pgpKeyRingDetails ->
+                pgpKeyRingDetails.copy(passphraseType = KeyEntity.PassphraseType.RAM)
+              }
+            )
           }
+
           getTempAccount()?.let { account ->
             accountViewModel.addNewAccount(account)
           }

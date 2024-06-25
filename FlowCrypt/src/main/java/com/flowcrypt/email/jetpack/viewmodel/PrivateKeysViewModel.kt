@@ -259,7 +259,9 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
             KeyStoreCryptoManager.encryptSuspend(pgpKeyRingDetails.privateKey).toByteArray()
 
           val keyEntity = (existingKeyEntity ?: pgpKeyRingDetails.toKeyEntity(accountEntity)).copy(
-            source = requireNotNull(pgpKeyRingDetails.importSourceType?.toPrivateKeySourceTypeString()),
+            source = requireNotNull(
+              pgpKeyRingDetails.importInfo?.importSourceType?.toPrivateKeySourceTypeString()
+            ),
             privateKey = encryptedPrvKey,
             storedPassphrase = encryptedPassphrase
           )
@@ -485,7 +487,8 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   fun protectPrivateKeys(privateKeys: List<PgpKeyRingDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
       protectPrivateKeysLiveData.value = Result.loading()
-      val sourceTypeInfo = privateKeys.associateBy({ it.fingerprint }, { it.importSourceType })
+      val sourceTypeInfo =
+        privateKeys.associateBy({ it.fingerprint }, { it.importInfo?.importSourceType })
       try {
         val encryptedKeysSource = privateKeys.map { pgpKeyRingDetails ->
           PgpKey.encryptKeySuspend(requireNotNull(pgpKeyRingDetails.privateKey), passphrase)
@@ -495,7 +498,9 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
           Result.success(PgpKey.parsePrivateKeys(encryptedKeysSource).map { key ->
             key.copy(
               tempPassphrase = passphrase.chars,
-              importSourceType = sourceTypeInfo[key.fingerprint]
+              importInfo = (key.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                importSourceType = sourceTypeInfo[key.fingerprint]
+              )
             )
           })
       } catch (e: Exception) {

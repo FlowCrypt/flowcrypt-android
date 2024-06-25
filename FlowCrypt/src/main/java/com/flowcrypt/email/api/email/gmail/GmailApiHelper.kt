@@ -802,7 +802,11 @@ class GmailApiHelper {
           val backup = EmailUtil.getKeyFromMimeMsg(msg).takeIf { it.isNotEmpty() } ?: continue
 
           list.addAll(PgpKey.parseKeys(source = backup).pgpKeyDetailsList.map {
-            it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
+            it.copy(
+              importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                importSourceType = KeyImportDetails.SourceType.EMAIL
+              )
+            )
           })
         }
 

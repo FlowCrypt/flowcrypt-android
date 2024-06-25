@@ -33,15 +33,15 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentPrivateKeyDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.gone
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
@@ -454,9 +454,7 @@ class PrivateKeyDetailsFragment : BaseFragment<FragmentPrivateKeyDetailsBinding>
                 if (privateKeyDetailsViewModel.getPassphraseType() == KeyEntity.PassphraseType.RAM) {
                   val existedPassphrase = privateKeyDetailsViewModel.getPassphrase()
                   if (existedPassphrase == null || existedPassphrase.isEmpty) {
-                    privateKeyDetailsViewModel.updatePassphrase(
-                      Passphrase.fromPassword(checkResult.passphrase)
-                    )
+                    privateKeyDetailsViewModel.updatePassphrase(Passphrase(checkResult.passphrase))
                   }
                   binding?.btnForgetPassphrase?.visible()
                   binding?.btnProvidePassphrase?.gone()
