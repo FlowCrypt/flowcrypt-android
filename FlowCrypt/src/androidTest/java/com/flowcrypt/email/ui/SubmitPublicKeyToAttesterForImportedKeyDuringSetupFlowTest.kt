@@ -42,6 +42,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Before
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -58,6 +59,7 @@ import java.net.HttpURLConnection
 @FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("Disabled due to migration to Credential Manager. More details can be found here https://stackoverflow.com/questions/78606467/")
 class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(

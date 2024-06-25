@@ -156,9 +156,8 @@ class PgpMsgTest {
       "decrypt - [gpg] signed fully armored message"
     )
     for (key in keys) {
-      println("Decrypt: '$key'")
       val r = processMessage(key)
-      assertTrue("Message not returned", r.content != null)
+      assertTrue("Message not returned for $key", r.content != null)
       val messageInfo = findMessage(key)
       checkContent(
         expected = messageInfo.content,
@@ -299,10 +298,6 @@ class PgpMsgTest {
       secretKeys = PGPSecretKeyRingCollection(PRIVATE_KEYS.map { it.keyRing }),
       protector = secretKeyRingProtector
     )
-    if (result.content != null) {
-      val s = String(result.content!!.toByteArray(), Charset.forName(messageInfo.charset))
-      println("=========\n$s\n=========")
-    }
     return result
   }
 

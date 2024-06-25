@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,7 +13,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavDirections
@@ -33,21 +34,25 @@ import com.flowcrypt.email.databinding.FragmentMainSignInBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
-import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.androidx.fragment.app.getNavigationResult
-import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
+import com.flowcrypt.email.extensions.java.lang.showDialogWithErrorDetails
 import com.flowcrypt.email.jetpack.viewmodel.CheckCustomerUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
+import com.flowcrypt.email.jetpack.viewmodel.SignInWithGoogleViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
@@ -61,13 +66,10 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.tasks.Task
+import com.google.android.gms.auth.api.identity.AuthorizationRequest
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.common.api.Scope
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.sun.mail.util.MailConnectException
@@ -83,27 +85,30 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentMainSignInBinding.inflate(inflater, container, false)
 
-  private lateinit var client: GoogleSignInClient
-  private var cachedGoogleSignInAccount: GoogleSignInAccount? = null
   private var cachedClientConfiguration: ClientConfiguration? = null
   private var cachedBaseFesUrlPath: String? = null
 
   private val checkCustomerUrlFesServerViewModel: CheckCustomerUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
+  private val signInWithGoogleViewModel: SignInWithGoogleViewModel by viewModels()
   private var useStartTlsForSmtp = false
 
   private val forActivityResultSignIn = registerForActivityResult(
-    ActivityResultContracts.StartActivityForResult()
+    ActivityResultContracts.StartIntentSenderForResult()
   ) { result: ActivityResult ->
-    handleSignInResult(result.resultCode, GoogleSignIn.getSignedInAccountFromIntent(result.data))
+    if (result.resultCode == Activity.RESULT_OK) {
+      onUserAuthorizedToGmailApi()
+    } else {
+      signInWithGoogleViewModel.resetAuthenticationState()
+    }
   }
 
   private val forActivityResultSignInError = registerForActivityResult(
     ActivityResultContracts.StartActivityForResult()
   ) { result: ActivityResult ->
     if (result.resultCode == Activity.RESULT_OK) {
-      signInWithGmail()
+      binding?.buttonSignInWithGmail?.callOnClick()
     }
   }
 
@@ -116,14 +121,12 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
 
-  override fun onAttach(context: Context) {
-    super.onAttach(context)
-    client = GoogleSignIn.getClient(context, GoogleApiClientHelper.generateGoogleSignInOptions())
-  }
+  private val cachedGoogleIdTokenCredential: GoogleIdTokenCredential?
+    get() = signInWithGoogleViewModel.googleIdTokenCredentialStateFlow.value.data
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews(view)
+    initViews()
 
     subscribeToCheckAccountSettingsAndSearchBackups()
     subscribeToCheckPrivateKeys()
@@ -135,13 +138,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     initEnterpriseViewModels()
     initPrivateKeysViewModel()
     initProtectPrivateKeysLiveData()
+    initSignInWithGoogleViewModel()
   }
 
   override fun getTempAccount(): AccountEntity? {
     val sharedTenantFesBaseUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
-    return cachedGoogleSignInAccount?.let {
+    return cachedGoogleIdTokenCredential?.let {
       AccountEntity(
-        googleSignInAccount = it,
+        googleIdTokenCredential = it,
         clientConfiguration = cachedClientConfiguration,
         useCustomerFesUrl = cachedBaseFesUrlPath?.isNotEmpty() == true &&
             cachedBaseFesUrlPath != sharedTenantFesBaseUrlPath,
@@ -171,15 +175,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     handleUnlockedKeys(accountEntity, keys)
   }
 
-  private fun initViews(view: View) {
-    view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
+  private fun initViews() {
+    binding?.buttonSignInWithGmail?.setOnClickListener {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       importCandidates.clear()
-      signInWithGmail()
+      signInWithGoogleViewModel.authenticateUser(requireActivity())
     }
 
-    view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
+    binding?.buttonOtherEmailProvider?.setOnClickListener {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       navController?.navigateSafe(
@@ -188,15 +192,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       )
     }
 
-    view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
+    binding?.buttonPrivacy?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)
     }
 
-    view.findViewById<View>(R.id.buttonTerms)?.setOnClickListener {
+    binding?.buttonTerms?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
 
-    view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
+    binding?.buttonSecurity?.setOnClickListener {
       navController?.navigateSafe(
         R.id.mainSignInFragment,
         NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
@@ -206,86 +210,103 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       )
     }
 
-    view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
+    binding?.buttonHelp?.setOnClickListener {
       showFeedbackFragment()
     }
   }
 
-  private fun signInWithGmail() {
-    cachedGoogleSignInAccount = null
-    client.signOut()
-    forActivityResultSignIn.launch(client.signInIntent)
-  }
+  private fun handleAuthentication(googleIdTokenCredential: GoogleIdTokenCredential) {
+    val account = googleIdTokenCredential.id
+    cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
-  private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {
-    try {
-      if (task.isSuccessful) {
-        cachedGoogleSignInAccount = task.getResult(ApiException::class.java)
-
-        val account = cachedGoogleSignInAccount?.account?.name ?: return
-        cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
-
-        val publicEmailDomains = EmailUtil.getPublicEmailDomains()
-        val domain = EmailUtil.getDomain(account)
-        if (domain in publicEmailDomains) {
-          if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-            cachedGoogleSignInAccount = null
-            showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = getString(
-                R.string.enterprise_does_not_support_pub_domains,
-                getString(R.string.app_name),
-                domain
-              ),
-              isCancelable = true
-            )
-          } else {
-            val idToken = cachedGoogleSignInAccount?.idToken
-            if (idToken == null) {
-              showInfoDialog(
-                dialogTitle = "",
-                dialogMsg = getString(
-                  R.string.error_occurred_with_details_please_try_again,
-                  "GoogleSignInAccount.idToken == null"
-                ),
-                isCancelable = true
-              )
-            } else {
-              clientConfigurationViewModel.fetchClientConfiguration(
-                idToken = idToken,
-                baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
-                domain = domain
-              )
-            }
-          }
-        } else {
-          checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
-        }
-      } else {
-        val error = task.exception
-
-        if (error is ApiException) {
-          throw error
-        }
-
-        showInfoSnackbar(
-          msgText = error?.message ?: error?.javaClass?.simpleName
-          ?: getString(R.string.unknown_error)
+    val publicEmailDomains = EmailUtil.getPublicEmailDomains()
+    val domain = EmailUtil.getDomain(account)
+    if (domain in publicEmailDomains) {
+      @Suppress("KotlinConstantConditions")
+      if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+        signInWithGoogleViewModel.resetAuthenticationState()
+        showInfoDialog(
+          dialogTitle = "",
+          dialogMsg = getString(
+            R.string.enterprise_does_not_support_pub_domains,
+            getString(R.string.app_name),
+            domain
+          ),
+          isCancelable = true
         )
-      }
-    } catch (e: ApiException) {
-      val msg = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
-      if (resultCode == Activity.RESULT_OK) {
-        showInfoSnackbar(msgText = msg)
       } else {
-        toast(msg)
+        authorizeUserToGmailApi()
       }
+    } else {
+      authorizeUserToGmailApi()
     }
   }
 
-  private fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
+  private fun authorizeUserToGmailApi() {
+    val authorizationRequest: AuthorizationRequest = AuthorizationRequest.builder()
+      .setRequestedScopes(listOf(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))).build()
+    Identity.getAuthorizationClient(requireContext())
+      .authorize(authorizationRequest)
+      .addOnSuccessListener { authorizationResult ->
+        if (authorizationResult.hasResolution()) {
+          // Access needs to be granted by the user.
+          // At this stage the grant access to Gmail API screen should be displayed
+          val pendingIntent = authorizationResult.pendingIntent
+          if (pendingIntent != null) {
+            try {
+              forActivityResultSignIn.launch(
+                IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+              )
+            } catch (e: Exception) {
+              e.showDialogWithErrorDetails(this)
+            }
+          } else {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = getString(
+                R.string.error_occurred_with_details_please_try_again,
+                "pendingIntent == null"
+              )
+            )
+          }
+        } else {
+          // Access already granted, continue with user action
+          onUserAuthorizedToGmailApi()
+        }
+      }.addOnFailureListener { exception ->
+        exception.showDialogWithErrorDetails(this)
+      }
+  }
+
+  private fun onUserAuthorizedToGmailApi() {
+    val account = cachedGoogleIdTokenCredential?.id?.lowercase()
+    val idToken = cachedGoogleIdTokenCredential?.idToken
+
+    if (idToken == null) {
+      IllegalStateException("idToken == null").showDialogWithErrorDetails(this)
+      return
+    }
+
+    if (account != null) {
+      val publicEmailDomains = EmailUtil.getPublicEmailDomains()
+      val domain = EmailUtil.getDomain(account)
+      if (domain in publicEmailDomains) {
+        clientConfigurationViewModel.fetchClientConfiguration(
+          idToken = idToken,
+          baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
+          domain = domain
+        )
+      } else {
+        checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
+      }
+    } else {
+      IllegalStateException("account == null").showDialogWithErrorDetails(this)
+    }
+  }
+
+  private fun onSignSuccess(googleIdTokenCredential: GoogleIdTokenCredential?) {
     val existedAccount = existingAccounts.firstOrNull {
-      it.email.equals(googleSignInAccount?.email, ignoreCase = true)
+      it.email.equals(googleIdTokenCredential?.id, ignoreCase = true)
     }
 
     if (existedAccount == null) {
@@ -375,7 +396,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         if (original is MailConnectException && !useStartTlsForSmtp) {
           useStartTlsForSmtp = true
-          onSignSuccess(cachedGoogleSignInAccount)
+          onSignSuccess(cachedGoogleIdTokenCredential)
           return
         }
 
@@ -439,15 +460,16 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val account = cachedGoogleSignInAccount?.account?.name
+          val account = cachedGoogleIdTokenCredential?.id
             ?: return@setFragmentResultListenerForTwoWayDialog
           checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken =
-            cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListenerForTwoWayDialog
-          val account = cachedGoogleSignInAccount?.account?.name
+            cachedGoogleIdTokenCredential?.idToken
+              ?: return@setFragmentResultListenerForTwoWayDialog
+          val account = cachedGoogleIdTokenCredential?.id
             ?: return@setFragmentResultListenerForTwoWayDialog
           val domain = EmailUtil.getDomain(account)
           val baseFesUrlPath =
@@ -461,7 +483,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken =
-            cachedGoogleSignInAccount?.idToken ?: return@setFragmentResultListenerForTwoWayDialog
+            cachedGoogleIdTokenCredential?.idToken
+              ?: return@setFragmentResultListenerForTwoWayDialog
           cachedClientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
         }
       }
@@ -496,13 +519,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
               accountEntity = account,
               keys = keys,
-              idToken = cachedGoogleSignInAccount?.idToken
+              idToken = cachedGoogleIdTokenCredential?.idToken
             )
           }
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {
-          this.cachedGoogleSignInAccount = null
+          signInWithGoogleViewModel.resetAuthenticationState()
           showContent()
         }
       }
@@ -568,9 +591,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           if (it.data?.service in ApiClientRepository.FES.ALLOWED_SERVICES) {
-            cachedGoogleSignInAccount?.account?.name?.let { account ->
+            cachedGoogleIdTokenCredential?.id?.let { account ->
               val domain = EmailUtil.getDomain(account)
-              val idToken = cachedGoogleSignInAccount?.idToken ?: return@let
+              val idToken = cachedGoogleIdTokenCredential?.idToken ?: return@let
               val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
                 useCustomerFesUrl = true,
                 domain = domain
@@ -634,6 +657,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
 
             is SSLException -> {
+              @Suppress("KotlinConstantConditions")
               if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
                 showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
               } else {
@@ -656,7 +680,55 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
+  private fun initSignInWithGoogleViewModel() {
+    launchAndRepeatWithViewLifecycle {
+      signInWithGoogleViewModel.googleIdTokenCredentialStateFlow.collect {
+        when (it.status) {
+          Result.Status.SUCCESS -> {
+            if (it.data != null) {
+              handleAuthentication(it.data)
+            } else {
+              showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = getString(
+                  R.string.error_occurred_with_details_please_try_again,
+                  "data == null"
+                )
+              )
+            }
+            signInWithGoogleViewModel.cacheAuthenticationState()
+          }
+
+          Result.Status.EXCEPTION -> {
+            when {
+              it.exception is GetCredentialCancellationException
+                  && "android.credentials.GetCredentialException.TYPE_USER_CANCELED" == it.exception.type
+                  && isConnected() -> {
+                //do nothing
+              }
+
+              it.exception is AccountAlreadyAddedException -> {
+                toast(it.exception.message)
+              }
+
+              else -> showInfoDialog(
+                dialogTitle = "",
+                dialogMsg = it.exceptionMsg
+              )
+            }
+
+            (it.exception as? Exception)?.printStackTraceIfDebugOnly()
+            signInWithGoogleViewModel.resetAuthenticationState()
+          }
+
+          else -> {}
+        }
+      }
+    }
+  }
+
   private fun continueBasedOnFlavorSettings(errorMsg: String) {
+    @Suppress("KotlinConstantConditions")
     if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
       showDialogWithRetryButton(
         errorMsg,
@@ -668,8 +740,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueWithRegularFlow() {
-    val idToken = cachedGoogleSignInAccount?.idToken
-    val account = cachedGoogleSignInAccount?.account?.name
+    val idToken = cachedGoogleIdTokenCredential?.idToken
+    val account = cachedGoogleIdTokenCredential?.id
     val baseFesUrlPath = cachedBaseFesUrlPath
 
     if (idToken != null && account != null && baseFesUrlPath != null) {
@@ -694,7 +766,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         Result.Status.SUCCESS -> {
-          val idToken = cachedGoogleSignInAccount?.idToken
+          val idToken = cachedGoogleIdTokenCredential?.idToken
           cachedClientConfiguration = it.data?.clientConfiguration
 
           if (idToken != null) {
@@ -752,7 +824,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           showContent()
           when (it.exception) {
             is EkmNotSupportedException -> {
-              onSignSuccess(cachedGoogleSignInAccount)
+              onSignSuccess(cachedGoogleIdTokenCredential)
             }
 
             is UnsupportedClientConfigurationException -> {
@@ -848,7 +920,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       if (accountEntity == null) {
         showContent()
-        ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
+        ExceptionUtil.handleError(NullPointerException("GoogleIdTokenCredential is null!"))
         toast(R.string.error_occurred_try_again_later)
       } else {
         accountViewModel.addNewAccount(accountEntity)

@@ -445,11 +445,14 @@ dependencies {
   implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
   implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
   implementation("androidx.webkit:webkit:1.11.0")
+  implementation("androidx.credentials:credentials:1.2.2")
+  implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
   implementation("com.google.android.gms:play-services-auth:21.2.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
+  implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 
   //https://mvnrepository.com/artifact/com.google.code.gson/gson
   implementation("com.google.code.gson:gson:2.11.0")

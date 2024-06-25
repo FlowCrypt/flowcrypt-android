@@ -35,6 +35,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -50,6 +51,9 @@ import java.util.concurrent.TimeUnit
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @EnterpriseTest
+@Ignore(
+  "Disabled due to migration to Credential Manager. More details can be found here https://stackoverflow.com/questions/78606467/"
+)
 class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
