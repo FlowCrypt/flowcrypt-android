@@ -7,16 +7,20 @@ package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author Denys Bondarenko
  */
-class AddAccountAliasToDatabaseRule constructor(val alias: AccountAliasesEntity) : BaseRule() {
+class AddAccountAliasToDatabaseRule(private val aliases: List<AccountAliasesEntity>) : BaseRule() {
   override fun execute() {
     saveAliasToDatabase()
   }
 
   private fun saveAliasToDatabase() {
-    FlowCryptRoomDatabase.getDatabase(targetContext).accountAliasesDao().insert(alias)
+    runBlocking {
+      FlowCryptRoomDatabase.getDatabase(targetContext).accountAliasesDao()
+        .insertSuspend(aliases)
+    }
   }
 }

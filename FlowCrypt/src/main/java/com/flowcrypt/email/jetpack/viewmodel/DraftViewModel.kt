@@ -126,7 +126,7 @@ class DraftViewModel(
     timeInMilliseconds: Long
   ) {
     draftFingerprint = DraftFingerprint(
-      msgText = initializationData.body,
+      msgText = initializationData.body ?: "",
       msgSubject = initializationData.subject,
       toRecipients = initializationData.toAddresses.map { it.lowercase() }.toSet(),
       ccRecipients = initializationData.ccAddresses.map { it.lowercase() }.toSet(),
@@ -148,7 +148,17 @@ class DraftViewModel(
         internetAddress.address.lowercase()
       }?.toSet() ?: emptySet()
 
-    if (outgoingMessageInfo.msg != draftFingerprint.msgText
+    val isTextTheSame = if (outgoingMessageInfo.signature != null) {
+      val textWithoutSignature = outgoingMessageInfo.msg?.replaceFirst(
+        regex = ("\n\n" + outgoingMessageInfo.signature).toRegex(RegexOption.MULTILINE),
+        replacement = ""
+      ) ?: ""
+      textWithoutSignature == draftFingerprint.msgText
+    } else {
+      (outgoingMessageInfo.msg ?: "") == draftFingerprint.msgText
+    }
+
+    if (!isTextTheSame
       || outgoingMessageInfo.subject != draftFingerprint.msgSubject
       || currentToRecipients != draftFingerprint.toRecipients
       || currentCcRecipients != draftFingerprint.ccRecipients
@@ -156,7 +166,7 @@ class DraftViewModel(
     ) {
       isSavingDraftNeeded = true
       draftFingerprint = DraftFingerprint(
-        msgText = outgoingMessageInfo.msg,
+        msgText = outgoingMessageInfo.msg ?: "",
         msgSubject = outgoingMessageInfo.subject,
         toRecipients = currentToRecipients,
         ccRecipients = currentCcRecipients,
@@ -307,7 +317,7 @@ class DraftViewModel(
   }
 
   private data class DraftFingerprint(
-    var msgText: String? = null,
+    var msgText: String = "",
     var msgSubject: String? = null,
     val toRecipients: Set<String> = setOf(),
     val ccRecipients: Set<String> = setOf(),

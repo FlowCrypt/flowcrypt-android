@@ -71,6 +71,14 @@ class MainSettingsFragment : BasePreferenceFragment() {
         true
       }
 
+    findPreference<Preference>(getString(R.string.pref_key_signature))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToSignatureSettingsFragment()
+        )
+        true
+      }
+
     findPreference<Preference>(getString(R.string.pref_key_server_settings))
       ?.setOnPreferenceClickListener {
         navController?.navigate(

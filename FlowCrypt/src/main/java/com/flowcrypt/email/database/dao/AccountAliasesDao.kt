@@ -20,7 +20,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 @Dao
 interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
   @Query("SELECT * FROM accounts_aliases WHERE email = :account AND account_type = :accountType")
-  fun getAliases(account: String, accountType: String): List<AccountAliasesEntity>
+  suspend fun getAliases(account: String, accountType: String): List<AccountAliasesEntity>
 
   @Query("SELECT * FROM accounts_aliases WHERE email = :account AND account_type = :accountType")
   fun getAliasesLD(account: String, accountType: String): LiveData<List<AccountAliasesEntity>>
@@ -31,11 +31,39 @@ interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
   @Transaction
   suspend fun updateAliases(
     accountEntity: AccountEntity?,
-    newAliases: Collection<AccountAliasesEntity>
+    freshestAliases: Collection<AccountAliasesEntity>
   ) {
     accountEntity?.let {
-      deleteByEmailSuspend(it.email, it.accountType ?: "")
-      insertWithReplaceSuspend(newAliases)
+      val freshestUniqueSendAsSet = freshestAliases.map { entity ->
+        entity.sendAsEmail?.lowercase()
+      }.toSet()
+      val existingAliases = getAliases(
+        account = accountEntity.email,
+        accountType = accountEntity.accountType ?: ""
+      )
+      val existingUniqueSendAsSet = existingAliases.map { entity ->
+        entity.sendAsEmail?.lowercase()
+      }.toSet()
+
+      val toBeDeleted = existingAliases.filter { existingEntity ->
+        existingEntity.sendAsEmail !in freshestUniqueSendAsSet
+      }
+      deleteSuspend(toBeDeleted)
+
+      val toBeAdded = freshestAliases.filter { newEntity ->
+        newEntity.sendAsEmail !in existingUniqueSendAsSet
+      }
+      insertWithReplaceSuspend(freshestAliases)
+
+      val toBeUpdated = (freshestAliases - toBeAdded.toSet()).mapNotNull { toBeUpdatedEntity ->
+        val existingEntity = existingAliases.firstOrNull { existingEntity ->
+          existingEntity.sendAsEmail == toBeUpdatedEntity.sendAsEmail
+        }
+
+        val finalToBeUpdatedEntity = toBeUpdatedEntity.copy(id = existingEntity?.id)
+        finalToBeUpdatedEntity.takeIf { existingEntity != finalToBeUpdatedEntity }
+      }
+      updateSuspend(toBeUpdated)
     }
   }
 }

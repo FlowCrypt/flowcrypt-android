@@ -619,9 +619,15 @@
     <string name="download_dangerous_file_warning">Цей виконуваний файл не було перевірено на наявність вірусів, він може бути небезпечним для завантаження чи запуску.\n\nБажаєте продовжити?</string>
     <string name="sending_message">Вихідні: надсилання&#8230;</string>
     <string name="message_not_found_or_labels_changed">Повідомлення не знайдено або мітки змінено</string>
+    <string name="signature">Підпис</string>
+    <string name="email_signature_explanation">Що таке підпис електронної пошти?\n\nПідпис електронної пошти - це текст, де можуть бути вказані ваші професійні контактні дані та бренд компанії чи улюблена цитата. Його буде автоматично додано в кінці ваших вихідних повідомлень як нижній колонтитул на екрані створення повідомлення.</string>
+    <string name="please_tap_to_edit">Будь ласка, натисніть, щоб редагувати</string>
+    <string name="use_gmail_alias_signatures">Використовуйте підписи псевдонімів Gmail</string>
+    <string name="update">Оновити</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>
         <item quantity="many">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроб, а потім 5-хвилинний період відновлення.</item>
     </plurals>
+    <string name="please_specify_your_signature_here">Будь ласка, вкажіть свій підпис тут</string>
 </resources>
