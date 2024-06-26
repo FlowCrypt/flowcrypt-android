@@ -204,7 +204,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
               val resultKeys = it.data ?: emptyList()
               val sessionUnlockedKeys = resultKeys
                 .filter { checkResult ->
-                  checkResult.passphrase.isNotEmpty()
+                  checkResult.passphrase.isNotEmpty() && checkResult.e == null
                 }.map { checkResult ->
                   checkResult.pgpKeyRingDetails.copy(
                     tempPassphrase = checkResult.passphrase,
