@@ -202,6 +202,13 @@
             app:layout_constraintTop_toBottomOf="@+id/buttonSkipRemainingBackups"
             tools:text="@string/use_another_account" />
 
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/groupAddToBackupOption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:constraint_referenced_ids="checkBoxMakeBackup,imageButtonMakeBackupHint" />
+
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLeft"
             android:layout_width="wrap_content"

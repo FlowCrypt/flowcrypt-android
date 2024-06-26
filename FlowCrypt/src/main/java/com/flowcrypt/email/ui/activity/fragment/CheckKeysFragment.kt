@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.IntDef
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -162,6 +163,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
         useWebViewToRender = true
       )
     }
+    binding?.groupAddToBackupOption?.visibleOrGone(args.showAddToBackupOption)
     binding?.imageButtonMakeBackupHint?.setOnClickListener {
       showInfoDialog(
         dialogTitle = "",
@@ -207,9 +209,14 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
                 }.map { checkResult ->
                   checkResult.pgpKeyRingDetails.copy(
                     tempPassphrase = checkResult.passphrase,
-                    importInfo = PgpKeyRingDetails.ImportInfo(
-                      shouldBeAddedToBackup = binding?.checkBoxMakeBackup?.isChecked ?: false
-                    )
+                    importInfo = if (binding?.checkBoxMakeBackup?.isVisible == true) {
+                      (checkResult.pgpKeyRingDetails.importInfo
+                        ?: PgpKeyRingDetails.ImportInfo()).copy(
+                        shouldBeAddedToBackup = binding?.checkBoxMakeBackup?.isChecked ?: false
+                      )
+                    } else {
+                      checkResult.pgpKeyRingDetails.importInfo
+                    }
                   )
                 }
               if (sessionUnlockedKeys.isNotEmpty()) {

@@ -102,7 +102,8 @@ class ImportPrivateKeysDuringSetupFragment :
             positiveBtnTitle = getString(R.string.continue_),
             negativeBtnTitle = getString(R.string.choose_another_key),
             initSubTitlePlurals = 0,
-            skipImportedKeys = true
+            skipImportedKeys = true,
+            showAddToBackupOption = true
           ).toBundle()
         }
       )

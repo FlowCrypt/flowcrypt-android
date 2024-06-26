@@ -48,5 +48,9 @@
             android:name="skipImportedKeys"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="showAddToBackupOption"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
 </navigation>
