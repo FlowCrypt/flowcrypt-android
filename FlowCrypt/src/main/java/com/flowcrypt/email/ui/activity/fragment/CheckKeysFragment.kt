@@ -167,7 +167,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     binding?.imageButtonMakeBackupHint?.setOnClickListener {
       showInfoDialog(
         dialogTitle = "",
-        dialogMsg = getString(R.string.make_backup_expalanation_text),
+        dialogMsg = getString(R.string.make_backup_explanation_text),
         useWebViewToRender = false
       )
     }

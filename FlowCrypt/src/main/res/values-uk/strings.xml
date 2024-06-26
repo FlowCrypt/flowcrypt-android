@@ -624,12 +624,12 @@
     <string name="please_tap_to_edit">Будь ласка, натисніть, щоб редагувати</string>
     <string name="use_gmail_alias_signatures">Використовуйте підписи псевдонімів Gmail</string>
     <string name="update">Оновити</string>
-    <string name="make_backup_in_the_email_box">Make a bakup in the email box</string>
-    <string name="make_backup_expalanation_text">Save unlocked PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>
         <item quantity="many">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроб, а потім 5-хвилинний період відновлення.</item>
     </plurals>
     <string name="please_specify_your_signature_here">Будь ласка, вкажіть свій підпис тут</string>
+    <string name="make_backup_in_the_email_box">Зробіть резервну копію в електронній скриньці</string>
+    <string name="make_backup_explanation_text">Зберегти надані секретні ключі PGP, захищені парольною фразою, як резервну копію в папці «Вхідні». Це допоможе отримати Вам доступ до Ваших зашифрованих повідомлень з інших пристроїв (за умови надання Вашою парольної фрази). Ви можете спокійно залишити його у папці "Вхідні" або заархівувати.\n\nЯкщо Вам не потрібна така резервна копія, вимкніть цю опцію.</string>
 </resources>
