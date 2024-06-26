@@ -191,13 +191,13 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
-          binding?.checkBoxMakeBackup?.isEnabled = false
+          binding?.checkBoxShouldBeAddedToBackup?.isEnabled = false
           countingIdlingResource?.incrementSafely(this@CheckKeysFragment)
           binding?.progressBar?.visibility = View.VISIBLE
         }
 
         else -> {
-          binding?.checkBoxMakeBackup?.isEnabled = true
+          binding?.checkBoxShouldBeAddedToBackup?.isEnabled = true
           binding?.progressBar?.visibility = View.GONE
           when (it.status) {
             Result.Status.SUCCESS -> {
@@ -211,7 +211,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
                     importInfo = if (args.showAddToBackupOption) {
                       (checkResult.pgpKeyRingDetails.importInfo
                         ?: PgpKeyRingDetails.ImportInfo()).copy(
-                        shouldBeAddedToBackup = binding?.checkBoxMakeBackup?.isChecked ?: false
+                        shouldBeAddedToBackup = binding?.checkBoxShouldBeAddedToBackup?.isChecked ?: false
                       )
                     } else {
                       checkResult.pgpKeyRingDetails.importInfo

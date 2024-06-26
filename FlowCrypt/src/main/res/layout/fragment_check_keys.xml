@@ -144,7 +144,7 @@
         </RadioGroup>
 
         <CheckBox
-            android:id="@+id/checkBoxMakeBackup"
+            android:id="@+id/checkBoxShouldBeAddedToBackup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/default_margin_content"
@@ -162,9 +162,9 @@
             android:layout_marginStart="@dimen/default_margin_small"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/make_backup_in_the_email_box"
-            app:layout_constraintBottom_toBottomOf="@+id/checkBoxMakeBackup"
-            app:layout_constraintStart_toEndOf="@+id/checkBoxMakeBackup"
-            app:layout_constraintTop_toTopOf="@+id/checkBoxMakeBackup"
+            app:layout_constraintBottom_toBottomOf="@+id/checkBoxShouldBeAddedToBackup"
+            app:layout_constraintStart_toEndOf="@+id/checkBoxShouldBeAddedToBackup"
+            app:layout_constraintTop_toTopOf="@+id/checkBoxShouldBeAddedToBackup"
             app:srcCompat="@drawable/ic_help" />
 
         <Button
@@ -175,7 +175,7 @@
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/checkBoxMakeBackup"
+            app:layout_constraintTop_toBottomOf="@+id/checkBoxShouldBeAddedToBackup"
             tools:text="Load Account" />
 
         <Button
@@ -207,7 +207,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            app:constraint_referenced_ids="checkBoxMakeBackup,imageButtonMakeBackupHint" />
+            app:constraint_referenced_ids="checkBoxShouldBeAddedToBackup,imageButtonMakeBackupHint" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLeft"

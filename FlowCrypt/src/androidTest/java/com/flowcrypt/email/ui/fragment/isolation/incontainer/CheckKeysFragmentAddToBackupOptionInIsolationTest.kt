@@ -1,0 +1,91 @@
+/*
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.ui.fragment.isolation.incontainer
+
+import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import com.flowcrypt.email.R
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
+import com.flowcrypt.email.model.KeyImportDetails
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.GrantPermissionRuleChooser
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment
+import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragmentArgs
+import com.flowcrypt.email.util.PrivateKeysManager
+import org.hamcrest.Matchers.not
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import java.util.UUID
+
+/**
+ * @author Denys Bondarenko
+ */
+@MediumTest
+@RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
+class CheckKeysFragmentAddToBackupOptionInIsolationTest : BaseTest() {
+  private val privateKeys = PrivateKeysManager.getKeysFromAssets(
+    arrayOf("pgp/default@flowcrypt.test_fisrtKey_prv_default.asc"),
+    true
+  )
+
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+    .outerRule(RetryRule.DEFAULT)
+    .around(ClearAppSettingsRule())
+    .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(ScreenshotTestRule())
+
+  @Test
+  fun testVisibleAddToBackupOption() {
+    launchFragmentInContainer<CheckKeysFragment>(
+      fragmentArgs = CheckKeysFragmentArgs(
+        requestKey = UUID.randomUUID().toString(),
+        privateKeys = privateKeys.toTypedArray(),
+        positiveBtnTitle = getTargetContext().getString(R.string.continue_),
+        negativeBtnTitle = getTargetContext().getString(R.string.use_another_account),
+        initSubTitlePlurals = R.plurals.found_backup_of_your_account_key,
+        sourceType = KeyImportDetails.SourceType.EMAIL,
+        showAddToBackupOption = true
+      ).toBundle()
+    )
+
+    Espresso.closeSoftKeyboard()
+
+    onView(withId(R.id.checkBoxShouldBeAddedToBackup))
+      .check(matches(isDisplayed()))
+  }
+
+  @Test
+  fun testNotVisibleAddToBackupOption() {
+    launchFragmentInContainer<CheckKeysFragment>(
+      fragmentArgs = CheckKeysFragmentArgs(
+        requestKey = UUID.randomUUID().toString(),
+        privateKeys = privateKeys.toTypedArray(),
+        positiveBtnTitle = getTargetContext().getString(R.string.continue_),
+        negativeBtnTitle = getTargetContext().getString(R.string.use_another_account),
+        initSubTitlePlurals = R.plurals.found_backup_of_your_account_key,
+        sourceType = KeyImportDetails.SourceType.EMAIL,
+        showAddToBackupOption = false
+      ).toBundle()
+    )
+
+    Espresso.closeSoftKeyboard()
+    onView(withId(R.id.checkBoxShouldBeAddedToBackup))
+      .check(matches(not(isDisplayed())))
+  }
+}
