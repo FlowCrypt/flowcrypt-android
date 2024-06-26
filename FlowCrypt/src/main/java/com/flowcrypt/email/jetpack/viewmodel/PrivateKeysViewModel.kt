@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.model.KeyImportDetails
@@ -596,17 +597,27 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   ): Boolean =
     withContext(Dispatchers.IO) {
       try {
-        val context: Context = getApplication()
-        val session = OpenStoreHelper.getAccountSess(context, accountEntity)
-        val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, accountEntity)
-        val msg = EmailUtil.genMsgWithPrivateKeys(
-          context, accountEntity, session,
-          EmailUtil.genBodyPartWithPrivateKey(accountEntity, keyDetails.privateKey!!)
-        )
-        transport.sendMessage(msg, msg.allRecipients)
+        if (accountEntity.hasClientConfigurationProperty(
+            ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
+          )
+        ) {
+          throw IllegalStateException("making backups is not allowed")
+        }
+
+        if (keyDetails.importInfo?.shouldBeAddedToBackup != false){
+          val context: Context = getApplication()
+          val session = OpenStoreHelper.getAccountSess(context, accountEntity)
+          val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, accountEntity)
+          val msg = EmailUtil.genMsgWithPrivateKeys(
+            context, accountEntity, session,
+            EmailUtil.genBodyPartWithPrivateKey(accountEntity, keyDetails.privateKey!!)
+          )
+          transport.sendMessage(msg, msg.allRecipients)
+        }
+
         return@withContext true
       } catch (e: Exception) {
-        e.printStackTrace()
+        e.printStackTraceIfDebugOnly()
         return@withContext false
       }
     }

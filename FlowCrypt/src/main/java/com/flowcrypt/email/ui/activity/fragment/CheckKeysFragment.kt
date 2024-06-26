@@ -294,7 +294,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   /**
-   * Remove the already imported keys from the list of found backups.
+   * Remove the already imported keys from the the given list.
    */
   private fun removeAlreadyImportedKeys() {
     val fingerprints = getUniqueFingerprints(keyDetailsAndFingerprintsMap)

@@ -11,6 +11,7 @@ import android.content.Context
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
+import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -39,6 +40,15 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
     val account = encryptedAccount.withDecryptedInfo()
+
+    if (account.hasClientConfigurationProperty(
+        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
+      )
+    ) {
+      //making backups is not allowed. Skipping...
+      return
+    }
+
     val keysStorage = KeysStorageImpl.getInstance(context)
     val pgpKeyRingDetails = keysStorage
       .getPGPSecretKeyRingByFingerprint(privateKeyFingerprint)
