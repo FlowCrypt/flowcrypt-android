@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.IntDef
 import androidx.core.os.bundleOf
-import androidx.core.view.isVisible
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -209,7 +208,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
                 }.map { checkResult ->
                   checkResult.pgpKeyRingDetails.copy(
                     tempPassphrase = checkResult.passphrase,
-                    importInfo = if (binding?.checkBoxMakeBackup?.isVisible == true) {
+                    importInfo = if (args.showAddToBackupOption) {
                       (checkResult.pgpKeyRingDetails.importInfo
                         ?: PgpKeyRingDetails.ImportInfo()).copy(
                         shouldBeAddedToBackup = binding?.checkBoxMakeBackup?.isChecked ?: false
