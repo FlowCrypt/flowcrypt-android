@@ -20,10 +20,10 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentCheckKeysBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -162,6 +162,14 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
         useWebViewToRender = true
       )
     }
+    binding?.groupAddToBackupOption?.visibleOrGone(args.showAddToBackupOption)
+    binding?.imageButtonMakeBackupHint?.setOnClickListener {
+      showInfoDialog(
+        dialogTitle = "",
+        dialogMsg = getString(R.string.make_backup_explanation_text),
+        useWebViewToRender = false
+      )
+    }
     binding?.textViewSubTitle?.text = args.subTitle
 
     if (args.isExtraImportOpt) {
@@ -183,19 +191,33 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
+          binding?.checkBoxShouldBeAddedToBackup?.isEnabled = false
           countingIdlingResource?.incrementSafely(this@CheckKeysFragment)
           binding?.progressBar?.visibility = View.VISIBLE
         }
 
         else -> {
+          binding?.checkBoxShouldBeAddedToBackup?.isEnabled = true
           binding?.progressBar?.visibility = View.GONE
           when (it.status) {
             Result.Status.SUCCESS -> {
               val resultKeys = it.data ?: emptyList()
               val sessionUnlockedKeys = resultKeys
                 .filter { checkResult ->
-                  checkResult.pgpKeyRingDetails.tempPassphrase?.isNotEmpty() == true
-                }.map { checkResult -> checkResult.pgpKeyRingDetails }
+                  checkResult.passphrase.isNotEmpty() && checkResult.e == null
+                }.map { checkResult ->
+                  checkResult.pgpKeyRingDetails.copy(
+                    tempPassphrase = checkResult.passphrase,
+                    importInfo = if (args.showAddToBackupOption) {
+                      (checkResult.pgpKeyRingDetails.importInfo
+                        ?: PgpKeyRingDetails.ImportInfo()).copy(
+                        shouldBeAddedToBackup = binding?.checkBoxShouldBeAddedToBackup?.isChecked ?: false
+                      )
+                    } else {
+                      checkResult.pgpKeyRingDetails.importInfo
+                    }
+                  )
+                }
               if (sessionUnlockedKeys.isNotEmpty()) {
                 unlockedKeys.addAll(sessionUnlockedKeys)
 
@@ -271,7 +293,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   /**
-   * Remove the already imported keys from the list of found backups.
+   * Remove the already imported keys from the the given list.
    */
   private fun removeAlreadyImportedKeys() {
     val fingerprints = getUniqueFingerprints(keyDetailsAndFingerprintsMap)

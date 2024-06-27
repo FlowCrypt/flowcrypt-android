@@ -104,7 +104,9 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
           .map {
             it.copy(
               passphraseType = KeyEntity.PassphraseType.RAM,
-              importSourceType = KeyImportDetails.SourceType.EKM,
+              importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                importSourceType = KeyImportDetails.SourceType.EKM
+              ),
               tempPassphrase = null
             )
           }

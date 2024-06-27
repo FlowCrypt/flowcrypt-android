@@ -35,7 +35,6 @@ import com.flowcrypt.email.databinding.FragmentAddOtherAccountBinding
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
-import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
@@ -43,6 +42,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
@@ -155,7 +155,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
   override fun onAccountAdded(accountEntity: AccountEntity) {
     //we should be sure we save keys with the same source type
-    if (importCandidates.mapNotNull { it.importSourceType }.toSet().size == 1) {
+    if (importCandidates.mapNotNull { it.importInfo?.importSourceType }.toSet().size == 1) {
       privateKeysViewModel.encryptAndSaveKeysToDatabase(
         accountEntity = accountEntity,
         keys = importCandidates

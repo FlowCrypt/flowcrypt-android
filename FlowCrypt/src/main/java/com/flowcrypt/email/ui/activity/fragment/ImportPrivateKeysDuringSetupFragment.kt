@@ -102,7 +102,8 @@ class ImportPrivateKeysDuringSetupFragment :
             positiveBtnTitle = getString(R.string.continue_),
             negativeBtnTitle = getString(R.string.choose_another_key),
             initSubTitlePlurals = 0,
-            skipImportedKeys = true
+            skipImportedKeys = false,
+            showAddToBackupOption = true
           ).toBundle()
         }
       )
@@ -123,11 +124,13 @@ class ImportPrivateKeysDuringSetupFragment :
             args.requestKey,
             bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys?.map {
               it.copy(
-                importSourceType = if (activeUri != null) {
-                  KeyImportDetails.SourceType.FILE
-                } else {
-                  KeyImportDetails.SourceType.CLIPBOARD
-                }
+                importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                  importSourceType = if (activeUri != null) {
+                    KeyImportDetails.SourceType.FILE
+                  } else {
+                    KeyImportDetails.SourceType.CLIPBOARD
+                  }
+                ),
               )
             })
           )

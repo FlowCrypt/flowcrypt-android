@@ -13,7 +13,6 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountSettingsEntity
-import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.GeneralUtil
@@ -122,14 +121,11 @@ class CheckPrivateKeysViewModel(
             if (prvKey.isNullOrEmpty()) {
               e = IllegalArgumentException("Empty source")
             } else {
-              if (copy.isFullyDecrypted) {
-                copy.tempPassphrase = passphrase.chars
-              } else {
+              if (!copy.isFullyDecrypted) {
                 try {
                   PgpKey.decryptKey(prvKey, passphrase)
                   //https://github.com/FlowCrypt/flowcrypt-android/issues/1669
                   PgpKey.checkSecretKeyIntegrity(prvKey, passphrase)
-                  copy.tempPassphrase = passphrase.chars
                 } catch (ex: Throwable) {
                   //to prevent leak sensitive info we skip printing stack trace for release builds
                   if (GeneralUtil.isDebugBuild()) {
@@ -154,7 +150,7 @@ class CheckPrivateKeysViewModel(
         resultList.add(
           CheckResult(
             pgpKeyRingDetails = copy,
-            passphrase = passphrase.asString ?: throw IllegalArgumentException(),
+            passphrase = passphrase.chars ?: throw IllegalArgumentException(),
             e = e
           )
         )
@@ -221,6 +217,27 @@ class CheckPrivateKeysViewModel(
 
   data class CheckResult(
     val pgpKeyRingDetails: PgpKeyRingDetails,
-    val passphrase: String, val e: Throwable? = null
-  )
+    val passphrase: CharArray,
+    val e: Throwable? = null
+  ) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as CheckResult
+
+      if (pgpKeyRingDetails != other.pgpKeyRingDetails) return false
+      if (!passphrase.contentEquals(other.passphrase)) return false
+      if (e != other.e) return false
+
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = pgpKeyRingDetails.hashCode()
+      result = 31 * result + passphrase.contentHashCode()
+      result = 31 * result + (e?.hashCode() ?: 0)
+      return result
+    }
+  }
 }

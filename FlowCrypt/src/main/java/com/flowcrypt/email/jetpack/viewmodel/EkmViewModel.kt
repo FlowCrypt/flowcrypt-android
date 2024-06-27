@@ -88,7 +88,11 @@ class EkmViewModel(application: Application) : BaseAndroidViewModel(application)
               }
             }
             pgpKeyRingDetailsList.addAll(parsedList.map {
-              it.copy(importSourceType = KeyImportDetails.SourceType.EKM)
+              it.copy(
+                importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                  importSourceType = KeyImportDetails.SourceType.EKM
+                ),
+              )
             })
           }
         }

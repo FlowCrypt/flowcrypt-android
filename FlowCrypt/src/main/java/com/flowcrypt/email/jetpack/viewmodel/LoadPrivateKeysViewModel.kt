@@ -122,7 +122,11 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
                 }
 
                 details.addAll(PgpKey.parseKeys(source = backup).pgpKeyDetailsList.map {
-                  it.copy(importSourceType = KeyImportDetails.SourceType.EMAIL)
+                  it.copy(
+                    importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                      importSourceType = KeyImportDetails.SourceType.EMAIL
+                    ),
+                  )
                 })
               }
 
