@@ -21,9 +21,9 @@ object FlavorSettings : EnvironmentSettings {
 
   private fun configureLeakCanary(context: Context) {
     if (GeneralUtil.isDebugBuild()) {
-      val isLeakCanaryEnabled = SharedPreferencesHelper.getBoolean(
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context),
-        key = Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED,
+      val isLeakCanaryEnabled = SharedPreferencesHelper.getValue(
+        context,
+        PreferencesKeys.KEY_IS_DETECT_MEMORY_LEAK_ENABLED,
         defaultValue = false
       )
 

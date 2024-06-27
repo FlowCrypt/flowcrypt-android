@@ -49,6 +49,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.PreferencesKeys
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -628,9 +629,10 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
     authCreds?.let { if (it.useOAuth2) return }
 
     val authCreds = generateAuthCreds().copy(password = "", smtpSignInPassword = "")
-    SharedPreferencesHelper.setString(
-      PreferenceManager.getDefaultSharedPreferences(requireContext()),
-      Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, Gson().toJson(authCreds)
+    SharedPreferencesHelper.setValue(
+      requireContext(),
+      PreferencesKeys.KEY_TEMP_LAST_AUTH_CREDENTIALS,
+      Gson().toJson(authCreds)
     )
   }
 

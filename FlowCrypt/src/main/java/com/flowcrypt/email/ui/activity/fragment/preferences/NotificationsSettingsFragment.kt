@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
+import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -129,6 +130,10 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
     filter.entryValues = levels
     filter.entries = entries
     filter.onPreferenceChangeListener = this
+
+    preferenceManager.preferenceDataStore = object : PreferenceDataStore() {
+
+    }
 
     var currentValue = SharedPreferencesHelper.getString(
       PreferenceManager.getDefaultSharedPreferences(

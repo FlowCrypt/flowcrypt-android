@@ -210,7 +210,11 @@ object TestGeneralUtil {
   }
 
   fun clearApp(context: Context) {
-    SharedPreferencesHelper.clear(context)
+    runBlocking {
+      context.dataStore.edit { preferences ->
+        preferences.clear()
+      }
+    }
     FileAndDirectoryUtils.cleanDir(context.cacheDir)
     FileAndDirectoryUtils.cleanDir(File(context.filesDir, MsgsCacheManager.CACHE_DIR_NAME))
     FlowCryptRoomDatabase.getDatabase(context).forceDatabaseCreationIfNeeded()

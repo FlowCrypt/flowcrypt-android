@@ -14,7 +14,6 @@ import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.SparseArray
 import androidx.annotation.WorkerThread
-import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -39,6 +38,7 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.OutgoingMessagesManager
+import com.flowcrypt.email.util.PreferencesKeys
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthException
@@ -329,10 +329,12 @@ class EmailUtil {
      * @return true if debug enable, false - otherwise.
      */
     fun hasEnabledDebug(context: Context): Boolean {
-      return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(
-        PreferenceManager.getDefaultSharedPreferences(context.applicationContext),
-        Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED, BuildConfig.IS_MAIL_DEBUG_ENABLED
-      )
+      return GeneralUtil.isDebugBuild() &&
+          SharedPreferencesHelper.getValue(
+            context = context.applicationContext,
+            key = PreferencesKeys.KEY_IS_MAIL_DEBUG_ENABLED,
+            defaultValue = BuildConfig.IS_MAIL_DEBUG_ENABLED
+          )
     }
 
     /**

@@ -24,6 +24,7 @@ import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.PreferencesKeys
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -129,9 +130,9 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
   private fun initACRA() {
     if (GeneralUtil.isDebugBuild()) {
-      val isAcraEnabled = SharedPreferencesHelper.getBoolean(
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this),
-        key = Constants.PREF_KEY_IS_ACRA_ENABLED,
+      val isAcraEnabled = SharedPreferencesHelper.getValue(
+        context = this,
+        key = PreferencesKeys.KEY_IS_ACRA_ENABLED,
         defaultValue = BuildConfig.IS_ACRA_ENABLED
       )
       if (isAcraEnabled) {

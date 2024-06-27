@@ -10,10 +10,22 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.widget.Toast
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.SharedPreferencesMigration
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import com.flowcrypt.email.BuildConfig
 
 /**
  * @author Denys Bondarenko
  */
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+  name = BuildConfig.APPLICATION_ID + "_preferences",
+  produceMigrations = { context ->
+    listOf(SharedPreferencesMigration(context, BuildConfig.APPLICATION_ID + "_preferences"))
+  })
+
 fun Context.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
   Toast.makeText(this, text ?: "", duration).show()
 }

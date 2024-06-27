@@ -7,8 +7,12 @@ package com.flowcrypt.email.util
 
 import android.content.Context
 import android.content.SharedPreferences
-
-import androidx.preference.PreferenceManager
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import com.flowcrypt.email.extensions.dataStore
+import kotlinx.coroutines.flow.lastOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author Denys Bondarenko
@@ -23,62 +27,21 @@ class SharedPreferencesHelper {
       return sharedPreferences.getString(key, defaultValue)
     }
 
-    fun getBoolean(
-      sharedPreferences: SharedPreferences,
-      key: String,
-      defaultValue: Boolean
-    ): Boolean {
-      return sharedPreferences.getBoolean(key, defaultValue)
+    fun <T> getValue(context: Context, key: Preferences.Key<T>, defaultValue: T): T {
+      return runBlocking {
+        context.dataStore.data
+          .map { preferences ->
+            preferences[key] ?: defaultValue
+          }.lastOrNull() ?: defaultValue
+      }
     }
 
-    fun setBoolean(sharedPreferences: SharedPreferences, key: String, value: Boolean): Boolean {
-      val editor = sharedPreferences.edit()
-      editor.putBoolean(key, value)
-      return editor.commit()
-    }
-
-    fun getStringSet(
-      sharedPreferences: SharedPreferences,
-      key: String,
-      defValues: Set<String>
-    ): Set<String>? {
-      return sharedPreferences.getStringSet(key, defValues)
-    }
-
-    fun getLong(sharedPreferences: SharedPreferences, key: String, defaultValue: Long): Long {
-      return sharedPreferences.getLong(key, defaultValue)
-    }
-
-    fun setLong(sharedPreferences: SharedPreferences, key: String, value: Long): Boolean {
-      val editor = sharedPreferences.edit()
-      editor.putLong(key, value)
-      return editor.commit()
-    }
-
-    fun setString(sharedPreferences: SharedPreferences, key: String, value: String): Boolean {
-      val editor = sharedPreferences.edit()
-      editor.putString(key, value)
-      return editor.commit()
-    }
-
-    fun getInt(sharedPreferences: SharedPreferences, key: String, defaultValue: Int): Int {
-      return sharedPreferences.getInt(key, defaultValue)
-    }
-
-    fun setInt(sharedPreferences: SharedPreferences, key: String, value: Int): Boolean {
-      val editor = sharedPreferences.edit()
-      editor.putInt(key, value)
-      return editor.commit()
-    }
-
-    /**
-     * Clear the all shared preferences.
-     *
-     * @param context Interface to global information about an application environment.
-     * @return Returns true if the new values were successfully written to persistent storage.
-     */
-    fun clear(context: Context): Boolean {
-      return PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit()
+    fun <T> setValue(context: Context, key: Preferences.Key<T>, value: T): Boolean {
+      return runBlocking {
+        context.dataStore.edit { preferences ->
+          preferences[key] = value
+        }
+      }.contains(key)
     }
   }
 }

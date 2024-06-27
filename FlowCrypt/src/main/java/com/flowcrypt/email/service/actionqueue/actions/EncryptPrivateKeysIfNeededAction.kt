@@ -8,16 +8,16 @@
 package com.flowcrypt.email.service.actionqueue.actions
 
 import android.content.Context
-import androidx.preference.PreferenceManager
-import com.flowcrypt.email.Constants
+import androidx.datastore.preferences.core.edit
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.dataStore
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
-import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.flowcrypt.email.util.PreferencesKeys
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
@@ -100,10 +100,8 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(
     }
 
     roomDatabase.keysDao().update(modifiedKeyEntities)
-
-    SharedPreferencesHelper.setBoolean(
-      PreferenceManager
-        .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, false
-    )
+    context.dataStore.edit { preferences ->
+      preferences[PreferencesKeys.KEY_IS_CHECK_KEYS_NEEDED] = false
+    }
   }
 }

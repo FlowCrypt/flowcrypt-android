@@ -13,6 +13,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.okhttp.ApiVersionInterceptor
 import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.PreferencesKeys
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.google.gson.ByteArrayJsonSerializerDeserializer
 import com.flowcrypt.email.util.google.gson.CharArrayJsonSerializerDeserializer
@@ -84,10 +85,10 @@ class ApiHelper private constructor(context: Context) {
       context: Context, okHttpClientBuilder: OkHttpClient.Builder
     ) {
       if (GeneralUtil.isDebugBuild()) {
-        val isHttpLogEnabled =
-          SharedPreferencesHelper.getBoolean(
-            PreferenceManager.getDefaultSharedPreferences(context),
-            Constants.PREF_KEY_IS_HTTP_LOG_ENABLED, BuildConfig.IS_HTTP_LOG_ENABLED
+        val isHttpLogEnabled = SharedPreferencesHelper.getValue(
+          context = context.applicationContext,
+          key = PreferencesKeys.KEY_IS_HTTP_LOG_ENABLED,
+          defaultValue = BuildConfig.IS_HTTP_LOG_ENABLED
           )
 
         if (isHttpLogEnabled) {
@@ -98,10 +99,10 @@ class ApiHelper private constructor(context: Context) {
             BuildConfig.HTTP_LOG_LEVEL
           )
 
-          val isWriteLogsEnabled =
-            SharedPreferencesHelper.getBoolean(
-              PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false
+          val isWriteLogsEnabled = SharedPreferencesHelper.getValue(
+            context = context.applicationContext,
+            key = PreferencesKeys.KEY_IS_WRITE_LOGS_TO_FILE_ENABLED,
+            defaultValue = false
             )
 
           if (isWriteLogsEnabled) {

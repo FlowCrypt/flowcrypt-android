@@ -29,7 +29,6 @@ import android.webkit.MimeTypeMap
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -350,13 +349,13 @@ class GeneralUtil {
      * @return The generated order number.
      */
     fun genAttOrderId(context: Context): Int {
-      return SharedPreferencesHelper.getInt(
-        PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREF_KEY_LAST_ATT_ORDER_ID, 0
+      return SharedPreferencesHelper.getValue(
+        context,
+        PreferencesKeys.KEY_LAST_ATT_ORDER_ID, 0
       ).inc().apply {
-        SharedPreferencesHelper.setInt(
-          PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREF_KEY_LAST_ATT_ORDER_ID, this
+        SharedPreferencesHelper.setValue(
+          context,
+          PreferencesKeys.KEY_LAST_ATT_ORDER_ID, this
         )
       }
     }
