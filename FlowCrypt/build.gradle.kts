@@ -382,7 +382,7 @@ dependencies {
   //noinspection FragmentGradleConfiguration
   uiTestsImplementation("androidx.fragment:fragment-testing:1.8.0")
 
-  androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+  androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
   androidTestImplementation("androidx.test.espresso:espresso-web:3.5.1")
