@@ -365,8 +365,7 @@ tasks.register<Copy>("copyReleaseApks") {
   }
 }
 
-val devDebugImplementation by configurations.creating
-val uiTestsImplementation by configurations.named("uiTestsImplementation")
+val devDebugImplementation: Configuration by configurations.creating
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.16.0")
@@ -378,10 +377,8 @@ dependencies {
   ksp("com.google.auto.service:auto-service:1.1.1")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
-  //uiTests is the build type for testing.
-  //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.0")
 
+  androidTestImplementation("androidx.fragment:fragment-testing:1.8.1")
   androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.6.1")
   androidTestImplementation("androidx.test.espresso:espresso-intents:3.6.1")
@@ -411,10 +408,6 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.0")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-
-  //it fixed compilation issue https://github.com/FlowCrypt/flowcrypt-android/pull/2064.
-  //Should be reviewed and removed when more dependencies will be updated
-  implementation("androidx.test:monitor:1.6.1")
 
   implementation("androidx.legacy:legacy-support-v4:1.0.0")
   implementation("androidx.appcompat:appcompat:1.7.0")
