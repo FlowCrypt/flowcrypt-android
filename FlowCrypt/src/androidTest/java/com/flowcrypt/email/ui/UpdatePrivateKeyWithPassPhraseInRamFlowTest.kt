@@ -175,7 +175,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     //type key
     onView(withId(R.id.editTextNewPrivateKey))
       .check(matches(isDisplayed()))
-      .perform(replaceText(updatedKeyDetails.privateKey), closeSoftKeyboard())
+      .perform(replaceText(updatedKeyDetails.privateKey?:""), closeSoftKeyboard())
 
     onView(withId(R.id.buttonCheck))
       .check(matches(isDisplayed()))
