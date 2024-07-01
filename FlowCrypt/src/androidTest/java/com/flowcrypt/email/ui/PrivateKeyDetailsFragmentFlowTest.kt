@@ -95,6 +95,7 @@ class PrivateKeyDetailsFragmentFlowTest : BaseTest() {
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(keyDetails.publicKey))
+      .check(matches(isDisplayed()))
   }
 
   companion object {

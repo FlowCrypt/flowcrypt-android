@@ -5,10 +5,10 @@
 
 package com.flowcrypt.email.ui.base
 
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -31,7 +31,7 @@ abstract class BaseCheckPassphraseOnFirstScreenTest : BaseTest() {
 
   @Test
   fun testEmptyFirstPassPhrase() {
-    closeSoftKeyboard()
+    Espresso.closeSoftKeyboard()
     onView(withId(firstScreenContinueButtonResId))
       .check(matches(isDisplayed()))
       .perform(click())
