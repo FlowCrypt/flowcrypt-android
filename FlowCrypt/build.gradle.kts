@@ -366,6 +366,7 @@ tasks.register<Copy>("copyReleaseApks") {
 }
 
 val devDebugImplementation: Configuration by configurations.creating
+val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.16.0")
@@ -377,8 +378,11 @@ dependencies {
   ksp("com.google.auto.service:auto-service:1.1.1")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+  //uiTests is the build type for testing.
+  //noinspection FragmentGradleConfiguration
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.1")
+  uiTestsImplementation("androidx.test:core-ktx:1.6.1")
 
-  androidTestImplementation("androidx.fragment:fragment-testing:1.8.1")
   androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.6.1")
   androidTestImplementation("androidx.test.espresso:espresso-intents:3.6.1")
@@ -386,7 +390,6 @@ dependencies {
   androidTestImplementation("androidx.test.ext:junit:1.2.1")
   androidTestImplementation("androidx.test:runner:1.6.1")
   androidTestImplementation("androidx.test:rules:1.6.1")
-  androidTestImplementation("androidx.test:core-ktx:1.6.1")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.2.1")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.6.1")
