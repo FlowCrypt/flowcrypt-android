@@ -579,8 +579,9 @@ class GmailApiHelper {
 
         history.labelsRemoved?.let { labelsRemoved ->
           for (historyLabelRemoved in labelsRemoved) {
-            labelsToBeUpdatedMap[historyLabelRemoved.message.uid] = historyLabelRemoved.message
-              .labelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+            val historyMessageLabelIds = historyLabelRemoved?.message?.labelIds ?: emptyList()
+            labelsToBeUpdatedMap[historyLabelRemoved.message.uid] =
+              historyMessageLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
             if (localFolder.fullName in (historyLabelRemoved.labelIds ?: emptyList())) {
               newCandidatesMap.remove(historyLabelRemoved.message.uid)
               updateCandidates.remove(historyLabelRemoved.message.uid)
@@ -589,17 +590,16 @@ class GmailApiHelper {
             }
 
             if (LABEL_TRASH in (historyLabelRemoved.labelIds ?: emptyList())) {
-              val msg = historyLabelRemoved.message
-              if (localFolder.fullName in (msg.labelIds ?: emptyList())) {
-                deleteCandidatesUIDs.remove(msg.uid)
-                updateCandidates.remove(msg.uid)
-                newCandidatesMap[msg.uid] = msg
+              val message = historyLabelRemoved.message
+              if (localFolder.fullName in historyMessageLabelIds) {
+                deleteCandidatesUIDs.remove(message.uid)
+                updateCandidates.remove(message.uid)
+                newCandidatesMap[message.uid] = message
                 continue
               }
             }
 
-            val existedFlags =
-              labelsToImapFlags(historyLabelRemoved.message.labelIds ?: emptyList())
+            val existedFlags = labelsToImapFlags(historyMessageLabelIds)
             updateCandidates[historyLabelRemoved.message.uid] = existedFlags
           }
         }
@@ -700,7 +700,7 @@ class GmailApiHelper {
           .setQ("rfc822msgid:$rfc822msgidValue")
           .execute()
 
-        return@withContext response.messages.firstOrNull()?.threadId
+        return@withContext response?.messages?.firstOrNull()?.threadId
       }
 
     suspend fun sendMsg(
