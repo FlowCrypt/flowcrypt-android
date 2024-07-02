@@ -700,7 +700,7 @@ class GmailApiHelper {
           .setQ("rfc822msgid:$rfc822msgidValue")
           .execute()
 
-        return@withContext response.messages.firstOrNull()?.threadId
+        return@withContext response?.messages?.firstOrNull()?.threadId
       }
 
     suspend fun sendMsg(
