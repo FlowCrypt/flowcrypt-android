@@ -34,7 +34,6 @@ object PgpArmor {
     val replace: Boolean
   )
 
-  @JvmStatic
   val ARMOR_HEADER_DICT: Map<RawBlockParser.RawBlockType, CryptoArmorStringHeaderDefinition> =
     mapOf(
       RawBlockParser.RawBlockType.UNKNOWN to CryptoArmorStringHeaderDefinition(
@@ -75,7 +74,6 @@ object PgpArmor {
       )
   )
 
-  @JvmStatic
   val ARMOR_HEADER_DICT_REGEX = ARMOR_HEADER_DICT.mapValues {
     val v = it.value
     CryptoArmorRegexHeaderDefinition(
@@ -86,16 +84,13 @@ object PgpArmor {
     )
   }
 
-  @JvmStatic
   val ARMOR_HEADER_UNKNOWN = ARMOR_HEADER_DICT[RawBlockParser.RawBlockType.UNKNOWN]
 
-  @JvmStatic
   val FLOWCRYPT_HEADERS: ArmoredOutputStream.Builder = ArmoredOutputStream.builder()
     .setVersion("FlowCrypt Email Encryption ${BuildConfig.VERSION_NAME}")
     .setComment("Seamlessly send and receive encrypted email")
 
   // note: using RawBlockParser.RawBlockType.UNKNOWN instead of "key" in Typescript
-  @JvmStatic
   fun normalize(armored: String, blockType: RawBlockParser.RawBlockType): String {
     if (blockType != RawBlockParser.RawBlockType.UNKNOWN
       && !RawBlockParser.PGP_BLOCK_TYPES.contains(blockType)
@@ -144,7 +139,6 @@ object PgpArmor {
     return result
   }
 
-  @JvmStatic
   private val normalizeBlockTypeList1 = arrayOf(
     RawBlockParser.RawBlockType.PGP_PUBLIC_KEY,
     RawBlockParser.RawBlockType.PGP_PRIVATE_KEY,
@@ -152,13 +146,10 @@ object PgpArmor {
     RawBlockParser.RawBlockType.UNKNOWN
   )
 
-  @JvmStatic
   private val normalizeRegex1 = Regex("^[a-zA-Z0-9\\-_. ]+: .+\$")
 
-  @JvmStatic
   private val normalizeRegex2 = Regex("^[a-zA-Z0-9/+]{32,77}\$")
 
-  @Suppress("ArrayInDataClass")
   data class CleartextSignedMessage(
     val content: ByteArrayOutputStream,
     val signature: String?
@@ -166,7 +157,6 @@ object PgpArmor {
 
   // Based on this example:
   // https://github.com/bcgit/bc-java/blob/bc3b92f1f0e78b82e2584c5fb4b226a13e7f8b3b/pg/src/main/java/org/bouncycastle/openpgp/examples/ClearSignedFileProcessor.java
-  @JvmStatic
   fun readSignedClearTextMessage(input: InputStream): CleartextSignedMessage {
     try {
       ArmoredInputStream(input).use { armoredInput ->
@@ -203,7 +193,6 @@ object PgpArmor {
   }
 
   @Throws(IOException::class)
-  @JvmStatic
   private fun readInputLine(output: ByteArrayOutputStream, input: InputStream): Int {
     output.reset()
     var lookAhead = -1
@@ -219,7 +208,6 @@ object PgpArmor {
   }
 
   @Throws(IOException::class)
-  @JvmStatic
   private fun readInputLine(
     output: ByteArrayOutputStream,
     initialLookAhead: Int,
@@ -242,7 +230,6 @@ object PgpArmor {
   }
 
   @Throws(IOException::class)
-  @JvmStatic
   private fun readPassedEOL(output: ByteArrayOutputStream, lastCh: Int, input: InputStream): Int {
     var lookAhead: Int = input.read()
     if (lastCh == '\r'.code && lookAhead == '\n'.code) {
@@ -252,7 +239,6 @@ object PgpArmor {
     return lookAhead
   }
 
-  @JvmStatic
   private fun getLengthWithoutSeparatorOrTrailingWhitespace(line: ByteArray): Int {
     var end = line.size - 1
     while (end >= 0 && line[end].isWhiteSpace) {
@@ -263,7 +249,6 @@ object PgpArmor {
 
   private val lineSeparatorBytes = Strings.lineSeparator().toByteArray()
 
-  @JvmStatic
   fun clip(text: String): String? {
     val unknown = ARMOR_HEADER_DICT[RawBlockParser.RawBlockType.UNKNOWN]!!
     if (text.contains(unknown.begin) && text.contains(unknown.end)) {

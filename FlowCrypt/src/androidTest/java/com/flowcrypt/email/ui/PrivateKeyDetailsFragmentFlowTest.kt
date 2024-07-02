@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -92,6 +93,10 @@ class PrivateKeyDetailsFragmentFlowTest : BaseTest() {
   fun testKeyDetailsShowPubKey() {
     val keyDetails = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
     onView(withId(R.id.btnShowPubKey))
+      .check(matches(isDisplayed()))
+      .perform(click())
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.show_public_key))
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withText(keyDetails.publicKey))
