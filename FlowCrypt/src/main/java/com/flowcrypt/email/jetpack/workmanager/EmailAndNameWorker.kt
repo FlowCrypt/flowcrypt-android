@@ -60,25 +60,37 @@ class EmailAndNameWorker(context: Context, params: WorkerParameters) : BaseWorke
     const val EXTRA_KEY_NAMES = BuildConfig.APPLICATION_ID + ".EXTRA_KEY_NAMES"
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPDATE_EMAIL_AND_NAME"
 
-    fun enqueue(context: Context, emailAndNamePairs: Collection<Pair<String, String?>>) {
-      val emails = emailAndNamePairs.map { it.first }
-      val names = emailAndNamePairs.map { it.second }
+    fun enqueue(context: Context, emailAndNamePairs: List<Pair<String, String?>>) {
+      var i = 0
+      val stepValue = 50
+      while (i < emailAndNamePairs.size) {
+        val tempList = if (emailAndNamePairs.size - i > stepValue) {
+          emailAndNamePairs.subList(i, i + stepValue)
+        } else {
+          emailAndNamePairs.subList(i, emailAndNamePairs.size)
+        }
 
-      WorkManager
-        .getInstance(context.applicationContext)
-        .enqueueUniqueWork(
-          GROUP_UNIQUE_TAG,
-          ExistingWorkPolicy.APPEND,
-          OneTimeWorkRequestBuilder<EmailAndNameWorker>()
-            .addTag(BaseSyncWorker.TAG_SYNC)
-            .setInputData(
-              workDataOf(
-                EXTRA_KEY_EMAILS to emails.toTypedArray(),
-                EXTRA_KEY_NAMES to names.toTypedArray()
+        val emails = tempList.map { it.first }
+        val names = tempList.map { it.second }
+
+        WorkManager
+          .getInstance(context.applicationContext)
+          .enqueueUniqueWork(
+            GROUP_UNIQUE_TAG,
+            ExistingWorkPolicy.APPEND,
+            OneTimeWorkRequestBuilder<EmailAndNameWorker>()
+              .addTag(BaseSyncWorker.TAG_SYNC)
+              .setInputData(
+                workDataOf(
+                  EXTRA_KEY_EMAILS to emails.toTypedArray(),
+                  EXTRA_KEY_NAMES to names.toTypedArray()
+                )
               )
-            )
-            .build()
-        )
+              .build()
+          )
+
+        i += stepValue
+      }
     }
   }
 }
