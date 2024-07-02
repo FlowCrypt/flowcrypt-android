@@ -255,7 +255,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
     //type key
     onView(withId(R.id.editTextNewPrivateKey))
       .check(matches(isDisplayed()))
-      .perform(replaceText(key), closeSoftKeyboard())
+      .perform(replaceText(key ?: ""), closeSoftKeyboard())
 
     onView(withId(R.id.buttonCheck))
       .check(matches(isDisplayed()))
