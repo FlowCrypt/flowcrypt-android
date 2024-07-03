@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -176,15 +177,15 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
      * @param context Interface to global information about an application environment.
      */
     fun start(context: Context) {
-      val startEmailServiceIntent = Intent(context, PassPhrasesInRAMService::class.java)
+      val startServiceIntent = Intent(context, PassPhrasesInRAMService::class.java)
       try {
-        context.startForegroundService(startEmailServiceIntent)
+        context.startForegroundService(startServiceIntent)
       } catch (e: Exception) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
           if (e is ForegroundServiceStartNotAllowedException) {
             /*Because this service should be restarted by the system we can skip this exception.
              It seems this service was started manually after the app crash via the trigger.*/
-            e.printStackTrace()
+            e.printStackTraceIfDebugOnly()
           }
         } else throw e
       }
