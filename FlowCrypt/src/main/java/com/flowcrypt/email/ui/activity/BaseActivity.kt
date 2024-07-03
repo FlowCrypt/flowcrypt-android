@@ -29,8 +29,11 @@ import androidx.navigation.ui.NavigationUI
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.util.LogsUtil
 
 /**
@@ -91,6 +94,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     initViews()
     setupNavigation()
     initAccountViewModel()
+    setupPassPhrasesInRAMService()
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -193,6 +197,19 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
         navController,
         appBarConfiguration
       )
+    }
+  }
+
+  private fun setupPassPhrasesInRAMService() {
+    val keysStorage = KeysStorageImpl.getInstance(this)
+    keysStorage.secretKeyRingsLiveData.observe(this) {
+      val hasTemporaryPassPhrases =
+        keysStorage.getRawKeys().any { it.passphraseType == KeyEntity.PassphraseType.RAM }
+      if (hasTemporaryPassPhrases) {
+        PassPhrasesInRAMService.start(this)
+      } else {
+        PassPhrasesInRAMService.stop(this)
+      }
     }
   }
 }
