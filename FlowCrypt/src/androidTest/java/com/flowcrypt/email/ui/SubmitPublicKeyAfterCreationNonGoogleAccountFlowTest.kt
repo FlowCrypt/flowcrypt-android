@@ -30,7 +30,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.base.BaseSignTest
 import com.flowcrypt.email.util.AccountDaoManager
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Folder
 import kotlinx.coroutines.runBlocking

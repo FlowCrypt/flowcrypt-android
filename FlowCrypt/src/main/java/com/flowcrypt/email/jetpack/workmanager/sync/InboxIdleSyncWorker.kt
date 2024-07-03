@@ -18,7 +18,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.GmailAPIException
 import com.google.api.services.gmail.model.History
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Store

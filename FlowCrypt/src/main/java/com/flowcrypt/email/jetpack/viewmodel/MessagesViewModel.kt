@@ -46,7 +46,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Message
