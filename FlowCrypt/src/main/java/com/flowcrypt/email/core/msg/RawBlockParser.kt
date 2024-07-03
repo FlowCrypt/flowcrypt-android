@@ -14,7 +14,7 @@ import com.flowcrypt.email.extensions.jakarta.mail.isInline
 import com.flowcrypt.email.extensions.java.io.readText
 import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
-import com.sun.mail.util.BASE64DecoderStream
+import org.eclipse.angus.mail.util.BASE64DecoderStream
 import jakarta.mail.Part
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMultipart

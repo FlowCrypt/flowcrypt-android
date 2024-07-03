@@ -41,7 +41,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.util.MailConnectException
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
 

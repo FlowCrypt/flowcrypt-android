@@ -32,7 +32,6 @@ import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSetting
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
-import com.sun.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Message
 import jakarta.mail.MessageRemovedException
@@ -42,6 +41,7 @@ import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.util.Properties
 
 /**

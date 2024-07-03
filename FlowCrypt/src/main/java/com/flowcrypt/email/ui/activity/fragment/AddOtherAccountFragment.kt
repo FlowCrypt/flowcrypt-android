@@ -55,7 +55,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
 import java.net.SocketTimeoutException
 

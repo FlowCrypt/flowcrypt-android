@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.email.protocol
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.BodyPart
 import jakarta.mail.MessagingException
 import jakarta.mail.Multipart

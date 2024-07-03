@@ -45,8 +45,8 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.http.FileContent
-import com.sun.mail.imap.IMAPFolder
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.Flags
 import jakarta.mail.Folder
