@@ -98,7 +98,7 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.sun.mail.imap.protocol.SearchSequence
+import org.eclipse.angus.mail.imap.protocol.SearchSequence
 import jakarta.mail.AuthenticationFailedException
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor

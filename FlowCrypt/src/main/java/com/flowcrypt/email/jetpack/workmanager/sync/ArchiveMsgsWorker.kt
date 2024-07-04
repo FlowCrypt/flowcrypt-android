@@ -16,7 +16,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Store

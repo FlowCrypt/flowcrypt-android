@@ -12,8 +12,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.sun.mail.util.FolderClosedIOException
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.mail.FolderClosedException
 import jakarta.mail.MessagingException
 import jakarta.mail.Store
@@ -199,7 +198,7 @@ class IMAPStoreConnection(
 
   private fun processException(e: Throwable): Throwable {
     return when (e) {
-      is UnknownHostException, is MailConnectException, is FolderClosedException, is SocketTimeoutException, is FolderClosedIOException -> {
+      is UnknownHostException, is MailConnectException, is FolderClosedException, is SocketTimeoutException -> {
         CommonConnectionException(e)
       }
 

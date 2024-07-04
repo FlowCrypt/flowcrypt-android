@@ -57,9 +57,9 @@ import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
-import com.sun.mail.imap.IMAPBodyPart
-import com.sun.mail.imap.IMAPFolder
-import com.sun.mail.imap.IMAPMessage
+import org.eclipse.angus.mail.imap.IMAPBodyPart
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPMessage
 import jakarta.mail.BodyPart
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder

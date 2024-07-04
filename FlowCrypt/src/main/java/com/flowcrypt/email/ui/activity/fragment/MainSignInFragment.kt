@@ -70,7 +70,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException

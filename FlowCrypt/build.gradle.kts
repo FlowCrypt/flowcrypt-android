@@ -208,6 +208,7 @@ android {
       "META-INF/*.SF",
       "META-INF/*.DSA",
       "META-INF/*.RSA",
+      "META-INF/javamail.providers",
     )
   }
 
@@ -401,14 +402,14 @@ dependencies {
   androidTestUtil("androidx.test:orchestrator:1.4.2")
 
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-  testImplementation("junit:junit:4.13.2")
-  testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("org.robolectric:robolectric:4.12.2")
-  testImplementation("io.github.classgraph:classgraph:4.8.174")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
+  testImplementation("org.robolectric:robolectric:4.12.2")
   //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.0")
+  testImplementation("junit:junit:4.13.2")
+  testImplementation("androidx.room:room-testing:2.6.1")
+  testImplementation("io.github.classgraph:classgraph:4.8.174")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -446,13 +447,11 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:21.2.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-
-  //https://mvnrepository.com/artifact/com.google.code.gson/gson
   implementation("com.google.code.gson:gson:2.11.0")
-  //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
   implementation("com.google.api-client:google-api-client-android:2.6.0")
-  //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
+  //ACRA needs the following dependency to use a custom report sender
+  implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
   implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
@@ -460,29 +459,21 @@ dependencies {
   implementation("com.squareup.okio:okio:3.9.0")
   implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-  implementation("com.sun.mail:jakarta.mail:2.0.1")
-  implementation("com.sun.activation:jakarta.activation:2.0.1")
-  implementation("com.sun.mail:gimap:2.0.1") {
-    //exclude group: "com.sun.mail" to prevent compilation errors
-    exclude("com.sun.mail")
-  }
-
-  implementation("org.pgpainless:pgpainless-core:1.6.7")
-
   implementation("com.github.bumptech.glide:glide:4.16.0")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
-  implementation("commons-io:commons-io:2.16.1")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
-  implementation("net.openid:appauth:0.11.1")
-  implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
-  implementation("org.jsoup:jsoup:1.17.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
+  implementation("org.bitbucket.b_c:jose4j:0.9.6")
+  implementation("org.jsoup:jsoup:1.17.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+  implementation("org.pgpainless:pgpainless-core:1.6.7")
+  implementation("org.eclipse.angus:angus-mail:2.0.3")
+  implementation("org.eclipse.angus:gimap:2.0.3")
+  implementation("commons-io:commons-io:2.16.1")
+  implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.11.3")
-  //ACRA needs the following dependency to use a custom report sender
-  implementation("com.google.auto.service:auto-service-annotations:1.1.1")
+  implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199

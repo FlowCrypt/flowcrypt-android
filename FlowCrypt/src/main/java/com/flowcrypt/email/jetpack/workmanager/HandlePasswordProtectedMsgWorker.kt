@@ -32,7 +32,7 @@ import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.GsonBuilder
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.activation.DataHandler
 import jakarta.mail.Address
 import jakarta.mail.Message

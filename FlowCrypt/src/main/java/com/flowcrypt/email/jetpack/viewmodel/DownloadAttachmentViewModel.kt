@@ -19,7 +19,7 @@ import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -28,7 +28,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers

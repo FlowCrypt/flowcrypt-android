@@ -14,7 +14,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Folder
 import jakarta.mail.Message

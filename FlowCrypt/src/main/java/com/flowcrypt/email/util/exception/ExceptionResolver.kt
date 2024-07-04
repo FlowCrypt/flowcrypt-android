@@ -9,9 +9,9 @@ import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
-import com.sun.mail.iap.ConnectionException
-import com.sun.mail.smtp.SMTPSendFailedException
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.iap.ConnectionException
+import org.eclipse.angus.mail.smtp.SMTPSendFailedException
+import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.FolderClosedException
 import jakarta.mail.MessagingException

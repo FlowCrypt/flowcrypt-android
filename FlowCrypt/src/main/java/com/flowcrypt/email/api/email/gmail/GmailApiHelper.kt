@@ -54,7 +54,7 @@ import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
-import com.sun.mail.gimap.GmailRawSearchTerm
+import org.eclipse.angus.mail.gimap.GmailRawSearchTerm
 import jakarta.mail.Flags
 import jakarta.mail.MessagingException
 import jakarta.mail.Part
