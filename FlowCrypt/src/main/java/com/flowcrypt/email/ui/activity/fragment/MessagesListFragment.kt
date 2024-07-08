@@ -18,7 +18,6 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -39,6 +38,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -46,6 +46,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
@@ -91,11 +92,13 @@ import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.OutgoingMessagesManager
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
@@ -311,6 +314,22 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           lifecycleScope.launch {
             account?.let {
               accountViewModel.updateAccountShowOnlyPgpState(isChecked)
+              if (isChecked) {
+                val currentNotificationLevel = SharedPreferencesHelper.getString(
+                  PreferenceManager.getDefaultSharedPreferences(requireContext()),
+                  Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+                  ""
+                )
+
+                if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
+                  SharedPreferencesHelper.setString(
+                    PreferenceManager.getDefaultSharedPreferences(requireContext()),
+                    Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+                    NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+                  )
+                }
+              }
+
               toast(
                 if (isChecked) {
                   R.string.showing_only_pgp_messages
