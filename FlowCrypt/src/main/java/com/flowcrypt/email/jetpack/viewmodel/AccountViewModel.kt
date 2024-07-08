@@ -120,6 +120,14 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
     }
   }
 
+  fun updateAccountShowOnlyPgpState(showOnlyPgp: Boolean?) {
+    viewModelScope.launch {
+      val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return@launch
+      roomDatabase.accountDao()
+        .updateAccountSuspend(activeAccount.copy(showOnlyEncrypted = showOnlyPgp))
+    }
+  }
+
   fun deleteAccount(accountEntity: AccountEntity?) {
     viewModelScope.launch {
       accountEntity?.let { roomDatabase.accountDao().deleteSuspend(it) }

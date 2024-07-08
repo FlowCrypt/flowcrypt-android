@@ -26,11 +26,10 @@
         tools:visible="true" />
 
     <item
-        android:id="@+id/menuSwitch"
+        android:id="@+id/menuSwitchShowOnlyPgp"
         android:menuCategory="system"
         android:orderInCategory="2"
-        android:title="@string/showing_only_encrypted_messages"
-        android:visible="false"
+        android:title="@string/showing_only_pgp_messages"
         app:actionLayout="@layout/action_item_switch"
         app:showAsAction="always" />
 

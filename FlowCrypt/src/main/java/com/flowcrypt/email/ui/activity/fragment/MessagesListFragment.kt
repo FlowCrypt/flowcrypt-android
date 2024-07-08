@@ -18,6 +18,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -29,6 +30,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -98,7 +100,6 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import org.eclipse.angus.mail.imap.protocol.SearchSequence
 import jakarta.mail.AuthenticationFailedException
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
@@ -106,6 +107,7 @@ import me.everything.android.ui.overscroll.IOverScrollState
 import me.everything.android.ui.overscroll.IOverScrollStateListener
 import me.everything.android.ui.overscroll.VerticalOverScrollBounceEffectDecorator
 import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorAdapter
+import org.eclipse.angus.mail.imap.protocol.SearchSequence
 import java.util.UUID
 
 /**
@@ -281,6 +283,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       override fun onPrepareMenu(menu: Menu) {
         super.onPrepareMenu(menu)
         val itemSearch = menu.findItem(R.id.menuSearch)
+        val itemSwitchShowOnlyPgp = menu.findItem(R.id.menuSwitchShowOnlyPgp)
         val itemForceSending = menu.findItem(R.id.menuForceSending)
         val itemEmptyTrash = menu.findItem(R.id.menuEmptyTrash)
         itemEmptyTrash?.isVisible =
@@ -289,13 +292,33 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         when {
           JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
+            itemSwitchShowOnlyPgp?.isVisible = false
             itemSearch?.isVisible = false
             itemForceSending?.isVisible = true
           }
 
           else -> {
+            itemSwitchShowOnlyPgp?.isVisible = true
             itemSearch?.isVisible = true
             itemForceSending?.isVisible = false
+          }
+        }
+
+        val switchView: SwitchCompat? =
+          itemSwitchShowOnlyPgp?.actionView?.findViewById(R.id.switchView)
+        switchView?.isChecked = account?.showOnlyEncrypted ?: false
+        switchView?.setOnCheckedChangeListener { _, isChecked ->
+          lifecycleScope.launch {
+            account?.let {
+              accountViewModel.updateAccountShowOnlyPgpState(isChecked)
+              toast(
+                if (isChecked) {
+                  R.string.showing_only_pgp_messages
+                } else {
+                  R.string.showing_all_messages
+                }
+              )
+            }
           }
         }
       }
@@ -334,6 +357,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     if (accountEntity == null) {
       navController?.navigate(NavGraphDirections.actionGlobalToMainSignInFragment())
     }
+
+    activity?.invalidateOptionsMenu()
   }
 
   override fun onRefresh() {
