@@ -170,7 +170,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           newCandidates, localFolder
         )
 
-        val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
+        val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
         val isNew = !GeneralUtil.isAppForegrounded()
 
         val msgEntities = MessageEntity.genMessageEntities(
@@ -179,7 +179,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,
-          areAllMsgsEncrypted = isEncryptedModeEnabled
+          onlyPgpModeEnabled = isOnlyPgpModeEnabled
         )
 
         processNewMsgs(accountEntity, localFolder, msgEntities)

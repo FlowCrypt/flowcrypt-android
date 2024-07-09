@@ -294,10 +294,16 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         itemForceSending?.isEnabled = isForceSendingEnabled
 
         when {
-          JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
+          currentFolder?.isOutbox == true -> {
             itemSwitchShowOnlyPgp?.isVisible = false
             itemSearch?.isVisible = false
             itemForceSending?.isVisible = true
+          }
+
+          currentFolder?.isDrafts == true -> {
+            itemSwitchShowOnlyPgp?.isVisible = false
+            itemSearch?.isVisible = true
+            itemForceSending?.isVisible = false
           }
 
           else -> {
