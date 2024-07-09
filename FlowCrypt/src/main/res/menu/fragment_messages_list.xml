@@ -10,7 +10,7 @@
         android:id="@+id/menuSearch"
         android:icon="@drawable/ic_search_white_24dp"
         android:menuCategory="system"
-        android:orderInCategory="100"
+        android:orderInCategory="1"
         android:title="@string/search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView" />
