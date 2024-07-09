@@ -132,7 +132,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   fun switchFolder(newFolder: LocalFolder, deleteAllMsgs: Boolean, forceClearFolderCache: Boolean) {
-    if (foldersLiveData.value == newFolder) {
+    if (foldersLiveData.value == newFolder && !deleteAllMsgs && !forceClearFolderCache) {
       return
     }
 
@@ -149,21 +149,25 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
 
       val accountEntity = getActiveAccountSuspend()
-      if (deleteAllMsgs) {
-        roomDatabase.msgDao().deleteAllExceptOutgoing(accountEntity?.email)
-        when (accountEntity?.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
-              clearHistoryIdForLabel(accountEntity, label)
+      when {
+        deleteAllMsgs -> {
+          roomDatabase.msgDao().deleteAllExceptOutgoing(accountEntity?.email)
+          when (accountEntity?.accountType) {
+            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+              if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
+                clearHistoryIdForLabel(accountEntity, label)
+              }
             }
           }
         }
-      } else if (forceClearFolderCache) {
-        roomDatabase.msgDao().delete(accountEntity?.email, label)
-        when (accountEntity?.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
-              clearHistoryIdForLabel(accountEntity, label)
+
+        forceClearFolderCache -> {
+          roomDatabase.msgDao().delete(accountEntity?.email, label)
+          when (accountEntity?.accountType) {
+            AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+              if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
+                clearHistoryIdForLabel(accountEntity, label)
+              }
             }
           }
         }

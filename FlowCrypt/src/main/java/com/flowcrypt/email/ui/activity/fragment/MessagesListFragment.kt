@@ -247,7 +247,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
             binding?.swipeRefreshLayout?.isEnabled = true
             currentFolder?.searchQuery = null
-            onFolderChanged(true)
+            onFolderChanged(forceClearCache = true)
             return true
           }
         })
@@ -264,7 +264,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             }
 
             currentFolder?.searchQuery = query
-            onFolderChanged(true)
+            onFolderChanged(forceClearCache = true)
             return false
           }
 
@@ -337,6 +337,8 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                   R.string.showing_all_messages
                 }
               )
+
+              onFolderChanged(forceClearCache = true, deleteAllMsgs = true)
             }
           }
         }
