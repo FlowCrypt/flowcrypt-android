@@ -32,6 +32,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncDraftsWorker
@@ -46,7 +47,6 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Message
@@ -58,6 +58,7 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.File
 import java.io.IOException
 import java.math.BigInteger
@@ -1015,7 +1016,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         val msgs = GmailApiHelper.loadMsgsInParallel(
           getApplication(), accountEntity,
           newCandidates.toList(), localFolder
-        )
+        ).run {
+          if (accountEntity.showOnlyEncrypted == true) {
+            filter { it.hasPgp() }
+          } else this
+        }
 
         val draftIdsMap = if (localFolder.isDrafts) {
           val drafts =
@@ -1029,7 +1034,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           fetchedDraftIdsMap
         } else emptyMap()
 
-        val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
         val isNew =
           !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
@@ -1039,7 +1043,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,
-          onlyPgpModeEnabled = isOnlyPgpModeEnabled,
+          onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
           draftIdsMap = draftIdsMap
         )
 
