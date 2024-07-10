@@ -600,7 +600,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   /**
-   * Try to load a new messages from an IMAP server.
+   * Try to load a new messages from a server.
    */
   private fun refreshMsgs() {
     currentFolder?.let {
@@ -609,7 +609,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   /**
-   * Try to load a next messages from an IMAP server.
+   * Try to load a next messages
    */
   private fun loadNextMsgs() {
     if (isOutboxFolder) {
@@ -1083,16 +1083,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             )
 
             R.id.progress_id_connecting_to_email_server -> setActionProgress(progress, "Connecting")
-
-            R.id.progress_id_running_smtp_action -> setActionProgress(
-              progress,
-              "Running SMTP action"
-            )
-
-            R.id.progress_id_running_imap_action -> setActionProgress(
-              progress,
-              "Running IMAP action"
-            )
 
             R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
 
