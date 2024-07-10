@@ -16,6 +16,7 @@ import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncInboxWorker
@@ -71,6 +72,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     enqueueMsgsCacheCleanerWorker()
     FlavorSettings.configure(this)
     clearGlideDiskCache()
+    cleanCacheForPgpOnlyMode()
   }
 
   private fun setupPGPainless() {
@@ -236,6 +238,21 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     GlobalScope.launch {
       withContext(Dispatchers.IO) {
         Glide.get(this@FlowCryptApplication).clearDiskCache()
+      }
+    }
+  }
+
+  @OptIn(DelicateCoroutinesApi::class)
+  private fun cleanCacheForPgpOnlyMode() {
+    GlobalScope.launch {
+      withContext(Dispatchers.IO) {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@FlowCryptApplication)
+        val activeAccountEntity =
+          roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
+
+        if (activeAccountEntity.showOnlyEncrypted == true) {
+          roomDatabase.msgDao().deleteAllExceptOutgoing(activeAccountEntity.email)
+        }
       }
     }
   }
