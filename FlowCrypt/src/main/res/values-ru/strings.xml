@@ -150,8 +150,7 @@
     <string name="show_public_key">Показать открытый ключ</string>
     <string name="show_original_message">Показать исходное сообщение</string>
     <string name="show_more">Показать еще</string>
-    <string name="showing_only_pgp_messages">Отображение только PGP сообщений</string>
-    <string name="showing_all_messages">Отображение всех сообщений</string>
+    <string name="load_only_pgp_messages">Загружать только PGP сообщения</string>
     <string name="server_settings_updated">Настройки сервера обновлены</string>
     <string name="server_settings">Настройки сервера</string>
     <string name="sent">Отправлено</string>

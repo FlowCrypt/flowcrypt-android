@@ -26,14 +26,6 @@
         tools:visible="true" />
 
     <item
-        android:id="@+id/menuSwitchShowOnlyPgp"
-        android:menuCategory="system"
-        android:orderInCategory="2"
-        android:title="@string/showing_only_pgp_messages"
-        app:actionLayout="@layout/action_item_switch"
-        app:showAsAction="always" />
-
-    <item
         android:id="@+id/menuForceSending"
         android:icon="@drawable/selector_ic_force_sending"
         android:menuCategory="system"

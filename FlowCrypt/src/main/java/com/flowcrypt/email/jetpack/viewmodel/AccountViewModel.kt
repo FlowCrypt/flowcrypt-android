@@ -20,8 +20,10 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.LoadRecipientsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * @author Denys Bondarenko
@@ -120,11 +122,17 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
     }
   }
 
-  fun updateAccountShowOnlyPgpState(showOnlyPgp: Boolean?) {
+  fun switchLoadingOnlyPgpMessagesMode() {
     viewModelScope.launch {
-      val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend() ?: return@launch
-      roomDatabase.accountDao()
-        .updateAccountSuspend(activeAccount.copy(showOnlyEncrypted = showOnlyPgp))
+      withContext(Dispatchers.IO) {
+        val activeAccount =
+          roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
+        roomDatabase.accountDao()
+          .updateAccountSuspend(
+            activeAccount.copy(showOnlyEncrypted = activeAccount.showOnlyEncrypted != true)
+          )
+        roomDatabase.msgDao().deleteAllExceptOutgoing(activeAccount.email)
+      }
     }
   }
 

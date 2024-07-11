@@ -286,7 +286,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       override fun onPrepareMenu(menu: Menu) {
         super.onPrepareMenu(menu)
         val itemSearch = menu.findItem(R.id.menuSearch)
-        val itemSwitchShowOnlyPgp = menu.findItem(R.id.menuSwitchShowOnlyPgp)
         val itemForceSending = menu.findItem(R.id.menuForceSending)
         val itemEmptyTrash = menu.findItem(R.id.menuEmptyTrash)
         itemEmptyTrash?.isVisible =
@@ -295,62 +294,18 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
         when {
           currentFolder?.isOutbox == true -> {
-            itemSwitchShowOnlyPgp?.isVisible = false
             itemSearch?.isVisible = false
             itemForceSending?.isVisible = true
           }
 
           currentFolder?.isDrafts == true -> {
-            itemSwitchShowOnlyPgp?.isVisible = false
             itemSearch?.isVisible = true
             itemForceSending?.isVisible = false
           }
 
           else -> {
-            itemSwitchShowOnlyPgp?.isVisible = true
             itemSearch?.isVisible = true
             itemForceSending?.isVisible = false
-          }
-        }
-
-        if (account?.isGoogleSignInAccount != true) {
-          //disable 'pgpOnly' mode for non-GoogleSignIn accounts
-          itemSwitchShowOnlyPgp?.isVisible = false
-        }
-
-        val switchView: SwitchCompat? =
-          itemSwitchShowOnlyPgp?.actionView?.findViewById(R.id.switchView)
-        switchView?.isChecked = account?.showOnlyEncrypted ?: false
-        switchView?.setOnCheckedChangeListener { _, isChecked ->
-          lifecycleScope.launch {
-            account?.let {
-              accountViewModel.updateAccountShowOnlyPgpState(isChecked)
-              if (isChecked) {
-                val currentNotificationLevel = SharedPreferencesHelper.getString(
-                  PreferenceManager.getDefaultSharedPreferences(requireContext()),
-                  Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
-                  ""
-                )
-
-                if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
-                  SharedPreferencesHelper.setString(
-                    PreferenceManager.getDefaultSharedPreferences(requireContext()),
-                    Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
-                    NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
-                  )
-                }
-              }
-
-              toast(
-                if (isChecked) {
-                  R.string.showing_only_pgp_messages
-                } else {
-                  R.string.showing_all_messages
-                }
-              )
-
-              onFolderChanged(forceClearCache = true, deleteAllMsgs = true)
-            }
           }
         }
       }
@@ -389,8 +344,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     if (accountEntity == null) {
       navController?.navigate(NavGraphDirections.actionGlobalToMainSignInFragment())
     }
-
-    activity?.invalidateOptionsMenu()
   }
 
   override fun onRefresh() {
