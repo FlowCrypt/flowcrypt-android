@@ -208,7 +208,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           accountEntity.email,
           if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else JavaEmailConstants.FOLDER_SEARCH
         )
-        if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
 
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
         loadMsgsFromRemoteServerLiveData.value = Result.loading(
