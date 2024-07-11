@@ -313,6 +313,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           }
         }
 
+        if (account?.isGoogleSignInAccount != true) {
+          //disable 'pgpOnly' mode for non-GoogleSignIn accounts
+          itemSwitchShowOnlyPgp?.isVisible = false
+        }
+
         val switchView: SwitchCompat? =
           itemSwitchShowOnlyPgp?.actionView?.findViewById(R.id.switchView)
         switchView?.isChecked = account?.showOnlyEncrypted ?: false
