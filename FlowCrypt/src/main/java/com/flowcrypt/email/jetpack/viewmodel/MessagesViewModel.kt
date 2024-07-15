@@ -150,21 +150,22 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
 
       val accountEntity = getActiveAccountSuspend()
-      when {
-        deleteAllMsgs -> {
-          //maybe need to keep drafts too
-          roomDatabase.msgDao().deleteAllExceptOutgoing(accountEntity?.email)
+      if (accountEntity != null) {
+        when {
+          deleteAllMsgs -> {
+            roomDatabase.msgDao().deleteAllExceptOutgoingAndDraft(getApplication(), accountEntity)
+          }
+
+          forceClearFolderCache -> {
+            roomDatabase.msgDao().delete(accountEntity.email, label)
+          }
         }
 
-        forceClearFolderCache -> {
-          roomDatabase.msgDao().delete(accountEntity?.email, label)
-        }
-      }
-
-      when (accountEntity?.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
-            clearHistoryIdForLabel(accountEntity, label)
+        when (accountEntity.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+            if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
+              clearHistoryIdForLabel(accountEntity, label)
+            }
           }
         }
       }

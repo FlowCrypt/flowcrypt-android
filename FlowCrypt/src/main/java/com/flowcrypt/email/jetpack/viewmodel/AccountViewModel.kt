@@ -131,7 +131,10 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
           .updateAccountSuspend(
             activeAccount.copy(showOnlyEncrypted = activeAccount.showOnlyEncrypted != true)
           )
-        roomDatabase.msgDao().deleteAllExceptOutgoing(activeAccount.email)
+        roomDatabase.msgDao().deleteAllExceptOutgoingAndDraft(
+          context = getApplication(),
+          accountEntity = activeAccount
+        )
       }
     }
   }

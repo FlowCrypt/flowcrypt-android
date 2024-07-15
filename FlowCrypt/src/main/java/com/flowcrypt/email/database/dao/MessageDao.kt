@@ -5,16 +5,19 @@
 
 package com.flowcrypt.email.database.dao
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
 import com.flowcrypt.email.database.dao.BaseDao.Companion.getEntitiesViaStepsSuspend
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import jakarta.mail.Flags
 import kotlinx.coroutines.Dispatchers
@@ -132,10 +135,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label")
   abstract suspend fun delete(email: String?, label: String?): Int
 
-  @Query("DELETE FROM messages WHERE email = :email AND folder != :label")
-  abstract suspend fun deleteAllExceptOutgoing(
+  @Query("DELETE FROM messages WHERE email = :email AND folder NOT IN (:labels)")
+  abstract suspend fun deleteAllExceptRelatedToLabels(
     email: String?,
-    label: String = JavaEmailConstants.FOLDER_OUTBOX
+    labels: Collection<String>
   ): Int
 
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
@@ -536,6 +539,20 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
       updateSuspend(messagesToBeUpdated)
     }
+
+  open suspend fun deleteAllExceptOutgoingAndDraft(
+    context: Context,
+    accountEntity: AccountEntity
+  ): Int {
+
+    val labels = mutableListOf<String>()
+    labels.add(JavaEmailConstants.FOLDER_OUTBOX)
+    FoldersManager.fromDatabaseSuspend(context, accountEntity).folderDrafts?.let {
+      labels.add(it.fullName)
+    }
+
+    return deleteAllExceptRelatedToLabels(accountEntity.email, labels)
+  }
 
   private suspend fun updateFlagsByUIDsSuspend(
     email: String?, label: String?, flagsMap: Map<Long, Flags>,

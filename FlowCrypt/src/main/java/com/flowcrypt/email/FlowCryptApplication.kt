@@ -251,7 +251,10 @@ class FlowCryptApplication : Application(), Configuration.Provider {
           roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
 
         if (activeAccountEntity.showOnlyEncrypted == true) {
-          roomDatabase.msgDao().deleteAllExceptOutgoing(activeAccountEntity.email)
+          roomDatabase.msgDao().deleteAllExceptOutgoingAndDraft(
+            context = this@FlowCryptApplication,
+            accountEntity = activeAccountEntity
+          )
         }
       }
     }
