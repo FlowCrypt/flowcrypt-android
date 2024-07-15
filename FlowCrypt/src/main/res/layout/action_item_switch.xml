@@ -6,9 +6,6 @@
 <com.google.android.material.switchmaterial.SwitchMaterial xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/switchView"
-    android:clickable="false"
-    android:focusable="false"
-    android:focusableInTouchMode="false"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     tools:checked="true" />

@@ -345,7 +345,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.navigationView.menu.findItem(R.id.menuSwitchShowOnlyPgp)?.let {
           val switchView: SwitchCompat? =
             it.actionView?.findViewById(R.id.switchView)
-          switchView?.isChecked = accountEntity.showOnlyEncrypted ?: false
+          switchView?.apply {
+            isClickable = false
+            isFocusable = false
+            isFocusableInTouchMode = false
+            isChecked = accountEntity.showOnlyEncrypted ?: false
+          }
 
           if (!accountEntity.isGoogleSignInAccount) {
             it.isVisible = false
