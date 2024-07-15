@@ -558,7 +558,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   /**
-   * Try to load a new messages from a server.
+   * Try to load new messages from a server.
    */
   private fun refreshMsgs() {
     currentFolder?.let {
