@@ -233,7 +233,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       activity = this,
       navHeaderActionsListener = object : NavigationViewManager.NavHeaderActionsListener {
         override fun onAccountsMenuExpanded(isExpanded: Boolean) {
-          binding.navigationView.menu.setGroupVisible(R.id.groupPgp, isExpanded)
+          if (activeAccount?.isGoogleSignInAccount == true) {
+            binding.navigationView.menu.setGroupVisible(R.id.groupPgp, isExpanded)
+          }
           binding.navigationView.menu.setGroupVisible(R.id.groupLabels, isExpanded)
           binding.navigationView.menu.setGroupVisible(R.id.groupOther, isExpanded)
         }
@@ -261,41 +263,22 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         R.id.menuSwitchShowOnlyPgp -> {
           accountViewModel.switchLoadingOnlyPgpMessagesMode()
 
-          /*if (account?.isGoogleSignInAccount != true) {
-            //disable 'pgpOnly' mode for non-GoogleSignIn accounts
-            itemSwitchShowOnlyPgp?.isVisible = false
-          }
+          val switchView: SwitchCompat? = menuItem.actionView?.findViewById(R.id.switchView)
+          if (switchView?.isChecked == true) {
+            val currentNotificationLevel = SharedPreferencesHelper.getString(
+              PreferenceManager.getDefaultSharedPreferences(this),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+              ""
+            )
 
-          val switchView: SwitchCompat? =
-            itemSwitchShowOnlyPgp?.actionView?.findViewById(R.id.switchView)
-          switchView?.isChecked = account?.showOnlyEncrypted ?: false
-          switchView?.setOnCheckedChangeListener { buttonView, isChecked ->
-            lifecycleScope.launch {
-              account?.let {
-                //accountViewModel.updateAccountShowOnlyPgpState(isChecked)
-                if (isChecked) {
-                  val currentNotificationLevel = SharedPreferencesHelper.getString(
-                    PreferenceManager.getDefaultSharedPreferences(requireContext()),
-                    Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
-                    ""
-                  )
-
-                  if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
-                    SharedPreferencesHelper.setString(
-                      PreferenceManager.getDefaultSharedPreferences(requireContext()),
-                      Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
-                      NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
-                    )
-                  }
-                }
-
-                onFolderChanged(
-                  forceClearCache = true,
-                  deleteAllMsgs = true
-                )
-              }
+            if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
+              SharedPreferencesHelper.setString(
+                PreferenceManager.getDefaultSharedPreferences(this),
+                Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+                NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+              )
             }
-          }*/
+          }
         }
 
         R.id.navMenuActionSettings -> {
@@ -363,6 +346,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
           val switchView: SwitchCompat? =
             it.actionView?.findViewById(R.id.switchView)
           switchView?.isChecked = accountEntity.showOnlyEncrypted ?: false
+
+          if (!accountEntity.isGoogleSignInAccount) {
+            it.isVisible = false
+          }
         }
       }
     }
