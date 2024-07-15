@@ -567,7 +567,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   /**
-   * Try to load a next messages
+   * Try to load next messages
    */
   private fun loadNextMsgs() {
     if (isOutboxFolder) {
