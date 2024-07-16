@@ -3,8 +3,18 @@
   ~ Contributors: DenBond7
   -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <group android:id="@+id/groupPgp">
+        <item
+            android:id="@+id/menuSwitchShowOnlyPgp"
+            android:icon="@drawable/ic_security_32"
+            android:title="@string/load_only_pgp_messages"
+            app:actionLayout="@layout/action_item_switch" />
+    </group>
+
+    <group android:id="@+id/groupLabels">
     <item
         android:id="@+id/mailLabels"
         android:title="@string/all_labels">
@@ -12,19 +22,22 @@
 
         </menu>
     </item>
+    </group>
 
-    <item
-        android:id="@+id/navMenuLogOut"
-        android:icon="@drawable/ic_exit_to_app_grey_32dp"
-        android:title="@string/log_out" />
+    <group android:id="@+id/groupOther">
+        <item
+            android:id="@+id/navMenuLogOut"
+            android:icon="@drawable/ic_exit_to_app_grey_32dp"
+            android:title="@string/log_out" />
 
-    <item
-        android:id="@+id/navMenuActionReportProblem"
-        android:icon="@drawable/ic_bug_report_grey_32dp"
-        android:title="@string/report_problem" />
+        <item
+            android:id="@+id/navMenuActionReportProblem"
+            android:icon="@drawable/ic_bug_report_grey_32dp"
+            android:title="@string/report_problem" />
 
-    <item
-        android:id="@+id/navMenuActionSettings"
-        android:icon="@drawable/ic_settings_grey_32dp"
-        android:title="@string/settings" />
+        <item
+            android:id="@+id/navMenuActionSettings"
+            android:icon="@drawable/ic_settings_grey_32dp"
+            android:title="@string/settings" />
+    </group>
 </menu>
