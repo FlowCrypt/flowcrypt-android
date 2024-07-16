@@ -20,6 +20,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.ApiHelper
@@ -47,6 +48,9 @@ import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
 import com.google.api.services.gmail.model.Message
+import com.google.api.services.gmail.model.MessagePart
+import com.google.api.services.gmail.model.MessagePartBody
+import com.google.api.services.gmail.model.MessagePartHeader
 import jakarta.activation.DataSource
 import jakarta.mail.Session
 import jakarta.mail.internet.ContentType
@@ -391,6 +395,75 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
       Session.getInstance(Properties()), rawMimeMessageAsByteArrayOfSecondMsg.inputStream()
     )
   }
+
+  protected fun genMessage(
+    messageId: String,
+    messageThreadId: String,
+    subject: String,
+    historyIdValue: BigInteger
+  ) =
+    Message().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = messageId
+      threadId = messageThreadId
+      labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      snippet = subject
+      historyId = historyIdValue
+      payload = MessagePart().apply {
+        partId = ""
+        mimeType = "multipart/alternative"
+        filename = ""
+        headers = prepareMessageHeaders(subject)
+        body = MessagePartBody().apply {
+          setSize(0)
+        }
+        parts = listOf(
+          MessagePart().apply {
+            partId = "0"
+            mimeType = "text/plain"
+            filename = ""
+            headers = listOf(MessagePartHeader().apply {
+              name = "Content-Type"
+              value = "text/plain"
+            })
+            body = MessagePartBody().apply { setSize(130) }
+          }
+        )
+      }
+    }.toString()
+
+  protected fun genPathForGmailMessages(subPath: String) = "/gmail/v1/users/me/messages/$subPath?" +
+      "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
+      "payload/partId,payload/mimeType,payload/filename,payload/headers," +
+      "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
+      "&format=full"
+
+  private fun prepareMessageHeaders(subject: String) = listOf(
+    MessagePartHeader().apply {
+      name = "MIME-Version"
+      value = "1.0"
+    },
+    MessagePartHeader().apply {
+      name = "Date"
+      value = "Tue, 29 Nov 2022 14:30:15 +0200"
+    },
+    MessagePartHeader().apply {
+      name = "Message-ID"
+      value = EmailUtil.generateContentId()
+    },
+    MessagePartHeader().apply {
+      name = "Subject"
+      value = subject
+    },
+    MessagePartHeader().apply {
+      name = "From"
+      value = AccountDaoManager.getDefaultAccountDao().email
+    },
+    MessagePartHeader().apply {
+      name = "Content-Type"
+      value = "text/plain"
+    },
+  )
 
   companion object {
     const val DRAFT_ID_FIRST = "r5555555555555555551"

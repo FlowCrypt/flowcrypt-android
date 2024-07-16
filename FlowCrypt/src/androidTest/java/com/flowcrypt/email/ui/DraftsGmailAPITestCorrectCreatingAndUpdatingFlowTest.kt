@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui
 
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -30,7 +29,9 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectDeletingFlowTest.Companion.HISTORY_ID_FIRST
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
+import com.google.api.client.json.Json
 import com.google.api.services.gmail.model.Message
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -116,6 +117,20 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
 
           request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_SECOND}?fields=id,threadId,historyId&format=full" -> {
             return genMsgDetailsMockResponse(MESSAGE_ID_SECOND, THREAD_ID_SECOND)
+          }
+
+          request.method == "GET" && request.path == genPathForGmailMessages(MESSAGE_ID_FIRST) -> {
+
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setHeader("Content-Type", Json.MEDIA_TYPE)
+              .setBody(
+                genMessage(
+                  messageId = MESSAGE_ID_FIRST,
+                  messageThreadId = THREAD_ID_FIRST,
+                  subject = MESSAGE_SUBJECT_FIRST,
+                  historyIdValue = HISTORY_ID_FIRST
+                )
+              )
           }
 
           else -> return handleCommonAPICalls(request)

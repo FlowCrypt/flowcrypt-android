@@ -28,9 +28,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -39,7 +39,6 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
-import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.viewaction.CustomViewActions.swipeToRefresh
 import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
@@ -48,9 +47,6 @@ import com.google.api.services.gmail.model.HistoryMessageDeleted
 import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListHistoryResponse
 import com.google.api.services.gmail.model.Message
-import com.google.api.services.gmail.model.MessagePart
-import com.google.api.services.gmail.model.MessagePartBody
-import com.google.api.services.gmail.model.MessagePartHeader
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -64,6 +60,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.math.BigInteger
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -73,6 +70,7 @@ import java.net.HttpURLConnection
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
   override val mockWebServerRule: FlowCryptMockWebServerRule = FlowCryptMockWebServerRule(
     TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -171,6 +169,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
     moveToDraftFolder()
 
     //select the second draft
+    waitForObjectWithText(MESSAGE_SUBJECT_SECOND, TimeUnit.SECONDS.toMillis(5))
     selectDraft()
 
     //delete the second draft
@@ -240,12 +239,6 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
     assertEquals(0, (responseAfterDeletingFirstDraft as ListDraftsResponse).drafts.size)
   }
 
-  private fun genPathForGmailMessages(subPath: String) = "/gmail/v1/users/me/messages/$subPath?" +
-      "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
-      "payload/partId,payload/mimeType,payload/filename,payload/headers," +
-      "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
-      "&format=full"
-
   private fun selectDraft(position: Int = 0) {
     onView(withId(R.id.recyclerViewMsgs))
       .perform(
@@ -263,69 +256,6 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
         )
       )
   }
-
-  private fun genMessage(
-    messageId: String,
-    messageThreadId: String,
-    subject: String,
-    historyIdValue: BigInteger
-  ) =
-    Message().apply {
-      factory = GsonFactory.getDefaultInstance()
-      id = messageId
-      threadId = messageThreadId
-      labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
-      snippet = subject
-      historyId = historyIdValue
-      payload = MessagePart().apply {
-        partId = ""
-        mimeType = "multipart/alternative"
-        filename = ""
-        headers = prepareMessageHeaders(subject)
-        body = MessagePartBody().apply {
-          setSize(0)
-        }
-        parts = listOf(
-          MessagePart().apply {
-            partId = "0"
-            mimeType = "text/plain"
-            filename = ""
-            headers = listOf(MessagePartHeader().apply {
-              name = "Content-Type"
-              value = "text/plain"
-            })
-            body = MessagePartBody().apply { setSize(130) }
-          }
-        )
-      }
-    }.toString()
-
-  private fun prepareMessageHeaders(subject: String) = listOf(
-    MessagePartHeader().apply {
-      name = "MIME-Version"
-      value = "1.0"
-    },
-    MessagePartHeader().apply {
-      name = "Date"
-      value = "Tue, 29 Nov 2022 14:30:15 +0200"
-    },
-    MessagePartHeader().apply {
-      name = "Message-ID"
-      value = EmailUtil.generateContentId()
-    },
-    MessagePartHeader().apply {
-      name = "Subject"
-      value = subject
-    },
-    MessagePartHeader().apply {
-      name = "From"
-      value = AccountDaoManager.getDefaultAccountDao().email
-    },
-    MessagePartHeader().apply {
-      name = "Content-Type"
-      value = "text/plain"
-    },
-  )
 
   companion object {
     val HISTORY_ID_FIRST = BigInteger("4444444")

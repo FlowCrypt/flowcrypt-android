@@ -54,7 +54,6 @@ import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
-import org.eclipse.angus.mail.gimap.GmailRawSearchTerm
 import jakarta.mail.Flags
 import jakarta.mail.MessagingException
 import jakarta.mail.Part
@@ -66,6 +65,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.android.binary.Base64InputStream
+import org.eclipse.angus.mail.gimap.GmailRawSearchTerm
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -254,45 +254,37 @@ class GmailApiHelper {
       nextPageToken: String? = null
     ): GenericJson? = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
-      if (localFolder.isDrafts) {
-        val request = gmailApiService
+      val request = if (localFolder.isDrafts) {
+        gmailApiService
           .users()
           .drafts()
           .list(DEFAULT_USER_ID)
           .setPageToken(nextPageToken)
           .setMaxResults(maxResult)
-
-        fields?.let { fields ->
-          request.fields = fields.joinToString(separator = ",")
-        }
-
-        if (accountEntity.showOnlyEncrypted == true) {
-          request.q =
-            (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
-        }
-        return@withContext request.execute()
       } else {
-        val request = gmailApiService
+        gmailApiService
           .users()
           .messages()
           .list(DEFAULT_USER_ID)
           .setPageToken(nextPageToken)
           .setMaxResults(maxResult)
+      }
 
-        fields?.let { fields ->
-          request.fields = fields.joinToString(separator = ",")
-        }
+      fields?.let { fields ->
+        request.fields = fields.joinToString(separator = ",")
+      }
 
+      if (request is Gmail.Users.Messages.List) {
         if (!localFolder.isAll) {
           request.labelIds = listOf(localFolder.fullName)
         }
-
         if (accountEntity.showOnlyEncrypted == true) {
           request.q =
             (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
         }
-        return@withContext request.execute()
       }
+
+      return@withContext request.execute()
     }
 
     /**

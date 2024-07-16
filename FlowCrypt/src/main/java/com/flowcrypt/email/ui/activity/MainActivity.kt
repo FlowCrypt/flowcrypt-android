@@ -23,6 +23,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -43,6 +44,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import androidx.preference.PreferenceManager
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -76,9 +78,11 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
@@ -229,7 +233,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       activity = this,
       navHeaderActionsListener = object : NavigationViewManager.NavHeaderActionsListener {
         override fun onAccountsMenuExpanded(isExpanded: Boolean) {
-          binding.navigationView.menu.setGroupVisible(0, isExpanded)
+          if (activeAccount?.isGoogleSignInAccount == true) {
+            binding.navigationView.menu.setGroupVisible(R.id.groupPgp, isExpanded)
+          }
+          binding.navigationView.menu.setGroupVisible(R.id.groupLabels, isExpanded)
+          binding.navigationView.menu.setGroupVisible(R.id.groupOther, isExpanded)
         }
 
         override fun onAddAccountClick() {
@@ -252,6 +260,27 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     binding.navigationView.setNavigationItemSelectedListener { menuItem ->
       when (menuItem.itemId) {
+        R.id.menuSwitchShowOnlyPgp -> {
+          accountViewModel.switchLoadingOnlyPgpMessagesMode()
+
+          val switchView: SwitchCompat? = menuItem.actionView?.findViewById(R.id.switchView)
+          if (switchView?.isChecked == true) {
+            val currentNotificationLevel = SharedPreferencesHelper.getString(
+              PreferenceManager.getDefaultSharedPreferences(this),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+              ""
+            )
+
+            if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
+              SharedPreferencesHelper.setString(
+                PreferenceManager.getDefaultSharedPreferences(this),
+                Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+                NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+              )
+            }
+          }
+        }
+
         R.id.navMenuActionSettings -> {
           navController.navigate(NavGraphDirections.actionGlobalMainSettingsFragment())
         }
@@ -312,6 +341,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.navigationView.getHeaderView(0)?.let { headerView ->
           navigationViewManager?.initUserProfileView(headerView, accountEntity)
         }
+
+        binding.navigationView.menu.findItem(R.id.menuSwitchShowOnlyPgp)?.let {
+          val switchView: SwitchCompat? =
+            it.actionView?.findViewById(R.id.switchView)
+          switchView?.apply {
+            isClickable = false
+            isFocusable = false
+            isFocusableInTouchMode = false
+            isChecked = accountEntity.showOnlyEncrypted ?: false
+          }
+
+          if (!accountEntity.isGoogleSignInAccount) {
+            it.isVisible = false
+          }
+        }
       }
     }
 
@@ -322,8 +366,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   private fun setupLabelsViewModel() {
     labelsViewModel.foldersManagerLiveData.observe(this) { foldersManager ->
-      val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels)
-      mailLabels?.subMenu?.clear()
+      val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels) ?: return@observe
+      mailLabels.subMenu?.clear()
 
       foldersManager?.run {
         val folders =
@@ -341,7 +385,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
           val folderIconResourceId =
             FoldersManager.getFolderIconResourceId(localFolder, isGoogleAccount)
-          val addedItem = mailLabels?.subMenu?.add(localFolder.folderAlias)
+          val addedItem = mailLabels.subMenu?.add(localFolder.folderAlias)
           if (localFolder.isCustom && localFolder.labelColor != null) {
             val drawable = ContextCompat.getDrawable(this@MainActivity, folderIconResourceId)
             val color = localFolder.labelColor.parseAsColorBasedOnDefaultSettings(this@MainActivity)
