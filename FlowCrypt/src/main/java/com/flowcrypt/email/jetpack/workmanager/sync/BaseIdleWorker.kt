@@ -96,7 +96,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
         folder = remoteFolder,
         msgs = newMsgs,
         isNew = !GeneralUtil.isAppForegrounded(),
-        areAllMsgsEncrypted = false,
+        isOnlyPgpModeEnabled = false,
         hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
       )
 

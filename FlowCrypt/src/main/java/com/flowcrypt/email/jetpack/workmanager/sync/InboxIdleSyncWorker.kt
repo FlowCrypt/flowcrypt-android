@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.GmailAPIException
 import com.google.api.services.gmail.model.History
@@ -168,9 +169,13 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
         val msgs = GmailApiHelper.loadMsgsInParallel(
           applicationContext, accountEntity,
           newCandidates, localFolder
-        )
+        ).run {
+          if (accountEntity.showOnlyEncrypted == true) {
+            filter { it.hasPgp() }
+          } else this
+        }
 
-        val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
+        val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
         val isNew = !GeneralUtil.isAppForegrounded()
 
         val msgEntities = MessageEntity.genMessageEntities(
@@ -179,7 +184,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,
-          areAllMsgsEncrypted = isEncryptedModeEnabled
+          onlyPgpModeEnabled = isOnlyPgpModeEnabled
         )
 
         processNewMsgs(accountEntity, localFolder, msgEntities)

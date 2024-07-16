@@ -93,9 +93,9 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     if (accountEntity != null) {
-      val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted
+      val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted
 
-      if (isEncryptedModeEnabled == true) {
+      if (isOnlyPgpModeEnabled == true) {
         levels = arrayOf(
           NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
           NOTIFICATION_LEVEL_NEVER
@@ -110,7 +110,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(),
         entries = resources.getStringArray(R.array.notification_level_entries)
       }
 
-      initPreferences(isEncryptedModeEnabled == true)
+      initPreferences(isOnlyPgpModeEnabled == true)
     } else {
       val intent = Intent(context, MainActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
