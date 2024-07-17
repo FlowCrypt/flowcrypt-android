@@ -151,7 +151,7 @@
     <string name="show_public_key">Показати відкритий ключ</string>
     <string name="show_original_message">Показати оригінальне повідомлення</string>
     <string name="show_more">Показати більше</string>
-    <string name="showing_only_encrypted_messages">Відображення тільки зашифрованих повідомлень</string>
+    <string name="load_only_pgp_messages">Завантажувати тільки PGP повідомлення</string>
     <string name="server_settings_updated">Налаштування сервера оновлені</string>
     <string name="server_settings">Налаштування сервера</string>
     <string name="sent">Відправлено</string>

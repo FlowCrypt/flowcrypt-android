@@ -32,6 +32,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncDraftsWorker
@@ -46,7 +47,6 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Message
@@ -58,6 +58,7 @@ import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.File
 import java.io.IOException
 import java.math.BigInteger
@@ -132,7 +133,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   fun switchFolder(newFolder: LocalFolder, deleteAllMsgs: Boolean, forceClearFolderCache: Boolean) {
-    if (foldersLiveData.value == newFolder) {
+    if (foldersLiveData.value == newFolder && !deleteAllMsgs && !forceClearFolderCache) {
       return
     }
 
@@ -149,18 +150,18 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
 
       val accountEntity = getActiveAccountSuspend()
-      if (deleteAllMsgs) {
-        roomDatabase.msgDao().deleteAllExceptOutgoing(accountEntity?.email)
-        when (accountEntity?.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
-              clearHistoryIdForLabel(accountEntity, label)
-            }
+      if (accountEntity != null) {
+        when {
+          deleteAllMsgs -> {
+            roomDatabase.msgDao().deleteAllExceptOutgoingAndDraft(getApplication(), accountEntity)
+          }
+
+          forceClearFolderCache -> {
+            roomDatabase.msgDao().delete(accountEntity.email, label)
           }
         }
-      } else if (forceClearFolderCache) {
-        roomDatabase.msgDao().delete(accountEntity?.email, label)
-        when (accountEntity?.accountType) {
+
+        when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
             if (FoldersManager.FolderType.INBOX != newFolder.getFolderType()) {
               clearHistoryIdForLabel(accountEntity, label)
@@ -202,13 +203,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         return@launch
       }
 
-      val accountEntity = getActiveAccountSuspend()
+      val accountEntity = roomDatabase.accountDao().getActiveAccountSuspend()?.withDecryptedInfo()
       accountEntity?.let {
         val totalItemsCount = roomDatabase.msgDao().getMsgsCount(
           accountEntity.email,
           if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else JavaEmailConstants.FOLDER_SEARCH
         )
-        if (totalItemsCount % JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP != 0) return@launch
 
         loadMsgsFromRemoteServerLiveData.value = Result.loading()
         loadMsgsFromRemoteServerLiveData.value = Result.loading(
@@ -384,11 +384,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         else -> countOfAlreadyLoadedMsgs
       }
 
-      val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted
+      val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted
       var foundMsgs: Array<Message> = emptyArray()
       var msgsCount = 0
 
-      if (isEncryptedModeEnabled == true) {
+      if (isOnlyPgpModeEnabled == true) {
         foundMsgs = imapFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity))
         foundMsgs?.let {
           msgsCount = foundMsgs.size
@@ -419,7 +419,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       if (end < 1) {
         handleReceivedMsgs(accountEntity, localFolder, imapFolder)
       } else {
-        val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
+        val msgs: Array<Message> = if (isOnlyPgpModeEnabled == true) {
           foundMsgs.copyOfRange(start - 1, end)
         } else {
           imapFolder.getMessages(start, end)
@@ -532,14 +532,14 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val email = account.email
     val folder = localFolder.fullName
 
-    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
+    val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
       email = email,
       label = folder,
       msgsList = msgs,
       isNew = false,
-      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      onlyPgpModeEnabled = isOnlyPgpModeEnabled,
       draftIdsMap = draftIdsMap
     )
 
@@ -562,7 +562,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val email = account.email
     val folder = localFolder.fullName
 
-    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
+    val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
       email = email,
@@ -570,7 +570,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
-      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      isOnlyPgpModeEnabled = isOnlyPgpModeEnabled,
       hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
@@ -785,7 +785,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet()
   ) = withContext(Dispatchers.IO) {
     val email = account.email
-    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
+    val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val searchLabel = JavaEmailConstants.FOLDER_SEARCH
 
     val msgEntities = MessageEntity.genMessageEntities(
@@ -795,7 +795,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
-      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      isOnlyPgpModeEnabled = isOnlyPgpModeEnabled,
       hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
@@ -811,14 +811,14 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val email = account.email
     val label = localFolder.fullName
 
-    val isEncryptedModeEnabled = account.showOnlyEncrypted ?: false
+    val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
       email = email,
       label = label,
       msgsList = msgs,
       isNew = false,
-      areAllMsgsEncrypted = isEncryptedModeEnabled
+      onlyPgpModeEnabled = isOnlyPgpModeEnabled
     )
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
@@ -967,7 +967,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
     val newCandidates = EmailUtil.genNewCandidates(msgsUIDs, remoteFolder, newMsgs)
 
-    val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
+    val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
     val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
     val msgEntities = MessageEntity.genMessageEntities(
@@ -977,7 +977,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       folder = remoteFolder,
       msgs = newCandidates,
       isNew = isNew,
-      areAllMsgsEncrypted = isEncryptedModeEnabled,
+      isOnlyPgpModeEnabled = isOnlyPgpModeEnabled,
       hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
@@ -1016,7 +1016,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         val msgs = GmailApiHelper.loadMsgsInParallel(
           getApplication(), accountEntity,
           newCandidates.toList(), localFolder
-        )
+        ).run {
+          if (accountEntity.showOnlyEncrypted == true) {
+            filter { it.hasPgp() }
+          } else this
+        }
 
         val draftIdsMap = if (localFolder.isDrafts) {
           val drafts =
@@ -1030,7 +1034,6 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           fetchedDraftIdsMap
         } else emptyMap()
 
-        val isEncryptedModeEnabled = accountEntity.showOnlyEncrypted ?: false
         val isNew =
           !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
@@ -1040,7 +1043,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,
-          areAllMsgsEncrypted = isEncryptedModeEnabled,
+          onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
           draftIdsMap = draftIdsMap
         )
 

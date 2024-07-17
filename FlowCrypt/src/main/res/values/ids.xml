@@ -21,8 +21,6 @@
     <item name="progress_id_running_task" type="id" />
     <item name="progress_id_resetting_connection" type="id" />
     <item name="progress_id_connecting_to_email_server" type="id" />
-    <item name="progress_id_running_smtp_action" type="id" />
-    <item name="progress_id_running_imap_action" type="id" />
     <item name="progress_id_opening_store" type="id" />
     <item name="progress_id_getting_list_of_emails" type="id" />
     <item name="progress_id_connecting" type="id" />

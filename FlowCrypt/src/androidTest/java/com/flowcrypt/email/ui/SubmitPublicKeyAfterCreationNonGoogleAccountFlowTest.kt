@@ -20,6 +20,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.IMAPStoreConnection
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -30,12 +31,12 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.base.BaseSignTest
 import com.flowcrypt.email.util.AccountDaoManager
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Folder
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.eclipse.angus.mail.imap.IMAPFolder
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -44,16 +45,17 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/1984
  *
  * @author Denys Bondarenko
  */
-@FlowCryptTestSettings(useIntents = true)
 @DependsOnMailServer
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
 class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
@@ -104,6 +106,8 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
+      waitForObjectWithText(getResString(R.string.create_a_new_key).uppercase(), TimeUnit.SECONDS.toMillis(5))
+
       onView(withId(R.id.buttonCreateNewKey))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -112,6 +116,7 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
       onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))
         .perform(replaceText(passphrase), closeSoftKeyboard())
+      Thread.sleep(TimeUnit.SECONDS.toMillis(1))
       onView(withId(R.id.buttonSetPassPhrase))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -121,6 +126,9 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
       onView(withId(R.id.buttonConfirmPassPhrases))
         .check(matches(isDisplayed()))
         .perform(click())
+
+      //need to wait while a key is creating
+      waitForObjectWithText(JavaEmailConstants.FOLDER_INBOX, TimeUnit.SECONDS.toMillis(10))
 
       assertTrue(isSubmitPubKeyCalled)
     } finally {

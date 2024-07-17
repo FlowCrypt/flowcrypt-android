@@ -889,9 +889,9 @@ class EmailUtil {
      * @return A generated [SearchTerm].
      */
     fun generateSearchTerm(account: AccountEntity, localFolder: LocalFolder): SearchTerm {
-      val isEncryptedModeEnabled = account.showOnlyEncrypted
+      val isOnlyPgpModeEnabled = account.showOnlyEncrypted
 
-      if (isEncryptedModeEnabled == true) {
+      if (isOnlyPgpModeEnabled == true) {
         val searchTerm = genPgpThingsSearchTerm(account)
 
         return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(

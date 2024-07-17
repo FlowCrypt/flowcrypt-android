@@ -238,7 +238,7 @@
     <string name="success">Success</string>
     <string name="parsing_public_keys">Parsing public keys</string>
     <string name="importing_public_keys">Importing public keys</string>
-    <string name="showing_only_encrypted_messages">Showing only encrypted messages</string>
+    <string name="load_only_pgp_messages">Load only PGP messages</string>
     <string name="messages">Messages</string>
     <string name="messages_notification_channel">The messages notification channel</string>
     <string name="notifications">Notifications</string>

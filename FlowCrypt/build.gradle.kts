@@ -399,7 +399,7 @@ dependencies {
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
-  androidTestUtil("androidx.test:orchestrator:1.4.2")
+  androidTestUtil("androidx.test:orchestrator:1.5.0")
 
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
@@ -466,7 +466,7 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.17.2")
+  implementation("org.jsoup:jsoup:1.18.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
   implementation("org.pgpainless:pgpainless-core:1.6.7")
   implementation("org.eclipse.angus:angus-mail:2.0.3")

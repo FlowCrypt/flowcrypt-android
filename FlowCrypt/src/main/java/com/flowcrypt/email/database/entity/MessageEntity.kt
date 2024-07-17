@@ -225,7 +225,8 @@ data class MessageEntity(
       folder: IMAPFolder,
       msgs: Array<Message>?,
       hasPgpAfterAdditionalSearchSet: Set<Long>,
-      isNew: Boolean, areAllMsgsEncrypted: Boolean
+      isNew: Boolean,
+      isOnlyPgpModeEnabled: Boolean
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       msgs?.let { msgsList ->
@@ -235,7 +236,7 @@ data class MessageEntity(
               Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
             )
 
-        val onlyEncryptedMsgs =
+        val notificationForOnlyPgpMessages =
           NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
               SharedPreferencesHelper.getString(
                 PreferenceManager.getDefaultSharedPreferences(context),
@@ -250,13 +251,13 @@ data class MessageEntity(
               isNewTemp = false
             }
 
-            val hasPgp = if (areAllMsgsEncrypted) {
+            val hasPgp = if (isOnlyPgpModeEnabled) {
               true
             } else {
               msg.hasPgp() || hasPgpAfterAdditionalSearchSet.contains(folder.getUID(msg))
             }
 
-            if (onlyEncryptedMsgs && !hasPgp) {
+            if (notificationForOnlyPgpMessages && !hasPgp) {
               isNewTemp = false
             }
 
@@ -287,7 +288,7 @@ data class MessageEntity(
       label: String,
       msgsList: List<com.google.api.services.gmail.model.Message>,
       isNew: Boolean,
-      areAllMsgsEncrypted: Boolean,
+      onlyPgpModeEnabled: Boolean,
       draftIdsMap: Map<String, String> = emptyMap()
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
@@ -312,7 +313,7 @@ data class MessageEntity(
             isNewTemp = false
           }
 
-          val hasPgp: Boolean = if (areAllMsgsEncrypted) {
+          val hasPgp: Boolean = if (onlyPgpModeEnabled) {
             true
           } else {
             msg.hasPgp()

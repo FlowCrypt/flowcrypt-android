@@ -29,6 +29,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -37,6 +38,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -44,6 +46,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
@@ -89,16 +92,17 @@ import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.OutgoingMessagesManager
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import org.eclipse.angus.mail.imap.protocol.SearchSequence
 import jakarta.mail.AuthenticationFailedException
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
@@ -106,6 +110,7 @@ import me.everything.android.ui.overscroll.IOverScrollState
 import me.everything.android.ui.overscroll.IOverScrollStateListener
 import me.everything.android.ui.overscroll.VerticalOverScrollBounceEffectDecorator
 import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorAdapter
+import org.eclipse.angus.mail.imap.protocol.SearchSequence
 import java.util.UUID
 
 /**
@@ -242,7 +247,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
             binding?.swipeRefreshLayout?.isEnabled = true
             currentFolder?.searchQuery = null
-            onFolderChanged(true)
+            onFolderChanged(forceClearCache = true)
             return true
           }
         })
@@ -259,7 +264,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             }
 
             currentFolder?.searchQuery = query
-            onFolderChanged(true)
+            onFolderChanged(forceClearCache = true)
             return false
           }
 
@@ -288,9 +293,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         itemForceSending?.isEnabled = isForceSendingEnabled
 
         when {
-          JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
+          currentFolder?.isOutbox == true -> {
             itemSearch?.isVisible = false
             itemForceSending?.isVisible = true
+          }
+
+          currentFolder?.isDrafts == true -> {
+            itemSearch?.isVisible = true
+            itemForceSending?.isVisible = false
           }
 
           else -> {
@@ -548,7 +558,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   /**
-   * Try to load a new messages from an IMAP server.
+   * Try to load new messages from a server.
    */
   private fun refreshMsgs() {
     currentFolder?.let {
@@ -557,7 +567,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   /**
-   * Try to load a next messages from an IMAP server.
+   * Try to load next messages
    */
   private fun loadNextMsgs() {
     if (isOutboxFolder) {
@@ -1031,16 +1041,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             )
 
             R.id.progress_id_connecting_to_email_server -> setActionProgress(progress, "Connecting")
-
-            R.id.progress_id_running_smtp_action -> setActionProgress(
-              progress,
-              "Running SMTP action"
-            )
-
-            R.id.progress_id_running_imap_action -> setActionProgress(
-              progress,
-              "Running IMAP action"
-            )
 
             R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
 

@@ -39,13 +39,14 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
-@FlowCryptTestSettings(useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
 class RecipientsListFlowTest : BaseRecipientsListTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>(
     TestGeneralUtil.genIntentForNavigationComponent(
@@ -68,9 +69,8 @@ class RecipientsListFlowTest : BaseRecipientsListTest() {
 
   @Test
   fun testShowContactsWithPgpOnly() {
-    unregisterCountingIdlingResource()
     addContactsToDatabase()
-    Thread.sleep(2000)
+    waitForObjectWithText(EMAILS[3], TimeUnit.SECONDS.toMillis(5))
     onView(withId(R.id.switchView))
       .perform(click())
     Thread.sleep(1000)
@@ -85,15 +85,15 @@ class RecipientsListFlowTest : BaseRecipientsListTest() {
 
   @Test
   fun testShowAllContactsAfterSwitch() {
-    unregisterCountingIdlingResource()
     val contactWithoutPgp = "no_pgp@flowcrypt.test"
     addContactsToDatabase()
     addContactToDatabase(email = contactWithoutPgp, hasPgp = false)
-    Thread.sleep(2000)
+    waitForObjectWithText(EMAILS[3], TimeUnit.SECONDS.toMillis(5))
     onView(withId(R.id.rVRecipients))
       .check(matches(withRecyclerViewItemCount(EMAILS.size)))
     onView(withId(R.id.switchView))
       .perform(click())
+    waitForObjectWithText(contactWithoutPgp, TimeUnit.SECONDS.toMillis(5))
     onView(withId(R.id.rVRecipients))
       .check(matches(withRecyclerViewItemCount(EMAILS.size + 1)))
     Thread.sleep(1000)
@@ -103,7 +103,6 @@ class RecipientsListFlowTest : BaseRecipientsListTest() {
 
   @Test
   fun testFilterContacts() {
-    unregisterCountingIdlingResource()
     val contactWithPgp = "has_pgp_00@flowcrypt.test"
     val contactsWithPgp = arrayOf(
       contactWithPgp,
@@ -123,7 +122,7 @@ class RecipientsListFlowTest : BaseRecipientsListTest() {
     contactsWithPgp.forEach { addContactToDatabase(email = it) }
     contactsWithoutPgp.forEach { addContactToDatabase(email = it, hasPgp = false) }
 
-    Thread.sleep(2000)
+    waitForObjectWithText(contactWithPgp, TimeUnit.SECONDS.toMillis(5))
     onView(withId(R.id.rVRecipients))
       .check(matches(withRecyclerViewItemCount(contactsWithPgp.size)))
 
@@ -135,6 +134,7 @@ class RecipientsListFlowTest : BaseRecipientsListTest() {
       .perform(pressKey(KeyEvent.KEYCODE_ENTER))
     closeSoftKeyboard()
 
+    waitForObjectWithText(contactWithPgp, TimeUnit.SECONDS.toMillis(5))
     onView(withId(R.id.rVRecipients))
       .check(matches(withRecyclerViewItemCount(1)))
     testSomeContact(contactWithPgp, Visibility.VISIBLE)
@@ -147,6 +147,7 @@ class RecipientsListFlowTest : BaseRecipientsListTest() {
 
     onView(withId(R.id.switchView))
       .perform(click())
+    waitForObjectWithText(contactWithoutPgp, TimeUnit.SECONDS.toMillis(5))
     onView(withId(R.id.rVRecipients))
       .check(matches(withRecyclerViewItemCount(2)))
     testSomeContact(contactWithPgp, Visibility.VISIBLE)
