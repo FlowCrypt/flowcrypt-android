@@ -1907,16 +1907,20 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
       if (account?.isHandlingAttachmentRestricted() == true) {
-        navController?.navigate(
-          object : NavDirections {
-            override val actionId = R.id.download_attachment_dialog_graph
-            override val arguments = DownloadAttachmentDialogFragmentArgs(
-              attachmentInfo = attInfo,
-              requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntity.id?.toString(),
-              requestCode = REQUEST_CODE_SAVE_ATTACHMENT
-            ).toBundle()
-          }
-        )
+        if (attInfo.uri != null) {
+          context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+        } else {
+          navController?.navigate(
+            object : NavDirections {
+              override val actionId = R.id.download_attachment_dialog_graph
+              override val arguments = DownloadAttachmentDialogFragmentArgs(
+                attachmentInfo = attInfo,
+                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntity.id?.toString(),
+                requestCode = REQUEST_CODE_SAVE_ATTACHMENT
+              ).toBundle()
+            }
+          )
+        }
       } else {
         context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
       }
