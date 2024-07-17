@@ -74,9 +74,11 @@ class PgpKeyTest {
         KeyFlag.CERTIFY_OTHER.flag,
       )
     )
-    val actual = PgpKey.parseKeys(source = TestKeys.KEYS["rsa1"]!!.publicKey)
-    assertEquals(1, actual.getAllKeys().size)
-    assertEquals(expected, actual.pgpKeyDetailsList.first())
+    val parseKeyResult = PgpKey.parseKeys(source = TestKeys.KEYS["rsa1"]!!.publicKey)
+    assertEquals(1, parseKeyResult.getAllKeys().size)
+    val actual = parseKeyResult.pgpKeyDetailsList.first()
+      .run { this.copy(publicKey = replaceVersionInKey(this.publicKey)) }
+    assertEquals(expected, actual)
   }
 
   @Test
@@ -113,9 +115,11 @@ class PgpKeyTest {
         KeyFlag.CERTIFY_OTHER.flag,
       )
     )
-    val actual = PgpKey.parseKeys(source = TestKeys.KEYS["expired"]!!.publicKey)
-    assertEquals(1, actual.getAllKeys().size)
-    assertEquals(expected, actual.pgpKeyDetailsList.first())
+    val parseKeyResult = PgpKey.parseKeys(source = TestKeys.KEYS["expired"]!!.publicKey)
+    assertEquals(1, parseKeyResult.getAllKeys().size)
+    val actual = parseKeyResult.pgpKeyDetailsList.first()
+      .run { this.copy(publicKey = replaceVersionInKey(this.publicKey)) }
+    assertEquals(expected, actual)
   }
 
   @Test
@@ -151,5 +155,16 @@ class PgpKeyTest {
     } finally {
       PGPainless.getPolicy().isEnableKeyParameterValidation = false
     }
+  }
+
+  fun replaceVersionInKey(key: String?): String {
+    val regex =
+      "^Version: FlowCrypt Email Encryption \\d*.\\d*.\\d*(_.*)?\$".toRegex(RegexOption.MULTILINE)
+    val version = BuildConfig.VERSION_NAME
+    val replacement = "Version: FlowCrypt Email Encryption $version"
+    key?.let {
+      return key.replaceFirst(regex, replacement)
+    }
+    return ""
   }
 }
