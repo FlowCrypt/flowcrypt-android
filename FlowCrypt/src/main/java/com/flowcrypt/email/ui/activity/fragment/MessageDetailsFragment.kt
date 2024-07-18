@@ -1906,10 +1906,16 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun downloadAttachment() {
     lastClickedAtt?.let { attInfo ->
-      if (account?.isHandlingAttachmentRestricted() == true) {
-        if (attInfo.uri != null) {
-          context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
-        } else {
+      when {
+        attInfo.uri != null -> {
+          context?.startService(
+            AttachmentDownloadManagerService.newIntent(
+              context = context, attInfo = attInfo
+            )
+          )
+        }
+
+        account?.isHandlingAttachmentRestricted() == true -> {
           navController?.navigate(
             object : NavDirections {
               override val actionId = R.id.download_attachment_dialog_graph
@@ -1921,8 +1927,14 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
             }
           )
         }
-      } else {
-        context?.startService(AttachmentDownloadManagerService.newIntent(context, attInfo))
+
+        else -> {
+          context?.startService(
+            AttachmentDownloadManagerService.newIntent(
+              context = context, attInfo = attInfo
+            )
+          )
+        }
       }
     }
   }
