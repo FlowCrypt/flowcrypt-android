@@ -106,6 +106,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
     if (waitButton.exists()) {
       waitButton.click()
     }
+
+    //close the notification bar if needed
+    if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
+      device.pressBack()
+    }
   }
 
   @Before
@@ -365,5 +370,10 @@ abstract class BaseTest : BaseActivityTestImplementation {
         accountEntity
       )
     }
+  }
+
+  companion object{
+    const val NOTIFICATION_RESOURCES_NAME =
+      "com.android.systemui:id/expandableNotificationRow"
   }
 }
