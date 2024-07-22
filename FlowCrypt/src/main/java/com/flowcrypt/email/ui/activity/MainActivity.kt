@@ -17,13 +17,13 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.CompoundButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -263,7 +263,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         R.id.menuSwitchShowOnlyPgp -> {
           accountViewModel.switchLoadingOnlyPgpMessagesMode()
 
-          val switchView: SwitchCompat? = menuItem.actionView?.findViewById(R.id.switchView)
+          val switchView: CompoundButton? = menuItem.actionView?.findViewById(R.id.switchView)
           if (switchView?.isChecked == true) {
             val currentNotificationLevel = SharedPreferencesHelper.getString(
               PreferenceManager.getDefaultSharedPreferences(this),
@@ -343,7 +343,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
 
         binding.navigationView.menu.findItem(R.id.menuSwitchShowOnlyPgp)?.let {
-          val switchView: SwitchCompat? =
+          val switchView: CompoundButton? =
             it.actionView?.findViewById(R.id.switchView)
           switchView?.apply {
             isClickable = false
