@@ -101,7 +101,7 @@ class EndPassPhraseSessionFlowTest : BaseTest() {
     val endPassPhraseSessionLabel = getResString(R.string.end_pass_phrase_session)
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     //close the notification bar if needed
-    if (device.hasObject(By.res(notificationResourcesName))) {
+    if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
       device.pressBack()
     }
     val keysStorage = KeysStorageImpl.getInstance(getTargetContext())
@@ -166,7 +166,7 @@ class EndPassPhraseSessionFlowTest : BaseTest() {
     activePassPhraseSessionLabel: String,
     endPassPhraseSessionLabel: String
   ): UiObject2? {
-    val notifications = device.findObjects(By.res(notificationResourcesName))
+    val notifications = device.findObjects(By.res(NOTIFICATION_RESOURCES_NAME))
 
     return notifications.firstNotNullOfOrNull { notification ->
       if (notification.hasObject(By.text(activePassPhraseSessionLabel))) {
@@ -180,10 +180,5 @@ class EndPassPhraseSessionFlowTest : BaseTest() {
         notification.findObject(By.text(endPassPhraseSessionLabel))
       } else null
     }
-  }
-
-  companion object {
-    private const val notificationResourcesName =
-      "com.android.systemui:id/expandableNotificationRow"
   }
 }
