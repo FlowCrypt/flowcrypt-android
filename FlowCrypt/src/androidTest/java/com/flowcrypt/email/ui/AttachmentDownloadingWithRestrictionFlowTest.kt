@@ -180,12 +180,17 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
         device.pressBack()
       }
 
-      baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo)
-
       waitForObjectWithText(
         requireNotNull(incomingMessageInfo?.text),
         TimeUnit.SECONDS.toMillis(10)
       )
+
+      waitForObjectWithText(
+        requireNotNull(simpleAttInfo?.name),
+        TimeUnit.SECONDS.toMillis(10)
+      )
+
+      baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo)
 
       onView(withId(R.id.imageViewAttIcon))
         .check(matches(withDrawable(R.drawable.ic_attachment)))

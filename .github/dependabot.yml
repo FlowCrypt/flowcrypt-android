@@ -6,4 +6,40 @@ updates:
     interval: weekly
     day: "sunday"
     time: "20:00"
+
+  groups:
+    espresso:
+      applies-to: version-updates
+      patterns:
+        - "androidx.test.espresso:espresso*"
+
+    androidx_room:
+      applies-to: version-updates
+      patterns:
+        - "androidx.room:room*"
+
+    androidx_lifecycle:
+      applies-to: version-updates
+      patterns:
+        - "androidx.lifecycle:lifecycle*"
+
+    androidx_work:
+      applies-to: version-updates
+      patterns:
+        - "androidx.work:work*"
+
+    androidx_navigation:
+      applies-to: version-updates
+      patterns:
+        - "androidx.navigation:navigation*"
+
+    retrofit2:
+      applies-to: version-updates
+      patterns:
+        - "com.squareup.retrofit2*"
+
+    okhttp3:
+      applies-to: version-updates
+      patterns:
+        - "com.squareup.okhttp3*"
   open-pull-requests-limit: 10
