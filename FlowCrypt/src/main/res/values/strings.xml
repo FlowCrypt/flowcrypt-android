@@ -352,7 +352,7 @@
     <string name="network_error">Network error</string>
     <string name="error_no_keys">Error: no keys</string>
     <string name="could_not_load_private_keys">Couldn\'t load private keys</string>
-    <string name="partially_encrypted_private_key_error_msg">One of the provided Private Keys is a partially encrypted private key (some packets are encrypted, some not). Such keys are not supported. Please only import fully encrypted keys, with the same pass phrase for all secret packets.</string>
+    <string name="partially_encrypted_private_key_error_msg">Some of the provided Private Keys is a partially encrypted private key (some packets are encrypted, some not). Such keys are not supported and will be skipped. Please only import fully encrypted keys, with the same pass phrase for all secret packets.</string>
     <string name="file_is_too_big">The file is too big</string>
     <string name="source_is_empty_or_not_available">The source is empty or not available</string>
     <string name="parsing_keys_please_wait">Parsing keys, please wait</string>
