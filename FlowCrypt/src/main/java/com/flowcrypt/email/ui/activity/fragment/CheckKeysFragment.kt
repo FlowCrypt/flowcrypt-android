@@ -102,7 +102,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
         showInfoDialog(
           dialogTitle = "",
           requestCode = if (finalList.isEmpty()) {
-            REQUEST_CODE_SINGLE_PARTIALY_ENCRTYPRED_KEY
+            REQUEST_CODE_SINGLE_PARTIALLY_ENCRYPTED_KEY
           } else {
             Int.MIN_VALUE
           },
@@ -376,7 +376,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   private fun subscribeToInfoDialog() {
     setFragmentResultListenerForInfoDialog { _, bundle ->
       when (bundle.getInt(InfoDialogFragment.KEY_REQUEST_CODE)) {
-        REQUEST_CODE_SINGLE_PARTIALY_ENCRTYPRED_KEY -> {
+        REQUEST_CODE_SINGLE_PARTIALLY_ENCRYPTED_KEY -> {
           returnResult(CANCELED)
         }
       }
@@ -396,7 +396,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   companion object {
-    private const val REQUEST_CODE_SINGLE_PARTIALY_ENCRTYPRED_KEY = 1
+    private const val REQUEST_CODE_SINGLE_PARTIALLY_ENCRYPTED_KEY = 1
 
     val KEY_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_UNLOCKED_PRIVATE_KEYS", CheckKeysFragment::class.java
