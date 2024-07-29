@@ -22,6 +22,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentLegalBinding
 import com.flowcrypt.email.databinding.SwipeToRefrechWithWebviewBinding
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
+import com.flowcrypt.email.extensions.android.webkit.showUrlUsingChromeCustomTabs
 import com.flowcrypt.email.extensions.androidx.viewpager2.widget.reduceDragSensitivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.google.android.material.tabs.TabLayoutMediator
@@ -87,44 +88,64 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
       super.onViewCreated(view, savedInstanceState)
-      if (isRefreshEnabled) {
-        binding?.swipeRefreshLayout?.setColorSchemeResources(
-          R.color.colorPrimary,
-          R.color.colorPrimary,
-          R.color.colorPrimary
-        )
-        binding?.swipeRefreshLayout?.setOnRefreshListener {
-          assetsPath?.let { binding?.webView?.loadUrl(it) }
+      binding?.swipeRefreshLayout?.apply {
+        if (isRefreshEnabled) {
+          setColorSchemeResources(
+            R.color.colorPrimary,
+            R.color.colorPrimary,
+            R.color.colorPrimary
+          )
+          setOnRefreshListener {
+            assetsPath?.let { binding?.webView?.loadUrl(it) }
+          }
+        } else {
+          isEnabled = false
         }
-      } else {
-        binding?.swipeRefreshLayout?.isEnabled = false
       }
 
-      binding?.webView?.layoutParams = ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-      )
-      binding?.webView?.webViewClient = object : WebViewClient() {
-        override fun onReceivedError(
-          view: WebView?,
-          request: WebResourceRequest?,
-          error: WebResourceError?
-        ) {
-          if (error?.description == "net::ERR_INTERNET_DISCONNECTED") {
-            binding?.webView?.loadUrl("file:///android_asset/html/no_connection.htm")
-          } else {
-            super.onReceivedError(view, request, error)
+      binding?.webView?.apply {
+        layoutParams = ViewGroup.LayoutParams(
+          ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT
+        )
+
+        webViewClient = object : WebViewClient() {
+          override fun onReceivedError(
+            view: WebView?,
+            request: WebResourceRequest?,
+            error: WebResourceError?
+          ) {
+            if (error?.description == "net::ERR_INTERNET_DISCONNECTED") {
+              binding?.webView?.loadUrl("file:///android_asset/html/no_connection.htm")
+            } else {
+              super.onReceivedError(view, request, error)
+            }
+          }
+
+          override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+            binding?.swipeRefreshLayout?.isRefreshing = false
+          }
+
+          @Deprecated("Deprecated in Java", ReplaceWith("true"))
+          override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+            showUrlUsingChromeCustomTabs(context = context, uri = Uri.parse(url))
+            return true
+          }
+
+          override fun shouldOverrideUrlLoading(
+            view: WebView,
+            request: WebResourceRequest
+          ): Boolean {
+            showUrlUsingChromeCustomTabs(context = context, uri = request.url)
+            return true
           }
         }
 
-        override fun onPageFinished(view: WebView?, url: String?) {
-          super.onPageFinished(view, url)
-          binding?.swipeRefreshLayout?.isRefreshing = false
+        assetsPath?.let {
+          this.setupDayNight()
+          this.loadUrl(it)
         }
-      }
-      assetsPath?.let {
-        binding?.webView?.setupDayNight()
-        binding?.webView?.loadUrl(it)
       }
     }
 
