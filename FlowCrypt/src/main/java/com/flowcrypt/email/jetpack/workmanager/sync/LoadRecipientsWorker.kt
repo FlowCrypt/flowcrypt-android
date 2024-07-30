@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
@@ -210,7 +211,7 @@ class LoadRecipientsWorker(context: Context, params: WorkerParameters) :
         val header = msg.getHeader(recipientType.toString()) ?: return@withContext emptyList()
         if (header.isNotEmpty()) {
           if (!TextUtils.isEmpty(header[0])) {
-            val addresses = InternetAddress.parse(header[0])
+            val addresses = header[0].asInternetAddresses()
             val emailAndNamePairs = mutableListOf<Pair<String, String>>()
             for (address in addresses) {
               emailAndNamePairs.add(Pair(address.address.lowercase(), address.personal))

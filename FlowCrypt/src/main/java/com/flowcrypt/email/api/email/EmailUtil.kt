@@ -30,6 +30,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -47,15 +48,6 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.google.api.services.gmail.GmailScopes
-import org.eclipse.angus.mail.gimap.GmailRawSearchTerm
-import org.eclipse.angus.mail.iap.Argument
-import org.eclipse.angus.mail.imap.IMAPBodyPart
-import org.eclipse.angus.mail.imap.IMAPFolder
-import org.eclipse.angus.mail.imap.protocol.BODY
-import org.eclipse.angus.mail.imap.protocol.FetchResponse
-import org.eclipse.angus.mail.imap.protocol.UID
-import org.eclipse.angus.mail.imap.protocol.UIDSet
-import org.eclipse.angus.mail.util.ASCIIUtility
 import jakarta.activation.DataHandler
 import jakarta.mail.BodyPart
 import jakarta.mail.FetchProfile
@@ -66,7 +58,6 @@ import jakarta.mail.Multipart
 import jakarta.mail.Part
 import jakarta.mail.Session
 import jakarta.mail.UIDFolder
-import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
@@ -86,6 +77,15 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.eclipse.angus.mail.gimap.GmailRawSearchTerm
+import org.eclipse.angus.mail.iap.Argument
+import org.eclipse.angus.mail.imap.IMAPBodyPart
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.protocol.BODY
+import org.eclipse.angus.mail.imap.protocol.FetchResponse
+import org.eclipse.angus.mail.imap.protocol.UID
+import org.eclipse.angus.mail.imap.protocol.UIDSet
+import org.eclipse.angus.mail.util.ASCIIUtility
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -984,14 +984,6 @@ class EmailUtil {
       return parameters.joinToString(separator = " ")
     }
 
-    fun parseAddresses(fromAddress: String?): List<InternetAddress> {
-      return try {
-        InternetAddress.parse(fromAddress ?: "").toList()
-      } catch (e: AddressException) {
-        emptyList()
-      }
-    }
-
     suspend fun prepareNewMsg(
       session: Session,
       info: OutgoingMessageInfo,
@@ -1265,7 +1257,7 @@ class EmailUtil {
       val msg = FlowCryptMimeMessage(session)
 
       msg.setFrom(InternetAddress(account.email))
-      msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
+      msg.setRecipients(Message.RecipientType.TO, account.email.asInternetAddresses())
       msg.subject =
         context.getString(R.string.your_key_backup, context.getString(R.string.app_name))
       return msg

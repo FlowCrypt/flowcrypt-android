@@ -14,6 +14,7 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.model.KeysStorage
@@ -21,7 +22,6 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
-import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -135,7 +135,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     for (secretKey in getPGPSecretKeyRings()) {
       for (userId in secretKey.publicKey.userIDs) {
         try {
-          val internetAddresses = InternetAddress.parse(userId)
+          val internetAddresses = userId.asInternetAddresses()
           for (internetAddress in internetAddresses) {
             if (user.equals(internetAddress.address, true)) {
               list.add(secretKey)

@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.jakarta.mail.hasPgp
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
@@ -88,19 +89,19 @@ data class MessageEntity(
 
   @IgnoredOnParcel
   @Ignore
-  val from: List<InternetAddress> = EmailUtil.parseAddresses(fromAddress)
+  val from: List<InternetAddress> = fromAddress.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
-  val replyToAddress: List<InternetAddress> = EmailUtil.parseAddresses(replyTo)
+  val replyToAddress: List<InternetAddress> = replyTo.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
-  val to: List<InternetAddress> = EmailUtil.parseAddresses(toAddress)
+  val to: List<InternetAddress> = toAddress.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
-  val cc: List<InternetAddress> = EmailUtil.parseAddresses(ccAddress)
+  val cc: List<InternetAddress> = ccAddress.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
