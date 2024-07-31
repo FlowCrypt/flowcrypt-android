@@ -8,17 +8,17 @@ package com.flowcrypt.email.security.model
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Parcelable
-import android.util.Patterns
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.model.KeyImportDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.Parcelize
 import org.pgpainless.algorithm.KeyFlag
@@ -63,13 +63,7 @@ data class PgpKeyRingDetails(
     get() = parseMimeAddresses()
 
   val primaryMimeAddress: InternetAddress?
-    get() = primaryUserId?.let {
-      try {
-        InternetAddress.parse(it).firstOrNull()
-      } catch (e: Exception) {
-        null
-      }
-    }
+    get() = primaryUserId?.asInternetAddress()
 
   val isPartiallyEncrypted: Boolean
     get() {
@@ -91,22 +85,7 @@ data class PgpKeyRingDetails(
   }
 
   private fun parseMimeAddresses(): List<InternetAddress> {
-    val results = mutableListOf<InternetAddress>()
-
-    for (user in users) {
-      try {
-        results.addAll(listOf(*InternetAddress.parse(user)))
-      } catch (e: AddressException) {
-        e.printStackTrace()
-        val pattern = Patterns.EMAIL_ADDRESS
-        val matcher = pattern.matcher(user)
-        if (matcher.find()) {
-          results.add(InternetAddress(matcher.group()))
-        }
-      }
-    }
-
-    return results
+    return users.flatMap { it.asInternetAddresses().asList() }
   }
 
   fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {

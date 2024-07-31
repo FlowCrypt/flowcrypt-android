@@ -8,11 +8,13 @@ package com.flowcrypt.email.extensions.kotlin
 
 import android.content.Context
 import android.graphics.Color
+import android.util.Patterns
 import android.util.TypedValue
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
 import com.flowcrypt.email.util.UIUtil
+import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.InternetAddress
 import org.json.JSONObject
@@ -156,11 +158,23 @@ fun String.capitalize(): String {
 }
 
 fun String?.asInternetAddress(): InternetAddress? {
+  return asInternetAddresses().firstOrNull()
+}
+
+fun String?.asInternetAddresses(): Array<InternetAddress> {
   return try {
     InternetAddress.parse(this)
   } catch (e: Exception) {
-    emptyArray<InternetAddress>()
-  }.firstOrNull()
+    if (e is AddressException) {
+      val pattern = Patterns.EMAIL_ADDRESS
+      val matcher = this?.let { pattern.matcher(it) }
+      if (matcher?.find() == true) {
+        arrayOf(InternetAddress(matcher.group().lowercase()))
+      } else emptyArray<InternetAddress>()
+    } else {
+      emptyArray<InternetAddress>()
+    }
+  }
 }
 
 fun String?.asContentTypeOrNull(): ContentType? {
