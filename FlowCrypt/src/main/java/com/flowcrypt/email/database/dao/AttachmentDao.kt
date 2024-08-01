@@ -16,8 +16,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AttachmentDao : BaseDao<AttachmentEntity> {
 
-  @Query("DELETE FROM attachment WHERE account = :email AND folder = :label")
-  suspend fun deleteAtt(email: String?, label: String?): Int
+  @Query("DELETE FROM attachment WHERE account = :account AND folder = :label")
+  suspend fun deleteAtt(account: String?, label: String?): Int
 
   @Query("SELECT * FROM attachment WHERE account = :account AND folder = :label AND uid = :uid")
   fun getAttachments(account: String, label: String, uid: Long): List<AttachmentEntity>
@@ -38,6 +38,6 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
   @Query("DELETE FROM attachment WHERE account = :account AND folder = :label AND uid = :uid")
   suspend fun deleteAttSuspend(account: String, label: String, uid: Long): Int
 
-  @Query("DELETE FROM attachment WHERE account = :email")
-  suspend fun deleteByEmailSuspend(email: String?): Int
+  @Query("DELETE FROM attachment WHERE account = :account")
+  suspend fun deleteByEmailSuspend(account: String?): Int
 }

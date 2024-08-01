@@ -16,6 +16,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.flowcrypt.account.database.dao.MessageDao
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.converters.ClientConfigurationConverter
 import com.flowcrypt.email.database.converters.LabelListVisibilityConverter
@@ -27,7 +28,6 @@ import com.flowcrypt.email.database.dao.ActionQueueDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
-import com.flowcrypt.email.database.dao.MessageDao
 import com.flowcrypt.email.database.dao.PubKeyDao
 import com.flowcrypt.email.database.dao.RecipientDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
