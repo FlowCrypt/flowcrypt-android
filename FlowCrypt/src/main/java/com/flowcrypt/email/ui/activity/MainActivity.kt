@@ -446,11 +446,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         roomDatabase.accountDao().logout(accountEntity)
         removeAccountFromAccountManager(accountEntity)
 
-        //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
-        //remove all info about the given account from the local db
-        roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
-        roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
-
         val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
         if (newActiveAccount == null) {
           roomDatabase.recipientDao().deleteAll()

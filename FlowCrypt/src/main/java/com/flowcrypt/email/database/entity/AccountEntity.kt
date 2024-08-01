@@ -40,7 +40,7 @@ data class AccountEntity(
   @PrimaryKey(autoGenerate = true)
   @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
-  @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
+  @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String,
   @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
   @ColumnInfo(name = "given_name", defaultValue = "NULL") val givenName: String? = null,
   @ColumnInfo(name = "family_name", defaultValue = "NULL") val familyName: String? = null,
@@ -109,7 +109,7 @@ data class AccountEntity(
     useStartTlsForSmtp: Boolean = false,
   ) : this(
     email = requireNotNull(googleSignInAccount.email).lowercase(),
-    accountType = googleSignInAccount.account?.type?.lowercase(),
+    accountType = requireNotNull(googleSignInAccount.account?.type?.lowercase()),//need to fix, don't merge
     displayName = googleSignInAccount.displayName,
     givenName = googleSignInAccount.givenName,
     familyName = googleSignInAccount.familyName,
@@ -183,7 +183,7 @@ data class AccountEntity(
   constructor(email: String) :
       this(
         email = email,
-        accountType = null,
+        accountType = "null",//need to fix, don't merge
         displayName = null,
         givenName = null,
         familyName = null,

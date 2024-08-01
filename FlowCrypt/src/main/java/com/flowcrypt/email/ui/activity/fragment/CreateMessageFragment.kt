@@ -518,7 +518,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     super.onAccountInfoRefreshed(accountEntity)
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-        account = accountEntity?.email
+        account = accountEntity?.email,
+        accountType = accountEntity?.accountType
       )
     )
 

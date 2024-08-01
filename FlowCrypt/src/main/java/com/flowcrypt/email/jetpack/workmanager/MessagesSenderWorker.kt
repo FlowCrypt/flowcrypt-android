@@ -45,8 +45,6 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.http.FileContent
-import org.eclipse.angus.mail.imap.IMAPFolder
-import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.Flags
 import jakarta.mail.Folder
@@ -58,6 +56,8 @@ import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.util.MailConnectException
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -254,7 +254,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           delay(2000)
 
           val attachments = roomDatabase.attachmentDao()
-            .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+            .getAttachmentsSuspend(
+              account = email,
+              accountType = account.accountType,
+              label = JavaEmailConstants.FOLDER_OUTBOX,
+              uid = msgEntity.uid
+            )
           val isMsgSent = sendMsg(account, msgEntity, attachments, sess, store)
 
           if (!isMsgSent) {
@@ -354,8 +359,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
         }
         val msgEntity = list.first()
         try {
-          val attachments = roomDatabase.attachmentDao()
-            .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+          val attachments = roomDatabase.attachmentDao().getAttachmentsSuspend(
+            account = email,
+            accountType = account.accountType,
+            label = JavaEmailConstants.FOLDER_OUTBOX,
+            uid = msgEntity.uid
+          )
 
           val mimeMsg = EmailUtil.createMimeMsg(applicationContext, sess, msgEntity, attachments)
 
@@ -426,6 +435,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     withContext(Dispatchers.IO) {
       FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().deleteAttSuspend(
         account = account.email,
+        accountType = account.accountType,
         label = JavaEmailConstants.FOLDER_OUTBOX,
         uid = details.uid
       )

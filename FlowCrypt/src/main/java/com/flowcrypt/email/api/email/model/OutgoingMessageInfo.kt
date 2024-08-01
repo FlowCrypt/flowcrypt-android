@@ -25,6 +25,7 @@ import java.util.UUID
 @Parcelize
 data class OutgoingMessageInfo(
   @Expose val account: String? = null,
+  @Expose val accountType: String? = null,
   @Expose val subject: String? = null,
   @Expose val msg: String? = null,
   @Expose val toRecipients: List<InternetAddress>? = null,
@@ -121,7 +122,7 @@ data class OutgoingMessageInfo(
     val timestamp = System.currentTimeMillis()
     return MessageEntity(
       account = requireNotNull(account),
-      accountType = requireNotNull(account),//need to fix it. Don't merge
+      accountType = requireNotNull(accountType),
       folder = folder,
       uid = uid,
       receivedDate = timestamp,

@@ -32,7 +32,6 @@ import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.GsonBuilder
-import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.activation.DataHandler
 import jakarta.mail.Address
 import jakarta.mail.Message
@@ -48,6 +47,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.eclipse.angus.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
@@ -337,6 +337,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
   private suspend fun getAttachments(msgEntity: MessageEntity) =
     roomDatabase.attachmentDao().getAttachmentsSuspend(
       account = msgEntity.account,
+      accountType = msgEntity.accountType,
       label = JavaEmailConstants.FOLDER_OUTBOX,
       uid = msgEntity.uid
     ).map {

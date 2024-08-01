@@ -279,6 +279,7 @@ class MsgDetailsViewModel(
   @OptIn(ExperimentalCoroutinesApi::class)
   private val separatedAttachmentsFlow = roomDatabase.attachmentDao().getAttachmentsFlow(
     account = messageEntity.account,
+    accountType = messageEntity.accountType,
     label = messageEntity.folder,
     uid = messageEntity.uid
   ).mapLatest { list ->
