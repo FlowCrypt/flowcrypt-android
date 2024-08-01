@@ -40,7 +40,7 @@ data class AccountEntity(
   @PrimaryKey(autoGenerate = true)
   @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
-  @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String,
+  @ColumnInfo(name = "account_type") val accountType: String,
   @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
   @ColumnInfo(name = "given_name", defaultValue = "NULL") val givenName: String? = null,
   @ColumnInfo(name = "family_name", defaultValue = "NULL") val familyName: String? = null,
@@ -312,7 +312,7 @@ data class AccountEntity(
   override fun hashCode(): Int {
     var result = id?.hashCode() ?: 0
     result = 31 * result + email.hashCode()
-    result = 31 * result + (accountType?.hashCode() ?: 0)
+    result = 31 * result + accountType.hashCode()
     result = 31 * result + (displayName?.hashCode() ?: 0)
     result = 31 * result + (givenName?.hashCode() ?: 0)
     result = 31 * result + (familyName?.hashCode() ?: 0)
