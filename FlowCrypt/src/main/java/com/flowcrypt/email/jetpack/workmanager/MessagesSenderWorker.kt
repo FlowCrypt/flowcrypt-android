@@ -433,7 +433,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     details: MessageEntity
   ) =
     withContext(Dispatchers.IO) {
-      FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().deleteAttachments(
+      roomDatabase.attachmentDao().deleteAttachments(
         account = account.email,
         accountType = account.accountType,
         label = JavaEmailConstants.FOLDER_OUTBOX,
