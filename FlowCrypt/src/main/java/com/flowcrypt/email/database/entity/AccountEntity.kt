@@ -14,6 +14,7 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
@@ -87,9 +88,7 @@ data class AccountEntity(
 
   @IgnoredOnParcel
   @Ignore
-  val account: Account = Account(this.email.ifEmpty { "unknown" },
-    accountType ?: this.email.substring(this.email.indexOf('@') + 1).lowercase()
-      .ifEmpty { "unknown" })
+  val account: Account = Account(this.email.ifEmpty { ACCOUNT_TYPE_UNKNOWN }, accountType)
 
   @IgnoredOnParcel
   @Ignore
@@ -109,7 +108,9 @@ data class AccountEntity(
     useStartTlsForSmtp: Boolean = false,
   ) : this(
     email = requireNotNull(googleSignInAccount.email).lowercase(),
-    accountType = requireNotNull(googleSignInAccount.account?.type?.lowercase()),//need to fix, don't merge
+    accountType = googleSignInAccount.account?.type?.lowercase() ?: EmailUtil.getDomain(
+      requireNotNull(googleSignInAccount.email)
+    ).ifEmpty { ACCOUNT_TYPE_UNKNOWN },
     displayName = googleSignInAccount.displayName,
     givenName = googleSignInAccount.givenName,
     familyName = googleSignInAccount.familyName,
@@ -148,8 +149,7 @@ data class AccountEntity(
   constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :
       this(
         email = authCredentials.email.lowercase(),
-        accountType =
-        authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).lowercase(),
+        accountType = EmailUtil.getDomain(authCredentials.email).ifEmpty { ACCOUNT_TYPE_UNKNOWN },
         displayName = authCredentials.displayName,
         givenName = null,
         familyName = null,
@@ -183,7 +183,7 @@ data class AccountEntity(
   constructor(email: String) :
       this(
         email = email,
-        accountType = "null",//need to fix, don't merge
+        accountType = EmailUtil.getDomain(email).ifEmpty { ACCOUNT_TYPE_UNKNOWN },
         displayName = null,
         givenName = null,
         familyName = null,
@@ -350,5 +350,6 @@ data class AccountEntity(
     const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
+    const val ACCOUNT_TYPE_UNKNOWN = "unknown"
   }
 }
