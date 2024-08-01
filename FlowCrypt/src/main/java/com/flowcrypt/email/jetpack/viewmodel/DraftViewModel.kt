@@ -286,7 +286,8 @@ class DraftViewModel(
       val folderDrafts =
         foldersManager.folderDrafts ?: throw IllegalStateException("Drafts folder is undefined")
       val newDraftMessageEntity = MessageEntity.genMsgEntity(
-        email = accountEntity.email,
+        account = accountEntity.email,
+        accountType = accountEntity.accountType,
         label = folderDrafts.fullName,
         uid = System.currentTimeMillis(),
         info = outgoingMessageInfo,

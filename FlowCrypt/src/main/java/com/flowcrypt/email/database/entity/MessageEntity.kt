@@ -416,15 +416,16 @@ data class MessageEntity(
     }
 
     fun genMsgEntity(
-      email: String,
+      account: String,
+      accountType: String,
       label: String,
       uid: Long,
       info: OutgoingMessageInfo,
       flags: List<MessageFlag> = listOf(MessageFlag.SEEN)
     ): MessageEntity {
       return MessageEntity(
-        account = email,
-        accountType = "accountType",//need to fix it. Don't merge
+        account = account,
+        accountType = accountType,
         folder = label,
         uid = uid,
         sentDate = System.currentTimeMillis(),
