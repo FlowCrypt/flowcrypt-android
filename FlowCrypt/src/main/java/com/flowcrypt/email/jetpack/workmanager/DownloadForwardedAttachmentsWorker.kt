@@ -122,7 +122,7 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
         val msgEntity = detailsList[0]
         val msgAttsDir = File(attCacheDir, msgEntity.attachmentsDirectory!!)
         try {
-          val atts = roomDatabase.attachmentDao().getAttachmentsSuspend(
+          val atts = roomDatabase.attachmentDao().getAttachments(
             account = account.email,
             accountType = account.accountType,
             label = JavaEmailConstants.FOLDER_OUTBOX,

@@ -20,7 +20,7 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
     "SELECT * FROM attachment WHERE account = :account " +
         "AND account_type = :accountType AND folder = :label AND uid = :uid"
   )
-  suspend fun getAttachmentsSuspend(
+  suspend fun getAttachments(
     account: String,
     accountType: String,
     label: String,
@@ -42,5 +42,5 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
     "DELETE FROM attachment WHERE account = :account " +
         "AND account_type = :accountType AND folder = :label AND uid = :uid"
   )
-  suspend fun deleteAttSuspend(account: String, accountType: String, label: String, uid: Long): Int
+  suspend fun deleteAttachments(account: String, accountType: String, label: String, uid: Long): Int
 }

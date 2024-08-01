@@ -254,7 +254,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           delay(2000)
 
           val attachments = roomDatabase.attachmentDao()
-            .getAttachmentsSuspend(
+            .getAttachments(
               account = email,
               accountType = account.accountType,
               label = JavaEmailConstants.FOLDER_OUTBOX,
@@ -359,7 +359,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
         }
         val msgEntity = list.first()
         try {
-          val attachments = roomDatabase.attachmentDao().getAttachmentsSuspend(
+          val attachments = roomDatabase.attachmentDao().getAttachments(
             account = email,
             accountType = account.accountType,
             label = JavaEmailConstants.FOLDER_OUTBOX,
@@ -433,7 +433,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     details: MessageEntity
   ) =
     withContext(Dispatchers.IO) {
-      FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().deleteAttSuspend(
+      FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().deleteAttachments(
         account = account.email,
         accountType = account.accountType,
         label = JavaEmailConstants.FOLDER_OUTBOX,
