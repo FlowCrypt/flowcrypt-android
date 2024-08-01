@@ -120,15 +120,16 @@ data class OutgoingMessageInfo(
   ): MessageEntity {
     val timestamp = System.currentTimeMillis()
     return MessageEntity(
-      email = requireNotNull(account),
+      account = requireNotNull(account),
+      accountType = requireNotNull(account),//need to fix it. Don't merge
       folder = folder,
       uid = uid,
       receivedDate = timestamp,
       sentDate = timestamp,
-      fromAddress = from.toString(),
-      replyTo = replyTo,
-      toAddress = InternetAddress.toString(toRecipients?.toTypedArray()),
-      ccAddress = InternetAddress.toString(ccRecipients?.toTypedArray()),
+      fromAddresses = from.toString(),
+      replyToAddresses = replyTo,
+      toAddresses = InternetAddress.toString(toRecipients?.toTypedArray()),
+      ccAddresses = InternetAddress.toString(ccRecipients?.toTypedArray()),
       subject = subject,
       flags = flags.toString().uppercase(),
       hasAttachments = atts?.isNotEmpty() == true || forwardedAtts?.isNotEmpty() == true,

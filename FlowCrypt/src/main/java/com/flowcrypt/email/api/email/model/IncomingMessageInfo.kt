@@ -42,7 +42,7 @@ data class IncomingMessageInfo constructor(
   fun getReplyTo(): List<InternetAddress> = msgEntity.replyToAddress
 
   fun getReplyToWithoutOwnerAddress(): List<InternetAddress> = getReplyTo().filter {
-    !it.address.equals(msgEntity.email, true)
+    !it.address.equals(msgEntity.account, true)
   }
 
   fun getReceiveDate(): Date = Date(msgEntity.receivedDate ?: 0)
@@ -97,7 +97,7 @@ data class IncomingMessageInfo constructor(
             //remove all addresses that To has
             ccSet.removeAll(toRecipients.toSet())
             //remove aliases as Gmail does and the owner address
-            val fromAddress = msgEntity.email
+            val fromAddress = msgEntity.account
             ccSet.removeAll { internetAddress ->
               aliases.any { alias -> internetAddress.address.equals(alias, ignoreCase = true) }
                   || fromAddress.equals(internetAddress.address, true)

@@ -336,7 +336,7 @@ class HandlePasswordProtectedMsgWorker(context: Context, params: WorkerParameter
 
   private suspend fun getAttachments(msgEntity: MessageEntity) =
     roomDatabase.attachmentDao().getAttachmentsSuspend(
-      account = msgEntity.email,
+      account = msgEntity.account,
       label = JavaEmailConstants.FOLDER_OUTBOX,
       uid = msgEntity.uid
     ).map {

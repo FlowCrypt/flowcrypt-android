@@ -265,7 +265,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       var needUpdateOutboxLabel = false
       for (entity in entities) {
         val isMsgDeleted = with(entity) {
-          roomDatabase.msgDao().deleteOutgoingMsg(email, folder, uid) > 0
+          roomDatabase.msgDao().deleteOutgoingMsg(account, folder, uid) > 0
         }
 
         if (isMsgDeleted) {

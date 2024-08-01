@@ -22,22 +22,26 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
   tableName = AttachmentEntity.TABLE_NAME,
   indices = [
     Index(
-      name = "email_uid_folder_path_in_attachment",
-      value = ["email", "uid", "folder", "path"],
+      name = "account_account_type_folder_uid_in_attachment",
+      value = ["account", "account_type", "folder", "uid"]
+    ),
+    Index(
+      name = "account_account_type_folder_uid_path_in_attachment",
+      value = ["account", "account_type", "folder", "uid", "path"],
       unique = true
     ),
-    Index(name = "email_folder_uid_in_attachment", value = ["email", "folder", "uid"])
   ],
   foreignKeys = [
     ForeignKey(
-      entity = MessageEntity::class, parentColumns = ["email", "folder", "uid"],
-      childColumns = ["email", "folder", "uid"], onDelete = ForeignKey.CASCADE
+      entity = MessageEntity::class, parentColumns = ["account", "account_type", "folder", "uid"],
+      childColumns = ["account", "account_type", "folder", "uid"], onDelete = ForeignKey.CASCADE
     )
   ]
 )
 data class AttachmentEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
-  val email: String,
+  val account: String,
+  @ColumnInfo(name = "account_type") val accountType: String,
   val folder: String,
   val uid: Long,
   val name: String,
@@ -57,7 +61,7 @@ data class AttachmentEntity(
 
   fun toAttInfo(): AttachmentInfo {
     return AttachmentInfo.Builder(
-      email = email,
+      email = account,
       folder = folder,
       uid = uid,
       name = name,
@@ -85,7 +89,8 @@ data class AttachmentEntity(
 
         return AttachmentEntity(
           id = null,
-          email = email,
+          account = email,
+          accountType = "accountType",//need to think here
           folder = folder,
           uid = uid,
           name = name,

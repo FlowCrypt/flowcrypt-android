@@ -12,6 +12,7 @@ import android.provider.BaseColumns
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -48,60 +49,73 @@ import java.util.Properties
 /**
  * @author Denys Bondarenko
  */
-//todo-denbond7 need to add ForeignKey on account table
 @Entity(
   tableName = MessageEntity.TABLE_NAME,
   indices = [
-    Index(name = "email_in_messages", value = ["email"]),
-    Index(name = "email_uid_folder_in_messages", value = ["email", "uid", "folder"], unique = true)
+    Index(name = "account_account_type_in_messages", value = ["account", "account_type"]),
+    Index(name = "uid_in_messages", value = ["uid"]),
+    Index(
+      name = "account_account_type_folder_uid_in_messages",
+      value = ["account", "account_type", "folder", "uid"],
+      unique = true
+    ),
+  ],
+  foreignKeys = [
+    ForeignKey(
+      entity = AccountEntity::class,
+      parentColumns = ["email", "account_type"],
+      childColumns = ["account", "account_type"],
+      onDelete = ForeignKey.CASCADE
+    )
   ]
 )
 @Parcelize
 data class MessageEntity(
   @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
-  val email: String,
+  val account: String,
+  @ColumnInfo(name = "account_type") val accountType: String,
   val folder: String,
   val uid: Long,
   @ColumnInfo(name = "received_date", defaultValue = "NULL") val receivedDate: Long? = null,
   @ColumnInfo(name = "sent_date", defaultValue = "NULL") val sentDate: Long? = null,
-  @ColumnInfo(name = "from_address", defaultValue = "NULL") val fromAddress: String? = null,
-  @ColumnInfo(name = "to_address", defaultValue = "NULL") val toAddress: String? = null,
-  @ColumnInfo(name = "cc_address", defaultValue = "NULL") val ccAddress: String? = null,
+  @ColumnInfo(name = "from_addresses", defaultValue = "NULL") val fromAddresses: String? = null,
+  @ColumnInfo(name = "to_addresses", defaultValue = "NULL") val toAddresses: String? = null,
+  @ColumnInfo(name = "cc_addresses", defaultValue = "NULL") val ccAddresses: String? = null,
+  @ColumnInfo(
+    name = "reply_to_addresses",
+    defaultValue = "NULL"
+  ) val replyToAddresses: String? = null,
   @ColumnInfo(defaultValue = "NULL") val subject: String? = null,
   @ColumnInfo(defaultValue = "NULL") val flags: String? = null,
-  @ColumnInfo(
-    name = "is_message_has_attachments",
-    defaultValue = "0"
-  ) val hasAttachments: Boolean? = null,
-  @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
+  @ColumnInfo(name = "has_attachments", defaultValue = "0") val hasAttachments: Boolean? = null,
   @ColumnInfo(name = "is_new", defaultValue = "-1") val isNew: Boolean? = null,
   @ColumnInfo(defaultValue = "-1") val state: Int? = null,
   @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
-  @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
-  @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null,
+  @ColumnInfo(name = "error_message", defaultValue = "NULL") val errorMsg: String? = null,
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
   @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
   @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
+  @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
   @ColumnInfo(name = "has_pgp", defaultValue = "0") val hasPgp: Boolean? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
   @Ignore
-  val from: List<InternetAddress> = fromAddress.asInternetAddresses().asList()
+  val from: List<InternetAddress> = fromAddresses.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
-  val replyToAddress: List<InternetAddress> = replyTo.asInternetAddresses().asList()
+  val replyToAddress: List<InternetAddress> = replyToAddresses.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
-  val to: List<InternetAddress> = toAddress.asInternetAddresses().asList()
+  val to: List<InternetAddress> = toAddresses.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
-  val cc: List<InternetAddress> = ccAddress.asInternetAddresses().asList()
+  val cc: List<InternetAddress> = ccAddresses.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
@@ -158,23 +172,23 @@ data class MessageEntity(
     other as MessageEntity
 
     if (id != other.id) return false
-    if (email != other.email) return false
+    if (account != other.account) return false
+    if (accountType != other.accountType) return false
     if (folder != other.folder) return false
     if (uid != other.uid) return false
     if (receivedDate != other.receivedDate) return false
     if (sentDate != other.sentDate) return false
-    if (fromAddress != other.fromAddress) return false
-    if (toAddress != other.toAddress) return false
-    if (ccAddress != other.ccAddress) return false
+    if (fromAddresses != other.fromAddresses) return false
+    if (toAddresses != other.toAddresses) return false
+    if (ccAddresses != other.ccAddresses) return false
+    if (replyToAddresses != other.replyToAddresses) return false
     if (subject != other.subject) return false
     if (flags != other.flags) return false
     if (hasAttachments != other.hasAttachments) return false
-    if (isEncrypted != other.isEncrypted) return false
     if (isNew != other.isNew) return false
     if (state != other.state) return false
     if (attachmentsDirectory != other.attachmentsDirectory) return false
     if (errorMsg != other.errorMsg) return false
-    if (replyTo != other.replyTo) return false
     if (threadId != other.threadId) return false
     if (historyId != other.historyId) return false
     if (password != null) {
@@ -183,34 +197,37 @@ data class MessageEntity(
     } else if (other.password != null) return false
     if (draftId != other.draftId) return false
     if (labelIds != other.labelIds) return false
+    if (isEncrypted != other.isEncrypted) return false
     if (hasPgp != other.hasPgp) return false
+
     return true
   }
 
   override fun hashCode(): Int {
     var result = id?.hashCode() ?: 0
-    result = 31 * result + email.hashCode()
+    result = 31 * result + account.hashCode()
+    result = 31 * result + accountType.hashCode()
     result = 31 * result + folder.hashCode()
     result = 31 * result + uid.hashCode()
     result = 31 * result + (receivedDate?.hashCode() ?: 0)
     result = 31 * result + (sentDate?.hashCode() ?: 0)
-    result = 31 * result + (fromAddress?.hashCode() ?: 0)
-    result = 31 * result + (toAddress?.hashCode() ?: 0)
-    result = 31 * result + (ccAddress?.hashCode() ?: 0)
+    result = 31 * result + (fromAddresses?.hashCode() ?: 0)
+    result = 31 * result + (toAddresses?.hashCode() ?: 0)
+    result = 31 * result + (ccAddresses?.hashCode() ?: 0)
+    result = 31 * result + (replyToAddresses?.hashCode() ?: 0)
     result = 31 * result + (subject?.hashCode() ?: 0)
     result = 31 * result + (flags?.hashCode() ?: 0)
     result = 31 * result + (hasAttachments?.hashCode() ?: 0)
-    result = 31 * result + (isEncrypted?.hashCode() ?: 0)
     result = 31 * result + (isNew?.hashCode() ?: 0)
     result = 31 * result + (state ?: 0)
     result = 31 * result + (attachmentsDirectory?.hashCode() ?: 0)
     result = 31 * result + (errorMsg?.hashCode() ?: 0)
-    result = 31 * result + (replyTo?.hashCode() ?: 0)
     result = 31 * result + (threadId?.hashCode() ?: 0)
     result = 31 * result + (historyId?.hashCode() ?: 0)
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + (draftId?.hashCode() ?: 0)
     result = 31 * result + (labelIds?.hashCode() ?: 0)
+    result = 31 * result + (isEncrypted?.hashCode() ?: 0)
     result = 31 * result + (hasPgp?.hashCode() ?: 0)
     return result
   }
@@ -374,15 +391,17 @@ data class MessageEntity(
       hasPgp: Boolean? = null,
       hasAttachments: Boolean? = null
     ): MessageEntity {
-      return MessageEntity(email = email,
+      return MessageEntity(
+        account = email,
+        accountType = "accountType",//need to fix it. Don't merge
         folder = label,
         uid = uid,
         receivedDate = msg.receivedDate?.time,
         sentDate = msg.sentDate?.time,
-        fromAddress = InternetAddress.toString(msg.from),
-        replyTo = InternetAddress.toString(msg.replyTo),
-        toAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)),
-        ccAddress = InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)),
+        fromAddresses = InternetAddress.toString(msg.from),
+        replyToAddresses = InternetAddress.toString(msg.replyTo),
+        toAddresses = InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)),
+        ccAddresses = InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)),
         subject = msg.subject,
         flags = msg.flags.toString().uppercase(),
         hasAttachments = hasAttachments?.let { hasAttachments } ?: EmailUtil.hasAtt(msg),
@@ -404,7 +423,8 @@ data class MessageEntity(
       flags: List<MessageFlag> = listOf(MessageFlag.SEEN)
     ): MessageEntity {
       return MessageEntity(
-        email = email,
+        account = email,
+        accountType = "accountType",//need to fix it. Don't merge
         folder = label,
         uid = uid,
         sentDate = System.currentTimeMillis(),

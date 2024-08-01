@@ -101,10 +101,11 @@ class EmailUtilTest {
     val receivedDate = Instant.now()
     val incomingMessageInfo = IncomingMessageInfo(
       msgEntity = MessageEntity(
-        email = accountEntity.email,
+        account = accountEntity.email,
+        accountType = accountEntity.email,//need to fix, Don't merge
         folder = "INBOX",
         uid = 123,
-        fromAddress = InternetAddress.toString(replyToMIME.from),
+        fromAddresses = InternetAddress.toString(replyToMIME.from),
         receivedDate = receivedDate.toEpochMilli()
       ),
       localFolder = LocalFolder(
