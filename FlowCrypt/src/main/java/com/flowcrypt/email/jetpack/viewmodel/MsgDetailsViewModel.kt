@@ -912,7 +912,8 @@ class MsgDetailsViewModel(
                   JavaEmailConstants.FOLDER_SEARCH
                 },
                 uid = msgUid
-              )
+              ),
+              accountType = accountEntity.accountType
             )
           }
 
@@ -936,11 +937,12 @@ class MsgDetailsViewModel(
         val attachments =
           GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
             AttachmentEntity.fromAttInfo(
-              attachmentInfo.copy(
+              attachmentInfo = attachmentInfo.copy(
                 email = accountEntity.email,
                 folder = localFolder.fullName,
                 uid = msg.uid
-              )
+              ),
+              accountType = accountEntity.accountType
             )
           }
         FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()

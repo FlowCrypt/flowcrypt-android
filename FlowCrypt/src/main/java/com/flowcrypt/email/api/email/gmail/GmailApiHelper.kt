@@ -638,11 +638,12 @@ class GmailApiHelper {
           if (msg.uid in savedMsgUIDsSet) {
             attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
               AttachmentEntity.fromAttInfo(
-                attachmentInfo.copy(
+                attachmentInfo = attachmentInfo.copy(
                   email = account.email,
                   folder = localFolder.fullName,
                   uid = msg.uid
-                )
+                ),
+                accountType = account.accountType
               )
             })
           }

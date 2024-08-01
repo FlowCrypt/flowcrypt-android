@@ -81,7 +81,7 @@ data class AttachmentEntity(
   companion object {
     const val TABLE_NAME = "attachment"
 
-    fun fromAttInfo(attachmentInfo: AttachmentInfo): AttachmentEntity? {
+    fun fromAttInfo(attachmentInfo: AttachmentInfo, accountType: String): AttachmentEntity? {
       with(attachmentInfo) {
         val email = email ?: return null
         val folder = folder ?: return null
@@ -90,7 +90,7 @@ data class AttachmentEntity(
         return AttachmentEntity(
           id = null,
           account = email,
-          accountType = "accountType",//need to think here
+          accountType = accountType,
           folder = folder,
           uid = uid,
           name = name,

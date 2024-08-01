@@ -593,11 +593,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           val uid = remoteFolder.getUID(msg)
           attachments.addAll(EmailUtil.getAttsInfoFromPart(msg).mapNotNull { attachmentInfo ->
             AttachmentEntity.fromAttInfo(
-              attachmentInfo.copy(
+              attachmentInfo = attachmentInfo.copy(
                 email = account.email,
                 folder = localFolder.fullName,
                 uid = uid
-              )
+              ),
+              accountType = account.accountType
             )
           })
         }
