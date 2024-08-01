@@ -40,7 +40,6 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.database.entity.ThreadEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -71,7 +70,6 @@ import java.util.UUID
     MessageEntity::class,
     PublicKeyEntity::class,
     AccountSettingsEntity::class,
-    ThreadEntity::class,
   ],
   version = FlowCryptRoomDatabase.DB_VERSION
 )
