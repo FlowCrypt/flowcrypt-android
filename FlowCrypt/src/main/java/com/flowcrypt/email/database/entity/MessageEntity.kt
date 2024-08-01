@@ -238,7 +238,8 @@ data class MessageEntity(
 
     fun genMessageEntities(
       context: Context,
-      email: String,
+      account: String,
+      accountType: String,
       label: String,
       folder: IMAPFolder,
       msgs: Array<Message>?,
@@ -281,7 +282,8 @@ data class MessageEntity(
 
             messageEntities.add(
               genMsgEntity(
-                email = email,
+                account = account,
+                accountType = accountType,
                 label = label,
                 msg = msg,
                 uid = folder.getUID(msg),
@@ -302,7 +304,8 @@ data class MessageEntity(
 
     fun genMessageEntities(
       context: Context,
-      email: String,
+      account: String,
+      accountType:String,
       label: String,
       msgsList: List<com.google.api.services.gmail.model.Message>,
       isNew: Boolean,
@@ -344,7 +347,8 @@ data class MessageEntity(
           val mimeMessage = GmaiAPIMimeMessage(Session.getInstance(Properties()), msg)
           messageEntities.add(
             genMsgEntity(
-              email = email,
+              account = account,
+              accountType = accountType,
               label = label,
               msg = mimeMessage,
               uid = msg.uid,
@@ -372,7 +376,7 @@ data class MessageEntity(
      * Prepare the content values for insert to the database. This method must be called in the
      * non-UI thread.
      *
-     * @param email The email that the message linked.
+     * @param account The email that the message linked.
      * @param label The folder label.
      * @param msg   The message which will be added to the database.
      * @param uid   The message UID.
@@ -382,7 +386,8 @@ data class MessageEntity(
      * [Message] object
      */
     fun genMsgEntity(
-      email: String,
+      account: String,
+      accountType: String,
       label: String,
       msg: Message,
       uid: Long,
@@ -392,8 +397,8 @@ data class MessageEntity(
       hasAttachments: Boolean? = null
     ): MessageEntity {
       return MessageEntity(
-        account = email,
-        accountType = "accountType",//need to fix it. Don't merge
+        account = account,
+        accountType = accountType,
         folder = label,
         uid = uid,
         receivedDate = msg.receivedDate?.time,

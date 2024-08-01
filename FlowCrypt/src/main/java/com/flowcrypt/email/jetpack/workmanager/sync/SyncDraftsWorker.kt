@@ -62,7 +62,8 @@ class SyncDraftsWorker(context: Context, params: WorkerParameters) :
 
       val msgEntities = MessageEntity.genMessageEntities(
         context = applicationContext,
-        email = accountEntity.email,
+        account = accountEntity.email,
+        accountType = accountEntity.accountType,
         label = folderDrafts.fullName,
         msgsList = msgs,
         isNew = false,

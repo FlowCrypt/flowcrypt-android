@@ -535,7 +535,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
+      account = email,
+      accountType = account.accountType,
       label = folder,
       msgsList = msgs,
       isNew = false,
@@ -559,14 +560,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     msgs: Array<Message> = emptyArray(),
     hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet()
   ) = withContext(Dispatchers.IO) {
-    val email = account.email
-    val folder = localFolder.fullName
-
     val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
-      label = folder,
+      account = account.email,
+      accountType = account.accountType,
+      label = localFolder.fullName,
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
@@ -785,18 +784,15 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     msgs: Array<Message> = emptyArray(),
     hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet()
   ) = withContext(Dispatchers.IO) {
-    val email = account.email
-    val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
-    val searchLabel = JavaEmailConstants.FOLDER_SEARCH
-
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
-      label = searchLabel,
+      account = account.email,
+      accountType = account.accountType,
+      label = JavaEmailConstants.FOLDER_SEARCH,
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
-      isOnlyPgpModeEnabled = isOnlyPgpModeEnabled,
+      isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false,
       hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
@@ -809,14 +805,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     account: AccountEntity, localFolder: LocalFolder,
     msgs: List<com.google.api.services.gmail.model.Message>
   ) = withContext(Dispatchers.IO) {
-    val email = account.email
-    val label = localFolder.fullName
-
     val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
-      label = label,
+      account = account.email,
+      accountType = account.accountType,
+      label = localFolder.fullName,
       msgsList = msgs,
       isNew = false,
       onlyPgpModeEnabled = isOnlyPgpModeEnabled
@@ -973,7 +967,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
+      account = email,
+      accountType = accountEntity.accountType,
       label = folderName,
       folder = remoteFolder,
       msgs = newCandidates,
@@ -1040,7 +1035,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         val msgEntities = MessageEntity.genMessageEntities(
           context = getApplication(),
-          email = accountEntity.email,
+          account = accountEntity.email,
+          accountType = accountEntity.accountType,
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,

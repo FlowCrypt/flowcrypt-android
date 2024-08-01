@@ -19,13 +19,13 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.GmailAPIException
 import com.google.api.services.gmail.model.History
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Store
 import jakarta.mail.UIDFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.math.BigInteger
 import java.net.HttpURLConnection
 
@@ -161,7 +161,6 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
                                                               newCandidatesMap,
                                                               updateCandidatesMap,
                                                               labelsToBeUpdatedMap ->
-      val email = accountEntity.email
       processDeletedMsgs(accountEntity, localFolder.fullName, deleteCandidatesUIDs)
 
       val newCandidates = newCandidatesMap.values.toList()
@@ -180,7 +179,8 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
 
         val msgEntities = MessageEntity.genMessageEntities(
           context = applicationContext,
-          email = email,
+          account = accountEntity.email,
+          accountType = accountEntity.accountType,
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,
