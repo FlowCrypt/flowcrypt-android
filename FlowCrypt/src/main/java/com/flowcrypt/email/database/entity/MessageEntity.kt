@@ -99,6 +99,7 @@ data class MessageEntity(
   @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
   @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
   @ColumnInfo(name = "has_pgp", defaultValue = "0") val hasPgp: Boolean? = null,
+  @ColumnInfo(name = "thread_messages_count", defaultValue = "NULL") val threadMessagesCount: Int? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -199,6 +200,7 @@ data class MessageEntity(
     if (labelIds != other.labelIds) return false
     if (isEncrypted != other.isEncrypted) return false
     if (hasPgp != other.hasPgp) return false
+    if (threadMessagesCount != other.threadMessagesCount) return false
 
     return true
   }
@@ -229,6 +231,7 @@ data class MessageEntity(
     result = 31 * result + (labelIds?.hashCode() ?: 0)
     result = 31 * result + (isEncrypted?.hashCode() ?: 0)
     result = 31 * result + (hasPgp?.hashCode() ?: 0)
+    result = 31 * result + (threadMessagesCount?.hashCode() ?: 0)
     return result
   }
 
