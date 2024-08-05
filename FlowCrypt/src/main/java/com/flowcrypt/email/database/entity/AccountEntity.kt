@@ -84,6 +84,7 @@ data class AccountEntity(
   @ColumnInfo(name = "service_pgp_private_key") val servicePgpPrivateKey: ByteArray,
   @ColumnInfo(name = "signature", defaultValue = "NULL") val signature: String? = null,
   @ColumnInfo(name = "use_alias_signatures", defaultValue = "0") val useAliasSignatures: Boolean = false,
+  @ColumnInfo(name = "use_conversation_mode", defaultValue = "0") val useConversationMode: Boolean = false,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -143,7 +144,8 @@ data class AccountEntity(
     useCustomerFesUrl = useCustomerFesUrl,
     servicePgpPassphrase = "",
     servicePgpPrivateKey = byteArrayOf(),
-    useAliasSignatures = true
+    useAliasSignatures = true,
+    useConversationMode = true
   )
 
   constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :
@@ -305,6 +307,7 @@ data class AccountEntity(
     if (!servicePgpPrivateKey.contentEquals(other.servicePgpPrivateKey)) return false
     if (signature != other.signature) return false
     if (useAliasSignatures != other.useAliasSignatures) return false
+    if (useConversationMode != other.useConversationMode) return false
 
     return true
   }
@@ -343,6 +346,7 @@ data class AccountEntity(
     result = 31 * result + servicePgpPrivateKey.contentHashCode()
     result = 31 * result + (signature?.hashCode() ?: 0)
     result = 31 * result + useAliasSignatures.hashCode()
+    result = 31 * result + useConversationMode.hashCode()
     return result
   }
 

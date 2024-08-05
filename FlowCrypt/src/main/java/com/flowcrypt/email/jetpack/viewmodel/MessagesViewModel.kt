@@ -461,31 +461,57 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             resultCode = R.id.progress_id_gmail_list
           )
         )
-        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(
-          context = getApplication(),
-          accountEntity = accountEntity,
-          localFolder = localFolder,
-          nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
-        )
 
-        val draftIdsMap = when (messagesBaseInfo) {
-          is ListDraftsResponse -> messagesBaseInfo.drafts?.associateBy(
-            { it.message.id },
-            { it.id }) ?: emptyMap()
+        val messages: List<com.google.api.services.gmail.model.Message>
+        val nextPageToken: String?
+        val draftIdsMap: Map<String, String>
 
-          else -> emptyMap()
-        }
+        if (accountEntity.useConversationMode) {
+          val threadsResponse = GmailApiHelper.loadThreads(
+            context = getApplication(),
+            accountEntity = accountEntity,
+            localFolder = localFolder,
+            nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
+          )
 
-        val messages = when (messagesBaseInfo) {
-          is ListMessagesResponse -> messagesBaseInfo.messages ?: emptyList()
-          is ListDraftsResponse -> messagesBaseInfo.drafts?.map { it.message } ?: emptyList()
-          else -> emptyList()
-        }
+          val gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
+            context = getApplication(),
+            accountEntity = accountEntity,
+            threads = threadsResponse.threads,
+            format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL,
+            localFolder = localFolder
+          )
 
-        val nextPageToken = when (messagesBaseInfo) {
-          is ListMessagesResponse -> messagesBaseInfo.nextPageToken
-          is ListDraftsResponse -> messagesBaseInfo.nextPageToken
-          else -> null
+          messages = gmailThreadInfoList.map { it.lastMessage }
+          nextPageToken = threadsResponse.nextPageToken
+          draftIdsMap = emptyMap()//todo-denbond7 fix me
+        } else{
+          val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(
+            context = getApplication(),
+            accountEntity = accountEntity,
+            localFolder = localFolder,
+            nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
+          )
+
+          draftIdsMap = when (messagesBaseInfo) {
+            is ListDraftsResponse -> messagesBaseInfo.drafts?.associateBy(
+              { it.message.id },
+              { it.id }) ?: emptyMap()
+
+            else -> emptyMap()
+          }
+
+          messages = when (messagesBaseInfo) {
+            is ListMessagesResponse -> messagesBaseInfo.messages ?: emptyList()
+            is ListDraftsResponse -> messagesBaseInfo.drafts?.map { it.message } ?: emptyList()
+            else -> emptyList()
+          }
+
+          nextPageToken = when (messagesBaseInfo) {
+            is ListMessagesResponse -> messagesBaseInfo.nextPageToken
+            is ListDraftsResponse -> messagesBaseInfo.nextPageToken
+            else -> null
+          }
         }
 
         loadMsgsFromRemoteServerLiveData.postValue(
