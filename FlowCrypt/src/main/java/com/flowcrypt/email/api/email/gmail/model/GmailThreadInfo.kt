@@ -17,5 +17,7 @@ data class GmailThreadInfo(
   val messagesCount: Int,
   val recipients: List<InternetAddress>,
   val subject: String,
-  val labels: String
+  val labels: Set<String>,
+  val hasAttachments: Boolean = false,
+  val hasPgpThings: Boolean = false,
 )

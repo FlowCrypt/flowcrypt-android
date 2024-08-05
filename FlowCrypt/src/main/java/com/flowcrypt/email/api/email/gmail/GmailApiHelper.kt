@@ -23,6 +23,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
@@ -118,6 +119,7 @@ class GmailApiHelper {
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
     const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
     const val MESSAGE_RESPONSE_FORMAT_MINIMAL = "minimal"
+    const val THREAD_RESPONSE_FORMAT_METADATA = "metadata"
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -395,9 +397,11 @@ class GmailApiHelper {
                         id = thread.id,
                         lastMessage = it,
                         messagesCount = thread.messages?.size ?: 0,
-                        recipients = emptyList(),
+                        recipients = thread.getUniqueRecipients(),
                         subject = it.snippet,
-                        labels = ""
+                        labels = thread.messages.flatMap { message ->
+                          message.labelIds ?: emptyList()
+                        }.toSortedSet()
                       )
                     )
                   }

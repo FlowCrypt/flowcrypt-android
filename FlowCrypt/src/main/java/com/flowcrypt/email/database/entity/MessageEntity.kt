@@ -313,7 +313,11 @@ data class MessageEntity(
       msgsList: List<com.google.api.services.gmail.model.Message>,
       isNew: Boolean,
       onlyPgpModeEnabled: Boolean,
-      draftIdsMap: Map<String, String> = emptyMap()
+      draftIdsMap: Map<String, String> = emptyMap(),
+      messageModificationAction: (
+        message: com.google.api.services.gmail.model.Message,
+        messageEntity: MessageEntity
+      ) -> MessageEntity = { _, messageEntity -> messageEntity }
     ): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
@@ -348,22 +352,23 @@ data class MessageEntity(
           }
 
           val mimeMessage = GmaiAPIMimeMessage(Session.getInstance(Properties()), msg)
+          val messageEntityTemplate = genMsgEntity(
+            account = account,
+            accountType = accountType,
+            label = label,
+            msg = mimeMessage,
+            uid = msg.uid,
+            isNew = isNewTemp,
+            hasPgp = hasPgp,
+            hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
+          ).copy(
+            threadId = msg.threadId,
+            historyId = msg.historyId.toString(),
+            draftId = draftIdsMap[msg.id],
+            labelIds = msg.labelIds?.joinToString(separator = LABEL_IDS_SEPARATOR)
+          )
           messageEntities.add(
-            genMsgEntity(
-              account = account,
-              accountType = accountType,
-              label = label,
-              msg = mimeMessage,
-              uid = msg.uid,
-              isNew = isNewTemp,
-              hasPgp = hasPgp,
-              hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
-            ).copy(
-              threadId = msg.threadId,
-              historyId = msg.historyId.toString(),
-              draftId = draftIdsMap[msg.id],
-              labelIds = msg.labelIds?.joinToString(separator = LABEL_IDS_SEPARATOR)
-            )
+            messageModificationAction.invoke(msg, messageEntityTemplate)
           )
         } catch (e: MessageRemovedException) {
           e.printStackTrace()

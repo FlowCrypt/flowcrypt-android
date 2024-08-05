@@ -10,6 +10,7 @@ import android.graphics.Camera
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
@@ -303,16 +304,39 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       folderType: FoldersManager.FolderType?,
       messageEntity: MessageEntity,
       context: Context
-    ) = when (folderType) {
-      FoldersManager.FolderType.SENT -> generateAddresses(messageEntity.to)
+    ): CharSequence {
+      val addresses = when (folderType) {
+        FoldersManager.FolderType.SENT -> generateAddresses(messageEntity.to)
 
-      FoldersManager.FolderType.DRAFTS -> generateAddresses(messageEntity.to).ifEmpty {
-        context.getString(R.string.no_recipients)
+        FoldersManager.FolderType.DRAFTS -> generateAddresses(messageEntity.to).ifEmpty {
+          context.getString(R.string.no_recipients)
+        }
+
+        FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
+
+        else -> generateAddresses(messageEntity.from)
       }
 
-      FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
-
-      else -> generateAddresses(messageEntity.from)
+      return if ((messageEntity.threadMessagesCount ?: 0) > 1) {
+        SpannableStringBuilder(addresses).apply {
+          val spannableStringForThreadMessageCount = SpannableString(
+            "(${messageEntity.threadMessagesCount})"
+          ).apply {
+            val textSize =
+              context.resources.getDimensionPixelSize(R.dimen.default_text_size_small)
+            setSpan(
+              AbsoluteSizeSpan(textSize),
+              0,
+              length,
+              Spanned.SPAN_INCLUSIVE_INCLUSIVE
+            )
+          }
+          append(" ")
+          append(spannableStringForThreadMessageCount)
+        }
+      } else {
+        addresses
+      }
     }
 
     private fun changeStatusView(messageEntity: MessageEntity) {
