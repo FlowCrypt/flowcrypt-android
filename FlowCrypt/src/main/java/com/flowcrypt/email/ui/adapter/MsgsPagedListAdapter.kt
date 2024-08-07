@@ -231,7 +231,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
         )
 
-        val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
+        val senderAddress = prepareSenderAddress(context, folderType, messageEntity)
         binding.textViewSenderAddress.text = senderAddress
 
         updateAvatar(senderAddress, folderType, lastDataId == messageEntity.id)
@@ -301,20 +301,33 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
 
     private fun prepareSenderAddress(
+      context: Context,
       folderType: FoldersManager.FolderType?,
-      messageEntity: MessageEntity,
-      context: Context
+      messageEntity: MessageEntity
     ): CharSequence {
+      val accountName = messageEntity.account
       val addresses = when (folderType) {
-        FoldersManager.FolderType.SENT -> generateAddresses(messageEntity.to)
+        FoldersManager.FolderType.SENT -> generateAddresses(
+          context = context,
+          accountName = accountName,
+          internetAddresses = messageEntity.to
+        )
 
-        FoldersManager.FolderType.DRAFTS -> generateAddresses(messageEntity.to).ifEmpty {
+        FoldersManager.FolderType.DRAFTS -> generateAddresses(
+          context = context,
+          accountName = accountName,
+          internetAddresses = messageEntity.to
+        ).ifEmpty {
           context.getString(R.string.no_recipients)
         }
 
         FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
 
-        else -> generateAddresses(messageEntity.from)
+        else -> generateAddresses(
+          context = context,
+          accountName = accountName,
+          internetAddresses = messageEntity.from
+        )
       }
 
       return if ((messageEntity.threadMessagesCount ?: 0) > 1) {
@@ -561,29 +574,41 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       return SENDER_NAME_PATTERN.matcher(name).replaceFirst("")
     }
 
-    private fun generateAddresses(internetAddresses: List<InternetAddress>?): String {
+    private fun generateAddresses(
+      context: Context,
+      accountName: String,
+      internetAddresses: List<InternetAddress>?
+    ): String {
       if (internetAddresses == null) {
-        return "null"
+        return context.getString(R.string.no_recipients)
       }
 
-      val iMax = internetAddresses.size - 1
-      if (iMax == -1) {
-        return ""
-      }
-
-      val stringBuilder = StringBuilder()
-      var i = 0
-      while (true) {
-        val address = internetAddresses[i]
-        val displayName =
-          if (TextUtils.isEmpty(address.personal)) address.address else address.personal
-        stringBuilder.append(displayName)
-        if (i == iMax) {
-          return prepareSenderName(stringBuilder.toString())
+      val mapOfUniqueInternetAddresses = mutableMapOf<String, InternetAddress>()
+      internetAddresses.forEach { internetAddress ->
+        val existingInternetAddress =
+          mapOfUniqueInternetAddresses[internetAddress.address.lowercase()]
+        if (existingInternetAddress == null || existingInternetAddress.personal?.isEmpty() == true) {
+          mapOfUniqueInternetAddresses[internetAddress.address.lowercase()] = internetAddress
         }
-        stringBuilder.append(", ")
-        i++
       }
+
+      val uniqueRecipients = mapOfUniqueInternetAddresses.values.map { internetAddress ->
+        if (accountName.equals(internetAddress.address, true)) {
+          context.getString(R.string.me)
+        } else {
+          if (internetAddress.personal.isNullOrEmpty()) {
+            internetAddress.address
+          } else {
+            internetAddress.personal
+          }
+        }
+      }.toSet()
+
+      return prepareSenderName(uniqueRecipients.joinToString {
+        if (uniqueRecipients.size > 1) {
+          it.split(" ").firstOrNull() ?: it
+        } else it
+      })
     }
 
     companion object {

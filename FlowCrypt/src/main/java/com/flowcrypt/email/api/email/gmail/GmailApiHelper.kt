@@ -390,15 +390,17 @@ class GmailApiHelper {
               responseHeaders: HttpHeaders?
             ) {
               t?.let { thread ->
-                thread.messages?.lastOrNull()?.let {
-                  if (isTrash || it.labelIds?.contains(LABEL_TRASH) != true) {
+                thread.messages?.lastOrNull()?.let { lastMessageInThread ->
+                  if (isTrash || lastMessageInThread.labelIds?.contains(LABEL_TRASH) != true) {
                     listResult.add(
                       GmailThreadInfo(
                         id = thread.id,
-                        lastMessage = it,
+                        lastMessage = lastMessageInThread,
                         messagesCount = thread.messages?.size ?: 0,
-                        recipients = thread.getUniqueRecipients(),
-                        subject = it.snippet,
+                        recipients = thread.getUniqueRecipients(accountEntity.email),
+                        subject = lastMessageInThread.payload?.headers?.firstOrNull { header ->
+                          header.name == "Subject"
+                        }?.value ?: context.getString(R.string.no_subject),
                         labels = thread.messages.flatMap { message ->
                           message.labelIds ?: emptyList()
                         }.toSortedSet()

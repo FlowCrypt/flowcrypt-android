@@ -12,30 +12,36 @@ import jakarta.mail.internet.InternetAddress
 /**
  * @author Denys Bondarenko
  */
-fun Thread.getUniqueRecipients(): List<InternetAddress> {
+//todo-denbond7 need to use ordering to show recipients in right order based on the conversation history
+fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
   return mutableListOf<InternetAddress>().apply {
     val filteredHeaders = messages?.flatMap { message ->
-      message?.payload?.headers?.filter { header ->
-        //need to check this line and test
-        header.name in listOf(
-          "From",
-          "To"
-        )//maybe need to add Cc. need to check
-      } ?: emptyList()
+      if (message?.payload?.headers?.any {
+          it.name in listOf(
+            "From",
+            "To",
+            "Cc"
+          ) && it.value.contains(account, true)
+        } == true) {
+        message.payload?.headers?.filter { header ->
+          header.name == "From"
+        } ?: emptyList()
+      } else emptyList()
     }
 
-    val mapOfUniqueRecipients = mutableMapOf<String, String>()
+    val mapOfUniqueRecipients = mutableMapOf<String, InternetAddress>()
     filteredHeaders?.forEach { header ->
       header.value.asInternetAddresses().forEach { internetAddress ->
         val address = internetAddress.address.lowercase()
 
         if (!mapOfUniqueRecipients.contains(address)
-          || mapOfUniqueRecipients[address].isNullOrEmpty()
+          || mapOfUniqueRecipients[address]?.personal.isNullOrEmpty()
         ) {
-          add(internetAddress)
-          mapOfUniqueRecipients[address] = internetAddress.personal
+          mapOfUniqueRecipients[address] = internetAddress
         }
       }
     }
+
+    addAll(mapOfUniqueRecipients.values)
   }
 }
