@@ -5,17 +5,13 @@
 
 package com.flowcrypt.email.providers
 
-import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
-import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
-import android.util.Log
-import android.widget.Toast
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
@@ -39,33 +35,7 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
   }
 
   override fun queryDocument(documentId: String?, projection: Array<String>?): Cursor {
-    val finalProjection = projection ?: DEFAULT_DOCUMENT_PROJECTION
-    return MatrixCursor(finalProjection).apply {
-      documentId?.let { id ->
-        getAttachmentByDocumentId(id)?.let { attachmentInfo ->
-          newRow().apply {
-            if (DocumentsContract.Document.COLUMN_DOCUMENT_ID in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, id)
-            }
-            if (DocumentsContract.Document.COLUMN_DISPLAY_NAME in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, attachmentInfo.getSafeName())
-            }
-            if (DocumentsContract.Document.COLUMN_MIME_TYPE in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_MIME_TYPE, attachmentInfo.getAndroidMimeType())
-            }
-            if (DocumentsContract.Document.COLUMN_FLAGS in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_FLAGS, 0)
-            }
-            if (DocumentsContract.Document.COLUMN_SIZE in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_SIZE, attachmentInfo.rawData?.size ?: 0)
-            }
-            if (DocumentsContract.Document.COLUMN_LAST_MODIFIED in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, null)
-            }
-          }
-        }
-      }
-    }
+    return MatrixCursor(emptyArray())
   }
 
   override fun queryChildDocuments(
@@ -80,6 +50,10 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     mode: String,
     signal: CancellationSignal?
   ): ParcelFileDescriptor? {
+    if (mode.contains("w")) {
+      throw IllegalStateException("Modification is not allowed")
+    }
+
     return getFileDescriptor(getBytesForDocumentId(documentId))
   }
 
@@ -184,16 +158,5 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
         }
       }
     }
-  }
-
-  companion object {
-    private val DEFAULT_DOCUMENT_PROJECTION = arrayOf(
-      DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-      DocumentsContract.Document.COLUMN_MIME_TYPE,
-      DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-      DocumentsContract.Document.COLUMN_LAST_MODIFIED,
-      DocumentsContract.Document.COLUMN_FLAGS,
-      DocumentsContract.Document.COLUMN_SIZE
-    )
   }
 }
