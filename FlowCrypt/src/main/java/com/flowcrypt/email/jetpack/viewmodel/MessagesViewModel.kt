@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
+import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -32,6 +33,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.MessageEntity.Companion.LABEL_IDS_SEPARATOR
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
@@ -265,7 +267,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       var needUpdateOutboxLabel = false
       for (entity in entities) {
         val isMsgDeleted = with(entity) {
-          roomDatabase.msgDao().deleteOutgoingMsg(email, folder, uid) > 0
+          roomDatabase.msgDao().deleteOutgoingMsg(account, folder, uid) > 0
         }
 
         if (isMsgDeleted) {
@@ -417,7 +419,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         )
       )
       if (end < 1) {
-        handleReceivedMsgs(accountEntity, localFolder, imapFolder)
+        handleReceivedMessages(accountEntity, localFolder, imapFolder)
       } else {
         val msgs: Array<Message> = if (isOnlyPgpModeEnabled == true) {
           foundMsgs.copyOfRange(start - 1, end)
@@ -433,7 +435,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           imapFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity), msgs)
             .map { imapFolder.getUID(it) }.toSet()
 
-        handleReceivedMsgs(
+        handleReceivedMessages(
           account = accountEntity,
           localFolder = localFolder,
           remoteFolder = folder,
@@ -461,31 +463,59 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             resultCode = R.id.progress_id_gmail_list
           )
         )
-        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(
-          context = getApplication(),
-          accountEntity = accountEntity,
-          localFolder = localFolder,
-          nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
-        )
 
-        val draftIdsMap = when (messagesBaseInfo) {
-          is ListDraftsResponse -> messagesBaseInfo.drafts?.associateBy(
-            { it.message.id },
-            { it.id }) ?: emptyMap()
+        val messages: List<com.google.api.services.gmail.model.Message>
+        val nextPageToken: String?
+        val draftIdsMap: Map<String, String>
+        val gmailThreadInfoList: List<GmailThreadInfo>
 
-          else -> emptyMap()
-        }
+        if (accountEntity.useConversationMode) {
+          val threadsResponse = GmailApiHelper.loadThreads(
+            context = getApplication(),
+            accountEntity = accountEntity,
+            localFolder = localFolder,
+            nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
+          )
 
-        val messages = when (messagesBaseInfo) {
-          is ListMessagesResponse -> messagesBaseInfo.messages ?: emptyList()
-          is ListDraftsResponse -> messagesBaseInfo.drafts?.map { it.message } ?: emptyList()
-          else -> emptyList()
-        }
+          gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
+            context = getApplication(),
+            accountEntity = accountEntity,
+            threads = threadsResponse.threads ?: emptyList(),
+            format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL,
+            localFolder = localFolder
+          )
 
-        val nextPageToken = when (messagesBaseInfo) {
-          is ListMessagesResponse -> messagesBaseInfo.nextPageToken
-          is ListDraftsResponse -> messagesBaseInfo.nextPageToken
-          else -> null
+          messages = gmailThreadInfoList.map { it.lastMessage }
+          nextPageToken = threadsResponse.nextPageToken
+          draftIdsMap = emptyMap()//todo-denbond7 fix me
+        } else {
+          gmailThreadInfoList = emptyList()
+          val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(
+            context = getApplication(),
+            accountEntity = accountEntity,
+            localFolder = localFolder,
+            nextPageToken = if (totalItemsCount > 0) labelEntity?.nextPageToken else null
+          )
+
+          draftIdsMap = when (messagesBaseInfo) {
+            is ListDraftsResponse -> messagesBaseInfo.drafts?.associateBy(
+              { it.message.id },
+              { it.id }) ?: emptyMap()
+
+            else -> emptyMap()
+          }
+
+          messages = when (messagesBaseInfo) {
+            is ListMessagesResponse -> messagesBaseInfo.messages ?: emptyList()
+            is ListDraftsResponse -> messagesBaseInfo.drafts?.map { it.message } ?: emptyList()
+            else -> emptyList()
+          }
+
+          nextPageToken = when (messagesBaseInfo) {
+            is ListMessagesResponse -> messagesBaseInfo.nextPageToken
+            is ListDraftsResponse -> messagesBaseInfo.nextPageToken
+            else -> null
+          }
         }
 
         loadMsgsFromRemoteServerLiveData.postValue(
@@ -505,7 +535,30 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               resultCode = R.id.progress_id_gmail_msgs_info
             )
           )
-          handleReceivedMsgs(accountEntity, localFolder, msgs, draftIdsMap)
+          handleReceivedMessages(
+            accountEntity,
+            localFolder,
+            msgs,
+            draftIdsMap
+          ) { message, messageEntity ->
+            if (accountEntity.useConversationMode) {
+              val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
+              if (thread != null) {
+                messageEntity.copy(
+                  threadMessagesCount = thread.messagesCount,
+                  labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
+                  hasAttachments = thread.hasAttachments,
+                  fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
+                  toAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
+                  hasPgp = thread.hasPgpThings
+                )
+              } else {
+                messageEntity
+              }
+            } else {
+              messageEntity
+            }
+          }
         } else {
           loadMsgsFromRemoteServerLiveData.postValue(
             Result.loading(
@@ -523,11 +576,15 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return@withContext Result.success(true)
   }
 
-  private suspend fun handleReceivedMsgs(
+  private suspend fun handleReceivedMessages(
     account: AccountEntity,
     localFolder: LocalFolder,
     msgs: List<com.google.api.services.gmail.model.Message>,
-    draftIdsMap: Map<String, String> = emptyMap()
+    draftIdsMap: Map<String, String> = emptyMap(),
+    messageEntityModificationAction: (
+      message: com.google.api.services.gmail.model.Message,
+      messageEntity: MessageEntity
+    ) -> MessageEntity
   ) = withContext(Dispatchers.IO) {
     val email = account.email
     val folder = localFolder.fullName
@@ -535,13 +592,16 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
+      account = email,
+      accountType = account.accountType,
       label = folder,
       msgsList = msgs,
       isNew = false,
       onlyPgpModeEnabled = isOnlyPgpModeEnabled,
       draftIdsMap = draftIdsMap
-    )
+    ) { message, messageEntity ->
+      messageEntityModificationAction.invoke(message, messageEntity)
+    }
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
     GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
@@ -552,21 +612,19 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     )
   }
 
-  private suspend fun handleReceivedMsgs(
+  private suspend fun handleReceivedMessages(
     account: AccountEntity,
     localFolder: LocalFolder,
     remoteFolder: IMAPFolder,
     msgs: Array<Message> = emptyArray(),
     hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet()
   ) = withContext(Dispatchers.IO) {
-    val email = account.email
-    val folder = localFolder.fullName
-
     val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
-      label = folder,
+      account = account.email,
+      accountType = account.accountType,
+      label = localFolder.fullName,
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
@@ -593,11 +651,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           val uid = remoteFolder.getUID(msg)
           attachments.addAll(EmailUtil.getAttsInfoFromPart(msg).mapNotNull { attachmentInfo ->
             AttachmentEntity.fromAttInfo(
-              attachmentInfo.copy(
+              attachmentInfo = attachmentInfo.copy(
                 email = account.email,
                 folder = localFolder.fullName,
                 uid = uid
-              )
+              ),
+              accountType = account.accountType
             )
           })
         }
@@ -784,18 +843,15 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     msgs: Array<Message> = emptyArray(),
     hasPgpAfterAdditionalSearchSet: Set<Long> = emptySet()
   ) = withContext(Dispatchers.IO) {
-    val email = account.email
-    val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
-    val searchLabel = JavaEmailConstants.FOLDER_SEARCH
-
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
-      label = searchLabel,
+      account = account.email,
+      accountType = account.accountType,
+      label = JavaEmailConstants.FOLDER_SEARCH,
       folder = remoteFolder,
       msgs = msgs,
       isNew = false,
-      isOnlyPgpModeEnabled = isOnlyPgpModeEnabled,
+      isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false,
       hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
     )
 
@@ -808,14 +864,12 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     account: AccountEntity, localFolder: LocalFolder,
     msgs: List<com.google.api.services.gmail.model.Message>
   ) = withContext(Dispatchers.IO) {
-    val email = account.email
-    val label = localFolder.fullName
-
     val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
-      label = label,
+      account = account.email,
+      accountType = account.accountType,
+      label = localFolder.fullName,
       msgsList = msgs,
       isNew = false,
       onlyPgpModeEnabled = isOnlyPgpModeEnabled
@@ -972,7 +1026,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),
-      email = email,
+      account = email,
+      accountType = accountEntity.accountType,
       label = folderName,
       folder = remoteFolder,
       msgs = newCandidates,
@@ -1039,7 +1094,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         val msgEntities = MessageEntity.genMessageEntities(
           context = getApplication(),
-          email = accountEntity.email,
+          account = accountEntity.email,
+          accountType = accountEntity.accountType,
           label = localFolder.fullName,
           msgsList = msgs,
           isNew = isNew,

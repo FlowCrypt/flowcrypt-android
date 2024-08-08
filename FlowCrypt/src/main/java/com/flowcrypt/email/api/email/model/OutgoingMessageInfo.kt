@@ -25,6 +25,7 @@ import java.util.UUID
 @Parcelize
 data class OutgoingMessageInfo(
   @Expose val account: String? = null,
+  @Expose val accountType: String? = null,
   @Expose val subject: String? = null,
   @Expose val msg: String? = null,
   @Expose val toRecipients: List<InternetAddress>? = null,
@@ -120,15 +121,16 @@ data class OutgoingMessageInfo(
   ): MessageEntity {
     val timestamp = System.currentTimeMillis()
     return MessageEntity(
-      email = requireNotNull(account),
+      account = requireNotNull(account),
+      accountType = requireNotNull(accountType),
       folder = folder,
       uid = uid,
       receivedDate = timestamp,
       sentDate = timestamp,
-      fromAddress = from.toString(),
-      replyTo = replyTo,
-      toAddress = InternetAddress.toString(toRecipients?.toTypedArray()),
-      ccAddress = InternetAddress.toString(ccRecipients?.toTypedArray()),
+      fromAddresses = from.toString(),
+      replyToAddresses = replyTo,
+      toAddresses = InternetAddress.toString(toRecipients?.toTypedArray()),
+      ccAddresses = InternetAddress.toString(ccRecipients?.toTypedArray()),
       subject = subject,
       flags = flags.toString().uppercase(),
       hasAttachments = atts?.isNotEmpty() == true || forwardedAtts?.isNotEmpty() == true,

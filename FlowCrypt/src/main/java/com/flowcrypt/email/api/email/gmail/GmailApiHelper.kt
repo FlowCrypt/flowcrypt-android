@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.api.GMailRawAttachmentFilterInputStream
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
+import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -22,6 +23,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
@@ -52,6 +54,7 @@ import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
+import com.google.api.services.gmail.model.ListThreadsResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import jakarta.mail.Flags
@@ -116,6 +119,7 @@ class GmailApiHelper {
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
     const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
     const val MESSAGE_RESPONSE_FORMAT_MINIMAL = "minimal"
+    const val THREAD_RESPONSE_FORMAT_METADATA = "metadata"
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -245,6 +249,38 @@ class GmailApiHelper {
       return@withContext Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()))
     }
 
+    suspend fun loadThreads(
+      context: Context,
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      maxResult: Long = COUNT_OF_LOADED_EMAILS_BY_STEP,
+      fields: List<String>? = null,
+      nextPageToken: String? = null
+    ): ListThreadsResponse = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val request = gmailApiService
+        .users()
+        .threads()
+        .list(DEFAULT_USER_ID)
+        .setPageToken(nextPageToken)
+        .setMaxResults(maxResult)
+
+      fields?.let { fields ->
+        request.fields = fields.joinToString(separator = ",")
+      }
+
+      if (!localFolder.isAll) {
+        request.labelIds = listOf(localFolder.fullName)
+      }
+
+      if (accountEntity.showOnlyEncrypted == true) {
+        request.q =
+          (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+      }
+
+      return@withContext request.execute()
+    }
+
     suspend fun loadMsgsBaseInfo(
       context: Context,
       accountEntity: AccountEntity,
@@ -303,6 +339,87 @@ class GmailApiHelper {
       return@withContext useParallel(list = messages, stepValue = stepValue) { list ->
         loadMsgs(context, accountEntity, list, localFolder, format)
       }
+    }
+
+    suspend fun loadGmailThreadInfoInParallel(
+      context: Context,
+      accountEntity: AccountEntity,
+      threads: List<com.google.api.services.gmail.model.Thread>,
+      localFolder: LocalFolder,
+      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      stepValue: Int = 10
+    ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
+    {
+      return@withContext useParallel(list = threads, stepValue = stepValue) { list ->
+        loadGmailThreadInfo(context, accountEntity, list, localFolder, format)
+      }
+    }
+
+    suspend fun loadGmailThreadInfo(
+      context: Context,
+      accountEntity: AccountEntity,
+      threads: Collection<com.google.api.services.gmail.model.Thread>,
+      localFolder: LocalFolder,
+      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      metadataHeaders: List<String>? = null,
+      fields: List<String>? = FULL_INFO_WITHOUT_DATA
+    ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
+    {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      val listResult = mutableListOf<GmailThreadInfo>()
+      val isTrash = localFolder.fullName.equals(LABEL_TRASH, true)
+
+      for (thread in threads) {
+        val request = gmailApiService
+          .users()
+          .threads()
+          .get(DEFAULT_USER_ID, thread.id)
+          .setFormat(format)
+
+        metadataHeaders?.let { metadataHeaders ->
+          request.metadataHeaders = metadataHeaders
+        }
+
+        request.queue(
+          batch,
+          object : JsonBatchCallback<com.google.api.services.gmail.model.Thread>() {
+            override fun onSuccess(
+              t: com.google.api.services.gmail.model.Thread?,
+              responseHeaders: HttpHeaders?
+            ) {
+              t?.let { thread ->
+                thread.messages?.lastOrNull()?.let { lastMessageInThread ->
+                  if (isTrash || lastMessageInThread.labelIds?.contains(LABEL_TRASH) != true) {
+                    listResult.add(
+                      GmailThreadInfo(
+                        id = thread.id,
+                        lastMessage = lastMessageInThread,
+                        messagesCount = thread.messages?.size ?: 0,
+                        recipients = thread.getUniqueRecipients(accountEntity.email),
+                        subject = lastMessageInThread.payload?.headers?.firstOrNull { header ->
+                          header.name == "Subject"
+                        }?.value ?: context.getString(R.string.no_subject),
+                        labels = thread.messages.flatMap { message ->
+                          message.labelIds ?: emptyList()
+                        }.toSortedSet()
+                      )
+                    )
+                  }
+                }
+              } ?: throw java.lang.NullPointerException()
+            }
+
+            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+
+            }
+          })
+      }
+
+      batch.execute()
+
+      return@withContext listResult
     }
 
     suspend fun loadMsgs(
@@ -638,11 +755,12 @@ class GmailApiHelper {
           if (msg.uid in savedMsgUIDsSet) {
             attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
               AttachmentEntity.fromAttInfo(
-                attachmentInfo.copy(
+                attachmentInfo = attachmentInfo.copy(
                   email = account.email,
                   folder = localFolder.fullName,
                   uid = msg.uid
-                )
+                ),
+                accountType = account.accountType
               )
             })
           }

@@ -125,7 +125,7 @@ class MsgDetailsViewModel(
         if (it.isNotEmpty()) {
           emit(
             roomDatabase.msgDao().getMsgSuspend(
-              account = messageEntity.email,
+              account = messageEntity.account,
               folder = messageEntity.folder,
               uid = messageEntity.uid
             )
@@ -139,7 +139,7 @@ class MsgDetailsViewModel(
       liveData {
         emit(
           roomDatabase.msgDao().getMsgSuspend(
-            account = messageEntity.email,
+            account = messageEntity.account,
             folder = messageEntity.folder,
             uid = messageEntity.uid
           )
@@ -278,7 +278,8 @@ class MsgDetailsViewModel(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   private val separatedAttachmentsFlow = roomDatabase.attachmentDao().getAttachmentsFlow(
-    account = messageEntity.email,
+    account = messageEntity.account,
+    accountType = messageEntity.accountType,
     label = messageEntity.folder,
     uid = messageEntity.uid
   ).mapLatest { list ->
@@ -486,7 +487,7 @@ class MsgDetailsViewModel(
         val accountEntity = getActiveAccountSuspend() ?: return@launch
 
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
-          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.email).size
+          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.account).size
           val outboxLabel = roomDatabase.labelDao().getLabelSuspend(
             account = accountEntity.email,
             accountType = accountEntity.accountType,
@@ -911,7 +912,8 @@ class MsgDetailsViewModel(
                   JavaEmailConstants.FOLDER_SEARCH
                 },
                 uid = msgUid
-              )
+              ),
+              accountType = accountEntity.accountType
             )
           }
 
@@ -935,11 +937,12 @@ class MsgDetailsViewModel(
         val attachments =
           GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
             AttachmentEntity.fromAttInfo(
-              attachmentInfo.copy(
+              attachmentInfo = attachmentInfo.copy(
                 email = accountEntity.email,
                 folder = localFolder.fullName,
                 uid = msg.uid
-              )
+              ),
+              accountType = accountEntity.accountType
             )
           }
         FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()

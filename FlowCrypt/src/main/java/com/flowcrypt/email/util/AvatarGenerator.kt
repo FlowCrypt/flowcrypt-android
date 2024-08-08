@@ -59,7 +59,8 @@ object AvatarGenerator {
     //draw a text
     textPaint.textSize = fontSize
     canvas.drawText(
-      text.substring(0, 2).uppercase(), (bitmapWidth / 2).toFloat(),
+      text.takeIf { it.length > 1 }?.substring(0, 2)?.uppercase() ?: text,
+      (bitmapWidth / 2).toFloat(),
       bitmapHeight / 2 - (textPaint.descent() + textPaint.ascent()) / 2, textPaint
     )
 

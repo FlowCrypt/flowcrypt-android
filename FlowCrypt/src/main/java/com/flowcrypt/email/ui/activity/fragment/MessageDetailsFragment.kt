@@ -672,7 +672,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun showSendersPublicKeyDialog() {
     showChoosePublicKeyDialogFragment(
       requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY + args.messageEntity.id?.toString(),
-      email = args.messageEntity.email,
+      email = args.messageEntity.account,
       choiceMode = ListView.CHOICE_MODE_SINGLE,
       titleResourceId = R.plurals.tell_sender_to_update_their_settings
     )
@@ -981,7 +981,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun prepareToText(): String {
     val stringBuilder = SpannableStringBuilder()
     val meAddress = args.messageEntity.to.firstOrNull {
-      it.address.equals(args.messageEntity.email, true)
+      it.address.equals(args.messageEntity.account, true)
     }
     val leftAddresses: List<InternetAddress>
     if (meAddress == null) {

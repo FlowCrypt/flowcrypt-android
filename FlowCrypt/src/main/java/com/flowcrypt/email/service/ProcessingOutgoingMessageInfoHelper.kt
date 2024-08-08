@@ -14,6 +14,7 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.BaseDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
@@ -73,7 +74,12 @@ object ProcessingOutgoingMessageInfoHelper {
         }
       }
 
-      addAttsToCache(context, outgoingMsgInfo, msgAttsCacheDir)
+      addAttsToCache(
+        context = context,
+        accountEntity = accountEntity,
+        outgoingMsgInfo = outgoingMsgInfo,
+        attsCacheDir = msgAttsCacheDir
+      )
     }
 
     afterMimeMessageCreatingAction.invoke(mimeMessage)
@@ -91,6 +97,7 @@ object ProcessingOutgoingMessageInfoHelper {
 
   private fun addAttsToCache(
     context: Context,
+    accountEntity: AccountEntity,
     outgoingMsgInfo: OutgoingMessageInfo,
     attsCacheDir: File
   ) {
@@ -178,7 +185,9 @@ object ProcessingOutgoingMessageInfoHelper {
       }
     }
 
-    roomDatabase.attachmentDao().insert(cachedAtts.mapNotNull { AttachmentEntity.fromAttInfo(it) })
+    roomDatabase.attachmentDao().insert(cachedAtts.mapNotNull {
+      AttachmentEntity.fromAttInfo(attachmentInfo = it, accountType = accountEntity.accountType)
+    })
   }
 
   /**
