@@ -23,6 +23,8 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getRecipients
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getSubject
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
@@ -390,6 +392,15 @@ class GmailApiHelper {
               responseHeaders: HttpHeaders?
             ) {
               t?.let { thread ->
+                val receiverEmail = accountEntity.email
+                val subject = thread.messages?.getOrNull(0)?.takeIf { message ->
+                  message.getRecipients("From").any { internetAddress ->
+                    internetAddress.address.equals(receiverEmail, true)
+                  } || (thread.messages?.size?: 0) == 1
+                }?.getSubject()
+                  ?: thread.messages?.getOrNull(1)?.getSubject()
+                  ?: context.getString(R.string.no_subject)
+
                 thread.messages?.lastOrNull()?.let { lastMessageInThread ->
                   if (isTrash || lastMessageInThread.labelIds?.contains(LABEL_TRASH) != true) {
                     listResult.add(
@@ -397,10 +408,8 @@ class GmailApiHelper {
                         id = thread.id,
                         lastMessage = lastMessageInThread,
                         messagesCount = thread.messages?.size ?: 0,
-                        recipients = thread.getUniqueRecipients(accountEntity.email),
-                        subject = lastMessageInThread.payload?.headers?.firstOrNull { header ->
-                          header.name == "Subject"
-                        }?.value ?: context.getString(R.string.no_subject),
+                        recipients = thread.getUniqueRecipients(receiverEmail),
+                        subject = subject,
                         labels = thread.messages.flatMap { message ->
                           message.labelIds ?: emptyList()
                         }.toSortedSet()

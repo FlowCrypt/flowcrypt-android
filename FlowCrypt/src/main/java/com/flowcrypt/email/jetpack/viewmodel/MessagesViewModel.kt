@@ -545,6 +545,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
               if (thread != null) {
                 messageEntity.copy(
+                  subject = thread.subject,
                   threadMessagesCount = thread.messagesCount,
                   labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                   hasAttachments = thread.hasAttachments,
