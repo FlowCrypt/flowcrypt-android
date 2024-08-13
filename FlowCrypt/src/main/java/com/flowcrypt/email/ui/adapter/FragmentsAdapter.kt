@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
-import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.NewMessageDetailsFragment
+import com.flowcrypt.email.ui.activity.fragment.NewMessageDetailsFragmentArgs
 
 /**
  * @author Denys Bondarenko
@@ -45,10 +45,9 @@ class FragmentsAdapter(
   override fun getItemCount(): Int = asyncListDiffer.currentList.size
 
   override fun createFragment(position: Int): Fragment =
-    MessageDetailsFragment().apply {
-      arguments = MessageDetailsFragmentArgs(
-        messageEntity = asyncListDiffer.currentList[position],
-        localFolder = localFolder,
+    NewMessageDetailsFragment().apply {
+      arguments = NewMessageDetailsFragmentArgs(
+        messageEntityId = requireNotNull(asyncListDiffer.currentList[position].id),
         isViewPagerMode = true
       ).toBundle()
     }

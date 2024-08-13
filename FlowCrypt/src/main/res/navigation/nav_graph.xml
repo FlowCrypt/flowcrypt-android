@@ -327,6 +327,19 @@
     </fragment>
 
     <fragment
+        android:id="@+id/newMessageDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.NewMessageDetailsFragment"
+        tools:layout="@layout/fragment_new_message_details">
+        <argument
+            android:name="messageEntityId"
+            app:argType="long" />
+        <argument
+            android:name="isViewPagerMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
+    </fragment>
+
+    <fragment
         android:id="@+id/searchBackupsInEmailFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragment"
         android:label="@string/backups"
