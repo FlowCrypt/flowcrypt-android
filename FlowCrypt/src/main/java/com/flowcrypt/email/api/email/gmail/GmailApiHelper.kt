@@ -353,11 +353,11 @@ class GmailApiHelper {
     ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
     {
       return@withContext useParallel(list = threads, stepValue = stepValue) { list ->
-        loadGmailThreadInfo(context, accountEntity, list, localFolder, format)
+        loadThreadsInfo(context, accountEntity, list, localFolder, format)
       }
     }
 
-    suspend fun loadGmailThreadInfo(
+    suspend fun loadThreadsInfo(
       context: Context,
       accountEntity: AccountEntity,
       threads: Collection<com.google.api.services.gmail.model.Thread>,
@@ -429,6 +429,34 @@ class GmailApiHelper {
       batch.execute()
 
       return@withContext listResult
+    }
+
+    suspend fun loadMessagesInThread(
+      context: Context,
+      accountEntity: AccountEntity,
+      threadId: String,
+      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      metadataHeaders: List<String>? = null,
+      fields: List<String>? = null
+    ): List<Message> = withContext(Dispatchers.IO)
+    {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+
+      val request = gmailApiService
+        .users()
+        .threads()
+        .get(DEFAULT_USER_ID, threadId)
+        .setFormat(format)
+
+      metadataHeaders?.let { metadataHeaders ->
+        request.metadataHeaders = metadataHeaders
+      }
+
+      fields?.let { fields ->
+        request.fields = fields.joinToString(separator = ",")
+      }
+
+      return@withContext request.execute()?.messages ?: emptyList()
     }
 
     suspend fun loadMsgs(

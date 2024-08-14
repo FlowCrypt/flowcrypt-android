@@ -22,6 +22,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import jakarta.mail.Flags
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 /**
@@ -39,6 +40,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query("SELECT * FROM messages WHERE _id = :id")
   abstract suspend fun getMsgById(id: Long): MessageEntity?
+
+  @Query("SELECT * FROM messages WHERE _id = :id")
+  abstract fun getMessageByIdFlow(id: Long): Flow<MessageEntity?>
 
   @Query("SELECT * FROM messages WHERE account = :account AND folder = :folder")
   abstract fun getMsgsLD(account: String, folder: String): LiveData<MessageEntity>
