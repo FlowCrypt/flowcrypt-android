@@ -5,36 +5,46 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentNewMessageDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
-import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
+import com.google.android.material.divider.MaterialDividerItemDecoration
 
 /**
  * @author Denys Bondarenko
  */
-class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>() {
+class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
+  ProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentNewMessageDetailsBinding.inflate(inflater, container, false)
+
+  override val progressView: View?
+    get() = binding?.progress?.root
+  override val contentView: View?
+    get() = binding?.groupContent
+  override val statusView: View?
+    get() = binding?.status?.root
 
   private val args by navArgs<NewMessageDetailsFragmentArgs>()
   private val threadDetailsViewModel: ThreadDetailsViewModel by viewModels {
@@ -74,7 +84,25 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
         messagesInThreadListAdapter.submitList(it)
-        binding?.recyclerViewMessages?.visible()
+        updateReplyButtons(it.lastOrNull()?.hasPgp == true)
+        showContent()
+
+        binding?.recyclerViewMessages?.let { recyclerView ->
+          recyclerView.scrollToPosition(recyclerView.adapter?.itemCount!! - 1)
+        }
+
+        /*GlobalScope.launch {
+          withContext(Dispatchers.Main) {
+            delay(500)
+            binding?.nonLockingScrollView?.apply {
+              val lastChild = getChildAt(childCount - 1)
+              val bottom = lastChild.bottom + paddingBottom
+              val delta = bottom - (scrollY + height)
+              scrollBy(0, delta)
+              fullScroll(View.FOCUS_DOWN)
+            }
+          }
+        }*/
       }
     }
 
@@ -94,7 +122,11 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
       val linearLayoutManager = LinearLayoutManager(context)
       layoutManager = linearLayoutManager
       addItemDecoration(
-        DividerItemDecoration(context, linearLayoutManager.orientation)
+        MaterialDividerItemDecoration(
+          context, linearLayoutManager.orientation
+        ).apply {
+          isLastItemDecorated = false
+        }
       )
       adapter = messagesInThreadListAdapter
     }
@@ -111,6 +143,43 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
         )
       )
       adapter = gmailApiLabelsListAdapter
+    }
+  }
+
+  private fun updateReplyButtons(usePgpMode: Boolean) {
+    if (binding?.layoutReplyButtons != null) {
+      val imageViewReply = binding?.layoutReplyButtons?.imageViewReply
+      val imageViewReplyAll = binding?.layoutReplyButtons?.imageViewReplyAll
+      val imageViewFwd = binding?.layoutReplyButtons?.imageViewFwd
+
+      val textViewReply = binding?.layoutReplyButtons?.textViewReply
+      val textViewReplyAll = binding?.layoutReplyButtons?.textViewReplyAll
+      val textViewFwd = binding?.layoutReplyButtons?.textViewFwd
+
+      val buttonsColorId: Int
+
+      if (usePgpMode) {
+        buttonsColorId = R.color.colorPrimary
+        textViewReply?.setText(R.string.reply_encrypted)
+        textViewReplyAll?.setText(R.string.reply_all_encrypted)
+        textViewFwd?.setText(R.string.forward_encrypted)
+      } else {
+        buttonsColorId = R.color.red
+        textViewReply?.setText(R.string.reply)
+        textViewReplyAll?.setText(R.string.reply_all)
+        textViewFwd?.setText(R.string.forward)
+      }
+
+      val colorStateList =
+        ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
+
+      imageViewReply?.imageTintList = colorStateList
+      imageViewReplyAll?.imageTintList = colorStateList
+      imageViewFwd?.imageTintList = colorStateList
+
+      /*binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
+      binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)*/
     }
   }
 }

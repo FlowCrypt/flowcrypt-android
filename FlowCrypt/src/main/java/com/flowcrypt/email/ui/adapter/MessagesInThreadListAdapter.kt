@@ -39,18 +39,19 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    holder.bindTo(getItem(position))
+    holder.bindTo(getItem(position), position == currentList.size - 1)
   }
 
   inner class ViewHolder(itemView: View) :
     RecyclerView.ViewHolder(itemView) {
     val binding = ItemMessageInThreadBinding.bind(itemView)
 
-    fun bindTo(item: MessageEntity) {
+    fun bindTo(item: MessageEntity, isTheLast: Boolean) {
       val context = itemView.context
       binding.header.setOnClickListener {
         binding.groupCollapsibleContent.visibleOrGone(!binding.groupCollapsibleContent.isVisible)
       }
+
       val senderAddress = EmailUtil.getFirstAddressString(item.from)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
@@ -59,6 +60,10 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
       binding.tVTo.text = prepareToText(context, item)
       binding.textViewDate.text =
         DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
+
+      if (isTheLast) {
+        binding.header.callOnClick()
+      }
     }
 
     private fun prepareToText(context: Context, messageEntity: MessageEntity): String {
