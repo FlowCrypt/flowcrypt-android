@@ -61,9 +61,9 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
       binding.textViewDate.text =
         DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
 
-      if (isTheLast) {
+      /*if (isTheLast) {
         binding.header.callOnClick()
-      }
+      }*/
     }
 
     private fun prepareToText(context: Context, messageEntity: MessageEntity): String {

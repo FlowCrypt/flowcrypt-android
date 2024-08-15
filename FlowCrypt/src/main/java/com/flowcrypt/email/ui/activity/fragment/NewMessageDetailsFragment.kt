@@ -42,7 +42,7 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
-    get() = binding?.groupContent
+    get() = binding?.groupContent?.rootView
   override val statusView: View?
     get() = binding?.status?.root
 
@@ -70,7 +70,6 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews()
-    setupLabelsViewModel()
     setupThreadDetailsViewModel()
   }
 
@@ -86,23 +85,6 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
         messagesInThreadListAdapter.submitList(it)
         updateReplyButtons(it.lastOrNull()?.hasPgp == true)
         showContent()
-
-        binding?.recyclerViewMessages?.let { recyclerView ->
-          recyclerView.scrollToPosition(recyclerView.adapter?.itemCount!! - 1)
-        }
-
-        /*GlobalScope.launch {
-          withContext(Dispatchers.Main) {
-            delay(500)
-            binding?.nonLockingScrollView?.apply {
-              val lastChild = getChildAt(childCount - 1)
-              val bottom = lastChild.bottom + paddingBottom
-              val delta = bottom - (scrollY + height)
-              scrollBy(0, delta)
-              fullScroll(View.FOCUS_DOWN)
-            }
-          }
-        }*/
       }
     }
 
@@ -111,10 +93,6 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
         gmailApiLabelsListAdapter.submitList(it)
       }
     }
-  }
-
-  private fun setupLabelsViewModel() {
-
   }
 
   private fun initViews() {
