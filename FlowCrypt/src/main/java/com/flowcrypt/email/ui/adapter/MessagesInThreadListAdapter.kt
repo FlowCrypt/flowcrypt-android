@@ -32,6 +32,9 @@ import jakarta.mail.internet.InternetAddress
 class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
     MessagesInThreadListAdapter.ViewHolder>(DIFF_UTIL_ITEM_CALLBACK) {
 
+  private val map = mapOf<String, String>()
+  private val fullList: MutableList<MessageEntity> = mutableListOf()
+
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
       LayoutInflater.from(parent.context).inflate(R.layout.item_message_in_thread, parent, false)
@@ -40,6 +43,16 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
     holder.bindTo(getItem(position), position == currentList.size - 1)
+  }
+
+  override fun submitList(list: List<MessageEntity>?) {
+    fullList.clear()
+    fullList.addAll(list ?: emptyList())
+    super.submitList(list?.filterIndexed { index, _ -> index == list.size - 1 })
+  }
+
+  fun showAll() {
+    super.submitList(fullList)
   }
 
   inner class ViewHolder(itemView: View) :
@@ -61,9 +74,9 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
       binding.textViewDate.text =
         DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
 
-      /*if (isTheLast) {
+      if (isTheLast) {
         binding.header.callOnClick()
-      }*/
+      }
     }
 
     private fun prepareToText(context: Context, messageEntity: MessageEntity): String {

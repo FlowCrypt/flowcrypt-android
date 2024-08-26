@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -40,7 +40,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/header"
@@ -89,16 +90,34 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/displayFullConversation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:textAllCaps="false"
+            android:textColor="#808080"
+            android:textSize="@dimen/default_text_size_regular"
+            android:visibility="gone"
+            app:icon="@drawable/ic_question_answer_24"
+            app:iconGravity="textStart"
+            app:iconSize="24dp"
+            app:iconTint="#808080"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/header"
+            tools:text="Show full conversation(4 left)"
+            tools:visibility="visible" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/layoutReplyButtons"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/header"
+            app:layout_constraintTop_toBottomOf="@+id/displayFullConversation"
             app:layout_constraintVertical_bias="0.0"
             tools:itemCount="3"
             tools:listitem="@layout/item_message_in_thread" />
@@ -109,7 +128,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/default_margin_content_small"
-            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

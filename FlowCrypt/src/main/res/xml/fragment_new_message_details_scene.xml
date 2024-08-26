@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 <MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:motion="http://schemas.android.com/apk/res-auto">
@@ -27,13 +27,22 @@
             motion:layout_constraintTop_toTopOf="parent" />
 
         <Constraint
+            android:id="@+id/displayFullConversation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/header"
+            motion:visibilityMode="ignore" />
+
+        <Constraint
             android:id="@id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toTopOf="@+id/layoutReplyButtons"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toBottomOf="@+id/header" />
+            motion:layout_constraintTop_toBottomOf="@+id/displayFullConversation" />
 
         <Constraint
             android:id="@id/layoutReplyButtons"
@@ -43,21 +52,6 @@
             motion:layout_constraintBottom_toBottomOf="parent"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent" />
-        <Constraint
-            android:id="@+id/groupContent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone" />
-        <Constraint
-            android:id="@+id/groupContent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="visible" />
-        <Constraint
-            android:id="@+id/groupContent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible" />
 
     </ConstraintSet>
 
@@ -72,13 +66,22 @@
             motion:motionProgress="1" />
 
         <Constraint
+            android:id="@+id/displayFullConversation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@+id/header"
+            motion:visibilityMode="ignore" />
+
+        <Constraint
             android:id="@id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toTopOf="@+id/layoutReplyButtons"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toBottomOf="@+id/header" />
+            motion:layout_constraintTop_toBottomOf="@+id/displayFullConversation" />
 
         <Constraint
             android:id="@id/layoutReplyButtons"

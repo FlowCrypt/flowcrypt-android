@@ -19,6 +19,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentNewMessageDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -83,6 +85,14 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
         messagesInThreadListAdapter.submitList(it)
+
+        if (it.size > 1) {
+          binding?.displayFullConversation?.visible()
+          binding?.displayFullConversation?.text = "Show full conversation(${it.size - 1} left)"
+        } else {
+          binding?.displayFullConversation?.gone()
+        }
+
         updateReplyButtons(it.lastOrNull()?.hasPgp == true)
         showContent()
       }
@@ -121,6 +131,11 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
         )
       )
       adapter = gmailApiLabelsListAdapter
+    }
+
+    binding?.displayFullConversation?.setOnClickListener { v ->
+      v.gone()
+      messagesInThreadListAdapter.showAll()
     }
   }
 
