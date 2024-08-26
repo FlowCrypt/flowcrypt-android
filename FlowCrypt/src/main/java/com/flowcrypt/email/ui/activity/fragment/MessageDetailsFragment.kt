@@ -490,7 +490,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   override fun onClick(v: View) {
-    when (v.id) {
+    /*when (v.id) {
       R.id.layoutReplyButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
@@ -561,7 +561,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           )
         }
       }
-    }
+    }*/
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -1181,7 +1181,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
    * Update the reply buttons layout depending on the [MessageEncryptionType]
    */
   private fun updateReplyButtons() {
-    if (binding?.layoutReplyButtons != null) {
+    /*if (binding?.layoutReplyButtons != null) {
       val imageViewReply = binding?.layoutReplyButtons?.imageViewReply
       val imageViewReplyAll = binding?.layoutReplyButtons?.imageViewReplyAll
       val imageViewFwd = binding?.layoutReplyButtons?.imageViewFwd
@@ -1217,7 +1217,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       binding?.layoutReplyButtons?.root?.visibleOrGone(
         !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
       )
-    }
+    }*/
   }
 
   /**

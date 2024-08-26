@@ -42,7 +42,7 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
-    get() = binding?.groupContent?.rootView
+    get() = binding?.content
   override val statusView: View?
     get() = binding?.status?.root
 
@@ -126,34 +126,30 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
 
   private fun updateReplyButtons(usePgpMode: Boolean) {
     if (binding?.layoutReplyButtons != null) {
-      val imageViewReply = binding?.layoutReplyButtons?.imageViewReply
-      val imageViewReplyAll = binding?.layoutReplyButtons?.imageViewReplyAll
-      val imageViewFwd = binding?.layoutReplyButtons?.imageViewFwd
-
-      val textViewReply = binding?.layoutReplyButtons?.textViewReply
-      val textViewReplyAll = binding?.layoutReplyButtons?.textViewReplyAll
-      val textViewFwd = binding?.layoutReplyButtons?.textViewFwd
+      val imageViewReply = binding?.layoutReplyButtons?.replyButton
+      val imageViewReplyAll = binding?.layoutReplyButtons?.replyAllButton
+      val imageViewFwd = binding?.layoutReplyButtons?.forwardButton
 
       val buttonsColorId: Int
 
       if (usePgpMode) {
         buttonsColorId = R.color.colorPrimary
-        textViewReply?.setText(R.string.reply_encrypted)
-        textViewReplyAll?.setText(R.string.reply_all_encrypted)
-        textViewFwd?.setText(R.string.forward_encrypted)
+        imageViewReply?.setText(R.string.reply_encrypted)
+        imageViewReplyAll?.setText(R.string.reply_all_encrypted)
+        imageViewFwd?.setText(R.string.forward_encrypted)
       } else {
         buttonsColorId = R.color.red
-        textViewReply?.setText(R.string.reply)
-        textViewReplyAll?.setText(R.string.reply_all)
-        textViewFwd?.setText(R.string.forward)
+        imageViewReply?.setText(R.string.reply)
+        imageViewReplyAll?.setText(R.string.reply_all)
+        imageViewFwd?.setText(R.string.forward)
       }
 
       val colorStateList =
         ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
 
-      imageViewReply?.imageTintList = colorStateList
-      imageViewReplyAll?.imageTintList = colorStateList
-      imageViewFwd?.imageTintList = colorStateList
+      imageViewReply?.iconTint = colorStateList
+      imageViewReplyAll?.iconTint = colorStateList
+      imageViewFwd?.iconTint = colorStateList
 
       /*binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)

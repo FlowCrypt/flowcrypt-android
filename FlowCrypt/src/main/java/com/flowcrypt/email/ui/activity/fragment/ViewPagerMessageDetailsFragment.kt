@@ -31,14 +31,12 @@ import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewPagerViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.adapter.FragmentsAdapter
 
 /**
  * @author Denys Bondarenko
  */
-class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDetailsBinding>(),
-  ProgressBehaviour {
+class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDetailsBinding>() {
   private val args by navArgs<ViewPagerMessageDetailsFragmentArgs>()
 
   private val messagesViewPagerViewModel: MessagesViewPagerViewModel by viewModels {
@@ -54,13 +52,6 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     }
   }
 
-  override val progressView: View?
-    get() = binding?.progress?.root
-  override val contentView: View?
-    get() = binding?.viewPager2
-  override val statusView: View?
-    get() = binding?.status?.root
-
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentViewPagerMessageDetailsBinding.inflate(inflater, container, false)
 
@@ -75,9 +66,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
         localFolder = args.localFolder,
         initialList = messagesViewPagerViewModel.messageEntitiesLiveData.value?.data ?: emptyList(),
         fragment = this@ViewPagerMessageDetailsFragment
-      ) { _, _ ->
-        showContent()
-      }
+      ) { _, _ -> }
 
       addItemDecoration(DividerItemDecoration(view.context, ORIENTATION_HORIZONTAL))
 
@@ -120,7 +109,6 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       when (it.status) {
         Result.Status.SUCCESS -> {
           (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
-          showContent()
         }
 
         else -> {
@@ -134,7 +122,6 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       when (it.status) {
         Result.Status.SUCCESS -> {
           (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
-          showContent()
         }
 
         else -> {}
