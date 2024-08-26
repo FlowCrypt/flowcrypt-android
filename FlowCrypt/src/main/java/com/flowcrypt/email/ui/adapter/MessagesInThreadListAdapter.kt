@@ -21,6 +21,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
@@ -32,7 +33,7 @@ import jakarta.mail.internet.InternetAddress
 class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
     MessagesInThreadListAdapter.ViewHolder>(DIFF_UTIL_ITEM_CALLBACK) {
 
-  private val map = mapOf<String, String>()
+  private val collapsedStates = mutableMapOf<Long, Boolean>()
   private val fullList: MutableList<MessageEntity> = mutableListOf()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -42,6 +43,9 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    if (position == 0) {
+      holder.itemView.context.toast("${collapsedStates[getItem(position).uid]}")
+    }
     holder.bindTo(getItem(position), position == currentList.size - 1)
   }
 
@@ -61,8 +65,12 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
 
     fun bindTo(item: MessageEntity, isTheLast: Boolean) {
       val context = itemView.context
+      val isCollapsed = collapsedStates[item.uid]
+      binding.groupCollapsibleContent.visibleOrGone(collapsedStates[item.uid] ?: false)
       binding.header.setOnClickListener {
-        binding.groupCollapsibleContent.visibleOrGone(!binding.groupCollapsibleContent.isVisible)
+        val newState = !binding.groupCollapsibleContent.isVisible
+        collapsedStates[item.uid] = newState
+        binding.groupCollapsibleContent.visibleOrGone(newState)
       }
 
       val senderAddress = EmailUtil.getFirstAddressString(item.from)
@@ -74,7 +82,7 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
       binding.textViewDate.text =
         DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
 
-      if (isTheLast) {
+      if (isTheLast && isCollapsed == null) {
         binding.header.callOnClick()
       }
     }

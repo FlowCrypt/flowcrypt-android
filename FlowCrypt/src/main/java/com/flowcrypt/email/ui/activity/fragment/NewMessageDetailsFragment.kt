@@ -136,6 +136,10 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
     binding?.displayFullConversation?.setOnClickListener { v ->
       v.gone()
       messagesInThreadListAdapter.showAll()
+      /*lifecycleScope.launch {
+        delay(100)
+        binding?.recyclerViewMessages?.smoothScrollToPosition(0)
+      }*/
     }
   }
 
