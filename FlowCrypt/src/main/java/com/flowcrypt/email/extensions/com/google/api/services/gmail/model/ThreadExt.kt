@@ -20,7 +20,8 @@ fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
           it.name in listOf(
             "From",
             "To",
-            "Cc"
+            "Cc",
+            "Delivered-To"
           ) && it.value.contains(account, true)
         } == true) {
         message.payload?.headers?.filter { header ->
