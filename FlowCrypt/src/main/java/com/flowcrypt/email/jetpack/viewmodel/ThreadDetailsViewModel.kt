@@ -54,7 +54,9 @@ class ThreadDetailsViewModel(
               isNew = false,
               onlyPgpModeEnabled = isOnlyPgpModeEnabled,
               draftIdsMap = emptyMap()
-            )
+            ) { message, messageEntity ->
+              messageEntity.copy(snippet = message.snippet)
+            }
 
             emit(messageEntities)
           } catch (e: Exception) {
