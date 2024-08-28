@@ -36,7 +36,7 @@ import com.google.android.material.divider.MaterialDividerItemDecoration
 /**
  * @author Denys Bondarenko
  */
-class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
+class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
   ProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentNewMessageDetailsBinding.inflate(inflater, container, false)
@@ -48,7 +48,7 @@ class NewMessageDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>
   override val statusView: View?
     get() = binding?.status?.root
 
-  private val args by navArgs<NewMessageDetailsFragmentArgs>()
+  private val args by navArgs<GmailThreadFragmentArgs>()
   private val threadDetailsViewModel: ThreadDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")

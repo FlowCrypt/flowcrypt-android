@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="prompt_subject">Тема</string>
     <string name="send">Відправити</string>
@@ -632,4 +637,9 @@
     <string name="please_specify_your_signature_here">Будь ласка, вкажіть свій підпис тут</string>
     <string name="make_backup_in_the_email_box">Зробіть резервну копію в електронній скриньці</string>
     <string name="make_backup_explanation_text">Зберегти надані секретні ключі PGP, захищені парольною фразою, як резервну копію в папці «Вхідні». Це допоможе отримати Вам доступ до Ваших зашифрованих повідомлень з інших пристроїв (за умови надання Вашої парольної фрази). Ви можете спокійно залишити його у папці "Вхідні" або заархівувати.\n\nЯкщо Вам не потрібна така резервна копія, вимкніть цю опцію.</string>
+    <plurals name="show_full_conversation">
+        <item quantity="one">Показати повне листування із %1$d повідомлення</item>
+        <item quantity="few">Показати повне листування із %1$d повідомленнь</item>
+        <item quantity="many">Показати повне листування із %1$d повідомленнь</item>
+    </plurals>
 </resources>

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -490,8 +490,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   override fun onClick(v: View) {
-    /*when (v.id) {
-      R.id.layoutReplyButton -> {
+    when (v.id) {
+      R.id.replyButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
             context, MessageType.REPLY, msgEncryptType, prepareMsgInfoForReply()
@@ -499,7 +499,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         )
       }
 
-      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
+      R.id.imageButtonReplyAll, R.id.replyAllButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
             context, MessageType.REPLY_ALL, msgEncryptType, prepareMsgInfoForReply()
@@ -513,12 +513,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         popup.setOnMenuItemClickListener {
           when (it.itemId) {
             R.id.menuActionReply -> {
-              binding?.layoutReplyButtons?.layoutReplyButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.replyButton?.let { view -> onClick(view) }
               true
             }
 
             R.id.menuActionForward -> {
-              binding?.layoutReplyButtons?.layoutFwdButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.forwardButton?.let { view -> onClick(view) }
               true
             }
 
@@ -532,7 +532,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
 
-      R.id.layoutFwdButton -> {
+      R.id.forwardButton -> {
         if (attachmentsRecyclerViewAdapter.currentList.none {
             it.isEmbeddedAndPossiblyEncrypted()
           }) {
@@ -561,7 +561,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
           )
         }
       }
-    }*/
+    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -884,6 +884,29 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun updateViews(messageEntity: MessageEntity) {
     updateActionBar(messageEntity)
 
+    messageEntity.threadMessagesCount?.let { threadMessagesCount ->
+      if (threadMessagesCount > 1) {
+        binding?.displayFullConversation?.apply {
+          visible()
+          text = resources.getQuantityString(
+            R.plurals.show_full_conversation, threadMessagesCount, threadMessagesCount
+          )
+          messageEntity.id?.let {
+            setOnClickListener {
+              navController?.navigate(
+                object : NavDirections {
+                  override val actionId = R.id.gmailThreadFragment
+                  override val arguments = GmailThreadFragmentArgs(
+                    messageEntityId = messageEntity.id
+                  ).toBundle()
+                }
+              )
+            }
+          }
+        }
+      }
+    }
+
     binding?.imageButtonReplyAll?.visibleOrInvisible(
       !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )
@@ -1181,43 +1204,39 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
    * Update the reply buttons layout depending on the [MessageEncryptionType]
    */
   private fun updateReplyButtons() {
-    /*if (binding?.layoutReplyButtons != null) {
-      val imageViewReply = binding?.layoutReplyButtons?.imageViewReply
-      val imageViewReplyAll = binding?.layoutReplyButtons?.imageViewReplyAll
-      val imageViewFwd = binding?.layoutReplyButtons?.imageViewFwd
-
-      val textViewReply = binding?.layoutReplyButtons?.textViewReply
-      val textViewReplyAll = binding?.layoutReplyButtons?.textViewReplyAll
-      val textViewFwd = binding?.layoutReplyButtons?.textViewFwd
+    if (binding?.layoutReplyButtons != null) {
+      val replyButton = binding?.layoutReplyButtons?.replyButton
+      val replyAllButton = binding?.layoutReplyButtons?.replyAllButton
+      val forwardButton = binding?.layoutReplyButtons?.forwardButton
 
       val buttonsColorId: Int
 
       if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
         buttonsColorId = R.color.colorPrimary
-        textViewReply?.setText(R.string.reply_encrypted)
-        textViewReplyAll?.setText(R.string.reply_all_encrypted)
-        textViewFwd?.setText(R.string.forward_encrypted)
+        replyButton?.setText(R.string.reply_encrypted)
+        replyAllButton?.setText(R.string.reply_all_encrypted)
+        forwardButton?.setText(R.string.forward_encrypted)
       } else {
         buttonsColorId = R.color.red
-        textViewReply?.setText(R.string.reply)
-        textViewReplyAll?.setText(R.string.reply_all)
-        textViewFwd?.setText(R.string.forward)
+        replyButton?.setText(R.string.reply)
+        replyAllButton?.setText(R.string.reply_all)
+        forwardButton?.setText(R.string.forward)
       }
 
-      val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
+      val colorStateList =
+        ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
 
-      binding?.imageButtonReplyAll?.imageTintList = colorStateList
-      imageViewReply?.imageTintList = colorStateList
-      imageViewReplyAll?.imageTintList = colorStateList
-      imageViewFwd?.imageTintList = colorStateList
+      replyButton?.iconTint = colorStateList
+      replyAllButton?.iconTint = colorStateList
+      forwardButton?.iconTint = colorStateList
 
-      binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)
+      replyButton?.setOnClickListener(this)
+      replyAllButton?.setOnClickListener(this)
+      forwardButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.root?.visibleOrGone(
         !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
       )
-    }*/
+    }
   }
 
   /**

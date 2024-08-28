@@ -1,6 +1,6 @@
 <!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
@@ -648,4 +648,7 @@
     <string name="please_specify_your_signature_here">Please specify your signature here</string>
     <string name="make_backup_in_the_email_box">Make a backup in the email box</string>
     <string name="make_backup_explanation_text">Save the given passphrase-protected PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
+    <plurals name="show_full_conversation">
+        <item quantity="other">Show a full conversation of %1$d messages</item>
+    </plurals>
 </resources>
