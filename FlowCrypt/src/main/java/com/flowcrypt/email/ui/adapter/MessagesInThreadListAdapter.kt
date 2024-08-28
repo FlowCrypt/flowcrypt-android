@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.toSpannable
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -21,7 +20,6 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
@@ -30,11 +28,8 @@ import jakarta.mail.internet.InternetAddress
 /**
  * @author Denys Bondarenko
  */
-class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
-    MessagesInThreadListAdapter.ViewHolder>(DIFF_UTIL_ITEM_CALLBACK) {
-
-  private val collapsedStates = mutableMapOf<Long, Boolean>()
-  private val fullList: MutableList<MessageEntity> = mutableListOf()
+class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageClickListener) :
+  ListAdapter<MessageEntity, MessagesInThreadListAdapter.ViewHolder>(DIFF_UTIL_ITEM_CALLBACK) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
@@ -43,48 +38,30 @@ class MessagesInThreadListAdapter : ListAdapter<MessageEntity,
   }
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    if (position == 0) {
-      holder.itemView.context.toast("${collapsedStates[getItem(position).uid]}")
-    }
-    holder.bindTo(getItem(position), position == currentList.size - 1)
+    holder.bindTo(getItem(position), onMessageClickListener)
   }
 
-  override fun submitList(list: List<MessageEntity>?) {
-    fullList.clear()
-    fullList.addAll(list ?: emptyList())
-    super.submitList(list?.filterIndexed { index, _ -> index == list.size - 1 })
-  }
-
-  fun showAll() {
-    super.submitList(fullList)
+  interface OnMessageClickListener {
+    fun onMessageClick(messageEntity: MessageEntity)
   }
 
   inner class ViewHolder(itemView: View) :
     RecyclerView.ViewHolder(itemView) {
     val binding = ItemMessageInThreadBinding.bind(itemView)
 
-    fun bindTo(item: MessageEntity, isTheLast: Boolean) {
+    fun bindTo(item: MessageEntity, onMessageClickListener: OnMessageClickListener) {
       val context = itemView.context
-      val isCollapsed = collapsedStates[item.uid]
-      binding.groupCollapsibleContent.visibleOrGone(collapsedStates[item.uid] ?: false)
-      binding.header.setOnClickListener {
-        val newState = !binding.groupCollapsibleContent.isVisible
-        collapsedStates[item.uid] = newState
-        binding.groupCollapsibleContent.visibleOrGone(newState)
-      }
-
+      itemView.setOnClickListener { onMessageClickListener.onMessageClick(item) }
       val senderAddress = EmailUtil.getFirstAddressString(item.from)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       )
-      binding.textViewSenderAddress.text = senderAddress
+      binding.textViewSnippet.text = item.snippet
+      binding.textViewSender.text = senderAddress
       binding.tVTo.text = prepareToText(context, item)
-      binding.textViewDate.text =
-        DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
-
-      if (isTheLast && isCollapsed == null) {
-        binding.header.callOnClick()
-      }
+      binding.textViewDate.text = DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
+      binding.viewHasPgp.visibleOrGone(item.hasPgp == true || item.isEncrypted == true)
+      binding.viewHasAttachments.visibleOrGone(item.hasAttachments == true)
     }
 
     private fun prepareToText(context: Context, messageEntity: MessageEntity): String {

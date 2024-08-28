@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.asFlow
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.kotlin.toHex
@@ -55,8 +56,17 @@ class ThreadDetailsViewModel(
               onlyPgpModeEnabled = isOnlyPgpModeEnabled,
               draftIdsMap = emptyMap()
             ) { message, messageEntity ->
-              messageEntity.copy(snippet = message.snippet)
+              messageEntity.copy(snippet = message.snippet, isVisible = false)
             }
+
+            roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
+            GmailApiHelper.identifyAttachments(
+              msgEntities = messageEntities,
+              msgs = messagesInThread,
+              account = activeAccount,
+              localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
+              roomDatabase = roomDatabase
+            )
 
             emit(messageEntities)
           } catch (e: Exception) {

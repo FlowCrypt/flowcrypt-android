@@ -27,23 +27,13 @@
             motion:layout_constraintTop_toTopOf="parent" />
 
         <Constraint
-            android:id="@+id/displayFullConversation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            motion:layout_constraintEnd_toEndOf="parent"
-            motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toBottomOf="@+id/header"
-            android:layout_marginTop="8dp"
-            motion:visibilityMode="ignore" />
-
-        <Constraint
             android:id="@id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toTopOf="@+id/layoutReplyButtons"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toBottomOf="@+id/displayFullConversation" />
+            motion:layout_constraintTop_toBottomOf="@+id/header" />
 
         <Constraint
             android:id="@id/layoutReplyButtons"
@@ -67,22 +57,13 @@
             motion:motionProgress="1" />
 
         <Constraint
-            android:id="@+id/displayFullConversation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            motion:layout_constraintEnd_toEndOf="parent"
-            motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toBottomOf="@+id/header"
-            motion:visibilityMode="ignore" />
-
-        <Constraint
             android:id="@id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             motion:layout_constraintBottom_toTopOf="@+id/layoutReplyButtons"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintStart_toStartOf="parent"
-            motion:layout_constraintTop_toBottomOf="@+id/displayFullConversation" />
+            motion:layout_constraintTop_toBottomOf="@+id/header" />
 
         <Constraint
             android:id="@id/layoutReplyButtons"

@@ -187,7 +187,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
-  val requestPermissionLauncher =
+  private val requestPermissionLauncher =
     registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
       if (isGranted) {
         downloadAttachment()
@@ -1226,6 +1226,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       val colorStateList =
         ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
 
+      binding?.imageButtonReplyAll?.imageTintList = colorStateList
       replyButton?.iconTint = colorStateList
       replyAllButton?.iconTint = colorStateList
       forwardButton?.iconTint = colorStateList

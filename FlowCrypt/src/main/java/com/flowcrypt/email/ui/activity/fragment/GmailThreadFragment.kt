@@ -13,14 +13,18 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentNewMessageDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
-import com.flowcrypt.email.extensions.gone
-import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -32,6 +36,7 @@ import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.divider.MaterialDividerItemDecoration
+import kotlinx.coroutines.launch
 
 /**
  * @author Denys Bondarenko
@@ -67,7 +72,25 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
       }
     })
 
-  private val messagesInThreadListAdapter = MessagesInThreadListAdapter()
+  private val messagesInThreadListAdapter =
+    MessagesInThreadListAdapter(object : MessagesInThreadListAdapter.OnMessageClickListener {
+      override fun onMessageClick(messageEntity: MessageEntity) {
+        lifecycleScope.launch {
+          FlowCryptRoomDatabase.getDatabase(requireContext()).msgDao()
+            .getMsgSuspend(messageEntity.account, messageEntity.folder, messageEntity.uid)?.let {
+              navController?.navigate(
+                GmailThreadFragmentDirections.actionGmailThreadFragmentToMessageDetailsFragment(
+                  messageEntity = it,
+                  localFolder = LocalFolder(
+                    messageEntity.account,
+                    GmailApiHelper.LABEL_INBOX
+                  )//fix me
+                )
+              )
+            }
+        }
+      }
+    })
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -85,14 +108,6 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
         messagesInThreadListAdapter.submitList(it)
-
-        if (it.size > 1) {
-          binding?.displayFullConversation?.visible()
-          binding?.displayFullConversation?.text = "Show full conversation(${it.size - 1} left)"
-        } else {
-          binding?.displayFullConversation?.gone()
-        }
-
         updateReplyButtons(it.lastOrNull()?.hasPgp == true)
         showContent()
       }
@@ -131,15 +146,6 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
         )
       )
       adapter = gmailApiLabelsListAdapter
-    }
-
-    binding?.displayFullConversation?.setOnClickListener { v ->
-      v.gone()
-      messagesInThreadListAdapter.showAll()
-      /*lifecycleScope.launch {
-        delay(100)
-        binding?.recyclerViewMessages?.smoothScrollToPosition(0)
-      }*/
     }
   }
 

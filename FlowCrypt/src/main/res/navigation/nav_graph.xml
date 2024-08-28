@@ -333,6 +333,9 @@
         <argument
             android:name="messageEntityId"
             app:argType="long" />
+        <action
+            android:id="@+id/action_gmailThreadFragment_to_messageDetailsFragment"
+            app:destination="@id/messageDetailsFragment" />
     </fragment>
 
     <fragment
