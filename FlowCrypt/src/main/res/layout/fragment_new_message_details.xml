@@ -42,75 +42,52 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/header"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/textViewSubject"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin_medium"
+            android:layout_marginTop="@dimen/default_margin_content"
+            android:layout_marginEnd="@dimen/default_margin_medium"
+            android:ellipsize="end"
+            android:maxLines="5"
+            android:textAlignment="textStart"
+            android:textColor="@color/dark"
+            android:textIsSelectable="true"
+            android:textSize="@dimen/default_text_size_very_big"
+            android:textStyle="italic"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginLeft="@dimen/default_margin_medium"
+            tools:text="[FlowCrypt/flowcrypt-security] Unlimited unauthenticated file storage via password protected attachments (#126)" />
 
-            <TextView
-                android:id="@+id/textViewSubject"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/default_margin_medium"
-                android:layout_marginTop="@dimen/default_margin_content"
-                android:layout_marginEnd="@dimen/default_margin_medium"
-                android:ellipsize="end"
-                android:maxLines="5"
-                android:textAlignment="textStart"
-                android:textColor="@color/dark"
-                android:textIsSelectable="true"
-                android:textSize="@dimen/default_text_size_very_big"
-                android:textStyle="italic"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_goneMarginLeft="@dimen/default_margin_medium"
-                tools:text="[FlowCrypt/flowcrypt-security] Unlimited unauthenticated file storage via password protected attachments (#126)" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerViewLabels"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/default_margin_medium"
-                android:layout_marginEnd="@dimen/default_margin_medium"
-                android:layout_marginBottom="@dimen/default_margin_small"
-                android:nestedScrollingEnabled="false"
-                android:overScrollMode="never"
-                app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textViewSubject"
-                tools:itemCount="4"
-                tools:listitem="@layout/item_label_badge"
-                tools:orientation="horizontal" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewLabels"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin_medium"
+            android:layout_marginEnd="@dimen/default_margin_medium"
+            android:layout_marginBottom="@dimen/default_margin_small"
+            android:nestedScrollingEnabled="false"
+            android:overScrollMode="never"
+            app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewSubject"
+            tools:itemCount="4"
+            tools:listitem="@layout/item_label_badge"
+            tools:orientation="horizontal" />
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/layoutReplyButtons"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/layoutReplyButtons"
-            app:layout_constraintTop_toBottomOf="@+id/header"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/recyclerViewLabels"
             tools:itemCount="3"
             tools:listitem="@layout/item_message_in_thread" />
-
-        <include
-            android:id="@+id/layoutReplyButtons"
-            layout="@layout/reply_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/default_margin_content_small"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

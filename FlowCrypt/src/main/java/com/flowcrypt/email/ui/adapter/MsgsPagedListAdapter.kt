@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.adapter
@@ -10,7 +10,6 @@ import android.graphics.Camera
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.SpannableString
-import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
@@ -52,7 +51,6 @@ import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
-import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
 
 /**
@@ -231,7 +229,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
         )
 
-        val senderAddress = prepareSenderAddress(context, folderType, messageEntity)
+        val senderAddress = when (folderType) {
+          FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
+
+          else -> messageEntity.generateSenderAddress(context, folderType)
+        }
         binding.textViewSenderAddress.text = senderAddress
 
         updateAvatar(senderAddress, folderType, lastDataId == messageEntity.id)
@@ -298,58 +300,6 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       }
 
       lastDataId = messageEntity?.id
-    }
-
-    private fun prepareSenderAddress(
-      context: Context,
-      folderType: FoldersManager.FolderType?,
-      messageEntity: MessageEntity
-    ): CharSequence {
-      val accountName = messageEntity.account
-      val addresses = when (folderType) {
-        FoldersManager.FolderType.SENT -> generateAddresses(
-          context = context,
-          accountName = accountName,
-          internetAddresses = messageEntity.to
-        )
-
-        FoldersManager.FolderType.DRAFTS -> generateAddresses(
-          context = context,
-          accountName = accountName,
-          internetAddresses = messageEntity.to
-        ).ifEmpty {
-          context.getString(R.string.no_recipients)
-        }
-
-        FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
-
-        else -> generateAddresses(
-          context = context,
-          accountName = accountName,
-          internetAddresses = messageEntity.from
-        )
-      }
-
-      return if ((messageEntity.threadMessagesCount ?: 0) > 1) {
-        SpannableStringBuilder(addresses).apply {
-          val spannableStringForThreadMessageCount = SpannableString(
-            "(${messageEntity.threadMessagesCount})"
-          ).apply {
-            val textSize =
-              context.resources.getDimensionPixelSize(R.dimen.default_text_size_small)
-            setSpan(
-              AbsoluteSizeSpan(textSize),
-              0,
-              length,
-              Spanned.SPAN_INCLUSIVE_INCLUSIVE
-            )
-          }
-          append(" ")
-          append(spannableStringForThreadMessageCount)
-        }
-      } else {
-        addresses
-      }
     }
 
     private fun changeStatusView(messageEntity: MessageEntity) {
@@ -559,56 +509,6 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       binding.imageViewStatus.gone()
 
       changeViewsTypeface(Typeface.NORMAL)
-    }
-
-    /**
-     * Prepare the sender name.
-     *
-     *  * Remove common mail domains: gmail.com, yahoo.com, live.com, outlook.com
-     *
-     *
-     * @param name An incoming name
-     * @return A generated sender name.
-     */
-    private fun prepareSenderName(name: String): String {
-      return SENDER_NAME_PATTERN.matcher(name).replaceFirst("")
-    }
-
-    private fun generateAddresses(
-      context: Context,
-      accountName: String,
-      internetAddresses: List<InternetAddress>?
-    ): String {
-      if (internetAddresses == null) {
-        return context.getString(R.string.no_recipients)
-      }
-
-      val mapOfUniqueInternetAddresses = mutableMapOf<String, InternetAddress>()
-      internetAddresses.forEach { internetAddress ->
-        val existingInternetAddress =
-          mapOfUniqueInternetAddresses[internetAddress.address.lowercase()]
-        if (existingInternetAddress == null || existingInternetAddress.personal?.isEmpty() == true) {
-          mapOfUniqueInternetAddresses[internetAddress.address.lowercase()] = internetAddress
-        }
-      }
-
-      val uniqueRecipients = mapOfUniqueInternetAddresses.values.map { internetAddress ->
-        if (accountName.equals(internetAddress.address, true)) {
-          context.getString(R.string.me)
-        } else {
-          if (internetAddress.personal.isNullOrEmpty()) {
-            internetAddress.address
-          } else {
-            internetAddress.personal
-          }
-        }
-      }.toSet()
-
-      return prepareSenderName(uniqueRecipients.joinToString {
-        if (uniqueRecipients.size > 1) {
-          it.split(" ").firstOrNull() ?: it
-        } else it
-      })
     }
 
     companion object {

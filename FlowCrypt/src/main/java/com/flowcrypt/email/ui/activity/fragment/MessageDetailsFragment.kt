@@ -94,7 +94,6 @@ import com.flowcrypt.email.extensions.exceptionMsgWithStack
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
-import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -942,7 +941,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun updateMsgDetails(messageEntity: MessageEntity) {
-    binding?.tVTo?.text = prepareToText()
+    binding?.tVTo?.text = messageEntity.generateToText(requireContext())
 
     val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
       add(
@@ -999,33 +998,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
         DateUtils.FORMAT_SHOW_YEAR
     return DateUtils.formatDateTime(context, dateInMilliseconds, flags)
-  }
-
-  private fun prepareToText(): String {
-    val stringBuilder = SpannableStringBuilder()
-    val meAddress = args.messageEntity.to.firstOrNull {
-      it.address.equals(args.messageEntity.account, true)
-    }
-    val leftAddresses: List<InternetAddress>
-    if (meAddress == null) {
-      leftAddresses = args.messageEntity.to
-    } else {
-      stringBuilder.append(getString(R.string.me))
-      leftAddresses = ArrayList(args.messageEntity.to) - meAddress
-      if (leftAddresses.isNotEmpty()) {
-        stringBuilder.append(", ")
-      }
-    }
-
-    val to = leftAddresses.foldIndexed(stringBuilder) { index, builder, it ->
-      builder.append(it.personalOrEmail)
-      if (index != leftAddresses.size - 1) {
-        builder.append(",")
-      }
-      builder
-    }.toSpannable()
-
-    return getString(R.string.to_receiver, to)
   }
 
   private fun formatAddresses(addresses: List<InternetAddress>) =

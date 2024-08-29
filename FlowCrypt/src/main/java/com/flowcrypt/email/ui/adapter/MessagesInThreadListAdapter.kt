@@ -5,12 +5,9 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.content.Context
-import android.text.SpannableStringBuilder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.text.toSpannable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -19,11 +16,9 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
-import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
-import jakarta.mail.internet.InternetAddress
 
 /**
  * @author Denys Bondarenko
@@ -56,39 +51,16 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       )
-      binding.textViewSnippet.text = item.snippet
+      binding.textViewSnippet.text = if (item.hasPgp == true) {
+        context.getString(R.string.preview_is_not_available_for_messages_with_pgp)
+      } else {
+        item.snippet
+      }
       binding.textViewSender.text = senderAddress
-      binding.tVTo.text = prepareToText(context, item)
+      binding.tVTo.text = item.generateToText(context)
       binding.textViewDate.text = DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
       binding.viewHasPgp.visibleOrGone(item.hasPgp == true || item.isEncrypted == true)
       binding.viewHasAttachments.visibleOrGone(item.hasAttachments == true)
-    }
-
-    private fun prepareToText(context: Context, messageEntity: MessageEntity): String {
-      val stringBuilder = SpannableStringBuilder()
-      val meAddress = messageEntity.to.firstOrNull {
-        it.address.equals(messageEntity.account, true)
-      }
-      val leftAddresses: List<InternetAddress>
-      if (meAddress == null) {
-        leftAddresses = messageEntity.to
-      } else {
-        stringBuilder.append(context.getString(R.string.me))
-        leftAddresses = ArrayList(messageEntity.to) - meAddress
-        if (leftAddresses.isNotEmpty()) {
-          stringBuilder.append(", ")
-        }
-      }
-
-      val to = leftAddresses.foldIndexed(stringBuilder) { index, builder, it ->
-        builder.append(it.personalOrEmail)
-        if (index != leftAddresses.size - 1) {
-          builder.append(",")
-        }
-        builder
-      }.toSpannable()
-
-      return context.getString(R.string.to_receiver, to)
     }
   }
 

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -549,8 +549,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                   threadMessagesCount = thread.messagesCount,
                   labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                   hasAttachments = thread.hasAttachments,
-                  fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
-                  toAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
+                  threadRecipientsAddresses = InternetAddress.toString(
+                    thread.recipients.toTypedArray()
+                  ),
                   hasPgp = thread.hasPgpThings
                 )
               } else {

@@ -9,6 +9,10 @@ import android.content.ContentValues
 import android.content.Context
 import android.os.Parcelable
 import android.provider.BaseColumns
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.AbsoluteSizeSpan
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -17,7 +21,9 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
@@ -26,12 +32,14 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.jakarta.mail.hasPgp
+import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
+import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter.MessageViewHolder.Companion.SENDER_NAME_PATTERN
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import jakarta.mail.Flags
@@ -100,6 +108,10 @@ data class MessageEntity(
   @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
   @ColumnInfo(name = "has_pgp", defaultValue = "0") val hasPgp: Boolean? = null,
   @ColumnInfo(name = "thread_messages_count", defaultValue = "NULL") val threadMessagesCount: Int? = null,
+  @ColumnInfo(
+    name = "thread_recipients_addresses",
+    defaultValue = "NULL"
+  ) val threadRecipientsAddresses: String? = null,
   @ColumnInfo(name = "snippet", defaultValue = "NULL") val snippet: String? = null,
   @ColumnInfo(name = "is_visible", defaultValue = "1") val isVisible: Boolean = true,
 ) : Parcelable {
@@ -119,6 +131,11 @@ data class MessageEntity(
   @IgnoredOnParcel
   @Ignore
   val cc: List<InternetAddress> = ccAddresses.asInternetAddresses().asList()
+
+  @IgnoredOnParcel
+  @Ignore
+  val threadRecipients: List<InternetAddress> =
+    threadRecipientsAddresses.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
@@ -203,6 +220,7 @@ data class MessageEntity(
     if (isEncrypted != other.isEncrypted) return false
     if (hasPgp != other.hasPgp) return false
     if (threadMessagesCount != other.threadMessagesCount) return false
+    if (threadRecipientsAddresses != other.threadRecipientsAddresses) return false
     if (snippet != other.snippet) return false
     if (isVisible != other.isVisible) return false
 
@@ -236,9 +254,146 @@ data class MessageEntity(
     result = 31 * result + (isEncrypted?.hashCode() ?: 0)
     result = 31 * result + (hasPgp?.hashCode() ?: 0)
     result = 31 * result + (threadMessagesCount?.hashCode() ?: 0)
+    result = 31 * result + (threadRecipientsAddresses?.hashCode() ?: 0)
     result = 31 * result + (snippet?.hashCode() ?: 0)
     result = 31 * result + isVisible.hashCode()
     return result
+  }
+
+  fun generateSenderAddress(
+    context: Context,
+    folderType: FoldersManager.FolderType?
+  ): CharSequence {
+    val accountName = account
+    val addresses = when (folderType) {
+      FoldersManager.FolderType.SENT -> generateAddresses(
+        context = context,
+        accountName = accountName,
+        internetAddresses = to
+      )
+
+      FoldersManager.FolderType.DRAFTS -> generateAddresses(
+        context = context,
+        accountName = accountName,
+        internetAddresses = to
+      ).ifEmpty {
+        context.getString(R.string.no_recipients)
+      }
+
+      else -> generateAddresses(
+        context = context,
+        accountName = accountName,
+        internetAddresses = if (threadId != null) {
+          threadRecipients
+        } else {
+          from
+        }
+      )
+    }
+
+    return if ((threadMessagesCount ?: 0) > 1) {
+      SpannableStringBuilder(addresses).apply {
+        val spannableStringForThreadMessageCount = SpannableString(
+          "(${threadMessagesCount})"
+        ).apply {
+          val textSize =
+            context.resources.getDimensionPixelSize(R.dimen.default_text_size_small)
+          setSpan(
+            AbsoluteSizeSpan(textSize),
+            0,
+            length,
+            Spanned.SPAN_INCLUSIVE_INCLUSIVE
+          )
+        }
+        append(" ")
+        append(spannableStringForThreadMessageCount)
+      }
+    } else {
+      addresses
+    }
+  }
+
+  fun generateToText(context: Context): String {
+    val allRecipients = to + cc
+    val meAddress = allRecipients.firstOrNull {
+      it.address.equals(account, true)
+    }
+    val sortedAllRecipients = if (meAddress == null) {
+      allRecipients
+    } else {
+      listOf(meAddress) + (allRecipients - listOf(meAddress).toSet())
+    }
+    val uniqueRecipientsMap = mutableMapOf<String, InternetAddress>()
+
+    sortedAllRecipients.forEach { internetAddress ->
+      val address = internetAddress.address.lowercase()
+
+      if (!uniqueRecipientsMap.contains(address)
+        || uniqueRecipientsMap[address]?.personal.isNullOrEmpty()
+      ) {
+        uniqueRecipientsMap[address] = internetAddress
+      }
+    }
+
+    return context.getString(
+      R.string.to_receiver,
+      uniqueRecipientsMap.values.joinToString {
+        if (it.address.equals(account, true)) {
+          context.getString(R.string.me)
+        } else {
+          it.personalOrEmail.split(" ").firstOrNull() ?: it.personalOrEmail
+        }
+      })
+  }
+
+  private fun generateAddresses(
+    context: Context,
+    accountName: String,
+    internetAddresses: List<InternetAddress>?
+  ): String {
+    if (internetAddresses == null) {
+      return context.getString(R.string.no_recipients)
+    }
+
+    val mapOfUniqueInternetAddresses = mutableMapOf<String, InternetAddress>()
+    internetAddresses.forEach { internetAddress ->
+      val existingInternetAddress =
+        mapOfUniqueInternetAddresses[internetAddress.address.lowercase()]
+      if (existingInternetAddress == null || existingInternetAddress.personal?.isEmpty() == true) {
+        mapOfUniqueInternetAddresses[internetAddress.address.lowercase()] = internetAddress
+      }
+    }
+
+    val uniqueRecipients = mapOfUniqueInternetAddresses.values.map { internetAddress ->
+      if (accountName.equals(internetAddress.address, true)) {
+        context.getString(R.string.me)
+      } else {
+        if (internetAddress.personal.isNullOrEmpty()) {
+          internetAddress.address
+        } else {
+          internetAddress.personal
+        }
+      }
+    }.toSet()
+
+    return generateSenderName(uniqueRecipients.joinToString {
+      if (uniqueRecipients.size > 1) {
+        it.split(" ").firstOrNull() ?: it
+      } else it
+    })
+  }
+
+  /**
+   * Prepare the sender name.
+   *
+   * Remove common mail domains: gmail.com, yahoo.com, live.com, outlook.com
+   *
+   *
+   * @param name An incoming name
+   * @return A generated sender name.
+   */
+  private fun generateSenderName(name: String): String {
+    return SENDER_NAME_PATTERN.matcher(name).replaceFirst("")
   }
 
   companion object {

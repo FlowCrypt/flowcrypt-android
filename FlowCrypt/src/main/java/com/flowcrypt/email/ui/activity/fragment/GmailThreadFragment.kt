@@ -5,12 +5,10 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
@@ -108,7 +106,6 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
         messagesInThreadListAdapter.submitList(it)
-        updateReplyButtons(it.lastOrNull()?.hasPgp == true)
         showContent()
       }
     }
@@ -146,39 +143,6 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
         )
       )
       adapter = gmailApiLabelsListAdapter
-    }
-  }
-
-  private fun updateReplyButtons(usePgpMode: Boolean) {
-    if (binding?.layoutReplyButtons != null) {
-      val imageViewReply = binding?.layoutReplyButtons?.replyButton
-      val imageViewReplyAll = binding?.layoutReplyButtons?.replyAllButton
-      val imageViewFwd = binding?.layoutReplyButtons?.forwardButton
-
-      val buttonsColorId: Int
-
-      if (usePgpMode) {
-        buttonsColorId = R.color.colorPrimary
-        imageViewReply?.setText(R.string.reply_encrypted)
-        imageViewReplyAll?.setText(R.string.reply_all_encrypted)
-        imageViewFwd?.setText(R.string.forward_encrypted)
-      } else {
-        buttonsColorId = R.color.red
-        imageViewReply?.setText(R.string.reply)
-        imageViewReplyAll?.setText(R.string.reply_all)
-        imageViewFwd?.setText(R.string.forward)
-      }
-
-      val colorStateList =
-        ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
-
-      imageViewReply?.iconTint = colorStateList
-      imageViewReplyAll?.iconTint = colorStateList
-      imageViewFwd?.iconTint = colorStateList
-
-      /*binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)*/
     }
   }
 }

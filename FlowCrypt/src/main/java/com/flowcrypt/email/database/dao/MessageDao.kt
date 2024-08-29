@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.account.database.dao
@@ -103,7 +103,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query(
     "SELECT * FROM messages " +
-        "WHERE account = :account AND folder = :folder ORDER BY received_date DESC"
+        "WHERE account = :account AND folder = :folder AND is_visible = 1 ORDER BY received_date DESC"
   )
   abstract fun getMessagesDataSourceFactory(
     account: String,
@@ -113,13 +113,13 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query(
     "SELECT * FROM (" +
         "SELECT * FROM messages " +
-        "WHERE account = :account AND folder = :folder AND received_date > :date " +
+        "WHERE account = :account AND folder = :folder AND is_visible = 1 AND received_date > :date " +
         "ORDER BY received_date ASC " +
         "LIMIT :limit) " +
         "UNION " +
         "SELECT * FROM (" +
         "SELECT * FROM messages " +
-        "WHERE account = :account AND folder = :folder AND received_date <= :date " +
+        "WHERE account = :account AND folder = :folder AND is_visible = 1 AND received_date <= :date " +
         "ORDER BY received_date DESC " +
         "LIMIT :limit) " +
         "ORDER BY received_date DESC"
