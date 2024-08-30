@@ -610,7 +610,7 @@ data class MessageEntity(
     }
 
     fun generateColoredLabels(
-      labelIds: List<String>?,
+      labelIds: Collection<String>?,
       labelEntities: List<LabelEntity>?,
       skippedLabels: List<String> = emptyList()
     ): List<GmailApiLabelsListAdapter.Label> {

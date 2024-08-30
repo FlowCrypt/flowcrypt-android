@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   DenBond7
- *   Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.gmail
@@ -25,6 +23,7 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getRecipients
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getSubject
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueLabelsSet
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
@@ -59,6 +58,7 @@ import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListThreadsResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
+import com.google.api.services.gmail.model.Thread
 import jakarta.mail.Flags
 import jakarta.mail.MessagingException
 import jakarta.mail.Part
@@ -119,9 +119,9 @@ class GmailApiHelper {
     private const val COUNT_OF_LOADED_EMAILS_BY_STEP =
       JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
-    const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
-    const val MESSAGE_RESPONSE_FORMAT_MINIMAL = "minimal"
-    const val THREAD_RESPONSE_FORMAT_METADATA = "metadata"
+    const val RESPONSE_FORMAT_FULL = "full"
+    const val RESPONSE_FORMAT_MINIMAL = "minimal"
+    const val RESPONSE_FORMAT_METADATA = "metadata"
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -334,7 +334,7 @@ class GmailApiHelper {
       accountEntity: AccountEntity,
       messages: List<Message>,
       localFolder: LocalFolder,
-      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      format: String = RESPONSE_FORMAT_FULL,
       stepValue: Int = 10
     ): List<Message> = withContext(Dispatchers.IO)
     {
@@ -346,9 +346,9 @@ class GmailApiHelper {
     suspend fun loadGmailThreadInfoInParallel(
       context: Context,
       accountEntity: AccountEntity,
-      threads: List<com.google.api.services.gmail.model.Thread>,
+      threads: List<Thread>,
       localFolder: LocalFolder,
-      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      format: String = RESPONSE_FORMAT_FULL,
       stepValue: Int = 10
     ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
     {
@@ -360,9 +360,9 @@ class GmailApiHelper {
     suspend fun loadThreadsInfo(
       context: Context,
       accountEntity: AccountEntity,
-      threads: Collection<com.google.api.services.gmail.model.Thread>,
+      threads: Collection<Thread>,
       localFolder: LocalFolder,
-      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
       fields: List<String>? = FULL_INFO_WITHOUT_DATA
     ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
@@ -386,38 +386,15 @@ class GmailApiHelper {
 
         request.queue(
           batch,
-          object : JsonBatchCallback<com.google.api.services.gmail.model.Thread>() {
+          object : JsonBatchCallback<Thread>() {
             override fun onSuccess(
-              t: com.google.api.services.gmail.model.Thread?,
+              t: Thread?,
               responseHeaders: HttpHeaders?
             ) {
               t?.let { thread ->
-                val receiverEmail = accountEntity.email
-                val subject = thread.messages?.getOrNull(0)?.takeIf { message ->
-                  message.getRecipients("From").any { internetAddress ->
-                    internetAddress.address.equals(receiverEmail, true)
-                  } || (thread.messages?.size?: 0) == 1
-                }?.getSubject()
-                  ?: thread.messages?.getOrNull(1)?.getSubject()
-                  ?: context.getString(R.string.no_subject)
-
-                thread.messages?.lastOrNull()?.let { lastMessageInThread ->
-                  if (isTrash || lastMessageInThread.labelIds?.contains(LABEL_TRASH) != true) {
-                    listResult.add(
-                      GmailThreadInfo(
-                        id = thread.id,
-                        lastMessage = lastMessageInThread,
-                        messagesCount = thread.messages?.size ?: 0,
-                        recipients = thread.getUniqueRecipients(receiverEmail),
-                        subject = subject,
-                        labels = thread.messages.flatMap { message ->
-                          message.labelIds ?: emptyList()
-                        }.toSortedSet()
-                      )
-                    )
-                  }
-                }
-              } ?: throw java.lang.NullPointerException()
+                val gmailThreadInfo = extractGmailThreadInfo(accountEntity, thread, context)
+                listResult.add(gmailThreadInfo)
+              }
             }
 
             override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
@@ -431,11 +408,42 @@ class GmailApiHelper {
       return@withContext listResult
     }
 
+    suspend fun loadThreadInfo(
+      context: Context,
+      accountEntity: AccountEntity,
+      threadId: String,
+      format: String = RESPONSE_FORMAT_FULL,
+      metadataHeaders: List<String>? = null,
+      fields: List<String>? = FULL_INFO_WITHOUT_DATA
+    ): GmailThreadInfo = withContext(Dispatchers.IO)
+    {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+
+      val request = gmailApiService
+        .users()
+        .threads()
+        .get(DEFAULT_USER_ID, threadId)
+        .setFormat(format)
+
+      metadataHeaders?.let { metadataHeaders ->
+        request.metadataHeaders = metadataHeaders
+      }
+
+      fields?.let { fields ->
+        request.fields = fields.joinToString(separator = ",")
+      }
+
+      val thread = request.execute()
+      val gmailThreadInfo = extractGmailThreadInfo(accountEntity, thread, context)
+
+      return@withContext gmailThreadInfo
+    }
+
     suspend fun loadMessagesInThread(
       context: Context,
       accountEntity: AccountEntity,
       threadId: String,
-      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
       fields: List<String>? = null
     ): List<Message> = withContext(Dispatchers.IO)
@@ -461,7 +469,7 @@ class GmailApiHelper {
 
     suspend fun loadMsgs(
       context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
-      localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      localFolder: LocalFolder, format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null, fields: List<String>? = FULL_INFO_WITHOUT_DATA
     ): List<Message> = withContext(Dispatchers.IO)
     {
@@ -1279,6 +1287,31 @@ class GmailApiHelper {
           processException(it)
         } ?: e
       }
+    }
+
+    private fun extractGmailThreadInfo(
+      accountEntity: AccountEntity,
+      thread: Thread,
+      context: Context
+    ): GmailThreadInfo {
+      val receiverEmail = accountEntity.email
+      val subject = thread.messages?.getOrNull(0)?.takeIf { message ->
+        message.getRecipients("From").any { internetAddress ->
+          internetAddress.address.equals(receiverEmail, true)
+        } || (thread.messages?.size ?: 0) == 1
+      }?.getSubject()
+        ?: thread.messages?.getOrNull(1)?.getSubject()
+        ?: context.getString(R.string.no_subject)
+
+      val gmailThreadInfo = GmailThreadInfo(
+        id = thread.id,
+        lastMessage = requireNotNull(thread.messages?.last()),
+        messagesCount = thread.messages?.size ?: 0,
+        recipients = thread.getUniqueRecipients(receiverEmail),
+        subject = subject,
+        labels = thread.getUniqueLabelsSet()
+      )
+      return gmailThreadInfo
     }
   }
 }

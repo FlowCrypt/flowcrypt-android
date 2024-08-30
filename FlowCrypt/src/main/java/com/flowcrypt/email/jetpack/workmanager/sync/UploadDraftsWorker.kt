@@ -78,7 +78,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
             "threadId",
             "historyId"
           ),
-          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+          format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
 
         val freshestMessageEntity =

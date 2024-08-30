@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager
@@ -185,7 +185,7 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
                   context = applicationContext,
                   accountEntity = account,
                   msgId = it,
-                  format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+                  format = GmailApiHelper.RESPONSE_FORMAT_FULL
                 )
               }
               ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING

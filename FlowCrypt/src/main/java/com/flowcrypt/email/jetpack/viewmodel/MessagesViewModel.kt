@@ -481,7 +481,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             context = getApplication(),
             accountEntity = accountEntity,
             threads = threadsResponse.threads ?: emptyList(),
-            format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL,
+            format = GmailApiHelper.RESPONSE_FORMAT_FULL,
             localFolder = localFolder
           )
 

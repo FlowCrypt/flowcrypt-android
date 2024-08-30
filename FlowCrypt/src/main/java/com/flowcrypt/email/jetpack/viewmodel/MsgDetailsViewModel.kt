@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -57,9 +57,6 @@ import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
-import org.eclipse.angus.mail.imap.IMAPBodyPart
-import org.eclipse.angus.mail.imap.IMAPFolder
-import org.eclipse.angus.mail.imap.IMAPMessage
 import jakarta.mail.BodyPart
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
@@ -82,6 +79,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPBodyPart
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPMessage
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
@@ -327,15 +327,25 @@ class MsgDetailsViewModel(
           val cachedLabelIds =
             freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
           try {
-            val message = GmailApiHelper.loadMsgInfoSuspend(
-              context = getApplication(),
-              accountEntity = account,
-              msgId = messageEntity.uidAsHEX,
-              fields = null,
-              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
-            )
+            val latestLabelIds =
+              if (account.useConversationMode) {
+                GmailApiHelper.loadThreadInfo(
+                  context = getApplication(),
+                  accountEntity = account,
+                  threadId = freshestMessageEntity?.threadId ?: "",
+                  fields = listOf("messages/labelIds"),
+                  format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
+                ).labels
+              } else {
+                GmailApiHelper.loadMsgInfoSuspend(
+                  context = getApplication(),
+                  accountEntity = account,
+                  msgId = messageEntity.uidAsHEX,
+                  fields = null,
+                  format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
+                ).labelIds
+              }
 
-            val latestLabelIds = message.labelIds
             if (cachedLabelIds == null
               || !(latestLabelIds.containsAll(cachedLabelIds)
                   && cachedLabelIds.containsAll(latestLabelIds))
@@ -645,7 +655,7 @@ class MsgDetailsViewModel(
               accountEntity = accountEntity,
               msgId = messageEntity.uidAsHEX,
               fields = null,
-              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+              format = GmailApiHelper.RESPONSE_FORMAT_FULL
             )
             msgSize = msgFullInfo.sizeEstimate
             val originalMsg = GmaiAPIMimeMessage(
@@ -932,7 +942,7 @@ class MsgDetailsViewModel(
           context = getApplication(),
           accountEntity = accountEntity,
           msgId = messageEntity.uidAsHEX,
-          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+          format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
         val attachments =
           GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->

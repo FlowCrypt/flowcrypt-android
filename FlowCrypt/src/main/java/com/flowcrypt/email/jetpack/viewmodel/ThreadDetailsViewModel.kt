@@ -106,7 +106,7 @@ class ThreadDetailsViewModel(
               accountEntity = account,
               msgId = messageEntityId.toHex(),
               fields = null,
-              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
+              format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
             )
 
             val latestLabelIds = message.labelIds

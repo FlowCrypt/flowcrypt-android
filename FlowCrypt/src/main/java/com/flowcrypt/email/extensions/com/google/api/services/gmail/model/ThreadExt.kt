@@ -46,3 +46,9 @@ fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
     addAll(mapOfUniqueRecipients.values)
   }
 }
+
+fun Thread.getUniqueLabelsSet(): Set<String> {
+  return messages?.flatMap { message ->
+    message.labelIds ?: emptyList()
+  }?.toSortedSet() ?: emptySet()
+}

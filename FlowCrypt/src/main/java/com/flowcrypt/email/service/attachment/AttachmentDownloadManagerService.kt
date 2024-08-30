@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service.attachment
@@ -45,7 +45,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +55,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -529,7 +529,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
                 context = context,
                 accountEntity = account,
                 msgId = att.uid.toHex(),
-                format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+                format = GmailApiHelper.RESPONSE_FORMAT_FULL
               )
               val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = att.path)
                 ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))
