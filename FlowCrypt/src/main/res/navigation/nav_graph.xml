@@ -306,6 +306,10 @@
             android:name="messageEntityId"
             app:argType="long" />
         <argument
+            android:name="isThreadMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
             android:name="localFolder"
             app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
     </fragment>
@@ -334,8 +338,8 @@
             android:name="messageEntityId"
             app:argType="long" />
         <action
-            android:id="@+id/action_gmailThreadFragment_to_messageDetailsFragment"
-            app:destination="@id/messageDetailsFragment" />
+            android:id="@+id/action_gmailThreadFragment_to_viewPagerMessageDetailsFragment"
+            app:destination="@id/viewPagerMessageDetailsFragment" />
     </fragment>
 
     <fragment

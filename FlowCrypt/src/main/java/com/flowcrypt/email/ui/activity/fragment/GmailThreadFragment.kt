@@ -75,10 +75,15 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
       override fun onMessageClick(messageEntity: MessageEntity) {
         lifecycleScope.launch {
           FlowCryptRoomDatabase.getDatabase(requireContext()).msgDao()
-            .getMsgSuspend(messageEntity.account, messageEntity.folder, messageEntity.uid)?.let {
+            .getMsgSuspend(
+              messageEntity.account,
+              messageEntity.folder,
+              messageEntity.uid
+            )?.id?.let {
               navController?.navigate(
-                GmailThreadFragmentDirections.actionGmailThreadFragmentToMessageDetailsFragment(
-                  messageEntity = it,
+                GmailThreadFragmentDirections.actionGmailThreadFragmentToViewPagerMessageDetailsFragment(
+                  messageEntityId = it,
+                  isThreadMode = true,
                   localFolder = LocalFolder(
                     messageEntity.account,
                     GmailApiHelper.LABEL_INBOX

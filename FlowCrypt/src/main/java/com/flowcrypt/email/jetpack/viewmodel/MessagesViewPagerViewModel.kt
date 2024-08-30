@@ -21,6 +21,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 class MessagesViewPagerViewModel(
   private val initialMessageEntityId: Long,
   private val localFolder: LocalFolder,
+  private val isThreadMode: Boolean,
   application: Application
 ) : AccountViewModel(application) {
   val initialLiveData: LiveData<Result<List<MessageEntity>>> =
@@ -57,21 +58,38 @@ class MessagesViewPagerViewModel(
         emit(Result.loading())
         val activeAccount = getActiveAccountSuspend()
         if (activeAccount != null) {
-          emit(
+          val result = if (isThreadMode) {
             Result.success(
               roomDatabase.msgDao()
-                .getMessagesForViewPager(
-                  activeAccount.email,
-                  if (localFolder.searchQuery.isNullOrEmpty()) {
+                .getMessagesInThreadForViewPager(
+                  account = activeAccount.email,
+                  folder = if (localFolder.searchQuery.isNullOrEmpty()) {
                     localFolder.fullName
                   } else {
                     JavaEmailConstants.FOLDER_SEARCH
                   },
-                  messageEntity.receivedDate ?: 0,
-                  PAGE_SIZE / 2
+                  threadId = messageEntity.threadId ?: "",
+                  date = messageEntity.receivedDate ?: 0,
+                  limit = PAGE_SIZE / 2
                 )
             )
-          )
+          } else {
+            Result.success(
+              roomDatabase.msgDao()
+                .getMessagesForViewPager(
+                  account = activeAccount.email,
+                  folder = if (localFolder.searchQuery.isNullOrEmpty()) {
+                    localFolder.fullName
+                  } else {
+                    JavaEmailConstants.FOLDER_SEARCH
+                  },
+                  date = messageEntity.receivedDate ?: 0,
+                  limit = PAGE_SIZE / 2
+                )
+            )
+          }
+
+          emit(result)
         } else {
           emit(Result.success(emptyList()))
         }

@@ -46,6 +46,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
         return MessagesViewPagerViewModel(
           initialMessageEntityId = args.messageEntityId,
           localFolder = args.localFolder,
+          isThreadMode = args.isThreadMode,
           application = requireActivity().application
         ) as T
       }
