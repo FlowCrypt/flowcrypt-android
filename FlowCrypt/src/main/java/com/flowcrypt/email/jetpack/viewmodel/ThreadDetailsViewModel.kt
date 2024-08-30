@@ -11,7 +11,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
-import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -101,15 +100,13 @@ class ThreadDetailsViewModel(
           val cachedLabelIds =
             freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
           try {
-            val message = GmailApiHelper.loadMsgInfoSuspend(
+            val latestLabelIds = GmailApiHelper.loadThreadInfo(
               context = getApplication(),
               accountEntity = account,
-              msgId = messageEntityId.toHex(),
-              fields = null,
+              threadId = freshestMessageEntity?.threadId ?: "",
+              fields = listOf("id", "messages/labelIds"),
               format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
-            )
-
-            val latestLabelIds = message.labelIds
+            ).labels
             if (cachedLabelIds == null
               || !(latestLabelIds.containsAll(cachedLabelIds)
                   && cachedLabelIds.containsAll(latestLabelIds))

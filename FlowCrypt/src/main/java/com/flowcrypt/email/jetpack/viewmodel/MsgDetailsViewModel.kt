@@ -333,7 +333,7 @@ class MsgDetailsViewModel(
                   context = getApplication(),
                   accountEntity = account,
                   threadId = freshestMessageEntity?.threadId ?: "",
-                  fields = listOf("messages/labelIds"),
+                  fields = listOf("id", "messages/labelIds"),
                   format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
                 ).labels
               } else {

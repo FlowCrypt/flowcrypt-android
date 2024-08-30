@@ -78,13 +78,15 @@
             tools:itemCount="4"
             tools:listitem="@layout/item_label_badge"
             tools:orientation="horizontal" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/recyclerViewLabels"
             tools:itemCount="3"
             tools:listitem="@layout/item_message_in_thread" />
