@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.adapter
 
+import android.graphics.Color
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +21,7 @@ import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSou
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
+import com.google.android.material.color.MaterialColors
 
 /**
  * @author Denys Bondarenko
@@ -56,11 +59,43 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
       } else {
         item.snippet
       }
-      binding.textViewSender.text = senderAddress
       binding.tVTo.text = item.generateToText(context)
-      binding.textViewDate.text = DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
+      binding.textViewSender.apply {
+        text = senderAddress
+        if (item.isSeen) {
+          setTypeface(null, Typeface.NORMAL)
+          setTextColor(
+            MaterialColors.getColor(
+              context,
+              com.google.android.material.R.attr.colorOnSurfaceVariant,
+              Color.BLACK
+            )
+          )
+        } else {
+          setTypeface(null, Typeface.BOLD)
+          setTextColor(
+            MaterialColors.getColor(context, R.attr.itemTitleColor, Color.BLACK)
+          )
+        }
+      }
+      binding.textViewSender.text = senderAddress
+      binding.textViewDate.apply {
+        text = DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
+        if (item.isSeen) {
+          setTypeface(null, Typeface.NORMAL)
+          setTextColor(
+            MaterialColors.getColor(context, R.attr.itemSubTitleColor, Color.BLACK)
+          )
+        } else {
+          setTypeface(null, Typeface.BOLD)
+          setTextColor(
+            MaterialColors.getColor(context, R.attr.itemTitleColor, Color.BLACK)
+          )
+        }
+      }
       binding.viewHasPgp.visibleOrGone(item.hasPgp == true || item.isEncrypted == true)
       binding.viewHasAttachments.visibleOrGone(item.hasAttachments == true)
+      binding.textViewDate.setTypeface(null, if (item.isSeen) Typeface.NORMAL else Typeface.BOLD)
     }
   }
 

@@ -288,7 +288,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
     object : GmailApiLabelsListAdapter.OnLabelClickListener {
       override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
-        if (args.localFolder.searchQuery == null) {
+        if (args.localFolder.searchQuery == null && !args.isThreadMode) {
           changeGmailLabels()
         }
       }
@@ -358,6 +358,11 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
     super.onSetupActionBarMenu(menuHost)
+
+    if (args.isThreadMode) {
+      return
+    }
+
     menuHost.addMenuProvider(object : MenuProvider {
       override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         if (!args.isViewPagerMode) {
@@ -884,7 +889,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     updateActionBar(messageEntity)
 
     messageEntity.threadMessagesCount?.let { threadMessagesCount ->
-      if (threadMessagesCount > 1) {
+      if (threadMessagesCount > 1 && !args.isThreadMode) {
         binding?.displayFullConversation?.apply {
           visible()
           text = resources.getQuantityString(

@@ -66,7 +66,8 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       adapter = FragmentsAdapter(
         localFolder = args.localFolder,
         initialList = messagesViewPagerViewModel.messageEntitiesLiveData.value?.data ?: emptyList(),
-        fragment = this@ViewPagerMessageDetailsFragment
+        fragment = this@ViewPagerMessageDetailsFragment,
+        isThreadMode = args.isThreadMode
       ) { _, _ -> }
 
       addItemDecoration(DividerItemDecoration(view.context, ORIENTATION_HORIZONTAL))
