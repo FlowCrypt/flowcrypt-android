@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.extensions.com.google.api.services.gmail.model
 
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.google.api.services.gmail.model.Thread
 import jakarta.mail.internet.InternetAddress
@@ -51,4 +52,10 @@ fun Thread.getUniqueLabelsSet(): Set<String> {
   return messages?.flatMap { message ->
     message.labelIds ?: emptyList()
   }?.toSortedSet() ?: emptySet()
+}
+
+fun Thread.hasUnreadMessages(): Boolean {
+  return messages?.any { message ->
+    message.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) != true
+  } ?: false
 }

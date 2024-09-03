@@ -25,6 +25,7 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getRec
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getSubject
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueLabelsSet
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasUnreadMessages
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
@@ -1213,7 +1214,8 @@ class GmailApiHelper {
         messagesCount = thread.messages?.size ?: 0,
         recipients = thread.getUniqueRecipients(receiverEmail),
         subject = subject,
-        labels = thread.getUniqueLabelsSet()
+        labels = thread.getUniqueLabelsSet(),
+        hasUnreadMessages = thread.hasUnreadMessages()
       )
       return gmailThreadInfo
     }
