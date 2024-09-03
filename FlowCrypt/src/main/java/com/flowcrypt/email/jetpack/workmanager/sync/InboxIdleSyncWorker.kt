@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -12,17 +12,21 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.MessageEntity.Companion.LABEL_IDS_SEPARATOR
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
-import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.util.exception.GmailAPIException
 import com.google.api.services.gmail.model.History
+import com.google.api.services.gmail.model.Thread
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Store
 import jakarta.mail.UIDFolder
+import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.eclipse.angus.mail.imap.IMAPFolder
@@ -165,17 +169,34 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
 
       val newCandidates = newCandidatesMap.values.toList()
       if (newCandidates.isNotEmpty()) {
-        val msgs = GmailApiHelper.loadMsgsInParallel(
-          applicationContext, accountEntity,
-          newCandidates, localFolder
-        ).run {
-          if (accountEntity.showOnlyEncrypted == true) {
-            filter { it.hasPgp() }
-          } else this
+        val gmailThreadInfoList: List<GmailThreadInfo>
+        val msgs: List<com.google.api.services.gmail.model.Message>
+
+        if (accountEntity.useConversationMode) {
+          val uniqueThreadIdList = newCandidates.map { it.threadId }.toSet()
+          gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
+            context = applicationContext,
+            accountEntity = accountEntity,
+            threads = uniqueThreadIdList.map { Thread().apply { id = it } },
+            format = GmailApiHelper.RESPONSE_FORMAT_FULL,
+            localFolder = localFolder
+          )
+
+          msgs = gmailThreadInfoList.map { it.lastMessage }
+        } else {
+          gmailThreadInfoList = emptyList()
+          msgs = GmailApiHelper.loadMsgsInParallel(
+            applicationContext, accountEntity,
+            newCandidates.toList(), localFolder
+          ).run {
+            if (accountEntity.showOnlyEncrypted == true) {
+              filter { it.hasPgp() }
+            } else this
+          }
         }
 
         val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
-        val isNew = !GeneralUtil.isAppForegrounded()
+        val isNew = applicationContext.isAppForegrounded()
 
         val msgEntities = MessageEntity.genMessageEntities(
           context = applicationContext,
@@ -185,7 +206,23 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           msgsList = msgs,
           isNew = isNew,
           onlyPgpModeEnabled = isOnlyPgpModeEnabled
-        )
+        ) { message, messageEntity ->
+          if (accountEntity.useConversationMode) {
+            val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
+            messageEntity.copy(
+              subject = thread?.subject,
+              threadMessagesCount = thread?.messagesCount,
+              labelIds = thread?.labels?.joinToString(separator = LABEL_IDS_SEPARATOR),
+              hasAttachments = thread?.hasAttachments,
+              threadRecipientsAddresses = InternetAddress.toString(
+                thread?.recipients?.toTypedArray()
+              ),
+              hasPgp = thread?.hasPgpThings
+            )
+          } else {
+            messageEntity
+          }
+        }
 
         processNewMsgs(accountEntity, localFolder, msgEntities)
         GmailApiHelper.identifyAttachments(
