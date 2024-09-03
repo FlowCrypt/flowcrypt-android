@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.util
@@ -39,17 +39,23 @@ import com.flowcrypt.email.api.retrofit.RetrofitApiServiceInterface
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
+import com.flowcrypt.email.jetpack.workmanager.EmailAndNameWorker
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import jakarta.mail.Message
+import jakarta.mail.MessagingException
+import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.apache.commons.io.IOUtils
+import org.eclipse.angus.mail.imap.IMAPFolder
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import retrofit2.Retrofit
 import java.io.File
@@ -582,6 +588,60 @@ class GeneralUtil {
 
       val preamble = context.getString(R.string.no_private_keys_suitable_for_encryption)
       return "$preamble <br><br> $stringBuilder"
+    }
+
+    suspend fun updateLocalContactsIfNeeded(
+      context: Context,
+      imapFolder: IMAPFolder? = null,
+      messages: Array<Message>
+    ) = withContext(Dispatchers.IO) {
+      try {
+        val isSentFolder = imapFolder?.attributes?.contains("\\Sent") ?: true
+
+        if (isSentFolder) {
+          val emailAndNamePairs = mutableListOf<Pair<String, String?>>()
+          for (message in messages) {
+            emailAndNamePairs.addAll(getEmailAndNamePairs(message))
+          }
+
+          EmailAndNameWorker.enqueue(context, emailAndNamePairs)
+        }
+      } catch (e: MessagingException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+      }
+    }
+
+    /**
+     * Generate a list of [Pair] objects from the input message.
+     * This information will be retrieved from "to" and "cc" headers.
+     *
+     * @param msg The input [jakarta.mail.Message].
+     * @return <tt>[List]</tt> of [Pair] objects, which contains information
+     * about
+     * emails and names.
+     * @throws MessagingException when retrieve information about recipients.
+     */
+    private fun getEmailAndNamePairs(msg: Message): List<Pair<String, String>> {
+      val pairs = mutableListOf<Pair<String, String>>()
+
+      val addressesTo = msg.getRecipients(Message.RecipientType.TO)
+      if (addressesTo != null) {
+        for (address in addressesTo) {
+          val internetAddress = address as InternetAddress
+          pairs.add(Pair(internetAddress.address, internetAddress.personal))
+        }
+      }
+
+      val addressesCC = msg.getRecipients(Message.RecipientType.CC)
+      if (addressesCC != null) {
+        for (address in addressesCC) {
+          val internetAddress = address as InternetAddress
+          pairs.add(Pair(internetAddress.address, internetAddress.personal))
+        }
+      }
+
+      return pairs
     }
   }
 }

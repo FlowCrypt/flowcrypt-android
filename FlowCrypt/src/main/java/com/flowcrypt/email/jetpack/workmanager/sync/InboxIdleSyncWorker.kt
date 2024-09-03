@@ -12,21 +12,15 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
+import com.flowcrypt.email.api.email.gmail.GmailHistoryHandler
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.database.entity.MessageEntity.Companion.LABEL_IDS_SEPARATOR
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
-import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.util.exception.GmailAPIException
 import com.google.api.services.gmail.model.History
-import com.google.api.services.gmail.model.Thread
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Store
 import jakarta.mail.UIDFolder
-import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.eclipse.angus.mail.imap.IMAPFolder
@@ -161,83 +155,15 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
     accountEntity: AccountEntity, localFolder: LocalFolder,
     historyList: List<History>
   ) = withContext(Dispatchers.IO) {
-    GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
-                                                              newCandidatesMap,
-                                                              updateCandidatesMap,
-                                                              labelsToBeUpdatedMap ->
-      processDeletedMsgs(accountEntity, localFolder.fullName, deleteCandidatesUIDs)
-
-      val newCandidates = newCandidatesMap.values.toList()
-      if (newCandidates.isNotEmpty()) {
-        val gmailThreadInfoList: List<GmailThreadInfo>
-        val msgs: List<com.google.api.services.gmail.model.Message>
-
-        if (accountEntity.useConversationMode) {
-          val uniqueThreadIdList = newCandidates.map { it.threadId }.toSet()
-          gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
-            context = applicationContext,
-            accountEntity = accountEntity,
-            threads = uniqueThreadIdList.map { Thread().apply { id = it } },
-            format = GmailApiHelper.RESPONSE_FORMAT_FULL,
-            localFolder = localFolder
-          )
-
-          msgs = gmailThreadInfoList.map { it.lastMessage }
-        } else {
-          gmailThreadInfoList = emptyList()
-          msgs = GmailApiHelper.loadMsgsInParallel(
-            applicationContext, accountEntity,
-            newCandidates.toList(), localFolder
-          ).run {
-            if (accountEntity.showOnlyEncrypted == true) {
-              filter { it.hasPgp() }
-            } else this
-          }
-        }
-
-        val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
-        val isNew = applicationContext.isAppForegrounded()
-
-        val msgEntities = MessageEntity.genMessageEntities(
-          context = applicationContext,
-          account = accountEntity.email,
-          accountType = accountEntity.accountType,
-          label = localFolder.fullName,
-          msgsList = msgs,
-          isNew = isNew,
-          onlyPgpModeEnabled = isOnlyPgpModeEnabled
-        ) { message, messageEntity ->
-          if (accountEntity.useConversationMode) {
-            val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
-            messageEntity.copy(
-              subject = thread?.subject,
-              threadMessagesCount = thread?.messagesCount,
-              labelIds = thread?.labels?.joinToString(separator = LABEL_IDS_SEPARATOR),
-              hasAttachments = thread?.hasAttachments,
-              threadRecipientsAddresses = InternetAddress.toString(
-                thread?.recipients?.toTypedArray()
-              ),
-              hasPgp = thread?.hasPgpThings
-            )
-          } else {
-            messageEntity
-          }
-        }
-
-        processNewMsgs(accountEntity, localFolder, msgEntities)
-        GmailApiHelper.identifyAttachments(
-          msgEntities,
-          msgs,
-          accountEntity,
-          localFolder,
-          roomDatabase
-        )
-      }
-
-      processUpdatedMsgs(accountEntity, localFolder.fullName, updateCandidatesMap)
-
-      roomDatabase.msgDao()
-        .updateGmailLabels(accountEntity.email, localFolder.fullName, labelsToBeUpdatedMap)
+    GmailHistoryHandler.handleHistory(
+      applicationContext,
+      accountEntity,
+      localFolder,
+      historyList
+    ) { deleteCandidatesUIDs, _, updateCandidatesMap, _ ->
+      tryToRemoveNotifications(deleteCandidatesUIDs)
+      tryToShowNotificationsForNewMessages(accountEntity, localFolder)
+      removeNotificationForSeenMessages(updateCandidatesMap)
     }
   }
 

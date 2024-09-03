@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -11,21 +11,22 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 
 /**
  * @author Denys Bondarenko
  */
 abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
-  private val notificationManager = MessagesNotificationManager(applicationContext)
+  protected val notificationManager = MessagesNotificationManager(applicationContext)
 
   protected suspend fun processDeletedMsgs(
     cachedUIDSet: Set<Long>, remoteFolder: IMAPFolder,
@@ -42,8 +43,12 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
   ) {
     roomDatabase.msgDao()
       .deleteByUIDsSuspend(accountEntity.email, folderFullName, deleteCandidatesUIDs)
-    if (!GeneralUtil.isAppForegrounded()) {
-      for (uid in deleteCandidatesUIDs) {
+    tryToRemoveNotifications(deleteCandidatesUIDs)
+  }
+
+  protected fun tryToRemoveNotifications(uidList: Collection<Long>) {
+    if (!applicationContext.isAppForegrounded()) {
+      for (uid in uidList) {
         notificationManager.cancel(uid.toHex())
       }
     }
@@ -67,6 +72,10 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
   ) {
     roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderFullName, updateCandidates)
 
+    removeNotificationForSeenMessages(updateCandidates)
+  }
+
+  protected fun removeNotificationForSeenMessages(updateCandidates: Map<Long, Flags>) {
     if (!GeneralUtil.isAppForegrounded()) {
       for (item in updateCandidates) {
         val uid = item.key
@@ -112,6 +121,13 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
   ) {
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
 
+    tryToShowNotificationsForNewMessages(accountEntity, localFolder)
+  }
+
+  protected suspend fun tryToShowNotificationsForNewMessages(
+    accountEntity: AccountEntity,
+    localFolder: LocalFolder
+  ) {
     if (!GeneralUtil.isAppForegrounded()) {
       val detailsList =
         roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, localFolder.fullName)
