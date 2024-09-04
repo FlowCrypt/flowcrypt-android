@@ -56,6 +56,6 @@ fun Thread.getUniqueLabelsSet(): Set<String> {
 
 fun Thread.hasUnreadMessages(): Boolean {
   return messages?.any { message ->
-    message.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) != true
+    message.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) == true
   } ?: false
 }

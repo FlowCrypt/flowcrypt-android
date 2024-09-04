@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.gmail
 import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.LABEL_DRAFT
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.LABEL_TRASH
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.labelsToImapFlags
@@ -156,7 +157,20 @@ object GmailHistoryHandler {
           val threadsToBeUpdated = existingThreads.mapNotNull { threadMessageEntity ->
             val thread = gmailThreadInfoList.firstOrNull { it.id == threadMessageEntity.threadId }
             if (thread != null) {
-              threadMessageEntity.copy(
+              val updatedMessageEntity = MessageEntity.genMessageEntities(
+                context = applicationContext,
+                account = accountEntity.email,
+                accountType = accountEntity.accountType,
+                label = localFolder.fullName,
+                msgsList = listOf(thread.lastMessage),
+                isNew = isNew,
+                onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
+                draftIdsMap = draftIdsMap
+              ).first()
+
+              MsgsCacheManager.removeMessage(threadMessageEntity.id.toString())
+              updatedMessageEntity.copy(
+                id = threadMessageEntity.id,
                 threadMessagesCount = thread.messagesCount,
                 labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                 hasAttachments = thread.hasAttachments,
