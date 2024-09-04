@@ -275,11 +275,11 @@ class FlowCryptApplication : Application(), Configuration.Provider {
       }
     private var isAppForegroundedInternal = false
     override fun onStart(owner: LifecycleOwner) {
-      isAppForegroundedInternal = false
+      isAppForegroundedInternal = true
     }
 
     override fun onStop(owner: LifecycleOwner) {
-      isAppForegroundedInternal = true
+      isAppForegroundedInternal = false
     }
   }
 }

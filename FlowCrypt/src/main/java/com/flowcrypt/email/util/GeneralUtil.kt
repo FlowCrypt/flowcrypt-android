@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.util
 
-import android.app.ActivityManager
-import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
-import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ContentResolver
@@ -76,17 +73,6 @@ import java.util.concurrent.TimeUnit
  */
 class GeneralUtil {
   companion object {
-    /**
-     * Check is the app foregrounded or visible.
-     *
-     * @return true if the app is foregrounded or visible.
-     */
-    fun isAppForegrounded(): Boolean {
-      val appProcessInfo = ActivityManager.RunningAppProcessInfo()
-      ActivityManager.getMyMemoryState(appProcessInfo)
-      return appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE
-    }
-
     /**
      * This method checks is it a debug or uiTests build.
      *

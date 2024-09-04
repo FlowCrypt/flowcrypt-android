@@ -38,6 +38,11 @@ fun Context?.hasActiveConnection(): Boolean {
   } ?: false
 }
 
+/**
+ * Check is the app foregrounded or visible.
+ *
+ * @return true if the app is foregrounded or visible.
+ */
 fun Context?.isAppForegrounded(): Boolean {
   return (this as? FlowCryptApplication)?.appForegroundedObserver?.isAppForegrounded ?: false
 }

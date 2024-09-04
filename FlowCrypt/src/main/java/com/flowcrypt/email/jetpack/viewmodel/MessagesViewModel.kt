@@ -6,6 +6,7 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
@@ -34,6 +35,7 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.MessageEntity.Companion.LABEL_IDS_SEPARATOR
+import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
@@ -964,6 +966,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     hasPgpAfterAdditionalSearchSet: Set<Long>,
     updatedMsgs: Array<Message>
   ) = withContext(Dispatchers.IO) {
+    val context: Context = getApplication()
     val email = accountEntity.email
     val folderName = localFolder.fullName
 
@@ -974,7 +977,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderName, deleteCandidatesUIDs)
 
     val folderType = FoldersManager.getFolderType(localFolder)
-    if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
+    if (!context.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
       val notificationManager = MessagesNotificationManager(getApplication())
       for (uid in deleteCandidatesUIDs) {
         notificationManager.cancel(uid.toHex())
@@ -984,7 +987,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val newCandidates = EmailUtil.genNewCandidates(msgsUIDs, remoteFolder, newMsgs)
 
     val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
-    val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
+    val isNew = !context.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
     val msgEntities = MessageEntity.genMessageEntities(
       context = getApplication(),

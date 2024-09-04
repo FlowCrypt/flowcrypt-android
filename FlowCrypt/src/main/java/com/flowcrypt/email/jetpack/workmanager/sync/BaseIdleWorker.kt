@@ -14,7 +14,6 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.service.MessagesNotificationManager
-import com.flowcrypt.email.util.GeneralUtil
 import jakarta.mail.Flags
 import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
@@ -76,7 +75,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
   }
 
   protected fun removeNotificationForSeenMessages(updateCandidates: Map<Long, Flags>) {
-    if (!GeneralUtil.isAppForegrounded()) {
+    if (!applicationContext.isAppForegrounded()) {
       for (item in updateCandidates) {
         val uid = item.key
         if (item.value.contains(Flags.Flag.SEEN)) {
@@ -105,7 +104,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
         label = localFolder.fullName,
         folder = remoteFolder,
         msgs = newMsgs,
-        isNew = !GeneralUtil.isAppForegrounded(),
+        isNew = !applicationContext.isAppForegrounded(),
         isOnlyPgpModeEnabled = false,
         hasPgpAfterAdditionalSearchSet = hasPgpAfterAdditionalSearchSet
       )
@@ -128,7 +127,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
     accountEntity: AccountEntity,
     localFolder: LocalFolder
   ) {
-    if (!GeneralUtil.isAppForegrounded()) {
+    if (!applicationContext.isAppForegrounded()) {
       val detailsList =
         roomDatabase.msgDao().getNewMsgsSuspend(accountEntity.email, localFolder.fullName)
       notificationManager.notify(applicationContext, accountEntity, localFolder, detailsList)
