@@ -21,8 +21,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getRecipients
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getSubject
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.extractSubject
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueLabelsSet
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasUnreadMessages
@@ -1231,20 +1230,12 @@ class GmailApiHelper {
       context: Context
     ): GmailThreadInfo {
       val receiverEmail = accountEntity.email
-      val subject = thread.messages?.getOrNull(0)?.takeIf { message ->
-        message.getRecipients("From").any { internetAddress ->
-          internetAddress.address.equals(receiverEmail, true)
-        } || (thread.messages?.size ?: 0) == 1
-      }?.getSubject()
-        ?: thread.messages?.getOrNull(1)?.getSubject()
-        ?: context.getString(R.string.no_subject)
-
       val gmailThreadInfo = GmailThreadInfo(
         id = thread.id,
         lastMessage = requireNotNull(thread.messages?.last()),
         messagesCount = thread.messages?.size ?: 0,
         recipients = thread.getUniqueRecipients(receiverEmail),
-        subject = subject,
+        subject = thread.extractSubject(context, receiverEmail),
         labels = thread.getUniqueLabelsSet(),
         hasUnreadMessages = thread.hasUnreadMessages()
       )
