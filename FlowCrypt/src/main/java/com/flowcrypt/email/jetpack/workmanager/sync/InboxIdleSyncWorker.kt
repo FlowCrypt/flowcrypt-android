@@ -13,10 +13,8 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.GmailHistoryHandler
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.GmailAPIException
-import com.google.api.services.gmail.model.History
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Store
@@ -129,7 +127,16 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
             historyId = labelEntityHistoryId.max(msgEntityHistoryId)
           )
 
-          handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
+          GmailHistoryHandler.handleHistory(
+            applicationContext,
+            accountEntity,
+            inboxLocalFolder,
+            historyList
+          ) { deleteCandidatesUIDs, _, updateCandidatesMap, _ ->
+            tryToRemoveNotifications(deleteCandidatesUIDs)
+            tryToShowNotificationsForNewMessages(accountEntity, inboxLocalFolder)
+            removeNotificationForSeenMessages(updateCandidatesMap)
+          }
         } catch (e: Exception) {
           if (e is GmailAPIException && e.code == HttpURLConnection.HTTP_NOT_FOUND) {
             /*
@@ -148,22 +155,6 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           }
         }
       }
-    }
-  }
-
-  private suspend fun handleMsgsFromHistory(
-    accountEntity: AccountEntity, localFolder: LocalFolder,
-    historyList: List<History>
-  ) = withContext(Dispatchers.IO) {
-    GmailHistoryHandler.handleHistory(
-      applicationContext,
-      accountEntity,
-      localFolder,
-      historyList
-    ) { deleteCandidatesUIDs, _, updateCandidatesMap, _ ->
-      tryToRemoveNotifications(deleteCandidatesUIDs)
-      tryToShowNotificationsForNewMessages(accountEntity, localFolder)
-      removeNotificationForSeenMessages(updateCandidatesMap)
     }
   }
 
