@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -14,13 +14,14 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import org.eclipse.angus.mail.imap.IMAPFolder
+import com.flowcrypt.email.database.entity.MessageEntity
 import jakarta.mail.Flags
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 
 /**
  * @author Denys Bondarenko
@@ -37,9 +38,10 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) =
     withContext(Dispatchers.IO) {
-      deleteMsgsPermanentlyInternal(account) { folderName, uidList ->
+      deleteMsgsPermanentlyInternal(account) { folderName, entities ->
         store.getFolder(folderName).use { folder ->
           val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val uidList = entities.map { it.uid }
           val msgs: List<Message> =
             imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
           if (msgs.isNotEmpty()) {
@@ -50,19 +52,27 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
     }
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity) = withContext(Dispatchers.IO) {
-    deleteMsgsPermanentlyInternal(account) { _, uidList ->
+    deleteMsgsPermanentlyInternal(account) { _, entities ->
       executeGMailAPICall(applicationContext) {
-        GmailApiHelper.deleteMsgsPermanently(
-          context = applicationContext,
-          accountEntity = account,
-          ids = uidList.map { java.lang.Long.toHexString(it).lowercase() })
+        if (account.useConversationMode) {
+          GmailApiHelper.deleteThreadsPermanently(
+            context = applicationContext,
+            accountEntity = account,
+            ids = entities.mapNotNull { it.threadId })
+        } else {
+          val uidList = entities.map { it.uid }
+          GmailApiHelper.deleteMsgsPermanently(
+            context = applicationContext,
+            accountEntity = account,
+            ids = uidList.map { java.lang.Long.toHexString(it).lowercase() })
+        }
       }
     }
   }
 
   private suspend fun deleteMsgsPermanentlyInternal(
     account: AccountEntity,
-    action: suspend (folderName: String, list: List<Long>) -> Unit
+    action: suspend (folderName: String, entities: List<MessageEntity>) -> Unit
   ) = withContext(Dispatchers.IO)
   {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
@@ -77,9 +87,9 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
       if (candidatesForDeleting.isEmpty()) {
         break
       } else {
-        val uidList = candidatesForDeleting.map { it.uid }
-        action.invoke(trash.fullName, uidList)
-        roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
+        action.invoke(trash.fullName, candidatesForDeleting)
+        roomDatabase.msgDao()
+          .deleteByUIDsSuspend(account.email, trash.fullName, candidatesForDeleting.map { it.uid })
       }
     }
   }

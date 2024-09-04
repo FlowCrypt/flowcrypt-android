@@ -594,6 +594,34 @@ class GmailApiHelper {
       }
     }
 
+    suspend fun deleteThreadsPermanently(
+      context: Context, accountEntity: AccountEntity,
+      ids: List<String>
+    ) {
+      withContext(Dispatchers.IO) {
+        val gmailApiService = generateGmailApiService(context, accountEntity)
+        val batch = gmailApiService.batch()
+
+        for (id in ids) {
+          val request = gmailApiService
+            .users()
+            .threads()
+            .delete(DEFAULT_USER_ID, id)
+          request.queue(batch, object : JsonBatchCallback<Void>() {
+            override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {
+              //need to think about it
+            }
+
+            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+              //need to think about it
+            }
+          })
+        }
+
+        batch.execute()
+      }
+    }
+
     suspend fun deleteDrafts(
       context: Context,
       accountEntity: AccountEntity,
