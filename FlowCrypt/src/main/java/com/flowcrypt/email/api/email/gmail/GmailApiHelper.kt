@@ -59,6 +59,7 @@ import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListThreadsResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
+import com.google.api.services.gmail.model.ModifyThreadRequest
 import com.google.api.services.gmail.model.Thread
 import jakarta.mail.Flags
 import jakarta.mail.MessagingException
@@ -546,6 +547,36 @@ class GmailApiHelper {
           this.removeLabelIds = removeLabelIds
         })
         .execute()
+    }
+
+    suspend fun changeLabelsForThreads(
+      context: Context,
+      accountEntity: AccountEntity,
+      threadIdList: Collection<String>,
+      addLabelIds: List<String>? = null,
+      removeLabelIds: List<String>? = null
+    ) = withContext(Dispatchers.IO) {
+      if (addLabelIds == null && removeLabelIds == null) return@withContext
+
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      for (threadId in threadIdList) {
+        val request = gmailApiService
+          .users()
+          .threads()
+          .modify(DEFAULT_USER_ID, threadId, ModifyThreadRequest().apply {
+            this.addLabelIds = addLabelIds
+            this.removeLabelIds = removeLabelIds
+          })
+
+        request.queue(batch, object : JsonBatchCallback<Thread>() {
+          override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {}
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {}
+        })
+      }
+
+      batch.execute()
     }
 
     suspend fun deleteMsgsPermanently(
