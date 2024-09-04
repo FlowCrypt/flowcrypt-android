@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -15,14 +15,15 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import org.eclipse.angus.mail.imap.IMAPFolder
-import org.eclipse.angus.mail.imap.IMAPStore
+import com.flowcrypt.email.database.entity.MessageEntity
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPStore
 
 
 /**
@@ -42,14 +43,22 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
   }
 
   private suspend fun moveMsgsToTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
-    moveMsgsToTrashInternal(account) { _, uidList ->
+    moveMsgsToTrashInternal(account) { _, entities ->
       executeGMailAPICall(applicationContext) {
         //todo-denbond7 need to improve this logic. We should delete local messages only if we'll
         // success delete remote messages
-        GmailApiHelper.moveToTrash(
-          context = applicationContext,
-          accountEntity = account,
-          ids = uidList.map { java.lang.Long.toHexString(it).lowercase() })
+        if (account.useConversationMode) {
+          GmailApiHelper.moveThreadToTrash(
+            context = applicationContext,
+            accountEntity = account,
+            ids = entities.mapNotNull { it.threadId })
+        } else {
+          val uidList = entities.map { it.uid }
+          GmailApiHelper.moveToTrash(
+            context = applicationContext,
+            accountEntity = account,
+            ids = uidList.map { java.lang.Long.toHexString(it).lowercase() })
+        }
         //need to wait while the Gmail server will update labels
         delay(2000)
       }
@@ -58,12 +67,13 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
 
   private suspend fun moveMsgsToTrash(account: AccountEntity, store: Store) =
     withContext(Dispatchers.IO) {
-      moveMsgsToTrashInternal(account) { folderName, uidList ->
+      moveMsgsToTrashInternal(account) { folderName, entities ->
         store.getFolder(folderName).use { folder ->
           val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account)
           val trash = foldersManager.folderTrash ?: return@use
           val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
           val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val uidList = entities.map { it.uid }
           val msgs: List<Message> =
             remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
           if (msgs.isNotEmpty()) {
@@ -79,7 +89,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
 
   private suspend fun moveMsgsToTrashInternal(
     account: AccountEntity,
-    action: suspend (folderName: String, list: List<Long>) -> Unit
+    action: suspend (folderName: String, entities: List<MessageEntity>) -> Unit
   ) = withContext(Dispatchers.IO)
   {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
@@ -103,9 +113,9 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
           ) {
             continue
           }
-          val uidList = filteredMsgs.map { it.uid }
-          action.invoke(srcFolder, uidList)
-          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, srcFolder, uidList)
+          action.invoke(srcFolder, filteredMsgs)
+          roomDatabase.msgDao()
+            .deleteByUIDsSuspend(account.email, srcFolder, filteredMsgs.map { it.uid })
         }
       }
     }

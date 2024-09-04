@@ -645,6 +645,34 @@ class GmailApiHelper {
         batch.execute()
       }
 
+    suspend fun moveThreadToTrash(
+      context: Context,
+      accountEntity: AccountEntity,
+      ids: List<String>
+    ) =
+      withContext(Dispatchers.IO) {
+        val gmailApiService = generateGmailApiService(context, accountEntity)
+        val batch = gmailApiService.batch()
+
+        for (id in ids) {
+          val request = gmailApiService
+            .users()
+            .threads()
+            .trash(DEFAULT_USER_ID, id)
+          request.queue(batch, object : JsonBatchCallback<Thread>() {
+            override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {
+              //need to think about it
+            }
+
+            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+              //need to think about it
+            }
+          })
+        }
+
+        batch.execute()
+      }
+
     suspend fun loadTrashMsgs(context: Context, accountEntity: AccountEntity): List<Message> =
       withContext(Dispatchers.IO) {
         val gmailApiService = generateGmailApiService(context, accountEntity)
