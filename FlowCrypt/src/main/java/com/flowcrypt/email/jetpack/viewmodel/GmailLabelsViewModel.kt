@@ -118,13 +118,23 @@ class GmailLabelsViewModel(
             it.initialState != MaterialCheckBox.STATE_UNCHECKED && it.state == MaterialCheckBox.STATE_UNCHECKED
           }
 
-          GmailApiHelper.changeLabels(
-            context = getApplication(),
-            accountEntity = activeAccount,
-            ids = messageEntities.map { it.uidAsHEX },
-            addLabelIds = labelsToBeAdded.map { it.id },
-            removeLabelIds = labelsToBeRemoved.map { it.id }
-          )
+          if (activeAccount.useConversationMode) {
+            GmailApiHelper.changeLabelsForThreads(
+              context = getApplication(),
+              accountEntity = activeAccount,
+              threadIdList = messageEntities.mapNotNull { it.threadId }.toSet(),
+              addLabelIds = labelsToBeAdded.map { it.id },
+              removeLabelIds = labelsToBeRemoved.map { it.id }
+            )
+          } else {
+            GmailApiHelper.changeLabels(
+              context = getApplication(),
+              accountEntity = activeAccount,
+              ids = messageEntities.map { it.uidAsHEX },
+              addLabelIds = labelsToBeAdded.map { it.id },
+              removeLabelIds = labelsToBeRemoved.map { it.id }
+            )
+          }
 
           //update labels in the local cache
           val toBeDeletedMessageEntities = mutableListOf<MessageEntity>()

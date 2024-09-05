@@ -30,6 +30,9 @@ import java.io.File
 import java.io.FileFilter
 import java.util.Properties
 
+/**
+ * @author Denys Bondarenko
+ */
 class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
