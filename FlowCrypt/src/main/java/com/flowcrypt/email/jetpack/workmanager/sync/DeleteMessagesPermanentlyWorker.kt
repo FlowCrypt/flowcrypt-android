@@ -58,7 +58,8 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
           GmailApiHelper.deleteThreadsPermanently(
             context = applicationContext,
             accountEntity = account,
-            ids = entities.mapNotNull { it.threadId })
+            ids = entities.mapNotNull { it.threadId }.toSet()
+          )
         } else {
           val uidList = entities.map { it.uid }
           GmailApiHelper.deleteMsgsPermanently(

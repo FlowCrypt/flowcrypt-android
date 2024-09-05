@@ -676,7 +676,7 @@ class GmailApiHelper {
     suspend fun moveThreadToTrash(
       context: Context,
       accountEntity: AccountEntity,
-      ids: List<String>
+      ids: Collection<String>
     ) =
       withContext(Dispatchers.IO) {
         val gmailApiService = generateGmailApiService(context, accountEntity)
