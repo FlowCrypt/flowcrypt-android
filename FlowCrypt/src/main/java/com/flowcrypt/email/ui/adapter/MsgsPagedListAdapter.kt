@@ -232,7 +232,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         val senderAddress = when (folderType) {
           FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
 
-          else -> messageEntity.generateSenderAddress(context, folderType)
+          else -> messageEntity.generateSenderAddresses(context, folderType)
         }
         binding.textViewSenderAddress.text = senderAddress
 

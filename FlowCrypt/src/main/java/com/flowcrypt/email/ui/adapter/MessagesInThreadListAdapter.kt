@@ -7,6 +7,10 @@ package com.flowcrypt.email.ui.adapter
 
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +18,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
@@ -50,7 +53,7 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
     fun bindTo(item: MessageEntity, onMessageClickListener: OnMessageClickListener) {
       val context = itemView.context
       itemView.setOnClickListener { onMessageClickListener.onMessageClick(item) }
-      val senderAddress = EmailUtil.getFirstAddressString(item.from)
+      val senderAddress = item.generateFromText(context)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       )
@@ -77,8 +80,19 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
             MaterialColors.getColor(context, R.attr.itemTitleColor, Color.BLACK)
           )
         }
+
+        if (item.isDraft) {
+          val spannableStringBuilder = SpannableStringBuilder(text)
+          spannableStringBuilder.append(" ")
+          val timeSpannable = SpannableString("(${context.getString(R.string.draft)})")
+          timeSpannable.setSpan(
+            ForegroundColorSpan(Color.RED), 0, timeSpannable.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+          )
+          spannableStringBuilder.append(timeSpannable)
+          text = spannableStringBuilder
+        }
       }
-      binding.textViewSender.text = senderAddress
       binding.textViewDate.apply {
         text = DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
         if (item.isSeen) {

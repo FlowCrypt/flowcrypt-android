@@ -10,6 +10,9 @@ import androidx.lifecycle.asFlow
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInReplyTo
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,7 +45,22 @@ class ThreadDetailsViewModel(
               application,
               activeAccount,
               initialMessageEntity.threadId
-            )
+            ).toMutableList().apply {
+              //put drafts in the right position
+              val drafts = filter { it.isDraft() }
+              drafts.forEach { draft ->
+                val inReplyToValue = draft.getInReplyTo()
+                val inReplyToMessage = firstOrNull { it.getMessageId() == inReplyToValue }
+
+                if (inReplyToMessage != null) {
+                  val inReplyToMessagePosition = indexOf(inReplyToMessage)
+                  if (inReplyToMessagePosition != -1) {
+                    remove(draft)
+                    add(inReplyToMessagePosition + 1, draft)
+                  }
+                }
+              }
+            }
 
             val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
             val messageEntities = MessageEntity.genMessageEntities(

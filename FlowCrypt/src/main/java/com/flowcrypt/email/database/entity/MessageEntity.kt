@@ -260,7 +260,7 @@ data class MessageEntity(
     return result
   }
 
-  fun generateSenderAddress(
+  fun generateSenderAddresses(
     context: Context,
     folderType: FoldersManager.FolderType?
   ): CharSequence {
@@ -344,6 +344,15 @@ data class MessageEntity(
           it.personalOrEmail.split(" ").firstOrNull() ?: it.personalOrEmail
         }
       })
+  }
+
+  fun generateFromText(context: Context): String {
+    val fromAddress = from.firstOrNull() ?: return ""
+    return if (fromAddress.address.equals(account, true)) {
+      context.getString(R.string.me)
+    } else {
+      EmailUtil.getFirstAddressString(from)
+    }
   }
 
   private fun generateAddresses(
