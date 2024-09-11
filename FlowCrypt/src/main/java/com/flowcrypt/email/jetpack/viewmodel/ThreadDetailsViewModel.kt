@@ -62,12 +62,15 @@ class ThreadDetailsViewModel(
               }
             }
 
+            roomDatabase.msgDao()
+              .updateSuspend(initialMessageEntity.copy(threadMessagesCount = messagesInThread.size))
+
             val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
             val messageEntities = MessageEntity.genMessageEntities(
               context = getApplication(),
               account = activeAccount.email,
               accountType = activeAccount.accountType,
-              label = "INBOX",
+              label = GmailApiHelper.LABEL_INBOX, //fix me
               msgsList = messagesInThread,
               isNew = false,
               onlyPgpModeEnabled = isOnlyPgpModeEnabled,
@@ -76,16 +79,38 @@ class ThreadDetailsViewModel(
               messageEntity.copy(snippet = message.snippet, isVisible = false)
             }
 
-            roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
-            GmailApiHelper.identifyAttachments(
-              msgEntities = messageEntities,
-              msgs = messagesInThread,
-              account = activeAccount,
-              localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
-              roomDatabase = roomDatabase
+            roomDatabase.msgDao().clearCacheForGmailThread(
+              account = activeAccount.email,
+              folder = GmailApiHelper.LABEL_INBOX, //fix me
+              threadId = initialMessageEntity.threadId
             )
 
-            emit(messageEntities)
+            messageEntities.filter {
+              it.uid != initialMessageEntity.uid
+            }.let {
+              roomDatabase.msgDao().insertWithReplaceSuspend(it)
+              GmailApiHelper.identifyAttachments(
+                msgEntities = it,
+                msgs = messagesInThread,
+                account = activeAccount,
+                localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
+                roomDatabase = roomDatabase
+              )
+            }
+
+            val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
+              activeAccount.email,
+              GmailApiHelper.LABEL_INBOX,//fix me
+              initialMessageEntity.threadId,
+            )
+
+            val finalList = messageEntities.map { fromServerMessageEntity ->
+              fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
+                it.uid == fromServerMessageEntity.uid
+              }?.id)
+            }
+
+            emit(finalList)
           } catch (e: Exception) {
             e.printStackTraceIfDebugOnly()
             emit(listOf(initialMessageEntity))

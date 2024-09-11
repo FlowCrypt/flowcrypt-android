@@ -83,7 +83,7 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
               navController?.navigate(
                 GmailThreadFragmentDirections.actionGmailThreadFragmentToViewPagerMessageDetailsFragment(
                   messageEntityId = it,
-                  isThreadMode = true,
+                  sortedEntityIdListForThread = getSortedEntityIdListForThread(),
                   localFolder = LocalFolder(
                     messageEntity.account,
                     GmailApiHelper.LABEL_INBOX
@@ -94,6 +94,10 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
         }
       }
     })
+
+  private fun getSortedEntityIdListForThread(): LongArray {
+    return messagesInThreadListAdapter.currentList.mapNotNull { it.id }.toLongArray()
+  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)

@@ -46,7 +46,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
         return MessagesViewPagerViewModel(
           initialMessageEntityId = args.messageEntityId,
           localFolder = args.localFolder,
-          isThreadMode = args.isThreadMode,
+          sortedEntityIdListForThread = args.sortedEntityIdListForThread?.toList(),
           application = requireActivity().application
         ) as T
       }
@@ -67,7 +67,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
         localFolder = args.localFolder,
         initialList = messagesViewPagerViewModel.messageEntitiesLiveData.value?.data ?: emptyList(),
         fragment = this@ViewPagerMessageDetailsFragment,
-        isThreadMode = args.isThreadMode
+        isThreadMode = args.sortedEntityIdListForThread?.isNotEmpty() == true
       ) { _, _ -> }
 
       addItemDecoration(DividerItemDecoration(view.context, ORIENTATION_HORIZONTAL))

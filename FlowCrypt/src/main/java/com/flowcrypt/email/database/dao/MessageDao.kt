@@ -141,28 +141,6 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     limit: Int
   ): List<MessageEntity>
 
-  @Query(
-    "SELECT * FROM (" +
-        "SELECT * FROM messages " +
-        "WHERE account = :account AND folder = :folder AND thread_id = :threadId AND received_date > :date " +
-        "ORDER BY received_date DESC " +
-        "LIMIT :limit) " +
-        "UNION " +
-        "SELECT * FROM (" +
-        "SELECT * FROM messages " +
-        "WHERE account = :account AND folder = :folder AND thread_id = :threadId AND received_date <= :date " +
-        "ORDER BY received_date ASC " +
-        "LIMIT :limit) " +
-        "ORDER BY received_date ASC"
-  )
-  abstract suspend fun getMessagesInThreadForViewPager(
-    account: String,
-    folder: String,
-    threadId: String,
-    date: Long,
-    limit: Int
-  ): List<MessageEntity>
-
   @Query("SELECT * FROM messages WHERE account = :account AND folder = :folder AND uid = :uid")
   abstract fun getMsgLiveData(account: String, folder: String, uid: Long): LiveData<MessageEntity?>
 
@@ -435,6 +413,16 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query("SELECT COUNT(*) FROM messages WHERE account = :account AND folder = :label")
   abstract suspend fun getMsgsCount(account: String, label: String): Int
+
+  @Query("SELECT * FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId")
+  abstract suspend fun getMessagesForGmailThread(
+    account: String,
+    folder: String,
+    threadId: String
+  ): List<MessageEntity>
+
+  @Query("DELETE FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId AND is_visible = 0")
+  abstract suspend fun clearCacheForGmailThread(account: String?, folder: String, threadId: String)
 
   @Transaction
   open fun deleteByUIDs(account: String?, label: String?, msgsUID: Collection<Long>) {

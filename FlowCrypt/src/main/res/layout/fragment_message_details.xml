@@ -297,6 +297,9 @@
 
                     <com.flowcrypt.email.ui.widget.EmailWebView
                         android:id="@+id/emailWebView"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
