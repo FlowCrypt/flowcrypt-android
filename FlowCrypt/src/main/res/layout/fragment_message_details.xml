@@ -122,25 +122,6 @@
                     tools:listitem="@layout/item_label_badge"
                     tools:orientation="horizontal" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/displayFullConversation"
-                    style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textAllCaps="false"
-                    android:textColor="@color/gray_default"
-                    android:visibility="gone"
-                    app:icon="@drawable/ic_question_answer_24"
-                    app:iconGravity="textStart"
-                    app:iconSize="24dp"
-                    app:iconTint="@color/gray_default"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewLabels"
-                    tools:text="Show a full conversation of 25 messages"
-                    tools:visibility="visible" />
-
                 <ImageButton
                     android:id="@+id/imageButtonEditDraft"
                     android:layout_width="wrap_content"
@@ -165,7 +146,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/displayFullConversation" />
+                    app:layout_constraintTop_toBottomOf="@+id/recyclerViewLabels" />
 
                 <TextView
                     android:id="@+id/textViewDate"

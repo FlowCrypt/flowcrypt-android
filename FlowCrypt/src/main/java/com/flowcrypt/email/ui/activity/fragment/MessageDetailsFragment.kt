@@ -888,29 +888,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun updateViews(messageEntity: MessageEntity) {
     updateActionBar(messageEntity)
 
-    messageEntity.threadMessagesCount?.let { threadMessagesCount ->
-      if (threadMessagesCount > 1 && !args.isThreadMode) {
-        binding?.displayFullConversation?.apply {
-          visible()
-          text = resources.getQuantityString(
-            R.plurals.show_full_conversation, threadMessagesCount, threadMessagesCount
-          )
-          messageEntity.id?.let {
-            setOnClickListener {
-              navController?.navigate(
-                object : NavDirections {
-                  override val actionId = R.id.gmailThreadFragment
-                  override val arguments = GmailThreadFragmentArgs(
-                    messageEntityId = messageEntity.id
-                  ).toBundle()
-                }
-              )
-            }
-          }
-        }
-      }
-    }
-
     binding?.imageButtonReplyAll?.visibleOrInvisible(
       !messageEntity.isOutboxMsg && !messageEntity.isDraft
     )

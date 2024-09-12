@@ -22,6 +22,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentNewMessageDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
@@ -101,8 +102,15 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    updateActionBar()
+
     initViews()
     setupThreadDetailsViewModel()
+  }
+
+  private fun updateActionBar() {
+    supportActionBar?.title = null
+    supportActionBar?.subtitle = null
   }
 
   private fun setupThreadDetailsViewModel() {

@@ -428,6 +428,9 @@
         <action
             android:id="@+id/action_messagesListFragment_to_viewPagerMessageDetailsFragment"
             app:destination="@id/viewPagerMessageDetailsFragment" />
+        <action
+            android:id="@+id/action_messagesListFragment_to_gmailThreadFragment"
+            app:destination="@id/gmailThreadFragment" />
     </fragment>
 
     <fragment

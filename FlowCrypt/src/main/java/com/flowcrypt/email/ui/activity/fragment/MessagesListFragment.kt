@@ -421,14 +421,28 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             )
           } else {
             currentFolder?.let { localFolder ->
-              navController?.navigateSafe(
-                currentDestinationId = R.id.messagesListFragment,
-                directions = MessagesListFragmentDirections
-                  .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
-                    messageEntityId = msgEntity.id ?: -1,
-                    localFolder = localFolder
-                  )
-              )
+              if (account?.isGoogleSignInAccount == true
+                && account?.useAPI == true
+                && account?.useConversationMode == true
+              ) {
+                navController?.navigateSafe(
+                  currentDestinationId = R.id.messagesListFragment,
+                  directions = MessagesListFragmentDirections
+                    .actionMessagesListFragmentToGmailThreadFragment(
+                      messageEntityId = msgEntity.id ?: -1,
+                      //localFolder = localFolder
+                    )
+                )
+              } else {
+                navController?.navigateSafe(
+                  currentDestinationId = R.id.messagesListFragment,
+                  directions = MessagesListFragmentDirections
+                    .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
+                      messageEntityId = msgEntity.id ?: -1,
+                      localFolder = localFolder
+                    )
+                )
+              }
             }
           }
         }
