@@ -237,15 +237,14 @@ class GmailApiHelper {
     suspend fun getWholeMimeMessageInputStream(
       context: Context,
       account: AccountEntity?,
-      messageEntity: MessageEntity
+      messageId: String
     ): InputStream = withContext(Dispatchers.IO) {
-      val msgId = messageEntity.uidAsHEX
       val gmailApiService = generateGmailApiService(context, account)
 
       val message = gmailApiService
         .users()
         .messages()
-        .get(DEFAULT_USER_ID, msgId)
+        .get(DEFAULT_USER_ID, messageId)
         .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
       message.fields = "raw"
 
@@ -415,7 +414,7 @@ class GmailApiHelper {
       threadId: String,
       format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
-      fields: List<String>? = FULL_INFO_WITHOUT_DATA
+      fields: List<String>? = null
     ): GmailThreadInfo = withContext(Dispatchers.IO)
     {
       val gmailApiService = generateGmailApiService(context, accountEntity)
@@ -1288,7 +1287,7 @@ class GmailApiHelper {
       val receiverEmail = accountEntity.email
       val gmailThreadInfo = GmailThreadInfo(
         id = thread.id,
-        lastMessage = requireNotNull(thread.messages?.last()),
+        lastMessage = requireNotNull(thread.messages?.last { !it.labelIds.contains(LABEL_DRAFT) }),
         messagesCount = thread.messages?.size ?: 0,
         recipients = thread.getUniqueRecipients(receiverEmail),
         subject = thread.extractSubject(context, receiverEmail),

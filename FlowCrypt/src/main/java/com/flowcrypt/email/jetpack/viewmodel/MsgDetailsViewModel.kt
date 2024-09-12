@@ -674,7 +674,7 @@ class MsgDetailsViewModel(
                 GmailApiHelper.getWholeMimeMessageInputStream(
                   context = getApplication(),
                   account = accountEntity,
-                  messageEntity = messageEntity
+                  messageId = msgFullInfo.id
                 )
               )
               MsgsCacheManager.storeMsg(

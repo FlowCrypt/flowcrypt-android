@@ -85,18 +85,14 @@ class ThreadDetailsViewModel(
               threadId = initialMessageEntity.threadId
             )
 
-            messageEntities.filter {
-              it.uid != initialMessageEntity.uid
-            }.let {
-              roomDatabase.msgDao().insertWithReplaceSuspend(it)
-              GmailApiHelper.identifyAttachments(
-                msgEntities = it,
-                msgs = messagesInThread,
-                account = activeAccount,
-                localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
-                roomDatabase = roomDatabase
-              )
-            }
+            roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
+            GmailApiHelper.identifyAttachments(
+              msgEntities = messageEntities,
+              msgs = messagesInThread,
+              account = activeAccount,
+              localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
+              roomDatabase = roomDatabase
+            )
 
             val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
               activeAccount.email,

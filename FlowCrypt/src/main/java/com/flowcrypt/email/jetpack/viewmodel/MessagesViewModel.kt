@@ -550,7 +550,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                   threadRecipientsAddresses = InternetAddress.toString(
                     thread.recipients.toTypedArray()
                   ),
-                  hasPgp = thread.hasPgpThings
+                  hasPgp = thread.hasPgpThings,
+                  uid = System.nanoTime()
                 )
               } else {
                 messageEntity
