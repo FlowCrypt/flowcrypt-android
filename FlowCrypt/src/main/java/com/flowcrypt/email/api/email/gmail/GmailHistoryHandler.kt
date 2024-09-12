@@ -63,7 +63,7 @@ object GmailHistoryHandler {
         .deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs)
 
       val folderType = FoldersManager.getFolderType(localFolder)
-      if (folderType === FoldersManager.FolderType.INBOX) {
+      if (folderType == FoldersManager.FolderType.INBOX) {
         val notificationManager = MessagesNotificationManager(applicationContext)
         for (uid in deleteCandidatesUIDs) {
           notificationManager.cancel(uid.toHex())
@@ -134,7 +134,7 @@ object GmailHistoryHandler {
               threadMessagesCount = thread?.messagesCount,
               labelIds = thread?.labels?.joinToString(separator = LABEL_IDS_SEPARATOR),
               hasAttachments = thread?.hasAttachments,
-              threadRecipientsAddresses = InternetAddress.toString(
+              fromAddresses = InternetAddress.toString(
                 thread?.recipients?.toTypedArray()
               ),
               hasPgp = thread?.hasPgpThings
@@ -174,7 +174,7 @@ object GmailHistoryHandler {
                 threadMessagesCount = thread.messagesCount,
                 labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                 hasAttachments = thread.hasAttachments,
-                threadRecipientsAddresses = InternetAddress.toString(
+                fromAddresses = InternetAddress.toString(
                   thread.recipients.toTypedArray()
                 ),
                 hasPgp = thread.hasPgpThings,
@@ -226,7 +226,7 @@ object GmailHistoryHandler {
             threadMessagesCount = thread?.messagesCount,
             labelIds = thread?.labels?.joinToString(separator = LABEL_IDS_SEPARATOR),
             hasAttachments = thread?.hasAttachments,
-            threadRecipientsAddresses = InternetAddress.toString(
+            fromAddresses = InternetAddress.toString(
               thread?.recipients?.toTypedArray()
             ),
             hasPgp = thread?.hasPgpThings
@@ -240,7 +240,6 @@ object GmailHistoryHandler {
 
         roomDatabase.msgDao()
           .updateFlagsSuspend(accountEntity.email, localFolder.fullName, map)
-
 
         val m = labelsToBeUpdatedMap.keys//messages ids
         val threadIds2 = roomDatabase.msgDao()
@@ -272,7 +271,7 @@ object GmailHistoryHandler {
             threadMessagesCount = thread?.messagesCount,
             labelIds = thread?.labels?.joinToString(separator = LABEL_IDS_SEPARATOR),
             hasAttachments = thread?.hasAttachments,
-            threadRecipientsAddresses = InternetAddress.toString(
+            fromAddresses = InternetAddress.toString(
               thread?.recipients?.toTypedArray()
             ),
             hasPgp = thread?.hasPgpThings
@@ -289,7 +288,7 @@ object GmailHistoryHandler {
           .updateGmailLabels(accountEntity.email, localFolder.fullName, labelsToBeUpdatedMap)
       }
 
-      if (folderType === FoldersManager.FolderType.SENT) {
+      if (folderType == FoldersManager.FolderType.SENT) {
         val session = Session.getInstance(Properties())
         GeneralUtil.updateLocalContactsIfNeeded(
           context = applicationContext,

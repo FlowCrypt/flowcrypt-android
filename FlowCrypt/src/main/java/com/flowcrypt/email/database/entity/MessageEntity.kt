@@ -100,20 +100,16 @@ data class MessageEntity(
   @ColumnInfo(defaultValue = "-1") val state: Int? = null,
   @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
   @ColumnInfo(name = "error_message", defaultValue = "NULL") val errorMsg: String? = null,
+  @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
+  @ColumnInfo(name = "is_visible", defaultValue = "1") val isVisible: Boolean = true,
   @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
-  @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
   @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
   @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
   @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
   @ColumnInfo(name = "has_pgp", defaultValue = "0") val hasPgp: Boolean? = null,
   @ColumnInfo(name = "thread_messages_count", defaultValue = "NULL") val threadMessagesCount: Int? = null,
-  @ColumnInfo(
-    name = "thread_recipients_addresses",
-    defaultValue = "NULL"
-  ) val threadRecipientsAddresses: String? = null,
   @ColumnInfo(name = "snippet", defaultValue = "NULL") val snippet: String? = null,
-  @ColumnInfo(name = "is_visible", defaultValue = "1") val isVisible: Boolean = true,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -131,11 +127,6 @@ data class MessageEntity(
   @IgnoredOnParcel
   @Ignore
   val cc: List<InternetAddress> = ccAddresses.asInternetAddresses().asList()
-
-  @IgnoredOnParcel
-  @Ignore
-  val threadRecipients: List<InternetAddress> =
-    threadRecipientsAddresses.asInternetAddresses().asList()
 
   @IgnoredOnParcel
   @Ignore
@@ -209,20 +200,19 @@ data class MessageEntity(
     if (state != other.state) return false
     if (attachmentsDirectory != other.attachmentsDirectory) return false
     if (errorMsg != other.errorMsg) return false
-    if (threadId != other.threadId) return false
-    if (historyId != other.historyId) return false
     if (password != null) {
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
+    if (isVisible != other.isVisible) return false
+    if (threadId != other.threadId) return false
+    if (historyId != other.historyId) return false
     if (draftId != other.draftId) return false
     if (labelIds != other.labelIds) return false
     if (isEncrypted != other.isEncrypted) return false
     if (hasPgp != other.hasPgp) return false
     if (threadMessagesCount != other.threadMessagesCount) return false
-    if (threadRecipientsAddresses != other.threadRecipientsAddresses) return false
     if (snippet != other.snippet) return false
-    if (isVisible != other.isVisible) return false
 
     return true
   }
@@ -246,17 +236,16 @@ data class MessageEntity(
     result = 31 * result + (state ?: 0)
     result = 31 * result + (attachmentsDirectory?.hashCode() ?: 0)
     result = 31 * result + (errorMsg?.hashCode() ?: 0)
+    result = 31 * result + (password?.contentHashCode() ?: 0)
+    result = 31 * result + isVisible.hashCode()
     result = 31 * result + (threadId?.hashCode() ?: 0)
     result = 31 * result + (historyId?.hashCode() ?: 0)
-    result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + (draftId?.hashCode() ?: 0)
     result = 31 * result + (labelIds?.hashCode() ?: 0)
     result = 31 * result + (isEncrypted?.hashCode() ?: 0)
     result = 31 * result + (hasPgp?.hashCode() ?: 0)
-    result = 31 * result + (threadMessagesCount?.hashCode() ?: 0)
-    result = 31 * result + (threadRecipientsAddresses?.hashCode() ?: 0)
+    result = 31 * result + (threadMessagesCount ?: 0)
     result = 31 * result + (snippet?.hashCode() ?: 0)
-    result = 31 * result + isVisible.hashCode()
     return result
   }
 
@@ -283,11 +272,7 @@ data class MessageEntity(
       else -> generateAddresses(
         context = context,
         accountName = accountName,
-        internetAddresses = if (threadId != null) {
-          threadRecipients
-        } else {
-          from
-        }
+        internetAddresses = from
       )
     }
 

@@ -547,7 +547,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                   threadMessagesCount = thread.messagesCount,
                   labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                   hasAttachments = thread.hasAttachments,
-                  threadRecipientsAddresses = InternetAddress.toString(
+                  fromAddresses = InternetAddress.toString(
                     thread.recipients.toTypedArray()
                   ),
                   hasPgp = thread.hasPgpThings,
