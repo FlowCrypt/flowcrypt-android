@@ -52,7 +52,7 @@ object GmailHistoryHandler {
       labelsToBeUpdatedMap: Map<Long, String>
     ) -> Unit = { _, _, _, _ -> }
   ) = withContext(Dispatchers.IO) {
-    processHistory(localFolder, historyList) { deleteCandidatesUIDs,
+    processHistory(accountEntity, localFolder, historyList) { deleteCandidatesUIDs,
                                                newCandidatesMap,
                                                updateCandidatesMap,
                                                labelsToBeUpdatedMap ->
@@ -308,6 +308,7 @@ object GmailHistoryHandler {
   }
 
   private suspend fun processHistory(
+    accountEntity: AccountEntity,
     localFolder: LocalFolder,
     historyList: List<History>,
     action: suspend (
