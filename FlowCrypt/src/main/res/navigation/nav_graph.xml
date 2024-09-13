@@ -354,6 +354,9 @@
         <argument
             android:name="messageEntityId"
             app:argType="long" />
+        <action
+            android:id="@+id/action_threadDetailsFragment_to_viewPagerMessageDetailsFragment"
+            app:destination="@id/viewPagerMessageDetailsFragment" />
     </fragment>
 
     <fragment

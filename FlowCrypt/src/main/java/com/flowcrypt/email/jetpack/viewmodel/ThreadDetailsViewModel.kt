@@ -99,7 +99,7 @@ class ThreadDetailsViewModel(
             val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
               activeAccount.email,
               GmailApiHelper.LABEL_INBOX,//fix me
-              threadMessageEntity.threadIdAsHEX,
+              threadMessageEntity.threadId ?: 0,
             )
 
             val finalList = messageEntities.map { fromServerMessageEntity ->

@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
@@ -24,7 +25,6 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithV
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
-import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -82,16 +82,18 @@ class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
               messageEntity.folder,
               messageEntity.uid
             )?.id?.let {
-              navController?.navigateSafe(
-                currentDestinationId = R.id.threadDetailsFragment,
-                directions = MessagesListFragmentDirections
-                  .actionMessagesListFragmentToViewPagerThreadDetailsFragment(
+              navController?.navigate(
+                object : NavDirections {
+                  override val actionId = R.id.viewPagerMessageDetailsFragment
+                  override val arguments = ViewPagerMessageDetailsFragmentArgs(
                     messageEntityId = it,
                     localFolder = LocalFolder(
                       messageEntity.account,
                       GmailApiHelper.LABEL_INBOX
-                    )//fix me
-                  )
+                    ),//fix me,
+                    sortedEntityIdListForThread = getSortedEntityIdListForThread()
+                  ).toBundle()
+                }
               )
             }
         }

@@ -424,7 +424,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract suspend fun getMessagesForGmailThread(
     account: String,
     folder: String,
-    threadId: String
+    threadId: Long
   ): List<MessageEntity>
 
   @Query("DELETE FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId AND is_visible = 0")
