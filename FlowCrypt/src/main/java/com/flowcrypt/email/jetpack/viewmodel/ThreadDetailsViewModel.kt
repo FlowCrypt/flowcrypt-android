@@ -37,14 +37,14 @@ class ThreadDetailsViewModel(
       flow {
         val initialMessageEntity = roomDatabase.msgDao().getMsgById(messageEntityId) ?: return@flow
         val activeAccount = getActiveAccountSuspend() ?: return@flow
-        if (initialMessageEntity.threadId.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
+        if (initialMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
           emit(listOf(initialMessageEntity))
         } else {
           try {
             val messagesInThread = GmailApiHelper.loadMessagesInThread(
               application,
               activeAccount,
-              initialMessageEntity.threadId
+              initialMessageEntity.threadIdAsHEX
             ).toMutableList().apply {
               //put drafts in the right position
               val drafts = filter { it.isDraft() }
@@ -82,7 +82,7 @@ class ThreadDetailsViewModel(
             roomDatabase.msgDao().clearCacheForGmailThread(
               account = activeAccount.email,
               folder = GmailApiHelper.LABEL_INBOX, //fix me
-              threadId = initialMessageEntity.threadId
+              threadId = initialMessageEntity.threadIdAsHEX
             )
 
             roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
@@ -97,7 +97,7 @@ class ThreadDetailsViewModel(
             val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
               activeAccount.email,
               GmailApiHelper.LABEL_INBOX,//fix me
-              initialMessageEntity.threadId,
+              initialMessageEntity.threadIdAsHEX,
             )
 
             val finalList = messageEntities.map { fromServerMessageEntity ->
@@ -142,7 +142,7 @@ class ThreadDetailsViewModel(
             val latestLabelIds = GmailApiHelper.loadThreadInfo(
               context = getApplication(),
               accountEntity = account,
-              threadId = freshestMessageEntity?.threadId ?: "",
+              threadId = freshestMessageEntity?.threadIdAsHEX ?: "",
               fields = listOf("id", "messages/labelIds"),
               format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
             ).labels

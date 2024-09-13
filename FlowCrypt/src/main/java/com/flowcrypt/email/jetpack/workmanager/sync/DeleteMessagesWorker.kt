@@ -51,7 +51,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
           GmailApiHelper.moveThreadToTrash(
             context = applicationContext,
             accountEntity = account,
-            ids = entities.mapNotNull { it.threadId }.toSet()
+            ids = entities.mapNotNull { it.threadIdAsHEX }.toSet()
           )
         } else {
           val uidList = entities.map { it.uid }

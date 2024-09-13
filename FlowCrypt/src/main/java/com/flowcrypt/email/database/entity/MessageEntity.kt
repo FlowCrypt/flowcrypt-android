@@ -36,6 +36,7 @@ import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
+import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
@@ -102,7 +103,7 @@ data class MessageEntity(
   @ColumnInfo(name = "error_message", defaultValue = "NULL") val errorMsg: String? = null,
   @ColumnInfo(name = "password", defaultValue = "NULL") val password: ByteArray? = null,
   @ColumnInfo(name = "is_visible", defaultValue = "1") val isVisible: Boolean = true,
-  @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: String? = null,
+  @ColumnInfo(name = "thread_id", defaultValue = "NULL") val threadId: Long? = null,
   @ColumnInfo(name = "history_id", defaultValue = "NULL") val historyId: String? = null,
   @ColumnInfo(name = "draft_id", defaultValue = "NULL") val draftId: String? = null,
   @ColumnInfo(name = "label_ids", defaultValue = "NULL") val labelIds: String? = null,
@@ -147,6 +148,10 @@ data class MessageEntity(
   @IgnoredOnParcel
   @Ignore
   val uidAsHEX: String = uid.toHex()
+
+  @IgnoredOnParcel
+  @Ignore
+  val threadIdAsHEX = threadId?.toHex()
 
   @IgnoredOnParcel
   @Ignore
@@ -517,7 +522,7 @@ data class MessageEntity(
             hasPgp = hasPgp,
             hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
           ).copy(
-            threadId = msg.threadId,
+            threadId = msg.threadIdAsLong,
             historyId = msg.historyId.toString(),
             draftId = draftIdsMap[msg.id],
             labelIds = msg.labelIds?.joinToString(separator = LABEL_IDS_SEPARATOR)

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager
@@ -293,7 +293,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(applicationContext)) {
-            msgEntity?.let {
+            msgEntity.let {
               if (msgEntity.msgState !== MessageState.SENT) {
                 roomDatabase.msgDao()
                   .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
@@ -325,7 +325,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
             }
 
-            msgEntity?.let {
+            msgEntity.let {
               roomDatabase.msgDao()
                 .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
             }
@@ -469,7 +469,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                 mimeMsg.writeTo(out)
               }
 
-              val threadId = msgEntity.threadId
+              val threadId = msgEntity.threadIdAsHEX
                 ?: mimeMsg.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null)
                   ?.let { replyMsgId ->
                     GmailApiHelper.executeWithResult {

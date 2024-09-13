@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
@@ -69,7 +70,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           account = account,
           mimeMessage = mimeMessage,
           draftId = draftId,
-          threadId = messageEntity.threadId
+          threadId = messageEntity.threadIdAsHEX
         )
 
         val message = GmailApiHelper.loadMsgInfoSuspend(
@@ -89,7 +90,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
 
         val messageEntityWithoutStateChange = messageEntity.copy(
           uid = message.uid,
-          threadId = message.threadId,
+          threadId = message.threadIdAsLong,
           draftId = draft.id,
           historyId = message.historyId.toString()
         )

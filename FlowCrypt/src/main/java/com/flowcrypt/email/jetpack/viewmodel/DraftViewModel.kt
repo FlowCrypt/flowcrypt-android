@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit
  */
 class DraftViewModel(
   existingDraftMessageEntity: MessageEntity? = null,
-  private val gmailThreadId: String? = null,
+  private val gmailThreadId: Long? = null,
   application: Application
 ) : AccountViewModel(application) {
   private var sessionDraftMessageEntity: MessageEntity? = existingDraftMessageEntity

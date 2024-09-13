@@ -23,6 +23,7 @@ import com.flowcrypt.email.database.entity.MessageEntity.Companion.LABEL_IDS_SEP
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.extensions.kotlin.toHex
+import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
@@ -88,8 +89,8 @@ object GmailHistoryHandler {
             localFolder = localFolder
           )
 
-          msgs =
-            gmailThreadInfoList.map { it.lastMessage }.filter { it.threadId !in existingThreadIds }
+          msgs = gmailThreadInfoList.map { it.lastMessage }
+            .filter { it.threadIdAsLong !in existingThreadIds }
         } else {
           gmailThreadInfoList = emptyList()
           existingThreads = emptyList()
@@ -155,7 +156,8 @@ object GmailHistoryHandler {
 
         if (accountEntity.useConversationMode && existingThreads.isNotEmpty()) {
           val threadsToBeUpdated = existingThreads.mapNotNull { threadMessageEntity ->
-            val thread = gmailThreadInfoList.firstOrNull { it.id == threadMessageEntity.threadId }
+            val thread =
+              gmailThreadInfoList.firstOrNull { it.id == threadMessageEntity.threadIdAsHEX }
             if (thread != null) {
               val updatedMessageEntity = MessageEntity.genMessageEntities(
                 context = applicationContext,
@@ -199,7 +201,7 @@ object GmailHistoryHandler {
         val s = updateCandidatesMap.keys//messages ids
         val threadIds = roomDatabase.msgDao()
           .getMsgsByUidsSuspend(accountEntity.email, localFolder.fullName, msgsUID = s)
-          .mapNotNull { it.threadId }.toSet()
+          .mapNotNull { it.threadIdAsHEX }.toSet()
 
         val gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
           context = applicationContext,
@@ -244,7 +246,7 @@ object GmailHistoryHandler {
         val m = labelsToBeUpdatedMap.keys//messages ids
         val threadIds2 = roomDatabase.msgDao()
           .getMsgsByUidsSuspend(accountEntity.email, localFolder.fullName, msgsUID = m)
-          .mapNotNull { it.threadId }.toSet()
+          .mapNotNull { it.threadIdAsHEX }.toSet()
 
         val gmailThreadInfoList2 = GmailApiHelper.loadGmailThreadInfoInParallel(
           context = applicationContext,

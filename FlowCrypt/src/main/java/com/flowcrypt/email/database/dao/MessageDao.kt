@@ -255,6 +255,12 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   )
   abstract suspend fun getNewestMsg(account: String?, folder: String?): MessageEntity?
 
+  @Query(
+    "SELECT * FROM messages " +
+        "WHERE account = :account AND folder = :folder ORDER BY thread_id DESC LIMIT 1"
+  )
+  abstract suspend fun getNewestThread(account: String?, folder: String?): MessageEntity?
+
   @Query("SELECT max(uid) FROM messages WHERE account = :account AND folder = :folder")
   abstract suspend fun getLastUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int?
 
@@ -423,6 +429,14 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query("DELETE FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId AND is_visible = 0")
   abstract suspend fun clearCacheForGmailThread(account: String?, folder: String, threadId: String)
+
+  suspend fun getNewestMsgOrThread(accountEntity: AccountEntity, folder: String?): MessageEntity? {
+    return if (accountEntity.isGoogleSignInAccount && accountEntity.useAPI && accountEntity.useConversationMode) {
+      getNewestThread(accountEntity.email, folder)
+    } else {
+      getNewestMsg(accountEntity.email, folder)
+    }
+  }
 
   @Transaction
   open fun deleteByUIDs(account: String?, label: String?, msgsUID: Collection<Long>) {

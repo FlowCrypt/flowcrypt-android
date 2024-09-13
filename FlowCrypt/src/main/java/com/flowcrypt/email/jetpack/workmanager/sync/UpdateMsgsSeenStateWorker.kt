@@ -69,7 +69,7 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
               GmailApiHelper.changeLabelsForThreads(
                 context = applicationContext,
                 accountEntity = account,
-                threadIdList = entities.mapNotNull { it.threadId }.toSet(),
+                threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
                 removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
               )
             } else {
@@ -85,7 +85,7 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
               GmailApiHelper.changeLabelsForThreads(
                 context = applicationContext,
                 accountEntity = account,
-                threadIdList = entities.mapNotNull { it.threadId }.toSet(),
+                threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
                 addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
               )
             } else {

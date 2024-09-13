@@ -75,7 +75,7 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
           GmailApiHelper.changeLabelsForThreads(
             context = applicationContext,
             accountEntity = account,
-            threadIdList = entities.mapNotNull { it.threadId }.toSet(),
+            threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
             addLabelIds = gmailApiLabelsData.addLabelIds,
             removeLabelIds = gmailApiLabelsData.removeLabelIds
           )

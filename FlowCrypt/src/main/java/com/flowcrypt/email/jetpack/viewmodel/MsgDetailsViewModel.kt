@@ -332,7 +332,7 @@ class MsgDetailsViewModel(
                 GmailApiHelper.loadThreadInfo(
                   context = getApplication(),
                   accountEntity = account,
-                  threadId = freshestMessageEntity?.threadId ?: "",
+                  threadId = freshestMessageEntity?.threadIdAsHEX ?: "",
                   fields = listOf("id", "messages/labelIds"),
                   format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
                 ).labels

@@ -122,7 +122,7 @@ class GmailLabelsViewModel(
             GmailApiHelper.changeLabelsForThreads(
               context = getApplication(),
               accountEntity = activeAccount,
-              threadIdList = messageEntities.mapNotNull { it.threadId }.toSet(),
+              threadIdList = messageEntities.mapNotNull { it.threadIdAsHEX }.toSet(),
               addLabelIds = labelsToBeAdded.map { it.id },
               removeLabelIds = labelsToBeRemoved.map { it.id }
             )

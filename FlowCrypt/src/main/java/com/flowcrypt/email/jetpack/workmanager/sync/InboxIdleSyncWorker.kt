@@ -110,7 +110,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
     val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
     val newestMsg =
-      roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, inboxLocalFolder.fullName)
+      roomDatabase.msgDao().getNewestMsgOrThread(accountEntity, inboxLocalFolder.fullName)
     val labelEntity = roomDatabase.labelDao()
       .getLabelSuspend(accountEntity.email, accountEntity.accountType, inboxLocalFolder.fullName)
     val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")

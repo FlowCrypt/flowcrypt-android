@@ -849,7 +849,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     localFolder: LocalFolder
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     val newestMsg =
-      roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, localFolder.fullName)
+      roomDatabase.msgDao().getNewestMsgOrThread(accountEntity, localFolder.fullName)
     try {
       val labelEntity = roomDatabase.labelDao()
         .getLabelSuspend(accountEntity.email, accountEntity.accountType, localFolder.fullName)
@@ -874,7 +874,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       when (e) {
         is GoogleJsonResponseException -> {
           if (localFolder.getFolderType() == FoldersManager.FolderType.INBOX
-            && e.statusCode == HttpURLConnection.HTTP_NOT_FOUND
+            && e.details.code == HttpURLConnection.HTTP_NOT_FOUND
             && e.details.errors.any { it.reason.equals("notFound", true) }
           ) {
             //client must perform a full sync
