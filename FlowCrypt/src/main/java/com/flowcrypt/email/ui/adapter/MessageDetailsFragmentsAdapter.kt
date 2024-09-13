@@ -17,7 +17,7 @@ import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragmentArgs
 /**
  * @author Denys Bondarenko
  */
-class FragmentsAdapter(
+class MessageDetailsFragmentsAdapter(
   private val localFolder: LocalFolder,
   initialList: List<MessageEntity>,
   fragment: Fragment,
@@ -69,9 +69,5 @@ class FragmentsAdapter(
 
   fun getItem(position: Int): MessageEntity? {
     return asyncListDiffer.currentList.getOrNull(position)
-  }
-
-  fun getItemPositionById(id: Long): Int {
-    return asyncListDiffer.currentList.indexOfFirst { item -> item.id == id }
   }
 }

@@ -428,9 +428,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 navController?.navigateSafe(
                   currentDestinationId = R.id.messagesListFragment,
                   directions = MessagesListFragmentDirections
-                    .actionMessagesListFragmentToGmailThreadFragment(
+                    .actionMessagesListFragmentToViewPagerThreadDetailsFragment(
                       messageEntityId = msgEntity.id ?: -1,
-                      //localFolder = localFolder
+                      localFolder = localFolder
                     )
                 )
               } else {

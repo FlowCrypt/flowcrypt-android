@@ -293,11 +293,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(applicationContext)) {
-            msgEntity.let {
-              if (msgEntity.msgState !== MessageState.SENT) {
-                roomDatabase.msgDao()
-                  .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
-              }
+            if (msgEntity.msgState != MessageState.SENT) {
+              roomDatabase.msgDao()
+                .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
             }
             throw e
           } else {
@@ -325,10 +323,8 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
             }
 
-            msgEntity.let {
-              roomDatabase.msgDao()
-                .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
-            }
+            roomDatabase.msgDao()
+              .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
           }
 
           delay(5000)

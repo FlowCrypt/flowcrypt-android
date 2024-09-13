@@ -31,7 +31,7 @@ import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewPagerViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.flowcrypt.email.ui.adapter.FragmentsAdapter
+import com.flowcrypt.email.ui.adapter.MessageDetailsFragmentsAdapter
 
 /**
  * @author Denys Bondarenko
@@ -63,7 +63,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     supportActionBar?.subtitle = null
 
     binding?.viewPager2?.apply {
-      adapter = FragmentsAdapter(
+      adapter = MessageDetailsFragmentsAdapter(
         localFolder = args.localFolder,
         initialList = messagesViewPagerViewModel.messageEntitiesLiveData.value?.data ?: emptyList(),
         fragment = this@ViewPagerMessageDetailsFragment,
@@ -76,7 +76,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       registerOnPageChangeCallback(object : OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
           super.onPageSelected(position)
-          (adapter as FragmentsAdapter).getItem(position)?.let { messageEntity ->
+          (adapter as MessageDetailsFragmentsAdapter).getItem(position)?.let { messageEntity ->
             messagesViewPagerViewModel.onItemSelected(messageEntity)
           }
         }
@@ -110,7 +110,9 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     messagesViewPagerViewModel.initialLiveData.observeOnce(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.SUCCESS -> {
-          (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
+          (binding?.viewPager2?.adapter as? MessageDetailsFragmentsAdapter)?.submit(
+            it.data ?: emptyList()
+          )
         }
 
         else -> {
@@ -123,7 +125,9 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     messagesViewPagerViewModel.messageEntitiesLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.SUCCESS -> {
-          (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
+          (binding?.viewPager2?.adapter as? MessageDetailsFragmentsAdapter)?.submit(
+            it.data ?: emptyList()
+          )
         }
 
         else -> {}

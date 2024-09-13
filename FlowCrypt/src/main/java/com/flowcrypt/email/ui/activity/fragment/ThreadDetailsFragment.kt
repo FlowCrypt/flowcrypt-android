@@ -24,6 +24,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithV
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
 /**
  * @author Denys Bondarenko
  */
-class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
+class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
   ProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentNewMessageDetailsBinding.inflate(inflater, container, false)
@@ -52,7 +53,7 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
   override val statusView: View?
     get() = binding?.status?.root
 
-  private val args by navArgs<GmailThreadFragmentArgs>()
+  private val args by navArgs<ThreadDetailsFragmentArgs>()
   private val threadDetailsViewModel: ThreadDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -81,15 +82,16 @@ class GmailThreadFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
               messageEntity.folder,
               messageEntity.uid
             )?.id?.let {
-              navController?.navigate(
-                GmailThreadFragmentDirections.actionGmailThreadFragmentToViewPagerMessageDetailsFragment(
-                  messageEntityId = it,
-                  sortedEntityIdListForThread = getSortedEntityIdListForThread(),
-                  localFolder = LocalFolder(
-                    messageEntity.account,
-                    GmailApiHelper.LABEL_INBOX
-                  )//fix me
-                )
+              navController?.navigateSafe(
+                currentDestinationId = R.id.threadDetailsFragment,
+                directions = MessagesListFragmentDirections
+                  .actionMessagesListFragmentToViewPagerThreadDetailsFragment(
+                    messageEntityId = it,
+                    localFolder = LocalFolder(
+                      messageEntity.account,
+                      GmailApiHelper.LABEL_INBOX
+                    )//fix me
+                  )
               )
             }
         }
