@@ -14,4 +14,4 @@ val Message.uid: Long
   get() = id.toLong(radix = 16)
 
 val Message.threadIdAsLong: Long
-  get() = id.toLong(radix = 16)
+  get() = threadId.toLong(radix = 16)

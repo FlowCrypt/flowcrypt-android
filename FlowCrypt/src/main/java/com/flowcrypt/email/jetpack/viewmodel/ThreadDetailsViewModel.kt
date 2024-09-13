@@ -26,25 +26,27 @@ import kotlinx.coroutines.flow.merge
  * @author Denys Bondarenko
  */
 class ThreadDetailsViewModel(
-  private val messageEntityId: Long,
+  private val threadMessageEntityId: Long,
   application: Application
 ) : AccountViewModel(application) {
 
-  val messageFlow: Flow<MessageEntity?> = roomDatabase.msgDao().getMessageByIdFlow(messageEntityId).distinctUntilChanged()
+  val messageFlow: Flow<MessageEntity?> =
+    roomDatabase.msgDao().getMessageByIdFlow(threadMessageEntityId).distinctUntilChanged()
 
   val messagesInThreadFlow: Flow<List<MessageEntity>> =
     merge(
       flow {
-        val initialMessageEntity = roomDatabase.msgDao().getMsgById(messageEntityId) ?: return@flow
+        val threadMessageEntity =
+          roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return@flow
         val activeAccount = getActiveAccountSuspend() ?: return@flow
-        if (initialMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
-          emit(listOf(initialMessageEntity))
+        if (threadMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
+          emit(listOf())
         } else {
           try {
             val messagesInThread = GmailApiHelper.loadMessagesInThread(
               application,
               activeAccount,
-              initialMessageEntity.threadIdAsHEX
+              threadMessageEntity.threadIdAsHEX
             ).toMutableList().apply {
               //put drafts in the right position
               val drafts = filter { it.isDraft() }
@@ -63,7 +65,7 @@ class ThreadDetailsViewModel(
             }
 
             roomDatabase.msgDao()
-              .updateSuspend(initialMessageEntity.copy(threadMessagesCount = messagesInThread.size))
+              .updateSuspend(threadMessageEntity.copy(threadMessagesCount = messagesInThread.size))
 
             val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
             val messageEntities = MessageEntity.genMessageEntities(
@@ -82,7 +84,7 @@ class ThreadDetailsViewModel(
             roomDatabase.msgDao().clearCacheForGmailThread(
               account = activeAccount.email,
               folder = GmailApiHelper.LABEL_INBOX, //fix me
-              threadId = initialMessageEntity.threadIdAsHEX
+              threadId = threadMessageEntity.threadIdAsHEX
             )
 
             roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
@@ -97,7 +99,7 @@ class ThreadDetailsViewModel(
             val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
               activeAccount.email,
               GmailApiHelper.LABEL_INBOX,//fix me
-              initialMessageEntity.threadIdAsHEX,
+              threadMessageEntity.threadIdAsHEX,
             )
 
             val finalList = messageEntities.map { fromServerMessageEntity ->
@@ -109,7 +111,7 @@ class ThreadDetailsViewModel(
             emit(finalList)
           } catch (e: Exception) {
             e.printStackTraceIfDebugOnly()
-            emit(listOf(initialMessageEntity))
+            emit(listOf(threadMessageEntity))
           }
         }
       },
@@ -135,7 +137,7 @@ class ThreadDetailsViewModel(
         if (account?.isGoogleSignInAccount == true) {
           val labelEntities =
             roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
-          val freshestMessageEntity = roomDatabase.msgDao().getMsgById(messageEntityId)
+          val freshestMessageEntity = roomDatabase.msgDao().getMsgById(threadMessageEntityId)
           val cachedLabelIds =
             freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
           try {
