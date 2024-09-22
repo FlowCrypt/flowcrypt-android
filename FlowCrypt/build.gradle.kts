@@ -442,7 +442,7 @@ dependencies {
   implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
   implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
   implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
-  implementation("androidx.webkit:webkit:1.11.0")
+  implementation("androidx.webkit:webkit:1.12.0")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
   implementation("com.google.android.gms:play-services-auth:21.2.0")
