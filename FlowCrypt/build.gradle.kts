@@ -409,7 +409,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.20")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("io.github.classgraph:classgraph:4.8.175")
+  testImplementation("io.github.classgraph:classgraph:4.8.176")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
