@@ -68,7 +68,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
   private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
     object : GmailApiLabelsListAdapter.OnLabelClickListener {
       override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
-        toast("fix me")
+        toast("fix me ")
       }
     })
 
