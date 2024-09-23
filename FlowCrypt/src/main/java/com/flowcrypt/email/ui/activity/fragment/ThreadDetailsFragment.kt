@@ -112,7 +112,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
-        messagesInThreadListAdapter.submitList(it)
+        messagesInThreadListAdapter.submitList(it.map { messageEntity ->
+          MessagesInThreadListAdapter.Message(
+            messageEntity
+          )
+        })
         showContent()
       }
     }

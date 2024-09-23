@@ -14,40 +14,107 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.IntDef
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadBinding
+import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
 
 /**
  * @author Denys Bondarenko
  */
 class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageClickListener) :
-  ListAdapter<MessageEntity, MessagesInThreadListAdapter.ViewHolder>(DIFF_UTIL_ITEM_CALLBACK) {
+  ListAdapter<MessagesInThreadListAdapter.Item, MessagesInThreadListAdapter.BaseViewHolder>(
+    DIFF_UTIL_ITEM_CALLBACK
+  ) {
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-    return ViewHolder(
-      LayoutInflater.from(parent.context).inflate(R.layout.item_message_in_thread, parent, false)
-    )
+  override fun getItemViewType(position: Int): Int {
+    return when (position) {
+      0 -> HEADER
+      else -> MESSAGE
+    }
   }
 
-  override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-    holder.bindTo(getItem(position), onMessageClickListener)
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
+    return when (viewType) {
+      HEADER -> HeaderViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.item_thread_header, parent, false)
+      )
+
+      MESSAGE -> MessageViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.item_message_in_thread, parent, false)
+      )
+
+      else -> error("Unreachable")
+    }
+  }
+
+  override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
+    when (holder.itemViewType) {
+      HEADER -> {
+        val header = (getItem(position) as? Header) ?: return
+        (holder as? HeaderViewHolder)?.bindTo(header)
+      }
+
+      MESSAGE -> {
+        val message = (getItem(position) as? Message) ?: return
+        (holder as? MessageViewHolder)?.bindTo(message.messageEntity, onMessageClickListener)
+      }
+
+      else -> error("Unreachable")
+    }
   }
 
   interface OnMessageClickListener {
     fun onMessageClick(messageEntity: MessageEntity)
   }
 
-  inner class ViewHolder(itemView: View) :
-    RecyclerView.ViewHolder(itemView) {
+  abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+  inner class HeaderViewHolder(itemView: View) : BaseViewHolder(itemView) {
+    val binding = ItemThreadHeaderBinding.bind(itemView)
+    private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
+      object : GmailApiLabelsListAdapter.OnLabelClickListener {
+        override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
+          itemView.context.toast("fix me")
+        }
+      })
+
+    fun bindTo(header: Header) {
+      binding.textViewSubject.text = header.subject
+
+      binding.recyclerViewLabels.apply {
+        layoutManager = FlexboxLayoutManager(context).apply {
+          flexDirection = FlexDirection.ROW
+          justifyContent = JustifyContent.FLEX_START
+        }
+        addItemDecoration(
+          MarginItemDecoration(
+            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+            marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+          )
+        )
+        adapter = gmailApiLabelsListAdapter
+      }
+
+      gmailApiLabelsListAdapter.submitList(header.labels)
+    }
+  }
+
+  inner class MessageViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ItemMessageInThreadBinding.bind(itemView)
 
     fun bindTo(item: MessageEntity, onMessageClickListener: OnMessageClickListener) {
@@ -113,13 +180,46 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
     }
   }
 
-  companion object {
-    private val DIFF_UTIL_ITEM_CALLBACK = object : DiffUtil.ItemCallback<MessageEntity>() {
-      override fun areItemsTheSame(oldItem: MessageEntity, newItem: MessageEntity) =
-        oldItem.uid == newItem.uid
+  abstract class Item(val type: Int) {
+    abstract val id: Long
+    abstract fun areContentsTheSame(other: Any?): Boolean
+  }
 
-      override fun areContentsTheSame(oldItem: MessageEntity, newItem: MessageEntity) =
-        oldItem == newItem
+  data class Message(val messageEntity: MessageEntity) : Item(MESSAGE) {
+    override val id: Long
+      get() = messageEntity.uid
+
+    override fun areContentsTheSame(other: Any?): Boolean {
+      return this == other
     }
+  }
+
+  data class Header(
+    val subject: String? = null,
+    val labels: List<GmailApiLabelsListAdapter.Label>
+  ) : Item(HEADER) {
+    override val id: Long
+      get() = Long.MIN_VALUE
+
+    override fun areContentsTheSame(other: Any?): Boolean {
+      return this == other
+    }
+  }
+
+  companion object {
+    private val DIFF_UTIL_ITEM_CALLBACK = object : DiffUtil.ItemCallback<Item>() {
+      override fun areItemsTheSame(oldItem: Item, newItem: Item) =
+        oldItem.id == newItem.id
+
+      override fun areContentsTheSame(oldItem: Item, newItem: Item) =
+        oldItem.areContentsTheSame(newItem)
+    }
+
+    @IntDef(HEADER, MESSAGE)
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class Type
+
+    const val HEADER = 0
+    const val MESSAGE = 1
   }
 }
