@@ -294,7 +294,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
           if (!GeneralUtil.isConnected(applicationContext)) {
             if (msgEntity.msgState != MessageState.SENT) {
-              msgEntity.copy(state = MessageState.QUEUED.value)?.let {
+              msgEntity.copy(state = MessageState.QUEUED.value).let {
                 roomDatabase.msgDao()
                   .updateSuspend(it)
               }
@@ -325,7 +325,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
             }
 
-            msgEntity.copy(state = newMsgState.value, errorMsg = e.message)?.let {
+            msgEntity.copy(state = newMsgState.value, errorMsg = e.message).let {
               roomDatabase.msgDao()
                 .updateSuspend(it)
             }

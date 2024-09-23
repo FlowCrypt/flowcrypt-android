@@ -20,36 +20,29 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.databinding.FragmentNewMessageDetailsBinding
+import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
-import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
-import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
-import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.flexbox.JustifyContent
 import com.google.android.material.divider.MaterialDividerItemDecoration
 import kotlinx.coroutines.launch
 
 /**
  * @author Denys Bondarenko
  */
-class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
-  ProgressBehaviour {
+class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), ProgressBehaviour {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
-    FragmentNewMessageDetailsBinding.inflate(inflater, container, false)
+    FragmentThreadDetailsBinding.inflate(inflater, container, false)
 
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
-    get() = binding?.content
+    get() = binding?.recyclerViewMessages
   override val statusView: View?
     get() = binding?.status?.root
 
@@ -64,13 +57,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
       }
     }
   }
-
-  private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
-    object : GmailApiLabelsListAdapter.OnLabelClickListener {
-      override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
-        toast("fix me ")
-      }
-    })
 
   private val messagesInThreadListAdapter =
     MessagesInThreadListAdapter(object : MessagesInThreadListAdapter.OnMessageClickListener {
@@ -120,7 +106,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
   private fun setupThreadDetailsViewModel() {
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messageFlow.collect {
-        binding?.textViewSubject?.text = it?.subject
+        //binding?.textViewSubject?.text = it?.subject
       }
     }
 
@@ -133,7 +119,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
 
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messageGmailApiLabelsFlow.collect {
-        gmailApiLabelsListAdapter.submitList(it)
+
       }
     }
   }
@@ -150,20 +136,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentNewMessageDetailsBinding>(),
         }
       )
       adapter = messagesInThreadListAdapter
-    }
-
-    binding?.recyclerViewLabels?.apply {
-      layoutManager = FlexboxLayoutManager(context).apply {
-        flexDirection = FlexDirection.ROW
-        justifyContent = JustifyContent.FLEX_START
-      }
-      addItemDecoration(
-        MarginItemDecoration(
-          marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
-          marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
-        )
-      )
-      adapter = gmailApiLabelsListAdapter
     }
   }
 }
