@@ -17,7 +17,9 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMes
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
+import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * @author Denys Bondarenko
@@ -40,13 +43,14 @@ class ThreadDetailsViewModel(
   val messageFlow: Flow<MessageEntity?> =
     roomDatabase.msgDao().getMessageByIdFlow(threadMessageEntityId).distinctUntilChanged()
 
-  private val controlledRunnerForLoadingMessages = ControlledRunner<Result<List<MessageEntity>>>()
-  private val loadMessagesManuallyMutableStateFlow: MutableStateFlow<Result<List<MessageEntity>>> =
+  private val controlledRunnerForLoadingMessages =
+    ControlledRunner<Result<List<MessagesInThreadListAdapter.Item>>>()
+  private val loadMessagesManuallyMutableStateFlow: MutableStateFlow<Result<List<MessagesInThreadListAdapter.Item>>> =
     MutableStateFlow(Result.none())
-  private val loadMessagesManuallyStateFlow: StateFlow<Result<List<MessageEntity>>> =
+  private val loadMessagesManuallyStateFlow: StateFlow<Result<List<MessagesInThreadListAdapter.Item>>> =
     loadMessagesManuallyMutableStateFlow.asStateFlow()
 
-  val messagesInThreadFlow: Flow<Result<List<MessageEntity>>> =
+  val messagesInThreadFlow: Flow<Result<List<MessagesInThreadListAdapter.Item>>> =
     merge(
       flow {
         emit(Result.loading())
@@ -65,7 +69,7 @@ class ThreadDetailsViewModel(
     }
   }
 
-  private suspend fun loadMessagesInternal(): Result<List<MessageEntity>> {
+  private suspend fun loadMessagesInternal(): Result<List<MessagesInThreadListAdapter.Item>> {
     val threadMessageEntity =
       roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return Result.exception(
         IllegalStateException()
@@ -75,6 +79,8 @@ class ThreadDetailsViewModel(
     if (threadMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
       return Result.success(listOf())
     } else {
+      val header = prepareHeader()
+
       try {
         val messagesInThread = GmailApiHelper.loadMessagesInThread(
           getApplication(),
@@ -136,18 +142,62 @@ class ThreadDetailsViewModel(
         )
 
         val finalList = messageEntities.map { fromServerMessageEntity ->
-          fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
-            it.uid == fromServerMessageEntity.uid
-          }?.id)
+          MessagesInThreadListAdapter.Message(
+            fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
+              it.uid == fromServerMessageEntity.uid
+            }?.id)
+          )
         }
 
-        return Result.success(finalList)
+        return Result.success(listOf(header) + finalList)
       } catch (e: Exception) {
         e.printStackTraceIfDebugOnly()
         return Result.exception(e)
       }
     }
   }
+
+  private suspend fun prepareHeader(): MessagesInThreadListAdapter.Header =
+    withContext(Dispatchers.IO) {
+      val account =
+        getActiveAccountSuspend() ?: return@withContext MessagesInThreadListAdapter.Header(
+          "",
+          emptyList()
+        )
+      val labelEntities =
+        roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
+      val freshestMessageEntity = roomDatabase.msgDao().getMsgById(threadMessageEntityId)
+      val cachedLabelIds =
+        freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+
+      return@withContext try {
+        //try to get the last changes from a server
+        val latestLabelIds = GmailApiHelper.loadThreadInfo(
+          context = getApplication(),
+          accountEntity = account,
+          threadId = freshestMessageEntity?.threadIdAsHEX ?: "",
+          fields = listOf("id", "messages/labelIds"),
+          format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
+        ).labels
+        if (cachedLabelIds == null
+          || !(latestLabelIds.containsAll(cachedLabelIds)
+              && cachedLabelIds.containsAll(latestLabelIds))
+        ) {
+          freshestMessageEntity?.copy(
+            labelIds = latestLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+          )?.let { roomDatabase.msgDao().updateSuspend(it) }
+        }
+        MessagesInThreadListAdapter.Header(
+          freshestMessageEntity?.subject,
+          MessageEntity.generateColoredLabels(latestLabelIds, labelEntities)
+        )
+      } catch (e: Exception) {
+        MessagesInThreadListAdapter.Header(
+          freshestMessageEntity?.subject,
+          MessageEntity.generateColoredLabels(cachedLabelIds, labelEntities)
+        )
+      }
+    }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =

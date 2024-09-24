@@ -26,7 +26,7 @@ import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
-import com.google.android.material.divider.MaterialDividerItemDecoration
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
 
 /**
  * @author Denys Bondarenko
@@ -88,11 +88,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               navController?.navigateUp()
               toast("Fix me")
             } else {
-              messagesInThreadListAdapter.submitList(data.map { messageEntity ->
-                MessagesInThreadListAdapter.Message(
-                  messageEntity
-                )
-              })
+              messagesInThreadListAdapter.submitList(data)
               showContent()
             }
           }
@@ -114,11 +110,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       val linearLayoutManager = LinearLayoutManager(context)
       layoutManager = linearLayoutManager
       addItemDecoration(
-        MaterialDividerItemDecoration(
+        SkipFirstAndLastDividerItemDecoration(
           context, linearLayoutManager.orientation
-        ).apply {
-          isLastItemDecorated = false
-        }
+        )
       )
       adapter = messagesInThreadListAdapter
     }
