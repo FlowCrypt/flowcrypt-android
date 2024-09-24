@@ -14,7 +14,6 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.IntDef
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -43,18 +42,18 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
 
   override fun getItemViewType(position: Int): Int {
     return when (position) {
-      0 -> HEADER
-      else -> MESSAGE
+      0 -> Type.HEADER.id
+      else -> Type.MESSAGE.id
     }
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
     return when (viewType) {
-      HEADER -> HeaderViewHolder(
+      Type.HEADER.id -> HeaderViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.item_thread_header, parent, false)
       )
 
-      MESSAGE -> MessageViewHolder(
+      Type.MESSAGE.id -> MessageViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.item_message_in_thread, parent, false)
       )
 
@@ -64,12 +63,12 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
 
   override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
     when (holder.itemViewType) {
-      HEADER -> {
+      Type.HEADER.id -> {
         val header = (getItem(position) as? Header) ?: return
         (holder as? HeaderViewHolder)?.bindTo(header)
       }
 
-      MESSAGE -> {
+      Type.MESSAGE.id -> {
         val message = (getItem(position) as? Message) ?: return
         (holder as? MessageViewHolder)?.bindTo(message.messageEntity, onMessageClickListener)
       }
@@ -180,12 +179,12 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
     }
   }
 
-  abstract class Item(val type: Int) {
+  abstract class Item(val type: Type) {
     abstract val id: Long
     abstract fun areContentsTheSame(other: Any?): Boolean
   }
 
-  data class Message(val messageEntity: MessageEntity) : Item(MESSAGE) {
+  data class Message(val messageEntity: MessageEntity) : Item(Type.MESSAGE) {
     override val id: Long
       get() = messageEntity.uid
 
@@ -197,7 +196,7 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
   data class Header(
     val subject: String? = null,
     val labels: List<GmailApiLabelsListAdapter.Label>
-  ) : Item(HEADER) {
+  ) : Item(Type.HEADER) {
     override val id: Long
       get() = Long.MIN_VALUE
 
@@ -215,11 +214,8 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
         oldItem.areContentsTheSame(newItem)
     }
 
-    @IntDef(HEADER, MESSAGE)
-    @Retention(AnnotationRetention.SOURCE)
-    annotation class Type
-
-    const val HEADER = 0
-    const val MESSAGE = 1
+    enum class Type(val id: Int) {
+      HEADER(0), MESSAGE(1)
+    }
   }
 }

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.base
@@ -40,7 +40,11 @@ interface ProgressBehaviour {
     contentView?.visible()
   }
 
-  fun showStatus(msg: String? = null, resourcesId: Int = R.drawable.ic_warning_red_24dp) {
+  fun showStatus(
+    msg: String? = null,
+    resourcesId: Int = R.drawable.ic_warning_red_24dp,
+    action: (() -> Unit)? = null
+  ) {
     goneProgressView()
     contentView?.gone()
 
@@ -50,6 +54,15 @@ interface ProgressBehaviour {
     if (resourcesId > 0) {
       val iVStatusImg = statusView?.findViewById<ImageView>(R.id.iVStatusImg)
       iVStatusImg?.setImageResource(resourcesId)
+    }
+
+    if (action != null) {
+      statusView?.findViewById<View>(R.id.buttonRetry)?.apply {
+        visible()
+        setOnClickListener {
+          action.invoke()
+        }
+      }
     }
 
     statusView?.visible()

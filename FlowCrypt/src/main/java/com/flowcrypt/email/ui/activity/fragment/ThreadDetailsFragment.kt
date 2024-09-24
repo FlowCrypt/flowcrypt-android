@@ -11,26 +11,22 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.google.android.material.divider.MaterialDividerItemDecoration
-import kotlinx.coroutines.launch
 
 /**
  * @author Denys Bondarenko
@@ -58,37 +54,12 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-  private val messagesInThreadListAdapter =
-    MessagesInThreadListAdapter(object : MessagesInThreadListAdapter.OnMessageClickListener {
+  private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
+    object : MessagesInThreadListAdapter.OnMessageClickListener {
       override fun onMessageClick(messageEntity: MessageEntity) {
-        lifecycleScope.launch {
-          FlowCryptRoomDatabase.getDatabase(requireContext()).msgDao()
-            .getMsgSuspend(
-              messageEntity.account,
-              messageEntity.folder,
-              messageEntity.uid
-            )?.id?.let {
-              navController?.navigate(
-                object : NavDirections {
-                  override val actionId = R.id.viewPagerMessageDetailsFragment
-                  override val arguments = ViewPagerMessageDetailsFragmentArgs(
-                    messageEntityId = it,
-                    localFolder = LocalFolder(
-                      messageEntity.account,
-                      GmailApiHelper.LABEL_INBOX
-                    ),//fix me,
-                    sortedEntityIdListForThread = getSortedEntityIdListForThread()
-                  ).toBundle()
-                }
-              )
-            }
-        }
+        toast(messageEntity.uidAsHEX)
       }
     })
-
-  private fun getSortedEntityIdListForThread(): LongArray {
-    return messagesInThreadListAdapter.currentList.mapNotNull { it.id }.toLongArray()
-  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -105,25 +76,35 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun setupThreadDetailsViewModel() {
     launchAndRepeatWithViewLifecycle {
-      threadDetailsViewModel.messageFlow.collect {
-        //binding?.textViewSubject?.text = it?.subject
-      }
-    }
-
-    launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
-        messagesInThreadListAdapter.submitList(it.map { messageEntity ->
-          MessagesInThreadListAdapter.Message(
-            messageEntity
-          )
-        })
-        showContent()
-      }
-    }
+        when (it.status) {
+          Result.Status.LOADING -> {
+            showProgress()
+          }
 
-    launchAndRepeatWithViewLifecycle {
-      threadDetailsViewModel.messageGmailApiLabelsFlow.collect {
+          Result.Status.SUCCESS -> {
+            val data = it.data
+            if (data.isNullOrEmpty()) {
+              navController?.navigateUp()
+              toast("Fix me")
+            } else {
+              messagesInThreadListAdapter.submitList(data.map { messageEntity ->
+                MessagesInThreadListAdapter.Message(
+                  messageEntity
+                )
+              })
+              showContent()
+            }
+          }
 
+          Result.Status.EXCEPTION -> {
+            showStatus(it.exceptionMsg) {
+              threadDetailsViewModel.loadMessages()
+            }
+          }
+
+          else -> {}
+        }
       }
     }
   }

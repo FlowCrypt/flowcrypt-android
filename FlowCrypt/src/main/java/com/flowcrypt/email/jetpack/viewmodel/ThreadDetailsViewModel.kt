@@ -7,20 +7,27 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInReplyTo
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
+import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 
 /**
  * @author Denys Bondarenko
@@ -33,89 +40,114 @@ class ThreadDetailsViewModel(
   val messageFlow: Flow<MessageEntity?> =
     roomDatabase.msgDao().getMessageByIdFlow(threadMessageEntityId).distinctUntilChanged()
 
-  val messagesInThreadFlow: Flow<List<MessageEntity>> =
+  private val controlledRunnerForLoadingMessages = ControlledRunner<Result<List<MessageEntity>>>()
+  private val loadMessagesManuallyMutableStateFlow: MutableStateFlow<Result<List<MessageEntity>>> =
+    MutableStateFlow(Result.none())
+  private val loadMessagesManuallyStateFlow: StateFlow<Result<List<MessageEntity>>> =
+    loadMessagesManuallyMutableStateFlow.asStateFlow()
+
+  val messagesInThreadFlow: Flow<Result<List<MessageEntity>>> =
     merge(
       flow {
-        val threadMessageEntity =
-          roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return@flow
-        val activeAccount = getActiveAccountSuspend() ?: return@flow
-        if (threadMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
-          emit(listOf())
-        } else {
-          try {
-            val messagesInThread = GmailApiHelper.loadMessagesInThread(
-              application,
-              activeAccount,
-              threadMessageEntity.threadIdAsHEX
-            ).toMutableList().apply {
-              //put drafts in the right position
-              val drafts = filter { it.isDraft() }
-              drafts.forEach { draft ->
-                val inReplyToValue = draft.getInReplyTo()
-                val inReplyToMessage = firstOrNull { it.getMessageId() == inReplyToValue }
+        emit(Result.loading())
+        emit(loadMessagesInternal())
+      },
+      loadMessagesManuallyStateFlow
+    )
 
-                if (inReplyToMessage != null) {
-                  val inReplyToMessagePosition = indexOf(inReplyToMessage)
-                  if (inReplyToMessagePosition != -1) {
-                    remove(draft)
-                    add(inReplyToMessagePosition + 1, draft)
-                  }
-                }
+  fun loadMessages() {
+    viewModelScope.launch {
+      loadMessagesManuallyMutableStateFlow.value = Result.loading()
+      loadMessagesManuallyMutableStateFlow.value =
+        controlledRunnerForLoadingMessages.cancelPreviousThenRun {
+          return@cancelPreviousThenRun loadMessagesInternal()
+        }
+    }
+  }
+
+  private suspend fun loadMessagesInternal(): Result<List<MessageEntity>> {
+    val threadMessageEntity =
+      roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return Result.exception(
+        IllegalStateException()
+      )
+    val activeAccount =
+      getActiveAccountSuspend() ?: return Result.exception(IllegalStateException())
+    if (threadMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
+      return Result.success(listOf())
+    } else {
+      try {
+        val messagesInThread = GmailApiHelper.loadMessagesInThread(
+          getApplication(),
+          activeAccount,
+          threadMessageEntity.threadIdAsHEX
+        ).toMutableList().apply {
+          //put drafts in the right position
+          val drafts = filter { it.isDraft() }
+          drafts.forEach { draft ->
+            val inReplyToValue = draft.getInReplyTo()
+            val inReplyToMessage = firstOrNull { it.getMessageId() == inReplyToValue }
+
+            if (inReplyToMessage != null) {
+              val inReplyToMessagePosition = indexOf(inReplyToMessage)
+              if (inReplyToMessagePosition != -1) {
+                remove(draft)
+                add(inReplyToMessagePosition + 1, draft)
               }
             }
-
-            roomDatabase.msgDao()
-              .updateSuspend(threadMessageEntity.copy(threadMessagesCount = messagesInThread.size))
-
-            val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
-            val messageEntities = MessageEntity.genMessageEntities(
-              context = getApplication(),
-              account = activeAccount.email,
-              accountType = activeAccount.accountType,
-              label = GmailApiHelper.LABEL_INBOX, //fix me
-              msgsList = messagesInThread,
-              isNew = false,
-              onlyPgpModeEnabled = isOnlyPgpModeEnabled,
-              draftIdsMap = emptyMap()
-            ) { message, messageEntity ->
-              messageEntity.copy(snippet = message.snippet, isVisible = false)
-            }
-
-            roomDatabase.msgDao().clearCacheForGmailThread(
-              account = activeAccount.email,
-              folder = GmailApiHelper.LABEL_INBOX, //fix me
-              threadId = threadMessageEntity.threadIdAsHEX
-            )
-
-            roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
-            GmailApiHelper.identifyAttachments(
-              msgEntities = messageEntities,
-              msgs = messagesInThread,
-              account = activeAccount,
-              localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
-              roomDatabase = roomDatabase
-            )
-
-            val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
-              activeAccount.email,
-              GmailApiHelper.LABEL_INBOX,//fix me
-              threadMessageEntity.threadId ?: 0,
-            )
-
-            val finalList = messageEntities.map { fromServerMessageEntity ->
-              fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
-                it.uid == fromServerMessageEntity.uid
-              }?.id)
-            }
-
-            emit(finalList)
-          } catch (e: Exception) {
-            e.printStackTraceIfDebugOnly()
-            emit(listOf(threadMessageEntity))
           }
         }
-      },
-    )
+
+        roomDatabase.msgDao()
+          .updateSuspend(threadMessageEntity.copy(threadMessagesCount = messagesInThread.size))
+
+        val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
+        val messageEntities = MessageEntity.genMessageEntities(
+          context = getApplication(),
+          account = activeAccount.email,
+          accountType = activeAccount.accountType,
+          label = GmailApiHelper.LABEL_INBOX, //fix me
+          msgsList = messagesInThread,
+          isNew = false,
+          onlyPgpModeEnabled = isOnlyPgpModeEnabled,
+          draftIdsMap = emptyMap()
+        ) { message, messageEntity ->
+          messageEntity.copy(snippet = message.snippet, isVisible = false)
+        }
+
+        roomDatabase.msgDao().clearCacheForGmailThread(
+          account = activeAccount.email,
+          folder = GmailApiHelper.LABEL_INBOX, //fix me
+          threadId = threadMessageEntity.threadIdAsHEX
+        )
+
+        roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
+        GmailApiHelper.identifyAttachments(
+          msgEntities = messageEntities,
+          msgs = messagesInThread,
+          account = activeAccount,
+          localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
+          roomDatabase = roomDatabase
+        )
+
+        val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
+          activeAccount.email,
+          GmailApiHelper.LABEL_INBOX,//fix me
+          threadMessageEntity.threadId ?: 0,
+        )
+
+        val finalList = messageEntities.map { fromServerMessageEntity ->
+          fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
+            it.uid == fromServerMessageEntity.uid
+          }?.id)
+        }
+
+        return Result.success(finalList)
+      } catch (e: Exception) {
+        e.printStackTraceIfDebugOnly()
+        return Result.exception(e)
+      }
+    }
+  }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =
