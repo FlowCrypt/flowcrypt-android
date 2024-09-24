@@ -42,7 +42,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="8"
-        tools:listitem="@layout/item_message_in_thread"
+        tools:listitem="@layout/item_message_in_thread_collapsed"
         tools:visibility="visible"></androidx.recyclerview.widget.RecyclerView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

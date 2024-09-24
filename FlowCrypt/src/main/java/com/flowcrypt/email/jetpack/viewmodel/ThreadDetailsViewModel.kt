@@ -6,7 +6,6 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -16,19 +15,19 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInR
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
-import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -50,13 +49,17 @@ class ThreadDetailsViewModel(
   private val loadMessagesManuallyStateFlow: StateFlow<Result<List<MessagesInThreadListAdapter.Item>>> =
     loadMessagesManuallyMutableStateFlow.asStateFlow()
 
-  val messagesInThreadFlow: Flow<Result<List<MessagesInThreadListAdapter.Item>>> =
+  val messagesInThreadFlow =
     merge(
       flow {
         emit(Result.loading())
         emit(loadMessagesInternal())
       },
       loadMessagesManuallyStateFlow
+    ).stateIn(
+      scope = viewModelScope,
+      started = WhileSubscribed(5000),
+      initialValue = Result.none()
     )
 
   fun loadMessages() {
@@ -145,7 +148,7 @@ class ThreadDetailsViewModel(
           MessagesInThreadListAdapter.Message(
             fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
               it.uid == fromServerMessageEntity.uid
-            }?.id)
+            }?.id), MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
           )
         }
 
@@ -199,51 +202,24 @@ class ThreadDetailsViewModel(
       }
     }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
-  val messageGmailApiLabelsFlow: Flow<List<GmailApiLabelsListAdapter.Label>> =
-    merge(
-      messageFlow.mapLatest { latestMessageEntityRecord ->
-        val activeAccount = getActiveAccountSuspend()
-        if (activeAccount?.isGoogleSignInAccount == true) {
-          val labelEntities =
-            roomDatabase.labelDao().getLabelsSuspend(activeAccount.email, activeAccount.accountType)
-          MessageEntity.generateColoredLabels(
-            latestMessageEntityRecord?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR),
-            labelEntities
-          )
-        } else {
-          emptyList()
+  fun onMessageClicked(message: MessagesInThreadListAdapter.Message) {
+    val currentValue = messagesInThreadFlow.value
+    if (currentValue.status == Result.Status.SUCCESS) {
+      loadMessagesManuallyMutableStateFlow.update {
+        val currentList = messagesInThreadFlow.value.data?.toMutableList()
+        currentList?.replaceAll {
+          if (it.id == message.id) {
+            message.copy(
+              type = if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED) {
+                MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
+              } else {
+                MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED
+              }
+            )
+          } else it
         }
-      },
-      activeAccountLiveData.asFlow().mapLatest { account ->
-        if (account?.isGoogleSignInAccount == true) {
-          val labelEntities =
-            roomDatabase.labelDao().getLabelsSuspend(account.email, account.accountType)
-          val freshestMessageEntity = roomDatabase.msgDao().getMsgById(threadMessageEntityId)
-          val cachedLabelIds =
-            freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
-          try {
-            val latestLabelIds = GmailApiHelper.loadThreadInfo(
-              context = getApplication(),
-              accountEntity = account,
-              threadId = freshestMessageEntity?.threadIdAsHEX ?: "",
-              fields = listOf("id", "messages/labelIds"),
-              format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
-            ).labels
-            if (cachedLabelIds == null
-              || !(latestLabelIds.containsAll(cachedLabelIds)
-                  && cachedLabelIds.containsAll(latestLabelIds))
-            ) {
-              freshestMessageEntity?.copy(
-                labelIds = latestLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
-              )?.let { roomDatabase.msgDao().updateSuspend(it) }
-            }
-            MessageEntity.generateColoredLabels(latestLabelIds, labelEntities)
-          } catch (e: Exception) {
-            MessageEntity.generateColoredLabels(cachedLabelIds, labelEntities)
-          }
-        } else {
-          emptyList()
-        }
-      })
+        currentValue.copy(data = currentList)
+      }
+    }
+  }
 }

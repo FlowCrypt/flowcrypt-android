@@ -19,7 +19,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.databinding.ItemMessageInThreadBinding
+import com.flowcrypt.email.databinding.ItemMessageInThreadCollapsedBinding
+import com.flowcrypt.email.databinding.ItemMessageInThreadExpandedBinding
 import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.toast
@@ -41,9 +42,12 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
   ) {
 
   override fun getItemViewType(position: Int): Int {
+    val item = getItem(position)
     return when (position) {
       0 -> Type.HEADER.id
-      else -> Type.MESSAGE.id
+      else -> if (item is Message) {
+        item.type.id
+      } else error("Unreachable")
     }
   }
 
@@ -53,8 +57,14 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
         LayoutInflater.from(parent.context).inflate(R.layout.item_thread_header, parent, false)
       )
 
-      Type.MESSAGE.id -> MessageViewHolder(
-        LayoutInflater.from(parent.context).inflate(R.layout.item_message_in_thread, parent, false)
+      Type.MESSAGE_COLLAPSED.id -> MessageCollapsedViewHolder(
+        LayoutInflater.from(parent.context)
+          .inflate(R.layout.item_message_in_thread_collapsed, parent, false)
+      )
+
+      Type.MESSAGE_EXPANDED.id -> MessageExpandedViewHolder(
+        LayoutInflater.from(parent.context)
+          .inflate(R.layout.item_message_in_thread_expanded, parent, false)
       )
 
       else -> error("Unreachable")
@@ -68,9 +78,22 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
         (holder as? HeaderViewHolder)?.bindTo(header)
       }
 
-      Type.MESSAGE.id -> {
+      Type.MESSAGE_COLLAPSED.id -> {
         val message = (getItem(position) as? Message) ?: return
-        (holder as? MessageViewHolder)?.bindTo(message.messageEntity, onMessageClickListener)
+        (holder as? MessageCollapsedViewHolder)?.bindTo(
+          position = position,
+          message = message,
+          onMessageClickListener = onMessageClickListener
+        )
+      }
+
+      Type.MESSAGE_EXPANDED.id -> {
+        val message = (getItem(position) as? Message) ?: return
+        (holder as? MessageExpandedViewHolder)?.bindTo(
+          position = position,
+          message = message,
+          onMessageClickListener = onMessageClickListener
+        )
       }
 
       else -> error("Unreachable")
@@ -78,7 +101,7 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
   }
 
   interface OnMessageClickListener {
-    fun onMessageClick(messageEntity: MessageEntity)
+    fun onMessageClick(position: Int, message: Message)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
@@ -113,25 +136,26 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
     }
   }
 
-  inner class MessageViewHolder(itemView: View) : BaseViewHolder(itemView) {
-    val binding = ItemMessageInThreadBinding.bind(itemView)
+  inner class MessageCollapsedViewHolder(itemView: View) : BaseViewHolder(itemView) {
+    val binding = ItemMessageInThreadCollapsedBinding.bind(itemView)
 
-    fun bindTo(item: MessageEntity, onMessageClickListener: OnMessageClickListener) {
+    fun bindTo(position: Int, message: Message, onMessageClickListener: OnMessageClickListener) {
       val context = itemView.context
-      itemView.setOnClickListener { onMessageClickListener.onMessageClick(item) }
-      val senderAddress = item.generateFromText(context)
+      val messageEntity = message.messageEntity
+      itemView.setOnClickListener { onMessageClickListener.onMessageClick(position, message) }
+      val senderAddress = messageEntity.generateFromText(context)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       )
-      binding.textViewSnippet.text = if (item.hasPgp == true) {
+      binding.textViewSnippet.text = if (messageEntity.hasPgp == true) {
         context.getString(R.string.preview_is_not_available_for_messages_with_pgp)
       } else {
-        item.snippet
+        messageEntity.snippet
       }
-      binding.tVTo.text = item.generateToText(context)
+      binding.tVTo.text = messageEntity.generateToText(context)
       binding.textViewSender.apply {
         text = senderAddress
-        if (item.isSeen) {
+        if (messageEntity.isSeen) {
           setTypeface(null, Typeface.NORMAL)
           setTextColor(
             MaterialColors.getColor(
@@ -147,7 +171,7 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
           )
         }
 
-        if (item.isDraft) {
+        if (messageEntity.isDraft) {
           val spannableStringBuilder = SpannableStringBuilder(text)
           spannableStringBuilder.append(" ")
           val timeSpannable = SpannableString("(${context.getString(R.string.draft)})")
@@ -160,8 +184,8 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
         }
       }
       binding.textViewDate.apply {
-        text = DateTimeUtil.formatSameDayTime(context, item.receivedDate ?: 0)
-        if (item.isSeen) {
+        text = DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
+        if (messageEntity.isSeen) {
           setTypeface(null, Typeface.NORMAL)
           setTextColor(
             MaterialColors.getColor(context, R.attr.itemSubTitleColor, Color.BLACK)
@@ -173,18 +197,33 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
           )
         }
       }
-      binding.viewHasPgp.visibleOrGone(item.hasPgp == true || item.isEncrypted == true)
-      binding.viewHasAttachments.visibleOrGone(item.hasAttachments == true)
-      binding.textViewDate.setTypeface(null, if (item.isSeen) Typeface.NORMAL else Typeface.BOLD)
+      binding.viewHasPgp.visibleOrGone(messageEntity.hasPgp == true || messageEntity.isEncrypted == true)
+      binding.viewHasAttachments.visibleOrGone(messageEntity.hasAttachments == true)
+      binding.textViewDate.setTypeface(
+        null,
+        if (messageEntity.isSeen) Typeface.NORMAL else Typeface.BOLD
+      )
     }
   }
 
-  abstract class Item(val type: Type) {
+  inner class MessageExpandedViewHolder(itemView: View) : BaseViewHolder(itemView) {
+    val binding = ItemMessageInThreadExpandedBinding.bind(itemView)
+
+    fun bindTo(position: Int, message: Message, onMessageClickListener: OnMessageClickListener) {
+      itemView.setOnClickListener { onMessageClickListener.onMessageClick(position, message) }
+    }
+  }
+
+  abstract class Item {
+    abstract val type: Type
     abstract val id: Long
     abstract fun areContentsTheSame(other: Any?): Boolean
   }
 
-  data class Message(val messageEntity: MessageEntity) : Item(Type.MESSAGE) {
+  data class Message(
+    val messageEntity: MessageEntity,
+    override val type: Type
+  ) : Item() {
     override val id: Long
       get() = messageEntity.uid
 
@@ -196,13 +235,18 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
   data class Header(
     val subject: String? = null,
     val labels: List<GmailApiLabelsListAdapter.Label>
-  ) : Item(Type.HEADER) {
+  ) : Item() {
+    override val type: Type = Type.HEADER
     override val id: Long
       get() = Long.MIN_VALUE
 
     override fun areContentsTheSame(other: Any?): Boolean {
       return this == other
     }
+  }
+
+  enum class Type(val id: Int) {
+    HEADER(0), MESSAGE_COLLAPSED(1), MESSAGE_EXPANDED(2),
   }
 
   companion object {
@@ -212,10 +256,6 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
 
       override fun areContentsTheSame(oldItem: Item, newItem: Item) =
         oldItem.areContentsTheSame(newItem)
-    }
-
-    enum class Type(val id: Int) {
-      HEADER(0), MESSAGE(1)
     }
   }
 }

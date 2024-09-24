@@ -89,7 +89,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/recyclerViewLabels"
             tools:itemCount="3"
-            tools:listitem="@layout/item_message_in_thread" />
+            tools:listitem="@layout/item_message_in_thread_collapsed" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

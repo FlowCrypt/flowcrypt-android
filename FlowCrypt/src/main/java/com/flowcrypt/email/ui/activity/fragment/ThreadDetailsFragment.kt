@@ -14,7 +14,6 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
@@ -56,8 +55,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
     object : MessagesInThreadListAdapter.OnMessageClickListener {
-      override fun onMessageClick(messageEntity: MessageEntity) {
-        toast(messageEntity.uidAsHEX)
+      override fun onMessageClick(position: Int, message: MessagesInThreadListAdapter.Message) {
+        threadDetailsViewModel.onMessageClicked(message)
       }
     })
 
