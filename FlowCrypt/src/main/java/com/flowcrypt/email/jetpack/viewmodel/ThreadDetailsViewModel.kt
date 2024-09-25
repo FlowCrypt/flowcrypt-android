@@ -146,9 +146,11 @@ class ThreadDetailsViewModel(
 
         val finalList = messageEntities.map { fromServerMessageEntity ->
           MessagesInThreadListAdapter.Message(
-            fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
+            messageEntity = fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
               it.uid == fromServerMessageEntity.uid
-            }?.id), MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
+            }?.id),
+            type = MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED,
+            isHeadersDetailsExpanded = false
           )
         }
 
@@ -216,6 +218,21 @@ class ThreadDetailsViewModel(
                 MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED
               }
             )
+          } else it
+        }
+        currentValue.copy(data = currentList)
+      }
+    }
+  }
+
+  fun onHeadersDetailsClick(message: MessagesInThreadListAdapter.Message) {
+    val currentValue = messagesInThreadFlow.value
+    if (currentValue.status == Result.Status.SUCCESS) {
+      loadMessagesManuallyMutableStateFlow.update {
+        val currentList = messagesInThreadFlow.value.data?.toMutableList()
+        currentList?.replaceAll {
+          if (it.id == message.id) {
+            message.copy(isHeadersDetailsExpanded = !message.isHeadersDetailsExpanded)
           } else it
         }
         currentValue.copy(data = currentList)

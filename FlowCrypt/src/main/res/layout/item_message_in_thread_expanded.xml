@@ -12,22 +12,22 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutHeader"
+        android:background="?android:attr/selectableItemBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/default_margin_medium"
-        android:layout_marginTop="@dimen/default_margin_content"
-        android:layout_marginEnd="@dimen/default_margin_medium"
+        android:paddingStart="@dimen/default_margin_medium"
+        android:paddingTop="@dimen/default_margin_content"
+        android:paddingEnd="@dimen/default_margin_medium"
+        android:paddingBottom="@dimen/default_margin_content"
         android:animateLayoutChanges="true">
 
         <ImageView
             android:id="@+id/imageViewAvatar"
             android:layout_width="@dimen/avatar_size"
             android:layout_height="@dimen/avatar_size"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:layout_marginBottom="@dimen/default_margin_content_small"
             android:contentDescription="@string/avatar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/view"
+            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_account_default_photo" />
 
         <TextView
@@ -35,7 +35,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/default_margin_content_small"
-            android:layout_marginTop="@dimen/default_margin_content_small"
             android:layout_marginEnd="@dimen/default_margin_small"
             android:ellipsize="middle"
             android:maxLines="1"
@@ -43,7 +42,7 @@
             android:textSize="@dimen/default_text_size_big"
             app:layout_constraintEnd_toStartOf="@+id/imageButtonReplyAll"
             app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
-            app:layout_constraintTop_toBottomOf="@+id/view"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_goneMarginLeft="@dimen/default_margin_medium"
             tools:text="sender@flowcrypt.com" />
 
@@ -51,17 +50,14 @@
             android:id="@+id/imageButtonReplyAll"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
             android:layout_marginEnd="@dimen/default_margin_content_small"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/reply_all"
-            android:visibility="invisible"
             app:layout_constraintEnd_toStartOf="@+id/imageButtonMoreOptions"
-            app:layout_constraintTop_toBottomOf="@+id/view"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_goneMarginRight="@dimen/default_margin_medium"
             app:srcCompat="@drawable/ic_reply_all"
-            tools:tint="@color/gray"
-            tools:visibility="visible" />
+            tools:tint="@color/gray" />
 
         <ImageButton
             android:id="@+id/imageButtonMoreOptions"
@@ -69,12 +65,10 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/reply_all"
-            android:visibility="invisible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_goneMarginRight="@dimen/default_margin_medium"
-            app:srcCompat="@drawable/ic_more_vert_gray_32dp"
-            tools:visibility="visible" />
+            app:srcCompat="@drawable/ic_more_vert_gray_32dp" />
 
         <TextView
             android:id="@+id/textViewDate"
@@ -124,38 +118,36 @@
             app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
             tools:text="To me" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rVMsgDetails"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_mime_headers"
-            android:nestedScrollingEnabled="false"
-            android:overScrollMode="never"
-            android:padding="@dimen/default_margin_content_small"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/iBShowDetails"
-            tools:itemCount="4"
-            tools:listitem="@layout/item_mime_header"
-            tools:visibility="visible" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rVPgpBadges"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/default_margin_content_small"
-            android:nestedScrollingEnabled="false"
-            android:overScrollMode="never"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rVMsgDetails"
-            tools:itemCount="4"
-            tools:listitem="@layout/item_pgp_badge"
-            tools:orientation="horizontal" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rVMsgDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_medium"
+        android:layout_marginEnd="@dimen/default_margin_medium"
+        android:background="@drawable/bg_mime_headers"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:padding="@dimen/default_margin_content_small"
+        android:visibility="gone"
+        tools:itemCount="4"
+        tools:listitem="@layout/item_mime_header"
+        tools:visibility="visible" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rVPgpBadges"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_medium"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_medium"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:itemCount="4"
+        tools:listitem="@layout/item_pgp_badge"
+        tools:orientation="horizontal" />
 
     <View
         android:id="@+id/layoutFooterOfHeader"

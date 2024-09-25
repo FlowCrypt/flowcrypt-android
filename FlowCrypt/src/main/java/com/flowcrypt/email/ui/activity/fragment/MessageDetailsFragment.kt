@@ -21,8 +21,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.text.Html
-import android.text.SpannableStringBuilder
-import android.text.format.DateUtils
 import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.Menu
@@ -39,7 +37,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.text.toSpannable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -93,7 +90,6 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.exceptionMsgWithStack
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -149,7 +145,6 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import jakarta.mail.AuthenticationFailedException
-import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FilenameUtils
@@ -924,76 +919,8 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   private fun updateMsgDetails(messageEntity: MessageEntity) {
     binding?.tVTo?.text = messageEntity.generateToText(requireContext())
-
-    val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
-      add(
-        MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.from),
-          value = formatAddresses(messageEntity.from)
-        )
-      )
-
-      if (messageEntity.replyToAddress.isNotEmpty()) {
-        add(
-          MsgDetailsRecyclerViewAdapter.Header(
-            name = getString(R.string.reply_to),
-            value = formatAddresses(messageEntity.replyToAddress)
-          )
-        )
-      }
-
-      add(
-        MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.to),
-          value = formatAddresses(messageEntity.to).ifEmpty { getString(R.string.no_recipients) }
-        )
-      )
-
-      if (messageEntity.cc.isNotEmpty()) {
-        add(
-          MsgDetailsRecyclerViewAdapter.Header(
-            name = getString(R.string.cc),
-            value = formatAddresses(messageEntity.cc)
-          )
-        )
-      }
-
-      add(
-        MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.date),
-          value = prepareDateHeaderValue(messageEntity)
-        )
-      )
-    }
-
-    msgDetailsAdapter.submitList(headers)
+    msgDetailsAdapter.submitList(messageEntity.generateDetailsHeaders(requireContext()))
   }
-
-  private fun prepareDateHeaderValue(messageEntity: MessageEntity): String {
-    val dateInMilliseconds: Long =
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
-        messageEntity.sentDate ?: 0
-      } else {
-        messageEntity.receivedDate ?: 0
-      }
-
-    val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
-        DateUtils.FORMAT_SHOW_YEAR
-    return DateUtils.formatDateTime(context, dateInMilliseconds, flags)
-  }
-
-  private fun formatAddresses(addresses: List<InternetAddress>) =
-    addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
-      if (index < MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE) {
-        builder.append(it.getFormattedString())
-        if (index != addresses.size - 1) {
-          builder.append("\n")
-        }
-      } else if (index == MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE + 1) {
-        builder.append(getString(R.string.and_others))
-      }
-      builder
-    }.toSpannable()
 
   private fun updateMsgView() {
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
@@ -2104,7 +2031,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
-    private const val MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE = 10
 
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001

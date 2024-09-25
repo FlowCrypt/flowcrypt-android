@@ -12,7 +12,9 @@ import android.provider.BaseColumns
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.format.DateUtils
 import android.text.style.AbsoluteSizeSpan
+import androidx.core.text.toSpannable
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -32,6 +34,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.jakarta.mail.hasPgp
+import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
 import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.extensions.kotlin.capitalize
@@ -40,6 +43,7 @@ import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
+import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter.MessageViewHolder.Companion.SENDER_NAME_PATTERN
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
@@ -344,6 +348,76 @@ data class MessageEntity(
       EmailUtil.getFirstAddressString(from)
     }
   }
+
+  fun generateDetailsHeaders(context: Context): List<MsgDetailsRecyclerViewAdapter.Header> {
+    return mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
+      add(
+        MsgDetailsRecyclerViewAdapter.Header(
+          name = context.getString(R.string.from),
+          value = formatAddresses(context, from)
+        )
+      )
+
+      if (replyToAddress.isNotEmpty()) {
+        add(
+          MsgDetailsRecyclerViewAdapter.Header(
+            name = context.getString(R.string.reply_to),
+            value = formatAddresses(context, replyToAddress)
+          )
+        )
+      }
+
+      add(
+        MsgDetailsRecyclerViewAdapter.Header(
+          name = context.getString(R.string.to),
+          value = formatAddresses(context, to).ifEmpty { context.getString(R.string.no_recipients) }
+        )
+      )
+
+      if (cc.isNotEmpty()) {
+        add(
+          MsgDetailsRecyclerViewAdapter.Header(
+            name = context.getString(R.string.cc),
+            value = formatAddresses(context, cc)
+          )
+        )
+      }
+
+      add(
+        MsgDetailsRecyclerViewAdapter.Header(
+          name = context.getString(R.string.date),
+          value = prepareDateHeaderValue(context)
+        )
+      )
+    }.toList()
+  }
+
+  private fun prepareDateHeaderValue(context: Context): String {
+    val dateInMilliseconds: Long =
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
+        sentDate ?: 0
+      } else {
+        receivedDate ?: 0
+      }
+
+    val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
+        DateUtils.FORMAT_SHOW_YEAR
+    return DateUtils.formatDateTime(context, dateInMilliseconds, flags)
+  }
+
+  private fun formatAddresses(context: Context, addresses: List<InternetAddress>) =
+    addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
+      val maxAllowedRecipientsInHeaderValue = 10
+      if (index < maxAllowedRecipientsInHeaderValue) {
+        builder.append(it.getFormattedString())
+        if (index != addresses.size - 1) {
+          builder.append("\n")
+        }
+      } else if (index == maxAllowedRecipientsInHeaderValue + 1) {
+        builder.append(context.getString(R.string.and_others))
+      }
+      builder
+    }.toSpannable()
 
   private fun generateAddresses(
     context: Context,

@@ -54,9 +54,16 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   }
 
   private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
-    object : MessagesInThreadListAdapter.OnMessageClickListener {
+    object : MessagesInThreadListAdapter.OnMessageActionsListener {
       override fun onMessageClick(position: Int, message: MessagesInThreadListAdapter.Message) {
         threadDetailsViewModel.onMessageClicked(message)
+      }
+
+      override fun onHeadersDetailsClick(
+        position: Int,
+        message: MessagesInThreadListAdapter.Message
+      ) {
+        threadDetailsViewModel.onHeadersDetailsClick(message)
       }
     })
 

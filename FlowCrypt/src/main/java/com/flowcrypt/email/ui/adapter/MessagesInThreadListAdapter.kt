@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.adapter
 
+import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.Spannable
@@ -14,10 +16,14 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadCollapsedBinding
 import com.flowcrypt.email.databinding.ItemMessageInThreadExpandedBinding
@@ -25,7 +31,9 @@ import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
+import com.flowcrypt.email.extensions.visibleOrInvisible
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.flexbox.FlexDirection
@@ -36,7 +44,7 @@ import com.google.android.material.color.MaterialColors
 /**
  * @author Denys Bondarenko
  */
-class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageClickListener) :
+class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessageActionsListener) :
   ListAdapter<MessagesInThreadListAdapter.Item, MessagesInThreadListAdapter.BaseViewHolder>(
     DIFF_UTIL_ITEM_CALLBACK
   ) {
@@ -83,7 +91,7 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
         (holder as? MessageCollapsedViewHolder)?.bindTo(
           position = position,
           message = message,
-          onMessageClickListener = onMessageClickListener
+          onMessageActionsListener = onMessageActionsListener
         )
       }
 
@@ -92,7 +100,7 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
         (holder as? MessageExpandedViewHolder)?.bindTo(
           position = position,
           message = message,
-          onMessageClickListener = onMessageClickListener
+          onMessageActionsListener = onMessageActionsListener
         )
       }
 
@@ -100,18 +108,22 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
     }
   }
 
-  interface OnMessageClickListener {
+  interface OnMessageActionsListener {
     fun onMessageClick(position: Int, message: Message)
+    fun onHeadersDetailsClick(position: Int, message: Message)
   }
 
-  abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+  abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    protected val context: Context
+      get() = itemView.context
+  }
 
   inner class HeaderViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ItemThreadHeaderBinding.bind(itemView)
     private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
       object : GmailApiLabelsListAdapter.OnLabelClickListener {
         override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
-          itemView.context.toast("fix me")
+          context.toast("fix me")
         }
       })
 
@@ -139,10 +151,13 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
   inner class MessageCollapsedViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ItemMessageInThreadCollapsedBinding.bind(itemView)
 
-    fun bindTo(position: Int, message: Message, onMessageClickListener: OnMessageClickListener) {
-      val context = itemView.context
+    fun bindTo(
+      position: Int,
+      message: Message,
+      onMessageActionsListener: OnMessageActionsListener
+    ) {
       val messageEntity = message.messageEntity
-      itemView.setOnClickListener { onMessageClickListener.onMessageClick(position, message) }
+      itemView.setOnClickListener { onMessageActionsListener.onMessageClick(position, message) }
       val senderAddress = messageEntity.generateFromText(context)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
@@ -209,8 +224,95 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
   inner class MessageExpandedViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ItemMessageInThreadExpandedBinding.bind(itemView)
 
-    fun bindTo(position: Int, message: Message, onMessageClickListener: OnMessageClickListener) {
-      itemView.setOnClickListener { onMessageClickListener.onMessageClick(position, message) }
+    private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
+    private val pgpBadgeListAdapter = PgpBadgeListAdapter()
+
+    init {
+      binding.rVMsgDetails.apply {
+        layoutManager = LinearLayoutManager(context)
+        addItemDecoration(
+          VerticalSpaceMarginItemDecoration(
+            marginTop = 0,
+            marginBottom = 0,
+            marginInternal = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+          )
+        )
+        adapter = msgDetailsAdapter
+      }
+
+      binding.rVPgpBadges.apply {
+        layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+        addItemDecoration(
+          MarginItemDecoration(
+            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+          )
+        )
+        adapter = pgpBadgeListAdapter
+      }
+    }
+
+    fun bindTo(
+      position: Int,
+      message: Message,
+      onMessageActionsListener: OnMessageActionsListener
+    ) {
+      binding.layoutHeader.setOnClickListener {
+        onMessageActionsListener.onMessageClick(
+          position,
+          message
+        )
+      }
+
+      binding.rVMsgDetails.visibleOrGone(message.isHeadersDetailsExpanded)
+      binding.textViewDate.visibleOrInvisible(!message.isHeadersDetailsExpanded)
+
+      binding.iBShowDetails.apply {
+        setImageResource(
+          if (message.isHeadersDetailsExpanded) {
+            R.drawable.ic_arrow_drop_up
+          } else {
+            R.drawable.ic_arrow_drop_down
+          }
+        )
+
+        setOnClickListener {
+          onMessageActionsListener.onHeadersDetailsClick(position, message)
+        }
+      }
+
+      val messageEntity = message.messageEntity
+
+      val senderAddress = EmailUtil.getFirstAddressString(messageEntity.from)
+      binding.textViewSenderAddress.text = senderAddress
+      binding.imageViewAvatar.useGlideToApplyImageFromSource(
+        source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
+      )
+
+      binding.tVTo.text = messageEntity.generateToText(context)
+
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+        binding.textViewDate.text =
+          DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
+      } else {
+        binding.textViewDate.text =
+          DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
+      }
+
+      binding.imageButtonReplyAll.apply {
+        val colorStateList =
+          ColorStateList.valueOf(
+            ContextCompat.getColor(
+              context, if (messageEntity.hasPgp == true) {
+                R.color.colorPrimary
+              } else {
+                R.color.red
+              }
+            )
+          )
+        imageTintList = colorStateList
+      }
+
+      msgDetailsAdapter.submitList(messageEntity.generateDetailsHeaders(context))
     }
   }
 
@@ -222,7 +324,8 @@ class MessagesInThreadListAdapter(private val onMessageClickListener: OnMessageC
 
   data class Message(
     val messageEntity: MessageEntity,
-    override val type: Type
+    override val type: Type,
+    val isHeadersDetailsExpanded: Boolean
   ) : Item() {
     override val id: Long
       get() = messageEntity.uid
