@@ -11,12 +11,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
+import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
@@ -24,8 +30,11 @@ import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragmentArgs
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author Denys Bondarenko
@@ -57,6 +66,19 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     object : MessagesInThreadListAdapter.OnMessageActionsListener {
       override fun onMessageClick(position: Int, message: MessagesInThreadListAdapter.Message) {
         threadDetailsViewModel.onMessageClicked(message)
+        if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
+          && message.incomingMessageInfo == null
+        ) {
+          navController?.navigate(
+            object : NavDirections {
+              override val actionId = R.id.process_message_dialog_graph
+              override val arguments = ProcessMessageDialogFragmentArgs(
+                requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+                messageIdInLocalDatabase = message.messageEntity.id ?: -1L
+              ).toBundle()
+            }
+          )
+        }
       }
 
       override fun onHeadersDetailsClick(
@@ -73,6 +95,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     initViews()
     setupThreadDetailsViewModel()
+    subscribeToProcessMessageDialogFragment()
   }
 
   private fun updateActionBar() {
@@ -111,6 +134,38 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun subscribeToProcessMessageDialogFragment() {
+    setFragmentResultListener(
+      REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+      true
+    ) { _, bundle ->
+      val result: Result<IncomingMessageInfo>? = bundle.getSerializableViaExt(
+        ProcessMessageDialogFragment.KEY_RESULT
+      ) as? Result<IncomingMessageInfo>
+
+      result?.let {
+        when (result.status) {
+          Result.Status.SUCCESS -> {
+            it.data?.let { it1 -> threadDetailsViewModel.onMessageProcessed(it1) }
+            toast("loaded!")
+          }
+
+          Result.Status.EXCEPTION -> {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = it.exceptionMsg,
+              isCancelable = true
+            )
+          }
+
+          else -> {
+            toast(getString(R.string.unknown_error))
+          }
+        }
+      }
+    }
+  }
+
   private fun initViews() {
     binding?.recyclerViewMessages?.apply {
       val linearLayoutManager = LinearLayoutManager(context)
@@ -122,5 +177,12 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       )
       adapter = messagesInThreadListAdapter
     }
+  }
+
+  companion object {
+    private val REQUEST_KEY_PROCESS_MESSAGE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_PROCESS_MESSAGE",
+      ThreadDetailsFragment::class.java
+    )
   }
 }

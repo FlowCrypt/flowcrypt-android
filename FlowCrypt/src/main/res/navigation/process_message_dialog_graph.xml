@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/process_message_dialog_graph"
+    app:startDestination="@id/processMessageDialogFragment">
+
+    <dialog
+        android:id="@+id/processMessageDialogFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragment"
+        tools:layout="@layout/fragment_process_message">
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+        <argument
+            android:name="messageIdInLocalDatabase"
+            app:argType="long" />
+    </dialog>
+</navigation>

@@ -24,12 +24,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadCollapsedBinding
 import com.flowcrypt.email.databinding.ItemMessageInThreadExpandedBinding
 import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
@@ -40,6 +45,7 @@ import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
+import java.nio.charset.StandardCharsets
 
 /**
  * @author Denys Bondarenko
@@ -224,8 +230,19 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
   inner class MessageExpandedViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ItemMessageInThreadExpandedBinding.bind(itemView)
 
-    private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
+    private val messageHeadersListAdapter = MessageHeadersListAdapter()
     private val pgpBadgeListAdapter = PgpBadgeListAdapter()
+    private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
+      isDeleteEnabled = false,
+      attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
+        override fun onDownloadClick(attachmentInfo: AttachmentInfo) {}
+
+        override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {}
+
+        override fun onPreviewClick(attachmentInfo: AttachmentInfo) {}
+
+        override fun onDeleteClick(attachmentInfo: AttachmentInfo) {}
+      })
 
     init {
       binding.rVMsgDetails.apply {
@@ -237,7 +254,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
             marginInternal = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
           )
         )
-        adapter = msgDetailsAdapter
+        adapter = messageHeadersListAdapter
       }
 
       binding.rVPgpBadges.apply {
@@ -248,6 +265,16 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
           )
         )
         adapter = pgpBadgeListAdapter
+      }
+
+      binding.rVAttachments.apply {
+        layoutManager = LinearLayoutManager(context)
+        addItemDecoration(
+          MarginItemDecoration(
+            marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+          )
+        )
+        adapter = attachmentsRecyclerViewAdapter
       }
     }
 
@@ -312,9 +339,78 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         imageTintList = colorStateList
       }
 
-      msgDetailsAdapter.submitList(messageEntity.generateDetailsHeaders(context))
+      messageHeadersListAdapter.submitList(messageEntity.generateDetailsHeaders(context))
+      attachmentsRecyclerViewAdapter.submitList(message.attachments)
+
+      binding.emailWebView.apply {
+        binding.status.root.gone()
+        binding.progress.root.gone()
+        binding.layoutContent.visible()
+        loadUrl("file:///android_asset/html/no_connection.htm")
+      }
+
+      if (message.incomingMessageInfo != null) {
+        updateMsgView(message.incomingMessageInfo)
+      }
+    }
+
+    private fun updateMsgView(msgInfo: IncomingMessageInfo) {
+      val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
+      binding.emailWebView.loadUrl("about:blank")
+      binding.layoutMessageParts.removeAllViews()
+      binding.layoutSecurityWarnings.removeAllViews()
+
+      var isFirstMsgPartText = true
+      var isHtmlDisplayed = false
+
+      for (block in msgInfo.msgBlocks ?: emptyList()) {
+        val layoutInflater = LayoutInflater.from(context)
+        when (block.type) {
+          MsgBlock.Type.SECURITY_WARNING -> {
+
+          }
+
+          MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
+            if (!isHtmlDisplayed) {
+              setupWebView(block)
+              isHtmlDisplayed = true
+            }
+          }
+
+
+          MsgBlock.Type.ENCRYPTED_SUBJECT -> {}// we should skip such blocks here
+
+          else -> {}
+        }
+        isFirstMsgPartText = false
+      }
+    }
+
+    private fun setupWebView(block: MsgBlock) {
+      binding.emailWebView.configure()
+
+      val text = clipLargeText(block.content) ?: ""
+
+      binding.emailWebView.loadDataWithBaseURL(
+        null,
+        text,
+        "text/html",
+        StandardCharsets.UTF_8.displayName(),
+        null
+      )
+    }
+
+    private fun clipLargeText(text: String?): String? {
+      text?.let {
+        return if (it.length > 50000) {
+          it.take(50000) + "\n\n" + context.getString(R.string.clipped_message_too_large)
+        } else text
+      }
+
+      return text
     }
   }
+
 
   abstract class Item {
     abstract val type: Type
@@ -325,7 +421,9 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
   data class Message(
     val messageEntity: MessageEntity,
     override val type: Type,
-    val isHeadersDetailsExpanded: Boolean
+    val isHeadersDetailsExpanded: Boolean,
+    val attachments: List<AttachmentInfo>,
+    val incomingMessageInfo: IncomingMessageInfo? = null
   ) : Item() {
     override val id: Long
       get() = messageEntity.uid

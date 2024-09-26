@@ -17,9 +17,9 @@ import com.flowcrypt.email.databinding.ItemMimeHeaderBinding
 /**
  * @author Denys Bondarenko
  */
-class MsgDetailsRecyclerViewAdapter :
-  ListAdapter<MsgDetailsRecyclerViewAdapter.Header,
-      MsgDetailsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+class MessageHeadersListAdapter :
+  ListAdapter<MessageHeadersListAdapter.Header,
+      MessageHeadersListAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(

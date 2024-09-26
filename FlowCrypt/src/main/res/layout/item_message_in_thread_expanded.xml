@@ -130,6 +130,7 @@
         android:nestedScrollingEnabled="false"
         android:overScrollMode="never"
         android:padding="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
         android:visibility="gone"
         tools:itemCount="4"
         tools:listitem="@layout/item_mime_header"

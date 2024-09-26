@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -144,13 +145,16 @@ class ThreadDetailsViewModel(
           threadMessageEntity.threadId ?: 0,
         )
 
+        //val attachments = roomDatabase.attachmentDao().getAttachments()
+
         val finalList = messageEntities.map { fromServerMessageEntity ->
           MessagesInThreadListAdapter.Message(
             messageEntity = fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
               it.uid == fromServerMessageEntity.uid
             }?.id),
             type = MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED,
-            isHeadersDetailsExpanded = false
+            isHeadersDetailsExpanded = false,
+            attachments = emptyList()
           )
         }
 
@@ -234,6 +238,24 @@ class ThreadDetailsViewModel(
           if (it.id == message.id) {
             message.copy(isHeadersDetailsExpanded = !message.isHeadersDetailsExpanded)
           } else it
+        }
+        currentValue.copy(data = currentList)
+      }
+    }
+  }
+
+  fun onMessageProcessed(incomingMessageInfo: IncomingMessageInfo) {
+    val currentValue = messagesInThreadFlow.value
+    if (currentValue.status == Result.Status.SUCCESS) {
+      loadMessagesManuallyMutableStateFlow.update {
+        val currentList = messagesInThreadFlow.value.data?.toMutableList()
+        currentList?.replaceAll {
+          val messageEntity = (it as? MessagesInThreadListAdapter.Message)?.messageEntity
+          if (messageEntity?.uid == incomingMessageInfo.msgEntity.uid) {
+            it.copy(incomingMessageInfo = incomingMessageInfo)
+          } else {
+            it
+          }
         }
         currentValue.copy(data = currentList)
       }

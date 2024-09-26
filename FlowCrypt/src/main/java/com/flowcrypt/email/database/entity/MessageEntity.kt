@@ -43,7 +43,7 @@ import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
-import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter.MessageViewHolder.Companion.SENDER_NAME_PATTERN
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
@@ -349,10 +349,10 @@ data class MessageEntity(
     }
   }
 
-  fun generateDetailsHeaders(context: Context): List<MsgDetailsRecyclerViewAdapter.Header> {
-    return mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
+  fun generateDetailsHeaders(context: Context): List<MessageHeadersListAdapter.Header> {
+    return mutableListOf<MessageHeadersListAdapter.Header>().apply {
       add(
-        MsgDetailsRecyclerViewAdapter.Header(
+        MessageHeadersListAdapter.Header(
           name = context.getString(R.string.from),
           value = formatAddresses(context, from)
         )
@@ -360,7 +360,7 @@ data class MessageEntity(
 
       if (replyToAddress.isNotEmpty()) {
         add(
-          MsgDetailsRecyclerViewAdapter.Header(
+          MessageHeadersListAdapter.Header(
             name = context.getString(R.string.reply_to),
             value = formatAddresses(context, replyToAddress)
           )
@@ -368,7 +368,7 @@ data class MessageEntity(
       }
 
       add(
-        MsgDetailsRecyclerViewAdapter.Header(
+        MessageHeadersListAdapter.Header(
           name = context.getString(R.string.to),
           value = formatAddresses(context, to).ifEmpty { context.getString(R.string.no_recipients) }
         )
@@ -376,7 +376,7 @@ data class MessageEntity(
 
       if (cc.isNotEmpty()) {
         add(
-          MsgDetailsRecyclerViewAdapter.Header(
+          MessageHeadersListAdapter.Header(
             name = context.getString(R.string.cc),
             value = formatAddresses(context, cc)
           )
@@ -384,7 +384,7 @@ data class MessageEntity(
       }
 
       add(
-        MsgDetailsRecyclerViewAdapter.Header(
+        MessageHeadersListAdapter.Header(
           name = context.getString(R.string.date),
           value = prepareDateHeaderValue(context)
         )

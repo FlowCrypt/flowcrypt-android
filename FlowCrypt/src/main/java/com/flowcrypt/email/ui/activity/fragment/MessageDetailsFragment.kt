@@ -126,7 +126,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogF
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
-import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
@@ -278,7 +278,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
-  private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
+  private val msgDetailsAdapter = MessageHeadersListAdapter()
   private val pgpBadgeListAdapter = PgpBadgeListAdapter()
   private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
     object : GmailApiLabelsListAdapter.OnLabelClickListener {
