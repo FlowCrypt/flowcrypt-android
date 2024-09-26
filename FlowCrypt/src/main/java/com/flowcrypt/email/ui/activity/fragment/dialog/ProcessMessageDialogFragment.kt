@@ -35,7 +35,7 @@ class ProcessMessageDialogFragment : BaseDialogFragment() {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ProcessMessageViewModel(
-          args.messageIdInLocalDatabase,
+          args.message,
           requireActivity().application
         ) as T
       }
@@ -74,15 +74,19 @@ class ProcessMessageDialogFragment : BaseDialogFragment() {
             binding?.progressBar?.visible()
           }
 
-          Result.Status.SUCCESS, Result.Status.EXCEPTION -> {
+          Result.Status.SUCCESS -> {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
               bundleOf(
                 KEY_REQUEST_KEY to args.requestKey,
-                KEY_RESULT to it,
+                KEY_RESULT to it.data,
               )
             )
+          }
+
+          Result.Status.EXCEPTION -> {
+
           }
 
           else -> {}

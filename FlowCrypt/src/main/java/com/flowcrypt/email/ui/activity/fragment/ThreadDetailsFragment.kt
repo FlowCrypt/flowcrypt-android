@@ -15,14 +15,12 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
-import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
+import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
-import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
@@ -65,19 +63,22 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
     object : MessagesInThreadListAdapter.OnMessageActionsListener {
       override fun onMessageClick(position: Int, message: MessagesInThreadListAdapter.Message) {
-        threadDetailsViewModel.onMessageClicked(message)
-        if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
-          && message.incomingMessageInfo == null
-        ) {
-          navController?.navigate(
-            object : NavDirections {
-              override val actionId = R.id.process_message_dialog_graph
-              override val arguments = ProcessMessageDialogFragmentArgs(
-                requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-                messageIdInLocalDatabase = message.messageEntity.id ?: -1L
-              ).toBundle()
-            }
-          )
+        if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED) {
+          if (message.incomingMessageInfo == null) {
+            navController?.navigate(
+              object : NavDirections {
+                override val actionId = R.id.process_message_dialog_graph
+                override val arguments = ProcessMessageDialogFragmentArgs(
+                  requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+                  message = message
+                ).toBundle()
+              }
+            )
+          } else {
+            threadDetailsViewModel.onMessageClicked(message)
+          }
+        } else {
+          threadDetailsViewModel.onMessageClicked(message)
         }
       }
 
@@ -143,28 +144,17 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
       true
     ) { _, bundle ->
-      val result: Result<IncomingMessageInfo>? = bundle.getSerializableViaExt(
+      val message: MessagesInThreadListAdapter.Message? = bundle.getParcelableViaExt(
         ProcessMessageDialogFragment.KEY_RESULT
-      ) as? Result<IncomingMessageInfo>
-
-      result?.let {
-        when (result.status) {
-          Result.Status.SUCCESS -> {
-            it.data?.let { it1 -> threadDetailsViewModel.onMessageProcessed(it1) }
-          }
-
-          Result.Status.EXCEPTION -> {
-            showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = it.exceptionMsg,
-              isCancelable = true
-            )
-          }
-
-          else -> {
-            toast(getString(R.string.unknown_error))
-          }
-        }
+      ) as? MessagesInThreadListAdapter.Message?
+      if (message != null) {
+        threadDetailsViewModel.onMessageChanged(
+          message.copy(
+            type = MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED
+          )
+        )
+      } else {
+        toast(R.string.unknown_error)
       }
     }
   }

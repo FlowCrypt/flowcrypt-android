@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Parcelable
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -34,9 +35,7 @@ import com.flowcrypt.email.databinding.ItemMessageInThreadCollapsedBinding
 import com.flowcrypt.email.databinding.ItemMessageInThreadExpandedBinding
 import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
-import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
@@ -48,6 +47,7 @@ import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
+import kotlinx.parcelize.Parcelize
 import java.nio.charset.StandardCharsets
 
 /**
@@ -391,16 +391,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         }
       }
 
-      binding.status.root.gone()
-      binding.progress.root.gone()
-      binding.layoutContent.visible()
-
       if (message.incomingMessageInfo != null) {
         updateMsgView(message.incomingMessageInfo)
-      } else {
-        binding.status.root.gone()
-        binding.progress.root.visible()
-        binding.layoutContent.gone()
       }
     }
 
@@ -468,13 +460,14 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     abstract fun areContentsTheSame(other: Any?): Boolean
   }
 
+  @Parcelize
   data class Message(
     val messageEntity: MessageEntity,
     override val type: Type,
     val isHeadersDetailsExpanded: Boolean,
     val attachments: List<AttachmentInfo>,
     val incomingMessageInfo: IncomingMessageInfo? = null
-  ) : Item() {
+  ) : Item(), Parcelable {
     override val id: Long
       get() = messageEntity.uid
 
@@ -496,7 +489,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     }
   }
 
-  enum class Type(val id: Int) {
+  @Parcelize
+  enum class Type(val id: Int) : Parcelable {
     HEADER(0), MESSAGE_COLLAPSED(1), MESSAGE_EXPANDED(2),
   }
 

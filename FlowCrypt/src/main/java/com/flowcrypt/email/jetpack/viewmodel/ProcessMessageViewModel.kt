@@ -52,7 +52,10 @@ import java.io.InputStream
 /**
  * @author Denys Bondarenko
  */
-class ProcessMessageViewModel(messageIdInLocalDatabase: Long, application: Application) :
+class ProcessMessageViewModel(
+  private val message: MessagesInThreadListAdapter.Message,
+  application: Application
+) :
   AccountViewModel(application) {
   private val controlledRunnerForLoadingMessages =
     ControlledRunner<Result<List<MessagesInThreadListAdapter.Item>>>()
@@ -62,7 +65,8 @@ class ProcessMessageViewModel(messageIdInLocalDatabase: Long, application: Appli
     processMessagesMutableStateFlow.asStateFlow()
 
   private val messageByIdFlow =
-    roomDatabase.msgDao().getMessageByIdFlow(messageIdInLocalDatabase).distinctUntilChanged()
+    roomDatabase.msgDao().getMessageByIdFlow(requireNotNull(message.messageEntity.id))
+      .distinctUntilChanged()
       .stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -105,7 +109,7 @@ class ProcessMessageViewModel(messageIdInLocalDatabase: Long, application: Appli
     }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  val incomingMessageInfoFlow: Flow<Result<IncomingMessageInfo>> = s.flatMapLatest {
+  val incomingMessageInfoFlow: Flow<Result<MessagesInThreadListAdapter.Message>> = s.flatMapLatest {
     flow {
       val context: Context = getApplication()
       val result = when (it.status) {
@@ -140,7 +144,10 @@ class ProcessMessageViewModel(messageIdInLocalDatabase: Long, application: Appli
                 },
                 verificationResult = processedMimeMessageResult.verificationResult
               )
-              Result.success(requestCode = it.requestCode, data = msgInfo)
+              Result.success(
+                requestCode = it.requestCode,
+                data = message.copy(incomingMessageInfo = msgInfo)
+              )
             } catch (e: Exception) {
               Result.exception(requestCode = it.requestCode, throwable = e)
             }
@@ -235,7 +242,6 @@ class ProcessMessageViewModel(messageIdInLocalDatabase: Long, application: Appli
       val accountEntity = getActiveAccountSuspend()
         ?: throw java.lang.NullPointerException("Account is null")
       val context: Context = getApplication()
-
 
       val result = GmailApiHelper.executeWithResult {
         val msgFullInfo = GmailApiHelper.loadMsgInfoSuspend(

@@ -17,7 +17,7 @@
             android:name="requestKey"
             app:argType="string" />
         <argument
-            android:name="messageIdInLocalDatabase"
-            app:argType="long" />
+            android:name="message"
+            app:argType="com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter$Message" />
     </dialog>
 </navigation>

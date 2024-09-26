@@ -159,75 +159,40 @@
         android:visibility="gone"
         tools:visibility="visible" />
 
-    <FrameLayout
-        android:id="@+id/layoutMessagePartsContainer"
+    <LinearLayout
+        android:id="@+id/layoutSecurityWarnings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <com.flowcrypt.email.ui.widget.EmailWebView
+        android:id="@+id/emailWebView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false">
+
+    </com.flowcrypt.email.ui.widget.EmailWebView>
+
+    <LinearLayout
+        android:id="@+id/layoutMessageParts"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="@dimen/default_margin_content_small"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/default_margin_small"
+        android:paddingBottom="@dimen/default_margin_small">
 
-        <include
-            android:id="@+id/progress"
-            layout="@layout/progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+    </LinearLayout>
 
-        <include
-            android:id="@+id/status"
-            layout="@layout/status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rVAttachments"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        tools:itemCount="3"
+        tools:listitem="@layout/attachment_item" />
 
-        <LinearLayout
-            android:id="@+id/layoutContent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:paddingTop="@dimen/default_margin_small"
-            android:paddingBottom="@dimen/default_margin_small"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <LinearLayout
-                android:id="@+id/layoutSecurityWarnings"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-
-            <com.flowcrypt.email.ui.widget.EmailWebView
-                android:id="@+id/emailWebView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="false"
-                android:focusable="false"
-                android:focusableInTouchMode="false">
-
-            </com.flowcrypt.email.ui.widget.EmailWebView>
-
-            <LinearLayout
-                android:id="@+id/layoutMessageParts"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:paddingTop="@dimen/default_margin_small"
-                android:paddingBottom="@dimen/default_margin_small">
-
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rVAttachments"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:overScrollMode="never"
-                tools:itemCount="3"
-                tools:listitem="@layout/attachment_item" />
-
-        </LinearLayout>
-
-    </FrameLayout>
 </LinearLayout>
