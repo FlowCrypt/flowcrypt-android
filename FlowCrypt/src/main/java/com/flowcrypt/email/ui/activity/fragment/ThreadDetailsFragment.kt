@@ -147,7 +147,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         when (result.status) {
           Result.Status.SUCCESS -> {
             it.data?.let { it1 -> threadDetailsViewModel.onMessageProcessed(it1) }
-            toast("loaded!")
           }
 
           Result.Status.EXCEPTION -> {

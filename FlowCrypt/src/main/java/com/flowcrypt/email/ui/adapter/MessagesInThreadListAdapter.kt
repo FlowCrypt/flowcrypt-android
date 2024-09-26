@@ -342,15 +342,16 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       messageHeadersListAdapter.submitList(messageEntity.generateDetailsHeaders(context))
       attachmentsRecyclerViewAdapter.submitList(message.attachments)
 
-      binding.emailWebView.apply {
-        binding.status.root.gone()
-        binding.progress.root.gone()
-        binding.layoutContent.visible()
-        loadUrl("file:///android_asset/html/no_connection.htm")
-      }
+      binding.status.root.gone()
+      binding.progress.root.gone()
+      binding.layoutContent.visible()
 
       if (message.incomingMessageInfo != null) {
         updateMsgView(message.incomingMessageInfo)
+      } else {
+        binding.status.root.gone()
+        binding.progress.root.visible()
+        binding.layoutContent.gone()
       }
     }
 
