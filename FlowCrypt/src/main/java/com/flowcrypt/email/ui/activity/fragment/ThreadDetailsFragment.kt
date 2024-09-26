@@ -87,6 +87,10 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       ) {
         threadDetailsViewModel.onHeadersDetailsClick(message)
       }
+
+      override fun onMessageChanged(position: Int, message: MessagesInThreadListAdapter.Message) {
+        threadDetailsViewModel.onMessageChanged(message)
+      }
     })
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

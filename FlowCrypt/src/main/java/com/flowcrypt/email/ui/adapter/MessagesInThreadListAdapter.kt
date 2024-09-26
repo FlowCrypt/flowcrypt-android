@@ -16,7 +16,9 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
 import androidx.core.content.ContextCompat
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -40,6 +42,7 @@ import com.flowcrypt.email.extensions.visibleOrInvisible
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
+import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
@@ -55,7 +58,13 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     DIFF_UTIL_ITEM_CALLBACK
   ) {
 
+  /**
+   * A cache of the last content height of WebView. It will help to prevent the content blinking
+   */
+  private val mapWebViewHeight = mutableMapOf<Int, Int>()
+
   override fun getItemViewType(position: Int): Int {
+    LogsUtil.d(TAG, "getItemViewType|position = $position")
     val item = getItem(position)
     return when (position) {
       0 -> Type.HEADER.id
@@ -66,6 +75,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
+    LogsUtil.d(TAG, "onCreateViewHolder|viewType = $viewType")
     return when (viewType) {
       Type.HEADER.id -> HeaderViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.item_thread_header, parent, false)
@@ -86,6 +96,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
   }
 
   override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
+    LogsUtil.d(TAG, "onBindViewHolder|holder = ${holder.itemViewType}, position = $position")
     when (holder.itemViewType) {
       Type.HEADER.id -> {
         val header = (getItem(position) as? Header) ?: return
@@ -114,9 +125,35 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     }
   }
 
+  // TODO:denbond7 need to check it with long content
+  override fun onViewRecycled(holder: BaseViewHolder) {
+    super.onViewRecycled(holder)
+    LogsUtil.d(
+      TAG,
+      "onViewRecycled|holder = ${holder.itemViewType}, bindingAdapterPosition = ${holder.bindingAdapterPosition}"
+    )
+    //try to cache the last content height of WebView. It will help to prevent the content blinking
+    if (holder is MessageExpandedViewHolder) {
+      val position = holder.bindingAdapterPosition
+      val holderWebViewHeight = holder.binding.emailWebView.height
+      if (holderWebViewHeight != 0) {
+        mapWebViewHeight[position] = holderWebViewHeight
+      }
+    }
+  }
+
+  override fun submitList(list: List<Item>?) {
+    super.submitList(list)
+    LogsUtil.d(
+      TAG,
+      "submitList|list.size = ${list?.size}"
+    )
+  }
+
   interface OnMessageActionsListener {
     fun onMessageClick(position: Int, message: Message)
     fun onHeadersDetailsClick(position: Int, message: Message)
+    fun onMessageChanged(position: Int, message: Message)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -126,6 +163,12 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
 
   inner class HeaderViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ItemThreadHeaderBinding.bind(itemView)
+
+    init {
+      //we prevent recycling for the header. It doesn't contain big data and can be in RAM all time.
+      setIsRecyclable(false)
+    }
+
     private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
       object : GmailApiLabelsListAdapter.OnLabelClickListener {
         override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
@@ -342,6 +385,12 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       messageHeadersListAdapter.submitList(messageEntity.generateDetailsHeaders(context))
       attachmentsRecyclerViewAdapter.submitList(message.attachments)
 
+      binding.emailWebView.apply {
+        updateLayoutParams {
+          height = mapWebViewHeight[position] ?: LayoutParams.WRAP_CONTENT
+        }
+      }
+
       binding.status.root.gone()
       binding.progress.root.gone()
       binding.layoutContent.visible()
@@ -459,5 +508,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       override fun areContentsTheSame(oldItem: Item, newItem: Item) =
         oldItem.areContentsTheSame(newItem)
     }
+
+    private const val TAG = "MessagesInThreadListAdapter"
   }
 }

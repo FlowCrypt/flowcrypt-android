@@ -261,4 +261,24 @@ class ThreadDetailsViewModel(
       }
     }
   }
+
+  fun onMessageChanged(messageWithChanges: MessagesInThreadListAdapter.Message) {
+    val currentValue = messagesInThreadFlow.value
+    if (currentValue.status == Result.Status.SUCCESS) {
+      val currentList = messagesInThreadFlow.value.data?.toMutableList()
+      val cachedMessage = currentList?.firstOrNull { it.id == messageWithChanges.id } ?: return
+      if (cachedMessage != messageWithChanges) {
+        loadMessagesManuallyMutableStateFlow.update {
+          currentList.replaceAll {
+            if (it.id == messageWithChanges.id) {
+              messageWithChanges
+            } else {
+              it
+            }
+          }
+          currentValue.copy(data = currentList)
+        }
+      }
+    }
+  }
 }
