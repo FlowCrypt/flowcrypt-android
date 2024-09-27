@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
@@ -19,15 +20,18 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentProcessMessageBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ProcessMessageViewModel
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 
 /**
  * @author Denys Bondarenko
  */
-class ProcessMessageDialogFragment : BaseDialogFragment() {
+class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
   private var binding: FragmentProcessMessageBinding? = null
   private val args by navArgs<ProcessMessageDialogFragmentArgs>()
   private val processMessageViewModel: ProcessMessageViewModel by viewModels {
@@ -42,10 +46,29 @@ class ProcessMessageDialogFragment : BaseDialogFragment() {
     }
   }
 
+  override val progressView: View?
+    get() = binding?.layoutProgress?.root
+  override val contentView: View?
+    get() = null
+  override val statusView: View?
+    get() = binding?.status?.root
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     isCancelable = false
     collectProcessMessageStateFlow()
+  }
+
+  override fun onStart() {
+    super.onStart()
+    getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
+      setOnClickListener {
+        processMessageViewModel.retry()
+        gone()
+      }
+      //we hide the button at the start up.
+      gone()
+    }
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -61,6 +84,8 @@ class ProcessMessageDialogFragment : BaseDialogFragment() {
       setNegativeButton(R.string.cancel) { _, _ ->
         navController?.navigateUp()
       }
+
+      setPositiveButton(R.string.retry) { _, _ -> }
     }
 
     return builder.create()
@@ -71,7 +96,7 @@ class ProcessMessageDialogFragment : BaseDialogFragment() {
       processMessageViewModel.incomingMessageInfoFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            binding?.progressBar?.visible()
+            showProgress()
           }
 
           Result.Status.SUCCESS -> {
@@ -86,7 +111,8 @@ class ProcessMessageDialogFragment : BaseDialogFragment() {
           }
 
           Result.Status.EXCEPTION -> {
-
+            showStatus(msg = it.exceptionMsg)
+            (dialog as? AlertDialog)?.getButton(AlertDialog.BUTTON_POSITIVE)?.visible()
           }
 
           else -> {}

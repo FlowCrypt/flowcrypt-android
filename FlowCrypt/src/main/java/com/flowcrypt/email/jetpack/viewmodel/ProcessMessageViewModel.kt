@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -34,14 +35,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
@@ -55,8 +55,7 @@ import java.io.InputStream
 class ProcessMessageViewModel(
   private val message: MessagesInThreadListAdapter.Message,
   application: Application
-) :
-  AccountViewModel(application) {
+) : AccountViewModel(application) {
   private val controlledRunnerForLoadingMessages =
     ControlledRunner<Result<List<MessagesInThreadListAdapter.Item>>>()
   private val processMessagesMutableStateFlow: MutableStateFlow<Result<List<IncomingMessageInfo>>> =
@@ -64,48 +63,88 @@ class ProcessMessageViewModel(
   val processMessagesStateFlow: StateFlow<Result<List<IncomingMessageInfo>>> =
     processMessagesMutableStateFlow.asStateFlow()
 
-  private val messageByIdFlow =
-    roomDatabase.msgDao().getMessageByIdFlow(requireNotNull(message.messageEntity.id))
-      .distinctUntilChanged()
-      .stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = null
+  private val triggerMessageEntityMutableStateFlow: MutableStateFlow<Trigger> =
+    MutableStateFlow(Trigger())
+  private val triggerMessageEntityStateFlow: StateFlow<Trigger> =
+    triggerMessageEntityMutableStateFlow.asStateFlow()
+
+  private val messageByIdFlow: Flow<Trigger> = merge(
+    triggerMessageEntityStateFlow,
+    flow {
+      emit(
+        Trigger(
+          roomDatabase.msgDao().getMessagesByIDs(
+            listOf(requireNotNull(message.messageEntity.id))
+          ).firstOrNull()
+        )
       )
+    }
+  )
 
   @OptIn(ExperimentalCoroutinesApi::class)
   private val s: Flow<Result<PgpMsg.ProcessedMimeMessageResult?>> =
-    messageByIdFlow.flatMapLatest { messageEntity ->
+    messageByIdFlow.flatMapLatest { trigger ->
       flow {
-        if (messageEntity?.isOutboxMsg == false) {
-          emit(Result.loading())
-          val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-          if (existedMsgSnapshot != null) {
-            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-            UpdateMsgsSeenStateWorker.enqueue(application)
-            val processingResult = processingMsgSnapshot(existedMsgSnapshot)
-            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
-            emit(processingResult)
-          } else {
-            emit(Result.loading(resultCode = R.id.progress_id_connecting, progress = 5.toDouble()))
-            val newMsgSnapshot = try {
-              loadMessageFromServer(messageEntity)
-            } catch (e: Exception) {
-              e.printStackTrace()
-              emit(Result.exception(e))
-              return@flow
+        val messageEntity = trigger.messageEntity ?: return@flow
+        try {
+          if (!messageEntity.isOutboxMsg) {
+            emit(Result.loading())
+
+            val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+            if (existedMsgSnapshot != null) {
+              emit(
+                Result.loading(
+                  resultCode = R.id.progress_id_processing,
+                  progress = 70.toDouble()
+                )
+              )
+              UpdateMsgsSeenStateWorker.enqueue(application)
+              val processingResult = processingMsgSnapshot(existedMsgSnapshot)
+              emit(
+                Result.loading(
+                  resultCode = R.id.progress_id_processing,
+                  progress = 90.toDouble()
+                )
+              )
+              emit(processingResult)
+            } else {
+              emit(
+                Result.loading(
+                  resultCode = R.id.progress_id_connecting,
+                  progress = 5.toDouble()
+                )
+              )
+              val newMsgSnapshot = try {
+                loadMessageFromServer(messageEntity)
+              } catch (e: Exception) {
+                e.printStackTrace()
+                emit(Result.exception(e))
+                return@flow
+              }
+              /*if (hasAbilityToChangeSeenStatus) {
+                setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
+              }*/
+              emit(
+                Result.loading(
+                  resultCode = R.id.progress_id_processing,
+                  progress = 70.toDouble()
+                )
+              )
+              val processingResult = processingMsgSnapshot(newMsgSnapshot)
+              emit(
+                Result.loading(
+                  resultCode = R.id.progress_id_processing,
+                  progress = 90.toDouble()
+                )
+              )
+              application.toast("PROCESS COMPLETED= ${System.currentTimeMillis()}")
+              emit(processingResult)
             }
-            /*if (hasAbilityToChangeSeenStatus) {
-              setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
-            }*/
-            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-            val processingResult = processingMsgSnapshot(newMsgSnapshot)
-            emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
-            emit(processingResult)
           }
+        } catch (e: Exception) {
+          emit(Result.exception(e))
         }
       }
-
     }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -126,9 +165,10 @@ class ProcessMessageViewModel(
           val processedMimeMessageResult = it.data
           if (processedMimeMessageResult != null) {
             try {
-              val messageEntity = requireNotNull(messageByIdFlow.value)
+              //todo need to get the latest one messageEntity
+              val messageEntity = message.messageEntity
               val msgInfo = IncomingMessageInfo(
-                msgEntity = requireNotNull(messageByIdFlow.value),
+                msgEntity = requireNotNull(messageEntity),
                 localFolder = LocalFolder(messageEntity.account, messageEntity.folder),
                 text = processedMimeMessageResult.text,
                 inlineSubject = processedMimeMessageResult.blocks.firstOrNull {
@@ -331,6 +371,12 @@ class ProcessMessageViewModel(
     }
   }
 
+  fun retry() {
+    viewModelScope.launch {
+      triggerMessageEntityMutableStateFlow.value = Trigger(message.messageEntity)
+    }
+  }
+
   /**
    * This class will be used to identify the fetching progress.
    */
@@ -348,4 +394,9 @@ class ProcessMessageViewModel(
       return value
     }
   }
+
+  data class Trigger(
+    val messageEntity: MessageEntity? = null,
+    val id: Long = System.currentTimeMillis()
+  )
 }

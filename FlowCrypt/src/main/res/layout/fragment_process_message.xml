@@ -3,30 +3,33 @@
   ~ Contributors: denbond7
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:padding="@dimen/default_margin_content">
 
-    <TextView
-        android:id="@+id/textViewMessage"
+    <include
+        android:id="@+id/status"
+        layout="@layout/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginStart="@dimen/default_margin_content"
-        android:layout_marginTop="@dimen/default_margin_content_large"
-        android:layout_marginEnd="@dimen/default_margin_content"
-        android:gravity="center"
-        android:paddingLeft="@dimen/default_margin_content_small"
-        android:paddingRight="@dimen/default_margin_content_small"
-        android:text="@string/processing_please_wait" />
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/layoutProgress"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
+    <include
+        android:id="@+id/layoutProgress"
+        layout="@layout/progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="@dimen/default_margin_content"
-        android:layout_marginBottom="@dimen/default_margin_content_small" />
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/status" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
