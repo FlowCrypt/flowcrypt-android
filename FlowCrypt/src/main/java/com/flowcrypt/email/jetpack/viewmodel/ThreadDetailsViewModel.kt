@@ -76,7 +76,7 @@ class ThreadDetailsViewModel(
   private suspend fun loadMessagesInternal(): Result<List<MessagesInThreadListAdapter.Item>> {
     val threadMessageEntity =
       roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return Result.exception(
-        IllegalStateException()
+        IllegalStateException("Message does not exist")
       )
     val activeAccount =
       getActiveAccountSuspend() ?: return Result.exception(IllegalStateException())

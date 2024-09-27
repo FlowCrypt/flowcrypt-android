@@ -20,7 +20,6 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -28,7 +27,6 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.cache.DiskLruCache
-import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import kotlinx.coroutines.Dispatchers
@@ -56,20 +54,10 @@ class ProcessMessageViewModel(
   private val message: MessagesInThreadListAdapter.Message,
   application: Application
 ) : AccountViewModel(application) {
-  private val controlledRunnerForLoadingMessages =
-    ControlledRunner<Result<List<MessagesInThreadListAdapter.Item>>>()
-  private val processMessagesMutableStateFlow: MutableStateFlow<Result<List<IncomingMessageInfo>>> =
-    MutableStateFlow(Result.none())
-  val processMessagesStateFlow: StateFlow<Result<List<IncomingMessageInfo>>> =
-    processMessagesMutableStateFlow.asStateFlow()
-
-  private val triggerMessageEntityMutableStateFlow: MutableStateFlow<Trigger> =
-    MutableStateFlow(Trigger())
-  private val triggerMessageEntityStateFlow: StateFlow<Trigger> =
-    triggerMessageEntityMutableStateFlow.asStateFlow()
-
-  private val messageByIdFlow: Flow<Trigger> = merge(
-    triggerMessageEntityStateFlow,
+  private val triggerMutableStateFlow: MutableStateFlow<Trigger> = MutableStateFlow(Trigger())
+  private val triggerStateFlow: StateFlow<Trigger> = triggerMutableStateFlow.asStateFlow()
+  private val triggerFlow: Flow<Trigger> = merge(
+    triggerStateFlow,
     flow {
       emit(
         Trigger(
@@ -82,8 +70,8 @@ class ProcessMessageViewModel(
   )
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  private val s: Flow<Result<PgpMsg.ProcessedMimeMessageResult?>> =
-    messageByIdFlow.flatMapLatest { trigger ->
+  private val processedMimeMessageResultFlow: Flow<Result<PgpMsg.ProcessedMimeMessageResult?>> =
+    triggerFlow.flatMapLatest { trigger ->
       flow {
         val messageEntity = trigger.messageEntity ?: return@flow
         try {
@@ -137,7 +125,6 @@ class ProcessMessageViewModel(
                   progress = 90.toDouble()
                 )
               )
-              application.toast("PROCESS COMPLETED= ${System.currentTimeMillis()}")
               emit(processingResult)
             }
           }
@@ -148,7 +135,8 @@ class ProcessMessageViewModel(
     }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  val incomingMessageInfoFlow: Flow<Result<MessagesInThreadListAdapter.Message>> = s.flatMapLatest {
+  val incomingMessageInfoFlow: Flow<Result<IncomingMessageInfo>> =
+    processedMimeMessageResultFlow.flatMapLatest {
     flow {
       val context: Context = getApplication()
       val result = when (it.status) {
@@ -168,7 +156,7 @@ class ProcessMessageViewModel(
               //todo need to get the latest one messageEntity
               val messageEntity = message.messageEntity
               val msgInfo = IncomingMessageInfo(
-                msgEntity = requireNotNull(messageEntity),
+                msgEntity = messageEntity,
                 localFolder = LocalFolder(messageEntity.account, messageEntity.folder),
                 text = processedMimeMessageResult.text,
                 inlineSubject = processedMimeMessageResult.blocks.firstOrNull {
@@ -184,10 +172,7 @@ class ProcessMessageViewModel(
                 },
                 verificationResult = processedMimeMessageResult.verificationResult
               )
-              Result.success(
-                requestCode = it.requestCode,
-                data = message.copy(incomingMessageInfo = msgInfo)
-              )
+              Result.success(requestCode = it.requestCode, data = msgInfo)
             } catch (e: Exception) {
               Result.exception(requestCode = it.requestCode, throwable = e)
             }
@@ -373,7 +358,7 @@ class ProcessMessageViewModel(
 
   fun retry() {
     viewModelScope.launch {
-      triggerMessageEntityMutableStateFlow.value = Trigger(message.messageEntity)
+      triggerMutableStateFlow.value = Trigger(message.messageEntity)
     }
   }
 

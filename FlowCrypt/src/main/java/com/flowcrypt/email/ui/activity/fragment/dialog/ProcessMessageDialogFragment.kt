@@ -105,7 +105,7 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
               args.requestKey,
               bundleOf(
                 KEY_REQUEST_KEY to args.requestKey,
-                KEY_RESULT to it.data,
+                KEY_RESULT to args.message.copy(incomingMessageInfo = it.data),
               )
             )
           }
