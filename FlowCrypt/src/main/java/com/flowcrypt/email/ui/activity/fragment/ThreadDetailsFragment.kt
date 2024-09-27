@@ -21,13 +21,16 @@ import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
+import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragmentArgs
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
@@ -63,23 +66,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
     object : MessagesInThreadListAdapter.OnMessageActionsListener {
       override fun onMessageClick(position: Int, message: MessagesInThreadListAdapter.Message) {
-        if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED) {
-          if (message.incomingMessageInfo == null) {
-            navController?.navigate(
-              object : NavDirections {
-                override val actionId = R.id.process_message_dialog_graph
-                override val arguments = ProcessMessageDialogFragmentArgs(
-                  requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-                  message = message
-                ).toBundle()
-              }
-            )
-          } else {
-            threadDetailsViewModel.onMessageClicked(message)
-          }
-        } else {
-          threadDetailsViewModel.onMessageClicked(message)
-        }
+        processMessageClick(message)
       }
 
       override fun onHeadersDetailsClick(
@@ -101,6 +88,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     initViews()
     setupThreadDetailsViewModel()
     subscribeToProcessMessageDialogFragment()
+    subscribeToFixNeedPassphraseIssueDialogFragment()
   }
 
   private fun updateActionBar() {
@@ -159,6 +147,35 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
+    setFragmentResultListener(
+      REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+      useSuperParentFragmentManagerIfPossible = true
+    ) { _, bundle ->
+      toast("HHHHH")
+      val requestCode = bundle.getInt(
+        FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE, Int.MIN_VALUE
+      )
+
+      when (requestCode) {
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE -> {
+          bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
+            val messageId = it.getLong(REQUEST_KEY_MESSAGE_ID, Long.MIN_VALUE)
+            if (messageId > 0) {
+              (messagesInThreadListAdapter.currentList.firstOrNull { item ->
+                item.id == messageId
+              } as? MessagesInThreadListAdapter.Message)?.let {
+                processMessageClick(it)
+              }
+            }
+          }
+        }
+
+        else -> toast(R.string.unknown_error)
+      }
+    }
+  }
+
   private fun initViews() {
     binding?.recyclerViewMessages?.apply {
       val linearLayoutManager = LinearLayoutManager(context)
@@ -172,10 +189,56 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun processMessageClick(message: MessagesInThreadListAdapter.Message) {
+    if (message.messageEntity.hasPgp == true) {
+      val keysStorage = KeysStorageImpl.getInstance(requireContext())
+      val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
+      if (fingerprints.isNotEmpty()) {
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+          requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE,
+          fingerprints = fingerprints,
+          bundle = Bundle().apply { putLong(REQUEST_KEY_MESSAGE_ID, message.id) }
+        )
+        return
+      }
+    }
+
+    if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED) {
+      if (message.incomingMessageInfo == null) {
+        navController?.navigate(
+          object : NavDirections {
+            override val actionId = R.id.process_message_dialog_graph
+            override val arguments = ProcessMessageDialogFragmentArgs(
+              requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+              message = message
+            ).toBundle()
+          }
+        )
+      } else {
+        threadDetailsViewModel.onMessageClicked(message)
+      }
+    } else {
+      threadDetailsViewModel.onMessageClicked(message)
+    }
+  }
+
   companion object {
     private val REQUEST_KEY_PROCESS_MESSAGE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PROCESS_MESSAGE",
       ThreadDetailsFragment::class.java
     )
+
+    private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_FIX_MISSING_PASSPHRASE",
+      ThreadDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_MESSAGE_ID = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_MESSAGE",
+      ThreadDetailsFragment::class.java
+    )
+
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1
   }
 }

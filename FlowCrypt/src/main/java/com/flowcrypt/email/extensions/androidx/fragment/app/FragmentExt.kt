@@ -46,19 +46,19 @@ import kotlinx.coroutines.launch
  * @author Denys Bondarenko
  */
 
-val androidx.fragment.app.Fragment.appBarLayout: AppBarLayout?
+val Fragment.appBarLayout: AppBarLayout?
   get() = activity?.findViewById(R.id.appBarLayout)
 
-val androidx.fragment.app.Fragment.countingIdlingResource: CountingIdlingResource?
+val Fragment.countingIdlingResource: CountingIdlingResource?
   get() = FlavorSettings.getCountingIdlingResource()
 
-val androidx.fragment.app.Fragment.supportActionBar: ActionBar?
+val Fragment.supportActionBar: ActionBar?
   get() = if (activity is AppCompatActivity) {
     (activity as AppCompatActivity).supportActionBar
   } else
     null
 
-val androidx.fragment.app.Fragment.navController: NavController?
+val Fragment.navController: NavController?
   get() = activity?.let {
     try {
       Navigation.findNavController(it, R.id.fragmentContainerView)
@@ -67,24 +67,24 @@ val androidx.fragment.app.Fragment.navController: NavController?
     }
   }
 
-val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
+val Fragment.currentOnResultSavedStateHandle
   get() = navController?.currentBackStackEntry?.savedStateHandle
 
-fun androidx.fragment.app.Fragment.doBaseUISetup(uiUxSettings: UiUxSettings) {
+fun Fragment.doBaseUISetup(uiUxSettings: UiUxSettings) {
   (activity as? BaseActivity<*>)?.setDrawerLockMode(uiUxSettings.isSideMenuLocked)
   appBarLayout?.visibleOrGone(uiUxSettings.isToolbarVisible)
   supportActionBar?.setDisplayHomeAsUpEnabled(uiUxSettings.isDisplayHomeAsUpEnabled)
   supportActionBar?.subtitle = null
 }
 
-fun androidx.fragment.app.Fragment.getOnResultSavedStateHandle(destinationId: Int? = null) =
+fun Fragment.getOnResultSavedStateHandle(destinationId: Int? = null) =
   if (destinationId == null) {
     null
   } else {
     navController?.getBackStackEntry(destinationId)?.savedStateHandle
   }
 
-fun <T> androidx.fragment.app.Fragment.getNavigationResult(
+fun <T> Fragment.getNavigationResult(
   key: String,
   onResult: (result: T) -> Unit
 ) {
@@ -96,17 +96,17 @@ fun <T> androidx.fragment.app.Fragment.getNavigationResult(
     }
 }
 
-fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
+fun Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
   text?.let { context?.toast(text, duration) }
 }
 
-fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGTH_SHORT) {
+fun Fragment.toast(resId: Int, duration: Int = Toast.LENGTH_SHORT) {
   if (resId != -1) {
     context?.toast(resId, duration)
   }
 }
 
-fun androidx.fragment.app.Fragment.showInfoDialog(
+fun Fragment.showInfoDialog(
   requestKey: String? = GeneralUtil.generateUniqueExtraKey(
     Constants.REQUEST_KEY_INFO_BUTTON_CLICK,
     this::class.java
@@ -137,7 +137,7 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
   )
 }
 
-fun androidx.fragment.app.Fragment.showTwoWayDialog(
+fun Fragment.showTwoWayDialog(
   requestKey: String? = GeneralUtil.generateUniqueExtraKey(
     Constants.REQUEST_KEY_BUTTON_CLICK,
     this::class.java
@@ -168,7 +168,7 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
   )
 }
 
-fun androidx.fragment.app.Fragment.setFragmentResultListenerForTwoWayDialog(
+fun Fragment.setFragmentResultListenerForTwoWayDialog(
   requestKey: String = GeneralUtil.generateUniqueExtraKey(
     Constants.REQUEST_KEY_BUTTON_CLICK,
     this::class.java
@@ -179,7 +179,7 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForTwoWayDialog(
   setFragmentResultListener(requestKey, useSuperParentFragmentManagerIfPossible, listener)
 }
 
-fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
+fun Fragment.setFragmentResultListenerForInfoDialog(
   useSuperParentFragmentManagerIfPossible: Boolean = false,
   listener: ((requestKey: String, bundle: Bundle) -> Unit)
 ) {
@@ -190,22 +190,24 @@ fun androidx.fragment.app.Fragment.setFragmentResultListenerForInfoDialog(
   setFragmentResultListener(requestKey, useSuperParentFragmentManagerIfPossible, listener)
 }
 
-fun androidx.fragment.app.Fragment.showNeedPassphraseDialog(
+fun Fragment.showNeedPassphraseDialog(
   requestKey: String,
   fingerprints: List<String>,
   requestCode: Int = Int.MIN_VALUE,
-  logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE
+  logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
+  bundle: Bundle? = null
 ) {
   showNeedPassphraseDialog(
     requestKey = requestKey,
     requestCode = requestCode,
     navController = navController,
     fingerprints = fingerprints,
-    logicType = logicType
+    logicType = logicType,
+    bundle = bundle
   )
 }
 
-fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
+fun Fragment.showInfoDialogWithExceptionDetails(
   e: Throwable?,
   msgDetails: String? = null
 ) {
@@ -217,11 +219,11 @@ fun androidx.fragment.app.Fragment.showInfoDialogWithExceptionDetails(
   )
 }
 
-fun androidx.fragment.app.Fragment.showFeedbackFragment() {
+fun Fragment.showFeedbackFragment() {
   showFeedbackFragment(requireActivity(), navController)
 }
 
-fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
+fun Fragment.showFindKeysInClipboardDialogFragment(
   requestKey: String,
   isPrivateKeyMode: Boolean
 ) {
@@ -236,7 +238,7 @@ fun androidx.fragment.app.Fragment.showFindKeysInClipboardDialogFragment(
   }
 }
 
-fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
+fun Fragment.showParsePgpKeysFromSourceDialogFragment(
   requestKey: String,
   source: String? = null,
   uri: Uri? = null,
@@ -255,7 +257,7 @@ fun androidx.fragment.app.Fragment.showParsePgpKeysFromSourceDialogFragment(
   }
 }
 
-fun androidx.fragment.app.Fragment.showChoosePublicKeyDialogFragment(
+fun Fragment.showChoosePublicKeyDialogFragment(
   requestKey: String,
   email: String,
   choiceMode: Int,
@@ -288,7 +290,7 @@ fun Fragment.setFragmentResultListener(
   }
 }
 
-inline fun androidx.fragment.app.Fragment.launchAndRepeatWithViewLifecycle(
+inline fun Fragment.launchAndRepeatWithViewLifecycle(
   minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
   crossinline block: suspend CoroutineScope.() -> Unit
 ) {
