@@ -93,7 +93,7 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
 
   private fun collectProcessMessageStateFlow() {
     launchAndRepeatWithLifecycle {
-      processMessageViewModel.incomingMessageInfoFlow.collect {
+      processMessageViewModel.processedMessageFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
             showProgress()
@@ -105,7 +105,7 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
               args.requestKey,
               bundleOf(
                 KEY_REQUEST_KEY to args.requestKey,
-                KEY_RESULT to args.message.copy(incomingMessageInfo = it.data),
+                KEY_RESULT to it.data,
               )
             )
           }

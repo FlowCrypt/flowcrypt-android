@@ -135,7 +135,7 @@ class ProcessMessageViewModel(
     }
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  val incomingMessageInfoFlow: Flow<Result<IncomingMessageInfo>> =
+  val processedMessageFlow: Flow<Result<MessagesInThreadListAdapter.Message>> =
     processedMimeMessageResultFlow.flatMapLatest {
     flow {
       val context: Context = getApplication()
@@ -155,7 +155,7 @@ class ProcessMessageViewModel(
             try {
               //todo need to get the latest one messageEntity
               val messageEntity = message.messageEntity
-              val msgInfo = IncomingMessageInfo(
+              val incomingMessageInfo = IncomingMessageInfo(
                 msgEntity = messageEntity,
                 localFolder = LocalFolder(messageEntity.account, messageEntity.folder),
                 text = processedMimeMessageResult.text,
@@ -172,7 +172,23 @@ class ProcessMessageViewModel(
                 },
                 verificationResult = processedMimeMessageResult.verificationResult
               )
-              Result.success(requestCode = it.requestCode, data = msgInfo)
+
+              val activeAccount = getActiveAccountSuspend() ?: error("No active account")
+
+              val attachments = roomDatabase.attachmentDao().getAttachments(
+                account = activeAccount.email,
+                accountType = activeAccount.accountType,
+                label = messageEntity.folder,
+                uid = messageEntity.uid
+              ).map { it.toAttInfo() }
+
+              Result.success(
+                requestCode = it.requestCode,
+                data = message.copy(
+                  incomingMessageInfo = incomingMessageInfo,
+                  attachments = attachments
+                )
+              )
             } catch (e: Exception) {
               Result.exception(requestCode = it.requestCode, throwable = e)
             }
