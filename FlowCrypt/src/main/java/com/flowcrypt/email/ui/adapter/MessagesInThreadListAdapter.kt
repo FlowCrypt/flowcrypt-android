@@ -99,8 +99,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     LogsUtil.d(TAG, "onBindViewHolder|holder = ${holder.itemViewType}, position = $position")
     when (holder.itemViewType) {
       Type.HEADER.id -> {
-        val header = (getItem(position) as? Header) ?: return
-        (holder as? HeaderViewHolder)?.bindTo(header)
+        val threadHeader = (getItem(position) as? ThreadHeader) ?: return
+        (holder as? HeaderViewHolder)?.bindTo(threadHeader)
       }
 
       Type.MESSAGE_COLLAPSED.id -> {
@@ -176,8 +176,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         }
       })
 
-    fun bindTo(header: Header) {
-      binding.textViewSubject.text = header.subject
+    fun bindTo(threadHeader: ThreadHeader) {
+      binding.textViewSubject.text = threadHeader.subject
 
       binding.recyclerViewLabels.apply {
         layoutManager = FlexboxLayoutManager(context).apply {
@@ -193,7 +193,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         adapter = gmailApiLabelsListAdapter
       }
 
-      gmailApiLabelsListAdapter.submitList(header.labels)
+      gmailApiLabelsListAdapter.submitList(threadHeader.labels)
     }
   }
 
@@ -476,7 +476,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     }
   }
 
-  data class Header(
+  data class ThreadHeader(
     val subject: String? = null,
     val labels: List<GmailApiLabelsListAdapter.Label>
   ) : Item() {

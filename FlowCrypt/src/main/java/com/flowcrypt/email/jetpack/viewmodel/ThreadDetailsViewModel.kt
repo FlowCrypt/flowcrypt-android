@@ -8,7 +8,6 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -19,12 +18,10 @@ import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
@@ -39,10 +36,6 @@ class ThreadDetailsViewModel(
   private val threadMessageEntityId: Long,
   application: Application
 ) : AccountViewModel(application) {
-
-  val messageFlow: Flow<MessageEntity?> =
-    roomDatabase.msgDao().getMessageByIdFlow(threadMessageEntityId).distinctUntilChanged()
-
   private val controlledRunnerForLoadingMessages =
     ControlledRunner<Result<List<MessagesInThreadListAdapter.Item>>>()
   private val loadMessagesManuallyMutableStateFlow: MutableStateFlow<Result<List<MessagesInThreadListAdapter.Item>>> =
@@ -52,10 +45,12 @@ class ThreadDetailsViewModel(
 
   val messagesInThreadFlow =
     merge(
+      //this flow will be used once to load messages at the start up
       flow {
         emit(Result.loading())
         emit(loadMessagesInternal())
       },
+      //this flow will be used to trigger loading messages manually, for example after connection issue
       loadMessagesManuallyStateFlow
     ).stateIn(
       scope = viewModelScope,
@@ -83,7 +78,7 @@ class ThreadDetailsViewModel(
     if (threadMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
       return Result.success(listOf())
     } else {
-      val header = prepareHeader()
+      val threadHeader = prepareThreadHeader()
 
       try {
         val messagesInThread = GmailApiHelper.loadMessagesInThread(
@@ -91,7 +86,7 @@ class ThreadDetailsViewModel(
           activeAccount,
           threadMessageEntity.threadIdAsHEX
         ).toMutableList().apply {
-          //put drafts in the right position
+          //try to put drafts in the right position
           val drafts = filter { it.isDraft() }
           drafts.forEach { draft ->
             val inReplyToValue = draft.getInReplyTo()
@@ -107,6 +102,7 @@ class ThreadDetailsViewModel(
           }
         }
 
+        //update the actual thread size
         roomDatabase.msgDao()
           .updateSuspend(threadMessageEntity.copy(threadMessagesCount = messagesInThread.size))
 
@@ -145,8 +141,6 @@ class ThreadDetailsViewModel(
           threadMessageEntity.threadId ?: 0,
         )
 
-        //val attachments = roomDatabase.attachmentDao().getAttachments()
-
         val finalList = messageEntities.map { fromServerMessageEntity ->
           MessagesInThreadListAdapter.Message(
             messageEntity = fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
@@ -158,7 +152,7 @@ class ThreadDetailsViewModel(
           )
         }
 
-        return Result.success(listOf(header) + finalList)
+        return Result.success(listOf(threadHeader) + finalList)
       } catch (e: Exception) {
         e.printStackTraceIfDebugOnly()
         return Result.exception(e)
@@ -166,10 +160,10 @@ class ThreadDetailsViewModel(
     }
   }
 
-  private suspend fun prepareHeader(): MessagesInThreadListAdapter.Header =
+  private suspend fun prepareThreadHeader(): MessagesInThreadListAdapter.ThreadHeader =
     withContext(Dispatchers.IO) {
       val account =
-        getActiveAccountSuspend() ?: return@withContext MessagesInThreadListAdapter.Header(
+        getActiveAccountSuspend() ?: return@withContext MessagesInThreadListAdapter.ThreadHeader(
           "",
           emptyList()
         )
@@ -196,12 +190,12 @@ class ThreadDetailsViewModel(
             labelIds = latestLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
           )?.let { roomDatabase.msgDao().updateSuspend(it) }
         }
-        MessagesInThreadListAdapter.Header(
+        MessagesInThreadListAdapter.ThreadHeader(
           freshestMessageEntity?.subject,
           MessageEntity.generateColoredLabels(latestLabelIds, labelEntities)
         )
       } catch (e: Exception) {
-        MessagesInThreadListAdapter.Header(
+        MessagesInThreadListAdapter.ThreadHeader(
           freshestMessageEntity?.subject,
           MessageEntity.generateColoredLabels(cachedLabelIds, labelEntities)
         )
@@ -238,24 +232,6 @@ class ThreadDetailsViewModel(
           if (it.id == message.id) {
             message.copy(isHeadersDetailsExpanded = !message.isHeadersDetailsExpanded)
           } else it
-        }
-        currentValue.copy(data = currentList)
-      }
-    }
-  }
-
-  fun onMessageProcessed(incomingMessageInfo: IncomingMessageInfo) {
-    val currentValue = messagesInThreadFlow.value
-    if (currentValue.status == Result.Status.SUCCESS) {
-      loadMessagesManuallyMutableStateFlow.update {
-        val currentList = messagesInThreadFlow.value.data?.toMutableList()
-        currentList?.replaceAll {
-          val messageEntity = (it as? MessagesInThreadListAdapter.Message)?.messageEntity
-          if (messageEntity?.uid == incomingMessageInfo.msgEntity.uid) {
-            it.copy(incomingMessageInfo = incomingMessageInfo)
-          } else {
-            it
-          }
         }
         currentValue.copy(data = currentList)
       }
