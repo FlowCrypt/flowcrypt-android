@@ -35,7 +35,6 @@ import com.flowcrypt.email.databinding.ItemMessageInThreadCollapsedBinding
 import com.flowcrypt.email.databinding.ItemMessageInThreadExpandedBinding
 import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
@@ -78,7 +77,12 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     LogsUtil.d(TAG, "onCreateViewHolder|viewType = $viewType")
     return when (viewType) {
       Type.HEADER.id -> HeaderViewHolder(
-        LayoutInflater.from(parent.context).inflate(R.layout.item_thread_header, parent, false)
+        LayoutInflater.from(parent.context).inflate(R.layout.item_thread_header, parent, false),
+        object : GmailApiLabelsListAdapter.OnLabelClickListener {
+          override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
+            onMessageActionsListener.onLabelClicked(label)
+          }
+        }
       )
 
       Type.MESSAGE_COLLAPSED.id -> MessageCollapsedViewHolder(
@@ -154,6 +158,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onMessageClick(position: Int, message: Message)
     fun onHeadersDetailsClick(position: Int, message: Message)
     fun onMessageChanged(position: Int, message: Message)
+    fun onLabelClicked(label: GmailApiLabelsListAdapter.Label)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -161,20 +166,12 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       get() = itemView.context
   }
 
-  inner class HeaderViewHolder(itemView: View) : BaseViewHolder(itemView) {
+  inner class HeaderViewHolder(
+    itemView: View,
+    listener: GmailApiLabelsListAdapter.OnLabelClickListener
+  ) : BaseViewHolder(itemView) {
     val binding = ItemThreadHeaderBinding.bind(itemView)
-
-    init {
-      //we prevent recycling for the header. It doesn't contain big data and can be in RAM all time.
-      setIsRecyclable(false)
-    }
-
-    private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
-      object : GmailApiLabelsListAdapter.OnLabelClickListener {
-        override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
-          context.toast("fix me")
-        }
-      })
+    private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(listener)
 
     fun bindTo(threadHeader: ThreadHeader) {
       binding.textViewSubject.text = threadHeader.subject
@@ -481,8 +478,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     val labels: List<GmailApiLabelsListAdapter.Label>
   ) : Item() {
     override val type: Type = Type.HEADER
-    override val id: Long
-      get() = Long.MIN_VALUE
+    override val id: Long = type.id.toLong()
 
     override fun areContentsTheSame(other: Any?): Boolean {
       return this == other

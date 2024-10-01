@@ -16,6 +16,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
@@ -30,9 +31,11 @@ import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragmentArgs
+import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
 import com.flowcrypt.email.util.GeneralUtil
@@ -78,6 +81,10 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
       override fun onMessageChanged(position: Int, message: MessagesInThreadListAdapter.Message) {
         threadDetailsViewModel.onMessageChanged(message)
+      }
+
+      override fun onLabelClicked(label: GmailApiLabelsListAdapter.Label) {
+        changeGmailLabels()
       }
     })
 
@@ -223,6 +230,20 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun changeGmailLabels() {
+    if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
+      navController?.navigate(
+        object : NavDirections {
+          override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
+          override val arguments = ChangeGmailLabelsDialogFragmentArgs(
+            requestKey = REQUEST_KEY_CHANGE_LABELS + args.messageEntityId.toString(),
+            messageEntityIds = arrayOf(args.messageEntityId).toLongArray()
+          ).toBundle()
+        }
+      )
+    }
+  }
+
   companion object {
     private val REQUEST_KEY_PROCESS_MESSAGE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PROCESS_MESSAGE",
@@ -236,6 +257,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     private val REQUEST_KEY_MESSAGE_ID = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_MESSAGE",
+      ThreadDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_CHANGE_LABELS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHANGE_LABELS",
       ThreadDetailsFragment::class.java
     )
 
