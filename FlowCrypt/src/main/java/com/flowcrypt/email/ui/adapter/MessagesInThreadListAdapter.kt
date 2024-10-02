@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -348,8 +347,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       }
 
       val messageEntity = message.messageEntity
-
-      val senderAddress = EmailUtil.getFirstAddressString(messageEntity.from)
+      val senderAddress = messageEntity.generateFromText(context)
       binding.textViewSenderAddress.text = senderAddress
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
