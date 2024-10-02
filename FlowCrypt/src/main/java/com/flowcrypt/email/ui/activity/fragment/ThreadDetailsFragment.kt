@@ -159,7 +159,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
       useSuperParentFragmentManagerIfPossible = true
     ) { _, bundle ->
-      toast("HHHHH")
       val requestCode = bundle.getInt(
         FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE, Int.MIN_VALUE
       )

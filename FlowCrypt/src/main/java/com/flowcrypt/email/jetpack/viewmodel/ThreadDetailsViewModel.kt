@@ -176,7 +176,7 @@ class ThreadDetailsViewModel(
               }
             }
           }
-        }
+        }.reversed()
 
         //update the actual thread size
         roomDatabase.msgDao()
