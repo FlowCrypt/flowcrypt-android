@@ -5,10 +5,12 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
@@ -50,7 +52,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   override val progressView: View?
     get() = binding?.progress?.root
   override val contentView: View?
-    get() = binding?.recyclerViewMessages
+    get() = binding?.groupContent
   override val statusView: View?
     get() = binding?.status?.root
 
@@ -130,6 +132,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               toast("Fix me")
             } else {
               messagesInThreadListAdapter.submitList(data)
+              (data.getOrNull(1) as? MessagesInThreadListAdapter.Message)?.let { message ->
+                updateThreadReplyButtons(message)
+              }
               showContent()
               tryToOpenTheFreshestMessage(data)
             }
@@ -145,6 +150,39 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         }
       }
     }
+  }
+
+  private fun updateThreadReplyButtons(message: MessagesInThreadListAdapter.Message) {
+    val replyButton = binding?.layoutReplyButtons?.replyButton
+    val replyAllButton = binding?.layoutReplyButtons?.replyAllButton
+    val forwardButton = binding?.layoutReplyButtons?.forwardButton
+
+    val buttonsColorId: Int
+
+    if (message.messageEntity.hasPgp == true) {
+      buttonsColorId = R.color.colorPrimary
+      replyButton?.setText(R.string.reply_encrypted)
+      replyAllButton?.setText(R.string.reply_all_encrypted)
+      forwardButton?.setText(R.string.forward_encrypted)
+    } else {
+      buttonsColorId = R.color.red
+      replyButton?.setText(R.string.reply)
+      replyAllButton?.setText(R.string.reply_all)
+      forwardButton?.setText(R.string.forward)
+    }
+
+    val colorStateList =
+      ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
+
+    replyButton?.iconTint = colorStateList
+    replyAllButton?.iconTint = colorStateList
+    forwardButton?.iconTint = colorStateList
+
+    //replyButton?.setOnClickListener(this)
+    //replyAllButton?.setOnClickListener(this)
+    //forwardButton?.setOnClickListener(this)
+
+    //binding?.layoutReplyButtons?.root?.visibleOrGone(!messageEntity.isOutboxMsg && !messageEntity.isDraft)
   }
 
   private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
