@@ -36,6 +36,7 @@ import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
+import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
 import com.flowcrypt.email.util.DateTimeUtil
@@ -388,7 +389,45 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
 
       if (message.incomingMessageInfo != null) {
         updateMsgView(message.incomingMessageInfo)
+        updatePgpBadges(message.incomingMessageInfo)
       }
+    }
+
+    private fun updatePgpBadges(incomingMessageInfo: IncomingMessageInfo) {
+      val badges = mutableListOf<PgpBadgeListAdapter.PgpBadge>()
+
+      if (incomingMessageInfo.encryptionType == MessageEncryptionType.ENCRYPTED) {
+        badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED))
+      } else {
+        badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED))
+      }
+
+      val verificationResult = incomingMessageInfo.verificationResult
+      if (verificationResult.hasSignedParts) {
+        val badge = when {
+          verificationResult.hasBadSignatures -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.BAD_SIGNATURE)
+          }
+
+          verificationResult.hasUnverifiedSignatures -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
+          }
+
+          verificationResult.isPartialSigned -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.ONLY_PARTIALLY_SIGNED)
+          }
+
+          !verificationResult.isPartialSigned && verificationResult.hasMixedSignatures -> {
+            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.MIXED_SIGNED)
+          }
+
+          else -> PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.SIGNED)
+        }
+        badges.add(badge)
+      } else {
+        badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED))
+      }
+      pgpBadgeListAdapter.submitList(badges)
     }
 
     private fun updateMsgView(msgInfo: IncomingMessageInfo) {
