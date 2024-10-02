@@ -90,6 +90,18 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       override fun onLabelClicked(label: GmailApiLabelsListAdapter.Label) {
         changeGmailLabels()
       }
+
+      override fun onReply(message: MessagesInThreadListAdapter.Message) {
+        replyTo(message)
+      }
+
+      override fun onReplyAll(message: MessagesInThreadListAdapter.Message) {
+        replyAllTo(message)
+      }
+
+      override fun onForward(message: MessagesInThreadListAdapter.Message) {
+        forward(message)
+      }
     })
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -178,12 +190,30 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     replyAllButton?.iconTint = colorStateList
     forwardButton?.iconTint = colorStateList
 
-    //replyButton?.setOnClickListener(this)
-    //replyAllButton?.setOnClickListener(this)
-    //forwardButton?.setOnClickListener(this)
-
-    //binding?.layoutReplyButtons?.root?.visibleOrGone(!messageEntity.isOutboxMsg && !messageEntity.isDraft)
+    replyButton?.setOnClickListener {
+      replyTo(message)
+    }
+    replyAllButton?.setOnClickListener {
+      replyAllTo(message)
+    }
+    forwardButton?.setOnClickListener {
+      forward(message)
+    }
   }
+
+
+  private fun replyTo(message: MessagesInThreadListAdapter.Message) {
+    toast("replyTo = ${message.messageEntity.subject}")
+  }
+
+  private fun replyAllTo(message: MessagesInThreadListAdapter.Message) {
+    toast("replyAllTo = ${message.messageEntity.subject}")
+  }
+
+  private fun forward(message: MessagesInThreadListAdapter.Message) {
+    toast("forward = ${message.messageEntity.subject}")
+  }
+
 
   private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
     if (isActive && data.size > 1) {

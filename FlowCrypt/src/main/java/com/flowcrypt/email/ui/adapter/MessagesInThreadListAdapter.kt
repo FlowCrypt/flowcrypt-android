@@ -17,6 +17,7 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
 import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
@@ -159,6 +160,9 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onHeadersDetailsClick(position: Int, message: Message)
     fun onMessageChanged(position: Int, message: Message)
     fun onLabelClicked(label: GmailApiLabelsListAdapter.Label)
+    fun onReply(message: Message)
+    fun onReplyAll(message: Message)
+    fun onForward(message: Message)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -347,6 +351,10 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         }
       }
 
+      binding.imageButtonReplyAll.setOnClickListener {
+        onMessageActionsListener.onReplyAll(message)
+      }
+
       val messageEntity = message.messageEntity
       val senderAddress = messageEntity.generateFromText(context)
       binding.textViewSenderAddress.text = senderAddress
@@ -390,6 +398,30 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       if (message.incomingMessageInfo != null) {
         updateMsgView(message.incomingMessageInfo)
         updatePgpBadges(message.incomingMessageInfo)
+      }
+
+      binding.imageButtonMoreOptions.setOnClickListener {
+        PopupMenu(context, binding.imageButtonMoreOptions).apply {
+          menuInflater.inflate(R.menu.popup_reply_actions, menu)
+          setOnMenuItemClickListener {
+            when (it.itemId) {
+              R.id.menuActionReply -> {
+                onMessageActionsListener.onReply(message)
+                true
+              }
+
+              R.id.menuActionForward -> {
+                onMessageActionsListener.onForward(message)
+                true
+              }
+
+              else -> {
+                true
+              }
+            }
+          }
+          show()
+        }
       }
     }
 
