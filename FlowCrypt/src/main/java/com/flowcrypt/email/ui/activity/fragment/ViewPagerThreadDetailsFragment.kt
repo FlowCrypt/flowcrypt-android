@@ -76,6 +76,15 @@ class ViewPagerThreadDetailsFragment : BaseFragment<FragmentViewPagerThreadDetai
           super.onPageSelected(position)
           (adapter as ThreadDetailsFragmentsAdapter).getItem(position)?.let { messageEntity ->
             threadsViewPagerViewModel.onItemSelected(messageEntity)
+            val activeFragment = childFragmentManager.fragments.firstOrNull {
+              messageEntity.id == it.navArgs<ThreadDetailsFragmentArgs>().value.messageEntityId
+            }?.apply {
+              (this as? ThreadDetailsFragment)?.changeActiveState(true)
+            }
+            val childFragmentsExceptSelected = childFragmentManager.fragments - activeFragment
+            childFragmentsExceptSelected.forEach {
+              (it as? ThreadDetailsFragment)?.changeActiveState(false)
+            }
           }
         }
       })

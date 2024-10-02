@@ -54,6 +54,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   override val statusView: View?
     get() = binding?.status?.root
 
+  private var isActive: Boolean = false
+
   private val args by navArgs<ThreadDetailsFragmentArgs>()
   private val threadDetailsViewModel: ThreadDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
@@ -98,6 +100,16 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     subscribeToFixNeedPassphraseIssueDialogFragment()
   }
 
+  fun changeActiveState(isActive: Boolean) {
+    this.isActive = isActive
+
+    if (isActive) {
+      threadDetailsViewModel.messagesInThreadFlow.value.data?.let {
+        tryToOpenTheFreshestMessage(it)
+      }
+    }
+  }
+
   private fun updateActionBar() {
     supportActionBar?.title = null
     supportActionBar?.subtitle = null
@@ -119,6 +131,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             } else {
               messagesInThreadListAdapter.submitList(data)
               showContent()
+              tryToOpenTheFreshestMessage(data)
             }
           }
 
@@ -129,6 +142,22 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           }
 
           else -> {}
+        }
+      }
+    }
+  }
+
+  private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
+    if (isActive && data.size > 1) {
+      val existing = messagesInThreadListAdapter.currentList.getOrNull(1)
+          as? MessagesInThreadListAdapter.Message
+      val firstMessage = data[1] as? MessagesInThreadListAdapter.Message
+
+      if (existing != null && existing.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
+        && existing.incomingMessageInfo == null
+      ) {
+        if (firstMessage != null && firstMessage.incomingMessageInfo == null) {
+          processMessageClick(firstMessage)
         }
       }
     }
