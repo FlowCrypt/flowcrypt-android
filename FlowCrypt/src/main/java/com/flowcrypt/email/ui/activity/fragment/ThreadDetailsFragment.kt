@@ -30,7 +30,10 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
@@ -203,17 +206,44 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
 
   private fun replyTo(message: MessagesInThreadListAdapter.Message) {
-    toast("replyTo = ${message.messageEntity.subject}")
+    startActivity(
+      CreateMessageActivity.generateIntent(
+        context = context,
+        messageType = MessageType.REPLY,
+        msgEncryptionType = if (message.messageEntity.hasPgp == true) {
+          MessageEncryptionType.ENCRYPTED
+        } else {
+          MessageEncryptionType.STANDARD
+        },
+        msgInfo = message.incomingMessageInfo?.toReplyVersion(
+          requireContext(),
+          CONTENT_MAX_ALLOWED_LENGTH
+        )
+      )
+    )
   }
 
   private fun replyAllTo(message: MessagesInThreadListAdapter.Message) {
-    toast("replyAllTo = ${message.messageEntity.subject}")
+    startActivity(
+      CreateMessageActivity.generateIntent(
+        context = context,
+        messageType = MessageType.REPLY_ALL,
+        msgEncryptionType = if (message.messageEntity.hasPgp == true) {
+          MessageEncryptionType.ENCRYPTED
+        } else {
+          MessageEncryptionType.STANDARD
+        },
+        msgInfo = message.incomingMessageInfo?.toReplyVersion(
+          requireContext(),
+          CONTENT_MAX_ALLOWED_LENGTH
+        )
+      )
+    )
   }
 
   private fun forward(message: MessagesInThreadListAdapter.Message) {
     toast("forward = ${message.messageEntity.subject}")
   }
-
 
   private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
     if (isActive && data.size > 1) {
@@ -362,5 +392,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
 
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1
+    private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
 }
