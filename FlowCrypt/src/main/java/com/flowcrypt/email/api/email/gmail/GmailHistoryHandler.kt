@@ -60,8 +60,15 @@ object GmailHistoryHandler {
       val applicationContext = context.applicationContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-      roomDatabase.msgDao()
-        .deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs)
+      if (accountEntity.isGoogleSignInAccount && accountEntity.useAPI && accountEntity.useConversationMode) {
+        roomDatabase.msgDao()
+          .deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs.map {
+            Long.MAX_VALUE - it
+          })
+      } else {
+        roomDatabase.msgDao()
+          .deleteByUIDsSuspend(accountEntity.email, localFolder.fullName, deleteCandidatesUIDs)
+      }
 
       val folderType = FoldersManager.getFolderType(localFolder)
       if (folderType == FoldersManager.FolderType.INBOX) {

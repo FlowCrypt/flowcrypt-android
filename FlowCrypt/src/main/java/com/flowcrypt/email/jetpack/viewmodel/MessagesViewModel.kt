@@ -551,7 +551,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                     thread.recipients.toTypedArray()
                   ),
                   hasPgp = thread.hasPgpThings,
-                  uid = System.nanoTime()
+                  //we need to identify threads by UID. But we can't have uid == threadId
+                  //as the first message in a thread has such a situation.
+                  //So we will use Long.MAX_VALUE to save 'threadId' modified
+                  //and will be able to recreate it.
+                  uid = Long.MAX_VALUE - (messageEntity.threadId ?: System.nanoTime())
                 )
               } else {
                 messageEntity

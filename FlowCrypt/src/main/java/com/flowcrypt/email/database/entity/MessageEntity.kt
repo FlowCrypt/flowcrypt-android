@@ -162,6 +162,10 @@ data class MessageEntity(
   @Ignore
   val isPasswordProtected = password?.isNotEmpty() ?: false
 
+  @IgnoredOnParcel
+  @Ignore
+  val isGmailThread: Boolean = threadMessagesCount != null && threadMessagesCount > 0
+
   /**
    * Generate a list of the all recipients.
    *
