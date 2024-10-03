@@ -135,7 +135,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           ) { deleteCandidatesUIDs, _, updateCandidatesMap, _ ->
             tryToRemoveNotifications(deleteCandidatesUIDs)
             tryToShowNotificationsForNewMessages(accountEntity, inboxLocalFolder)
-            removeNotificationForSeenMessages(updateCandidatesMap)
+            //removeNotificationForSeenMessages(updateCandidatesMap)
           }
         } catch (e: Exception) {
           if (e is GmailAPIException && e.code == HttpURLConnection.HTTP_NOT_FOUND) {

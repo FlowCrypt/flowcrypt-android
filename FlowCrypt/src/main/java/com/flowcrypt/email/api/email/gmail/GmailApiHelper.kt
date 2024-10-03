@@ -1226,7 +1226,7 @@ class GmailApiHelper {
         .setSelectedAccount(account)
     }
 
-    fun labelsToImapFlags(labelIds: List<String>): Flags {
+    fun labelsToImapFlags(labelIds: Collection<String>): Flags {
       val flags = Flags()
       labelIds.forEach {
         when (it) {

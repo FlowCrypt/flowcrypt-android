@@ -1,7 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.kotlin
@@ -184,3 +183,6 @@ fun String?.asContentTypeOrNull(): ContentType? {
     null
   }
 }
+
+val String.toLongRadix16: Long
+  get() = toLong(radix = 16)

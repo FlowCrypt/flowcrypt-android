@@ -5,13 +5,14 @@
 
 package com.flowcrypt.email.extensions
 
+import com.flowcrypt.email.extensions.kotlin.toLongRadix16
 import com.google.api.services.gmail.model.Message
 
 /**
  * @author Denys Bondarenko
  */
 val Message.uid: Long
-  get() = id.toLong(radix = 16)
+  get() = id.toLongRadix16
 
 val Message.threadIdAsLong: Long
-  get() = threadId.toLong(radix = 16)
+  get() = threadId.toLongRadix16
