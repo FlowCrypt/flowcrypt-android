@@ -41,6 +41,7 @@ import com.flowcrypt.email.extensions.kotlin.capitalize
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
+import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
@@ -346,6 +347,14 @@ data class MessageEntity(
       context.getString(R.string.me)
     } else {
       EmailUtil.getFirstAddressString(from)
+    }
+  }
+
+  fun getMessageEncryptionType(): MessageEncryptionType {
+    return if (hasPgp == true) {
+      MessageEncryptionType.ENCRYPTED
+    } else {
+      MessageEncryptionType.STANDARD
     }
   }
 

@@ -30,7 +30,6 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
-import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
@@ -204,45 +203,58 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-
   private fun replyTo(message: MessagesInThreadListAdapter.Message) {
     startActivity(
-      CreateMessageActivity.generateIntent(
-        context = context,
-        messageType = MessageType.REPLY,
-        msgEncryptionType = if (message.messageEntity.hasPgp == true) {
-          MessageEncryptionType.ENCRYPTED
-        } else {
-          MessageEncryptionType.STANDARD
-        },
-        msgInfo = message.incomingMessageInfo?.toReplyVersion(
-          requireContext(),
-          CONTENT_MAX_ALLOWED_LENGTH
-        )
-      )
+      prepareReply(message, MessageType.REPLY)
     )
   }
 
   private fun replyAllTo(message: MessagesInThreadListAdapter.Message) {
     startActivity(
-      CreateMessageActivity.generateIntent(
-        context = context,
-        messageType = MessageType.REPLY_ALL,
-        msgEncryptionType = if (message.messageEntity.hasPgp == true) {
-          MessageEncryptionType.ENCRYPTED
-        } else {
-          MessageEncryptionType.STANDARD
-        },
-        msgInfo = message.incomingMessageInfo?.toReplyVersion(
-          requireContext(),
-          CONTENT_MAX_ALLOWED_LENGTH
-        )
-      )
+      prepareReply(message, MessageType.REPLY_ALL)
     )
   }
 
+  private fun prepareReply(message: MessagesInThreadListAdapter.Message, replyType: Int) =
+    CreateMessageActivity.generateIntent(
+      context = context,
+      messageType = replyType,
+      msgEncryptionType = message.messageEntity.getMessageEncryptionType(),
+      msgInfo = message.incomingMessageInfo?.toReplyVersion(
+        requireContext(),
+        CONTENT_MAX_ALLOWED_LENGTH
+      )
+    )
+
   private fun forward(message: MessagesInThreadListAdapter.Message) {
-    toast("forward = ${message.messageEntity.subject}")
+    if (message.attachments.none { it.isEmbeddedAndPossiblyEncrypted() }) {
+      startActivity(
+        CreateMessageActivity.generateIntent(
+          context = context,
+          messageType = MessageType.FORWARD,
+          msgEncryptionType = message.messageEntity.getMessageEncryptionType(),
+          msgInfo = message.incomingMessageInfo?.toReplyVersion(
+            requireContext(),
+            CONTENT_MAX_ALLOWED_LENGTH
+          ),
+          //attachments = prepareAttachmentsForForwarding().toTypedArray()
+        )
+      )
+    } else {
+      /*navController?.navigate(
+        object : NavDirections {
+          override val actionId =
+            R.id.prepare_downloaded_attachments_for_forwarding_dialog_graph
+          override val arguments =
+            DecryptDownloadedAttachmentsBeforeForwardingDialogFragmentArgs(
+              requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING + args.messageEntityId.toString(),
+              attachments = attachmentsRecyclerViewAdapter.currentList.filter {
+                it.isEmbeddedAndPossiblyEncrypted()
+              }.toTypedArray()
+            ).toBundle()
+        }
+      )*/
+    }
   }
 
   private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
@@ -390,6 +402,12 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       "REQUEST_KEY_CHANGE_LABELS",
       ThreadDetailsFragment::class.java
     )
+
+    private val REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING =
+      GeneralUtil.generateUniqueExtraKey(
+        "REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING",
+        ThreadDetailsFragment::class.java
+      )
 
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
