@@ -704,7 +704,7 @@ data class MessageEntity(
             ?: entity.alias.orEmpty()
           GmailApiLabelsListAdapter.Label(name, entity.labelColor, entity.textColor)
         }
-      }.sortedBy { it.name }
+      }.sortedBy { it.name.lowercase() }
     }
   }
 }
