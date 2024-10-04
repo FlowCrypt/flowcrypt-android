@@ -60,16 +60,6 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     msgsID: Collection<Long>?
   ): List<MessageEntity>
 
-  @Query(
-    "SELECT * FROM messages WHERE (account = :account AND folder = :folder AND is_visible = 1 " +
-        "AND thread_id IN (:threadIdList)) GROUP BY thread_id"
-  )
-  abstract suspend fun getThreadsByID(
-    account: String,
-    folder: String,
-    threadIdList: Collection<String>
-  ): List<MessageEntity>
-
   @Query("SELECT * FROM messages WHERE _id IN (:msgsID)")
   abstract suspend fun getMessagesByIDs(msgsID: Collection<Long>): List<MessageEntity>
 

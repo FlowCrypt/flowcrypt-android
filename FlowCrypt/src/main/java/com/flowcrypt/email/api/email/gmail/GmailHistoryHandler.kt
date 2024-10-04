@@ -8,12 +8,10 @@ package com.flowcrypt.email.api.email.gmail
 import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.LABEL_DRAFT
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.LABEL_TRASH
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.labelsToImapFlags
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
-import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -24,7 +22,6 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.extensions.kotlin.toLongRadix16
-import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
@@ -116,7 +113,7 @@ object GmailHistoryHandler {
       localFolder = localFolder
     )
 
-    //delete remotely trashed treads locally
+    //delete remotely trashed threads locally
     if (deleteCandidates.isNotEmpty()) {
       if (accountEntity.isGoogleSignInAccount && accountEntity.useAPI && accountEntity.useConversationMode) {
         val threadIdsToBeDeleted = deleteCandidates.values.toSet()
@@ -138,44 +135,44 @@ object GmailHistoryHandler {
       }
     }
 
-    //insert new threads
+    //insert new threads or update the existing
     val newCandidates = newCandidatesMap.values
-    if (false/*newCandidates.isNotEmpty()*/) {
-      val gmailThreadInfoList: List<GmailThreadInfo>
-      val msgs: List<Message>
-      val existingThreads: List<MessageEntity>
-      val uniqueThreadIdList = newCandidates.map { it.threadId }.toSet()
-      existingThreads = roomDatabase.msgDao()
-        .getThreadsByID(accountEntity.email, localFolder.fullName, uniqueThreadIdList)
-      val existingThreadIds = existingThreads.mapNotNull { it.threadId }
-      gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
+    if (newCandidates.isNotEmpty()) {
+      val uniqueThreadIdListOfNewMessages = newCandidates.map { it.threadId }.toSet()
+      val existingThreads = roomDatabase.msgDao()
+        .getMessagesByIDs(uniqueThreadIdListOfNewMessages.map { Long.MAX_VALUE - it.toLongRadix16 })
+      val existingThreadIds = existingThreads.mapNotNull { it.threadIdAsHEX }.toSet()
+
+      val gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
         context = context,
         accountEntity = accountEntity,
-        threads = uniqueThreadIdList.map { Thread().apply { id = it } },
+        threads = uniqueThreadIdListOfNewMessages.map { Thread().apply { id = it } },
         format = GmailApiHelper.RESPONSE_FORMAT_FULL,
         localFolder = localFolder
       )
 
-      msgs = gmailThreadInfoList.map { it.lastMessage }
-        .filter { it.threadIdAsLong !in existingThreadIds }
+      val threadsToBeAdded = gmailThreadInfoList
+        .filter { it.id !in existingThreadIds }
+        .map { it.lastMessage }
 
-      //todo-denbond7: fix me
-      val draftIdsMap = emptyMap<String, String>()
+      if (threadsToBeAdded.isNotEmpty()) {
+        //insert new threads
+        //todo-denbond7: fix me
+        val draftIdsMap = emptyMap<String, String>()
 
-      val isNew =
-        !context.isAppForegrounded() && folderType == FoldersManager.FolderType.INBOX
+        val isNew =
+          !context.isAppForegrounded() && folderType == FoldersManager.FolderType.INBOX
 
-      val msgEntities = MessageEntity.genMessageEntities(
-        context = context,
-        account = accountEntity.email,
-        accountType = accountEntity.accountType,
-        label = localFolder.fullName,
-        msgsList = msgs,
-        isNew = isNew,
-        onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
-        draftIdsMap = draftIdsMap
-      ) { message, messageEntity ->
-        if (accountEntity.useConversationMode) {
+        val msgEntities = MessageEntity.genMessageEntities(
+          context = context,
+          account = accountEntity.email,
+          accountType = accountEntity.accountType,
+          label = localFolder.fullName,
+          msgsList = threadsToBeAdded,
+          isNew = isNew,
+          onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
+          draftIdsMap = draftIdsMap
+        ) { message, messageEntity ->
           val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
             ?: return@genMessageEntities messageEntity
           messageEntity.copy(
@@ -189,57 +186,44 @@ object GmailHistoryHandler {
             ),
             hasPgp = thread.hasPgpThings
           )
-        } else {
-          messageEntity
         }
+        roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
       }
 
-      roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
-      GmailApiHelper.identifyAttachments(
-        msgEntities,
-        msgs,
-        accountEntity,
-        localFolder,
-        roomDatabase
-      )
-
-      if (accountEntity.useConversationMode && existingThreads.isNotEmpty()) {
+      if (existingThreads.isNotEmpty()) {
+        //update existing threads
         val threadsToBeUpdated = existingThreads.mapNotNull { threadMessageEntity ->
-          val thread =
-            gmailThreadInfoList.firstOrNull { it.id == threadMessageEntity.threadIdAsHEX }
-          if (thread != null) {
-            val updatedMessageEntity = MessageEntity.genMessageEntities(
-              context = context,
-              account = accountEntity.email,
-              accountType = accountEntity.accountType,
-              label = localFolder.fullName,
-              msgsList = listOf(thread.lastMessage),
-              isNew = isNew,
-              onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
-              draftIdsMap = draftIdsMap
-            ).first()
+          gmailThreadInfoList.firstOrNull { it.id == threadMessageEntity.threadIdAsHEX }
+            ?.let { thread ->
+              val updatedMessageEntity = MessageEntity.genMessageEntities(
+                context = context,
+                account = accountEntity.email,
+                accountType = accountEntity.accountType,
+                label = localFolder.fullName,
+                msgsList = listOf(thread.lastMessage),
+                isNew = false,//todo-denbond7 need to think here
+                onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
+                draftIdsMap = emptyMap(),//todo-denbond7 need to think here
+              ).first()
 
-            MsgsCacheManager.removeMessage(threadMessageEntity.id.toString())
-            updatedMessageEntity.copy(
-              id = threadMessageEntity.id,
-              threadMessagesCount = thread.messagesCount,
-              labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
-              hasAttachments = thread.hasAttachments,
-              fromAddresses = InternetAddress.toString(
-                thread.recipients.toTypedArray()
-              ),
-              hasPgp = thread.hasPgpThings,
-              flags = if (thread.hasUnreadMessages) {
-                threadMessageEntity.flags?.replace(MessageFlag.SEEN.value, "")
-              } else {
-                if (threadMessageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-                  threadMessageEntity.flags
+              updatedMessageEntity.copy(
+                id = threadMessageEntity.id,
+                threadMessagesCount = thread.messagesCount,
+                labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
+                hasAttachments = thread.hasAttachments,
+                fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
+                hasPgp = thread.hasPgpThings,
+                flags = if (thread.hasUnreadMessages) {
+                  threadMessageEntity.flags?.replace(MessageFlag.SEEN.value, "")
                 } else {
-                  threadMessageEntity.flags.plus("${MessageFlag.SEEN.value} ")
+                  if (threadMessageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                    threadMessageEntity.flags
+                  } else {
+                    threadMessageEntity.flags.plus("${MessageFlag.SEEN.value} ")
+                  }
                 }
-              }
-            )
-          } else null
+              )
+            }
         }
         roomDatabase.msgDao().updateSuspend(threadsToBeUpdated)
       }
