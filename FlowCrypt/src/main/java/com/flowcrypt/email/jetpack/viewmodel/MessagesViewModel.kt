@@ -36,6 +36,7 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.MessageEntity.Companion.LABEL_IDS_SEPARATOR
 import com.flowcrypt.email.extensions.isAppForegrounded
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
@@ -874,7 +875,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         historyList = historyList
       )
     } catch (e: Exception) {
-      e.printStackTrace()
+      e.printStackTraceIfDebugOnly()
       when (e) {
         is GoogleJsonResponseException -> {
           if (localFolder.getFolderType() == FoldersManager.FolderType.INBOX
@@ -887,7 +888,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           }
         }
 
-        else -> throw e
+        else -> return@withContext Result.exception(e)
       }
     }
 

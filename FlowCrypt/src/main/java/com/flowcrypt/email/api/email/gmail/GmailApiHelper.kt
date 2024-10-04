@@ -28,6 +28,7 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasUnr
 import com.flowcrypt.email.extensions.contentId
 import com.flowcrypt.email.extensions.disposition
 import com.flowcrypt.email.extensions.isMimeType
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
@@ -138,6 +139,14 @@ class GmailApiHelper {
       "payload/headers",
       "payload/body",
       "payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)"
+    )
+
+    val THREAD_BASE_INFO = listOf(
+      "id",
+      "historyId",
+      "messages/id",
+      "messages/threadId",
+      "messages/labelIds",
     )
 
     suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> =
@@ -349,11 +358,19 @@ class GmailApiHelper {
       threads: List<Thread>,
       localFolder: LocalFolder,
       format: String = RESPONSE_FORMAT_FULL,
+      fields: List<String>? = null,
       stepValue: Int = 10
     ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
     {
       return@withContext useParallel(list = threads, stepValue = stepValue) { list ->
-        loadThreadsInfo(context, accountEntity, list, localFolder, format)
+        loadThreadsInfo(
+          context = context,
+          accountEntity = accountEntity,
+          threads = list,
+          localFolder = localFolder,
+          format = format,
+          fields = fields
+        )
       }
     }
 
@@ -364,7 +381,7 @@ class GmailApiHelper {
       localFolder: LocalFolder,
       format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
-      fields: List<String>? = FULL_INFO_WITHOUT_DATA
+      fields: List<String>? = null
     ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
     {
       val gmailApiService = generateGmailApiService(context, accountEntity)
@@ -384,6 +401,10 @@ class GmailApiHelper {
           request.metadataHeaders = metadataHeaders
         }
 
+        fields?.let { fields ->
+          request.fields = fields.joinToString(separator = ",")
+        }
+
         request.queue(
           batch,
           object : JsonBatchCallback<Thread>() {
@@ -398,7 +419,7 @@ class GmailApiHelper {
             }
 
             override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-
+              IllegalStateException(e?.toPrettyString()).printStackTraceIfDebugOnly()
             }
           })
       }

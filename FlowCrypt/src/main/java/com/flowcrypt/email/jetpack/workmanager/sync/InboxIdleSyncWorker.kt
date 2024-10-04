@@ -133,7 +133,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
             inboxLocalFolder,
             historyList
           ) { deleteCandidatesUIDs, _, updateCandidatesMap, _ ->
-            tryToRemoveNotifications(deleteCandidatesUIDs)
+            //tryToRemoveNotifications(deleteCandidatesUIDs)
             tryToShowNotificationsForNewMessages(accountEntity, inboxLocalFolder)
             //removeNotificationForSeenMessages(updateCandidatesMap)
           }
