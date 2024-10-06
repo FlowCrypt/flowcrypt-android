@@ -12,7 +12,7 @@ plugins {
   id("com.starter.easylauncher") version "6.4.0" apply false
   id("org.jetbrains.kotlin.plugin.parcelize") version "2.0.20" apply false
   id("com.google.devtools.ksp") version "2.0.20-1.0.25" apply false
-  id("org.ajoberstar.grgit") version "5.2.2" apply false
+  id("org.ajoberstar.grgit") version "5.3.0" apply false
 }
 
 subprojects {
