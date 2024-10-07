@@ -268,7 +268,7 @@ data class MessageEntity(
     folderType: FoldersManager.FolderType?
   ): CharSequence {
     val accountName = account
-    val addresses = when (folderType) {
+    return when (folderType) {
       FoldersManager.FolderType.SENT -> generateAddresses(
         context = context,
         accountName = accountName,
@@ -289,27 +289,23 @@ data class MessageEntity(
         internetAddresses = from
       )
     }
+  }
 
+  fun getThreadMessageCountSpannableString(context: Context): SpannableString? {
     return if ((threadMessagesCount ?: 0) > 1) {
-      SpannableStringBuilder(addresses).apply {
-        val spannableStringForThreadMessageCount = SpannableString(
-          "(${threadMessagesCount})"
-        ).apply {
-          val textSize =
-            context.resources.getDimensionPixelSize(R.dimen.default_text_size_small)
-          setSpan(
-            AbsoluteSizeSpan(textSize),
-            0,
-            length,
-            Spanned.SPAN_INCLUSIVE_INCLUSIVE
-          )
-        }
-        append(" ")
-        append(spannableStringForThreadMessageCount)
+      SpannableString(
+        "(${threadMessagesCount})"
+      ).apply {
+        val textSize =
+          context.resources.getDimensionPixelSize(R.dimen.default_text_size_small)
+        setSpan(
+          AbsoluteSizeSpan(textSize),
+          0,
+          length,
+          Spanned.SPAN_INCLUSIVE_INCLUSIVE
+        )
       }
-    } else {
-      addresses
-    }
+    } else null
   }
 
   fun generateToText(context: Context): String {

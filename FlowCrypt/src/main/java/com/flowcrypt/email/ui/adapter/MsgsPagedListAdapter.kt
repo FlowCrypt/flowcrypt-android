@@ -10,6 +10,7 @@ import android.graphics.Camera
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
@@ -234,7 +235,16 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
           else -> messageEntity.generateSenderAddresses(context, folderType)
         }
-        binding.textViewSenderAddress.text = senderAddress
+        binding.textViewSenderAddress.text = if ((messageEntity.threadMessagesCount ?: 0) > 1) {
+          messageEntity.getThreadMessageCountSpannableString(context)?.let { spanableString ->
+            SpannableStringBuilder(senderAddress).apply {
+              append(" ")
+              append(spanableString)
+            }
+          } ?: senderAddress
+        } else {
+          senderAddress
+        }
 
         updateAvatar(senderAddress, folderType, lastDataId == messageEntity.id)
         binding.imageViewAvatar.setOnClickListener {
