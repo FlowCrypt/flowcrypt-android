@@ -7,13 +7,16 @@ package com.flowcrypt.email.database.entity
 
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Color
 import android.os.Parcelable
 import android.provider.BaseColumns
+import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.format.DateUtils
 import android.text.style.AbsoluteSizeSpan
+import android.text.style.ForegroundColorSpan
 import androidx.core.text.toSpannable
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
@@ -115,6 +118,10 @@ data class MessageEntity(
   @ColumnInfo(name = "is_encrypted", defaultValue = "-1") val isEncrypted: Boolean? = null,
   @ColumnInfo(name = "has_pgp", defaultValue = "0") val hasPgp: Boolean? = null,
   @ColumnInfo(name = "thread_messages_count", defaultValue = "NULL") val threadMessagesCount: Int? = null,
+  @ColumnInfo(
+    name = "thread_drafts_count",
+    defaultValue = "NULL"
+  ) val threadDraftsCount: Int? = null,
   @ColumnInfo(name = "snippet", defaultValue = "NULL") val snippet: String? = null,
 ) : Parcelable {
 
@@ -226,6 +233,7 @@ data class MessageEntity(
     if (isEncrypted != other.isEncrypted) return false
     if (hasPgp != other.hasPgp) return false
     if (threadMessagesCount != other.threadMessagesCount) return false
+    if (threadDraftsCount != other.threadDraftsCount) return false
     if (snippet != other.snippet) return false
 
     return true
@@ -259,6 +267,7 @@ data class MessageEntity(
     result = 31 * result + (isEncrypted?.hashCode() ?: 0)
     result = 31 * result + (hasPgp?.hashCode() ?: 0)
     result = 31 * result + (threadMessagesCount ?: 0)
+    result = 31 * result + (threadDraftsCount ?: 0)
     result = 31 * result + (snippet?.hashCode() ?: 0)
     return result
   }
@@ -291,21 +300,45 @@ data class MessageEntity(
     }
   }
 
-  fun getThreadMessageCountSpannableString(context: Context): SpannableString? {
-    return if ((threadMessagesCount ?: 0) > 1) {
-      SpannableString(
-        "(${threadMessagesCount})"
-      ).apply {
-        val textSize =
-          context.resources.getDimensionPixelSize(R.dimen.default_text_size_small)
-        setSpan(
-          AbsoluteSizeSpan(textSize),
-          0,
-          length,
-          Spanned.SPAN_INCLUSIVE_INCLUSIVE
+  fun getThreadSpannableString(context: Context): SpannableStringBuilder {
+    return SpannableStringBuilder().apply {
+      val draftsCount = threadDraftsCount ?: 0
+      if (draftsCount > 0) {
+        append(", ")
+
+        val text = context.resources.getQuantityString(
+          R.plurals.drafts_count,
+          draftsCount, draftsCount
+        )
+        val color = Color.RED
+        append(
+          SpannableString(text).apply {
+            setSpan(
+              ForegroundColorSpan(color), 0, text.length,
+              Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+          }
+        )
+        append(" ")
+      }
+
+      if ((threadMessagesCount ?: 0) > 1) {
+        append(
+          SpannableString(
+            "(${threadMessagesCount})"
+          ).apply {
+            val textSize =
+              context.resources.getDimensionPixelSize(R.dimen.default_text_size_small)
+            setSpan(
+              AbsoluteSizeSpan(textSize),
+              0,
+              length,
+              Spanned.SPAN_INCLUSIVE_INCLUSIVE
+            )
+          }
         )
       }
-    } else null
+    }
   }
 
   fun generateToText(context: Context): String {

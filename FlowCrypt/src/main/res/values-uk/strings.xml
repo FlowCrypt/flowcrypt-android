@@ -644,4 +644,9 @@
         <item quantity="few">Показати повне листування із %1$d повідомленнь</item>
         <item quantity="many">Показати повне листування із %1$d повідомленнь</item>
     </plurals>
+    <plurals name="drafts_count">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Чорновик</item>
+        <item quantity="few">Чорновики(%1$d)</item>
+        <item quantity="many">Чорновики(%1$d)</item>
+    </plurals>
 </resources>

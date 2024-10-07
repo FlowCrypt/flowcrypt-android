@@ -22,6 +22,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.extractSubject
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getDraftsCount
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueLabelsSet
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasUnreadMessages
@@ -1310,6 +1311,7 @@ class GmailApiHelper {
         id = thread.id,
         lastMessage = requireNotNull(thread.messages?.last { !it.labelIds.contains(LABEL_DRAFT) }),
         messagesCount = thread.messages?.size ?: 0,
+        draftsCount = thread.getDraftsCount(),
         recipients = thread.getUniqueRecipients(receiverEmail),
         subject = thread.extractSubject(context, receiverEmail),
         labels = thread.getUniqueLabelsSet(),

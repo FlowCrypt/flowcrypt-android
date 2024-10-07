@@ -15,6 +15,7 @@ data class GmailThreadInfo(
   val id: String,
   val lastMessage: Message,
   val messagesCount: Int,
+  val draftsCount: Int,
   val recipients: List<InternetAddress>,
   val subject: String,
   val labels: Set<String>,

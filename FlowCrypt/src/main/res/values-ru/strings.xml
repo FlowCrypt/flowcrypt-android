@@ -643,4 +643,9 @@
         <item quantity="few">Показать всю переписку из %1$d сообщений</item>
         <item quantity="many">Показать всю переписку из %1$d сообщений</item>
     </plurals>
+    <plurals name="drafts_count">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Черновик</item>
+        <item quantity="few">Черновики(%1$d)</item>
+        <item quantity="many">Черновики(%1$d)</item>
+    </plurals>
 </resources>

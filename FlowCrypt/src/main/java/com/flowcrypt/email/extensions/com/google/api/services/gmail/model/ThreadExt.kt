@@ -56,6 +56,10 @@ fun Thread.getUniqueLabelsSet(): Set<String> {
   }?.toSortedSet() ?: emptySet()
 }
 
+fun Thread.getDraftsCount(): Int {
+  return messages?.filter { it.labelIds.contains(GmailApiHelper.LABEL_DRAFT) }?.size ?: 0
+}
+
 fun Thread.hasUnreadMessages(): Boolean {
   return messages?.any { message ->
     message.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) == true

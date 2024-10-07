@@ -113,6 +113,8 @@ object GmailHistoryHandler {
       localFolder = localFolder
     )
 
+    val threadIdListToBeUpdated = mutableSetOf<String>()
+
     //delete remotely trashed threads locally
     if (deleteCandidates.isNotEmpty()) {
       if (accountEntity.isGoogleSignInAccount && accountEntity.useAPI && accountEntity.useConversationMode) {
@@ -121,34 +123,39 @@ object GmailHistoryHandler {
           gmailThreadsListWithBaseInfo.filter { it.id in threadIdsToBeDeleted }
 
         /*
-            Delete threads from the active folder if all messages in a tread doesn't have
-            the requested label.
-            It will cover a situation when some email client works with separate messages.
-            */
+        Delete threads from the active folder if all messages in a tread doesn't have
+        the requested label.
+        It will cover a situation when some email client works with separate messages.
+        */
         val toBeDeletedLocally =
-          gmailThreadInfoList.filter { !it.labels.contains(localFolder.fullName) }
+          gmailThreadInfoList.filter { !it.labels.contains(localFolder.fullName) }.toSet()
 
         roomDatabase.msgDao().deleteByUIDsSuspend(
           account = accountEntity.email,
           label = localFolder.fullName,
           msgsUID = toBeDeletedLocally.map { Long.MAX_VALUE - it.id.toLongRadix16 })
+
+
+        //need to update the left threads
+        val toBeUpdated = gmailThreadInfoList - toBeDeletedLocally
+        threadIdListToBeUpdated.addAll(toBeUpdated.map { it.id })
       }
     }
 
     //insert new threads or update the existing
     val newCandidates = newCandidatesMap.values
-    if (newCandidates.isNotEmpty()) {
-      val uniqueThreadIdListOfNewMessages = newCandidates.map { it.threadId }.toSet()
+    if (newCandidates.isNotEmpty() || threadIdListToBeUpdated.isNotEmpty()) {
+      val uniqueThreadIdList = newCandidates.map { it.threadId }.toSet() + threadIdListToBeUpdated
       val existingThreads = roomDatabase.msgDao().getMsgsByUIDs(
         account = accountEntity.email,
         label = localFolder.fullName,
-        uidList = uniqueThreadIdListOfNewMessages.map { Long.MAX_VALUE - it.toLongRadix16 })
+        uidList = uniqueThreadIdList.map { Long.MAX_VALUE - it.toLongRadix16 })
       val existingThreadIds = existingThreads.mapNotNull { it.threadIdAsHEX }.toSet()
 
       val gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
         context = context,
         accountEntity = accountEntity,
-        threads = uniqueThreadIdListOfNewMessages.map { Thread().apply { id = it } },
+        threads = uniqueThreadIdList.map { Thread().apply { id = it } },
         format = GmailApiHelper.RESPONSE_FORMAT_FULL,
         localFolder = localFolder
       )
@@ -181,6 +188,7 @@ object GmailHistoryHandler {
             uid = Long.MAX_VALUE - thread.id.toLongRadix16,
             subject = thread.subject,
             threadMessagesCount = thread.messagesCount,
+            threadDraftsCount = thread.draftsCount,
             labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
             hasAttachments = thread.hasAttachments,
             fromAddresses = InternetAddress.toString(
@@ -213,6 +221,7 @@ object GmailHistoryHandler {
                 uid = threadMessageEntity.uid,
                 subject = thread.subject,
                 threadMessagesCount = thread.messagesCount,
+                threadDraftsCount = thread.draftsCount,
                 labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                 hasAttachments = thread.hasAttachments,
                 fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
@@ -381,9 +390,11 @@ object GmailHistoryHandler {
 
       history.messagesAdded?.let { messagesAdded ->
         for (historyMsgAdded in messagesAdded) {
-          if (LABEL_DRAFT in (historyMsgAdded.message.labelIds ?: emptyList()) && !isDrafts) {
-            //skip adding drafts to non-Drafts folder
-            continue
+          if (!accountEntity.useConversationMode) {
+            if (LABEL_DRAFT in (historyMsgAdded.message.labelIds ?: emptyList()) && !isDrafts) {
+              //skip adding drafts to non-Drafts folder
+              continue
+            }
           }
           deleteCandidates.remove(historyMsgAdded.message.uid)
           updateCandidates.remove(historyMsgAdded.message.uid)

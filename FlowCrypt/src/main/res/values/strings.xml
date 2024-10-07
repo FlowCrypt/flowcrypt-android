@@ -653,4 +653,8 @@
     <plurals name="show_full_conversation">
         <item quantity="other">Show a full conversation of %1$d messages</item>
     </plurals>
+    <plurals name="drafts_count">
+        <item quantity="one">Draft</item>
+        <item quantity="other">Drafts(%1$d)</item>
+    </plurals>
 </resources>

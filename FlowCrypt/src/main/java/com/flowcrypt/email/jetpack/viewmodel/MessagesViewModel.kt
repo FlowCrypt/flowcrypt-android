@@ -546,6 +546,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
                 messageEntity.copy(
                   subject = thread.subject,
                   threadMessagesCount = thread.messagesCount,
+                  threadDraftsCount = thread.draftsCount,
                   labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                   hasAttachments = thread.hasAttachments,
                   fromAddresses = InternetAddress.toString(
