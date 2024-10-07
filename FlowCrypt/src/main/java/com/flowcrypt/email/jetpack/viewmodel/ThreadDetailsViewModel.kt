@@ -6,7 +6,6 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -16,7 +15,6 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInR
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
@@ -284,9 +282,6 @@ class ThreadDetailsViewModel(
         if (existingResult.data.isNullOrEmpty()) {
           return@collectLatest
         } else {
-          val context: Context = getApplication()
-          // TODO: delete toast before merge to master
-          context.toast("need to update labels")
           loadMessagesManuallyMutableStateFlow.update {
             val updatedList = existingResult.data.toMutableList().apply {
               replaceAll { item ->
