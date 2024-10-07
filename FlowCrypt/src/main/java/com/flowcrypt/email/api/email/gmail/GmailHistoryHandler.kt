@@ -117,29 +117,26 @@ object GmailHistoryHandler {
 
     //delete remotely trashed threads locally
     if (deleteCandidates.isNotEmpty()) {
-      if (accountEntity.isGoogleSignInAccount && accountEntity.useAPI && accountEntity.useConversationMode) {
-        val threadIdsToBeDeleted = deleteCandidates.values.toSet()
-        val gmailThreadInfoList =
-          gmailThreadsListWithBaseInfo.filter { it.id in threadIdsToBeDeleted }
+      val threadIdsToBeDeleted = deleteCandidates.values.toSet()
+      val gmailThreadInfoList =
+        gmailThreadsListWithBaseInfo.filter { it.id in threadIdsToBeDeleted }
 
-        /*
-        Delete threads from the active folder if all messages in a tread doesn't have
-        the requested label.
-        It will cover a situation when some email client works with separate messages.
-        */
-        val toBeDeletedLocally =
-          gmailThreadInfoList.filter { !it.labels.contains(localFolder.fullName) }.toSet()
+      /*
+      Delete threads from the active folder if all messages in a tread doesn't have
+      the requested label.
+      It will cover a situation when some email client works with separate messages.
+      */
+      val toBeDeletedLocally =
+        gmailThreadInfoList.filter { !it.labels.contains(localFolder.fullName) }.toSet()
 
-        roomDatabase.msgDao().deleteByUIDsSuspend(
-          account = accountEntity.email,
-          label = localFolder.fullName,
-          msgsUID = toBeDeletedLocally.map { Long.MAX_VALUE - it.id.toLongRadix16 })
+      roomDatabase.msgDao().deleteByUIDsSuspend(
+        account = accountEntity.email,
+        label = localFolder.fullName,
+        msgsUID = toBeDeletedLocally.map { Long.MAX_VALUE - it.id.toLongRadix16 })
 
-
-        //need to update the left threads
-        val toBeUpdated = gmailThreadInfoList - toBeDeletedLocally
-        threadIdListToBeUpdated.addAll(toBeUpdated.map { it.id })
-      }
+      //need to update the left threads
+      val toBeUpdated = gmailThreadInfoList - toBeDeletedLocally
+      threadIdListToBeUpdated.addAll(toBeUpdated.map { it.id })
     }
 
     //insert new threads or update the existing
