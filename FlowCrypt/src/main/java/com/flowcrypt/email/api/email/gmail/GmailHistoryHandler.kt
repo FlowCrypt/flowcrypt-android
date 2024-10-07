@@ -139,8 +139,10 @@ object GmailHistoryHandler {
     val newCandidates = newCandidatesMap.values
     if (newCandidates.isNotEmpty()) {
       val uniqueThreadIdListOfNewMessages = newCandidates.map { it.threadId }.toSet()
-      val existingThreads = roomDatabase.msgDao()
-        .getMessagesByIDs(uniqueThreadIdListOfNewMessages.map { Long.MAX_VALUE - it.toLongRadix16 })
+      val existingThreads = roomDatabase.msgDao().getMsgsByUIDs(
+        account = accountEntity.email,
+        label = localFolder.fullName,
+        uidList = uniqueThreadIdListOfNewMessages.map { Long.MAX_VALUE - it.toLongRadix16 })
       val existingThreadIds = existingThreads.mapNotNull { it.threadIdAsHEX }.toSet()
 
       val gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
@@ -176,7 +178,7 @@ object GmailHistoryHandler {
           val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
             ?: return@genMessageEntities messageEntity
           messageEntity.copy(
-            id = Long.MAX_VALUE - thread.id.toLongRadix16,
+            uid = Long.MAX_VALUE - thread.id.toLongRadix16,
             subject = thread.subject,
             threadMessagesCount = thread.messagesCount,
             labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
@@ -208,6 +210,8 @@ object GmailHistoryHandler {
 
               updatedMessageEntity.copy(
                 id = threadMessageEntity.id,
+                uid = threadMessageEntity.uid,
+                subject = thread.subject,
                 threadMessagesCount = thread.messagesCount,
                 labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
                 hasAttachments = thread.hasAttachments,
