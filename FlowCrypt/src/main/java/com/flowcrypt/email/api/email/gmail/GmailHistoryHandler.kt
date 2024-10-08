@@ -200,42 +200,49 @@ object GmailHistoryHandler {
       if (existingThreads.isNotEmpty()) {
         //update existing threads
         val threadsToBeUpdated = existingThreads.mapNotNull { threadMessageEntity ->
-          gmailThreadInfoList.firstOrNull { it.id == threadMessageEntity.threadIdAsHEX }
-            ?.let { thread ->
-              val updatedMessageEntity = MessageEntity.genMessageEntities(
-                context = context,
-                account = accountEntity.email,
-                accountType = accountEntity.accountType,
-                label = localFolder.fullName,
-                msgsList = listOf(thread.lastMessage),
-                isNew = false,//todo-denbond7 need to think here
-                onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
-                draftIdsMap = emptyMap(),//todo-denbond7 need to think here
-              ).first()
+          gmailThreadInfoList.firstOrNull {
+            it.id == threadMessageEntity.threadIdAsHEX
+          }?.let { thread ->
+            val isNew = !context.isAppForegrounded()
+                && folderType == FoldersManager.FolderType.INBOX
+                && thread.id !in threadIdListToBeUpdated
 
-              updatedMessageEntity.copy(
-                id = threadMessageEntity.id,
-                uid = threadMessageEntity.uid,
-                subject = thread.subject,
-                threadMessagesCount = thread.messagesCount,
-                threadDraftsCount = thread.draftsCount,
-                labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
-                hasAttachments = thread.hasAttachments,
-                fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
-                hasPgp = thread.hasPgpThings,
-                flags = if (thread.hasUnreadMessages) {
-                  threadMessageEntity.flags?.replace(MessageFlag.SEEN.value, "")
-                } else {
-                  if (threadMessageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-                    threadMessageEntity.flags
+            MessageEntity.genMessageEntities(
+              context = context,
+              account = accountEntity.email,
+              accountType = accountEntity.accountType,
+              label = localFolder.fullName,
+              msgsList = listOf(thread.lastMessage),
+              isNew = isNew,
+              onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
+              draftIdsMap = emptyMap(),//todo-denbond7 need to think here
+            ) { message, messageEntity ->
+              if (message.threadId == thread.id) {
+                messageEntity.copy(
+                  id = threadMessageEntity.id,
+                  uid = threadMessageEntity.uid,
+                  subject = thread.subject,
+                  threadMessagesCount = thread.messagesCount,
+                  threadDraftsCount = thread.draftsCount,
+                  labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
+                  hasAttachments = thread.hasAttachments,
+                  fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
+                  hasPgp = thread.hasPgpThings,
+                  flags = if (thread.hasUnreadMessages) {
+                    threadMessageEntity.flags?.replace(MessageFlag.SEEN.value, "")
                   } else {
-                    threadMessageEntity.flags.plus("${MessageFlag.SEEN.value} ")
+                    if (threadMessageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                      threadMessageEntity.flags
+                    } else {
+                      threadMessageEntity.flags.plus("${MessageFlag.SEEN.value} ")
+                    }
                   }
-                }
-              )
+                )
+              } else messageEntity
             }
+          }
         }
-        roomDatabase.msgDao().updateSuspend(threadsToBeUpdated)
+        roomDatabase.msgDao().updateSuspend(threadsToBeUpdated.flatten())
       }
     }
 

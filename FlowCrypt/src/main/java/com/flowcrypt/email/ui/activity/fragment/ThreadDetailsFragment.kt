@@ -503,8 +503,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun subscribeToProcessMessageDialogFragment() {
     setFragmentResultListener(
-      REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-      true
+      requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
     ) { _, bundle ->
       val message: MessagesInThreadListAdapter.Message? = bundle.getParcelableViaExt(
         ProcessMessageDialogFragment.KEY_RESULT
@@ -523,8 +523,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
     setFragmentResultListener(
-      REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
-      useSuperParentFragmentManagerIfPossible = true
+      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
     ) { _, bundle ->
       val requestCode = bundle.getInt(
         FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE, Int.MIN_VALUE
