@@ -557,6 +557,11 @@
         <item quantity="few">Видалити ці %1$d повідомлення назавжди?</item>
         <item quantity="many">Видалити ці %1$d повідомлень назавжди?</item>
     </plurals>
+    <plurals name="delete_thread_question">
+        <item quantity="one">Видалити цю %1$d бесіду назавжди?</item>
+        <item quantity="few">Видалити ці %1$d бесіди назавжди?</item>
+        <item quantity="many">Видалити ці %1$d бесід назавжди?</item>
+    </plurals>
     <plurals name="found_folder">
         <item quantity="other">Теки відсутні</item>
         <item quantity="one">Знайдено %1$d теку</item>
@@ -639,6 +644,7 @@
     <string name="make_backup_explanation_text">Зберегти надані секретні ключі PGP, захищені парольною фразою, як резервну копію в папці «Вхідні». Це допоможе отримати Вам доступ до Ваших зашифрованих повідомлень з інших пристроїв (за умови надання Вашої парольної фрази). Ви можете спокійно залишити його у папці "Вхідні" або заархівувати.\n\nЯкщо Вам не потрібна така резервна копія, вимкніть цю опцію.</string>
     <string name="preview_is_not_available_for_messages_with_pgp">Попередній перегляд недоступний для повідомлень з PGP</string>
     <string name="draft">Чорновик</string>
+    <string name="thread_was_deleted">The thread was deleted</string>
     <plurals name="show_full_conversation">
         <item quantity="one">Показати повне листування із %1$d повідомлення</item>
         <item quantity="few">Показати повне листування із %1$d повідомленнь</item>

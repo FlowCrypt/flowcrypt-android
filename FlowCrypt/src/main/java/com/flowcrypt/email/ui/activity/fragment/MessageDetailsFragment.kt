@@ -105,6 +105,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
@@ -376,20 +377,20 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         val menuActionChangeLabels = menu.findItem(R.id.menuActionChangeLabels)
 
         menuItemArchiveMsg?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.ARCHIVE
+          MessageAction.ARCHIVE
         )
         menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
         menuActionMoveToInbox?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.MOVE_TO_INBOX
+          MessageAction.MOVE_TO_INBOX
         )
         menuActionMarkUnread?.isVisible =
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
         menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
         menuActionMarkAsNotSpam?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.MARK_AS_NOT_SPAM
+          MessageAction.MARK_AS_NOT_SPAM
         )
         menuActionChangeLabels?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.CHANGE_LABELS
+          MessageAction.CHANGE_LABELS
         )
 
         menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled

@@ -46,6 +46,7 @@ import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.livedata.SkipInitialValueObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -961,15 +962,6 @@ class MsgDetailsViewModel(
         e.printStackTrace()
       }
     }
-
-  enum class MessageAction {
-    DELETE,
-    ARCHIVE,
-    MOVE_TO_INBOX,
-    MOVE_TO_SPAM,
-    MARK_AS_NOT_SPAM,
-    CHANGE_LABELS
-  }
 
   /**
    * This class will be used to identify the fetching progress.

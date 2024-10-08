@@ -385,6 +385,10 @@
         <item quantity="one">Delete this message permanently?</item>
         <item quantity="other">Delete these %1$d messages permanently?</item>
     </plurals>
+    <plurals name="delete_thread_question">
+        <item quantity="one">Delete this thread permanently?</item>
+        <item quantity="other">Delete these %1$d thread permanently?</item>
+    </plurals>
     <string name="processing">Processing&#8230;</string>
     <string name="or_use_your_credentials_to_connect">or use your credentials to connect</string>
     <string name="advanced_settings">Advanced settings</string>
@@ -650,6 +654,7 @@
     <string name="make_backup_explanation_text">Save the given passphrase-protected PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
     <string name="preview_is_not_available_for_messages_with_pgp">The preview is not available for messages with PGP</string>
     <string name="draft">Draft</string>
+    <string name="thread_was_deleted">The thread was deleted</string>
     <plurals name="show_full_conversation">
         <item quantity="other">Show a full conversation of %1$d messages</item>
     </plurals>

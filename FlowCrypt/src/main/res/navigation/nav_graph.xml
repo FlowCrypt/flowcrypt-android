@@ -355,6 +355,10 @@
         <argument
             android:name="messageEntityId"
             app:argType="long" />
+        <argument
+            android:name="isViewPagerMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_threadDetailsFragment_to_viewPagerMessageDetailsFragment"
             app:destination="@id/viewPagerMessageDetailsFragment" />

@@ -106,7 +106,7 @@ class ViewPagerThreadDetailsFragment : BaseFragment<FragmentViewPagerThreadDetai
     super.onSetupActionBarMenu(menuHost)
     menuHost.addMenuProvider(object : MenuProvider {
       override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menuInflater.inflate(R.menu.fragment_message_details, menu)
+        menuInflater.inflate(R.menu.fragment_thread_details, menu)
       }
 
       override fun onMenuItemSelected(menuItem: MenuItem): Boolean = false

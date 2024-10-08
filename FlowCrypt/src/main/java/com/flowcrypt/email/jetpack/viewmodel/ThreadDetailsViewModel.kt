@@ -7,21 +7,26 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInReplyTo
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
+import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -47,12 +52,29 @@ class ThreadDetailsViewModel(
     MutableStateFlow(Result.none())
   private val loadMessagesManuallyStateFlow: StateFlow<Result<List<MessagesInThreadListAdapter.Item>>> =
     loadMessagesManuallyMutableStateFlow.asStateFlow()
-  private val messageFlow: Flow<MessageEntity?> =
+  val threadMessageEntityFlow =
     roomDatabase.msgDao().getMessageByIdFlow(threadMessageEntityId)
-      .distinctUntilChanged()
+      .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+      )
 
   @OptIn(ExperimentalCoroutinesApi::class)
-  private val threadHeaderFlow = messageFlow.mapLatest {
+  val localFolderFlow: StateFlow<LocalFolder?> =
+    threadMessageEntityFlow.mapLatest { threadMessageEntity ->
+      val activeAccount = getActiveAccountSuspend()
+        ?: return@mapLatest null
+      val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
+      return@mapLatest foldersManager.getFolderByFullName(threadMessageEntity?.folder)
+    }.stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = null
+    )
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val threadHeaderFlow = threadMessageEntityFlow.mapLatest {
     prepareThreadHeader(it)
   }.distinctUntilChanged()
 
@@ -67,9 +89,80 @@ class ThreadDetailsViewModel(
       loadMessagesManuallyStateFlow
     ).stateIn(
       scope = viewModelScope,
-      started = WhileSubscribed(5000),
+      started = SharingStarted.WhileSubscribed(5000),
       initialValue = Result.none()
     )
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  val messageActionsAvailabilityStateFlow =
+    threadMessageEntityFlow.mapLatest { threadMessageEntity ->
+    val activeAccount = getActiveAccountSuspend()
+      ?: return@mapLatest MessageAction.entries.associateBy({ it }, { false })
+    val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
+    MessageAction.entries.associateBy({ it }, { false }).toMutableMap().apply {
+      val folderType =
+        foldersManager.getFolderByFullName(threadMessageEntity?.folder)?.getFolderType()
+      if (activeAccount.isGoogleSignInAccount) {
+        val labelIds =
+          threadMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR).orEmpty()
+        this[MessageAction.ARCHIVE] = labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+        this[MessageAction.MOVE_TO_INBOX] =
+          folderType !in setOf(FoldersManager.FolderType.OUTBOX, FoldersManager.FolderType.SPAM)
+              && !labelIds.contains(JavaEmailConstants.FOLDER_INBOX)
+        this[MessageAction.CHANGE_LABELS] = folderType != FoldersManager.FolderType.OUTBOX
+        this[MessageAction.MARK_AS_NOT_SPAM] =
+          folderType in setOf(FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM)
+      } else {
+        this[MessageAction.MOVE_TO_INBOX] = folderType !in listOf(
+          FoldersManager.FolderType.TRASH,
+          FoldersManager.FolderType.DRAFTS,
+          FoldersManager.FolderType.OUTBOX,
+        )
+      }
+
+      this[MessageAction.MARK_UNREAD] =
+        !JavaEmailConstants.FOLDER_OUTBOX.equals(threadMessageEntity?.folder, ignoreCase = true)
+
+      if (folderType != null) {
+        when (folderType) {
+          FoldersManager.FolderType.SENT -> {
+            this[MessageAction.DELETE] = true
+            this[MessageAction.MOVE_TO_SPAM] =
+              AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount.accountType
+          }
+
+          FoldersManager.FolderType.DRAFTS,
+          FoldersManager.FolderType.OUTBOX,
+          FoldersManager.FolderType.JUNK,
+          FoldersManager.FolderType.SPAM -> {
+            this[MessageAction.DELETE] = true
+            this[MessageAction.MOVE_TO_SPAM] = false
+          }
+
+          else -> {
+            this[MessageAction.DELETE] = true
+            this[MessageAction.MOVE_TO_SPAM] = true
+          }
+        }
+      } else {
+        this[MessageAction.DELETE] = true
+        this[MessageAction.MOVE_TO_SPAM] = false
+      }
+
+      if (foldersManager.folderTrash == null) {
+        this[MessageAction.DELETE] = false
+      }
+    }
+  }.stateIn(
+    scope = viewModelScope,
+    started = SharingStarted.WhileSubscribed(5000),
+    initialValue = MessageAction.entries.associateBy({ it }, { false })
+  )
+
+  private val sessionMessageStateMutableStateFlow: MutableStateFlow<MessageState?> =
+    MutableStateFlow(null)
+  val sessionMessageStateStateFlow: StateFlow<MessageState?> =
+    sessionMessageStateMutableStateFlow.asStateFlow()
 
   init {
     subscribeToAutomaticallyUpdateLabels()
@@ -136,6 +229,69 @@ class ThreadDetailsViewModel(
             }
           }
           currentValue.copy(data = currentList)
+        }
+      }
+    }
+  }
+
+  fun getMessageActionAvailability(messageAction: MessageAction): Boolean {
+    return messageActionsAvailabilityStateFlow.value[messageAction] ?: false
+  }
+
+  fun changeMsgState(newMsgState: MessageState) {
+    val freshMsgEntity = threadMessageEntityFlow.value
+    freshMsgEntity?.let { messageEntity ->
+      viewModelScope.launch {
+        val candidate: MessageEntity = when (newMsgState) {
+          MessageState.PENDING_MARK_READ -> {
+            messageEntity.copy(
+              state = newMsgState.value,
+              flags = if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                messageEntity.flags
+              } else {
+                messageEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+              }
+            )
+          }
+
+          MessageState.PENDING_MARK_UNREAD -> {
+            messageEntity.copy(
+              state = newMsgState.value,
+              flags = messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+            )
+          }
+
+          else -> {
+            messageEntity.copy(state = newMsgState.value)
+          }
+        }
+
+        roomDatabase.msgDao().updateSuspend(candidate)
+        sessionMessageStateMutableStateFlow.value = newMsgState
+      }
+    }
+  }
+
+  fun deleteThread() {
+    val freshMsgEntity = threadMessageEntityFlow.value
+    freshMsgEntity?.let { messageEntity ->
+      viewModelScope.launch {
+        roomDatabase.msgDao().deleteSuspend(messageEntity)
+
+        val accountEntity = getActiveAccountSuspend() ?: return@launch
+
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+          val outgoingMsgCount =
+            roomDatabase.msgDao().getOutboxMsgsSuspend(messageEntity.account).size
+          val outboxLabel = roomDatabase.labelDao().getLabelSuspend(
+            account = accountEntity.email,
+            accountType = accountEntity.accountType,
+            label = JavaEmailConstants.FOLDER_OUTBOX
+          )
+
+          outboxLabel?.let {
+            roomDatabase.labelDao().updateSuspend(it.copy(messagesTotal = outgoingMsgCount))
+          }
         }
       }
     }

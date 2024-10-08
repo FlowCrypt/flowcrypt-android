@@ -8,28 +8,50 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
+import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
@@ -39,6 +61,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFr
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
@@ -59,6 +82,12 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     get() = binding?.status?.root
 
   private var isActive: Boolean = false
+  private val isAdditionalActionEnabled: Boolean
+    get() = threadDetailsViewModel.messagesInThreadFlow.value.status == Result.Status.SUCCESS
+  private val threadMessageEntity: MessageEntity?
+    get() = threadDetailsViewModel.threadMessageEntityFlow.value
+  private val localFolder: LocalFolder?
+    get() = threadDetailsViewModel.localFolderFlow.value
 
   private val args by navArgs<ThreadDetailsFragmentArgs>()
   private val threadDetailsViewModel: ThreadDetailsViewModel by viewModels {
@@ -112,8 +141,144 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     initViews()
     setupThreadDetailsViewModel()
+    subscribeToTwoWayDialog()
     subscribeToProcessMessageDialogFragment()
     subscribeToFixNeedPassphraseIssueDialogFragment()
+  }
+
+  override fun onSetupActionBarMenu(menuHost: MenuHost) {
+    super.onSetupActionBarMenu(menuHost)
+
+    menuHost.addMenuProvider(object : MenuProvider {
+      override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        if (!args.isViewPagerMode) {
+          menuInflater.inflate(R.menu.fragment_thread_details, menu)
+        }
+      }
+
+      override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
+        val menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage)
+        val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
+        val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
+        val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
+        val menuActionMoveToSpam = menu.findItem(R.id.menuActionMoveToSpam)
+        val menuActionMarkAsNotSpam = menu.findItem(R.id.menuActionMarkAsNotSpam)
+        val menuActionChangeLabels = menu.findItem(R.id.menuActionChangeLabels)
+
+        menuItemArchiveMsg?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+          MessageAction.ARCHIVE
+        )
+        menuItemDeleteMsg?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+          MessageAction.DELETE
+        )
+        menuActionMoveToInbox?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+          MessageAction.MOVE_TO_INBOX
+        )
+        menuActionMarkUnread?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+          MessageAction.MARK_UNREAD
+        )
+        menuActionMoveToSpam?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+          MessageAction.MOVE_TO_SPAM
+        )
+        menuActionMarkAsNotSpam?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+          MessageAction.MARK_AS_NOT_SPAM
+        )
+        menuActionChangeLabels?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+          MessageAction.CHANGE_LABELS
+        )
+
+        menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
+        menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
+        menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
+        menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
+        menuActionMoveToSpam?.isEnabled = isAdditionalActionEnabled
+        menuActionMarkAsNotSpam?.isEnabled = isAdditionalActionEnabled
+        menuActionChangeLabels?.isEnabled = isAdditionalActionEnabled
+
+        /*args.localFolder.searchQuery?.let {
+          menuItemArchiveMsg?.isVisible = false
+          menuItemDeleteMsg?.isVisible = false
+          menuActionMoveToInbox?.isVisible = false
+          menuActionMarkUnread?.isVisible = false
+          menuActionMoveToSpam?.isVisible = false
+          menuActionMarkAsNotSpam?.isVisible = false
+          menuActionChangeLabels?.isVisible = false
+        }*/
+      }
+
+      override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+          R.id.menuActionArchiveMessage -> {
+            threadDetailsViewModel.changeMsgState(MessageState.PENDING_ARCHIVING)
+            true
+          }
+
+          R.id.menuActionDeleteMessage -> {
+            val messageEntity = threadMessageEntity ?: return true
+            if (messageEntity.isOutboxMsg) {
+              if (messageEntity.msgState == MessageState.SENDING) {
+                toast(R.string.can_not_delete_sending_message, Toast.LENGTH_LONG)
+              } else {
+                threadDetailsViewModel.deleteThread()
+                toast(R.string.thread_was_deleted)
+              }
+            } else {
+              if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+                showTwoWayDialog(
+                  requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+                  requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
+                  dialogTitle = "",
+                  dialogMsg = requireContext().resources.getQuantityString(
+                    R.plurals.delete_thread_question,
+                    1,
+                    1
+                  ),
+                  positiveButtonTitle = getString(android.R.string.ok),
+                  negativeButtonTitle = getString(android.R.string.cancel),
+                )
+              } else {
+                threadDetailsViewModel.changeMsgState(
+                  if (messageEntity.isDraft) {
+                    MessageState.PENDING_DELETING_DRAFT
+                  } else {
+                    MessageState.PENDING_DELETING
+                  }
+                )
+              }
+            }
+            true
+          }
+
+          R.id.menuActionMoveToInbox -> {
+            threadDetailsViewModel.changeMsgState(MessageState.PENDING_MOVE_TO_INBOX)
+            true
+          }
+
+          R.id.menuActionMarkUnread -> {
+            threadDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_UNREAD)
+            true
+          }
+
+          R.id.menuActionMoveToSpam -> {
+            threadDetailsViewModel.changeMsgState(MessageState.PENDING_MOVE_TO_SPAM)
+            true
+          }
+
+          R.id.menuActionMarkAsNotSpam -> {
+            threadDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_AS_NOT_SPAM)
+            true
+          }
+
+          R.id.menuActionChangeLabels -> {
+            changeGmailLabels()
+            true
+          }
+
+          else -> false
+        }
+      }
+    }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
   fun changeActiveState(isActive: Boolean) {
@@ -134,6 +299,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   private fun setupThreadDetailsViewModel() {
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
+        activity?.invalidateOptionsMenu()
+
         when (it.status) {
           Result.Status.LOADING -> {
             showProgress()
@@ -161,6 +328,67 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           }
 
           else -> {}
+        }
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      threadDetailsViewModel.localFolderFlow.collect {
+        //do nothing. Just subscribe for updates to have the latest value async
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      threadDetailsViewModel.messageActionsAvailabilityStateFlow.collect {
+        activity?.invalidateOptionsMenu()
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      threadDetailsViewModel.sessionMessageStateStateFlow.collect { newState ->
+        newState ?: return@collect //skip initial value
+
+        activity?.invalidateOptionsMenu()
+
+        var navigateUp = true
+        when (newState) {
+          MessageState.PENDING_ARCHIVING -> ArchiveMsgsWorker.enqueue(requireContext())
+          MessageState.PENDING_DELETING -> DeleteMessagesWorker.enqueue(requireContext())
+          MessageState.PENDING_DELETING_DRAFT -> DeleteDraftsWorker.enqueue(requireContext())
+          MessageState.PENDING_DELETING_PERMANENTLY -> DeleteMessagesPermanentlyWorker.enqueue(
+            requireContext()
+          )
+
+          MessageState.PENDING_MOVE_TO_INBOX -> MovingToInboxWorker.enqueue(requireContext())
+          MessageState.PENDING_MOVE_TO_SPAM -> MovingToSpamWorker.enqueue(requireContext())
+          MessageState.PENDING_MARK_AS_NOT_SPAM -> MarkAsNotSpamWorker.enqueue(requireContext())
+          MessageState.PENDING_MARK_UNREAD -> UpdateMsgsSeenStateWorker.enqueue(requireContext())
+          MessageState.PENDING_MARK_READ -> {
+            UpdateMsgsSeenStateWorker.enqueue(requireContext())
+            navigateUp = false
+          }
+
+          else -> {}
+        }
+
+        if (navigateUp) {
+          navController?.navigateUp()
+        }
+      }
+    }
+  }
+
+  private fun subscribeToTwoWayDialog() {
+    setFragmentResultListenerForTwoWayDialog(
+      requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
+    ) { _, bundle ->
+      val requestCode = bundle.getInt(TwoWayDialogFragment.KEY_REQUEST_CODE)
+      val result = bundle.getInt(TwoWayDialogFragment.KEY_RESULT)
+
+      when (requestCode) {
+        REQUEST_CODE_DELETE_MESSAGE_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
+          threadDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
         }
       }
     }
@@ -409,7 +637,13 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         ThreadDetailsFragment::class.java
       )
 
+    private val REQUEST_KEY_TWO_WAY_DIALOG_BASE = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_TWO_WAY_DIALOG_BASE",
+      ThreadDetailsFragment::class.java
+    )
+
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1
+    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 2
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
 }
