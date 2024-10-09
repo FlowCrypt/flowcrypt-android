@@ -16,6 +16,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.kotlin.toHex
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Store
@@ -45,20 +46,35 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
   private suspend fun moveMsgsToTrash(account: AccountEntity) = withContext(Dispatchers.IO) {
     moveMsgsToTrashInternal(account) { _, entities ->
       executeGMailAPICall(applicationContext) {
-        //todo-denbond7 need to improve this logic. We should delete local messages only if we'll
-        // success delete remote messages
         if (account.useConversationMode) {
-          GmailApiHelper.moveThreadToTrash(
+          val resultMap = GmailApiHelper.moveThreadToTrash(
             context = applicationContext,
             accountEntity = account,
             ids = entities.mapNotNull { it.threadIdAsHEX }.toSet()
           )
+
+          val successList = resultMap.filter { it.value }.keys
+          val threadMessageEntitiesToBeDeleted = entities.filter { it.threadIdAsHEX in successList }
+          val localFoldersSet = entities.map { it.folder }.toSet()
+          localFoldersSet.forEach { folderName ->
+            val threadIdList = threadMessageEntitiesToBeDeleted.filter { it.folder == folderName }
+              .mapNotNull { it.threadId }
+            if (threadIdList.isNotEmpty()) {
+              roomDatabase.msgDao()
+                .deleteCacheForGmailThreads(account.email, folderName, threadIdList)
+            }
+          }
+          roomDatabase.msgDao().deleteSuspend(threadMessageEntitiesToBeDeleted)
         } else {
-          val uidList = entities.map { it.uid }
-          GmailApiHelper.moveToTrash(
+          val uidList = entities.map { it.uid.toHex().lowercase() }
+          val resultMap = GmailApiHelper.moveToTrash(
             context = applicationContext,
             accountEntity = account,
-            ids = uidList.map { java.lang.Long.toHexString(it).lowercase() })
+            ids = uidList
+          )
+          val successList = resultMap.filter { it.value }.keys
+          roomDatabase.msgDao()
+            .deleteSuspend(entities.filter { it.uid.toHex().lowercase() in successList })
         }
         //need to wait while the Gmail server will update labels
         delay(2000)

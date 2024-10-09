@@ -350,11 +350,13 @@ class ThreadDetailsViewModel(
           messageEntity.copy(snippet = message.snippet, isVisible = false)
         }
 
-        roomDatabase.msgDao().clearCacheForGmailThread(
-          account = activeAccount.email,
-          folder = GmailApiHelper.LABEL_INBOX, //fix me
-          threadId = threadMessageEntity.threadIdAsHEX
-        )
+        threadMessageEntity.threadId?.let {
+          roomDatabase.msgDao().clearCacheForGmailThread(
+            account = activeAccount.email,
+            folder = GmailApiHelper.LABEL_INBOX, //fix me
+            threadId = it
+          )
+        }
 
         roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
         GmailApiHelper.identifyAttachments(

@@ -418,7 +418,14 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   ): List<MessageEntity>
 
   @Query("DELETE FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId AND is_visible = 0")
-  abstract suspend fun clearCacheForGmailThread(account: String?, folder: String, threadId: String)
+  abstract suspend fun clearCacheForGmailThread(account: String?, folder: String, threadId: Long)
+
+  @Query("DELETE FROM messages WHERE account = :account AND folder = :folder AND thread_id IN (:threadIdList)")
+  abstract suspend fun deleteCacheForGmailThreads(
+    account: String?,
+    folder: String,
+    threadIdList: List<Long>
+  )
 
   suspend fun getNewestMsgOrThread(accountEntity: AccountEntity, folder: String?): MessageEntity? {
     return if (accountEntity.isGoogleSignInAccount && accountEntity.useAPI && accountEntity.useConversationMode) {

@@ -670,57 +670,63 @@ class GmailApiHelper {
       }
     }
 
-    suspend fun moveToTrash(context: Context, accountEntity: AccountEntity, ids: List<String>) =
-      withContext(Dispatchers.IO) {
-        val gmailApiService = generateGmailApiService(context, accountEntity)
-        val batch = gmailApiService.batch()
+    suspend fun moveToTrash(
+      context: Context,
+      accountEntity: AccountEntity,
+      ids: List<String>
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+      val resultMap = mutableMapOf<String, Boolean>()
 
-        for (id in ids) {
-          val request = gmailApiService
-            .users()
-            .messages()
-            .trash(DEFAULT_USER_ID, id)
-          request.queue(batch, object : JsonBatchCallback<Message>() {
-            override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
-              //need to think about it
-            }
+      ids.forEach { id ->
+        val request = gmailApiService
+          .users()
+          .messages()
+          .trash(DEFAULT_USER_ID, id)
+        request.queue(batch, object : JsonBatchCallback<Message>() {
+          override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = true
+          }
 
-            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-              //need to think about it
-            }
-          })
-        }
-
-        batch.execute()
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = false
+          }
+        })
       }
+
+      batch.execute()
+      return@withContext resultMap
+    }
 
     suspend fun moveThreadToTrash(
       context: Context,
       accountEntity: AccountEntity,
       ids: Collection<String>
-    ) =
-      withContext(Dispatchers.IO) {
-        val gmailApiService = generateGmailApiService(context, accountEntity)
-        val batch = gmailApiService.batch()
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
 
-        for (id in ids) {
-          val request = gmailApiService
-            .users()
-            .threads()
-            .trash(DEFAULT_USER_ID, id)
-          request.queue(batch, object : JsonBatchCallback<Thread>() {
-            override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {
-              //need to think about it
-            }
+      val resultMap = mutableMapOf<String, Boolean>()
+      ids.forEach { id ->
+        val request = gmailApiService
+          .users()
+          .threads()
+          .trash(DEFAULT_USER_ID, id)
+        request.queue(batch, object : JsonBatchCallback<Thread>() {
+          override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = true
+          }
 
-            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-              //need to think about it
-            }
-          })
-        }
-
-        batch.execute()
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = false
+          }
+        })
       }
+
+      batch.execute()
+      return@withContext resultMap
+    }
 
     suspend fun loadTrashMsgs(context: Context, accountEntity: AccountEntity): List<Message> =
       withContext(Dispatchers.IO) {
