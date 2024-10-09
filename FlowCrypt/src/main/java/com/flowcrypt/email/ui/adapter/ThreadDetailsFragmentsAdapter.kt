@@ -47,8 +47,9 @@ class ThreadDetailsFragmentsAdapter(
   override fun createFragment(position: Int): Fragment =
     ThreadDetailsFragment().apply {
       arguments = ThreadDetailsFragmentArgs(
-        isViewPagerMode = true,
         messageEntityId = asyncListDiffer.currentList[position].id ?: 0,
+        localFolder = localFolder,
+        isViewPagerMode = true,
       ).toBundle()
     }
 

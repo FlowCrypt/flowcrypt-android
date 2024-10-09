@@ -95,7 +95,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ThreadDetailsViewModel(
-          args.messageEntityId, requireActivity().application
+          threadMessageEntityId = args.messageEntityId,
+          localFolder = args.localFolder,
+          application = requireActivity().application
         ) as T
       }
     }

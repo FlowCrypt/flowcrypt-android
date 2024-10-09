@@ -44,6 +44,7 @@ import kotlinx.coroutines.withContext
  */
 class ThreadDetailsViewModel(
   private val threadMessageEntityId: Long,
+  private val localFolder: LocalFolder,
   application: Application
 ) : AccountViewModel(application) {
   private val controlledRunnerForLoadingMessages =
@@ -341,7 +342,7 @@ class ThreadDetailsViewModel(
           context = getApplication(),
           account = activeAccount.email,
           accountType = activeAccount.accountType,
-          label = GmailApiHelper.LABEL_INBOX, //fix me
+          label = localFolder.fullName,
           msgsList = messagesInThread,
           isNew = false,
           onlyPgpModeEnabled = isOnlyPgpModeEnabled,
@@ -353,7 +354,7 @@ class ThreadDetailsViewModel(
         threadMessageEntity.threadId?.let {
           roomDatabase.msgDao().clearCacheForGmailThread(
             account = activeAccount.email,
-            folder = GmailApiHelper.LABEL_INBOX, //fix me
+            folder = localFolder.fullName,
             threadId = it
           )
         }
@@ -363,13 +364,13 @@ class ThreadDetailsViewModel(
           msgEntities = messageEntities,
           msgs = messagesInThread,
           account = activeAccount,
-          localFolder = LocalFolder(activeAccount.email, GmailApiHelper.LABEL_INBOX),//fix me
+          localFolder = localFolder,
           roomDatabase = roomDatabase
         )
 
         val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
           activeAccount.email,
-          GmailApiHelper.LABEL_INBOX,//fix me
+          localFolder.fullName,
           threadMessageEntity.threadId ?: 0,
         )
 

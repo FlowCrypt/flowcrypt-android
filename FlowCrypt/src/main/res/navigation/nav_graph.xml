@@ -356,6 +356,9 @@
             android:name="messageEntityId"
             app:argType="long" />
         <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+        <argument
             android:name="isViewPagerMode"
             android:defaultValue="false"
             app:argType="boolean" />

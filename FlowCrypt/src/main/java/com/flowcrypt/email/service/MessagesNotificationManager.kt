@@ -288,7 +288,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setDestination(R.id.threadDetailsFragment)
         .setArguments(
           ThreadDetailsFragmentArgs(
-            messageEntityId = messageEntity.id
+            messageEntityId = messageEntity.id,
+            localFolder = localFolder
           ).toBundle()
         )
     } else {
