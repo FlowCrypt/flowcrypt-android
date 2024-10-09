@@ -72,13 +72,17 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
         val gmailApiLabelsData = getAddAndRemoveLabelIdsForGmailAPI(folderName)
 
         if (account.useConversationMode) {
-          GmailApiHelper.changeLabelsForThreads(
+          val resultMap = GmailApiHelper.changeLabelsForThreads(
             context = applicationContext,
             accountEntity = account,
             threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
             addLabelIds = gmailApiLabelsData.addLabelIds,
             removeLabelIds = gmailApiLabelsData.removeLabelIds
           )
+
+          val successList = resultMap.filter { it.value }.keys
+          val threadMessageEntitiesToBeDeleted = entities.filter { it.threadIdAsHEX in successList }
+          cleanSomeThreadsCache(threadMessageEntitiesToBeDeleted, account)
         } else {
           val uidList = entities.map { it.uid }
           GmailApiHelper.changeLabels(
