@@ -575,13 +575,16 @@ class GmailApiHelper {
       threadIdList: Collection<String>,
       addLabelIds: List<String>? = null,
       removeLabelIds: List<String>? = null
-    ) = withContext(Dispatchers.IO) {
-      if (addLabelIds == null && removeLabelIds == null) return@withContext
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      if (addLabelIds == null && removeLabelIds == null) {
+        return@withContext emptyMap<String, Boolean>()
+      }
 
       val gmailApiService = generateGmailApiService(context, accountEntity)
       val batch = gmailApiService.batch()
 
-      for (threadId in threadIdList) {
+      val resultMap = mutableMapOf<String, Boolean>()
+      threadIdList.forEach { threadId ->
         val request = gmailApiService
           .users()
           .threads()
@@ -591,12 +594,19 @@ class GmailApiHelper {
           })
 
         request.queue(batch, object : JsonBatchCallback<Thread>() {
-          override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {}
-          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {}
+          override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {
+            resultMap[threadId] = true
+          }
+
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[threadId] = true
+          }
         })
       }
 
       batch.execute()
+
+      return@withContext resultMap
     }
 
     suspend fun deleteMsgsPermanently(

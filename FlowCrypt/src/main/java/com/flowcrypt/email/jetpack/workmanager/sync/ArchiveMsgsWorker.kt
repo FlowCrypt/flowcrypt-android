@@ -61,12 +61,18 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) :
     archiveInternal(account) { _, entities ->
       executeGMailAPICall(applicationContext) {
         if (account.useConversationMode) {
-          GmailApiHelper.changeLabelsForThreads(
+          val resultMap = GmailApiHelper.changeLabelsForThreads(
             context = applicationContext,
             accountEntity = account,
             threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
             removeLabelIds = listOf(GmailApiHelper.LABEL_INBOX)
           )
+
+          val successList = resultMap.filter { it.value }.keys
+          val threadMessageEntitiesToBeDeleted = entities.filter {
+            it.folder == JavaEmailConstants.FOLDER_INBOX && it.threadIdAsHEX in successList
+          }
+          cleanSomeThreadsCache(threadMessageEntitiesToBeDeleted, account)
         } else {
           val uidList = entities.map { it.uid }
           GmailApiHelper.changeLabels(
