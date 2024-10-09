@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.IMAPStoreConnection
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.BaseWorker
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import jakarta.mail.Store
@@ -79,6 +80,22 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
         }
       }
     }
+  }
+
+  protected suspend fun cleanSomeThreadsCache(
+    threadMessageEntitiesToBeDeleted: List<MessageEntity>,
+    account: AccountEntity
+  ) = withContext(Dispatchers.IO) {
+    val localFoldersSet = threadMessageEntitiesToBeDeleted.map { it.folder }.toSet()
+    localFoldersSet.forEach { folderName ->
+      val threadIdList = threadMessageEntitiesToBeDeleted.filter { it.folder == folderName }
+        .mapNotNull { it.threadId }
+      if (threadIdList.isNotEmpty()) {
+        roomDatabase.msgDao()
+          .deleteCacheForGmailThreads(account.email, folderName, threadIdList)
+      }
+    }
+    roomDatabase.msgDao().deleteSuspend(threadMessageEntitiesToBeDeleted)
   }
 
   companion object {

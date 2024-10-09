@@ -55,16 +55,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
 
           val successList = resultMap.filter { it.value }.keys
           val threadMessageEntitiesToBeDeleted = entities.filter { it.threadIdAsHEX in successList }
-          val localFoldersSet = entities.map { it.folder }.toSet()
-          localFoldersSet.forEach { folderName ->
-            val threadIdList = threadMessageEntitiesToBeDeleted.filter { it.folder == folderName }
-              .mapNotNull { it.threadId }
-            if (threadIdList.isNotEmpty()) {
-              roomDatabase.msgDao()
-                .deleteCacheForGmailThreads(account.email, folderName, threadIdList)
-            }
-          }
-          roomDatabase.msgDao().deleteSuspend(threadMessageEntitiesToBeDeleted)
+          cleanSomeThreadsCache(threadMessageEntitiesToBeDeleted, account)
         } else {
           val uidList = entities.map { it.uid.toHex().lowercase() }
           val resultMap = GmailApiHelper.moveToTrash(

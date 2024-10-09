@@ -55,17 +55,22 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
     deleteMsgsPermanentlyInternal(account) { _, entities ->
       executeGMailAPICall(applicationContext) {
         if (account.useConversationMode) {
-          GmailApiHelper.deleteThreadsPermanently(
+          val resultMap = GmailApiHelper.deleteThreadsPermanently(
             context = applicationContext,
             accountEntity = account,
             ids = entities.mapNotNull { it.threadIdAsHEX }.toSet()
           )
+
+          val successList = resultMap.filter { it.value }.keys
+          val threadMessageEntitiesToBeDeleted = entities.filter { it.threadIdAsHEX in successList }
+          cleanSomeThreadsCache(threadMessageEntitiesToBeDeleted, account)
         } else {
           val uidList = entities.map { it.uid }
           GmailApiHelper.deleteMsgsPermanently(
             context = applicationContext,
             accountEntity = account,
             ids = uidList.map { java.lang.Long.toHexString(it).lowercase() })
+          roomDatabase.msgDao().deleteSuspend(entities)
         }
       }
     }

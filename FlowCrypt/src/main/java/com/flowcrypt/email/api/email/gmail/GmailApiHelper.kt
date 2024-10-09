@@ -618,29 +618,28 @@ class GmailApiHelper {
     suspend fun deleteThreadsPermanently(
       context: Context, accountEntity: AccountEntity,
       ids: Collection<String>
-    ) {
-      withContext(Dispatchers.IO) {
-        val gmailApiService = generateGmailApiService(context, accountEntity)
-        val batch = gmailApiService.batch()
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+      val resultMap = mutableMapOf<String, Boolean>()
+      ids.forEach { id ->
+        val request = gmailApiService
+          .users()
+          .threads()
+          .delete(DEFAULT_USER_ID, id)
+        request.queue(batch, object : JsonBatchCallback<Void>() {
+          override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = true
+          }
 
-        for (id in ids) {
-          val request = gmailApiService
-            .users()
-            .threads()
-            .delete(DEFAULT_USER_ID, id)
-          request.queue(batch, object : JsonBatchCallback<Void>() {
-            override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {
-              //need to think about it
-            }
-
-            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-              //need to think about it
-            }
-          })
-        }
-
-        batch.execute()
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = false
+          }
+        })
       }
+
+      batch.execute()
+      return@withContext resultMap
     }
 
     suspend fun deleteDrafts(
