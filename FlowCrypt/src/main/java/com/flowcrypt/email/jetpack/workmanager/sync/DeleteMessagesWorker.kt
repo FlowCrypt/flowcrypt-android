@@ -56,6 +56,9 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
           val successList = resultMap.filter { it.value }.keys
           val threadMessageEntitiesToBeDeleted = entities.filter { it.threadIdAsHEX in successList }
           cleanSomeThreadsCache(threadMessageEntitiesToBeDeleted, account)
+          //need to wait while the Gmail server will update labels
+          delay(2000)
+          return@executeGMailAPICall threadMessageEntitiesToBeDeleted
         } else {
           val uidList = entities.map { it.uid.toHex().lowercase() }
           val resultMap = GmailApiHelper.moveToTrash(
@@ -66,9 +69,10 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
           val successList = resultMap.filter { it.value }.keys
           roomDatabase.msgDao()
             .deleteSuspend(entities.filter { it.uid.toHex().lowercase() in successList })
+          //need to wait while the Gmail server will update labels
+          delay(2000)
+          return@executeGMailAPICall entities
         }
-        //need to wait while the Gmail server will update labels
-        delay(2000)
       }
     }
   }
@@ -92,12 +96,14 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
             }
           }
         }
+
+        return@moveMsgsToTrashInternal entities
       }
     }
 
   private suspend fun moveMsgsToTrashInternal(
     account: AccountEntity,
-    action: suspend (folderName: String, entities: List<MessageEntity>) -> Unit
+    action: suspend (folderName: String, entities: List<MessageEntity>) -> List<MessageEntity>
   ) = withContext(Dispatchers.IO)
   {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
@@ -121,7 +127,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
           ) {
             continue
           }
-          action.invoke(srcFolder, filteredMsgs)
+          val candidatesToBeDeletedLocally = action.invoke(srcFolder, filteredMsgs)
           roomDatabase.msgDao()
             .deleteByUIDsSuspend(account.email, srcFolder, filteredMsgs.map { it.uid })
         }

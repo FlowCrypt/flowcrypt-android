@@ -95,7 +95,6 @@ abstract class BaseSyncWorker(context: Context, params: WorkerParameters) :
           .deleteCacheForGmailThreads(account.email, folderName, threadIdList)
       }
     }
-    roomDatabase.msgDao().deleteSuspend(threadMessageEntitiesToBeDeleted)
   }
 
   companion object {
