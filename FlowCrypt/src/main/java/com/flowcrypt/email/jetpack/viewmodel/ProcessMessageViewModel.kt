@@ -15,10 +15,12 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -109,9 +111,7 @@ class ProcessMessageViewModel(
                 emit(Result.exception(e))
                 return@flow
               }
-              /*if (hasAbilityToChangeSeenStatus) {
-                setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
-              }*/
+              setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
               emit(
                 Result.loading(
                   resultCode = R.id.progress_id_processing,
@@ -153,8 +153,11 @@ class ProcessMessageViewModel(
           val processedMimeMessageResult = it.data
           if (processedMimeMessageResult != null) {
             try {
-              //todo need to get the latest one messageEntity
-              val messageEntity = message.messageEntity
+              val messageEntity = roomDatabase.msgDao().getMsgSuspend(
+                message.messageEntity.account,
+                message.messageEntity.folder,
+                message.messageEntity.uid,
+              ) ?: message.messageEntity
               val incomingMessageInfo = IncomingMessageInfo(
                 msgEntity = messageEntity,
                 localFolder = LocalFolder(messageEntity.account, messageEntity.folder),
@@ -185,6 +188,7 @@ class ProcessMessageViewModel(
               Result.success(
                 requestCode = it.requestCode,
                 data = message.copy(
+                  messageEntity = messageEntity,
                   incomingMessageInfo = incomingMessageInfo,
                   attachments = attachments
                 )
@@ -370,6 +374,30 @@ class ProcessMessageViewModel(
         }
       }
     }
+  }
+
+  private suspend fun setSeenStatusInternal(
+    msgEntity: MessageEntity,
+    isSeen: Boolean,
+    usePending: Boolean = false
+  ) = withContext(Dispatchers.IO) {
+    if (msgEntity.isSeen == isSeen) return@withContext
+    roomDatabase.msgDao().updateSuspend(
+      msgEntity.copy(
+        state = if (usePending) {
+          if (isSeen) MessageState.PENDING_MARK_READ.value else MessageState.PENDING_MARK_UNREAD.value
+        } else msgEntity.state,
+        flags = if (isSeen) {
+          if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+            msgEntity.flags
+          } else {
+            msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+          }
+        } else {
+          msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+        }
+      )
+    )
   }
 
   fun retry() {

@@ -22,6 +22,7 @@ import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraf
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
+import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter.Message
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -167,6 +168,44 @@ class ThreadDetailsViewModel(
 
   init {
     subscribeToAutomaticallyUpdateLabels()
+    viewModelScope.launch {
+      messagesInThreadFlow.collectLatest {
+        if (it.status == Result.Status.SUCCESS) {
+          val messageItems = it.data?.filterIsInstance<Message>() ?: return@collectLatest
+          if (messageItems.isEmpty()) {
+            return@collectLatest
+          }
+
+          val threadMessageEntity =
+            roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return@collectLatest
+
+          val isThreadFullySeen = messageItems.all { item -> item.messageEntity.isSeen }
+          if (threadMessageEntity.isSeen != isThreadFullySeen) {
+            roomDatabase.msgDao().getMsgById(threadMessageEntityId)?.let { messageEntity ->
+              roomDatabase.msgDao().updateSuspend(
+                messageEntity.copy(
+                  labelIds = messageEntity.labelIds
+                    ?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+                    ?.toMutableSet()
+                    ?.apply {
+                      remove(GmailApiHelper.LABEL_UNREAD)
+                    }?.joinToString(MessageEntity.LABEL_IDS_SEPARATOR),
+                  flags = if (isThreadFullySeen) {
+                    if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                      messageEntity.flags
+                    } else {
+                      messageEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+                    }
+                  } else {
+                    messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+                  }
+                )
+              )
+            }
+          }
+        }
+      }
+    }
   }
 
   fun loadMessages() {
@@ -179,7 +218,7 @@ class ThreadDetailsViewModel(
     }
   }
 
-  fun onMessageClicked(message: MessagesInThreadListAdapter.Message) {
+  fun onMessageClicked(message: Message) {
     val currentValue = messagesInThreadFlow.value
     if (currentValue.status == Result.Status.SUCCESS) {
       loadMessagesManuallyMutableStateFlow.update {
@@ -200,7 +239,7 @@ class ThreadDetailsViewModel(
     }
   }
 
-  fun onHeadersDetailsClick(message: MessagesInThreadListAdapter.Message) {
+  fun onHeadersDetailsClick(message: Message) {
     val currentValue = messagesInThreadFlow.value
     if (currentValue.status == Result.Status.SUCCESS) {
       loadMessagesManuallyMutableStateFlow.update {
@@ -215,7 +254,7 @@ class ThreadDetailsViewModel(
     }
   }
 
-  fun onMessageChanged(messageWithChanges: MessagesInThreadListAdapter.Message) {
+  fun onMessageChanged(messageWithChanges: Message) {
     val currentValue = messagesInThreadFlow.value
     if (currentValue.status == Result.Status.SUCCESS) {
       val currentList = messagesInThreadFlow.value.data?.toMutableList()
@@ -375,7 +414,7 @@ class ThreadDetailsViewModel(
         )
 
         val finalList = messageEntities.map { fromServerMessageEntity ->
-          MessagesInThreadListAdapter.Message(
+          Message(
             messageEntity = fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
               it.uid == fromServerMessageEntity.uid
             }?.id),
