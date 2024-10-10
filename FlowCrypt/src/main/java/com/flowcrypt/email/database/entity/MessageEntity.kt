@@ -7,7 +7,6 @@ package com.flowcrypt.email.database.entity
 
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.Color
 import android.os.Parcelable
 import android.provider.BaseColumns
 import android.text.Spannable
@@ -50,6 +49,7 @@ import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter.MessageViewHolder.Companion.SENDER_NAME_PATTERN
 import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.flowcrypt.email.util.UIUtil
 import com.google.android.gms.common.util.CollectionUtils
 import jakarta.mail.Flags
 import jakarta.mail.Message
@@ -310,7 +310,7 @@ data class MessageEntity(
           R.plurals.drafts_count,
           draftsCount, draftsCount
         )
-        val color = Color.RED
+        val color = UIUtil.getColor(context, R.color.red)
         append(
           SpannableString(text).apply {
             setSpan(
