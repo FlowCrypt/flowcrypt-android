@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email
@@ -615,11 +615,15 @@ class EmailUtil {
       } as HashMap<Long, Boolean>
     }
 
-    fun hasEncryptedData(rawMsg: String?) =
-      rawMsg?.contains("-----BEGIN PGP MESSAGE-----") == true
+    fun hasEncryptedData(rawMsg: String?): Boolean {
+      return "^-----BEGIN PGP MESSAGE-----".toRegex(RegexOption.MULTILINE)
+        .containsMatchIn(rawMsg ?: "")
+    }
 
-    fun hasSignedData(rawMsg: String?) =
-      rawMsg?.contains("-----BEGIN PGP SIGNED MESSAGE-----") == true
+    fun hasSignedData(rawMsg: String?): Boolean {
+      return "^-----BEGIN PGP SIGNED MESSAGE-----".toRegex(RegexOption.MULTILINE)
+        .containsMatchIn(rawMsg ?: "")
+    }
 
     fun genPgpThingsSearchTerm(account: AccountEntity): SearchTerm {
       return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {

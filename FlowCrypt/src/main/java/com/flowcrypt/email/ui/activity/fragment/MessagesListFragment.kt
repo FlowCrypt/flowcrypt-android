@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -29,7 +29,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -38,7 +37,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
-import androidx.preference.PreferenceManager
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -46,7 +44,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
@@ -80,30 +77,28 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
-import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.MessagesNotificationManager
-import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
-import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.OutgoingMessagesManager
-import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import jakarta.mail.AuthenticationFailedException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
 import me.everything.android.ui.overscroll.IOverScrollState
@@ -426,14 +421,28 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             )
           } else {
             currentFolder?.let { localFolder ->
-              navController?.navigateSafe(
-                currentDestinationId = R.id.messagesListFragment,
-                directions = MessagesListFragmentDirections
-                  .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
-                    messageEntityId = msgEntity.id ?: -1,
-                    localFolder = localFolder
-                  )
-              )
+              if (account?.isGoogleSignInAccount == true
+                && account?.useAPI == true
+                && account?.useConversationMode == true
+              ) {
+                navController?.navigateSafe(
+                  currentDestinationId = R.id.messagesListFragment,
+                  directions = MessagesListFragmentDirections
+                    .actionMessagesListFragmentToViewPagerThreadDetailsFragment(
+                      messageEntityId = msgEntity.id ?: -1,
+                      localFolder = localFolder
+                    )
+                )
+              } else {
+                navController?.navigateSafe(
+                  currentDestinationId = R.id.messagesListFragment,
+                  directions = MessagesListFragmentDirections
+                    .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
+                      messageEntityId = msgEntity.id ?: -1,
+                      localFolder = localFolder
+                    )
+                )
+              }
             }
           }
         }
@@ -512,14 +521,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         val errorMsg = messageEntity.errorMsg
-        message = if (errorMsg?.equals(messageEntity.email, ignoreCase = true) == true) {
+        message = if (errorMsg?.equals(messageEntity.account, ignoreCase = true) == true) {
           getString(
             R.string.no_key_available_for_your_email_account,
             getString(R.string.support_email)
           )
         } else {
           getString(
-            R.string.no_key_available_for_your_emails, errorMsg, messageEntity.email,
+            R.string.no_key_available_for_your_emails, errorMsg, messageEntity.account,
             getString(R.string.support_email)
           )
         }
@@ -608,9 +617,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     binding?.swipeRefreshLayout?.setOnRefreshListener(this)
 
     binding?.floatActionButtonCompose?.setOnClickListener {
-      startActivity(
+      lifecycleScope.launch {
+        delay(10000)
+        InboxIdleSyncWorker.enqueue(requireContext())
+      }
+
+      /*startActivity(
         CreateMessageActivity.generateIntent(context, MessageType.NEW)
-      )
+      )*/
     }
   }
 
