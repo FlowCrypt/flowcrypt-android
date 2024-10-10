@@ -29,11 +29,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasAttachments
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.jakarta.mail.hasPgp
 import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
@@ -636,7 +636,7 @@ data class MessageEntity(
             uid = msg.uid,
             isNew = isNewTemp,
             hasPgp = hasPgp,
-            hasAttachments = GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).isNotEmpty()
+            hasAttachments = msg.hasAttachments()
           ).copy(
             threadId = msg.threadIdAsLong,
             historyId = msg.historyId.toString(),

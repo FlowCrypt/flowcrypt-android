@@ -66,6 +66,18 @@ fun Thread.hasUnreadMessages(): Boolean {
   } ?: false
 }
 
+fun Thread.hasAttachments(): Boolean {
+  return messages?.any { message ->
+    message.hasAttachments()
+  } ?: false
+}
+
+fun Thread.hasPgp(): Boolean {
+  return messages?.any { message ->
+    message.hasPgp()
+  } ?: false
+}
+
 fun Thread.extractSubject(context: Context, receiverEmail: String): String {
   return messages?.getOrNull(0)?.takeIf { message ->
     message.getRecipients("From").any { internetAddress ->

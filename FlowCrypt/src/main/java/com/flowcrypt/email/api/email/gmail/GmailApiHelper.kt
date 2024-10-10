@@ -21,14 +21,16 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.disposition
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.extractSubject
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getAttachmentInfoList
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getDraftsCount
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueLabelsSet
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasAttachments
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasUnreadMessages
-import com.flowcrypt.email.extensions.contentId
-import com.flowcrypt.email.extensions.disposition
-import com.flowcrypt.email.extensions.isMimeType
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isMimeType
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.model.KeyImportDetails
@@ -825,7 +827,7 @@ class GmailApiHelper {
       for (msg in msgs) {
         try {
           if (msg.uid in savedMsgUIDsSet) {
-            attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+            attachments.addAll(msg.payload.getAttachmentInfoList().mapNotNull { attachmentInfo ->
               AttachmentEntity.fromAttInfo(
                 attachmentInfo = attachmentInfo.copy(
                   email = account.email,
@@ -1018,41 +1020,6 @@ class GmailApiHelper {
         .setFormat(format)
         .setFields(fields?.joinToString(separator = ","))
         .execute()
-    }
-
-    /**
-     * Get information about attachments from the given [MessagePart]
-     *
-     * @param depth          The depth of the given [MessagePart]
-     * @param messagePart    The given [MessagePart]
-     * @return a list of found attachments
-     */
-    fun getAttsInfoFromMessagePart(
-      messagePart: MessagePart,
-      depth: String = "0"
-    ): MutableList<AttachmentInfo> {
-      val attachmentInfoList = mutableListOf<AttachmentInfo>()
-      if (messagePart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        for ((index, part) in (messagePart.parts ?: emptyList()).withIndex()) {
-          attachmentInfoList.addAll(
-            getAttsInfoFromMessagePart(
-              part,
-              "$depth${AttachmentInfo.DEPTH_SEPARATOR}${index}"
-            )
-          )
-        }
-      } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
-        val attachmentInfoBuilder = AttachmentInfo.Builder()
-        attachmentInfoBuilder.name = messagePart.filename ?: depth
-        attachmentInfoBuilder.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
-        attachmentInfoBuilder.type = messagePart.mimeType ?: ""
-        attachmentInfoBuilder.id = messagePart.contentId()
-          ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
-        attachmentInfoBuilder.path = depth
-        attachmentInfoList.add(attachmentInfoBuilder.build())
-      }
-
-      return attachmentInfoList
     }
 
     /**
@@ -1330,6 +1297,8 @@ class GmailApiHelper {
         recipients = thread.getUniqueRecipients(receiverEmail),
         subject = thread.extractSubject(context, receiverEmail),
         labels = thread.getUniqueLabelsSet(),
+        hasAttachments = thread.hasAttachments(),
+        hasPgpThings = thread.hasPgp(),
         hasUnreadMessages = thread.hasUnreadMessages()
       )
       return gmailThreadInfo

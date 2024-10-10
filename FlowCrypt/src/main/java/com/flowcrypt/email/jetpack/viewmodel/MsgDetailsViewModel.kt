@@ -42,6 +42,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getAttachmentInfoList
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.livedata.SkipInitialValueObserver
@@ -945,8 +946,7 @@ class MsgDetailsViewModel(
           msgId = messageEntity.uidAsHEX,
           format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
-        val attachments =
-          GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+        val attachments = msg.payload.getAttachmentInfoList().mapNotNull { attachmentInfo ->
             AttachmentEntity.fromAttInfo(
               attachmentInfo = attachmentInfo.copy(
                 email = accountEntity.email,

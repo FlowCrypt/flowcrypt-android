@@ -73,3 +73,7 @@ fun Message.getMessageId(): String? {
 fun Message.isDraft(): Boolean {
   return labelIds?.contains(GmailApiHelper.LABEL_DRAFT) ?: false
 }
+
+fun Message.hasAttachments(): Boolean {
+  return payload?.hasAttachments() ?: false
+}
