@@ -30,6 +30,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadsViewPagerViewModel
+import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.adapter.ThreadDetailsFragmentsAdapter
 
@@ -96,6 +97,11 @@ class ViewPagerThreadDetailsFragment : BaseFragment<FragmentViewPagerThreadDetai
   override fun onDestroyView() {
     binding?.viewPager2?.adapter = null
     super.onDestroyView()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    EmbeddedAttachmentsProvider.Cache.getInstance().clear()
   }
 
   /*

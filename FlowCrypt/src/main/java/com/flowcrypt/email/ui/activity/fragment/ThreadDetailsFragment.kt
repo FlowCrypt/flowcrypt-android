@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -23,8 +25,10 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
@@ -36,6 +40,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithV
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
@@ -53,11 +58,14 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ProcessMessageDialogFragmentArgs
@@ -124,6 +132,20 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         changeGmailLabels()
       }
 
+      override fun onAttachmentDownloadClick(
+        attachmentInfo: AttachmentInfo,
+        message: MessagesInThreadListAdapter.Message
+      ) {
+        toast("Not yet implemented + ${attachmentInfo.name}")
+      }
+
+      override fun onAttachmentPreviewClick(
+        attachmentInfo: AttachmentInfo,
+        message: MessagesInThreadListAdapter.Message
+      ) {
+        handleAttachmentPreviewClick(attachmentInfo, message)
+      }
+
       override fun onReply(message: MessagesInThreadListAdapter.Message) {
         replyTo(message)
       }
@@ -146,6 +168,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     subscribeToTwoWayDialog()
     subscribeToProcessMessageDialogFragment()
     subscribeToFixNeedPassphraseIssueDialogFragment()
+    subscribeToDownloadAttachmentViaDialog()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -298,6 +321,19 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     supportActionBar?.subtitle = null
   }
 
+  private fun initViews() {
+    binding?.recyclerViewMessages?.apply {
+      val linearLayoutManager = LinearLayoutManager(context)
+      layoutManager = linearLayoutManager
+      addItemDecoration(
+        SkipFirstAndLastDividerItemDecoration(
+          context, linearLayoutManager.orientation
+        )
+      )
+      adapter = messagesInThreadListAdapter
+    }
+  }
+
   private fun setupThreadDetailsViewModel() {
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
@@ -396,42 +432,122 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-  private fun updateThreadReplyButtons(message: MessagesInThreadListAdapter.Message) {
-    val replyButton = binding?.layoutReplyButtons?.replyButton
-    val replyAllButton = binding?.layoutReplyButtons?.replyAllButton
-    val forwardButton = binding?.layoutReplyButtons?.forwardButton
-
-    val buttonsColorId: Int
-
-    if (message.messageEntity.hasPgp == true) {
-      buttonsColorId = R.color.colorPrimary
-      replyButton?.setText(R.string.reply_encrypted)
-      replyAllButton?.setText(R.string.reply_all_encrypted)
-      forwardButton?.setText(R.string.forward_encrypted)
-    } else {
-      buttonsColorId = R.color.red
-      replyButton?.setText(R.string.reply)
-      replyAllButton?.setText(R.string.reply_all)
-      forwardButton?.setText(R.string.forward)
-    }
-
-    val colorStateList =
-      ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
-
-    replyButton?.iconTint = colorStateList
-    replyAllButton?.iconTint = colorStateList
-    forwardButton?.iconTint = colorStateList
-
-    replyButton?.setOnClickListener {
-      replyTo(message)
-    }
-    replyAllButton?.setOnClickListener {
-      replyAllTo(message)
-    }
-    forwardButton?.setOnClickListener {
-      forward(message)
+  private fun subscribeToProcessMessageDialogFragment() {
+    setFragmentResultListener(
+      requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
+    ) { _, bundle ->
+      val message: MessagesInThreadListAdapter.Message? = bundle.getParcelableViaExt(
+        ProcessMessageDialogFragment.KEY_RESULT
+      ) as? MessagesInThreadListAdapter.Message?
+      if (message != null) {
+        threadDetailsViewModel.onMessageChanged(
+          message.copy(
+            type = MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED
+          )
+        )
+      } else {
+        toast(R.string.unknown_error)
+      }
     }
   }
+
+  private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
+    setFragmentResultListener(
+      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
+    ) { _, bundle ->
+      val requestCode = bundle.getInt(
+        FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE, Int.MIN_VALUE
+      )
+
+      when (requestCode) {
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE -> {
+          bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
+            val messageId = it.getLong(REQUEST_KEY_MESSAGE_ID, Long.MIN_VALUE)
+            if (messageId > 0) {
+              (messagesInThreadListAdapter.currentList.firstOrNull { item ->
+                item.id == messageId
+              } as? MessagesInThreadListAdapter.Message)?.let {
+                processMessageClick(it)
+              }
+            }
+          }
+        }
+
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT -> {
+          bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
+            val messageId = it.getLong(KEY_EXTRA_MESSAGE_ID, Long.MIN_VALUE)
+            val attachmentId = it.getString(KEY_EXTRA_ATTACHMENT_ID)
+            if (messageId > 0 && !attachmentId.isNullOrEmpty()) {
+              (messagesInThreadListAdapter.currentList.firstOrNull { item ->
+                item.id == messageId
+              } as? MessagesInThreadListAdapter.Message)?.let { message ->
+                val attachmentInfo = message.attachments.firstOrNull { attachmentInfo ->
+                  attachmentInfo.uniqueStringId == attachmentId
+                } ?: return@setFragmentResultListener
+                handleAttachmentPreviewClick(attachmentInfo, message)
+              }
+            }
+          }
+        }
+
+        else -> toast(R.string.unknown_error)
+      }
+    }
+  }
+
+  private fun subscribeToDownloadAttachmentViaDialog() {
+    setFragmentResultListener(
+      REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntityId.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
+      val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
+      val attachmentInfo = bundle.getParcelableViaExt<AttachmentInfo>(
+        DownloadAttachmentDialogFragment.KEY_ATTACHMENT
+      )?.let { EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(it) }
+
+      bundle.getBundle(DownloadAttachmentDialogFragment.KEY_INCOMING_BUNDLE)?.getLong(
+        KEY_EXTRA_MESSAGE_ID
+      ).let { messageId ->
+        messagesInThreadListAdapter.currentList.firstOrNull {
+          it.id == messageId
+        }?.let { message ->
+          (message as? MessagesInThreadListAdapter.Message)?.let {
+            threadDetailsViewModel.onMessageChanged(
+              message.copy(
+                attachments = message.attachments.toMutableList().apply {
+                  replaceAll {
+                    if (attachmentInfo != null && it.id == attachmentInfo.id) {
+                      attachmentInfo
+                    } else {
+                      it
+                    }
+                  }
+                }
+              )
+            )
+          }
+        }
+      }
+
+      when (requestCode) {
+        REQUEST_CODE_PREVIEW_ATTACHMENT -> {
+          attachmentInfo?.let {
+            previewAttachment(
+              attachmentInfo = it,
+              useContentApp = account?.isHandlingAttachmentRestricted() == true
+            )
+          }
+        }
+
+        REQUEST_CODE_SAVE_ATTACHMENT -> {
+          //downloadAttachment()
+        }
+      }
+    }
+  }
+
 
   private fun replyTo(message: MessagesInThreadListAdapter.Message) {
     startActivity(
@@ -503,67 +619,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-  private fun subscribeToProcessMessageDialogFragment() {
-    setFragmentResultListener(
-      requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
-    ) { _, bundle ->
-      val message: MessagesInThreadListAdapter.Message? = bundle.getParcelableViaExt(
-        ProcessMessageDialogFragment.KEY_RESULT
-      ) as? MessagesInThreadListAdapter.Message?
-      if (message != null) {
-        threadDetailsViewModel.onMessageChanged(
-          message.copy(
-            type = MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED
-          )
-        )
-      } else {
-        toast(R.string.unknown_error)
-      }
-    }
-  }
-
-  private fun subscribeToFixNeedPassphraseIssueDialogFragment() {
-    setFragmentResultListener(
-      requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
-      useSuperParentFragmentManagerIfPossible = args.isViewPagerMode
-    ) { _, bundle ->
-      val requestCode = bundle.getInt(
-        FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_CODE, Int.MIN_VALUE
-      )
-
-      when (requestCode) {
-        REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE -> {
-          bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
-            val messageId = it.getLong(REQUEST_KEY_MESSAGE_ID, Long.MIN_VALUE)
-            if (messageId > 0) {
-              (messagesInThreadListAdapter.currentList.firstOrNull { item ->
-                item.id == messageId
-              } as? MessagesInThreadListAdapter.Message)?.let {
-                processMessageClick(it)
-              }
-            }
-          }
-        }
-
-        else -> toast(R.string.unknown_error)
-      }
-    }
-  }
-
-  private fun initViews() {
-    binding?.recyclerViewMessages?.apply {
-      val linearLayoutManager = LinearLayoutManager(context)
-      layoutManager = linearLayoutManager
-      addItemDecoration(
-        SkipFirstAndLastDividerItemDecoration(
-          context, linearLayoutManager.orientation
-        )
-      )
-      adapter = messagesInThreadListAdapter
-    }
-  }
-
   private fun processMessageClick(message: MessagesInThreadListAdapter.Message) {
     if (message.messageEntity.hasPgp == true) {
       val keysStorage = KeysStorageImpl.getInstance(requireContext())
@@ -612,7 +667,124 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun updateThreadReplyButtons(message: MessagesInThreadListAdapter.Message) {
+    val replyButton = binding?.layoutReplyButtons?.replyButton
+    val replyAllButton = binding?.layoutReplyButtons?.replyAllButton
+    val forwardButton = binding?.layoutReplyButtons?.forwardButton
+
+    val buttonsColorId: Int
+
+    if (message.messageEntity.hasPgp == true) {
+      buttonsColorId = R.color.colorPrimary
+      replyButton?.setText(R.string.reply_encrypted)
+      replyAllButton?.setText(R.string.reply_all_encrypted)
+      forwardButton?.setText(R.string.forward_encrypted)
+    } else {
+      buttonsColorId = R.color.red
+      replyButton?.setText(R.string.reply)
+      replyAllButton?.setText(R.string.reply_all)
+      forwardButton?.setText(R.string.forward)
+    }
+
+    val colorStateList =
+      ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
+
+    replyButton?.iconTint = colorStateList
+    replyAllButton?.iconTint = colorStateList
+    forwardButton?.iconTint = colorStateList
+
+    replyButton?.setOnClickListener {
+      replyTo(message)
+    }
+    replyAllButton?.setOnClickListener {
+      replyAllTo(message)
+    }
+    forwardButton?.setOnClickListener {
+      forward(message)
+    }
+  }
+
+
+  private fun handleAttachmentPreviewClick(
+    attachmentInfo: AttachmentInfo,
+    message: MessagesInThreadListAdapter.Message
+  ) {
+    val documentId = EmbeddedAttachmentsProvider.Cache.getInstance()
+      .getDocumentId(attachmentInfo)
+
+    if (attachmentInfo.uri != null && documentId != null) {
+      previewAttachment(
+        attachmentInfo = attachmentInfo,
+        useContentApp = account?.isHandlingAttachmentRestricted() == true
+      )
+    } else {
+      if (attachmentInfo.isPossiblyEncrypted) {
+        val keysStorage = KeysStorageImpl.getInstance(requireContext())
+        val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
+        if (fingerprints.isNotEmpty()) {
+          showNeedPassphraseDialog(
+            requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+            requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT,
+            fingerprints = fingerprints,
+            bundle = Bundle().apply {
+              putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+              putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+            }
+          )
+          return
+        }
+      }
+
+      navController?.navigate(
+        object : NavDirections {
+          override val actionId = R.id.download_attachment_dialog_graph
+          override val arguments = DownloadAttachmentDialogFragmentArgs(
+            attachmentInfo = attachmentInfo,
+            requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntityId.toString(),
+            requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT,
+            bundle = Bundle().apply {
+              putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+            }
+          ).toBundle()
+        }
+      )
+    }
+  }
+
+  private fun previewAttachment(
+    attachmentInfo: AttachmentInfo,
+    useContentApp: Boolean = false
+  ) {
+    val intent = if (attachmentInfo.uri != null) {
+      GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
+    } else {
+      toast(getString(R.string.preview_is_not_available))
+      return
+    }
+
+    if (useContentApp) {
+      try {
+        startActivity(Intent(intent).setPackage(Constants.APP_PACKAGE_CONTENT_LOCKER))
+      } catch (e: ActivityNotFoundException) {
+        //We don't have the required app
+        showInfoDialog(
+          dialogTitle = "",
+          dialogMsg = getString(R.string.warning_don_not_have_content_app)
+        )
+      }
+    } else {
+      try {
+        startActivity(intent)
+      } catch (e: ActivityNotFoundException) {
+        toast(getString(R.string.no_apps_that_can_handle_intent))
+      }
+    }
+  }
+
   companion object {
+    private const val KEY_EXTRA_MESSAGE_ID = "MESSAGE_ID"
+    private const val KEY_EXTRA_ATTACHMENT_ID = "ATTACHMENT_ID"
+
     private val REQUEST_KEY_PROCESS_MESSAGE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PROCESS_MESSAGE",
       ThreadDetailsFragment::class.java
@@ -633,6 +805,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       ThreadDetailsFragment::class.java
     )
 
+    private val REQUEST_KEY_DOWNLOAD_ATTACHMENT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_DOWNLOAD_ATTACHMENT",
+      ThreadDetailsFragment::class.java
+    )
+
     private val REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING =
       GeneralUtil.generateUniqueExtraKey(
         "REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING",
@@ -645,7 +822,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
 
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1
-    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 2
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT = 2
+    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 3
+    private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
+    private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
+    private const val REQUEST_CODE_DECRYPT_ATTACHMENT = 1002
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
 }

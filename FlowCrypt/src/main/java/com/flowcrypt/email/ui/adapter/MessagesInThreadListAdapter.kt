@@ -160,6 +160,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onHeadersDetailsClick(position: Int, message: Message)
     fun onMessageChanged(position: Int, message: Message)
     fun onLabelClicked(label: GmailApiLabelsListAdapter.Label)
+    fun onAttachmentDownloadClick(attachmentInfo: AttachmentInfo, message: Message)
+    fun onAttachmentPreviewClick(attachmentInfo: AttachmentInfo, message: Message)
     fun onReply(message: Message)
     fun onReplyAll(message: Message)
     fun onForward(message: Message)
@@ -276,17 +278,6 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
 
     private val messageHeadersListAdapter = MessageHeadersListAdapter()
     private val pgpBadgeListAdapter = PgpBadgeListAdapter()
-    private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
-      isDeleteEnabled = false,
-      attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
-        override fun onDownloadClick(attachmentInfo: AttachmentInfo) {}
-
-        override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {}
-
-        override fun onPreviewClick(attachmentInfo: AttachmentInfo) {}
-
-        override fun onDeleteClick(attachmentInfo: AttachmentInfo) {}
-      })
 
     init {
       binding.rVMsgDetails.apply {
@@ -318,7 +309,6 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
             marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
           )
         )
-        adapter = attachmentsRecyclerViewAdapter
       }
     }
 
@@ -387,7 +377,26 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       }
 
       messageHeadersListAdapter.submitList(messageEntity.generateDetailsHeaders(context))
-      attachmentsRecyclerViewAdapter.submitList(message.attachments)
+
+      binding.rVAttachments.adapter = AttachmentsRecyclerViewAdapter(
+        isDeleteEnabled = false,
+        attachmentActionListener = object :
+          AttachmentsRecyclerViewAdapter.AttachmentActionListener {
+          override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
+            onMessageActionsListener.onAttachmentDownloadClick(attachmentInfo, message)
+          }
+
+          override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {}
+
+          override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
+            onMessageActionsListener.onAttachmentPreviewClick(attachmentInfo, message)
+          }
+
+          override fun onDeleteClick(attachmentInfo: AttachmentInfo) {}
+        }
+      ).apply {
+        submitList(message.attachments)
+      }
 
       binding.emailWebView.apply {
         updateLayoutParams {
