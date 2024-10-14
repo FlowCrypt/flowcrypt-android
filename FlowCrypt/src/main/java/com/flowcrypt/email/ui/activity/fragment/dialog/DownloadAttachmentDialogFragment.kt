@@ -24,6 +24,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -116,8 +117,7 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
                        after decryption. It will help the Android system use a right app
                        to open this attachment.
                       */
-                      args.attachmentInfo.copy(rawData = null, name = finalName)
-                        .getAndroidMimeType() ?: args.attachmentInfo.type
+                      finalName.getPossibleAndroidMimeType() ?: args.attachmentInfo.type
                     } else {
                       args.attachmentInfo.type
                     },

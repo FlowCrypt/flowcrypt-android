@@ -9,6 +9,7 @@ import android.content.Context
 import android.graphics.Color
 import android.util.Patterns
 import android.util.TypedValue
+import android.webkit.MimeTypeMap
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
@@ -16,6 +17,7 @@ import com.flowcrypt.email.util.UIUtil
 import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.InternetAddress
+import org.apache.commons.io.FilenameUtils
 import org.json.JSONObject
 import java.io.InputStream
 import java.net.URLDecoder
@@ -182,6 +184,10 @@ fun String?.asContentTypeOrNull(): ContentType? {
   } catch (e: Exception) {
     null
   }
+}
+
+fun String?.getPossibleAndroidMimeType(): String? {
+  return MimeTypeMap.getSingleton().getMimeTypeFromExtension(FilenameUtils.getExtension(this))
 }
 
 val String.toLongRadix16: Long

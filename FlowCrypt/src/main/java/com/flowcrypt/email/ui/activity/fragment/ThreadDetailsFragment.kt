@@ -5,9 +5,12 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -16,6 +19,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -60,6 +64,7 @@ import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -74,6 +79,7 @@ import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
 import com.flowcrypt.email.util.GeneralUtil
+import org.apache.commons.io.FilenameUtils
 
 /**
  * @author Denys Bondarenko
@@ -110,6 +116,16 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       }
     }
   }
+  private val requestPermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+      toast(
+        if (isGranted) {
+          R.string.permissions_granted_and_now_you_can_download_attachments
+        } else {
+          R.string.cannot_save_attachment_without_permission
+        }, Toast.LENGTH_LONG
+      )
+    }
 
   private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
     object : MessagesInThreadListAdapter.OnMessageActionsListener {
@@ -136,7 +152,24 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         attachmentInfo: AttachmentInfo,
         message: MessagesInThreadListAdapter.Message
       ) {
-        toast("Not yet implemented + ${attachmentInfo.name}")
+        if (FilenameUtils.getExtension(attachmentInfo.getSafeName())
+            ?.lowercase() in AttachmentInfo.DANGEROUS_FILE_EXTENSIONS
+        ) {
+          showTwoWayDialog(
+            requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+            requestCode = REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE,
+            dialogTitle = "",
+            dialogMsg = getString(R.string.download_dangerous_file_warning),
+            positiveButtonTitle = getString(R.string.continue_),
+            negativeButtonTitle = getString(android.R.string.cancel),
+            bundle = Bundle().apply {
+              putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+              putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+            }
+          )
+        } else {
+          processDownloadAttachment(attachmentInfo, message)
+        }
       }
 
       override fun onAttachmentPreviewClick(
@@ -428,6 +461,16 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         REQUEST_CODE_DELETE_MESSAGE_DIALOG -> if (result == TwoWayDialogFragment.RESULT_OK) {
           threadDetailsViewModel.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
         }
+
+        REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE ->
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)
+              ?.let {
+                processActionBasedOnIncomingBundle(it) { attachmentInfo, message ->
+                  processDownloadAttachment(attachmentInfo, message)
+                }
+              }
+          }
       }
     }
   }
@@ -468,26 +511,25 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             if (messageId > 0) {
               (messagesInThreadListAdapter.currentList.firstOrNull { item ->
                 item.id == messageId
-              } as? MessagesInThreadListAdapter.Message)?.let {
-                processMessageClick(it)
+              } as? MessagesInThreadListAdapter.Message)?.let { message ->
+                processMessageClick(message)
               }
+            }
+          }
+        }
+
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT -> {
+          bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
+            processActionBasedOnIncomingBundle(it) { attachmentInfo, message ->
+              handleAttachmentPreviewClick(attachmentInfo, message)
             }
           }
         }
 
         REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT -> {
           bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
-            val messageId = it.getLong(KEY_EXTRA_MESSAGE_ID, Long.MIN_VALUE)
-            val attachmentId = it.getString(KEY_EXTRA_ATTACHMENT_ID)
-            if (messageId > 0 && !attachmentId.isNullOrEmpty()) {
-              (messagesInThreadListAdapter.currentList.firstOrNull { item ->
-                item.id == messageId
-              } as? MessagesInThreadListAdapter.Message)?.let { message ->
-                val attachmentInfo = message.attachments.firstOrNull { attachmentInfo ->
-                  attachmentInfo.uniqueStringId == attachmentId
-                } ?: return@setFragmentResultListener
-                handleAttachmentPreviewClick(attachmentInfo, message)
-              }
+            processActionBasedOnIncomingBundle(it) { attachmentInfo, message ->
+              downloadAttachment(attachmentInfo, message)
             }
           }
         }
@@ -503,46 +545,44 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       args.isViewPagerMode
     ) { _, bundle ->
       val requestCode = bundle.getInt(DownloadAttachmentDialogFragment.KEY_REQUEST_CODE)
+
       val attachmentInfo = bundle.getParcelableViaExt<AttachmentInfo>(
         DownloadAttachmentDialogFragment.KEY_ATTACHMENT
       )?.let { EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(it) }
+        ?: return@setFragmentResultListener
 
-      bundle.getBundle(DownloadAttachmentDialogFragment.KEY_INCOMING_BUNDLE)?.getLong(
+      val message = bundle.getBundle(DownloadAttachmentDialogFragment.KEY_INCOMING_BUNDLE)?.getLong(
         KEY_EXTRA_MESSAGE_ID
       ).let { messageId ->
         messagesInThreadListAdapter.currentList.firstOrNull {
           it.id == messageId
-        }?.let { message ->
-          (message as? MessagesInThreadListAdapter.Message)?.let {
-            threadDetailsViewModel.onMessageChanged(
-              message.copy(
-                attachments = message.attachments.toMutableList().apply {
-                  replaceAll {
-                    if (attachmentInfo != null && it.id == attachmentInfo.id) {
-                      attachmentInfo
-                    } else {
-                      it
-                    }
-                  }
-                }
-              )
-            )
+        } as? MessagesInThreadListAdapter.Message
+      } ?: return@setFragmentResultListener
+
+      threadDetailsViewModel.onMessageChanged(
+        message.copy(
+          attachments = message.attachments.toMutableList().apply {
+            replaceAll {
+              if (it.id == attachmentInfo.id) {
+                attachmentInfo
+              } else {
+                it
+              }
+            }
           }
-        }
-      }
+        )
+      )
 
       when (requestCode) {
         REQUEST_CODE_PREVIEW_ATTACHMENT -> {
-          attachmentInfo?.let {
-            previewAttachment(
-              attachmentInfo = it,
-              useContentApp = account?.isHandlingAttachmentRestricted() == true
-            )
-          }
+          previewAttachment(
+            attachmentInfo = attachmentInfo,
+            useContentApp = account?.isHandlingAttachmentRestricted() == true
+          )
         }
 
         REQUEST_CODE_SAVE_ATTACHMENT -> {
-          //downloadAttachment()
+          downloadAttachment(attachmentInfo = attachmentInfo, message = message)
         }
       }
     }
@@ -704,7 +744,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-
   private fun handleAttachmentPreviewClick(
     attachmentInfo: AttachmentInfo,
     message: MessagesInThreadListAdapter.Message
@@ -718,22 +757,13 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         useContentApp = account?.isHandlingAttachmentRestricted() == true
       )
     } else {
-      if (attachmentInfo.isPossiblyEncrypted) {
-        val keysStorage = KeysStorageImpl.getInstance(requireContext())
-        val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
-        if (fingerprints.isNotEmpty()) {
-          showNeedPassphraseDialog(
-            requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
-            requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT,
-            fingerprints = fingerprints,
-            bundle = Bundle().apply {
-              putLong(KEY_EXTRA_MESSAGE_ID, message.id)
-              putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
-            }
-          )
-          return
-        }
-      }
+      if (
+        checkAndShowNeedPassphraseDialogIfNeeded(
+          attachmentInfo = attachmentInfo,
+          message = message,
+          requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT
+        )
+      ) return
 
       navController?.navigate(
         object : NavDirections {
@@ -781,6 +811,107 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun processDownloadAttachment(
+    attachmentInfo: AttachmentInfo,
+    message: MessagesInThreadListAdapter.Message
+  ) {
+    if (
+      checkAndShowNeedPassphraseDialogIfNeeded(
+        attachmentInfo = attachmentInfo,
+        message = message,
+        requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT
+      )
+    ) return
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+      ContextCompat.checkSelfPermission(
+        requireContext(),
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+      ) == PackageManager.PERMISSION_GRANTED
+    ) {
+      downloadAttachment(attachmentInfo, message)
+    } else {
+      requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
+  }
+
+  private fun downloadAttachment(
+    attachmentInfo: AttachmentInfo,
+    message: MessagesInThreadListAdapter.Message
+  ) {
+    when {
+      attachmentInfo.uri != null -> {
+        requireContext().startService(
+          AttachmentDownloadManagerService.newIntent(context = context, attInfo = attachmentInfo)
+        )
+      }
+
+      account?.isHandlingAttachmentRestricted() == true -> {
+        navController?.navigate(
+          object : NavDirections {
+            override val actionId = R.id.download_attachment_dialog_graph
+            override val arguments = DownloadAttachmentDialogFragmentArgs(
+              attachmentInfo = attachmentInfo,
+              requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntityId.toString(),
+              requestCode = REQUEST_CODE_SAVE_ATTACHMENT,
+              bundle = Bundle().apply {
+                putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+              }
+            ).toBundle()
+          }
+        )
+      }
+
+      else -> {
+        requireContext().startService(
+          AttachmentDownloadManagerService.newIntent(context = context, attInfo = attachmentInfo)
+        )
+      }
+    }
+  }
+
+  private fun checkAndShowNeedPassphraseDialogIfNeeded(
+    attachmentInfo: AttachmentInfo,
+    message: MessagesInThreadListAdapter.Message,
+    requestCode: Int
+  ): Boolean {
+    if (attachmentInfo.isPossiblyEncrypted) {
+      val keysStorage = KeysStorageImpl.getInstance(requireContext())
+      val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
+      if (fingerprints.isNotEmpty()) {
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+          requestCode = requestCode,
+          fingerprints = fingerprints,
+          bundle = Bundle().apply {
+            putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+            putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+          }
+        )
+        return true
+      }
+    }
+    return false
+  }
+
+  private fun processActionBasedOnIncomingBundle(
+    bundle: Bundle,
+    action: (AttachmentInfo, MessagesInThreadListAdapter.Message) -> Unit
+  ) {
+    val messageId = bundle.getLong(KEY_EXTRA_MESSAGE_ID, Long.MIN_VALUE)
+    val attachmentId = bundle.getString(KEY_EXTRA_ATTACHMENT_ID)
+    if (messageId > 0 && !attachmentId.isNullOrEmpty()) {
+      (messagesInThreadListAdapter.currentList.firstOrNull { item ->
+        item.id == messageId
+      } as? MessagesInThreadListAdapter.Message)?.let { message ->
+        val attachmentInfo = message.attachments.firstOrNull { attachmentInfo ->
+          attachmentInfo.uniqueStringId == attachmentId
+        } ?: return
+        action.invoke(attachmentInfo, message)
+      }
+    }
+  }
+
   companion object {
     private const val KEY_EXTRA_MESSAGE_ID = "MESSAGE_ID"
     private const val KEY_EXTRA_ATTACHMENT_ID = "ATTACHMENT_ID"
@@ -821,12 +952,15 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       ThreadDetailsFragment::class.java
     )
 
-    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1
-    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT = 2
-    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 3
-    private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
-    private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001
-    private const val REQUEST_CODE_DECRYPT_ATTACHMENT = 1002
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1000
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT = 1001
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT = 1002
+    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 1003
+    private const val REQUEST_CODE_SAVE_ATTACHMENT = 1004
+    private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1005
+    private const val REQUEST_CODE_DECRYPT_ATTACHMENT = 1006
+    private const val REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE = 1007
+
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
 }

@@ -36,6 +36,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
@@ -599,7 +600,12 @@ class AttachmentDownloadManagerService : LifecycleService() {
         } else {
           val uri = storeFileToSharedFolder(context, attTempFile)
           listener?.onAttDownloaded(
-            attInfo = att.copy(name = finalFileName),
+            attInfo = att.copy(
+              name = finalFileName,
+              type = if (att.isPossiblyEncrypted) {
+                finalFileName.getPossibleAndroidMimeType() ?: att.type
+              } else att.type
+            ),
             uri = uri,
             useContentApp = useContentApp
           )
