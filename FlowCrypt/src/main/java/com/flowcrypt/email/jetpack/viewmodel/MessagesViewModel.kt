@@ -695,43 +695,108 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             resultCode = R.id.progress_id_gmail_list
           )
         )
-        val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfoUsingSearch(
-          getApplication(), accountEntity,
-          localFolder, if (totalItemsCount > 0) searchNextPageToken else null
-        )
+
+        val nextPageToken: String
+        val gmailThreadInfoList: List<GmailThreadInfo>
+        val messages = if (accountEntity.useConversationMode) {
+          val threadsResponse = GmailApiHelper.loadThreads(
+            context = getApplication(),
+            accountEntity = accountEntity,
+            localFolder = localFolder,
+            nextPageToken = if (totalItemsCount > 0) searchNextPageToken else null
+          )
+          nextPageToken = threadsResponse.nextPageToken
+
+          if (threadsResponse.threads.isNullOrEmpty()) {
+            gmailThreadInfoList = emptyList()
+            null
+          } else {
+            gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
+              context = getApplication(),
+              accountEntity = accountEntity,
+              threads = threadsResponse.threads ?: emptyList(),
+              format = GmailApiHelper.RESPONSE_FORMAT_FULL,
+              localFolder = localFolder
+            )
+
+            val messages = gmailThreadInfoList.map { it.lastMessage }
+            val msgs = GmailApiHelper.loadMsgsInParallel(
+              getApplication(), accountEntity, messages, localFolder
+            )
+            loadMsgsFromRemoteServerLiveData.postValue(
+              Result.loading(
+                progress = 90.0,
+                resultCode = R.id.progress_id_gmail_msgs_info
+              )
+            )
+            msgs
+          }
+        } else {
+          gmailThreadInfoList = emptyList()
+          val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfoUsingSearch(
+            getApplication(), accountEntity,
+            localFolder, if (totalItemsCount > 0) searchNextPageToken else null
+          )
+          nextPageToken = messagesBaseInfo.nextPageToken
+          loadMsgsFromRemoteServerLiveData.postValue(
+            Result.loading(
+              progress = 70.0,
+              resultCode = R.id.progress_id_gmail_msgs_info
+            )
+          )
+
+          if (messagesBaseInfo.messages.isNullOrEmpty()) {
+            null
+          } else {
+            GmailApiHelper.loadMsgsInParallel(
+              getApplication(), accountEntity, messagesBaseInfo.messages
+                ?: emptyList(), localFolder
+            )
+          }
+        }
+
         loadMsgsFromRemoteServerLiveData.postValue(
           Result.loading(
-            progress = 70.0,
+            progress = 90.0,
             resultCode = R.id.progress_id_gmail_msgs_info
           )
         )
 
-        if (messagesBaseInfo.messages?.isNotEmpty() == true) {
-          val msgs = GmailApiHelper.loadMsgsInParallel(
-            getApplication(), accountEntity, messagesBaseInfo.messages
-              ?: emptyList(), localFolder
-          )
-          loadMsgsFromRemoteServerLiveData.postValue(
-            Result.loading(
-              progress = 90.0,
-              resultCode = R.id.progress_id_gmail_msgs_info
-            )
-          )
+        if (!messages.isNullOrEmpty()) {
           handleSearchResults(
             accountEntity,
             localFolder.copy(fullName = JavaEmailConstants.FOLDER_SEARCH),
-            msgs
-          )
-        } else {
-          loadMsgsFromRemoteServerLiveData.postValue(
-            Result.loading(
-              progress = 90.0,
-              resultCode = R.id.progress_id_gmail_msgs_info
-            )
-          )
+            messages
+          ) { message, messageEntity ->
+            if (accountEntity.useConversationMode) {
+              val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
+              if (thread != null) {
+                messageEntity.copy(
+                  subject = thread.subject,
+                  threadMessagesCount = thread.messagesCount,
+                  threadDraftsCount = thread.draftsCount,
+                  labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
+                  hasAttachments = thread.hasAttachments,
+                  fromAddresses = InternetAddress.toString(
+                    thread.recipients.toTypedArray()
+                  ),
+                  hasPgp = thread.hasPgpThings,
+                  //we need to identify threads by UID. But we can't have uid == threadId
+                  //as the first message in a thread has such a situation.
+                  //So we will use Long.MAX_VALUE to save 'threadId' modified
+                  //and will be able to recreate it.
+                  uid = Long.MAX_VALUE - (messageEntity.threadId ?: System.nanoTime())
+                )
+              } else {
+                messageEntity
+              }
+            } else {
+              messageEntity
+            }
+          }
         }
 
-        searchNextPageToken = messagesBaseInfo.nextPageToken
+        searchNextPageToken = nextPageToken
       }
     }
 
@@ -826,7 +891,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   private suspend fun handleSearchResults(
     account: AccountEntity, localFolder: LocalFolder,
-    msgs: List<com.google.api.services.gmail.model.Message>
+    msgs: List<com.google.api.services.gmail.model.Message>,
+    messageEntityModificationAction: (
+      message: com.google.api.services.gmail.model.Message,
+      messageEntity: MessageEntity
+    ) -> MessageEntity
   ) = withContext(Dispatchers.IO) {
     val isOnlyPgpModeEnabled = account.showOnlyEncrypted ?: false
     val msgEntities = MessageEntity.genMessageEntities(
@@ -837,7 +906,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       msgsList = msgs,
       isNew = false,
       onlyPgpModeEnabled = isOnlyPgpModeEnabled
-    )
+    ) { message, messageEntity ->
+      messageEntityModificationAction.invoke(message, messageEntity)
+    }
 
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
     GmailApiHelper.identifyAttachments(msgEntities, msgs, account, localFolder, roomDatabase)
@@ -846,7 +917,8 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       context = getApplication(),
       messages = msgs
       .filter { it.labelIds?.contains(GmailApiHelper.LABEL_SENT) == true }
-      .map { GmaiAPIMimeMessage(session, it) }.toTypedArray()
+        .map { GmaiAPIMimeMessage(session, it) }
+        .toTypedArray()
     )
   }
 

@@ -145,7 +145,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       }
 
       override fun onLabelClicked(label: GmailApiLabelsListAdapter.Label) {
-        changeGmailLabels()
+        if (args.localFolder.searchQuery == null) {
+          changeGmailLabels()
+        }
       }
 
       override fun onAttachmentDownloadClick(
@@ -258,7 +260,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         menuActionMarkAsNotSpam?.isEnabled = isAdditionalActionEnabled
         menuActionChangeLabels?.isEnabled = isAdditionalActionEnabled
 
-        /*args.localFolder.searchQuery?.let {
+        args.localFolder.searchQuery?.let {
           menuItemArchiveMsg?.isVisible = false
           menuItemDeleteMsg?.isVisible = false
           menuActionMoveToInbox?.isVisible = false
@@ -266,7 +268,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           menuActionMoveToSpam?.isVisible = false
           menuActionMarkAsNotSpam?.isVisible = false
           menuActionChangeLabels?.isVisible = false
-        }*/
+        }
       }
 
       override fun onMenuItemSelected(menuItem: MenuItem): Boolean {

@@ -287,9 +287,16 @@ class GmailApiHelper {
         request.labelIds = listOf(localFolder.fullName)
       }
 
-      if (accountEntity.showOnlyEncrypted == true) {
-        request.q =
-          (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+      if (localFolder.searchQuery.isNullOrEmpty()) {
+        if (accountEntity.showOnlyEncrypted == true) {
+          request.q =
+            (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+        }
+      } else {
+        request.q = (EmailUtil.generateSearchTerm(
+          accountEntity,
+          localFolder
+        ) as? GmailRawSearchTerm)?.pattern
       }
 
       return@withContext request.execute()

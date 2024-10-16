@@ -381,7 +381,7 @@ class ThreadDetailsViewModel(
           context = getApplication(),
           account = activeAccount.email,
           accountType = activeAccount.accountType,
-          label = localFolder.fullName,
+          label = getFolderFullName(),
           msgsList = messagesInThread,
           isNew = false,
           onlyPgpModeEnabled = isOnlyPgpModeEnabled,
@@ -393,7 +393,7 @@ class ThreadDetailsViewModel(
         threadMessageEntity.threadId?.let {
           roomDatabase.msgDao().clearCacheForGmailThread(
             account = activeAccount.email,
-            folder = localFolder.fullName,
+            folder = getFolderFullName(),
             threadId = it
           )
         }
@@ -403,13 +403,17 @@ class ThreadDetailsViewModel(
           msgEntities = messageEntities,
           msgs = messagesInThread,
           account = activeAccount,
-          localFolder = localFolder,
+          localFolder = if (localFolder.searchQuery == null) {
+            localFolder
+          } else {
+            localFolder.copy(fullName = JavaEmailConstants.FOLDER_SEARCH)
+          },
           roomDatabase = roomDatabase
         )
 
         val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
           activeAccount.email,
-          localFolder.fullName,
+          getFolderFullName(),
           threadMessageEntity.threadId ?: 0,
         )
 
@@ -495,5 +499,11 @@ class ThreadDetailsViewModel(
         }
       }
     }
+  }
+
+  private fun getFolderFullName() = if (localFolder.searchQuery == null) {
+    localFolder.fullName
+  } else {
+    JavaEmailConstants.FOLDER_SEARCH
   }
 }
