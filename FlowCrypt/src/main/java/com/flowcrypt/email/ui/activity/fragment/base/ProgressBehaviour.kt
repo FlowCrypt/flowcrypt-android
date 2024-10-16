@@ -7,10 +7,12 @@ package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.view.View
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.visible
+import com.flowcrypt.email.extensions.visibleOrGone
 
 /**
  * This interface describes a situation when we should to show some progress while some operation
@@ -24,12 +26,32 @@ interface ProgressBehaviour {
   val contentView: View?
   val statusView: View?
 
-  fun showProgress(progressMsg: String? = null) {
+  fun showProgress(
+    progressMsg: String? = null,
+    useHorizontalProgressBar: Boolean = false,
+    progress: Int = 0
+  ) {
     contentView?.gone()
     goneStatusView()
 
     val tVProgressMsg = progressView?.findViewById<TextView>(R.id.tVProgressMsg)
     tVProgressMsg?.text = progressMsg
+
+    val progressBar = progressView?.findViewById<ProgressBar>(R.id.progressBar)
+    val progressBarHorizontal = progressView?.findViewById<ProgressBar>(R.id.progressBarHorizontal)
+
+    progressBar?.visibleOrGone(!useHorizontalProgressBar)
+    progressBarHorizontal?.visibleOrGone(useHorizontalProgressBar)
+
+    if (useHorizontalProgressBar) {
+      if (progress > 0) {
+        progressBarHorizontal?.isIndeterminate = false
+        progressBarHorizontal?.progress = progress
+      } else {
+        progressBarHorizontal?.isIndeterminate = true
+        progressBarHorizontal?.progress = 0
+      }
+    }
 
     progressView?.visible()
   }

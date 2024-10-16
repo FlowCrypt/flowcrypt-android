@@ -9,6 +9,8 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.visible
 
 /**
  * This interface helps to show a list of some data. It extends [ProgressBehaviour] with one more
@@ -19,23 +21,31 @@ import com.flowcrypt.email.R
 interface ListProgressBehaviour : ProgressBehaviour {
   val emptyView: View?
 
-  override fun showProgress(progressMsg: String?) {
-    emptyView?.visibility = View.GONE
-    super.showProgress(progressMsg)
+  override fun showProgress(
+    progressMsg: String?,
+    useHorizontalProgressBar: Boolean,
+    progress: Int
+  ) {
+    emptyView?.gone()
+    super.showProgress(
+      progressMsg = progressMsg,
+      useHorizontalProgressBar = useHorizontalProgressBar,
+      progress = progress
+    )
   }
 
   override fun showContent() {
-    emptyView?.visibility = View.GONE
+    emptyView?.gone()
     super.showContent()
   }
 
   override fun showStatus(msg: String?, resourcesId: Int, action: (() -> Unit)?) {
-    emptyView?.visibility = View.GONE
+    emptyView?.gone()
     super.showStatus(msg, resourcesId, action)
   }
 
   fun showEmptyView(msg: String? = null, imageResourcesId: Int = 0) {
-    contentView?.visibility = View.GONE
+    contentView?.gone()
     goneStatusView()
     goneProgressView()
 
@@ -49,7 +59,7 @@ interface ListProgressBehaviour : ProgressBehaviour {
       iVEmptyImg?.setImageResource(imageResourcesId)
     }
 
-    emptyView?.visibility = View.VISIBLE
+    emptyView?.visible()
   }
 
   fun updateEmptyViewText(msg: String?) {

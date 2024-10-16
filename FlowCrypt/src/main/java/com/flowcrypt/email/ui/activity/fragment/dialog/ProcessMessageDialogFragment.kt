@@ -96,7 +96,11 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
       processMessageViewModel.processedMessageFlow.collect {
         when (it.status) {
           Result.Status.LOADING -> {
-            showProgress()
+            showProgress(
+              progressMsg = it.progressMsg,
+              useHorizontalProgressBar = true,
+              progress = it.progress?.toInt() ?: 0
+            )
           }
 
           Result.Status.SUCCESS -> {

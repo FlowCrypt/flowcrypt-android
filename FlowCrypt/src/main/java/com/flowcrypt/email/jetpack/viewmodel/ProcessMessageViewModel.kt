@@ -22,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -30,7 +31,6 @@ import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -40,14 +40,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
-import java.io.BufferedInputStream
-import java.io.InputStream
 
 /**
  * @author Denys Bondarenko
@@ -76,14 +73,22 @@ class ProcessMessageViewModel(
     triggerFlow.flatMapLatest { trigger ->
       flow {
         val messageEntity = trigger.messageEntity ?: return@flow
+        val context: Context = getApplication()
+
         try {
           if (!messageEntity.isOutboxMsg) {
-            emit(Result.loading())
+            emit(
+              Result.loading(
+                progressMsg = context.getString(R.string.processing),
+                progress = (-1).toDouble()
+              )
+            )
 
             val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
             if (existedMsgSnapshot != null) {
               emit(
                 Result.loading(
+                  progressMsg = context.getString(R.string.processing),
                   resultCode = R.id.progress_id_processing,
                   progress = 70.toDouble()
                 )
@@ -92,6 +97,7 @@ class ProcessMessageViewModel(
               val processingResult = processingMsgSnapshot(existedMsgSnapshot)
               emit(
                 Result.loading(
+                  progressMsg = context.getString(R.string.processing),
                   resultCode = R.id.progress_id_processing,
                   progress = 90.toDouble()
                 )
@@ -100,20 +106,21 @@ class ProcessMessageViewModel(
             } else {
               emit(
                 Result.loading(
-                  resultCode = R.id.progress_id_connecting,
-                  progress = 5.toDouble()
+                  progressMsg = context.getString(R.string.connection),
+                  resultCode = R.id.progress_id_connecting
                 )
               )
               val newMsgSnapshot = try {
                 loadMessageFromServer(messageEntity)
               } catch (e: Exception) {
-                e.printStackTrace()
+                e.printStackTraceIfDebugOnly()
                 emit(Result.exception(e))
                 return@flow
               }
               setSeenStatusInternal(msgEntity = messageEntity, isSeen = true)
               emit(
                 Result.loading(
+                  progressMsg = context.getString(R.string.processing),
                   resultCode = R.id.progress_id_processing,
                   progress = 70.toDouble()
                 )
@@ -121,6 +128,7 @@ class ProcessMessageViewModel(
               val processingResult = processingMsgSnapshot(newMsgSnapshot)
               emit(
                 Result.loading(
+                  progressMsg = context.getString(R.string.processing),
                   resultCode = R.id.progress_id_processing,
                   progress = 90.toDouble()
                 )
@@ -129,6 +137,7 @@ class ProcessMessageViewModel(
             }
           }
         } catch (e: Exception) {
+          e.printStackTraceIfDebugOnly()
           emit(Result.exception(e))
         }
       }
@@ -227,6 +236,12 @@ class ProcessMessageViewModel(
     }
   }
 
+  fun retry() {
+    viewModelScope.launch {
+      triggerMutableStateFlow.value = Trigger(message.messageEntity)
+    }
+  }
+
   private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot):
       Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
     val uri = msgSnapshot.getUri(0)
@@ -308,16 +323,13 @@ class ProcessMessageViewModel(
             accountEntity = accountEntity
           )
         } else {
-          val inputStream = FetchingInputStream(
-            GmailApiHelper.getWholeMimeMessageInputStream(
+          MsgsCacheManager.storeMsg(
+            key = messageEntity.id.toString(),
+            inputStream = GmailApiHelper.getWholeMimeMessageInputStream(
               context = getApplication(),
               account = accountEntity,
               messageId = msgFullInfo.id
-            )
-          )
-          MsgsCacheManager.storeMsg(
-            key = messageEntity.id.toString(),
-            inputStream = inputStream,
+            ),
             accountEntity = accountEntity
           )
         }
@@ -398,30 +410,6 @@ class ProcessMessageViewModel(
         }
       )
     )
-  }
-
-  fun retry() {
-    viewModelScope.launch {
-      triggerMutableStateFlow.value = Trigger(message.messageEntity)
-    }
-  }
-
-  /**
-   * This class will be used to identify the fetching progress.
-   */
-  inner class FetchingInputStream(val stream: InputStream) : BufferedInputStream(stream) {
-    override fun read(b: ByteArray, off: Int, len: Int): Int {
-      if (!viewModelScope.isActive) {
-        throw SyncTaskTerminatedException()
-      }
-
-      val value = super.read(b, off, len)
-      if (value != -1) {
-        //downloadedMsgSize += value
-        //sendProgress()
-      }
-      return value
-    }
   }
 
   data class Trigger(

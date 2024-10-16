@@ -25,7 +25,7 @@
     <include
         android:id="@+id/layoutProgress"
         layout="@layout/progress"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_content_small"
         app:layout_constraintEnd_toEndOf="parent"
