@@ -70,6 +70,18 @@
             app:layout_goneMarginRight="@dimen/default_margin_medium"
             app:srcCompat="@drawable/ic_more_vert_gray_32dp" />
 
+        <ImageButton
+            android:id="@+id/imageButtonEditDraft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/edit_draft"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginRight="@dimen/default_margin_medium"
+            app:srcCompat="@drawable/ic_baseline_edit_draft_32" />
+
         <TextView
             android:id="@+id/textViewDate"
             android:layout_width="0dp"

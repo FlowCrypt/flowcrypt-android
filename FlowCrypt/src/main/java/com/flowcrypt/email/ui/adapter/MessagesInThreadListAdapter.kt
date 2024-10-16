@@ -10,10 +10,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Parcelable
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -165,6 +161,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onReply(message: Message)
     fun onReplyAll(message: Message)
     fun onForward(message: Message)
+    fun onEditDraft(message: Message)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -238,17 +235,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
           )
         }
 
-        if (messageEntity.isDraft) {
-          val spannableStringBuilder = SpannableStringBuilder(text)
-          spannableStringBuilder.append(" ")
-          val timeSpannable = SpannableString("(${context.getString(R.string.draft)})")
-          timeSpannable.setSpan(
-            ForegroundColorSpan(Color.RED), 0, timeSpannable.length,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-          )
-          spannableStringBuilder.append(timeSpannable)
-          text = spannableStringBuilder
-        }
+        text = messageEntity.appendDraftLabelIfNeeded(context, text)
       }
       binding.textViewDate.apply {
         text = DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
@@ -324,6 +311,13 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         )
       }
 
+      binding.imageButtonEditDraft.visibleOrGone(message.messageEntity.isDraft)
+      binding.imageButtonEditDraft.setOnClickListener {
+        onMessageActionsListener.onEditDraft(message)
+      }
+      binding.imageButtonReplyAll.visibleOrInvisible(!message.messageEntity.isDraft)
+      binding.imageButtonMoreOptions.visibleOrInvisible(!message.messageEntity.isDraft)
+
       binding.rVMsgDetails.visibleOrGone(message.isHeadersDetailsExpanded)
       binding.textViewDate.visibleOrInvisible(!message.isHeadersDetailsExpanded)
 
@@ -347,7 +341,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
 
       val messageEntity = message.messageEntity
       val senderAddress = messageEntity.generateFromText(context)
-      binding.textViewSenderAddress.text = senderAddress
+      binding.textViewSenderAddress.text =
+        messageEntity.appendDraftLabelIfNeeded(context, senderAddress)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       )

@@ -190,6 +190,10 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       override fun onForward(message: MessagesInThreadListAdapter.Message) {
         forward(message)
       }
+
+      override fun onEditDraft(message: MessagesInThreadListAdapter.Message) {
+        editDraft(message)
+      }
     })
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -466,7 +470,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           if (result == TwoWayDialogFragment.RESULT_OK) {
             bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)
               ?.let {
-                processActionBasedOnIncomingBundle(it) { attachmentInfo, message ->
+                processActionForMessageAndAttachmentBasedOnIncomingBundle(it) { attachmentInfo, message ->
                   processDownloadAttachment(attachmentInfo, message)
                 }
               }
@@ -507,20 +511,15 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       when (requestCode) {
         REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE -> {
           bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
-            val messageId = it.getLong(REQUEST_KEY_MESSAGE_ID, Long.MIN_VALUE)
-            if (messageId > 0) {
-              (messagesInThreadListAdapter.currentList.firstOrNull { item ->
-                item.id == messageId
-              } as? MessagesInThreadListAdapter.Message)?.let { message ->
-                processMessageClick(message)
-              }
+            processActionForMessageBasedOnIncomingBundle(it) { message ->
+              processMessageClick(message)
             }
           }
         }
 
         REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT -> {
           bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
-            processActionBasedOnIncomingBundle(it) { attachmentInfo, message ->
+            processActionForMessageAndAttachmentBasedOnIncomingBundle(it) { attachmentInfo, message ->
               handleAttachmentPreviewClick(attachmentInfo, message)
             }
           }
@@ -528,8 +527,16 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
         REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT -> {
           bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
-            processActionBasedOnIncomingBundle(it) { attachmentInfo, message ->
+            processActionForMessageAndAttachmentBasedOnIncomingBundle(it) { attachmentInfo, message ->
               downloadAttachment(attachmentInfo, message)
+            }
+          }
+        }
+
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_EDITING_DRAFT -> {
+          bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
+            processActionForMessageBasedOnIncomingBundle(it) { message ->
+              editDraft(message)
             }
           }
         }
@@ -894,7 +901,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     return false
   }
 
-  private fun processActionBasedOnIncomingBundle(
+  private fun processActionForMessageAndAttachmentBasedOnIncomingBundle(
     bundle: Bundle,
     action: (AttachmentInfo, MessagesInThreadListAdapter.Message) -> Unit
   ) {
@@ -910,6 +917,50 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         action.invoke(attachmentInfo, message)
       }
     }
+  }
+
+  private fun processActionForMessageBasedOnIncomingBundle(
+    bundle: Bundle,
+    action: (MessagesInThreadListAdapter.Message) -> Unit
+  ) {
+    val messageId = bundle.getLong(KEY_EXTRA_MESSAGE_ID, Long.MIN_VALUE)
+    if (messageId > 0) {
+      (messagesInThreadListAdapter.currentList.firstOrNull { item ->
+        item.id == messageId
+      } as? MessagesInThreadListAdapter.Message)?.let { message ->
+        action.invoke(message)
+      }
+    }
+  }
+
+  private fun editDraft(message: MessagesInThreadListAdapter.Message) {
+    if (message.messageEntity.hasPgp == true) {
+      val keysStorage = KeysStorageImpl.getInstance(requireContext())
+      val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
+      if (fingerprints.isNotEmpty()) {
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+          requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_EDITING_DRAFT,
+          fingerprints = fingerprints,
+          bundle = Bundle().apply {
+            putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+          }
+        )
+        return
+      }
+    }
+
+    startActivity(
+      CreateMessageActivity.generateIntent(
+        context = context,
+        messageType = MessageType.DRAFT,
+        msgEncryptionType = message.messageEntity.getMessageEncryptionType(),
+        msgInfo = message.incomingMessageInfo?.toReplyVersion(
+          requireContext(),
+          CONTENT_MAX_ALLOWED_LENGTH
+        )
+      )
+    )
   }
 
   companion object {
@@ -955,6 +1006,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1000
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT = 1001
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT = 1002
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_EDITING_DRAFT = 1008
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 1003
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1004
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1005

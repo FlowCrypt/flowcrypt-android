@@ -7,6 +7,7 @@ package com.flowcrypt.email.database.entity
 
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Color
 import android.os.Parcelable
 import android.provider.BaseColumns
 import android.text.Spannable
@@ -432,6 +433,20 @@ data class MessageEntity(
         )
       )
     }.toList()
+  }
+
+  fun appendDraftLabelIfNeeded(context: Context, charSequence: CharSequence): CharSequence {
+    return if (isDraft) {
+      SpannableStringBuilder(charSequence).apply {
+        append(" ")
+        val timeSpannable = SpannableString("(${context.getString(R.string.draft)})")
+        timeSpannable.setSpan(
+          ForegroundColorSpan(Color.RED), 0, timeSpannable.length,
+          Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        append(timeSpannable)
+      }
+    } else charSequence
   }
 
   private fun prepareDateHeaderValue(context: Context): String {
