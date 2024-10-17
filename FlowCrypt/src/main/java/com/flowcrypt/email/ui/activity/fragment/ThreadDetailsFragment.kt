@@ -677,7 +677,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
           requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE,
           fingerprints = fingerprints,
-          bundle = Bundle().apply { putLong(REQUEST_KEY_MESSAGE_ID, message.id) }
+          bundle = Bundle().apply { putLong(KEY_EXTRA_MESSAGE_ID, message.id) }
         )
         return
       }
@@ -979,11 +979,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       ThreadDetailsFragment::class.java
     )
 
-    private val REQUEST_KEY_MESSAGE_ID = GeneralUtil.generateUniqueExtraKey(
-      "REQUEST_KEY_MESSAGE",
-      ThreadDetailsFragment::class.java
-    )
-
     private val REQUEST_KEY_CHANGE_LABELS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHANGE_LABELS",
       ThreadDetailsFragment::class.java
@@ -993,12 +988,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       "REQUEST_KEY_DOWNLOAD_ATTACHMENT",
       ThreadDetailsFragment::class.java
     )
-
-    private val REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING =
-      GeneralUtil.generateUniqueExtraKey(
-        "REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING",
-        ThreadDetailsFragment::class.java
-      )
 
     private val REQUEST_KEY_TWO_WAY_DIALOG_BASE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_TWO_WAY_DIALOG_BASE",
