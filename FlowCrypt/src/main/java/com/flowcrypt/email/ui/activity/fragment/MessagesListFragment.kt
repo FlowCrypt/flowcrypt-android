@@ -739,8 +739,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun isItemViewSwipeEnabled(): Boolean {
-        return actionMode == null && AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+        return actionMode == null
+            && AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
             && currentFolder?.getFolderType() == FoldersManager.FolderType.INBOX
+            && currentFolder?.searchQuery == null
       }
 
       override fun isLongPressDragEnabled(): Boolean = false
