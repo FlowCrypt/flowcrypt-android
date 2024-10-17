@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -13,13 +13,13 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.Folder
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 
 /**
  * @author Denys Bondarenko
@@ -40,12 +40,25 @@ class EmptyTrashWorker(context: Context, params: WorkerParameters) :
         .changeMsgsStateSuspend(account.email, folderName, MessageState.PENDING_EMPTY_TRASH.value)
       try {
         executeGMailAPICall(applicationContext) {
-          val msgs = GmailApiHelper.loadTrashMsgs(applicationContext, account)
-          if (msgs.isNotEmpty()) {
-            GmailApiHelper.deleteMsgsPermanently(applicationContext, account, msgs.map { it.id })
-            //need to wait while the Gmail server will update labels
-            delay(2000)
+          val messages = GmailApiHelper.loadTrashMsgs(applicationContext, account)
+          if (messages.isEmpty()) {
+            return@executeGMailAPICall
           }
+
+          if (account.useConversationMode) {
+            GmailApiHelper.deleteThreadsPermanently(
+              applicationContext,
+              account,
+              messages.mapNotNull { it.threadId }.toSet()
+            )
+          } else {
+            GmailApiHelper.deleteMsgsPermanently(
+              applicationContext,
+              account,
+              messages.map { it.id })
+          }
+          //need to wait while the Gmail server will update labels
+          delay(2000)
         }
       } catch (e: Exception) {
         roomDatabase.msgDao().changeMsgsStateSuspend(account.email, folderName)

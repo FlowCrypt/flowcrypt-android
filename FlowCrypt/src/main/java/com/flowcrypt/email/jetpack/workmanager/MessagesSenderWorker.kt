@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager
@@ -45,8 +45,6 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.http.FileContent
-import org.eclipse.angus.mail.imap.IMAPFolder
-import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.Flags
 import jakarta.mail.Folder
@@ -58,6 +56,8 @@ import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.util.MailConnectException
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -254,7 +254,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           delay(2000)
 
           val attachments = roomDatabase.attachmentDao()
-            .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+            .getAttachments(
+              account = email,
+              accountType = account.accountType,
+              label = JavaEmailConstants.FOLDER_OUTBOX,
+              uid = msgEntity.uid
+            )
           val isMsgSent = sendMsg(account, msgEntity, attachments, sess, store)
 
           if (!isMsgSent) {
@@ -288,10 +293,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(applicationContext)) {
-            msgEntity?.let {
-              if (msgEntity.msgState !== MessageState.SENT) {
+            if (msgEntity.msgState != MessageState.SENT) {
+              msgEntity.copy(state = MessageState.QUEUED.value).let {
                 roomDatabase.msgDao()
-                  .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+                  .updateSuspend(it)
               }
             }
             throw e
@@ -320,9 +325,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
             }
 
-            msgEntity?.let {
+            msgEntity.copy(state = newMsgState.value, errorMsg = e.message).let {
               roomDatabase.msgDao()
-                .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
+                .updateSuspend(it)
             }
           }
 
@@ -354,8 +359,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
         }
         val msgEntity = list.first()
         try {
-          val attachments = roomDatabase.attachmentDao()
-            .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+          val attachments = roomDatabase.attachmentDao().getAttachments(
+            account = email,
+            accountType = account.accountType,
+            label = JavaEmailConstants.FOLDER_OUTBOX,
+            uid = msgEntity.uid
+          )
 
           val mimeMsg = EmailUtil.createMimeMsg(applicationContext, sess, msgEntity, attachments)
 
@@ -424,8 +433,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     details: MessageEntity
   ) =
     withContext(Dispatchers.IO) {
-      FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().deleteAttSuspend(
+      roomDatabase.attachmentDao().deleteAttachments(
         account = account.email,
+        accountType = account.accountType,
         label = JavaEmailConstants.FOLDER_OUTBOX,
         uid = details.uid
       )
@@ -459,7 +469,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                 mimeMsg.writeTo(out)
               }
 
-              val threadId = msgEntity.threadId
+              val threadId = msgEntity.threadIdAsHEX
                 ?: mimeMsg.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null)
                   ?.let { replyMsgId ->
                     GmailApiHelper.executeWithResult {

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit
  */
 class DraftViewModel(
   existingDraftMessageEntity: MessageEntity? = null,
-  private val gmailThreadId: String? = null,
+  private val gmailThreadId: Long? = null,
   application: Application
 ) : AccountViewModel(application) {
   private var sessionDraftMessageEntity: MessageEntity? = existingDraftMessageEntity
@@ -254,10 +254,10 @@ class DraftViewModel(
           )
           val messageEntityWithoutStateChange = draftMessageEntity.copy(
             subject = outgoingMessageInfo.subject,
-            fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
-            replyTo = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
-            toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
-            ccAddress = InternetAddress.toString(outgoingMessageInfo.ccRecipients?.toTypedArray()),
+            fromAddresses = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
+            replyToAddresses = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
+            toAddresses = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
+            ccAddresses = InternetAddress.toString(outgoingMessageInfo.ccRecipients?.toTypedArray()),
             sentDate = mimeMessage.sentDate?.time,
             receivedDate = mimeMessage.sentDate?.time
           )
@@ -286,7 +286,8 @@ class DraftViewModel(
       val folderDrafts =
         foldersManager.folderDrafts ?: throw IllegalStateException("Drafts folder is undefined")
       val newDraftMessageEntity = MessageEntity.genMsgEntity(
-        email = accountEntity.email,
+        account = accountEntity.email,
+        accountType = accountEntity.accountType,
         label = folderDrafts.fullName,
         uid = System.currentTimeMillis(),
         info = outgoingMessageInfo,

@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
@@ -30,6 +31,9 @@ import java.io.File
 import java.io.FileFilter
 import java.util.Properties
 
+/**
+ * @author Denys Bondarenko
+ */
 class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
@@ -66,7 +70,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           account = account,
           mimeMessage = mimeMessage,
           draftId = draftId,
-          threadId = messageEntity.threadId
+          threadId = messageEntity.threadIdAsHEX
         )
 
         val message = GmailApiHelper.loadMsgInfoSuspend(
@@ -78,7 +82,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
             "threadId",
             "historyId"
           ),
-          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+          format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
 
         val freshestMessageEntity =
@@ -86,7 +90,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
 
         val messageEntityWithoutStateChange = messageEntity.copy(
           uid = message.uid,
-          threadId = message.threadId,
+          threadId = message.threadIdAsLong,
           draftId = draft.id,
           historyId = message.historyId.toString()
         )

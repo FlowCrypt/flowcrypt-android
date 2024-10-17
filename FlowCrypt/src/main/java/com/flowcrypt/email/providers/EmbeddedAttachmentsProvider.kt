@@ -12,14 +12,16 @@ import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
+import androidx.collection.LruCache
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
+import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.max
 
 /**
  * @author Denys Bondarenko
@@ -97,21 +99,31 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
 
 
   class Cache private constructor() {
-    private val map: ConcurrentHashMap<String, AttachmentInfo> = ConcurrentHashMap()
+    private val lruCache: LruCache<String, AttachmentInfo>
+
+    init {
+      val maxMemory = Runtime.getRuntime().maxMemory()
+      val cacheSize = max(maxMemory / 4, FileUtils.ONE_MB * 25).toInt()
+      lruCache = object : LruCache<String, AttachmentInfo>(cacheSize) {
+        override fun sizeOf(key: String, attachmentInfo: AttachmentInfo): Int {
+          return attachmentInfo.rawData?.size ?: attachmentInfo.encodedSize.toInt()
+        }
+      }
+    }
 
     fun get(documentId: String): AttachmentInfo? {
-      return map[documentId]
+      return lruCache.get(documentId)
     }
 
     fun getUriVersion(documentId: String): AttachmentInfo? {
-      return map[documentId]?.copy(
+      return lruCache.get(documentId)?.copy(
         rawData = null,
         uri = getUriByDocumentId(documentId)
       )
     }
 
     fun getDocumentId(attachmentInfo: AttachmentInfo): String? {
-      return map.filter { entry ->
+      return lruCache.snapshot().filter { entry ->
         entry.value.uniqueStringId == attachmentInfo.uniqueStringId
             && entry.value.name == attachmentInfo.name
       }.map { it.key }.firstOrNull()
@@ -123,7 +135,7 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     }
 
     fun clear() {
-      map.clear()
+      lruCache.evictAll()
     }
 
     private fun addOrReplace(attachmentInfo: AttachmentInfo): Uri? {
@@ -131,11 +143,11 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
 
       return if (attachmentInfo.rawData != null) {
         val documentId = existingAttachmentInfoKey ?: UUID.randomUUID().toString()
-        map[documentId] = attachmentInfo
+        lruCache.put(documentId, attachmentInfo)
         getUriByDocumentId(documentId)
       } else {
         if (existingAttachmentInfoKey != null) {
-          map.remove(existingAttachmentInfoKey)
+          lruCache.remove(existingAttachmentInfoKey)
         }
         null
       }
