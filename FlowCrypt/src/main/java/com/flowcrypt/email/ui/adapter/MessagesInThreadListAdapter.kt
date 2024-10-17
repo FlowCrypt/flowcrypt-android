@@ -311,7 +311,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         )
       }
 
-      binding.imageButtonEditDraft.visibleOrGone(message.messageEntity.isDraft)
+      //temporary disabled ability to edit a draft from a thread
+      binding.imageButtonEditDraft.visibleOrGone(false)
       binding.imageButtonEditDraft.setOnClickListener {
         onMessageActionsListener.onEditDraft(message)
       }
