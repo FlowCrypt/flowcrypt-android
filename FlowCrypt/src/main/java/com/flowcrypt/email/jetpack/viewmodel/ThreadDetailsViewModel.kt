@@ -366,7 +366,11 @@ class ThreadDetailsViewModel(
               val inReplyToMessagePosition = indexOf(inReplyToMessage)
               if (inReplyToMessagePosition != -1) {
                 remove(draft)
-                add(inReplyToMessagePosition + 1, draft)
+                if (size >= inReplyToMessagePosition + 1) {
+                  add(inReplyToMessagePosition + 1, draft)
+                } else {
+                  add(draft)
+                }
               }
             }
           }

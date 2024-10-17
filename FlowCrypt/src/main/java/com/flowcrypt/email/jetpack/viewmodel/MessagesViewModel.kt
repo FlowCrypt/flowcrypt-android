@@ -480,8 +480,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             context = getApplication(),
             accountEntity = accountEntity,
             threads = threadsResponse.threads ?: emptyList(),
-            format = GmailApiHelper.RESPONSE_FORMAT_FULL,
-            localFolder = localFolder
+            format = GmailApiHelper.RESPONSE_FORMAT_FULL
           )
 
           messages = gmailThreadInfoList.map { it.lastMessage }
@@ -715,8 +714,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               context = getApplication(),
               accountEntity = accountEntity,
               threads = threadsResponse.threads ?: emptyList(),
-              format = GmailApiHelper.RESPONSE_FORMAT_FULL,
-              localFolder = localFolder
+              format = GmailApiHelper.RESPONSE_FORMAT_FULL
             )
 
             val messages = gmailThreadInfoList.map { it.lastMessage }

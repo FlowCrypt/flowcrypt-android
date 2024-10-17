@@ -366,7 +366,6 @@ class GmailApiHelper {
       context: Context,
       accountEntity: AccountEntity,
       threads: List<Thread>,
-      localFolder: LocalFolder,
       format: String = RESPONSE_FORMAT_FULL,
       fields: List<String>? = null,
       stepValue: Int = 10
@@ -377,7 +376,6 @@ class GmailApiHelper {
           context = context,
           accountEntity = accountEntity,
           threads = list,
-          localFolder = localFolder,
           format = format,
           fields = fields
         )
@@ -388,7 +386,6 @@ class GmailApiHelper {
       context: Context,
       accountEntity: AccountEntity,
       threads: Collection<Thread>,
-      localFolder: LocalFolder,
       format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
       fields: List<String>? = null
@@ -398,7 +395,6 @@ class GmailApiHelper {
       val batch = gmailApiService.batch()
 
       val listResult = mutableListOf<GmailThreadInfo>()
-      val isTrash = localFolder.fullName.equals(LABEL_TRASH, true)
 
       for (thread in threads) {
         val request = gmailApiService
@@ -671,6 +667,7 @@ class GmailApiHelper {
         val gmailApiService = generateGmailApiService(context, accountEntity)
         val batch = gmailApiService.batch()
 
+        val result = mutableListOf<Pair<String, Boolean>>()
         for (id in list) {
           val request = gmailApiService
             .users()
@@ -678,14 +675,19 @@ class GmailApiHelper {
             .delete(DEFAULT_USER_ID, id)
 
           request.queue(batch, object : JsonBatchCallback<Void>() {
-            override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {}
-            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {}
+            override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {
+              result.add(Pair(id, true))
+            }
+
+            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+              result.add(Pair(id, false))
+            }
           })
         }
 
         batch.execute()
-        return@useParallel list
-      }
+        return@useParallel result
+      }.associateBy({ it.first }, { it.second })
     }
 
     suspend fun moveToTrash(

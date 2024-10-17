@@ -410,6 +410,13 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT COUNT(*) FROM messages WHERE account = :account AND folder = :label")
   abstract suspend fun getMsgsCount(account: String, label: String): Int
 
+  @Query("SELECT * FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId AND is_visible = 1")
+  abstract suspend fun getThreadMessageEntity(
+    account: String?,
+    folder: String?,
+    threadId: Long
+  ): MessageEntity?
+
   @Query("SELECT * FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId")
   abstract suspend fun getMessagesForGmailThread(
     account: String,

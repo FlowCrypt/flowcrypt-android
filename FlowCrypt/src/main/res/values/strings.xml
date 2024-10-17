@@ -656,9 +656,7 @@
     <string name="draft">Draft</string>
     <string name="thread_was_deleted">The thread was deleted</string>
     <string name="permissions_granted_and_now_you_can_download_attachments">The permissions have been granted, and now you can download attachments</string>
-    <plurals name="show_full_conversation">
-        <item quantity="other">Show a full conversation of %1$d messages</item>
-    </plurals>
+    <string name="delete_draft">Delete draft?</string>
     <plurals name="drafts_count">
         <item quantity="one">Draft</item>
         <item quantity="other">Drafts(%1$d)</item>

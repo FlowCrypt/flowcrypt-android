@@ -109,8 +109,7 @@ object GmailHistoryHandler {
       accountEntity = accountEntity,
       threads = threadIds.map { Thread().apply { id = it } },
       format = GmailApiHelper.RESPONSE_FORMAT_FULL,
-      fields = GmailApiHelper.THREAD_BASE_INFO,
-      localFolder = localFolder
+      fields = GmailApiHelper.THREAD_BASE_INFO
     )
 
     val threadIdListToBeUpdated = mutableSetOf<String>()
@@ -153,8 +152,7 @@ object GmailHistoryHandler {
         context = context,
         accountEntity = accountEntity,
         threads = uniqueThreadIdList.map { Thread().apply { id = it } },
-        format = GmailApiHelper.RESPONSE_FORMAT_FULL,
-        localFolder = localFolder
+        format = GmailApiHelper.RESPONSE_FORMAT_FULL
       )
 
       val threadsToBeAdded = gmailThreadInfoList

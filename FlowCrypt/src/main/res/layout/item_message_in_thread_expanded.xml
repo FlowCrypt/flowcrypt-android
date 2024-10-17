@@ -71,6 +71,20 @@
             app:srcCompat="@drawable/ic_more_vert_gray_32dp" />
 
         <ImageButton
+            android:id="@+id/imageButtonDeleteDraft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/default_margin_content_small"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/reply_all"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@+id/imageButtonEditDraft"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginEnd="0dp"
+            app:srcCompat="@drawable/ic_delete_white_24dp"
+            app:tint="@color/gray" />
+
+        <ImageButton
             android:id="@+id/imageButtonEditDraft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

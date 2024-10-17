@@ -25,6 +25,7 @@
     <include app:graph="@navigation/change_gmail_labels_for_single_message_dialog_graph" />
     <include app:graph="@navigation/prepare_downloaded_attachments_for_forwarding_dialog_graph" />
     <include app:graph="@navigation/process_message_dialog_graph" />
+    <include app:graph="@navigation/delete_draft_dialog_graph" />
 
     <fragment
         android:id="@+id/mainSignInFragment"

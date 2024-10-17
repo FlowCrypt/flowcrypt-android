@@ -7,7 +7,6 @@ package com.flowcrypt.email.database.entity
 
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.Color
 import android.os.Parcelable
 import android.provider.BaseColumns
 import android.text.Spannable
@@ -441,7 +440,7 @@ data class MessageEntity(
         append(" ")
         val timeSpannable = SpannableString("(${context.getString(R.string.draft)})")
         timeSpannable.setSpan(
-          ForegroundColorSpan(Color.RED), 0, timeSpannable.length,
+          ForegroundColorSpan(UIUtil.getColor(context, R.color.red)), 0, timeSpannable.length,
           Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         append(timeSpannable)

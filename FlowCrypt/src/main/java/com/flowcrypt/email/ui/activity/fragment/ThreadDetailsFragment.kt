@@ -69,6 +69,8 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.DeleteDraftDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DeleteDraftDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
@@ -196,6 +198,10 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       override fun onEditDraft(message: MessagesInThreadListAdapter.Message) {
         editDraft(message)
       }
+
+      override fun onDeleteDraft(message: MessagesInThreadListAdapter.Message) {
+        deleteDraft(message)
+      }
     })
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -208,6 +214,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     subscribeToProcessMessageDialogFragment()
     subscribeToFixNeedPassphraseIssueDialogFragment()
     subscribeToDownloadAttachmentViaDialog()
+    subscribeToDeleteDraftDialog()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -470,12 +477,32 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
         REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE ->
           if (result == TwoWayDialogFragment.RESULT_OK) {
-            bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)
+            bundle.getBundle(TwoWayDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)
               ?.let {
                 processActionForMessageAndAttachmentBasedOnIncomingBundle(it) { attachmentInfo, message ->
                   processDownloadAttachment(attachmentInfo, message)
                 }
               }
+          }
+
+        REQUEST_CODE_SHOW_TWO_WAY_DIALOG_FOR_DELETING_DRAFT ->
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            bundle.getBundle(TwoWayDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
+              processActionForMessageBasedOnIncomingBundle(it) { message ->
+                if (message.messageEntity.id != null) {
+                  navController?.navigate(
+                    object : NavDirections {
+                      override val actionId = R.id.delete_draft_dialog_graph
+                      override val arguments = DeleteDraftDialogFragmentArgs(
+                        requestKey = REQUEST_KEY_DELETE_DRAFT + args.messageEntityId.toString(),
+                        uniqueId = message.id,
+                        messageEntityId = message.messageEntity.id,
+                      ).toBundle()
+                    }
+                  )
+                }
+              }
+            }
           }
       }
     }
@@ -597,6 +624,18 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun subscribeToDeleteDraftDialog() {
+    setFragmentResultListener(
+      REQUEST_KEY_DELETE_DRAFT + args.messageEntityId.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
+      val uniqueMessageId = bundle.getLong(
+        DeleteDraftDialogFragment.KEY_RESULT
+      )
+
+      messagesInThreadListAdapter.deleteMessageById(uniqueMessageId)
+    }
+  }
 
   private fun replyTo(message: MessagesInThreadListAdapter.Message) {
     startActivity(
@@ -965,6 +1004,18 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
   }
 
+  private fun deleteDraft(message: MessagesInThreadListAdapter.Message) {
+    showTwoWayDialog(
+      requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+      requestCode = REQUEST_CODE_SHOW_TWO_WAY_DIALOG_FOR_DELETING_DRAFT,
+      dialogTitle = "",
+      dialogMsg = getString(R.string.delete_draft),
+      positiveButtonTitle = getString(R.string.delete),
+      negativeButtonTitle = getString(android.R.string.cancel),
+      bundle = Bundle().apply { putLong(KEY_EXTRA_MESSAGE_ID, message.id) }
+    )
+  }
+
   companion object {
     private const val KEY_EXTRA_MESSAGE_ID = "MESSAGE_ID"
     private const val KEY_EXTRA_ATTACHMENT_ID = "ATTACHMENT_ID"
@@ -994,15 +1045,21 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       ThreadDetailsFragment::class.java
     )
 
+    private val REQUEST_KEY_DELETE_DRAFT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_DELETE_DRAFT",
+      ThreadDetailsFragment::class.java
+    )
+
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1000
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT = 1001
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT = 1002
-    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_EDITING_DRAFT = 1008
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 1003
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1004
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1005
     private const val REQUEST_CODE_DECRYPT_ATTACHMENT = 1006
     private const val REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE = 1007
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_EDITING_DRAFT = 1008
+    private const val REQUEST_CODE_SHOW_TWO_WAY_DIALOG_FOR_DELETING_DRAFT = 1009
 
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }

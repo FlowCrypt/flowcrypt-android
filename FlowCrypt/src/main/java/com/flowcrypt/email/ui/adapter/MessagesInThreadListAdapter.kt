@@ -151,6 +151,11 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     )
   }
 
+  fun deleteMessageById(uniqueMessageId: Long) {
+    val item = currentList.firstOrNull { it.id == uniqueMessageId } ?: return
+    submitList(currentList - item)
+  }
+
   interface OnMessageActionsListener {
     fun onMessageClick(position: Int, message: Message)
     fun onHeadersDetailsClick(position: Int, message: Message)
@@ -162,6 +167,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onReplyAll(message: Message)
     fun onForward(message: Message)
     fun onEditDraft(message: Message)
+    fun onDeleteDraft(message: Message)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -315,6 +321,10 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       binding.imageButtonEditDraft.visibleOrGone(false)
       binding.imageButtonEditDraft.setOnClickListener {
         onMessageActionsListener.onEditDraft(message)
+      }
+      binding.imageButtonDeleteDraft.visibleOrGone(message.messageEntity.isDraft)
+      binding.imageButtonDeleteDraft.setOnClickListener {
+        onMessageActionsListener.onDeleteDraft(message)
       }
       binding.imageButtonReplyAll.visibleOrInvisible(!message.messageEntity.isDraft)
       binding.imageButtonMoreOptions.visibleOrInvisible(!message.messageEntity.isDraft)

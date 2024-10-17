@@ -643,13 +643,9 @@
     <string name="make_backup_explanation_text">Сохранить предоставленные закрытые ключи PGP, защищенные парольной фразой, в качестве резервной копии в папке «Входящие». Это поможет Вам получить доступ к Вашим зашифрованным сообщениям с других устройств (при условии предоставление Вашей парольной фразы). Вы можете безопасно оставить его в своем почтовом ящике или заархивировать.\n\nЕсли Вам не нужна такая резервная копия, отключите эту опцию.</string>
     <string name="preview_is_not_available_for_messages_with_pgp">Предварительный просмотр недоступен для сообщений с PGP.</string>
     <string name="draft">Черновик</string>
-    <string name="thread_was_deleted">The thread was deleted</string>
+    <string name="thread_was_deleted">Переписка удалена</string>
     <string name="permissions_granted_and_now_you_can_download_attachments">Разрешения предоставлены и теперь Вы можете загружать вложения.</string>
-    <plurals name="show_full_conversation">
-        <item quantity="one">Показать всю переписку из %1$d сообщения</item>
-        <item quantity="few">Показать всю переписку из %1$d сообщений</item>
-        <item quantity="many">Показать всю переписку из %1$d сообщений</item>
-    </plurals>
+    <string name="delete_draft">Удалить черновик?</string>
     <plurals name="drafts_count">
         <item quantity="one" tools:ignore="ImpliedQuantity">Черновик</item>
         <item quantity="few">Черновики(%1$d)</item>
