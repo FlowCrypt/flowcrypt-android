@@ -39,8 +39,9 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
       @Suppress("UNCHECKED_CAST")
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ProcessMessageViewModel(
-          args.message,
-          requireActivity().application
+          message = args.message,
+          skipAttachmentsRawData = args.attachmentId == null,
+          application = requireActivity().application
         ) as T
       }
     }
@@ -109,7 +110,9 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
               args.requestKey,
               bundleOf(
                 KEY_REQUEST_KEY to args.requestKey,
+                KEY_REQUEST_CODE to args.requestCode,
                 KEY_RESULT to it.data,
+                KEY_ATTACHMENT_ID to args.attachmentId,
               )
             )
           }
@@ -127,6 +130,8 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
 
   companion object {
     const val KEY_RESULT = "KEY_RESULT"
-    const val KEY_REQUEST_KEY = "KEY_REQUEST_CODE"
+    const val KEY_REQUEST_KEY = "KEY_REQUEST_KEY"
+    const val KEY_REQUEST_CODE = "KEY_REQUEST_CODE"
+    const val KEY_ATTACHMENT_ID = "KEY_ATTACHMENT_ID"
   }
 }

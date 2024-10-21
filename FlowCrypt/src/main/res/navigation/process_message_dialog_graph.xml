@@ -17,7 +17,15 @@
             android:name="requestKey"
             app:argType="string" />
         <argument
+            android:name="requestCode"
+            app:argType="integer" />
+        <argument
             android:name="message"
             app:argType="com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter$Message" />
+        <argument
+            android:name="attachmentId"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
     </dialog>
 </navigation>

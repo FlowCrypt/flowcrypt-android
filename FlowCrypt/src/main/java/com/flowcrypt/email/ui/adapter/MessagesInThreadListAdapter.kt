@@ -478,7 +478,6 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     }
 
     private fun updateMsgView(msgInfo: IncomingMessageInfo) {
-      val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
       binding.emailWebView.loadUrl("about:blank")
       binding.layoutMessageParts.removeAllViews()
       binding.layoutSecurityWarnings.removeAllViews()

@@ -13,10 +13,12 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
@@ -51,6 +53,7 @@ import org.pgpainless.util.Passphrase
  */
 class ProcessMessageViewModel(
   private val message: MessagesInThreadListAdapter.Message,
+  private val skipAttachmentsRawData: Boolean,
   application: Application
 ) : AccountViewModel(application) {
   private val triggerMutableStateFlow: MutableStateFlow<Trigger> = MutableStateFlow(Trigger())
@@ -194,12 +197,29 @@ class ProcessMessageViewModel(
                 uid = messageEntity.uid
               ).map { it.toAttInfo() }
 
+              val inlinedAttachmentInfoList = mutableListOf<AttachmentInfo>()
+
+              for (block in incomingMessageInfo.msgBlocks ?: emptyList()) {
+                when (block) {
+                  is AttMsgBlock -> {
+                    inlinedAttachmentInfoList.add(
+                      block.toAttachmentInfo().copy(
+                        email = activeAccount.email,
+                        uid = messageEntity.uid,
+                        folder = messageEntity.folder,
+                        path = "${inlinedAttachmentInfoList.size}"
+                      )
+                    )
+                  }
+                }
+              }
+
               Result.success(
                 requestCode = it.requestCode,
                 data = message.copy(
                   messageEntity = messageEntity,
                   incomingMessageInfo = incomingMessageInfo,
-                  attachments = attachments
+                  attachments = attachments + inlinedAttachmentInfoList
                 )
               )
             } catch (e: Exception) {
@@ -267,7 +287,8 @@ class ProcessMessageViewModel(
 
         val processedMimeMessage = PgpMsg.processMimeMessage(
           context = getApplication(),
-          inputStream = decryptionStream
+          inputStream = decryptionStream,
+          skipAttachmentsRawData = skipAttachmentsRawData
         )
 
         preResultsProcessing(processedMimeMessage.blocks)
@@ -287,8 +308,11 @@ class ProcessMessageViewModel(
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       try {
-        val processedMimeMessageResult =
-          PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
+        val processedMimeMessageResult = PgpMsg.processMimeMessage(
+          context = getApplication(),
+          inputStream = rawMimeBytes.inputStream(),
+          skipAttachmentsRawData = skipAttachmentsRawData
+        )
         preResultsProcessing(processedMimeMessageResult.blocks)
         return@withContext Result.success(processedMimeMessageResult)
       } catch (e: Exception) {

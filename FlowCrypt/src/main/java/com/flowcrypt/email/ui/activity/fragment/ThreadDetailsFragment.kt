@@ -156,23 +156,43 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         attachmentInfo: AttachmentInfo,
         message: MessagesInThreadListAdapter.Message
       ) {
-        if (FilenameUtils.getExtension(attachmentInfo.getSafeName())
-            ?.lowercase() in AttachmentInfo.DANGEROUS_FILE_EXTENSIONS
-        ) {
-          showTwoWayDialog(
-            requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
-            requestCode = REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE,
-            dialogTitle = "",
-            dialogMsg = getString(R.string.download_dangerous_file_warning),
-            positiveButtonTitle = getString(R.string.continue_),
-            negativeButtonTitle = getString(android.R.string.cancel),
-            bundle = Bundle().apply {
-              putLong(KEY_EXTRA_MESSAGE_ID, message.id)
-              putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
-            }
-          )
-        } else {
-          processDownloadAttachment(attachmentInfo, message)
+        when {
+          FilenameUtils.getExtension(attachmentInfo.getSafeName())
+            ?.lowercase() in AttachmentInfo.DANGEROUS_FILE_EXTENSIONS -> {
+            showTwoWayDialog(
+              requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+              requestCode = REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE,
+              dialogTitle = "",
+              dialogMsg = getString(R.string.download_dangerous_file_warning),
+              positiveButtonTitle = getString(R.string.continue_),
+              negativeButtonTitle = getString(android.R.string.cancel),
+              bundle = Bundle().apply {
+                putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+                putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+              }
+            )
+          }
+
+          EmbeddedAttachmentsProvider.Cache.getInstance().getDocumentId(attachmentInfo) == null
+              && attachmentInfo.isDecrypted
+              && attachmentInfo.uri == null -> {
+            //need to process message again and store attachment in RAM cache
+            navController?.navigate(
+              object : NavDirections {
+                override val actionId = R.id.process_message_dialog_graph
+                override val arguments = ProcessMessageDialogFragmentArgs(
+                  requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+                  requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD,
+                  message = message,
+                  attachmentId = attachmentInfo.path
+                ).toBundle()
+              }
+            )
+          }
+
+          else -> {
+            processDownloadAttachment(attachmentInfo, message)
+          }
         }
       }
 
@@ -516,12 +536,38 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       val message: MessagesInThreadListAdapter.Message? = bundle.getParcelableViaExt(
         ProcessMessageDialogFragment.KEY_RESULT
       ) as? MessagesInThreadListAdapter.Message?
+      val requestCode = bundle.getInt(ProcessMessageDialogFragment.KEY_REQUEST_CODE)
       if (message != null) {
-        threadDetailsViewModel.onMessageChanged(
-          message.copy(
-            type = MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED
-          )
+        val updatedMessage = message.copy(
+          type = MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED,
+          attachments = message.attachments.map { attachmentInfo ->
+            if (attachmentInfo.rawData != null) {
+              EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(attachmentInfo)
+            } else {
+              attachmentInfo
+            }
+          }
         )
+
+        threadDetailsViewModel.onMessageChanged(updatedMessage)
+
+        when (requestCode) {
+          REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW -> {
+            val attachmentId = bundle.getString(ProcessMessageDialogFragment.KEY_ATTACHMENT_ID)
+            updatedMessage.attachments.firstOrNull { it.path == attachmentId }
+              ?.let { attachmentInfo ->
+                handleAttachmentPreviewClick(attachmentInfo, updatedMessage)
+              }
+          }
+
+          REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD -> {
+            val attachmentId = bundle.getString(ProcessMessageDialogFragment.KEY_ATTACHMENT_ID)
+            updatedMessage.attachments.firstOrNull { it.path == attachmentId }
+              ?.let { attachmentInfo ->
+                processDownloadAttachment(attachmentInfo, updatedMessage)
+              }
+          }
+        }
       } else {
         toast(R.string.unknown_error)
       }
@@ -729,6 +775,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             override val actionId = R.id.process_message_dialog_graph
             override val arguments = ProcessMessageDialogFragmentArgs(
               requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+              requestCode = REQUEST_CODE_PROCESS_WHOLE_MESSAGE,
               message = message
             ).toBundle()
           }
@@ -805,27 +852,44 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         useContentApp = account?.isHandlingAttachmentRestricted() == true
       )
     } else {
-      if (
+      when {
         checkAndShowNeedPassphraseDialogIfNeeded(
           attachmentInfo = attachmentInfo,
           message = message,
           requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT
-        )
-      ) return
+        ) -> return
 
-      navController?.navigate(
-        object : NavDirections {
-          override val actionId = R.id.download_attachment_dialog_graph
-          override val arguments = DownloadAttachmentDialogFragmentArgs(
-            attachmentInfo = attachmentInfo,
-            requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntityId.toString(),
-            requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT,
-            bundle = Bundle().apply {
-              putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+        attachmentInfo.isDecrypted && attachmentInfo.uri == null -> {
+          //need to process message again and store attachment in RAM cache
+          navController?.navigate(
+            object : NavDirections {
+              override val actionId = R.id.process_message_dialog_graph
+              override val arguments = ProcessMessageDialogFragmentArgs(
+                requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+                requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW,
+                message = message,
+                attachmentId = attachmentInfo.path
+              ).toBundle()
             }
-          ).toBundle()
+          )
         }
-      )
+
+        else -> {
+          navController?.navigate(
+            object : NavDirections {
+              override val actionId = R.id.download_attachment_dialog_graph
+              override val arguments = DownloadAttachmentDialogFragmentArgs(
+                attachmentInfo = attachmentInfo,
+                requestKey = REQUEST_KEY_DOWNLOAD_ATTACHMENT + args.messageEntityId.toString(),
+                requestCode = REQUEST_CODE_PREVIEW_ATTACHMENT,
+                bundle = Bundle().apply {
+                  putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+                }
+              ).toBundle()
+            }
+          )
+        }
+      }
     }
   }
 
@@ -887,8 +951,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     attachmentInfo: AttachmentInfo,
     message: MessagesInThreadListAdapter.Message
   ) {
+    val documentId = EmbeddedAttachmentsProvider.Cache.getInstance()
+      .getDocumentId(attachmentInfo)
+
     when {
-      attachmentInfo.uri != null -> {
+      attachmentInfo.uri != null && documentId != null -> {
         requireContext().startService(
           AttachmentDownloadManagerService.newIntent(context = context, attInfo = attachmentInfo)
         )
@@ -923,7 +990,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     message: MessagesInThreadListAdapter.Message,
     requestCode: Int
   ): Boolean {
-    if (attachmentInfo.isPossiblyEncrypted) {
+    if (attachmentInfo.isPossiblyEncrypted || attachmentInfo.isDecrypted) {
       val keysStorage = KeysStorageImpl.getInstance(requireContext())
       val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
       if (fingerprints.isNotEmpty()) {
@@ -1060,6 +1127,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     private const val REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE = 1007
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_EDITING_DRAFT = 1008
     private const val REQUEST_CODE_SHOW_TWO_WAY_DIALOG_FOR_DELETING_DRAFT = 1009
+    private const val REQUEST_CODE_PROCESS_WHOLE_MESSAGE = 1010
+    private const val REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD = 1011
+    private const val REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW = 1012
 
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
