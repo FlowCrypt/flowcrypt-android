@@ -1,7 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko,
- *               DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -17,6 +16,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttLinkMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedSubjectBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockError
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
@@ -189,7 +189,11 @@ object PgpMsg {
     .allowAttributesOnElementsExt(ALLOWED_ATTRS)
     .toFactory()
 
-  suspend fun processMimeMessage(context: Context, inputStream: InputStream):
+  suspend fun processMimeMessage(
+    context: Context,
+    inputStream: InputStream,
+    skipAttachmentsRawData: Boolean = false
+  ):
       ProcessedMimeMessageResult = withContext(Dispatchers.IO) {
     val keysStorage = KeysStorageImpl.getInstance(context)
     val accountSecretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
@@ -216,7 +220,8 @@ object PgpMsg {
       msg = msg,
       verificationPublicKeys = PGPPublicKeyRingCollection(verificationPublicKeys),
       secretKeys = accountSecretKeys,
-      protector = protector
+      protector = protector,
+      skipAttachmentsRawData = skipAttachmentsRawData
     )
   }
 
@@ -236,7 +241,8 @@ object PgpMsg {
     msg: MimeMessage,
     verificationPublicKeys: PGPPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf()),
     secretKeys: PGPSecretKeyRingCollection,
-    protector: SecretKeyRingProtector
+    protector: SecretKeyRingProtector,
+    skipAttachmentsRawData: Boolean = false
   ): ProcessedMimeMessageResult {
     val extractedMsgBlocks = extractMsgBlocksFromPart(
       part = msg,
@@ -244,7 +250,10 @@ object PgpMsg {
       secretKeys = secretKeys,
       protector = protector
     )
-    return processExtractedMsgBlocks(extractedMsgBlocks)
+    return processExtractedMsgBlocks(
+      msgBlocks = extractedMsgBlocks,
+      skipAttachmentsRawData = skipAttachmentsRawData
+    )
   }
 
   fun extractMsgBlocksFromPart(
@@ -780,7 +789,10 @@ object PgpMsg {
     return decryptedContent
   }
 
-  private fun processExtractedMsgBlocks(msgBlocks: Collection<MsgBlock>): ProcessedMimeMessageResult {
+  private fun processExtractedMsgBlocks(
+    msgBlocks: Collection<MsgBlock>,
+    skipAttachmentsRawData: Boolean = false
+  ): ProcessedMimeMessageResult {
     var isEncrypted = false
     val contentBlocks = mutableListOf<MsgBlock>()
     val resultBlocks = mutableListOf<MsgBlock>()
@@ -882,7 +894,23 @@ object PgpMsg {
 
     return ProcessedMimeMessageResult(
       text = fmtRes.text,
-      blocks = resultBlocks,
+      blocks = if (skipAttachmentsRawData) {
+        resultBlocks.map {
+          when (it) {
+            is DecryptedAttMsgBlock -> {
+              it.copy(attMeta = it.attMeta.copy(data = null))
+            }
+
+            is InlineAttMsgBlock -> {
+              it.copy(attMeta = it.attMeta.copy(data = null))
+            }
+
+            else -> it
+          }
+        }
+      } else {
+        resultBlocks
+      },
       verificationResult = VerificationResult(
         hasEncryptedParts = isEncrypted,
         hasSignedParts = signedBlockCount > 0,

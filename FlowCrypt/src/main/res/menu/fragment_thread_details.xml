@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <item
+        android:id="@+id/menuActionArchiveMessage"
+        android:icon="@drawable/selector_ic_archive_white"
+        android:title="@string/archive"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuActionMoveToInbox"
+        android:icon="@drawable/selector_ic_move_to_inbox_white"
+        android:title="@string/move_to_inbox"
+        android:visible="false"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+
+    <item
+        android:id="@+id/menuActionDeleteMessage"
+        android:icon="@drawable/selector_ic_delete_white"
+        android:title="@string/delete"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuActionMarkUnread"
+        android:icon="@drawable/selector_ic_mark_unread_white"
+        android:title="@string/mark_unread"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionMoveToSpam"
+        android:icon="@drawable/selector_ic_to_spam_white"
+        android:title="@string/move_to_spam"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionMarkAsNotSpam"
+        android:icon="@drawable/selector_ic_from_spam_white"
+        android:title="@string/mark_as_not_spam"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionChangeLabels"
+        android:icon="@drawable/ic_label_24dp"
+        android:title="@string/change_labels"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+</menu>
