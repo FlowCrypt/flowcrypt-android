@@ -39,6 +39,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.SecurityWarningMsgBlock
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadCollapsedBinding
 import com.flowcrypt.email.databinding.ItemMessageInThreadExpandedBinding
 import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
@@ -188,6 +189,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onEditDraft(message: Message)
     fun onDeleteDraft(message: Message)
     fun addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails: PgpKeyRingDetails)
+    fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyRingDetails: PgpKeyRingDetails)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -672,7 +674,16 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
 
               keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyRingDetails) -> {
                 textViewManualImportWarning?.visible()
-                //initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
+                button?.apply {
+                  setText(R.string.update_pub_key)
+                  setOnClickListener {
+                    onMessageActionsListener.updateExistingPubKey(
+                      matchingKeyByFingerprint,
+                      keyDetails
+                    )
+                    gone()
+                  }
+                }
               }
 
               else -> {
@@ -704,7 +715,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       val decryptError = block.decryptErr ?: return View(context)
 
       when (decryptError.details?.type) {
-        /*PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(
+        /*PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH ->
+        return generateMissingPrivateKeyLayout(
           clipLargeText(
             block.content
           ), layoutInflater
@@ -746,6 +758,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
             btText = context.getString(R.string.fix)
             onClickListener = View.OnClickListener {
               /*val fingerprints = decryptError.fingerprints ?: return@OnClickListener
+
               showNeedPassphraseDialog(
                 requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
                 fingerprints = fingerprints

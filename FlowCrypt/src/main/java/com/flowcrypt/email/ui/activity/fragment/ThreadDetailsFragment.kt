@@ -38,6 +38,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
@@ -229,6 +230,14 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       override fun addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails: PgpKeyRingDetails) {
         recipientsViewModel.addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails)
         toast(R.string.pub_key_successfully_imported)
+      }
+
+      override fun updateExistingPubKey(
+        publicKeyEntity: PublicKeyEntity,
+        pgpKeyRingDetails: PgpKeyRingDetails
+      ) {
+        recipientsViewModel.updateExistingPubKey(publicKeyEntity, pgpKeyRingDetails)
+        toast(R.string.pub_key_successfully_updated)
       }
     })
 
