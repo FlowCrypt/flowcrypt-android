@@ -176,18 +176,10 @@
         tools:listitem="@layout/item_pgp_badge"
         tools:orientation="horizontal" />
 
-    <View
-        android:id="@+id/layoutFooterOfHeader"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="@dimen/default_margin_medium"
-        android:background="@color/aluminum"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
     <LinearLayout
         android:id="@+id/layoutSecurityWarnings"
         android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/default_margin_medium"
         android:layout_height="wrap_content"
         android:orientation="vertical" />
 
