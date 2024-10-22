@@ -51,6 +51,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
+import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
@@ -64,6 +65,7 @@ import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -106,6 +108,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     get() = threadDetailsViewModel.localFolderFlow.value
 
   private val args by navArgs<ThreadDetailsFragmentArgs>()
+  private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val threadDetailsViewModel: ThreadDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
       @Suppress("UNCHECKED_CAST")
@@ -221,6 +224,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
       override fun onDeleteDraft(message: MessagesInThreadListAdapter.Message) {
         deleteDraft(message)
+      }
+
+      override fun addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails: PgpKeyRingDetails) {
+        recipientsViewModel.addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails)
+        toast(R.string.pub_key_successfully_imported)
       }
     })
 

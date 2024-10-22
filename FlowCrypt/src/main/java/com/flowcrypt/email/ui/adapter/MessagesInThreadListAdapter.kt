@@ -48,6 +48,7 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
 import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
@@ -186,6 +187,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onForward(message: Message)
     fun onEditDraft(message: Message)
     fun onDeleteDraft(message: Message)
+    fun addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails: PgpKeyRingDetails)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -429,7 +431,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       }
 
       if (message.incomingMessageInfo != null) {
-        updateMsgView(message.incomingMessageInfo)
+        updateMsgView(message.incomingMessageInfo, onMessageActionsListener)
         updatePgpBadges(message.incomingMessageInfo)
       }
 
@@ -495,7 +497,10 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       pgpBadgeListAdapter.submitList(badges)
     }
 
-    private fun updateMsgView(msgInfo: IncomingMessageInfo) {
+    private fun updateMsgView(
+      msgInfo: IncomingMessageInfo,
+      onMessageActionsListener: OnMessageActionsListener
+    ) {
       binding.emailWebView.loadUrl("about:blank")
       binding.layoutMessageParts.removeAllViews()
       binding.layoutSecurityWarnings.removeAllViews()
@@ -537,7 +542,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
             binding.layoutMessageParts.addView(
               genPublicKeyPart(
                 block as PublicKeyMsgBlock,
-                layoutInflater
+                layoutInflater,
+                onMessageActionsListener
               )
             )
 
@@ -586,7 +592,11 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
      * @param inflater The [LayoutInflater] instance.
      * @return The generated view.
      */
-    private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
+    private fun genPublicKeyPart(
+      block: PublicKeyMsgBlock,
+      inflater: LayoutInflater,
+      onMessageActionsListener: OnMessageActionsListener
+    ): View {
       if (block.error?.errorMsg?.isNotEmpty() == true) {
         return getView(
           clipLargeText(block.content),
@@ -633,38 +643,47 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       val textViewManualImportWarning =
         pubKeyView.findViewById<TextView>(R.id.textViewManualImportWarning)
       if (keyDetails?.usableForEncryption == true) {
-        if (button != null) {
-          if (existingRecipientWithPubKeys == null) {
-            //initImportPubKeyButton(keyDetails, button)
-          } else {
-            val matchingKeyByFingerprint = existingRecipientWithPubKeys.publicKeys.firstOrNull {
-              it.fingerprint.equals(keyDetails.fingerprint, true)
-            }
-            if (matchingKeyByFingerprint != null) {
-              when {
-                matchingKeyByFingerprint.pgpKeyRingDetails?.isRevoked == true -> {
-                  textViewStatus?.text = context.getString(R.string.key_is_revoked_unable_to_update)
-                  textViewStatus?.setTextColor(UIUtil.getColor(context, R.color.red))
-                  textViewStatus?.visible()
-                  textViewManualImportWarning?.gone()
-                  button.gone()
-                }
-
-                keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyRingDetails) -> {
-                  textViewManualImportWarning?.visible()
-                  //initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
-                }
-
-                else -> {
-                  textViewStatus?.text = context.getString(R.string.already_imported)
-                  textViewStatus.visible()
-                  textViewManualImportWarning?.gone()
-                  button.gone()
-                }
+        if (existingRecipientWithPubKeys == null) {
+          button?.apply {
+            setText(R.string.import_pub_key)
+            setOnClickListener {
+              onMessageActionsListener.addRecipientsBasedOnPgpKeyDetails(keyDetails)
+              gone()
+              textViewManualImportWarning.gone()
+              textViewStatus?.apply {
+                text = context.getString(R.string.already_imported)
+                visible()
               }
-            } else {
-              button.gone()
             }
+          }
+        } else {
+          val matchingKeyByFingerprint = existingRecipientWithPubKeys.publicKeys.firstOrNull {
+            it.fingerprint.equals(keyDetails.fingerprint, true)
+          }
+          if (matchingKeyByFingerprint != null) {
+            when {
+              matchingKeyByFingerprint.pgpKeyRingDetails?.isRevoked == true -> {
+                textViewStatus?.text = context.getString(R.string.key_is_revoked_unable_to_update)
+                textViewStatus?.setTextColor(UIUtil.getColor(context, R.color.red))
+                textViewStatus?.visible()
+                textViewManualImportWarning?.gone()
+                button?.gone()
+              }
+
+              keyDetails.isNewerThan(matchingKeyByFingerprint.pgpKeyRingDetails) -> {
+                textViewManualImportWarning?.visible()
+                //initUpdatePubKeyButton(matchingKeyByFingerprint, keyDetails, button)
+              }
+
+              else -> {
+                textViewStatus?.text = context.getString(R.string.already_imported)
+                textViewStatus.visible()
+                textViewManualImportWarning?.gone()
+                button?.gone()
+              }
+            }
+          } else {
+            button?.gone()
           }
         }
       } else {
