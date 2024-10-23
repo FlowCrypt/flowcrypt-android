@@ -55,6 +55,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
@@ -187,7 +188,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               && attachmentInfo.isDecrypted
               && attachmentInfo.uri == null -> {
             //need to process message again and store attachment in RAM cache
-            navController?.navigate(
+            showDialogFragment(navController) {
               object : NavDirections {
                 override val actionId = R.id.process_message_dialog_graph
                 override val arguments = ProcessMessageDialogFragmentArgs(
@@ -197,7 +198,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                   attachmentId = attachmentInfo.path
                 ).toBundle()
               }
-            )
+            }
           }
 
           else -> {
@@ -574,7 +575,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             bundle.getBundle(TwoWayDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
               processActionForMessageBasedOnIncomingBundle(it) { message ->
                 if (message.messageEntity.id != null) {
-                  navController?.navigate(
+                  showDialogFragment(navController) {
                     object : NavDirections {
                       override val actionId = R.id.delete_draft_dialog_graph
                       override val arguments = DeleteDraftDialogFragmentArgs(
@@ -583,7 +584,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                         messageEntityId = message.messageEntity.id,
                       ).toBundle()
                     }
-                  )
+                  }
                 }
               }
             }
@@ -895,8 +896,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED || forceProcess) {
       if (message.incomingMessageInfo == null || forceProcess) {
-        navController?.navigate(
-          object : NavDirections {
+        showDialogFragment(navController) {
+          return@showDialogFragment object : NavDirections {
             override val actionId = R.id.process_message_dialog_graph
             override val arguments = ProcessMessageDialogFragmentArgs(
               requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
@@ -904,7 +905,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               message = message
             ).toBundle()
           }
-        )
+        }
       } else {
         threadDetailsViewModel.onMessageClicked(message)
       }
@@ -915,7 +916,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun changeGmailLabels() {
     if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
-      navController?.navigate(
+      showDialogFragment(navController) {
         object : NavDirections {
           override val actionId = R.id.change_gmail_labels_for_single_message_dialog_graph
           override val arguments = ChangeGmailLabelsDialogFragmentArgs(
@@ -923,7 +924,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             messageEntityIds = arrayOf(args.messageEntityId).toLongArray()
           ).toBundle()
         }
-      )
+      }
     }
   }
 
@@ -986,7 +987,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
         attachmentInfo.isDecrypted && attachmentInfo.uri == null -> {
           //need to process message again and store attachment in RAM cache
-          navController?.navigate(
+          showDialogFragment(navController) {
             object : NavDirections {
               override val actionId = R.id.process_message_dialog_graph
               override val arguments = ProcessMessageDialogFragmentArgs(
@@ -996,11 +997,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                 attachmentId = attachmentInfo.path
               ).toBundle()
             }
-          )
+          }
         }
 
         else -> {
-          navController?.navigate(
+          showDialogFragment(navController) {
             object : NavDirections {
               override val actionId = R.id.download_attachment_dialog_graph
               override val arguments = DownloadAttachmentDialogFragmentArgs(
@@ -1012,7 +1013,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                 }
               ).toBundle()
             }
-          )
+          }
         }
       }
     }
@@ -1087,7 +1088,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       }
 
       account?.isHandlingAttachmentRestricted() == true -> {
-        navController?.navigate(
+        showDialogFragment(navController) {
           object : NavDirections {
             override val actionId = R.id.download_attachment_dialog_graph
             override val arguments = DownloadAttachmentDialogFragmentArgs(
@@ -1099,7 +1100,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               }
             ).toBundle()
           }
-        )
+        }
       }
 
       else -> {
