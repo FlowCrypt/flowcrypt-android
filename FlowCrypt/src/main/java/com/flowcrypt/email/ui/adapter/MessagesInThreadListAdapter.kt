@@ -38,6 +38,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.SecurityWarningMsgBlock
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.ItemMessageInThreadCollapsedBinding
@@ -192,6 +193,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyRingDetails: PgpKeyRingDetails)
     fun importAdditionalPrivateKeys(message: Message)
     fun fixMissingPassphraseIssue(message: Message, fingerprints: List<String>)
+    fun showSendersPublicKeyDialog(message: Message)
+    fun getAccount(): AccountEntity?
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -926,18 +929,20 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
         onMessageActionsListener.importAdditionalPrivateKeys(message)
       }
 
-      /*val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
-      buttonSendOwnPublicKey?.setOnClickListener { showSendersPublicKeyDialog() }
+      val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
+      buttonSendOwnPublicKey?.setOnClickListener {
+        onMessageActionsListener.showSendersPublicKeyDialog(message)
+      }
 
       val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
-      if (account?.clientConfiguration?.usesKeyManager() == true) {
+      if (onMessageActionsListener.getAccount()?.clientConfiguration?.usesKeyManager() == true) {
         textViewErrorMsg?.text = context.getString(R.string.your_keys_cannot_open_this_message)
         buttonImportPrivateKey?.gone()
         buttonSendOwnPublicKey?.text = context.getString(R.string.inform_sender)
       } else {
         textViewErrorMsg?.text =
           context.getString(R.string.decrypt_error_current_key_cannot_open_message)
-      }*/
+      }
 
       viewGroup.addView(genShowOrigMsgLayout(pgpMsg, inflater, viewGroup))
       return viewGroup

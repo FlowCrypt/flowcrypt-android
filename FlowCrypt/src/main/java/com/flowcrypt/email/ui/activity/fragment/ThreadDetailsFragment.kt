@@ -18,6 +18,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ListView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -34,6 +35,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -46,6 +48,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithV
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListener
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showChoosePublicKeyDialogFragment
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showNeedPassphraseDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
@@ -64,6 +67,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageAction
+import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -73,6 +77,7 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DeleteDraftDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DeleteDraftDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
@@ -267,6 +272,18 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           bundle = Bundle().apply { putLong(KEY_EXTRA_MESSAGE_ID, message.id) }
         )
       }
+
+      override fun showSendersPublicKeyDialog(message: MessagesInThreadListAdapter.Message) {
+        showChoosePublicKeyDialogFragment(
+          requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY + args.messageEntityId.toString(),
+          email = message.messageEntity.account,
+          choiceMode = ListView.CHOICE_MODE_SINGLE,
+          titleResourceId = R.plurals.tell_sender_to_update_their_settings,
+          bundle = Bundle().apply { putLong(KEY_EXTRA_MESSAGE_ID, message.id) }
+        )
+      }
+
+      override fun getAccount(): AccountEntity? = account
     })
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -281,6 +298,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     subscribeToDownloadAttachmentViaDialog()
     subscribeToDeleteDraftDialog()
     subscribeToImportingAdditionalPrivateKeys()
+    subscribeToChoosePublicKeyDialogFragment()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -689,7 +707,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
       val message = bundle.getBundle(DownloadAttachmentDialogFragment.KEY_INCOMING_BUNDLE)?.getLong(
         KEY_EXTRA_MESSAGE_ID
-      ).let { messageId ->
+      )?.let { messageId ->
         messagesInThreadListAdapter.currentList.firstOrNull {
           it.id == messageId
         } as? MessagesInThreadListAdapter.Message
@@ -750,13 +768,39 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         val message =
           bundle.getBundle(ImportAdditionalPrivateKeysFragment.KEY_INCOMING_BUNDLE)?.getLong(
             KEY_EXTRA_MESSAGE_ID
-          ).let { messageId ->
+          )?.let { messageId ->
             messagesInThreadListAdapter.currentList.firstOrNull {
               it.id == messageId
             } as? MessagesInThreadListAdapter.Message
           } ?: return@setFragmentResultListener
 
         processMessageClick(message = message, forceProcess = true)
+      }
+    }
+  }
+
+  private fun subscribeToChoosePublicKeyDialogFragment() {
+    setFragmentResultListener(
+      REQUEST_KEY_CHOOSE_PUBLIC_KEY + args.messageEntityId.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
+      val keyList = bundle.getParcelableArrayListViaExt<AttachmentInfo>(
+        ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST
+      )?.map { attachmentInfo ->
+        attachmentInfo.copy(isProtected = true)
+      } ?: return@setFragmentResultListener
+      if (keyList.isNotEmpty()) {
+        val message =
+          bundle.getBundle(ChoosePublicKeyDialogFragment.KEY_INCOMING_BUNDLE)?.getLong(
+            KEY_EXTRA_MESSAGE_ID
+          )?.let { messageId ->
+            messagesInThreadListAdapter.currentList.firstOrNull {
+              it.id == messageId
+            } as? MessagesInThreadListAdapter.Message
+          } ?: return@setFragmentResultListener
+        sendTemplateMsgWithPublicKey(message, keyList[0])
+      } else {
+        toast(R.string.account_has_no_associated_keys)
       }
     }
   }
@@ -1164,6 +1208,36 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
   }
 
+  /**
+   * Send a template message with a sender public key.
+   */
+  private fun sendTemplateMsgWithPublicKey(
+    message: MessagesInThreadListAdapter.Message,
+    attachmentInfo: AttachmentInfo
+  ) {
+    startActivity(
+      CreateMessageActivity.generateIntent(
+        context = context,
+        messageType = MessageType.REPLY,
+        msgEncryptionType = MessageEncryptionType.STANDARD,
+        msgInfo = message.incomingMessageInfo?.toReplyVersion(
+          requireContext(),
+          CONTENT_MAX_ALLOWED_LENGTH
+        ),
+        serviceInfo = ServiceInfo(
+          isToFieldEditable = false,
+          isFromFieldEditable = false,
+          isMsgEditable = false,
+          isSubjectEditable = false,
+          isMsgTypeSwitchable = false,
+          hasAbilityToAddNewAtt = false,
+          systemMsg = getString(R.string.message_was_encrypted_for_wrong_key),
+          atts = listOf(attachmentInfo.copy(isProtected = true))
+        )
+      )
+    )
+  }
+
   companion object {
     private const val KEY_EXTRA_MESSAGE_ID = "MESSAGE_ID"
     private const val KEY_EXTRA_ATTACHMENT_ID = "ATTACHMENT_ID"
@@ -1200,6 +1274,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     private val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
+      ThreadDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
       ThreadDetailsFragment::class.java
     )
 

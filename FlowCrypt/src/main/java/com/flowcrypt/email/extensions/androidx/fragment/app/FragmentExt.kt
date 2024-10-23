@@ -262,7 +262,8 @@ fun Fragment.showChoosePublicKeyDialogFragment(
   email: String,
   choiceMode: Int,
   titleResourceId: Int,
-  returnResultImmediatelyIfSingle: Boolean = false
+  returnResultImmediatelyIfSingle: Boolean = false,
+  bundle: Bundle? = null
 ) {
   showDialogFragment(navController) {
     return@showDialogFragment object : NavDirections {
@@ -272,7 +273,8 @@ fun Fragment.showChoosePublicKeyDialogFragment(
         email = email,
         choiceMode = choiceMode,
         titleResourceId = titleResourceId,
-        returnResultImmediatelyIfSingle = returnResultImmediatelyIfSingle
+        returnResultImmediatelyIfSingle = returnResultImmediatelyIfSingle,
+        bundle = bundle
       ).toBundle()
     }
   }
