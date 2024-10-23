@@ -227,26 +227,13 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           msgStates = listOf(MessageState.QUEUED.value)
         )
 
-        if (CollectionUtils.isEmpty(list)) {
+        if (list.isEmpty()) {
           break
         }
 
-        val iterator = list.iterator()
-        var msgEntity: MessageEntity? = null
-
-        while (iterator.hasNext()) {
-          val tempMsgDetails = iterator.next()
-          if (tempMsgDetails.uid > lastMsgUID) {
-            msgEntity = tempMsgDetails
-            break
-          }
+        var msgEntity = (list.firstOrNull { it.uid > lastMsgUID } ?: list.first()).apply {
+          lastMsgUID = uid
         }
-
-        if (msgEntity == null) {
-          msgEntity = list[0]
-        }
-
-        lastMsgUID = msgEntity.uid
 
         try {
           roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
@@ -266,10 +253,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
             continue
           }
 
-          msgEntity = roomDatabase.msgDao()
+          val existingMessageEntity = roomDatabase.msgDao()
             .getMsgSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+            ?: return@withContext
+          msgEntity = existingMessageEntity
 
-          if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
+          if (msgEntity.msgState === MessageState.SENT) {
             roomDatabase.msgDao().deleteSuspend(msgEntity)
             OutgoingMessagesManager.deleteOutgoingMessage(
               applicationContext,

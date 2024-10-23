@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.base
@@ -313,7 +313,9 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
       for (attInfo in atts) {
         attInfo?.let { info ->
-          AttachmentEntity.fromAttInfo(info)?.let { candidate -> attEntities.add(candidate) }
+          AttachmentEntity.fromAttInfo(info, accountEntity.accountType)?.let { candidate ->
+            attEntities.add(candidate)
+          }
         }
       }
 
