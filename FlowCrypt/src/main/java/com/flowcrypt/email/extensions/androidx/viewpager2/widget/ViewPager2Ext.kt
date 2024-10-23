@@ -1,12 +1,13 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.androidx.viewpager2.widget
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 
 /**
  * @author Denys Bondarenko
@@ -19,7 +20,7 @@ import androidx.viewpager2.widget.ViewPager2
  * Origin:
  * https://medium.com/nerd-for-tech/android-webview-part-2-webview-on-top-viewpager2-639181e6d6f5
  */
-fun ViewPager2.reduceDragSensitivity() {
+fun ViewPager2.reduceDragSensitivity(factor: Int = 4) {
   try {
     val recyclerViewField = ViewPager2::class.java.getDeclaredField("mRecyclerView")
     recyclerViewField.isAccessible = true
@@ -28,8 +29,8 @@ fun ViewPager2.reduceDragSensitivity() {
     val touchSlopField = RecyclerView::class.java.getDeclaredField("mTouchSlop")
     touchSlopField.isAccessible = true
     val touchSlop = touchSlopField.get(recyclerView) as Int
-    touchSlopField.set(recyclerView, touchSlop * 8)
+    touchSlopField.set(recyclerView, touchSlop * factor)
   } catch (e: Exception) {
-    e.printStackTrace()
+    e.printStackTraceIfDebugOnly()
   }
 }

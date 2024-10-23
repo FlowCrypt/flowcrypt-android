@@ -27,6 +27,7 @@ import com.flowcrypt.email.databinding.FragmentViewPagerThreadDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.androidx.viewpager2.widget.reduceDragSensitivity
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ThreadsViewPagerViewModel
@@ -63,6 +64,7 @@ class ViewPagerThreadDetailsFragment : BaseFragment<FragmentViewPagerThreadDetai
     supportActionBar?.subtitle = null
 
     binding?.viewPager2?.apply {
+      reduceDragSensitivity()
       adapter = ThreadDetailsFragmentsAdapter(
         localFolder = args.localFolder,
         initialList = threadsViewPagerViewModel.messageEntitiesLiveData.value?.data ?: emptyList(),
