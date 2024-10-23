@@ -27,18 +27,17 @@ import com.flowcrypt.email.databinding.FragmentViewPagerMessageDetailsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.androidx.viewpager2.widget.reduceDragSensitivity
 import com.flowcrypt.email.extensions.observeOnce
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewPagerViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
-import com.flowcrypt.email.ui.adapter.FragmentsAdapter
+import com.flowcrypt.email.ui.adapter.MessageDetailsFragmentsAdapter
 
 /**
  * @author Denys Bondarenko
  */
-class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDetailsBinding>(),
-  ProgressBehaviour {
+class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDetailsBinding>() {
   private val args by navArgs<ViewPagerMessageDetailsFragmentArgs>()
 
   private val messagesViewPagerViewModel: MessagesViewPagerViewModel by viewModels {
@@ -48,18 +47,12 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
         return MessagesViewPagerViewModel(
           initialMessageEntityId = args.messageEntityId,
           localFolder = args.localFolder,
+          sortedEntityIdListForThread = args.sortedEntityIdListForThread?.toList(),
           application = requireActivity().application
         ) as T
       }
     }
   }
-
-  override val progressView: View?
-    get() = binding?.progress?.root
-  override val contentView: View?
-    get() = binding?.viewPager2
-  override val statusView: View?
-    get() = binding?.status?.root
 
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentViewPagerMessageDetailsBinding.inflate(inflater, container, false)
@@ -71,13 +64,13 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     supportActionBar?.subtitle = null
 
     binding?.viewPager2?.apply {
-      adapter = FragmentsAdapter(
+      reduceDragSensitivity()
+      adapter = MessageDetailsFragmentsAdapter(
         localFolder = args.localFolder,
         initialList = messagesViewPagerViewModel.messageEntitiesLiveData.value?.data ?: emptyList(),
-        fragment = this@ViewPagerMessageDetailsFragment
-      ) { _, _ ->
-        showContent()
-      }
+        fragment = this@ViewPagerMessageDetailsFragment,
+        isThreadMode = args.sortedEntityIdListForThread?.isNotEmpty() == true
+      ) { _, _ -> }
 
       addItemDecoration(DividerItemDecoration(view.context, ORIENTATION_HORIZONTAL))
 
@@ -85,7 +78,7 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
       registerOnPageChangeCallback(object : OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
           super.onPageSelected(position)
-          (adapter as FragmentsAdapter).getItem(position)?.let { messageEntity ->
+          (adapter as MessageDetailsFragmentsAdapter).getItem(position)?.let { messageEntity ->
             messagesViewPagerViewModel.onItemSelected(messageEntity)
           }
         }
@@ -119,8 +112,9 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     messagesViewPagerViewModel.initialLiveData.observeOnce(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.SUCCESS -> {
-          (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
-          showContent()
+          (binding?.viewPager2?.adapter as? MessageDetailsFragmentsAdapter)?.submit(
+            it.data ?: emptyList()
+          )
         }
 
         else -> {
@@ -133,8 +127,9 @@ class ViewPagerMessageDetailsFragment : BaseFragment<FragmentViewPagerMessageDet
     messagesViewPagerViewModel.messageEntitiesLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.SUCCESS -> {
-          (binding?.viewPager2?.adapter as? FragmentsAdapter)?.submit(it.data ?: emptyList())
-          showContent()
+          (binding?.viewPager2?.adapter as? MessageDetailsFragmentsAdapter)?.submit(
+            it.data ?: emptyList()
+          )
         }
 
         else -> {}

@@ -102,7 +102,7 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
     Thread.sleep(1000)
 
     //click on reply
-    openReplyScreen(R.id.layoutReplyButton, SUBJECT_EXISTING_STANDARD)
+    openReplyScreen(R.id.replyButton, SUBJECT_EXISTING_STANDARD)
 
     //switch to encrypted mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -148,10 +148,11 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
       val expectedText = MESSAGE + EmailUtil.genReplyContent(
         IncomingMessageInfo(
           msgEntity = MessageEntity(
-            email = "",
+            account = "",
+            accountType = "",
             folder = "",
             uid = 0,
-            fromAddress = DEFAULT_FROM_RECIPIENT,
+            fromAddresses = DEFAULT_FROM_RECIPIENT,
             receivedDate = DATE_EXISTING_STANDARD
 
           ),
