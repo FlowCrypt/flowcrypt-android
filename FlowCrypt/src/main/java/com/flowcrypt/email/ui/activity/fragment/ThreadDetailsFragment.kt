@@ -40,6 +40,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentThreadDetailsBinding
+import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
@@ -239,6 +240,33 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         recipientsViewModel.updateExistingPubKey(publicKeyEntity, pgpKeyRingDetails)
         toast(R.string.pub_key_successfully_updated)
       }
+
+      override fun importAdditionalPrivateKeys(message: MessagesInThreadListAdapter.Message) {
+        account?.let { accountEntity ->
+          navController?.navigate(
+            object : NavDirections {
+              override val actionId = R.id.import_additional_private_keys_graph
+              override val arguments = ImportAdditionalPrivateKeysFragmentArgs(
+                requestKey = REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS + args.messageEntityId.toString(),
+                accountEntity = accountEntity,
+                bundle = Bundle().apply { putLong(KEY_EXTRA_MESSAGE_ID, message.id) }
+              ).toBundle()
+            }
+          )
+        }
+      }
+
+      override fun fixMissingPassphraseIssue(
+        message: MessagesInThreadListAdapter.Message,
+        fingerprints: List<String>
+      ) {
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+          requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_AFTER_PROCESS_MESSAGE,
+          fingerprints = fingerprints,
+          bundle = Bundle().apply { putLong(KEY_EXTRA_MESSAGE_ID, message.id) }
+        )
+      }
     })
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -252,6 +280,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     subscribeToFixNeedPassphraseIssueDialogFragment()
     subscribeToDownloadAttachmentViaDialog()
     subscribeToDeleteDraftDialog()
+    subscribeToImportingAdditionalPrivateKeys()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -609,6 +638,14 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           }
         }
 
+        REQUEST_CODE_FIX_MISSING_PASSPHRASE_AFTER_PROCESS_MESSAGE -> {
+          bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
+            processActionForMessageBasedOnIncomingBundle(it) { message ->
+              processMessageClick(message = message, forceProcess = true)
+            }
+          }
+        }
+
         REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT -> {
           bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
             processActionForMessageAndAttachmentBasedOnIncomingBundle(it) { attachmentInfo, message ->
@@ -700,6 +737,30 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
+  private fun subscribeToImportingAdditionalPrivateKeys() {
+    setFragmentResultListener(
+      REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS + args.messageEntityId.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
+      val keys = bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(
+        ImportAdditionalPrivateKeysFragment.KEY_IMPORTED_PRIVATE_KEYS
+      )
+      if (keys?.isNotEmpty() == true) {
+        toast(R.string.key_successfully_imported)
+        val message =
+          bundle.getBundle(ImportAdditionalPrivateKeysFragment.KEY_INCOMING_BUNDLE)?.getLong(
+            KEY_EXTRA_MESSAGE_ID
+          ).let { messageId ->
+            messagesInThreadListAdapter.currentList.firstOrNull {
+              it.id == messageId
+            } as? MessagesInThreadListAdapter.Message
+          } ?: return@setFragmentResultListener
+
+        processMessageClick(message = message, forceProcess = true)
+      }
+    }
+  }
+
   private fun replyTo(message: MessagesInThreadListAdapter.Message) {
     startActivity(
       prepareReply(message, MessageType.REPLY)
@@ -770,7 +831,10 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-  private fun processMessageClick(message: MessagesInThreadListAdapter.Message) {
+  private fun processMessageClick(
+    message: MessagesInThreadListAdapter.Message,
+    forceProcess: Boolean = false
+  ) {
     if (message.messageEntity.hasPgp == true) {
       val keysStorage = KeysStorageImpl.getInstance(requireContext())
       val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
@@ -785,8 +849,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       }
     }
 
-    if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED) {
-      if (message.incomingMessageInfo == null) {
+    if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED || forceProcess) {
+      if (message.incomingMessageInfo == null || forceProcess) {
         navController?.navigate(
           object : NavDirections {
             override val actionId = R.id.process_message_dialog_graph
@@ -1134,6 +1198,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       ThreadDetailsFragment::class.java
     )
 
+    private val REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_IMPORT_ADDITIONAL_PRIVATE_KEYS",
+      ThreadDetailsFragment::class.java
+    )
+
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE = 1000
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT = 1001
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_DOWNLOAD_ATTACHMENT = 1002
@@ -1147,6 +1216,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     private const val REQUEST_CODE_PROCESS_WHOLE_MESSAGE = 1010
     private const val REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD = 1011
     private const val REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW = 1012
+    private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_AFTER_PROCESS_MESSAGE = 1013
 
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }

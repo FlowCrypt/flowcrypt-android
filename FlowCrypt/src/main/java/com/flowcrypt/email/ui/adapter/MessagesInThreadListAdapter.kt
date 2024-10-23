@@ -190,6 +190,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun onDeleteDraft(message: Message)
     fun addRecipientsBasedOnPgpKeyDetails(pgpKeyRingDetails: PgpKeyRingDetails)
     fun updateExistingPubKey(publicKeyEntity: PublicKeyEntity, pgpKeyRingDetails: PgpKeyRingDetails)
+    fun importAdditionalPrivateKeys(message: Message)
+    fun fixMissingPassphraseIssue(message: Message, fingerprints: List<String>)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -433,7 +435,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       }
 
       if (message.incomingMessageInfo != null) {
-        updateMsgView(message.incomingMessageInfo, onMessageActionsListener)
+        updateMsgView(message, onMessageActionsListener)
         updatePgpBadges(message.incomingMessageInfo)
       }
 
@@ -500,9 +502,10 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     }
 
     private fun updateMsgView(
-      msgInfo: IncomingMessageInfo,
+      message: Message,
       onMessageActionsListener: OnMessageActionsListener
     ) {
+      val msgInfo = message.incomingMessageInfo ?: return
       binding.emailWebView.loadUrl("about:blank")
       binding.layoutMessageParts.removeAllViews()
       binding.layoutSecurityWarnings.removeAllViews()
@@ -552,6 +555,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
           MsgBlock.Type.DECRYPT_ERROR -> {
             binding.layoutMessageParts.addView(
               genDecryptErrorPart(
+                message,
                 block as DecryptErrorMsgBlock,
                 layoutInflater
               )
@@ -709,18 +713,20 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     }
 
     private fun genDecryptErrorPart(
+      message: Message,
       block: DecryptErrorMsgBlock,
       layoutInflater: LayoutInflater
     ): View {
       val decryptError = block.decryptErr ?: return View(context)
 
       when (decryptError.details?.type) {
-        /*PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH ->
+        PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH ->
         return generateMissingPrivateKeyLayout(
-          clipLargeText(
-            block.content
-          ), layoutInflater
-        )*/
+          message = message,
+          pgpMsg = clipLargeText(block.content),
+          inflater = layoutInflater,
+          onMessageActionsListener = onMessageActionsListener
+        )
 
         PgpDecryptAndOrVerify.DecryptionErrorType.FORMAT -> {
           val formatErrorMsg = (context.getString(
@@ -757,12 +763,8 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
           if (decryptError.details?.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
             btText = context.getString(R.string.fix)
             onClickListener = View.OnClickListener {
-              /*val fingerprints = decryptError.fingerprints ?: return@OnClickListener
-
-              showNeedPassphraseDialog(
-                requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntity.id?.toString(),
-                fingerprints = fingerprints
-              )*/
+              val fingerprints = decryptError.fingerprints ?: return@OnClickListener
+              onMessageActionsListener.fixMissingPassphraseIssue(message, fingerprints)
             }
           }
 
@@ -901,6 +903,44 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
           R.layout.message_part_other, binding.layoutMessageParts
         )
       )
+    }
+
+    /**
+     * Generate a layout which describes the missing private keys situation.
+     *
+     * @param pgpMsg   The pgp message.
+     * @param inflater The [LayoutInflater] instance.
+     * @return Generated layout.
+     */
+    private fun generateMissingPrivateKeyLayout(
+      message: Message,
+      pgpMsg: String?,
+      inflater: LayoutInflater,
+      onMessageActionsListener: OnMessageActionsListener
+    ): View {
+      val viewGroup = inflater.inflate(
+        R.layout.message_part_pgp_message_missing_private_key, binding.layoutMessageParts, false
+      ) as ViewGroup
+      val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
+      buttonImportPrivateKey?.setOnClickListener {
+        onMessageActionsListener.importAdditionalPrivateKeys(message)
+      }
+
+      /*val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
+      buttonSendOwnPublicKey?.setOnClickListener { showSendersPublicKeyDialog() }
+
+      val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
+      if (account?.clientConfiguration?.usesKeyManager() == true) {
+        textViewErrorMsg?.text = context.getString(R.string.your_keys_cannot_open_this_message)
+        buttonImportPrivateKey?.gone()
+        buttonSendOwnPublicKey?.text = context.getString(R.string.inform_sender)
+      } else {
+        textViewErrorMsg?.text =
+          context.getString(R.string.decrypt_error_current_key_cannot_open_message)
+      }*/
+
+      viewGroup.addView(genShowOrigMsgLayout(pgpMsg, inflater, viewGroup))
+      return viewGroup
     }
 
     private fun clipLargeText(text: String?): String? {
