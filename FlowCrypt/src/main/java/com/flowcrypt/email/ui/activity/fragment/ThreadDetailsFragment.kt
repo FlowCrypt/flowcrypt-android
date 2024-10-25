@@ -79,6 +79,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.DecryptAttachmentDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DeleteDraftDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.DeleteDraftDialogFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogFragment
@@ -300,6 +302,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     subscribeToDeleteDraftDialog()
     subscribeToImportingAdditionalPrivateKeys()
     subscribeToChoosePublicKeyDialogFragment()
+    subscribeToDecryptAttachmentViaDialog()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -730,10 +733,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
       when (requestCode) {
         REQUEST_CODE_PREVIEW_ATTACHMENT -> {
-          previewAttachment(
-            attachmentInfo = attachmentInfo,
-            useContentApp = account?.isHandlingAttachmentRestricted() == true
-          )
+          previewAttachment(attachmentInfo)
         }
 
         REQUEST_CODE_SAVE_ATTACHMENT -> {
@@ -803,6 +803,19 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       } else {
         toast(R.string.account_has_no_associated_keys)
       }
+    }
+  }
+
+  private fun subscribeToDecryptAttachmentViaDialog() {
+    setFragmentResultListener(
+      REQUEST_KEY_DECRYPT_ATTACHMENT + args.messageEntityId.toString(),
+      args.isViewPagerMode
+    ) { _, bundle ->
+      val attachmentInfo =
+        bundle.getParcelableViaExt<AttachmentInfo>(DecryptAttachmentDialogFragment.KEY_ATTACHMENT)
+          ?: return@setFragmentResultListener
+
+      previewAttachment(EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(attachmentInfo))
     }
   }
 
@@ -973,10 +986,41 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       .getDocumentId(attachmentInfo)
 
     if (attachmentInfo.uri != null && documentId != null) {
-      previewAttachment(
-        attachmentInfo = attachmentInfo,
-        useContentApp = account?.isHandlingAttachmentRestricted() == true
-      )
+      if (attachmentInfo.isPossiblyEncrypted) {
+        val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
+        val existingDocumentIdForDecryptedVersion = embeddedAttachmentsCache
+          .getDocumentId(attachmentInfo.copy(name = FilenameUtils.getBaseName(attachmentInfo.name)))
+
+        if (existingDocumentIdForDecryptedVersion != null) {
+          embeddedAttachmentsCache.getUriVersion(existingDocumentIdForDecryptedVersion)?.let {
+            previewAttachment(it)
+          }
+        } else {
+          if (!checkAndShowNeedPassphraseDialogIfNeeded(
+              attachmentInfo = attachmentInfo,
+              message = message,
+              requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PREVIEW_ATTACHMENT
+            )
+          ) {
+            navController?.navigate(
+              object : NavDirections {
+                override val actionId = R.id.decrypt_attachment_dialog_graph
+                override val arguments = DecryptAttachmentDialogFragmentArgs(
+                  attachmentInfo = attachmentInfo.copy(),
+                  requestKey = REQUEST_KEY_DECRYPT_ATTACHMENT + args.messageEntityId.toString(),
+                  requestCode = REQUEST_CODE_DECRYPT_ATTACHMENT,
+                  bundle = Bundle().apply {
+                    putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+                    putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+                  }
+                ).toBundle()
+              }
+            )
+          }
+        }
+      } else {
+        previewAttachment(attachmentInfo)
+      }
     } else {
       when {
         checkAndShowNeedPassphraseDialogIfNeeded(
@@ -1019,10 +1063,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-  private fun previewAttachment(
-    attachmentInfo: AttachmentInfo,
-    useContentApp: Boolean = false
-  ) {
+  private fun previewAttachment(attachmentInfo: AttachmentInfo) {
     val intent = if (attachmentInfo.uri != null) {
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
@@ -1030,7 +1071,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       return
     }
 
-    if (useContentApp) {
+    if (account?.isHandlingAttachmentRestricted() == true) {
       try {
         startActivity(Intent(intent).setPackage(Constants.APP_PACKAGE_CONTENT_LOCKER))
       } catch (e: ActivityNotFoundException) {
@@ -1280,6 +1321,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     private val REQUEST_KEY_CHOOSE_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_CHOOSE_PUBLIC_KEY",
+      ThreadDetailsFragment::class.java
+    )
+
+    private val REQUEST_KEY_DECRYPT_ATTACHMENT = GeneralUtil.generateUniqueExtraKey(
+      "REQUEST_KEY_DECRYPT_ATTACHMENT",
       ThreadDetailsFragment::class.java
     )
 

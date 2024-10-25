@@ -21,7 +21,6 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.provider.MediaStore
 import android.text.TextUtils
-import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
@@ -513,7 +512,10 @@ class AttachmentDownloadManagerService : LifecycleService() {
             if (!Thread.currentThread().isInterrupted) {
               val uri = storeFileToSharedFolder(context, attTempFile)
               listener?.onAttDownloaded(
-                attInfo = att.copy(name = finalFileName),
+                attInfo = att.copy(
+                  name = finalFileName,
+                  type = finalFileName.getPossibleAndroidMimeType() ?: att.type
+                ),
                 uri = uri,
                 useContentApp = account.isHandlingAttachmentRestricted()
               )
@@ -624,8 +626,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(finalFileName).lowercase()
-      val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+      val mimeType = finalFileName.getPossibleAndroidMimeType()
 
       val contentValues = ContentValues().apply {
         put(MediaStore.DownloadColumns.DISPLAY_NAME, finalFileName)

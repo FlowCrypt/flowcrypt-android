@@ -428,7 +428,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
           override fun onDeleteClick(attachmentInfo: AttachmentInfo) {}
         }
       ).apply {
-        submitList(message.attachments)
+        submitList(message.attachments.filterNot { it.isHidden() })
       }
 
       binding.emailWebView.apply {
@@ -572,7 +572,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
             }
           }
 
-          MsgBlock.Type.ENCRYPTED_SUBJECT -> {}// we should skip such blocks here
+          MsgBlock.Type.ENCRYPTED_SUBJECT, MsgBlock.Type.INLINE_ATT -> {}// we should skip such blocks here
 
           else -> handleOtherBlock(block, layoutInflater)
         }

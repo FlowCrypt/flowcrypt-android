@@ -187,7 +187,8 @@ fun String?.asContentTypeOrNull(): ContentType? {
 }
 
 fun String?.getPossibleAndroidMimeType(): String? {
-  return MimeTypeMap.getSingleton().getMimeTypeFromExtension(FilenameUtils.getExtension(this))
+  return MimeTypeMap.getSingleton()
+    .getMimeTypeFromExtension(FilenameUtils.getExtension(this).lowercase())
 }
 
 val String.toLongRadix16: Long
