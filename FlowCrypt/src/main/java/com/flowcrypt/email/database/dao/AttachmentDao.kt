@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.database.dao
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 interface AttachmentDao : BaseDao<AttachmentEntity> {
 
   @Query(
-    "SELECT * FROM attachment WHERE account = :account " +
+    "SELECT * FROM attachments WHERE account = :account " +
         "AND account_type = :accountType AND folder = :label AND uid = :uid"
   )
   suspend fun getAttachments(
@@ -28,7 +28,7 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
   ): List<AttachmentEntity>
 
   @Query(
-    "SELECT * FROM attachment WHERE account = :account " +
+    "SELECT * FROM attachments WHERE account = :account " +
         "AND account_type = :accountType AND folder = :label AND uid = :uid"
   )
   fun getAttachmentsFlow(
@@ -39,7 +39,7 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
   ): Flow<List<AttachmentEntity>>
 
   @Query(
-    "DELETE FROM attachment WHERE account = :account " +
+    "DELETE FROM attachments WHERE account = :account " +
         "AND account_type = :accountType AND folder = :label AND uid = :uid"
   )
   suspend fun deleteAttachments(account: String, accountType: String, label: String, uid: Long): Int

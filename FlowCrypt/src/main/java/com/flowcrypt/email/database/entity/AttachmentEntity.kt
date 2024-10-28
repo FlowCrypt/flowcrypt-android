@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.database.entity
@@ -19,14 +19,14 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  * @author Denys Bondarenko
  */
 @Entity(
-  tableName = AttachmentEntity.TABLE_NAME,
+  tableName = "attachments",
   indices = [
     Index(
-      name = "account_account_type_folder_uid_in_attachment",
+      name = "account_account_type_folder_uid_in_attachments",
       value = ["account", "account_type", "folder", "uid"]
     ),
     Index(
-      name = "account_account_type_folder_uid_path_in_attachment",
+      name = "account_account_type_folder_uid_path_in_attachments",
       value = ["account", "account_type", "folder", "uid", "path"],
       unique = true
     ),
@@ -79,8 +79,6 @@ data class AttachmentEntity(
   }
 
   companion object {
-    const val TABLE_NAME = "attachment"
-
     fun fromAttInfo(attachmentInfo: AttachmentInfo, accountType: String): AttachmentEntity? {
       with(attachmentInfo) {
         val email = email ?: return null

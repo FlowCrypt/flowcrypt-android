@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.database
@@ -17,6 +17,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.account.database.dao.MessageDao
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.converters.ClientConfigurationConverter
 import com.flowcrypt.email.database.converters.LabelListVisibilityConverter
@@ -105,7 +106,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 45
+    const val DB_VERSION = 46
 
     private val MIGRATION_1_3 = object : FlowCryptMigration(1, 3) {
       override fun doMigration(database: SupportSQLiteDatabase) {
@@ -1255,7 +1256,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         //delete attachments for predefined 'com.google' users, except outgoing
         database.delete(
-          AttachmentEntity.TABLE_NAME,
+          "attachments",
           "$commonWhereClause AND folder != ?",
           commonWhereArgs
         )
@@ -1462,6 +1463,196 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_45_46 = object : FlowCryptMigration(45, 46) {
+      override fun doMigration(database: SupportSQLiteDatabase) {
+        //ref https://github.com/FlowCrypt/flowcrypt-android/issues/74
+
+        //############## update accounts ##############
+        //add `use_conversation_mode` column
+        database.execSQL("ALTER TABLE accounts ADD COLUMN `use_conversation_mode` INTEGER NOT NULL DEFAULT 0;")
+        //update accounts table
+        database.query("SELECT * FROM accounts;").use { cursor ->
+          if (cursor.count > 0) {
+            while (cursor.moveToNext()) {
+              val id = cursor.getString(cursor.getColumnIndexOrThrow(BaseColumns._ID))
+              val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+              val sss = cursor.getString(cursor.getColumnIndexOrThrow("use_conversation_mode"))
+              val existingAccountType =
+                cursor.getString(cursor.getColumnIndexOrThrow("account_type"))
+              if (existingAccountType.isNullOrEmpty()) {
+                val predictedAccountType =
+                  EmailUtil.getDomain(email).ifEmpty { AccountEntity.ACCOUNT_TYPE_UNKNOWN }
+                database.execSQL(
+                  "UPDATE accounts SET account_type = ? WHERE ${BaseColumns._ID} = ?;",
+                  arrayOf(predictedAccountType, id)
+                )
+              } else if (existingAccountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+                database.execSQL(
+                  "UPDATE accounts SET use_conversation_mode = 1 WHERE ${BaseColumns._ID} = ?;",
+                  arrayOf(id)
+                )
+              }
+            }
+          }
+        }
+
+        //create temp table with existing content
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS accounts_temp AS SELECT * FROM accounts;")
+        //drop old table
+        database.execSQL("DROP TABLE IF EXISTS accounts;")
+        //create a new table with new structure
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `accounts` " +
+              "(`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`email` TEXT NOT NULL, " +
+              "`account_type` TEXT NOT NULL, " +
+              "`display_name` TEXT DEFAULT NULL, " +
+              "`given_name` TEXT DEFAULT NULL, " +
+              "`family_name` TEXT DEFAULT NULL, " +
+              "`photo_url` TEXT DEFAULT NULL, " +
+              "`is_enabled` INTEGER DEFAULT 1, " +
+              "`is_active` INTEGER DEFAULT 0, " +
+              "`username` TEXT NOT NULL, " +
+              "`password` TEXT NOT NULL, " +
+              "`imap_server` TEXT NOT NULL, " +
+              "`imap_port` INTEGER DEFAULT 143, " +
+              "`imap_use_ssl_tls` INTEGER DEFAULT 0, " +
+              "`imap_use_starttls` INTEGER DEFAULT 0, " +
+              "`imap_auth_mechanisms` TEXT, " +
+              "`smtp_server` TEXT NOT NULL, " +
+              "`smtp_port` INTEGER DEFAULT 25, " +
+              "`smtp_use_ssl_tls` INTEGER DEFAULT 0, " +
+              "`smtp_use_starttls` INTEGER DEFAULT 0, " +
+              "`smtp_auth_mechanisms` TEXT, " +
+              "`smtp_use_custom_sign` INTEGER DEFAULT 0, " +
+              "`smtp_username` TEXT DEFAULT NULL, " +
+              "`smtp_password` TEXT DEFAULT NULL, " +
+              "`contacts_loaded` INTEGER DEFAULT 0, " +
+              "`show_only_encrypted` INTEGER DEFAULT 0, " +
+              "`client_configuration` TEXT DEFAULT NULL, " +
+              "`use_api` INTEGER NOT NULL DEFAULT 0, " +
+              "`use_customer_fes_url` INTEGER NOT NULL DEFAULT 0, " +
+              "`service_pgp_passphrase` TEXT NOT NULL, " +
+              "`service_pgp_private_key` BLOB NOT NULL, " +
+              "`signature` TEXT DEFAULT NULL, " +
+              "`use_alias_signatures` INTEGER NOT NULL DEFAULT 0, " +
+              "`use_conversation_mode` INTEGER NOT NULL DEFAULT 0)"
+        )
+        //create indices for new table
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS `email_account_type_in_accounts` " +
+              "ON `accounts` (`email`, `account_type`)"
+        )
+        //fill new table with existing data.
+        database.execSQL("INSERT INTO `accounts` SELECT * FROM accounts_temp;")
+        //drop temp table
+        database.execSQL("DROP TABLE IF EXISTS accounts_temp;")
+        //##########################
+
+        //############## update attachments ##############
+        //create temp table with existing content
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS attachments_temp AS SELECT * FROM attachment;")
+        //drop old table
+        database.execSQL("DROP TABLE IF EXISTS attachment;")
+        //create a new table with new structure
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `attachments` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`account` TEXT NOT NULL, " +
+              "`account_type` TEXT NOT NULL, " +
+              "`folder` TEXT NOT NULL, " +
+              "`uid` INTEGER NOT NULL, " +
+              "`name` TEXT NOT NULL, " +
+              "`encodedSize` INTEGER DEFAULT 0, " +
+              "`type` TEXT NOT NULL, " +
+              "`attachment_id` TEXT, " +
+              "`file_uri` TEXT, " +
+              "`forwarded_folder` TEXT, " +
+              "`forwarded_uid` INTEGER DEFAULT -1, " +
+              "`decrypt_when_forward` INTEGER NOT NULL DEFAULT 0, " +
+              "`path` TEXT NOT NULL, " +
+              "FOREIGN KEY(`account`, `account_type`, `folder`, `uid`) " +
+              "REFERENCES `messages`(`account`, `account_type`, `folder`, `uid`) " +
+              "ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        //create indices for new table
+        database.execSQL(
+          "CREATE INDEX IF NOT EXISTS `account_account_type_folder_uid_in_attachments` " +
+              "ON `attachments` (`account`, `account_type`, `folder`, `uid`)"
+        )
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS " +
+              "`account_account_type_folder_uid_path_in_attachments` " +
+              "ON `attachments` (`account`, `account_type`, `folder`, `uid`, `path`)"
+        )
+        //fill new table with existing data.
+        //FIX ME
+        //drop temp table
+        database.execSQL("DROP TABLE IF EXISTS attachments_temp;")
+        //##########################
+
+        //############## update messages ##############
+        //create temp table with existing content
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS messages_temp AS SELECT * FROM messages;")
+        //drop old table
+        database.execSQL("DROP TABLE IF EXISTS messages;")
+        //create a new table with new structure
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `messages` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`account` TEXT NOT NULL, " +
+              "`account_type` TEXT NOT NULL, " +
+              "`folder` TEXT NOT NULL, " +
+              "`uid` INTEGER NOT NULL, " +
+              "`received_date` INTEGER DEFAULT NULL, " +
+              "`sent_date` INTEGER DEFAULT NULL, " +
+              "`from_addresses` TEXT DEFAULT NULL, " +
+              "`to_addresses` TEXT DEFAULT NULL, " +
+              "`cc_addresses` TEXT DEFAULT NULL, " +
+              "`reply_to_addresses` TEXT DEFAULT NULL, " +
+              "`subject` TEXT DEFAULT NULL, " +
+              "`flags` TEXT DEFAULT NULL, " +
+              "`has_attachments` INTEGER DEFAULT 0, " +
+              "`is_new` INTEGER DEFAULT -1, " +
+              "`state` INTEGER DEFAULT -1, " +
+              "`attachments_directory` TEXT, " +
+              "`error_message` TEXT DEFAULT NULL, " +
+              "`password` BLOB DEFAULT NULL, " +
+              "`is_visible` INTEGER NOT NULL DEFAULT 1, " +
+              "`thread_id` INTEGER DEFAULT NULL, " +
+              "`history_id` TEXT DEFAULT NULL, " +
+              "`draft_id` TEXT DEFAULT NULL, " +
+              "`label_ids` TEXT DEFAULT NULL, " +
+              "`is_encrypted` INTEGER DEFAULT -1, " +
+              "`has_pgp` INTEGER DEFAULT 0, " +
+              "`thread_messages_count` INTEGER DEFAULT NULL, " +
+              "`thread_drafts_count` INTEGER DEFAULT NULL, " +
+              "`snippet` TEXT DEFAULT NULL, " +
+              "FOREIGN KEY(`account`, `account_type`) " +
+              "REFERENCES `accounts`(`email`, `account_type`) " +
+              "ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        //create indices for new table
+        database.execSQL(
+          "CREATE INDEX IF NOT EXISTS `account_account_type_in_messages` " +
+              "ON `messages` (`account`, `account_type`)"
+        )
+        database.execSQL(
+          "CREATE INDEX IF NOT EXISTS `uid_in_messages` " +
+              "ON `messages` (`uid`)"
+        )
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS `account_account_type_folder_uid_in_messages` " +
+              "ON `messages` (`account`, `account_type`, `folder`, `uid`)"
+        )
+        //fill new table with existing data.
+        //FIX ME
+        //drop temp table
+        database.execSQL("DROP TABLE IF EXISTS messages_temp;")
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -1521,6 +1712,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           Migration42to43(context.applicationContext),
           MIGRATION_43_44,
           MIGRATION_44_45,
+          MIGRATION_45_46,
         ).build()
         INSTANCE = instance
         return instance
