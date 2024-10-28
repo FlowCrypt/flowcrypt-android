@@ -67,7 +67,7 @@ import java.util.Properties
  * @author Denys Bondarenko
  */
 @Entity(
-  tableName = MessageEntity.TABLE_NAME,
+  tableName = "messages",
   indices = [
     Index(name = "account_account_type_in_messages", value = ["account", "account_type"]),
     Index(name = "uid_in_messages", value = ["uid"]),
@@ -526,7 +526,6 @@ data class MessageEntity(
   }
 
   companion object {
-    const val TABLE_NAME = "messages"
     const val LABEL_IDS_SEPARATOR = " "
 
     fun genMessageEntities(

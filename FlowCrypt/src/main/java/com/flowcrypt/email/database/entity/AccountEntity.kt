@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.database.entity
@@ -31,7 +31,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Entity(
-  tableName = AccountEntity.TABLE_NAME,
+  tableName = "accounts",
   indices = [
     Index(name = "email_account_type_in_accounts", value = ["email", "account_type"], unique = true)
   ]
@@ -351,7 +351,6 @@ data class AccountEntity(
   }
 
   companion object {
-    const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
     const val ACCOUNT_TYPE_UNKNOWN = "unknown"

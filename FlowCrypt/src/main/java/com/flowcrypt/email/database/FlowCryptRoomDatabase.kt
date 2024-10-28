@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.provider.BaseColumns
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.core.database.getStringOrNull
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -41,6 +42,7 @@ import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.android.content.fillWithDataFromCursor
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -1240,8 +1242,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //we need to clean old cache for some 'com.google' users: messages, attachments, labels
 
-        val commonWhereClause = "email IN (SELECT email FROM " + AccountEntity.TABLE_NAME +
-            " WHERE account_type = ? AND use_api = ?)"
+        val commonWhereClause = "email IN (SELECT email FROM accounts " +
+            "WHERE account_type = ? AND use_api = ?)"
         val commonWhereArgs = arrayOf(
           AccountEntity.ACCOUNT_TYPE_GOOGLE,
           "0",
@@ -1249,7 +1251,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         )
         //delete messages for predefined 'com.google' users, except outgoing
         database.delete(
-          MessageEntity.TABLE_NAME,
+          "messages",
           "$commonWhereClause AND folder != ?",
           commonWhereArgs
         )
@@ -1272,7 +1274,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         val contentValues = ContentValues()
         contentValues.put("use_api", "1")
         database.update(
-          AccountEntity.TABLE_NAME,
+          "accounts",
           SQLiteDatabase.CONFLICT_IGNORE,
           contentValues,
           "account_type = ?",
@@ -1467,7 +1469,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
     val MIGRATION_45_46 = object : FlowCryptMigration(45, 46) {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //ref https://github.com/FlowCrypt/flowcrypt-android/issues/74
-
+        val mapAccountWithAccountType = mutableMapOf<String, String>()
         //############## update accounts ##############
         //add `use_conversation_mode` column
         database.execSQL("ALTER TABLE accounts ADD COLUMN `use_conversation_mode` INTEGER NOT NULL DEFAULT 0;")
@@ -1477,22 +1479,28 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
             while (cursor.moveToNext()) {
               val id = cursor.getString(cursor.getColumnIndexOrThrow(BaseColumns._ID))
               val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
-              val sss = cursor.getString(cursor.getColumnIndexOrThrow("use_conversation_mode"))
               val existingAccountType =
-                cursor.getString(cursor.getColumnIndexOrThrow("account_type"))
-              if (existingAccountType.isNullOrEmpty()) {
-                val predictedAccountType =
-                  EmailUtil.getDomain(email).ifEmpty { AccountEntity.ACCOUNT_TYPE_UNKNOWN }
-                database.execSQL(
-                  "UPDATE accounts SET account_type = ? WHERE ${BaseColumns._ID} = ?;",
-                  arrayOf(predictedAccountType, id)
-                )
-              } else if (existingAccountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-                database.execSQL(
-                  "UPDATE accounts SET use_conversation_mode = 1 WHERE ${BaseColumns._ID} = ?;",
-                  arrayOf(id)
+                cursor.getStringOrNull(cursor.getColumnIndexOrThrow("account_type"))
+              val predictedAccountType =
+                EmailUtil.getDomain(email).ifEmpty { AccountEntity.ACCOUNT_TYPE_UNKNOWN }
+              val contentValues = ContentValues().apply {
+                if (existingAccountType.isNullOrEmpty()) {
+                  put("account_type", predictedAccountType)
+                } else if (existingAccountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+                  put("use_conversation_mode", 1)
+                }
+              }
+
+              if (contentValues.size() != 0) {
+                database.update(
+                  table = "accounts",
+                  conflictAlgorithm = SQLiteDatabase.CONFLICT_IGNORE,
+                  values = contentValues,
+                  whereClause = "${BaseColumns._ID} = ?",
+                  whereArgs = arrayOf(id)
                 )
               }
+              mapAccountWithAccountType[email] = existingAccountType ?: predictedAccountType
             }
           }
         }
@@ -1550,53 +1558,28 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.execSQL("DROP TABLE IF EXISTS accounts_temp;")
         //##########################
 
-        //############## update attachments ##############
-        //create temp table with existing content
-        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS attachments_temp AS SELECT * FROM attachment;")
-        //drop old table
-        database.execSQL("DROP TABLE IF EXISTS attachment;")
-        //create a new table with new structure
-        database.execSQL(
-          "CREATE TABLE IF NOT EXISTS `attachments` (" +
-              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
-              "`account` TEXT NOT NULL, " +
-              "`account_type` TEXT NOT NULL, " +
-              "`folder` TEXT NOT NULL, " +
-              "`uid` INTEGER NOT NULL, " +
-              "`name` TEXT NOT NULL, " +
-              "`encodedSize` INTEGER DEFAULT 0, " +
-              "`type` TEXT NOT NULL, " +
-              "`attachment_id` TEXT, " +
-              "`file_uri` TEXT, " +
-              "`forwarded_folder` TEXT, " +
-              "`forwarded_uid` INTEGER DEFAULT -1, " +
-              "`decrypt_when_forward` INTEGER NOT NULL DEFAULT 0, " +
-              "`path` TEXT NOT NULL, " +
-              "FOREIGN KEY(`account`, `account_type`, `folder`, `uid`) " +
-              "REFERENCES `messages`(`account`, `account_type`, `folder`, `uid`) " +
-              "ON UPDATE NO ACTION ON DELETE CASCADE )"
+        //############## delete old data for 'messages' and 'attachment', except outgoing data #############
+        val commonWhereClause = "email IN (SELECT email FROM accounts) AND folder != ?"
+        val commonWhereArgs = arrayOf(JavaEmailConstants.FOLDER_OUTBOX)
+        database.delete(
+          "messages",
+          commonWhereClause,
+          commonWhereArgs
         )
-        //create indices for new table
-        database.execSQL(
-          "CREATE INDEX IF NOT EXISTS `account_account_type_folder_uid_in_attachments` " +
-              "ON `attachments` (`account`, `account_type`, `folder`, `uid`)"
+        database.delete(
+          "attachment",
+          commonWhereClause,
+          commonWhereArgs
         )
-        database.execSQL(
-          "CREATE UNIQUE INDEX IF NOT EXISTS " +
-              "`account_account_type_folder_uid_path_in_attachments` " +
-              "ON `attachments` (`account`, `account_type`, `folder`, `uid`, `path`)"
-        )
-        //fill new table with existing data.
-        //FIX ME
-        //drop temp table
-        database.execSQL("DROP TABLE IF EXISTS attachments_temp;")
         //##########################
 
-        //############## update messages ##############
+        //############## update messages and attachments ##############
         //create temp table with existing content
         database.execSQL("CREATE TEMP TABLE IF NOT EXISTS messages_temp AS SELECT * FROM messages;")
+        database.execSQL("CREATE TEMP TABLE IF NOT EXISTS attachments_temp AS SELECT * FROM attachment;")
         //drop old table
         database.execSQL("DROP TABLE IF EXISTS messages;")
+        database.execSQL("DROP TABLE IF EXISTS attachment;")
         //create a new table with new structure
         database.execSQL(
           "CREATE TABLE IF NOT EXISTS `messages` (" +
@@ -1633,6 +1616,27 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
               "REFERENCES `accounts`(`email`, `account_type`) " +
               "ON UPDATE NO ACTION ON DELETE CASCADE )"
         )
+
+        database.execSQL(
+          "CREATE TABLE IF NOT EXISTS `attachments` (" +
+              "`_id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "`account` TEXT NOT NULL, " +
+              "`account_type` TEXT NOT NULL, " +
+              "`folder` TEXT NOT NULL, " +
+              "`uid` INTEGER NOT NULL, " +
+              "`name` TEXT NOT NULL, " +
+              "`encodedSize` INTEGER DEFAULT 0, " +
+              "`type` TEXT NOT NULL, " +
+              "`attachment_id` TEXT, " +
+              "`file_uri` TEXT, " +
+              "`forwarded_folder` TEXT, " +
+              "`forwarded_uid` INTEGER DEFAULT -1, " +
+              "`decrypt_when_forward` INTEGER NOT NULL DEFAULT 0, " +
+              "`path` TEXT NOT NULL, " +
+              "FOREIGN KEY(`account`, `account_type`, `folder`, `uid`) " +
+              "REFERENCES `messages`(`account`, `account_type`, `folder`, `uid`) " +
+              "ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
         //create indices for new table
         database.execSQL(
           "CREATE INDEX IF NOT EXISTS `account_account_type_in_messages` " +
@@ -1646,10 +1650,78 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           "CREATE UNIQUE INDEX IF NOT EXISTS `account_account_type_folder_uid_in_messages` " +
               "ON `messages` (`account`, `account_type`, `folder`, `uid`)"
         )
+
+        database.execSQL(
+          "CREATE INDEX IF NOT EXISTS `account_account_type_folder_uid_in_attachments` " +
+              "ON `attachments` (`account`, `account_type`, `folder`, `uid`)"
+        )
+        database.execSQL(
+          "CREATE UNIQUE INDEX IF NOT EXISTS " +
+              "`account_account_type_folder_uid_path_in_attachments` " +
+              "ON `attachments` (`account`, `account_type`, `folder`, `uid`, `path`)"
+        )
         //fill new table with existing data.
-        //FIX ME
+        database.query("SELECT * FROM messages_temp;").use { cursor ->
+          if (cursor.count > 0) {
+            while (cursor.moveToNext()) {
+              val contentValues = ContentValues().apply {
+                val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+                put(
+                  "account_type",
+                  mapAccountWithAccountType[email] ?: AccountEntity.ACCOUNT_TYPE_UNKNOWN
+                )
+                fillWithDataFromCursor(
+                  cursor = cursor,
+                  namesToBeRenamed = mapOf(
+                    "email" to "account",
+                    "from_address" to "from_addresses",
+                    "to_address" to "to_addresses",
+                    "cc_address" to "cc_addresses",
+                    "is_message_has_attachments" to "has_attachments",
+                    "error_msg" to "error_message",
+                    "reply_to" to "reply_to_addresses",
+                  )
+                )
+              }
+
+              database.insert(
+                table = "messages",
+                conflictAlgorithm = SQLiteDatabase.CONFLICT_NONE,
+                values = contentValues
+              )
+            }
+          }
+        }
+
+        database.query("SELECT * FROM attachments_temp;").use { cursor ->
+          if (cursor.count > 0) {
+            while (cursor.moveToNext()) {
+              val contentValues = ContentValues().apply {
+                val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+                put(
+                  "account_type",
+                  mapAccountWithAccountType[email] ?: AccountEntity.ACCOUNT_TYPE_UNKNOWN
+                )
+                fillWithDataFromCursor(
+                  cursor = cursor,
+                  skippedNames = setOf(BaseColumns._ID),
+                  namesToBeRenamed = mapOf("email" to "account")
+                )
+              }
+
+              database.insert(
+                table = "attachments",
+                conflictAlgorithm = SQLiteDatabase.CONFLICT_IGNORE,
+                values = contentValues
+              )
+            }
+          }
+        }
+
         //drop temp table
         database.execSQL("DROP TABLE IF EXISTS messages_temp;")
+        database.execSQL("DROP TABLE IF EXISTS attachments_temp;")
+        //##########################
       }
     }
 
