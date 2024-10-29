@@ -1216,7 +1216,8 @@
   ],
   "msgEntity": {
     "cc": [],
-    "email": "default@flowcrypt.test",
+    "account": "default@flowcrypt.test",
+    "accountType": "flowcrypt.test",
     "flags": "\\SEEN",
     "folder": "INBOX",
     "from": [

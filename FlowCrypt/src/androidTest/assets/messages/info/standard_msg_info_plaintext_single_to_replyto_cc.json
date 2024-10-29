@@ -15,7 +15,8 @@
       }
     ],
     "ccAddress": "ccuser@test",
-    "email": "default@flowcrypt.test",
+    "account": "default@flowcrypt.test",
+    "account_type": "flowcrypt.test",
     "flags": "\\SEEN",
     "folder": "INBOX",
     "from": [

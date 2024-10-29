@@ -1,5 +1,6 @@
 {
-  "email": "default@flowcrypt.test",
+  "account": "default@flowcrypt.test",
+  "account_type": "flowcrypt.test",
   "encodedSize": 3666,
   "folder": "INBOX",
   "fwdUid": 0,

@@ -308,6 +308,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
     )
     val incomingMsgInfo = action?.invoke(defaultIncomingMsgInfo) ?: defaultIncomingMsgInfo
     incomingMsgInfo?.msgEntity?.let {
+      roomDatabase.msgDao().deleteByUIDs(it.account, it.folder, listOf(it.uid))
       val uri = roomDatabase.msgDao().insert(it)
       val attEntities = mutableListOf<AttachmentEntity>()
 

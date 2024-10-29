@@ -1531,7 +1531,8 @@
   "msgEntity": {
     "isEncrypted": true,
     "cc": [],
-    "email": "denbond7@flowcrypt.test",
+    "account": "denbond7@flowcrypt.test",
+    "account_type": "flowcrypt.test",
     "flags": "\\SEEN",
     "folder": "INBOX",
     "from": [

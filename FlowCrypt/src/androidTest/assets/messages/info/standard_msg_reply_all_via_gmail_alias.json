@@ -2,7 +2,8 @@
   "encryptionType": "STANDARD",
   "msgEntity": {
     "id": 42,
-    "email": "default@flowcrypt.test",
+    "account": "default@flowcrypt.test",
+    "account_type": "flowcrypt.test",
     "folder": "INBOX",
     "uid": 525,
     "receivedDate": 1569929137000,
