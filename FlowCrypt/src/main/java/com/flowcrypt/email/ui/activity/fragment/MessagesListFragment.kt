@@ -77,12 +77,13 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
-import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.MessagesNotificationManager
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChangeGmailLabelsDialogFragmentArgs
@@ -98,7 +99,6 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import jakarta.mail.AuthenticationFailedException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
 import me.everything.android.ui.overscroll.IOverScrollState
@@ -617,14 +617,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
     binding?.swipeRefreshLayout?.setOnRefreshListener(this)
 
     binding?.floatActionButtonCompose?.setOnClickListener {
-      lifecycleScope.launch {
-        delay(10000)
-        InboxIdleSyncWorker.enqueue(requireContext())
-      }
-
-      /*startActivity(
+      startActivity(
         CreateMessageActivity.generateIntent(context, MessageType.NEW)
-      )*/
+      )
     }
   }
 
