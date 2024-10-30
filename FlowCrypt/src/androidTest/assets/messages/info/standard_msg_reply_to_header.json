@@ -8,15 +8,15 @@
     "uid": 525,
     "receivedDate": 1569929137000,
     "sentDate": 1569929121000,
-    "fromAddress": "denbond7@flowcrypt.test",
-    "toAddress": "Default <default@flowcrypt.test>",
+    "fromAddresses": "denbond7@flowcrypt.test",
+    "toAddresses": "Default <default@flowcrypt.test>",
     "subject": "Honor reply-to address",
     "flags": "\\SEEN",
     "hasAttachments": false,
     "isEncrypted": false,
     "isNew": false,
     "state": -1,
-    "replyTo": "android@flowcrypt.test",
+    "replyToAddresses": "android@flowcrypt.test",
     "from": [
       {
         "address": "denbond7@flowcrypt.test"

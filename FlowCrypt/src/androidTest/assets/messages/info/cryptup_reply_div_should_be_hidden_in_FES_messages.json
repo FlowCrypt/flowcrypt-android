@@ -18,7 +18,7 @@
         "address": "default@flowcrypt.test"
       }
     ],
-    "fromAddress": "default@flowcrypt.test",
+    "fromAddresses": "default@flowcrypt.test",
     "hasAttachments": false,
     "id": 45,
     "isDraft": false,
@@ -28,7 +28,7 @@
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1702893775000,
-    "replyTo": "default@flowcrypt.test",
+    "replyToAddresses": "default@flowcrypt.test",
     "replyToAddress": [
       {
         "address": "default@flowcrypt.test"
@@ -41,7 +41,7 @@
         "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@flowcrypt.test",
+    "toAddresses": "default@flowcrypt.test",
     "uid": 57,
     "uidAsHEX": "39"
   },

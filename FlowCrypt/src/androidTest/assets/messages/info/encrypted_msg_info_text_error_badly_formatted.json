@@ -33,7 +33,7 @@
         "personal": "Denis Bondarenko"
       }
     ],
-    "fromAddress": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
+    "fromAddresses": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
     "hasAttachments": false,
     "id": 8,
     "isEncrypted": true,
@@ -41,7 +41,7 @@
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1601910126000,
-    "replyTo": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
+    "replyToAddresses": "Denis Bondarenko \u003cdenbond7@flowcrypt.test\u003e",
     "replyToAddress": [
       {
         "address": "denbond7@flowcrypt.test",
@@ -56,7 +56,7 @@
         "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@flowcrypt.test",
+    "toAddresses": "default@flowcrypt.test",
     "uid": 12,
     "uidAsHEX": "c"
   },

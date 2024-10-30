@@ -33,13 +33,13 @@
         "address": "denbond7@flowcrypt.test"
       }
     ],
-    "fromAddress": "denbond7@flowcrypt.test",
+    "fromAddresses": "denbond7@flowcrypt.test",
     "hasAttachments": false,
     "id": 292,
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1619763416000,
-    "replyTo": "denbond7@flowcrypt.test",
+    "replyToAddresses": "denbond7@flowcrypt.test",
     "replyToAddress": [
       {
         "address": "denbond7@flowcrypt.test"
@@ -53,7 +53,7 @@
         "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@flowcrypt.test",
+    "toAddresses": "default@flowcrypt.test",
     "uid": 14,
     "uidAsHEX": "e"
   },

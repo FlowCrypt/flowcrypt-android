@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -166,7 +166,9 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
       path = "messages/info/encrypted_msg_info_text_with_missing_key.json",
       mimeMsgPath = "messages/mime/encrypted_msg_info_text_with_missing_key.txt",
       accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
-    )?.msgEntity
+    ) {
+      it?.copy(msgEntity = it.msgEntity.copy(accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE))
+    }?.msgEntity
     launchActivity(requireNotNull(details))
 
     waitForObjectWithText(getResString(R.string.your_keys_cannot_open_this_message), 2000)
@@ -180,13 +182,16 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+
   fun testPreviewAttachmentButton() {
     baseCheckWithAtt(
       incomingMsgInfo = getMsgInfo(
         path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
         mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt", simpleAttInfo,
         accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
-      ), att = simpleAttInfo
+      ) {
+        it?.copy(msgEntity = it.msgEntity.copy(accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE))
+      }, att = simpleAttInfo
     )
 
     onView(withId(R.id.imageButtonPreviewAtt))

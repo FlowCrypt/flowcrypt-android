@@ -32,14 +32,14 @@
         "personal": "Denys"
       }
     ],
-    "fromAddress": "Denys \u003cdenbond7@flowcrypt.test\u003e",
+    "fromAddresses": "Denys \u003cdenbond7@flowcrypt.test\u003e",
     "hasAttachments": false,
     "id": 32,
     "isEncrypted": true,
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1619781764000,
-    "replyTo": "Denys \u003cdenbond7@flowcrypt.test\u003e",
+    "replyToAddresses": "Denys \u003cdenbond7@flowcrypt.test\u003e",
     "replyToAddress": [
       {
         "address": "denbond7@flowcrypt.test",
@@ -54,7 +54,7 @@
         "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@flowcrypt.test",
+    "toAddresses": "default@flowcrypt.test",
     "uid": 17
   },
   "verificationResult": {
