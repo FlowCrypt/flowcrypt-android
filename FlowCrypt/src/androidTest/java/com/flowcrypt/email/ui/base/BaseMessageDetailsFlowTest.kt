@@ -152,11 +152,18 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .check(matches(withDrawable(resId = R.drawable.ic_forward, tintColor = buttonsColorId)))
   }
 
-  protected fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, att: AttachmentInfo?) {
+  protected fun baseCheckWithAtt(
+    incomingMsgInfo: IncomingMessageInfo?,
+    att: AttachmentInfo?,
+    actionBeforeProceed: () -> Unit = {}
+  ) {
     assertThat(incomingMsgInfo, notNullValue())
 
     val msgEntity = incomingMsgInfo!!.msgEntity
     launchActivity(msgEntity)
+
+    actionBeforeProceed.invoke()
+
     matchHeader(incomingMsgInfo)
     Thread.sleep(1000)//temporary added to complete test. Idling issue
     //checkWebViewText(incomingMsgInfo.text) temporary disabled

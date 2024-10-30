@@ -1532,7 +1532,7 @@
     "isEncrypted": true,
     "cc": [],
     "account": "denbond7@flowcrypt.test",
-    "account_type": "flowcrypt.test",
+    "accountType": "flowcrypt.test",
     "flags": "\\SEEN",
     "folder": "INBOX",
     "from": [

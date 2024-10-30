@@ -1258,7 +1258,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
         //delete attachments for predefined 'com.google' users, except outgoing
         database.delete(
-          "attachments",
+          "attachment",
           "$commonWhereClause AND folder != ?",
           commonWhereArgs
         )

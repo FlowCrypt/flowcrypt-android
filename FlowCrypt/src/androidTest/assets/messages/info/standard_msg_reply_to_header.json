@@ -3,7 +3,7 @@
   "msgEntity": {
     "id": 42,
     "account": "default@flowcrypt.test",
-    "account_type": "flowcrypt.test",
+    "accountType": "flowcrypt.test",
     "folder": "INBOX",
     "uid": 525,
     "receivedDate": 1569929137000,

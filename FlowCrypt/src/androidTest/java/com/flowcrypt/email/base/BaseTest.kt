@@ -310,14 +310,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
     incomingMsgInfo?.msgEntity?.let {
       roomDatabase.msgDao().deleteByUIDs(it.account, it.folder, listOf(it.uid))
       val uri = roomDatabase.msgDao().insert(it)
-      val attEntities = mutableListOf<AttachmentEntity>()
-
-      for (attInfo in atts) {
-        attInfo?.let { info ->
-          AttachmentEntity.fromAttInfo(info, accountEntity.accountType)?.let { candidate ->
-            attEntities.add(candidate)
-          }
-        }
+      val attEntities = atts.mapNotNull { attachmentInfo ->
+        if (attachmentInfo != null) AttachmentEntity.fromAttInfo(
+          attachmentInfo,
+          accountEntity.accountType
+        ) else null
       }
 
       roomDatabase.attachmentDao().insert(attEntities)

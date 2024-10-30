@@ -61,6 +61,7 @@ class MigrationTest {
 
   @Test
   @Throws(IOException::class)
+
   fun testAllMigrations() {
     // Create earliest version of the database.
     migrationTestHelper.createDatabase(FlowCryptRoomDatabase.DB_NAME, INIT_DATABASE_VERSION).apply {
