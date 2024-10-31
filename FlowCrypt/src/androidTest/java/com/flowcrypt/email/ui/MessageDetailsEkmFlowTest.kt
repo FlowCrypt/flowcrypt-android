@@ -182,7 +182,6 @@ class MessageDetailsEkmFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-
   fun testPreviewAttachmentButton() {
     baseCheckWithAtt(
       incomingMsgInfo = getMsgInfo(
