@@ -64,38 +64,30 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
     withContext(Dispatchers.IO) {
       changeMsgsReadStateInternal(account, state) { _, entities ->
         executeGMailAPICall(applicationContext) {
-          if (state == MessageState.PENDING_MARK_READ) {
-            if (account.useConversationMode) {
-              GmailApiHelper.changeLabelsForThreads(
-                context = applicationContext,
-                accountEntity = account,
-                threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
-                removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
-              )
-            } else {
-              GmailApiHelper.changeLabels(
-                context = applicationContext,
-                accountEntity = account,
-                ids = entities.map { java.lang.Long.toHexString(it.uid).lowercase() },
-                removeLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
-              )
-            }
+          val removeLabelIds = if (state == MessageState.PENDING_MARK_READ) {
+            listOf(GmailApiHelper.LABEL_UNREAD)
+          } else null
+
+          val addLabelIds = if (state == MessageState.PENDING_MARK_READ) {
+            null
+          } else listOf(GmailApiHelper.LABEL_UNREAD)
+
+          if (account.useConversationMode) {
+            GmailApiHelper.changeLabelsForThreads(
+              context = applicationContext,
+              accountEntity = account,
+              threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
+              removeLabelIds = removeLabelIds,
+              addLabelIds = addLabelIds
+            )
           } else {
-            if (account.useConversationMode) {
-              GmailApiHelper.changeLabelsForThreads(
-                context = applicationContext,
-                accountEntity = account,
-                threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
-                addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
-              )
-            } else {
-              GmailApiHelper.changeLabels(
-                context = applicationContext,
-                accountEntity = account,
-                ids = entities.map { java.lang.Long.toHexString(it.uid).lowercase() },
-                addLabelIds = listOf(GmailApiHelper.LABEL_UNREAD)
-              )
-            }
+            GmailApiHelper.changeLabels(
+              context = applicationContext,
+              accountEntity = account,
+              ids = entities.map { java.lang.Long.toHexString(it.uid).lowercase() },
+              removeLabelIds = removeLabelIds,
+              addLabelIds = addLabelIds
+            )
           }
         }
       }
