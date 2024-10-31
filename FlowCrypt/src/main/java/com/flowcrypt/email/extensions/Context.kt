@@ -39,7 +39,7 @@ fun Context?.hasActiveConnection(): Boolean {
 }
 
 /**
- * Check is the app foregrounded or visible.
+ * Check if the app is in the foreground or visible..
  *
  * @return true if the app is foregrounded or visible.
  */
