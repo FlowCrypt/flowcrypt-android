@@ -258,7 +258,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
             ?: return@withContext
           msgEntity = existingMessageEntity
 
-          if (msgEntity.msgState === MessageState.SENT) {
+          if (msgEntity.msgState == MessageState.SENT) {
             roomDatabase.msgDao().deleteSuspend(msgEntity)
             OutgoingMessagesManager.deleteOutgoingMessage(
               applicationContext,
