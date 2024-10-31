@@ -424,6 +424,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
               if (account?.isGoogleSignInAccount == true
                 && account?.useAPI == true
                 && account?.useConversationMode == true
+                && !isOutbox
               ) {
                 navController?.navigateSafe(
                   currentDestinationId = R.id.messagesListFragment,

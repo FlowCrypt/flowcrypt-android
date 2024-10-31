@@ -598,6 +598,7 @@ class MsgDetailsViewModel(
 
   private suspend fun processingByteArray(rawMimeBytes: ByteArray?):
       Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
+    passphraseNeededLiveData.postValue(emptyList())
     return@withContext if (rawMimeBytes == null) {
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
