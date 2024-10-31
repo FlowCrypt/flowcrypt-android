@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 package com.flowcrypt.email.ui.activity
 
@@ -591,13 +591,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       super.onDrawerOpened(drawerView)
       UpdateLabelsWorker.enqueue(context = this@MainActivity)
       labelsViewModel.updateOutboxMsgsCount()
-    }
-
-    override fun onDrawerClosed(drawerView: View) {
-      super.onDrawerClosed(drawerView)
-      if (binding.navigationView.menu.getItem(0)?.isVisible == false) {
-        navigationViewManager?.navHeaderBinding?.layoutUserDetails?.performClick()
-      }
     }
 
     override fun onDrawerStateChanged(newState: Int) {
