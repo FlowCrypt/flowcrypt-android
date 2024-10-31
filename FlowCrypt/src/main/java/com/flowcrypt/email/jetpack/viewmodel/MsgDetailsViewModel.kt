@@ -384,7 +384,7 @@ class MsgDetailsViewModel(
             folderType in setOf(FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM)
         } else {
           this[MessageAction.MOVE_TO_INBOX] = folderType !in listOf(
-            FoldersManager.FolderType.TRASH,
+            FoldersManager.FolderType.INBOX,
             FoldersManager.FolderType.DRAFTS,
             FoldersManager.FolderType.OUTBOX,
           )

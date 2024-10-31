@@ -1345,7 +1345,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private fun isMoveToInboxActionEnabled(): Boolean {
     return when (FoldersManager.getFolderType(currentFolder)) {
-      FoldersManager.FolderType.OUTBOX, FoldersManager.FolderType.SPAM -> false
+      FoldersManager.FolderType.OUTBOX,
+      FoldersManager.FolderType.SPAM,
+      FoldersManager.FolderType.INBOX -> false
 
       else -> if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
         val selection = tracker?.selection?.map { it }
@@ -1355,7 +1357,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
             ?.contains(JavaEmailConstants.FOLDER_INBOX) == false
         }
-      } else false
+      } else true
     }
   }
 
