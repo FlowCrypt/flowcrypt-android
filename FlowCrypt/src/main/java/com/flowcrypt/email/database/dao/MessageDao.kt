@@ -3,7 +3,7 @@
  * Contributors: denbond7
  */
 
-package com.flowcrypt.account.database.dao
+package com.flowcrypt.email.database.dao
 
 import android.content.Context
 import androidx.lifecycle.LiveData
@@ -14,7 +14,6 @@ import androidx.room.Transaction
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.BaseDao
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
 import com.flowcrypt.email.database.dao.BaseDao.Companion.getEntitiesViaStepsSuspend
