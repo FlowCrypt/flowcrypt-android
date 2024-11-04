@@ -21,7 +21,6 @@ class MessageDetailsFragmentsAdapter(
   private val localFolder: LocalFolder,
   initialList: List<MessageEntity>,
   fragment: Fragment,
-  private val isThreadMode: Boolean,
   listListener: AsyncListDiffer.ListListener<MessageEntity>
 ) : FragmentStateAdapter(fragment) {
   private val diffUtil = object : DiffUtil.ItemCallback<MessageEntity>() {
@@ -51,7 +50,6 @@ class MessageDetailsFragmentsAdapter(
         messageEntity = asyncListDiffer.currentList[position],
         localFolder = localFolder,
         isViewPagerMode = true,
-        isThreadMode = isThreadMode
       ).toBundle()
     }
 

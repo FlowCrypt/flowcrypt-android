@@ -284,7 +284,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
     object : GmailApiLabelsListAdapter.OnLabelClickListener {
       override fun onLabelClick(label: GmailApiLabelsListAdapter.Label) {
-        if (args.localFolder.searchQuery == null && !args.isThreadMode) {
+        if (args.localFolder.searchQuery == null) {
           changeGmailLabels()
         }
       }
@@ -354,11 +354,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
     super.onSetupActionBarMenu(menuHost)
-
-    if (args.isThreadMode) {
-      return
-    }
-
     menuHost.addMenuProvider(object : MenuProvider {
       override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         if (!args.isViewPagerMode) {

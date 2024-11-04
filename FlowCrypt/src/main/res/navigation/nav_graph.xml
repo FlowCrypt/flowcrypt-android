@@ -310,11 +310,6 @@
         <argument
             android:name="localFolder"
             app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
-        <argument
-            android:name="sortedEntityIdListForThread"
-            android:defaultValue="@null"
-            app:argType="long[]"
-            app:nullable="true" />
     </fragment>
 
     <fragment
@@ -343,10 +338,6 @@
             android:name="isViewPagerMode"
             app:argType="boolean"
             android:defaultValue="false" />
-        <argument
-            android:name="isThreadMode"
-            android:defaultValue="false"
-            app:argType="boolean" />
     </fragment>
 
     <fragment

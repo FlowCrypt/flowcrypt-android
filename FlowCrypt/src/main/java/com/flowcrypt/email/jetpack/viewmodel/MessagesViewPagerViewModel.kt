@@ -20,12 +20,9 @@ import com.flowcrypt.email.database.entity.MessageEntity
  */
 class MessagesViewPagerViewModel(
   private val initialMessageEntityId: Long,
-  private val sortedEntityIdListForThread: List<Long>? = null,
   private val localFolder: LocalFolder,
   application: Application
 ) : AccountViewModel(application) {
-
-  private val isThreadMode: Boolean = sortedEntityIdListForThread?.isNotEmpty() == true
 
   val initialLiveData: LiveData<Result<List<MessageEntity>>> =
     activeAccountLiveData.switchMap { accountEntity ->
@@ -61,18 +58,7 @@ class MessagesViewPagerViewModel(
         emit(Result.loading())
         val activeAccount = getActiveAccountSuspend()
         if (activeAccount != null) {
-          val result = if (isThreadMode) {
-            val cachedMessages =
-              roomDatabase.msgDao().getMessagesByIDs(sortedEntityIdListForThread ?: emptyList())
-            val sortedCachedMessages =
-              arrayOfNulls<MessageEntity>(cachedMessages.size).toMutableList().apply {
-                cachedMessages.forEach { messageEntity ->
-                  add(sortedEntityIdListForThread?.indexOf(messageEntity.id) ?: 0, messageEntity)
-                }
-              }.filterNotNull()
-
-            Result.success(sortedCachedMessages)
-          } else {
+          emit(
             Result.success(
               roomDatabase.msgDao()
                 .getMessagesForViewPager(
@@ -86,9 +72,7 @@ class MessagesViewPagerViewModel(
                   limit = PAGE_SIZE / 2
                 )
             )
-          }
-
-          emit(result)
+          )
         } else {
           emit(Result.success(emptyList()))
         }
