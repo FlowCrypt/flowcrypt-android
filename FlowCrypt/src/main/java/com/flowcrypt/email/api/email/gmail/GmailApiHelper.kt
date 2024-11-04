@@ -1300,7 +1300,10 @@ class GmailApiHelper {
       val receiverEmail = accountEntity.email
       val gmailThreadInfo = GmailThreadInfo(
         id = thread.id,
-        lastMessage = requireNotNull(thread.messages?.last { !it.labelIds.contains(LABEL_DRAFT) }),
+        lastMessage = requireNotNull(
+          thread.messages?.lastOrNull {
+            !it.labelIds.contains(LABEL_DRAFT)
+          } ?: thread.messages.first()),
         messagesCount = thread.messages?.size ?: 0,
         draftsCount = thread.getDraftsCount(),
         recipients = thread.getUniqueRecipients(receiverEmail),

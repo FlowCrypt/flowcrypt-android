@@ -274,23 +274,34 @@ data class MessageEntity(
 
   fun generateSenderAddresses(
     context: Context,
-    folderType: FoldersManager.FolderType?
+    folderType: FoldersManager.FolderType?,
+    meString: String
   ): CharSequence {
     val accountName = account
     return when (folderType) {
       FoldersManager.FolderType.SENT -> generateAddresses(
         context = context,
         accountName = accountName,
-        internetAddresses = to
+        internetAddresses = if (isGmailThread) {
+          from
+        } else {
+          to
+        }
       )
 
       FoldersManager.FolderType.DRAFTS -> generateAddresses(
         context = context,
         accountName = accountName,
-        internetAddresses = to
+        internetAddresses = if (isGmailThread) {
+          from
+        } else {
+          to
+        }
       ).ifEmpty {
         context.getString(R.string.no_recipients)
-      }
+      }.takeIf {
+        it != meString
+      } ?: ""
 
       else -> generateAddresses(
         context = context,
@@ -304,8 +315,6 @@ data class MessageEntity(
     return SpannableStringBuilder().apply {
       val draftsCount = threadDraftsCount ?: 0
       if (draftsCount > 0) {
-        append(", ")
-
         val text = context.resources.getQuantityString(
           R.plurals.drafts_count,
           draftsCount, draftsCount
@@ -319,10 +328,13 @@ data class MessageEntity(
             )
           }
         )
-        append(" ")
       }
 
       if ((threadMessagesCount ?: 0) > 1) {
+        if (isNotEmpty()) {
+          append(" ")
+        }
+
         append(
           SpannableString(
             "(${threadMessagesCount})"

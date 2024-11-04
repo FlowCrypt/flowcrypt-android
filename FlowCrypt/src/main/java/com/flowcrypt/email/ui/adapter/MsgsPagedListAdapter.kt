@@ -233,11 +233,18 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         val senderAddress = when (folderType) {
           FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
 
-          else -> messageEntity.generateSenderAddresses(context, folderType)
+          else -> messageEntity.generateSenderAddresses(
+            context,
+            folderType,
+            context.getString(R.string.me)
+          )
         }
         binding.textViewSenderAddress.text = if (messageEntity.isGmailThread) {
           messageEntity.getThreadSpannableString(context).let { spannableString ->
             SpannableStringBuilder(senderAddress).apply {
+              if (isNotEmpty()) {
+                append(", ")
+              }
               append(spannableString)
             }
           }
