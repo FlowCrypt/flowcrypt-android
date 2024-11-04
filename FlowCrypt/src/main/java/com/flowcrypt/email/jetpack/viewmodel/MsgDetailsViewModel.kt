@@ -329,24 +329,13 @@ class MsgDetailsViewModel(
           val cachedLabelIds =
             freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
           try {
-            val latestLabelIds =
-              if (account.useConversationMode) {
-                GmailApiHelper.loadThreadInfo(
-                  context = getApplication(),
-                  accountEntity = account,
-                  threadId = freshestMessageEntity?.threadIdAsHEX ?: "",
-                  fields = listOf("id", "messages/labelIds"),
-                  format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
-                ).labels
-              } else {
-                GmailApiHelper.loadMsgInfoSuspend(
-                  context = getApplication(),
-                  accountEntity = account,
-                  msgId = messageEntity.uidAsHEX,
-                  fields = null,
-                  format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
-                ).labelIds
-              }
+            val latestLabelIds = GmailApiHelper.loadMsgInfoSuspend(
+              context = getApplication(),
+              accountEntity = account,
+              msgId = messageEntity.uidAsHEX,
+              fields = null,
+              format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
+            ).labelIds
 
             if (cachedLabelIds == null
               || !(latestLabelIds.containsAll(cachedLabelIds)
