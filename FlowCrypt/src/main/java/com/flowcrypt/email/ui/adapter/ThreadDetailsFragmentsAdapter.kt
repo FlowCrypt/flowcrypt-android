@@ -68,8 +68,4 @@ class ThreadDetailsFragmentsAdapter(
   fun getItem(position: Int): MessageEntity? {
     return asyncListDiffer.currentList.getOrNull(position)
   }
-
-  fun getItemPositionById(id: Long): Int {
-    return asyncListDiffer.currentList.indexOfFirst { item -> item.id == id }
-  }
 }
