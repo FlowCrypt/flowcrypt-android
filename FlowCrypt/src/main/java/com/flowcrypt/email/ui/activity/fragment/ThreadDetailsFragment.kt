@@ -456,7 +456,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   }
 
   private fun initViews() {
-    binding?.recyclerViewMessages?.apply {
+    binding?.recyclerViewThreads?.apply {
       val linearLayoutManager = LinearLayoutManager(context)
       layoutManager = linearLayoutManager
       addItemDecoration(
