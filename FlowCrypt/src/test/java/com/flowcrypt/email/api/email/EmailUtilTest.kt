@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email
@@ -102,7 +102,7 @@ class EmailUtilTest {
     val incomingMessageInfo = IncomingMessageInfo(
       msgEntity = MessageEntity(
         account = accountEntity.email,
-        accountType = accountEntity.email,//need to fix, Don't merge
+        accountType = accountEntity.accountType,
         folder = "INBOX",
         uid = 123,
         fromAddresses = InternetAddress.toString(replyToMIME.from),
