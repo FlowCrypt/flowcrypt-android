@@ -1242,8 +1242,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun doMigration(database: SupportSQLiteDatabase) {
         //we need to clean old cache for some 'com.google' users: messages, attachments, labels
 
-        val commonWhereClause = "email IN (SELECT email FROM accounts " +
-            "WHERE account_type = ? AND use_api = ?)"
+        val commonWhereClause =
+          "email IN (SELECT email FROM accounts WHERE account_type = ? AND use_api = ?)"
         val commonWhereArgs = arrayOf(
           AccountEntity.ACCOUNT_TYPE_GOOGLE,
           "0",
