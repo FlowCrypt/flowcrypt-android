@@ -240,13 +240,13 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query(
     "SELECT * FROM messages " +
-        "WHERE account = :account AND folder = :folder ORDER BY uid DESC LIMIT 1"
+        "WHERE account = :account AND folder = :folder AND is_visible = 1 ORDER BY uid DESC LIMIT 1"
   )
   abstract suspend fun getNewestMsg(account: String?, folder: String?): MessageEntity?
 
   @Query(
     "SELECT * FROM messages " +
-        "WHERE account = :account AND folder = :folder ORDER BY thread_id DESC LIMIT 1"
+        "WHERE account = :account AND folder = :folder AND is_visible = 1 ORDER BY thread_id DESC LIMIT 1"
   )
   abstract suspend fun getNewestThread(account: String?, folder: String?): MessageEntity?
 
@@ -416,7 +416,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     threadId: Long
   ): MessageEntity?
 
-  @Query("SELECT * FROM messages WHERE account = :account AND folder = :folder AND thread_id = :threadId")
+  @Query(
+    "SELECT * FROM messages WHERE account = :account AND folder = :folder " +
+        "AND thread_id = :threadId AND is_visible = 0"
+  )
   abstract suspend fun getMessagesForGmailThread(
     account: String,
     folder: String,
