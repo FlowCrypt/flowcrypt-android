@@ -15,7 +15,6 @@ import jakarta.mail.internet.InternetAddress
 /**
  * @author Denys Bondarenko
  */
-//todo-denbond7 need to use ordering to show recipients in right order based on the conversation history
 fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
   return mutableListOf<InternetAddress>().apply {
     val filteredHeaders = messages?.flatMap { message ->
