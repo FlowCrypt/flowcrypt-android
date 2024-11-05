@@ -376,6 +376,14 @@ class ThreadDetailsViewModel(
           }
         }.reversed()
 
+        val fetchedDraftIdsMap = if (messagesInThread.any { it.isDraft() }) {
+          GmailApiHelper.loadBaseDraftInfoInParallel(
+            context = getApplication(),
+            accountEntity = activeAccount,
+            messages = messagesInThread.filter { it.isDraft() }
+          ).associateBy({ it.message.id }, { it.id })
+        } else emptyMap()
+
         //update the actual thread size
         roomDatabase.msgDao()
           .updateSuspend(threadMessageEntity.copy(threadMessagesCount = messagesInThread.size))
@@ -389,7 +397,7 @@ class ThreadDetailsViewModel(
           msgsList = messagesInThread,
           isNew = false,
           onlyPgpModeEnabled = isOnlyPgpModeEnabled,
-          draftIdsMap = emptyMap()
+          draftIdsMap = fetchedDraftIdsMap
         ) { message, messageEntity ->
           messageEntity.copy(snippet = message.snippet, isVisible = false)
         }

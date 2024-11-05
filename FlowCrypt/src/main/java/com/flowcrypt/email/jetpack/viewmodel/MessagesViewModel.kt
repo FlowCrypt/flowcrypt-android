@@ -485,7 +485,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
           messages = gmailThreadInfoList.map { it.lastMessage }
           nextPageToken = threadsResponse.nextPageToken
-          draftIdsMap = emptyMap()//todo-denbond7 fix me
+          draftIdsMap = emptyMap()
         } else {
           gmailThreadInfoList = emptyList()
           val messagesBaseInfo = GmailApiHelper.loadMsgsBaseInfo(

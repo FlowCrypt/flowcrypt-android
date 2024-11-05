@@ -161,9 +161,6 @@ object GmailHistoryHandler {
 
       if (threadsToBeAdded.isNotEmpty()) {
         //insert new threads
-        //todo-denbond7: fix me
-        val draftIdsMap = emptyMap<String, String>()
-
         val isNew =
           !context.isAppForegrounded() && folderType == FoldersManager.FolderType.INBOX
 
@@ -174,8 +171,7 @@ object GmailHistoryHandler {
           label = localFolder.fullName,
           msgsList = threadsToBeAdded,
           isNew = isNew,
-          onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
-          draftIdsMap = draftIdsMap
+          onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
         ) { message, messageEntity ->
           val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
             ?: return@genMessageEntities messageEntity
@@ -212,8 +208,7 @@ object GmailHistoryHandler {
               label = localFolder.fullName,
               msgsList = listOf(thread.lastMessage),
               isNew = isNew,
-              onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
-              draftIdsMap = emptyMap(),//todo-denbond7 need to think here
+              onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
             ) { message, messageEntity ->
               if (message.threadId == thread.id) {
                 messageEntity.copy(
