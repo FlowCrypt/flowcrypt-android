@@ -55,6 +55,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
@@ -485,10 +486,16 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               toast("Fix me")
             } else {
               messagesInThreadListAdapter.submitList(data)
-              (data.getOrNull(1) as? MessagesInThreadListAdapter.Message)?.let { message ->
-                updateThreadReplyButtons(message)
-              }
               showContent()
+              val freshestMessageInConversation =
+                (data.getOrNull(1) as? MessagesInThreadListAdapter.Message)
+              updateThreadReplyButtons(
+                if (freshestMessageInConversation?.messageEntity?.isDraft == true) {
+                  null
+                } else {
+                  freshestMessageInConversation
+                }
+              )
               tryToOpenTheFreshestMessage(data)
             }
           }
@@ -752,7 +759,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         DeleteDraftDialogFragment.KEY_RESULT
       )
 
-      messagesInThreadListAdapter.deleteMessageById(uniqueMessageId)
+      messagesInThreadListAdapter.getMessageItemById(uniqueMessageId)?.let {
+        threadDetailsViewModel.deleteMessageFromCache(it)
+      }
     }
   }
 
@@ -770,9 +779,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           bundle.getBundle(ImportAdditionalPrivateKeysFragment.KEY_INCOMING_BUNDLE)?.getLong(
             KEY_EXTRA_MESSAGE_ID
           )?.let { messageId ->
-            messagesInThreadListAdapter.currentList.firstOrNull {
-              it.id == messageId
-            } as? MessagesInThreadListAdapter.Message
+            messagesInThreadListAdapter.getMessageItemById(messageId)
           } ?: return@setFragmentResultListener
 
         processMessageClick(message = message, forceProcess = true)
@@ -795,9 +802,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           bundle.getBundle(ChoosePublicKeyDialogFragment.KEY_INCOMING_BUNDLE)?.getLong(
             KEY_EXTRA_MESSAGE_ID
           )?.let { messageId ->
-            messagesInThreadListAdapter.currentList.firstOrNull {
-              it.id == messageId
-            } as? MessagesInThreadListAdapter.Message
+            messagesInThreadListAdapter.getMessageItemById(messageId)
           } ?: return@setFragmentResultListener
         sendTemplateMsgWithPublicKey(message, keyList[0])
       } else {
@@ -941,10 +946,15 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
   }
 
-  private fun updateThreadReplyButtons(message: MessagesInThreadListAdapter.Message) {
+  private fun updateThreadReplyButtons(message: MessagesInThreadListAdapter.Message?) {
     val replyButton = binding?.layoutReplyButtons?.replyButton
     val replyAllButton = binding?.layoutReplyButtons?.replyAllButton
     val forwardButton = binding?.layoutReplyButtons?.forwardButton
+
+    if (message == null) {
+      binding?.layoutReplyButtons?.root?.gone()
+      return
+    }
 
     val buttonsColorId: Int
 
@@ -1183,9 +1193,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     val messageId = bundle.getLong(KEY_EXTRA_MESSAGE_ID, Long.MIN_VALUE)
     val attachmentId = bundle.getString(KEY_EXTRA_ATTACHMENT_ID)
     if (messageId > 0 && !attachmentId.isNullOrEmpty()) {
-      (messagesInThreadListAdapter.currentList.firstOrNull { item ->
-        item.id == messageId
-      } as? MessagesInThreadListAdapter.Message)?.let { message ->
+      messagesInThreadListAdapter.getMessageItemById(messageId)?.let { message ->
         val attachmentInfo = message.attachments.firstOrNull { attachmentInfo ->
           attachmentInfo.uniqueStringId == attachmentId
         } ?: return
@@ -1200,9 +1208,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   ) {
     val messageId = bundle.getLong(KEY_EXTRA_MESSAGE_ID, Long.MIN_VALUE)
     if (messageId > 0) {
-      (messagesInThreadListAdapter.currentList.firstOrNull { item ->
-        item.id == messageId
-      } as? MessagesInThreadListAdapter.Message)?.let { message ->
+      messagesInThreadListAdapter.getMessageItemById(messageId)?.let { message ->
         action.invoke(message)
       }
     }

@@ -56,7 +56,7 @@ object GmailHistoryHandler {
                                                updateCandidatesMap,
                                                labelsToBeUpdatedMap ->
       val applicationContext = context.applicationContext
-      if (accountEntity.useConversationMode) {
+      if (accountEntity.useConversationMode && !localFolder.isDrafts) {
         handleHistoryForConversationMode(
           context = applicationContext,
           accountEntity = accountEntity,
@@ -374,7 +374,6 @@ object GmailHistoryHandler {
     val newCandidatesMap = mutableMapOf<Long, Message>()
     val updateCandidates = mutableMapOf<Long, Pair<String, Flags>>()
     val labelsToBeUpdatedMap = mutableMapOf<Long, Pair<String, String>>()
-    val isDrafts = localFolder.isDrafts
 
     for (history in historyList) {
       history.messagesDeleted?.let { messagesDeleted ->
@@ -388,7 +387,9 @@ object GmailHistoryHandler {
       history.messagesAdded?.let { messagesAdded ->
         for (historyMsgAdded in messagesAdded) {
           if (!accountEntity.useConversationMode) {
-            if (LABEL_DRAFT in (historyMsgAdded.message.labelIds ?: emptyList()) && !isDrafts) {
+            if (LABEL_DRAFT in (historyMsgAdded.message.labelIds
+                ?: emptyList()) && !localFolder.isDrafts
+            ) {
               //skip adding drafts to non-Drafts folder
               continue
             }

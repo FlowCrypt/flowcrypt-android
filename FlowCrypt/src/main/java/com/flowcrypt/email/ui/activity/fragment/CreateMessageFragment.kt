@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -1388,7 +1388,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             val accountEntity = it.data ?: return@collect
 
             if (accountEntity.useAliasSignatures) {
-              val position = binding?.spinnerFrom?.selectedItemPosition ?: return@collect
+              val position = binding?.spinnerFrom?.selectedItemPosition?.takeIf { position ->
+                position != Spinner.INVALID_POSITION
+              } ?: return@collect
               val sendAs =
                 (fromAddressesAdapter?.getItem(position) as? CharSequence) ?: return@collect
               applyAliasSignature(sendAs)

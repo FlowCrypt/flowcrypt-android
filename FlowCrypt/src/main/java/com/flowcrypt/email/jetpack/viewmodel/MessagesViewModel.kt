@@ -192,6 +192,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
               ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
           }
         }
+
+        if (localFolder.isDrafts) {
+          SyncDraftsWorker.enqueue(getApplication())
+          UploadDraftsWorker.enqueue(getApplication())
+        }
       }
     }
   }
@@ -468,7 +473,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         val draftIdsMap: Map<String, String>
         val gmailThreadInfoList: List<GmailThreadInfo>
 
-        if (accountEntity.useConversationMode) {
+        if (accountEntity.useConversationMode && !localFolder.isDrafts) {
           val threadsResponse = GmailApiHelper.loadThreads(
             context = getApplication(),
             accountEntity = accountEntity,
@@ -539,7 +544,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             msgs,
             draftIdsMap
           ) { message, messageEntity ->
-            if (accountEntity.useConversationMode) {
+            if (accountEntity.useConversationMode && !localFolder.isDrafts) {
               val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
               if (thread != null) {
                 messageEntity.copy(
@@ -697,7 +702,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         val nextPageToken: String
         val gmailThreadInfoList: List<GmailThreadInfo>
-        val messages = if (accountEntity.useConversationMode) {
+        val messages = if (accountEntity.useConversationMode && !localFolder.isDrafts) {
           val threadsResponse = GmailApiHelper.loadThreads(
             context = getApplication(),
             accountEntity = accountEntity,
@@ -766,7 +771,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             localFolder.copy(fullName = JavaEmailConstants.FOLDER_SEARCH),
             messages
           ) { message, messageEntity ->
-            if (accountEntity.useConversationMode) {
+            if (accountEntity.useConversationMode && !localFolder.isDrafts) {
               val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
               if (thread != null) {
                 messageEntity.copy(

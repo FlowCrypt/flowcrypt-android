@@ -425,6 +425,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 && account?.useAPI == true
                 && account?.useConversationMode == true
                 && !isOutbox
+                && !localFolder.isDrafts
               ) {
                 navController?.navigateSafe(
                   currentDestinationId = R.id.messagesListFragment,

@@ -172,9 +172,10 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     )
   }
 
-  fun deleteMessageById(uniqueMessageId: Long) {
-    val item = currentList.firstOrNull { it.id == uniqueMessageId } ?: return
-    submitList(currentList - item)
+  fun getMessageItemById(messageId: Long): Message? {
+    return currentList.firstOrNull {
+      it.id == messageId
+    } as? Message
   }
 
   interface OnMessageActionsListener {

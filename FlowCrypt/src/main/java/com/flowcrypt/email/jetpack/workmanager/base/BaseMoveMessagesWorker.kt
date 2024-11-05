@@ -71,7 +71,7 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
       executeGMailAPICall(applicationContext) {
         val gmailApiLabelsData = getAddAndRemoveLabelIdsForGmailAPI(folderName)
 
-        if (account.useConversationMode) {
+        if (account.useConversationMode && folderName != GmailApiHelper.LABEL_DRAFT) {
           val resultMap = GmailApiHelper.changeLabelsForThreads(
             context = applicationContext,
             accountEntity = account,

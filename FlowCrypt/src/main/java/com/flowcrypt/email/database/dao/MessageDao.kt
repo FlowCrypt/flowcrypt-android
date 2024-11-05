@@ -13,6 +13,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
 import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
@@ -437,7 +438,11 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   )
 
   suspend fun getNewestMsgOrThread(accountEntity: AccountEntity, folder: String?): MessageEntity? {
-    return if (accountEntity.isGoogleSignInAccount && accountEntity.useAPI && accountEntity.useConversationMode) {
+    return if (accountEntity.isGoogleSignInAccount
+      && accountEntity.useAPI
+      && accountEntity.useConversationMode
+      && folder != GmailApiHelper.LABEL_DRAFT
+    ) {
       getNewestThread(accountEntity.email, folder)
     } else {
       getNewestMsg(accountEntity.email, folder)

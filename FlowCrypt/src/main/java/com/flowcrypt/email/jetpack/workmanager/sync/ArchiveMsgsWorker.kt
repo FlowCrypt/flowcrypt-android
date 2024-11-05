@@ -58,9 +58,9 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) :
   }
 
   private suspend fun archive(account: AccountEntity) = withContext(Dispatchers.IO) {
-    archiveInternal(account) { _, entities ->
+    archiveInternal(account) { folderName, entities ->
       executeGMailAPICall(applicationContext) {
-        if (account.useConversationMode) {
+        if (account.useConversationMode && folderName != GmailApiHelper.LABEL_DRAFT) {
           val resultMap = GmailApiHelper.changeLabelsForThreads(
             context = applicationContext,
             accountEntity = account,

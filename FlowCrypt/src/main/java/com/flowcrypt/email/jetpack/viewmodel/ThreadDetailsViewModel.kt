@@ -218,6 +218,20 @@ class ThreadDetailsViewModel(
     }
   }
 
+  fun deleteMessageFromCache(message: Message) {
+    viewModelScope.launch {
+      if (loadMessagesManuallyMutableStateFlow.value.status == Result.Status.SUCCESS) {
+        loadMessagesManuallyMutableStateFlow.value.data?.let { list ->
+          if (list.contains(message)) {
+            loadMessagesManuallyMutableStateFlow.update {
+              Result.success(list - message)
+            }
+          }
+        }
+      }
+    }
+  }
+
   fun onMessageClicked(message: Message) {
     val currentValue = messagesInThreadFlow.value
     if (currentValue.status == Result.Status.SUCCESS) {
