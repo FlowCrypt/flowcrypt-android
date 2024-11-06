@@ -242,7 +242,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         binding.textViewSenderAddress.text = if (messageEntity.isGmailThread) {
           messageEntity.getThreadSpannableString(context).let { spannableString ->
             SpannableStringBuilder(senderAddress).apply {
-              if (isNotEmpty()) {
+              if (spannableString.startsWith("(")) {
+                append(" ")
+              } else {
                 append(", ")
               }
               append(spannableString)
