@@ -9,6 +9,7 @@ import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -48,11 +49,10 @@ class ThreadDetailsViewModel(
   private val localFolder: LocalFolder,
   application: Application
 ) : AccountViewModel(application) {
-  private val controlledRunnerForLoadingMessages =
-    ControlledRunner<Result<List<MessagesInThreadListAdapter.Item>>>()
-  private val loadMessagesManuallyMutableStateFlow: MutableStateFlow<Result<List<MessagesInThreadListAdapter.Item>>> =
+  private val controlledRunnerForLoadingMessages = ControlledRunner<Result<Data>>()
+  private val loadMessagesManuallyMutableStateFlow: MutableStateFlow<Result<Data>> =
     MutableStateFlow(Result.none())
-  private val loadMessagesManuallyStateFlow: StateFlow<Result<List<MessagesInThreadListAdapter.Item>>> =
+  private val loadMessagesManuallyStateFlow: StateFlow<Result<Data>> =
     loadMessagesManuallyMutableStateFlow.asStateFlow()
   val threadMessageEntityFlow =
     roomDatabase.msgDao().getMessageByIdFlow(threadMessageEntityId)
@@ -85,7 +85,7 @@ class ThreadDetailsViewModel(
       //this flow will be used once to load messages at the start up
       flow {
         emit(Result.loading())
-        emit(loadMessagesInternal())
+        emit(loadMessagesInternal(clearCache = true))
       },
       //this flow will be used to trigger loading messages manually, for example after connection issue
       loadMessagesManuallyStateFlow
@@ -171,7 +171,7 @@ class ThreadDetailsViewModel(
     viewModelScope.launch {
       messagesInThreadFlow.collectLatest {
         if (it.status == Result.Status.SUCCESS) {
-          val messageItems = it.data?.filterIsInstance<Message>() ?: return@collectLatest
+          val messageItems = it.data?.list?.filterIsInstance<Message>() ?: return@collectLatest
           if (messageItems.isEmpty()) {
             return@collectLatest
           }
@@ -208,12 +208,17 @@ class ThreadDetailsViewModel(
     }
   }
 
-  fun loadMessages() {
+  fun loadMessages(clearCache: Boolean = false, silentUpdate: Boolean = false) {
     viewModelScope.launch {
-      loadMessagesManuallyMutableStateFlow.value = Result.loading()
+      if (!silentUpdate) {
+        loadMessagesManuallyMutableStateFlow.value = Result.loading()
+      }
       loadMessagesManuallyMutableStateFlow.value =
         controlledRunnerForLoadingMessages.cancelPreviousThenRun {
-          return@cancelPreviousThenRun loadMessagesInternal()
+          return@cancelPreviousThenRun loadMessagesInternal(
+            clearCache = clearCache,
+            silentUpdate = silentUpdate
+          )
         }
     }
   }
@@ -221,10 +226,10 @@ class ThreadDetailsViewModel(
   fun deleteMessageFromCache(message: Message) {
     viewModelScope.launch {
       if (loadMessagesManuallyMutableStateFlow.value.status == Result.Status.SUCCESS) {
-        loadMessagesManuallyMutableStateFlow.value.data?.let { list ->
+        loadMessagesManuallyMutableStateFlow.value.data?.list?.let { list ->
           if (list.contains(message)) {
             loadMessagesManuallyMutableStateFlow.update {
-              Result.success(list - message)
+              Result.success(Data(silentUpdate = true, list = list - message))
             }
           }
         }
@@ -235,9 +240,9 @@ class ThreadDetailsViewModel(
   fun onMessageClicked(message: Message) {
     val currentValue = messagesInThreadFlow.value
     if (currentValue.status == Result.Status.SUCCESS) {
+      val currentList = messagesInThreadFlow.value.data?.list?.toMutableList() ?: return
       loadMessagesManuallyMutableStateFlow.update {
-        val currentList = messagesInThreadFlow.value.data?.toMutableList()
-        currentList?.replaceAll {
+        currentList.replaceAll {
           if (it.id == message.id) {
             message.copy(
               type = if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED) {
@@ -248,7 +253,7 @@ class ThreadDetailsViewModel(
             )
           } else it
         }
-        currentValue.copy(data = currentList)
+        currentValue.copy(data = currentValue.data?.copy(list = currentList.toList()))
       }
     }
   }
@@ -256,14 +261,14 @@ class ThreadDetailsViewModel(
   fun onHeadersDetailsClick(message: Message) {
     val currentValue = messagesInThreadFlow.value
     if (currentValue.status == Result.Status.SUCCESS) {
+      val currentList = messagesInThreadFlow.value.data?.list?.toMutableList() ?: return
       loadMessagesManuallyMutableStateFlow.update {
-        val currentList = messagesInThreadFlow.value.data?.toMutableList()
-        currentList?.replaceAll {
+        currentList.replaceAll {
           if (it.id == message.id) {
             message.copy(isHeadersDetailsExpanded = !message.isHeadersDetailsExpanded)
           } else it
         }
-        currentValue.copy(data = currentList)
+        currentValue.copy(data = currentValue.data?.copy(list = currentList.toList()))
       }
     }
   }
@@ -271,7 +276,7 @@ class ThreadDetailsViewModel(
   fun onMessageChanged(messageWithChanges: Message) {
     val currentValue = messagesInThreadFlow.value
     if (currentValue.status == Result.Status.SUCCESS) {
-      val currentList = messagesInThreadFlow.value.data?.toMutableList()
+      val currentList = messagesInThreadFlow.value.data?.list?.toMutableList()
       val cachedMessage = currentList?.firstOrNull { it.id == messageWithChanges.id } ?: return
       if (cachedMessage != messageWithChanges) {
         loadMessagesManuallyMutableStateFlow.update {
@@ -282,7 +287,7 @@ class ThreadDetailsViewModel(
               it
             }
           }
-          currentValue.copy(data = currentList)
+          currentValue.copy(data = currentValue.data?.copy(list = currentList.toList()))
         }
       }
     }
@@ -351,7 +356,10 @@ class ThreadDetailsViewModel(
     }
   }
 
-  private suspend fun loadMessagesInternal(): Result<List<MessagesInThreadListAdapter.Item>> {
+  private suspend fun loadMessagesInternal(
+    clearCache: Boolean = false,
+    silentUpdate: Boolean = false
+  ): Result<Data> {
     val threadMessageEntity =
       roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return Result.exception(
         IllegalStateException("Message does not exist")
@@ -359,7 +367,7 @@ class ThreadDetailsViewModel(
     val activeAccount =
       getActiveAccountSuspend() ?: return Result.exception(IllegalStateException())
     if (threadMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
-      return Result.success(listOf())
+      return Result.success(Data(silentUpdate = silentUpdate, list = listOf()))
     } else {
       val threadHeader =
         prepareThreadHeader(roomDatabase.msgDao().getMsgById(threadMessageEntityId))
@@ -403,7 +411,7 @@ class ThreadDetailsViewModel(
           .updateSuspend(threadMessageEntity.copy(threadMessagesCount = messagesInThread.size))
 
         val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
-        val messageEntities = MessageEntity.genMessageEntities(
+        val messageEntitiesBasedOnServerResult = MessageEntity.genMessageEntities(
           context = getApplication(),
           account = activeAccount.email,
           accountType = activeAccount.accountType,
@@ -415,18 +423,44 @@ class ThreadDetailsViewModel(
         ) { message, messageEntity ->
           messageEntity.copy(snippet = message.snippet, isVisible = false)
         }
+        val setOfUIDsBasedOnServerResult = messageEntitiesBasedOnServerResult.map { it.uid }.toSet()
 
-        threadMessageEntity.threadId?.let {
-          roomDatabase.msgDao().clearCacheForGmailThread(
-            account = activeAccount.email,
-            folder = getFolderFullName(),
-            threadId = it
-          )
+        if (clearCache) {
+          threadMessageEntity.threadId?.let {
+            roomDatabase.msgDao().clearCacheForGmailThread(
+              account = activeAccount.email,
+              folder = getFolderFullName(),
+              threadId = it
+            )
+          }
         }
 
-        roomDatabase.msgDao().insertWithReplaceSuspend(messageEntities)
+        var cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
+          activeAccount.email,
+          getFolderFullName(),
+          threadMessageEntity.threadId ?: 0,
+        )
+
+        val candidatesToBeInserted = mutableListOf<MessageEntity>()
+        val candidatesToBeUpdated = mutableListOf<MessageEntity>()
+        messageEntitiesBasedOnServerResult.forEach { entity ->
+          val existingVersion = cachedEntities.firstOrNull { it.uid == entity.uid }
+          if (existingVersion == null) {
+            candidatesToBeInserted.add(entity)
+          } else if (existingVersion.copy(id = null) != entity) {
+            candidatesToBeUpdated.add(entity.copy(id = existingVersion.id))
+            MsgsCacheManager.removeMessage(existingVersion.id.toString())
+          }
+        }
+        val candidatesToBeDeleted =
+          cachedEntities.filter { it.uid !in setOfUIDsBasedOnServerResult }
+
+        roomDatabase.msgDao().insertSuspend(candidatesToBeInserted)
+        roomDatabase.msgDao().updateSuspend(candidatesToBeUpdated)
+        roomDatabase.msgDao().deleteSuspend(candidatesToBeDeleted)
+
         GmailApiHelper.identifyAttachments(
-          msgEntities = messageEntities,
+          msgEntities = messageEntitiesBasedOnServerResult,
           msgs = messagesInThread,
           account = activeAccount,
           localFolder = if (localFolder.searchQuery == null) {
@@ -437,24 +471,44 @@ class ThreadDetailsViewModel(
           roomDatabase = roomDatabase
         )
 
-        val cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
+        //get the freshest info from the local database
+        cachedEntities = roomDatabase.msgDao().getMessagesForGmailThread(
           activeAccount.email,
           getFolderFullName(),
           threadMessageEntity.threadId ?: 0,
         )
 
-        val finalList = messageEntities.map { fromServerMessageEntity ->
-          Message(
-            messageEntity = fromServerMessageEntity.copy(id = cachedEntities.firstOrNull {
-              it.uid == fromServerMessageEntity.uid
-            }?.id),
+        val currentList = messagesInThreadFlow.value.data?.list ?: emptyList()
+        val finalList = messageEntitiesBasedOnServerResult.map { fromServerMessageEntity ->
+          val messageEntity = fromServerMessageEntity.copy(
+            id = cachedEntities.firstOrNull { it.uid == fromServerMessageEntity.uid }?.id
+          )
+          val messageItemBasedOnDataFromServer = Message(
+            messageEntity = messageEntity,
             type = MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED,
             isHeadersDetailsExpanded = false,
             attachments = emptyList()
           )
+
+          // this code prevent redundant UI updates
+          currentList.firstOrNull {
+            it.id == messageItemBasedOnDataFromServer.id
+          }?.let { item ->
+            val existingMessageItem = item as Message
+            if (existingMessageItem.messageEntity.flags != messageEntity.flags) {
+              messageItemBasedOnDataFromServer
+            } else {
+              existingMessageItem.copy(messageEntity = messageEntity)
+            }
+          } ?: messageItemBasedOnDataFromServer
         }
 
-        return Result.success(listOf(threadHeader) + finalList)
+        return Result.success(
+          Data(
+            silentUpdate = silentUpdate,
+            list = listOf(threadHeader) + finalList
+          )
+        )
       } catch (e: Exception) {
         e.printStackTraceIfDebugOnly()
         return Result.exception(e)
@@ -507,11 +561,12 @@ class ThreadDetailsViewModel(
     viewModelScope.launch {
       threadHeaderFlow.collectLatest { threadHeader ->
         val existingResult = messagesInThreadFlow.value
-        if (existingResult.data.isNullOrEmpty()) {
+        if (existingResult.data?.list.isNullOrEmpty()) {
           return@collectLatest
         } else {
           loadMessagesManuallyMutableStateFlow.update {
-            val updatedList = existingResult.data.toMutableList().apply {
+            val existingValue = existingResult.data ?: Data(false, emptyList())
+            val updatedList = existingValue.list.toMutableList().apply {
               replaceAll { item ->
                 if (item.type == MessagesInThreadListAdapter.Type.HEADER) {
                   (item as MessagesInThreadListAdapter.ThreadHeader).copy(labels = threadHeader.labels)
@@ -520,7 +575,7 @@ class ThreadDetailsViewModel(
                 }
               }
             }
-            Result.success(updatedList)
+            Result.success(existingValue.copy(list = updatedList))
           }
         }
       }
@@ -532,4 +587,10 @@ class ThreadDetailsViewModel(
   } else {
     JavaEmailConstants.FOLDER_SEARCH
   }
+
+  data class Data(
+    val silentUpdate: Boolean,
+    val list: List<MessagesInThreadListAdapter.Item>,
+    val timeSnapshot: Long = System.currentTimeMillis()
+  )
 }

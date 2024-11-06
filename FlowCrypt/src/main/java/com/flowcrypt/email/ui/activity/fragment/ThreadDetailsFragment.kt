@@ -446,7 +446,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
     if (isActive) {
       threadDetailsViewModel.messagesInThreadFlow.value.data?.let {
-        tryToOpenTheFreshestMessage(it)
+        tryToOpenTheFreshestMessage(it.list)
       }
     }
   }
@@ -467,12 +467,20 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       )
       adapter = messagesInThreadListAdapter
     }
+
+    binding?.swipeRefreshLayout?.apply {
+      setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
+      setOnRefreshListener {
+        threadDetailsViewModel.loadMessages(silentUpdate = true)
+      }
+    }
   }
 
   private fun setupThreadDetailsViewModel() {
     launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messagesInThreadFlow.collect {
         activity?.invalidateOptionsMenu()
+        binding?.swipeRefreshLayout?.isRefreshing = false
 
         when (it.status) {
           Result.Status.LOADING -> {
@@ -480,15 +488,18 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           }
 
           Result.Status.SUCCESS -> {
-            val data = it.data
-            if (data.isNullOrEmpty()) {
-              navController?.navigateUp()
-              toast("Fix me")
+            val items = it.data?.list
+            if (items.isNullOrEmpty()) {
+              if (it.data?.silentUpdate == true) {
+                navController?.navigateUp()
+                toast("Fix me")
+              }
             } else {
-              messagesInThreadListAdapter.submitList(data)
+              binding?.swipeRefreshLayout?.isEnabled = true
+              messagesInThreadListAdapter.submitList(items)
               showContent()
               val freshestMessageInConversation =
-                (data.getOrNull(1) as? MessagesInThreadListAdapter.Message)
+                (items.getOrNull(1) as? MessagesInThreadListAdapter.Message)
               updateThreadReplyButtons(
                 if (freshestMessageInConversation?.messageEntity?.isDraft == true) {
                   null
@@ -496,13 +507,20 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                   freshestMessageInConversation
                 }
               )
-              tryToOpenTheFreshestMessage(data)
+
+              if (!it.data.silentUpdate) {
+                tryToOpenTheFreshestMessage(items)
+              }
             }
           }
 
           Result.Status.EXCEPTION -> {
-            showStatus(it.exceptionMsg) {
-              threadDetailsViewModel.loadMessages()
+            if (it.data?.silentUpdate == true) {
+              toast(it.exceptionMsg)
+            } else {
+              showStatus(it.exceptionMsg) {
+                threadDetailsViewModel.loadMessages(clearCache = true)
+              }
             }
           }
 
