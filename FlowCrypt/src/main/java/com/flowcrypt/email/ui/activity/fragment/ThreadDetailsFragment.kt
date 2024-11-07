@@ -57,6 +57,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.showDialogFragment
+import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
@@ -144,6 +145,19 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
 
   private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
+    object : MessagesInThreadListAdapter.AdapterListener {
+      override fun onDataSubmitted(list: List<MessagesInThreadListAdapter.Item>?) {
+        val freshestMessageInConversation =
+          (list?.getOrNull(1) as? MessagesInThreadListAdapter.Message)
+        updateThreadReplyButtons(
+          if (freshestMessageInConversation?.messageEntity?.isDraft == true) {
+            null
+          } else {
+            freshestMessageInConversation
+          }
+        )
+      }
+    },
     object : MessagesInThreadListAdapter.OnMessageActionsListener {
       override fun onMessageClick(position: Int, message: MessagesInThreadListAdapter.Message) {
         processMessageClick(message)
@@ -457,6 +471,10 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   }
 
   private fun initViews() {
+    binding?.layoutReplyButtons?.replyButton?.gone()
+    binding?.layoutReplyButtons?.replyAllButton?.gone()
+    binding?.layoutReplyButtons?.forwardButton?.gone()
+
     binding?.recyclerViewThreads?.apply {
       val linearLayoutManager = LinearLayoutManager(context)
       layoutManager = linearLayoutManager
@@ -498,16 +516,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               binding?.swipeRefreshLayout?.isEnabled = true
               messagesInThreadListAdapter.submitList(items)
               showContent()
-              val freshestMessageInConversation =
-                (items.getOrNull(1) as? MessagesInThreadListAdapter.Message)
-              updateThreadReplyButtons(
-                if (freshestMessageInConversation?.messageEntity?.isDraft == true) {
-                  null
-                } else {
-                  freshestMessageInConversation
-                }
-              )
-
               if (!it.data.silentUpdate) {
                 tryToOpenTheFreshestMessage(items)
               }
@@ -969,8 +977,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     val replyAllButton = binding?.layoutReplyButtons?.replyAllButton
     val forwardButton = binding?.layoutReplyButtons?.forwardButton
 
+    replyButton?.visibleOrGone(message != null)
+    replyAllButton?.visibleOrGone(message != null)
+    forwardButton?.visibleOrGone(message != null)
+
     if (message == null) {
-      binding?.layoutReplyButtons?.root?.gone()
       return
     }
 

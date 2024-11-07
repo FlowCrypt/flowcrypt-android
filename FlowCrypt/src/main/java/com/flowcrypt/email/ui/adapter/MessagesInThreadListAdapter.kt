@@ -70,7 +70,10 @@ import java.nio.charset.StandardCharsets
 /**
  * @author Denys Bondarenko
  */
-class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessageActionsListener) :
+class MessagesInThreadListAdapter(
+  private val adapterListener: AdapterListener,
+  private val onMessageActionsListener: OnMessageActionsListener
+) :
   ListAdapter<MessagesInThreadListAdapter.Item, MessagesInThreadListAdapter.BaseViewHolder>(
     DIFF_UTIL_ITEM_CALLBACK
   ) {
@@ -166,10 +169,7 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
 
   override fun submitList(list: List<Item>?) {
     super.submitList(list)
-    LogsUtil.d(
-      TAG,
-      "submitList|list.size = ${list?.size}"
-    )
+    adapterListener.onDataSubmitted(list)
   }
 
   fun getMessageItemById(messageId: Long): Message? {
@@ -196,6 +196,10 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
     fun fixMissingPassphraseIssue(message: Message, fingerprints: List<String>)
     fun showSendersPublicKeyDialog(message: Message)
     fun getAccount(): AccountEntity?
+  }
+
+  interface AdapterListener {
+    fun onDataSubmitted(list: List<Item>?)
   }
 
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
