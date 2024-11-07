@@ -123,7 +123,8 @@ class DraftViewModel(
 
   fun setupWithInitializationData(
     initializationData: InitializationData,
-    timeInMilliseconds: Long
+    timeInMilliseconds: Long,
+    skipCheckingSignature: Boolean
   ) {
     draftFingerprint = DraftFingerprint(
       msgText = initializationData.body ?: "",
@@ -131,7 +132,8 @@ class DraftViewModel(
       toRecipients = initializationData.toAddresses.map { it.lowercase() }.toSet(),
       ccRecipients = initializationData.ccAddresses.map { it.lowercase() }.toSet(),
       bccRecipients = initializationData.bccAddresses.map { it.lowercase() }.toSet(),
-      timeInMilliseconds = timeInMilliseconds
+      timeInMilliseconds = timeInMilliseconds,
+      skipCheckingSignature = skipCheckingSignature
     )
   }
 
@@ -148,7 +150,8 @@ class DraftViewModel(
         internetAddress.address.lowercase()
       }?.toSet() ?: emptySet()
 
-    val isTextTheSame = if (outgoingMessageInfo.signature != null) {
+    val isTextTheSame =
+      if (outgoingMessageInfo.signature != null && !draftFingerprint.skipCheckingSignature) {
       val textWithoutSignature = outgoingMessageInfo.msg?.replaceFirst(
         regex = ("\n\n" + outgoingMessageInfo.signature).toRegex(RegexOption.MULTILINE),
         replacement = ""
@@ -323,7 +326,8 @@ class DraftViewModel(
     val toRecipients: Set<String> = setOf(),
     val ccRecipients: Set<String> = setOf(),
     val bccRecipients: Set<String> = setOf(),
-    val timeInMilliseconds: Long = System.currentTimeMillis()
+    val timeInMilliseconds: Long = System.currentTimeMillis(),
+    val skipCheckingSignature: Boolean = false,
   )
 
   companion object {

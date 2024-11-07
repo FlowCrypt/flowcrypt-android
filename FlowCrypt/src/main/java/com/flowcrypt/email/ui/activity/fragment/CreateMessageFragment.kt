@@ -906,7 +906,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       draftViewModel.setupWithInitializationData(
         initializationData = initializationData,
-        timeInMilliseconds = startOfSessionInMilliseconds
+        timeInMilliseconds = startOfSessionInMilliseconds,
+        skipCheckingSignature = args.messageType == MessageType.DRAFT
       )
     }
 
@@ -1386,6 +1387,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         when (it.status) {
           Result.Status.SUCCESS -> {
             val accountEntity = it.data ?: return@collect
+
+            if (args.messageType == MessageType.DRAFT) {
+              composeMsgViewModel.markSignatureUsed()
+              return@collect
+            }
 
             if (accountEntity.useAliasSignatures) {
               val position = binding?.spinnerFrom?.selectedItemPosition?.takeIf { position ->
@@ -2128,6 +2134,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     var useNewSignature = false
 
     val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
+    if (oldSignature == null && args.messageType == MessageType.DRAFT) {
+      val extractedSignature = aliases.firstOrNull { alias ->
+        alias.plainTextSignature != null && binding?.editTextEmailMessage?.text?.contains(
+          ("^${alias.plainTextSignature}$").toRegex(RegexOption.MULTILINE)
+        ) == true
+      }?.plainTextSignature
+
+      if (!extractedSignature.isNullOrEmpty()) {
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            signature = extractedSignature
+          )
+        )
+      }
+
+      return
+    }
+
     val messageHasOldSignature = oldSignature != null && binding?.editTextEmailMessage?.text?.contains(
       ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
     ) == true

@@ -94,7 +94,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_goneMarginRight="@dimen/default_margin_medium"
-            app:srcCompat="@drawable/ic_baseline_edit_draft_32" />
+            app:srcCompat="@drawable/ic_baseline_edit_draft_24" />
 
         <TextView
             android:id="@+id/textViewDate"
