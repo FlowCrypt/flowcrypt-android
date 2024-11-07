@@ -240,7 +240,12 @@ class MessagesInThreadListAdapter(private val onMessageActionsListener: OnMessag
       onMessageActionsListener: OnMessageActionsListener
     ) {
       val messageEntity = message.messageEntity
-      itemView.setOnClickListener { onMessageActionsListener.onMessageClick(position, message) }
+      itemView.setOnClickListener {
+        onMessageActionsListener.onMessageClick(position, message)
+        if (message.incomingMessageInfo == null) {
+          mapWebViewHeight.remove(position)
+        }
+      }
       val senderAddress = messageEntity.generateFromText(context)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
