@@ -420,7 +420,7 @@ dependencies {
   implementation("androidx.browser:browser:1.8.0")
   implementation("androidx.recyclerview:recyclerview:1.3.2")
   implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
-  implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+  implementation("androidx.constraintlayout:constraintlayout:2.2.0")
   implementation("androidx.test.espresso:espresso-idling-resource:3.6.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
   implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
