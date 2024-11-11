@@ -1065,7 +1065,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
-    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+      draftId = draftViewModel.getSessionDraftMessageEntity()?.draftId
+    )
 
     navController?.navigate(
       CreateMessageFragmentDirections

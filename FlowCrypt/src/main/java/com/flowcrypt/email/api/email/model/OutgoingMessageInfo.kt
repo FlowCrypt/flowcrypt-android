@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.model
@@ -42,6 +42,7 @@ data class OutgoingMessageInfo(
   @Expose val timestamp: Long = System.currentTimeMillis(),
   @Expose val signature: String? = null,
   @Expose val quotedTextForReply: String? = null,
+  @Expose val draftId: String? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -89,6 +90,7 @@ data class OutgoingMessageInfo(
     if (timestamp != other.timestamp) return false
     if (signature != other.signature) return false
     if (quotedTextForReply != other.quotedTextForReply) return false
+    if (draftId != other.draftId) return false
     return true
   }
 
@@ -110,6 +112,7 @@ data class OutgoingMessageInfo(
     result = 31 * result + timestamp.hashCode()
     result = 31 * result + (signature?.hashCode() ?: 0)
     result = 31 * result + (quotedTextForReply?.hashCode() ?: 0)
+    result = 31 * result + (draftId?.hashCode() ?: 0)
     return result
   }
 
@@ -142,7 +145,8 @@ data class OutgoingMessageInfo(
         MessageState.NEW.value
       },
       password = password,
-      attachmentsDirectory = UUID.randomUUID().toString()
+      attachmentsDirectory = UUID.randomUUID().toString(),
+      draftId = draftId
     )
   }
 }

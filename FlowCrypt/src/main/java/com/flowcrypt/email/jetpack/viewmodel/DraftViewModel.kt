@@ -77,6 +77,10 @@ class DraftViewModel(
   val savingDraftStateFlow: StateFlow<Result<Boolean>> =
     savingDraftMutableStateFlow.asStateFlow()
 
+  fun getSessionDraftMessageEntity(): MessageEntity? {
+    return sessionDraftMessageEntity?.copy()
+  }
+
   fun processDraft(
     coroutineScope: CoroutineScope = viewModelScope,
     currentOutgoingMessageInfo: OutgoingMessageInfo,

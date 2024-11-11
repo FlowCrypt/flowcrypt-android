@@ -45,6 +45,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.http.FileContent
+import com.google.api.services.gmail.model.Draft
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.Flags
 import jakarta.mail.Folder
@@ -473,12 +474,25 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
 
               val mediaContent = FileContent(Constants.MIME_TYPE_RFC822, copyOfMimeMsg)
-
-              gmailMsg = gmail
-                .users()
-                .messages()
-                .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
-                .execute()
+              gmailMsg = if (msgEntity.draftId.isNullOrEmpty()) {
+                gmail
+                  .users()
+                  .messages()
+                  .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
+                  .execute()
+              } else {
+                gmail
+                  .users()
+                  .drafts()
+                  .send(
+                    GmailApiHelper.DEFAULT_USER_ID,
+                    Draft().apply {
+                      message = gmailMsg
+                      id = msgEntity.draftId
+                    },
+                    mediaContent
+                  ).execute()
+              }
 
               if (gmailMsg.id == null) {
                 return@withContext false
