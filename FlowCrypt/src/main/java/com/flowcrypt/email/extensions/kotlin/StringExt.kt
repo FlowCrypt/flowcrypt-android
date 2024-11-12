@@ -193,3 +193,9 @@ fun String?.getPossibleAndroidMimeType(): String? {
 
 val String.toLongRadix16: Long
   get() = toLong(radix = 16)
+
+fun String.clip(context: Context, maxSize: Int): String {
+  return if (length > maxSize) {
+    take(maxSize) + "\n\n" + context.getString(R.string.clipped_message_too_large)
+  } else this
+}

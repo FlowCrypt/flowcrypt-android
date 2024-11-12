@@ -46,6 +46,7 @@ import com.flowcrypt.email.databinding.ItemMessageInThreadExpandedBinding
 import com.flowcrypt.email.databinding.ItemThreadHeaderBinding
 import com.flowcrypt.email.extensions.android.widget.useGlideToApplyImageFromSource
 import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.kotlin.clip
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -253,7 +254,6 @@ class MessagesInThreadListAdapter(
       }
       binding.tVTo.text = messageEntity.generateToText(context)
       binding.textViewSender.apply {
-        text = senderAddress
         if (messageEntity.isSeen) {
           setTypeface(null, Typeface.NORMAL)
           setTextColor(
@@ -270,7 +270,7 @@ class MessagesInThreadListAdapter(
           )
         }
 
-        text = messageEntity.appendDraftLabelIfNeeded(context, text)
+        text = messageEntity.appendDraftLabelIfNeeded(context, senderAddress)
       }
       binding.textViewDate.apply {
         text = DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
@@ -290,7 +290,11 @@ class MessagesInThreadListAdapter(
       binding.viewHasAttachments.visibleOrGone(messageEntity.hasAttachments == true)
       binding.textViewDate.setTypeface(
         null,
-        if (messageEntity.isSeen) Typeface.NORMAL else Typeface.BOLD
+        if (messageEntity.isSeen) {
+          Typeface.NORMAL
+        } else {
+          Typeface.BOLD
+        }
       )
     }
   }
@@ -302,36 +306,7 @@ class MessagesInThreadListAdapter(
     private val pgpBadgeListAdapter = PgpBadgeListAdapter()
 
     init {
-      binding.rVMsgDetails.apply {
-        layoutManager = LinearLayoutManager(context)
-        addItemDecoration(
-          VerticalSpaceMarginItemDecoration(
-            marginTop = 0,
-            marginBottom = 0,
-            marginInternal = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
-          )
-        )
-        adapter = messageHeadersListAdapter
-      }
-
-      binding.rVPgpBadges.apply {
-        layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
-        addItemDecoration(
-          MarginItemDecoration(
-            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small)
-          )
-        )
-        adapter = pgpBadgeListAdapter
-      }
-
-      binding.rVAttachments.apply {
-        layoutManager = LinearLayoutManager(context)
-        addItemDecoration(
-          MarginItemDecoration(
-            marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
-          )
-        )
-      }
+      initSomeRecyclerViews()
     }
 
     fun bindTo(
@@ -346,19 +321,48 @@ class MessagesInThreadListAdapter(
         )
       }
 
-      binding.imageButtonEditDraft.visibleOrGone(message.messageEntity.isDraft)
-      binding.imageButtonEditDraft.setOnClickListener {
-        onMessageActionsListener.onEditDraft(message)
+      binding.imageButtonEditDraft.apply {
+        visibleOrGone(message.messageEntity.isDraft)
+        setOnClickListener {
+          onMessageActionsListener.onEditDraft(message)
+        }
       }
-      binding.imageButtonDeleteDraft.visibleOrGone(message.messageEntity.isDraft)
-      binding.imageButtonDeleteDraft.setOnClickListener {
-        onMessageActionsListener.onDeleteDraft(message)
+
+      binding.imageButtonDeleteDraft.apply {
+        visibleOrGone(message.messageEntity.isDraft)
+        setOnClickListener {
+          onMessageActionsListener.onDeleteDraft(message)
+        }
       }
-      binding.imageButtonReplyAll.visibleOrInvisible(!message.messageEntity.isDraft)
-      binding.imageButtonMoreOptions.visibleOrInvisible(!message.messageEntity.isDraft)
+
+      binding.imageButtonReplyAll.apply {
+        visibleOrInvisible(!message.messageEntity.isDraft)
+        setOnClickListener {
+          onMessageActionsListener.onReplyAll(message)
+        }
+      }
+
+      binding.imageButtonMoreOptions.apply {
+        visibleOrInvisible(!message.messageEntity.isDraft)
+        setOnClickListener {
+          showPopupForMoreOptionButton(onMessageActionsListener, message)
+        }
+      }
+
+      binding.textViewDate.apply {
+        visibleOrInvisible(!message.isHeadersDetailsExpanded)
+        val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(
+          message.messageEntity.folder,
+          ignoreCase = true
+        )
+        text = if (isOutbox) {
+          DateTimeUtil.formatSameDayTime(context, message.messageEntity.sentDate ?: 0)
+        } else {
+          DateTimeUtil.formatSameDayTime(context, message.messageEntity.receivedDate ?: 0)
+        }
+      }
 
       binding.rVMsgDetails.visibleOrGone(message.isHeadersDetailsExpanded)
-      binding.textViewDate.visibleOrInvisible(!message.isHeadersDetailsExpanded)
 
       binding.iBShowDetails.apply {
         setImageResource(
@@ -374,43 +378,28 @@ class MessagesInThreadListAdapter(
         }
       }
 
-      binding.imageButtonReplyAll.setOnClickListener {
-        onMessageActionsListener.onReplyAll(message)
-      }
-
-      val messageEntity = message.messageEntity
-      val senderAddress = messageEntity.generateFromText(context)
+      val senderAddress = message.messageEntity.generateFromText(context)
       binding.textViewSenderAddress.text =
-        messageEntity.appendDraftLabelIfNeeded(context, senderAddress)
+        message.messageEntity.appendDraftLabelIfNeeded(context, senderAddress)
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       )
 
-      binding.tVTo.text = messageEntity.generateToText(context)
-
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
-        binding.textViewDate.text =
-          DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate ?: 0)
-      } else {
-        binding.textViewDate.text =
-          DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate ?: 0)
-      }
+      binding.tVTo.text = message.messageEntity.generateToText(context)
 
       binding.imageButtonReplyAll.apply {
-        val colorStateList =
-          ColorStateList.valueOf(
-            ContextCompat.getColor(
-              context, if (messageEntity.hasPgp == true) {
-                R.color.colorPrimary
-              } else {
-                R.color.red
-              }
-            )
+        imageTintList = ColorStateList.valueOf(
+          ContextCompat.getColor(
+            context, if (message.messageEntity.hasPgp == true) {
+              R.color.colorPrimary
+            } else {
+              R.color.red
+            }
           )
-        imageTintList = colorStateList
+        )
       }
 
-      messageHeadersListAdapter.submitList(messageEntity.generateDetailsHeaders(context))
+      messageHeadersListAdapter.submitList(message.messageEntity.generateDetailsHeaders(context))
 
       binding.rVAttachments.adapter = AttachmentsRecyclerViewAdapter(
         isDeleteEnabled = false,
@@ -442,29 +431,32 @@ class MessagesInThreadListAdapter(
         updateMsgView(message, onMessageActionsListener)
         updatePgpBadges(message.incomingMessageInfo)
       }
+    }
 
-      binding.imageButtonMoreOptions.setOnClickListener {
-        PopupMenu(context, binding.imageButtonMoreOptions).apply {
-          menuInflater.inflate(R.menu.popup_reply_actions, menu)
-          setOnMenuItemClickListener {
-            when (it.itemId) {
-              R.id.menuActionReply -> {
-                onMessageActionsListener.onReply(message)
-                true
-              }
+    private fun showPopupForMoreOptionButton(
+      onMessageActionsListener: OnMessageActionsListener,
+      message: Message
+    ) {
+      PopupMenu(context, binding.imageButtonMoreOptions).apply {
+        menuInflater.inflate(R.menu.popup_reply_actions, menu)
+        setOnMenuItemClickListener {
+          when (it.itemId) {
+            R.id.menuActionReply -> {
+              onMessageActionsListener.onReply(message)
+              true
+            }
 
-              R.id.menuActionForward -> {
-                onMessageActionsListener.onForward(message)
-                true
-              }
+            R.id.menuActionForward -> {
+              onMessageActionsListener.onForward(message)
+              true
+            }
 
-              else -> {
-                true
-              }
+            else -> {
+              true
             }
           }
-          show()
         }
+        show()
       }
     }
 
@@ -525,7 +517,7 @@ class MessagesInThreadListAdapter(
                 SecurityWarningMsgBlock.WarningType.RECEIVED_SPF_SOFT_FAIL -> {
                   binding.layoutSecurityWarnings.addView(
                     getView(
-                      originalMsg = clipLargeText(block.content),
+                      originalMsg = block.content?.clip(context, TEXT_MAX_SIZE),
                       errorMsg = context.getText(R.string.spf_soft_fail_warning),
                       layoutInflater = layoutInflater,
                       leftBorderColor = R.color.orange
@@ -583,7 +575,7 @@ class MessagesInThreadListAdapter(
     private fun setupWebView(block: MsgBlock) {
       binding.emailWebView.configure()
 
-      val text = clipLargeText(block.content) ?: ""
+      val text = block.content?.clip(context, TEXT_MAX_SIZE) ?: ""
 
       binding.emailWebView.loadDataWithBaseURL(
         null,
@@ -594,14 +586,6 @@ class MessagesInThreadListAdapter(
       )
     }
 
-    /**
-     * Generate the public key block. There we can see the public key msgEntity and save/update the
-     * key owner information to the local database.
-     *
-     * @param block    The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
-     * @param inflater The [LayoutInflater] instance.
-     * @return The generated view.
-     */
     private fun genPublicKeyPart(
       block: PublicKeyMsgBlock,
       inflater: LayoutInflater,
@@ -609,7 +593,7 @@ class MessagesInThreadListAdapter(
     ): View {
       if (block.error?.errorMsg?.isNotEmpty() == true) {
         return getView(
-          clipLargeText(block.content),
+          block.content?.clip(context, TEXT_MAX_SIZE),
           context.getString(R.string.msg_contains_not_valid_pub_key, block.error.errorMsg),
           inflater
         )
@@ -645,7 +629,8 @@ class MessagesInThreadListAdapter(
         ), fingerprint
       )
 
-      textViewPgpPublicKey.text = clipLargeText(block.keyDetails?.publicKey ?: block.content)
+      textViewPgpPublicKey.text =
+        (block.keyDetails?.publicKey ?: block.content)?.clip(context, TEXT_MAX_SIZE)
 
       val existingRecipientWithPubKeys = block.existingRecipientWithPubKeys
       val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
@@ -727,7 +712,7 @@ class MessagesInThreadListAdapter(
         PgpDecryptAndOrVerify.DecryptionErrorType.KEY_MISMATCH ->
         return generateMissingPrivateKeyLayout(
           message = message,
-          pgpMsg = clipLargeText(block.content),
+          pgpMsg = block.content?.clip(context, TEXT_MAX_SIZE),
           inflater = layoutInflater,
           onMessageActionsListener = onMessageActionsListener
         )
@@ -738,7 +723,11 @@ class MessagesInThreadListAdapter(
             context.getString(R.string.app_name)
           ) + "\n\n"
               + decryptError.details.type + ": " + decryptError.details.message)
-          return getView(clipLargeText(block.content), formatErrorMsg, layoutInflater)
+          return getView(
+            block.content?.clip(context, TEXT_MAX_SIZE),
+            formatErrorMsg,
+            layoutInflater
+          )
         }
 
         PgpDecryptAndOrVerify.DecryptionErrorType.OTHER -> {
@@ -758,7 +747,7 @@ class MessagesInThreadListAdapter(
                 "\n\n" + decryptError.details.stack
           }
 
-          return getView(clipLargeText(block.content), otherErrorMsg, layoutInflater)
+          return getView(block.content?.clip(context, TEXT_MAX_SIZE), otherErrorMsg, layoutInflater)
         }
 
         else -> {
@@ -785,7 +774,7 @@ class MessagesInThreadListAdapter(
           }
 
           return getView(
-            originalMsg = clipLargeText(block.content),
+            originalMsg = block.content?.clip(context, TEXT_MAX_SIZE),
             errorMsg = context.getString(
               R.string.could_not_decrypt_message_due_to_error,
               decryptError.details?.type.toString() + ": " + detailedMessage
@@ -892,7 +881,7 @@ class MessagesInThreadListAdapter(
         )
       } else {
         val textViewMsgPartOther = inflater.inflate(res, viewGroup, false) as TextView
-        textViewMsgPartOther.text = clipLargeText(block.content)
+        textViewMsgPartOther.text = block.content?.clip(context, TEXT_MAX_SIZE)
         textViewMsgPartOther
       }
     }
@@ -949,14 +938,37 @@ class MessagesInThreadListAdapter(
       return viewGroup
     }
 
-    private fun clipLargeText(text: String?): String? {
-      text?.let {
-        return if (it.length > 50000) {
-          it.take(50000) + "\n\n" + context.getString(R.string.clipped_message_too_large)
-        } else text
+    private fun initSomeRecyclerViews() {
+      binding.rVMsgDetails.apply {
+        layoutManager = LinearLayoutManager(context)
+        addItemDecoration(
+          VerticalSpaceMarginItemDecoration(
+            marginTop = 0,
+            marginBottom = 0,
+            marginInternal = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+          )
+        )
+        adapter = messageHeadersListAdapter
       }
 
-      return text
+      binding.rVPgpBadges.apply {
+        layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+        addItemDecoration(
+          MarginItemDecoration(
+            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+          )
+        )
+        adapter = pgpBadgeListAdapter
+      }
+
+      binding.rVAttachments.apply {
+        layoutManager = LinearLayoutManager(context)
+        addItemDecoration(
+          MarginItemDecoration(
+            marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)
+          )
+        )
+      }
     }
   }
 
@@ -1009,6 +1021,6 @@ class MessagesInThreadListAdapter(
         oldItem.areContentsTheSame(newItem)
     }
 
-    private const val TAG = "MessagesInThreadListAdapter"
+    private const val TEXT_MAX_SIZE = 50000
   }
 }
