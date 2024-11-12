@@ -222,12 +222,14 @@ class MessagesInThreadListAdapter(
           flexDirection = FlexDirection.ROW
           justifyContent = JustifyContent.FLEX_START
         }
-        addItemDecoration(
-          MarginItemDecoration(
-            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
-            marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+        if (itemDecorationCount == 0) {
+          addItemDecoration(
+            MarginItemDecoration(
+              marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+              marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
+            )
           )
-        )
+        }
         adapter = gmailApiLabelsListAdapter
       }
 
