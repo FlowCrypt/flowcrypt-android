@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
@@ -32,7 +31,6 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.cache.DiskLruCache
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -87,8 +85,8 @@ class ProcessMessageViewModel(
               )
             )
 
-            val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
-            if (existedMsgSnapshot != null) {
+            val existingMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+            if (existingMsgSnapshot != null) {
               emit(
                 Result.loading(
                   progressMsg = context.getString(R.string.processing),
@@ -97,7 +95,7 @@ class ProcessMessageViewModel(
                 )
               )
               UpdateMsgsSeenStateWorker.enqueue(application)
-              val processingResult = processingMsgSnapshot(existedMsgSnapshot)
+              val processingResult = processingMsgSnapshot(existingMsgSnapshot)
               emit(
                 Result.loading(
                   progressMsg = context.getString(R.string.processing),
@@ -395,17 +393,6 @@ class ProcessMessageViewModel(
             }
           } catch (e: Exception) {
             e.printStackTrace()
-          }
-        }
-
-        is DecryptErrorMsgBlock -> {
-          if (block.decryptErr?.details?.type == PgpDecryptAndOrVerify.DecryptionErrorType.NEED_PASSPHRASE) {
-            val fingerprints = block.decryptErr.fingerprints ?: emptyList()
-            if (fingerprints.isEmpty()) {
-              ExceptionUtil.handleError(IllegalStateException("Fingerprints were not provided"))
-            } else {
-              //passphraseNeededLiveData.postValue(fingerprints)
-            }
           }
         }
       }
