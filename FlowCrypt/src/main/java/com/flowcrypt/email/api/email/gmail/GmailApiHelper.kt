@@ -719,7 +719,7 @@ class GmailApiHelper {
       return@withContext resultMap
     }
 
-    suspend fun moveThreadToTrash(
+    suspend fun moveThreadsToTrash(
       context: Context,
       accountEntity: AccountEntity,
       ids: Collection<String>

@@ -47,7 +47,7 @@ class DeleteMessagesWorker(context: Context, params: WorkerParameters) :
     moveMsgsToTrashInternal(account) { folderName, entities ->
       executeGMailAPICall(applicationContext) {
         if (account.useConversationMode && folderName != GmailApiHelper.LABEL_DRAFT) {
-          val resultMap = GmailApiHelper.moveThreadToTrash(
+          val resultMap = GmailApiHelper.moveThreadsToTrash(
             context = applicationContext,
             accountEntity = account,
             ids = entities.mapNotNull { it.threadIdAsHEX }.toSet()
