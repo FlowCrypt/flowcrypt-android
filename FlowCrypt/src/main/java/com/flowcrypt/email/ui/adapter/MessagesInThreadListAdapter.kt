@@ -57,7 +57,6 @@ import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceM
 import com.flowcrypt.email.ui.widget.TileDrawable
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
-import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.graphics.glide.AvatarModelLoader
 import com.google.android.flexbox.FlexDirection
@@ -84,7 +83,6 @@ class MessagesInThreadListAdapter(
   private val mapWebViewHeight = mutableMapOf<Int, Int>()
 
   override fun getItemViewType(position: Int): Int {
-    LogsUtil.d(TAG, "getItemViewType|position = $position")
     val item = getItem(position)
     return when (position) {
       0 -> Type.HEADER.id
@@ -95,7 +93,6 @@ class MessagesInThreadListAdapter(
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-    LogsUtil.d(TAG, "onCreateViewHolder|viewType = $viewType")
     return when (viewType) {
       Type.HEADER.id -> HeaderViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.item_thread_header, parent, false),
@@ -121,7 +118,6 @@ class MessagesInThreadListAdapter(
   }
 
   override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-    LogsUtil.d(TAG, "onBindViewHolder|holder = ${holder.itemViewType}, position = $position")
     when (holder.itemViewType) {
       Type.HEADER.id -> {
         val threadHeader = (getItem(position) as? ThreadHeader) ?: return
@@ -150,13 +146,8 @@ class MessagesInThreadListAdapter(
     }
   }
 
-  // TODO:denbond7 need to check it with long content
   override fun onViewRecycled(holder: BaseViewHolder) {
     super.onViewRecycled(holder)
-    LogsUtil.d(
-      TAG,
-      "onViewRecycled|holder = ${holder.itemViewType}, bindingAdapterPosition = ${holder.bindingAdapterPosition}"
-    )
     //try to cache the last content height of WebView. It will help to prevent the content blinking
     if (holder is MessageExpandedViewHolder) {
       val position = holder.bindingAdapterPosition
@@ -214,25 +205,24 @@ class MessagesInThreadListAdapter(
     val binding = ItemThreadHeaderBinding.bind(itemView)
     private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(listener)
 
-    fun bindTo(threadHeader: ThreadHeader) {
-      binding.textViewSubject.text = threadHeader.subject
-
+    init {
       binding.recyclerViewLabels.apply {
         layoutManager = FlexboxLayoutManager(context).apply {
           flexDirection = FlexDirection.ROW
           justifyContent = JustifyContent.FLEX_START
         }
-        if (itemDecorationCount == 0) {
-          addItemDecoration(
-            MarginItemDecoration(
-              marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
-              marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
-            )
+        addItemDecoration(
+          MarginItemDecoration(
+            marginRight = resources.getDimensionPixelSize(R.dimen.default_margin_small),
+            marginTop = resources.getDimensionPixelSize(R.dimen.default_margin_small)
           )
-        }
+        )
         adapter = gmailApiLabelsListAdapter
       }
+    }
 
+    fun bindTo(threadHeader: ThreadHeader) {
+      binding.textViewSubject.text = threadHeader.subject
       gmailApiLabelsListAdapter.submitList(threadHeader.labels)
     }
   }
