@@ -24,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.core.view.forEach
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -111,7 +112,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   override val statusView: View?
     get() = binding?.status?.root
 
-  private var isActive: Boolean = false
   private val isAdditionalActionEnabled: Boolean
     get() = threadDetailsViewModel.messagesInThreadFlow.value.status == Result.Status.SUCCESS
   private val threadMessageEntity: MessageEntity?
@@ -120,6 +120,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     get() = threadDetailsViewModel.localFolderFlow.value
 
   private val args by navArgs<ThreadDetailsFragmentArgs>()
+  private var isActive: Boolean = false
   private val recipientsViewModel: RecipientsViewModel by viewModels()
   private val threadDetailsViewModel: ThreadDetailsViewModel by viewModels {
     object : CustomAndroidViewModelFactory(requireActivity().application) {
@@ -184,44 +185,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         attachmentInfo: AttachmentInfo,
         message: MessagesInThreadListAdapter.Message
       ) {
-        when {
-          FilenameUtils.getExtension(attachmentInfo.getSafeName())
-            ?.lowercase() in AttachmentInfo.DANGEROUS_FILE_EXTENSIONS -> {
-            showTwoWayDialog(
-              requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
-              requestCode = REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE,
-              dialogTitle = "",
-              dialogMsg = getString(R.string.download_dangerous_file_warning),
-              positiveButtonTitle = getString(R.string.continue_),
-              negativeButtonTitle = getString(android.R.string.cancel),
-              bundle = Bundle().apply {
-                putLong(KEY_EXTRA_MESSAGE_ID, message.id)
-                putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
-              }
-            )
-          }
-
-          EmbeddedAttachmentsProvider.Cache.getInstance().getDocumentId(attachmentInfo) == null
-              && attachmentInfo.isDecrypted
-              && attachmentInfo.uri == null -> {
-            //need to process message again and store attachment in RAM cache
-            showDialogFragment(navController) {
-              object : NavDirections {
-                override val actionId = R.id.process_message_dialog_graph
-                override val arguments = ProcessMessageDialogFragmentArgs(
-                  requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-                  requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD,
-                  message = message,
-                  attachmentId = attachmentInfo.path
-                ).toBundle()
-              }
-            }
-          }
-
-          else -> {
-            processDownloadAttachment(attachmentInfo, message)
-          }
-        }
+        handleAttachmentDownloadClick(attachmentInfo, message)
       }
 
       override fun onAttachmentPreviewClick(
@@ -304,6 +268,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       override fun getAccount(): AccountEntity? = account
     })
 
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    isActive = !args.isViewPagerMode
+  }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     updateActionBar()
@@ -332,52 +301,36 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
       override fun onPrepareMenu(menu: Menu) {
         super.onPrepareMenu(menu)
-        val menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage)
-        val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
-        val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
-        val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
-        val menuActionMoveToSpam = menu.findItem(R.id.menuActionMoveToSpam)
-        val menuActionMarkAsNotSpam = menu.findItem(R.id.menuActionMarkAsNotSpam)
-        val menuActionChangeLabels = menu.findItem(R.id.menuActionChangeLabels)
-
-        menuItemArchiveMsg?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
-          MessageAction.ARCHIVE
-        )
-        menuItemDeleteMsg?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
-          MessageAction.DELETE
-        )
-        menuActionMoveToInbox?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
-          MessageAction.MOVE_TO_INBOX
-        )
-        menuActionMarkUnread?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
-          MessageAction.MARK_UNREAD
-        )
-        menuActionMoveToSpam?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
-          MessageAction.MOVE_TO_SPAM
-        )
-        menuActionMarkAsNotSpam?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
-          MessageAction.MARK_AS_NOT_SPAM
-        )
-        menuActionChangeLabels?.isVisible = threadDetailsViewModel.getMessageActionAvailability(
-          MessageAction.CHANGE_LABELS
+        val ids = listOf(
+          R.id.menuActionArchiveMessage,
+          R.id.menuActionDeleteMessage,
+          R.id.menuActionMoveToInbox,
+          R.id.menuActionMarkUnread,
+          R.id.menuActionMoveToSpam,
+          R.id.menuActionMarkAsNotSpam,
+          R.id.menuActionChangeLabels,
         )
 
-        menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
-        menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
-        menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
-        menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
-        menuActionMoveToSpam?.isEnabled = isAdditionalActionEnabled
-        menuActionMarkAsNotSpam?.isEnabled = isAdditionalActionEnabled
-        menuActionChangeLabels?.isEnabled = isAdditionalActionEnabled
-
-        args.localFolder.searchQuery?.let {
-          menuItemArchiveMsg?.isVisible = false
-          menuItemDeleteMsg?.isVisible = false
-          menuActionMoveToInbox?.isVisible = false
-          menuActionMarkUnread?.isVisible = false
-          menuActionMoveToSpam?.isVisible = false
-          menuActionMarkAsNotSpam?.isVisible = false
-          menuActionChangeLabels?.isVisible = false
+        menu.forEach { item: MenuItem ->
+          if (args.localFolder.searchQuery != null) {
+            if (item.itemId in ids) {
+              item.isVisible = false
+            }
+          } else if (item.itemId in ids) {
+            item.isEnabled = isAdditionalActionEnabled
+            item.isVisible = threadDetailsViewModel.getMessageActionAvailability(
+              when (item.itemId) {
+                R.id.menuActionArchiveMessage -> MessageAction.ARCHIVE
+                R.id.menuActionDeleteMessage -> MessageAction.DELETE
+                R.id.menuActionMoveToInbox -> MessageAction.MOVE_TO_INBOX
+                R.id.menuActionMarkUnread -> MessageAction.MARK_UNREAD
+                R.id.menuActionMoveToSpam -> MessageAction.MOVE_TO_SPAM
+                R.id.menuActionMarkAsNotSpam -> MessageAction.MARK_AS_NOT_SPAM
+                R.id.menuActionChangeLabels -> MessageAction.CHANGE_LABELS
+                else -> error("Unreached")
+              }
+            )
+          }
         }
       }
 
@@ -390,14 +343,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
           R.id.menuActionDeleteMessage -> {
             val messageEntity = threadMessageEntity ?: return true
-            if (messageEntity.isOutboxMsg) {
-              if (messageEntity.msgState == MessageState.SENDING) {
-                toast(R.string.can_not_delete_sending_message, Toast.LENGTH_LONG)
-              } else {
-                threadDetailsViewModel.deleteThread()
-                toast(R.string.thread_was_deleted)
-              }
-            } else {
+            if (!messageEntity.isOutboxMsg) {
               if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
                   requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
@@ -455,7 +401,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }, viewLifecycleOwner, Lifecycle.State.RESUMED)
   }
 
-  fun changeActiveState(isActive: Boolean) {
+  fun changeFragmentActiveState(isActive: Boolean) {
     this.isActive = isActive
 
     if (isActive) {
@@ -479,18 +425,14 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       val linearLayoutManager = LinearLayoutManager(context)
       layoutManager = linearLayoutManager
       addItemDecoration(
-        SkipFirstAndLastDividerItemDecoration(
-          context, linearLayoutManager.orientation
-        )
+        SkipFirstAndLastDividerItemDecoration(context, linearLayoutManager.orientation)
       )
       adapter = messagesInThreadListAdapter
     }
 
     binding?.swipeRefreshLayout?.apply {
       setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
-      setOnRefreshListener {
-        threadDetailsViewModel.loadMessages(silentUpdate = true)
-      }
+      setOnRefreshListener { threadDetailsViewModel.loadMessages(silentUpdate = true) }
     }
   }
 
@@ -510,7 +452,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             if (items.isNullOrEmpty()) {
               if (it.data?.silentUpdate == true) {
                 navController?.navigateUp()
-                toast("Fix me")
+                showStatus(getString(R.string.no_results)) {
+                  threadDetailsViewModel.loadMessages(clearCache = true)
+                }
               }
             } else {
               binding?.swipeRefreshLayout?.isEnabled = true
@@ -781,9 +725,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       REQUEST_KEY_DELETE_DRAFT + args.messageEntityId.toString(),
       args.isViewPagerMode
     ) { _, bundle ->
-      val uniqueMessageId = bundle.getLong(
-        DeleteDraftDialogFragment.KEY_RESULT
-      )
+      val uniqueMessageId = bundle.getLong(DeleteDraftDialogFragment.KEY_RESULT)
 
       messagesInThreadListAdapter.getMessageItemById(uniqueMessageId)?.let {
         threadDetailsViewModel.deleteMessageFromCache(it)
@@ -851,15 +793,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   }
 
   private fun replyTo(message: MessagesInThreadListAdapter.Message) {
-    startActivity(
-      prepareReply(message, MessageType.REPLY)
-    )
+    startActivity(prepareReply(message, MessageType.REPLY))
   }
 
   private fun replyAllTo(message: MessagesInThreadListAdapter.Message) {
-    startActivity(
-      prepareReply(message, MessageType.REPLY_ALL)
-    )
+    startActivity(prepareReply(message, MessageType.REPLY_ALL))
   }
 
   private fun prepareReply(message: MessagesInThreadListAdapter.Message, replyType: Int) =
@@ -874,7 +812,20 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
 
   private fun forward(message: MessagesInThreadListAdapter.Message) {
-    if (message.attachments.none { it.isEmbeddedAndPossiblyEncrypted() }) {
+    startActivity(
+      CreateMessageActivity.generateIntent(
+        context = context,
+        messageType = MessageType.FORWARD,
+        msgEncryptionType = message.messageEntity.getMessageEncryptionType(),
+        msgInfo = message.incomingMessageInfo?.toReplyVersion(
+          requireContext(),
+          CONTENT_MAX_ALLOWED_LENGTH
+        ),
+      //attachments = prepareAttachmentsForForwarding().toTypedArray()
+      )
+    )
+    //todo-denbond7 need to handle this case
+    /*if (message.attachments.none { it.isEmbeddedAndPossiblyEncrypted() }) {
       startActivity(
         CreateMessageActivity.generateIntent(
           context = context,
@@ -884,11 +835,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             requireContext(),
             CONTENT_MAX_ALLOWED_LENGTH
           ),
-          //attachments = prepareAttachmentsForForwarding().toTypedArray()
+          attachments = prepareAttachmentsForForwarding().toTypedArray()
         )
       )
     } else {
-      /*navController?.navigate(
+      navController?.navigate(
         object : NavDirections {
           override val actionId =
             R.id.prepare_downloaded_attachments_for_forwarding_dialog_graph
@@ -900,17 +851,20 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               }.toTypedArray()
             ).toBundle()
         }
-      )*/
-    }
+      )
+    }*/
   }
 
   private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
     if (isActive && data.size > 1) {
+      val hasProcessedMessages = messagesInThreadListAdapter.currentList.any {
+        it is MessagesInThreadListAdapter.Message && it.incomingMessageInfo != null
+      }
       val existing = messagesInThreadListAdapter.currentList.getOrNull(1)
           as? MessagesInThreadListAdapter.Message
       val firstMessage = data[1] as? MessagesInThreadListAdapter.Message
 
-      if (existing != null && existing.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
+      if (!hasProcessedMessages && existing != null && existing.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
         && existing.incomingMessageInfo == null
       ) {
         if (firstMessage != null && firstMessage.incomingMessageInfo == null) {
@@ -1006,14 +960,52 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     replyAllButton?.iconTint = colorStateList
     forwardButton?.iconTint = colorStateList
 
-    replyButton?.setOnClickListener {
-      replyTo(message)
-    }
-    replyAllButton?.setOnClickListener {
-      replyAllTo(message)
-    }
-    forwardButton?.setOnClickListener {
-      forward(message)
+    replyButton?.setOnClickListener { replyTo(message) }
+    replyAllButton?.setOnClickListener { replyAllTo(message) }
+    forwardButton?.setOnClickListener { forward(message) }
+  }
+
+  private fun handleAttachmentDownloadClick(
+    attachmentInfo: AttachmentInfo,
+    message: MessagesInThreadListAdapter.Message
+  ) {
+    when {
+      FilenameUtils.getExtension(attachmentInfo.getSafeName())
+        ?.lowercase() in AttachmentInfo.DANGEROUS_FILE_EXTENSIONS -> {
+        showTwoWayDialog(
+          requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+          requestCode = REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE,
+          dialogTitle = "",
+          dialogMsg = getString(R.string.download_dangerous_file_warning),
+          positiveButtonTitle = getString(R.string.continue_),
+          negativeButtonTitle = getString(android.R.string.cancel),
+          bundle = Bundle().apply {
+            putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+            putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+          }
+        )
+      }
+
+      EmbeddedAttachmentsProvider.Cache.getInstance().getDocumentId(attachmentInfo) == null
+          && attachmentInfo.isDecrypted
+          && attachmentInfo.uri == null -> {
+        //need to process message again and store attachment in RAM cache
+        showDialogFragment(navController) {
+          object : NavDirections {
+            override val actionId = R.id.process_message_dialog_graph
+            override val arguments = ProcessMessageDialogFragmentArgs(
+              requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+              requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD,
+              message = message,
+              attachmentId = attachmentInfo.path
+            ).toBundle()
+          }
+        }
+      }
+
+      else -> {
+        processDownloadAttachment(attachmentInfo, message)
+      }
     }
   }
 
@@ -1021,9 +1013,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     attachmentInfo: AttachmentInfo,
     message: MessagesInThreadListAdapter.Message
   ) {
-    val documentId = EmbeddedAttachmentsProvider.Cache.getInstance()
-      .getDocumentId(attachmentInfo)
-
+    val documentId = EmbeddedAttachmentsProvider.Cache.getInstance().getDocumentId(attachmentInfo)
     if (attachmentInfo.uri != null && documentId != null) {
       if (attachmentInfo.isPossiblyEncrypted) {
         val embeddedAttachmentsCache = EmbeddedAttachmentsProvider.Cache.getInstance()
@@ -1157,8 +1147,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     attachmentInfo: AttachmentInfo,
     message: MessagesInThreadListAdapter.Message
   ) {
-    val documentId = EmbeddedAttachmentsProvider.Cache.getInstance()
-      .getDocumentId(attachmentInfo)
+    val documentId = EmbeddedAttachmentsProvider.Cache.getInstance().getDocumentId(attachmentInfo)
 
     when {
       attachmentInfo.uri != null && documentId != null -> {
@@ -1285,9 +1274,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
   }
 
-  /**
-   * Send a template message with a sender public key.
-   */
   private fun sendTemplateMsgWithPublicKey(
     message: MessagesInThreadListAdapter.Message,
     attachmentInfo: AttachmentInfo

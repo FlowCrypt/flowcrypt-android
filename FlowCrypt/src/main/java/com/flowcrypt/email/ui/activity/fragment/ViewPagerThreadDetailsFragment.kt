@@ -82,11 +82,11 @@ class ViewPagerThreadDetailsFragment : BaseFragment<FragmentViewPagerThreadDetai
             val activeFragment = childFragmentManager.fragments.firstOrNull {
               messageEntity.id == it.navArgs<ThreadDetailsFragmentArgs>().value.messageEntityId
             }?.apply {
-              (this as? ThreadDetailsFragment)?.changeActiveState(true)
+              (this as? ThreadDetailsFragment)?.changeFragmentActiveState(true)
             }
             val childFragmentsExceptSelected = childFragmentManager.fragments - activeFragment
             childFragmentsExceptSelected.forEach {
-              (it as? ThreadDetailsFragment)?.changeActiveState(false)
+              (it as? ThreadDetailsFragment)?.changeFragmentActiveState(false)
             }
           }
         }
