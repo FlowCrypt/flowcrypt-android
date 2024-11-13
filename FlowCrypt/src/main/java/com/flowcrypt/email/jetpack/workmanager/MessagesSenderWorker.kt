@@ -44,6 +44,7 @@ import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.FileContent
 import com.google.api.services.gmail.model.Draft
 import jakarta.mail.AuthenticationFailedException
@@ -481,17 +482,34 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                   .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
                   .execute()
               } else {
-                gmail
-                  .users()
-                  .drafts()
-                  .send(
-                    GmailApiHelper.DEFAULT_USER_ID,
-                    Draft().apply {
-                      message = gmailMsg
-                      id = msgEntity.draftId
-                    },
-                    mediaContent
-                  ).execute()
+                try {
+                  gmail
+                    .users()
+                    .drafts()
+                    .send(
+                      GmailApiHelper.DEFAULT_USER_ID,
+                      Draft().apply {
+                        message = gmailMsg
+                        id = msgEntity.draftId
+                      },
+                      mediaContent
+                    ).execute()
+                } catch (e: GoogleJsonResponseException) {
+                  val isDraftNotFound = e.details.errors.any {
+                    it.message == "Requested entity was not found."
+                  }
+
+                  if (isDraftNotFound) {
+                    //try to send via messages().send()
+                    gmail
+                      .users()
+                      .messages()
+                      .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
+                      .execute()
+                  } else {
+                    throw e
+                  }
+                }
               }
 
               if (gmailMsg.id == null) {
