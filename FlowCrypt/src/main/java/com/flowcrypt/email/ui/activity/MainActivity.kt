@@ -410,18 +410,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     val itemPosition = mailLabels?.subMenu?.size() ?: return
     if (itemPosition == 0) return
     val menuItem = mailLabels.subMenu?.getItem(itemPosition - 1) ?: return
-
-    if ((foldersManager.getFolderByAlias(label)?.msgCount ?: 0) > 0) {
-      val folder = foldersManager.getFolderByAlias(label) ?: return
-      val view = layoutInflater.inflate(
-        R.layout.navigation_view_item_with_amount, binding.navigationView, false
-      )
-      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-      textViewMsgsCount.text = folder.msgCount.toString()
-      menuItem.actionView = view
-    } else {
-      menuItem.actionView = null
-    }
+    val folder = foldersManager.getFolderByAlias(label) ?: return
+    val view = layoutInflater.inflate(
+      R.layout.navigation_view_item_with_amount, binding.navigationView, false
+    )
+    val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
+    textViewMsgsCount.text = folder.msgCount.takeIf { it > 0 }?.toString()
+    menuItem.actionView = view
   }
 
   private fun handleLogoutFromSystemSettings(intent: Intent?): Boolean {
