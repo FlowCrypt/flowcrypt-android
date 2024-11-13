@@ -1221,7 +1221,7 @@ class GmailApiHelper {
         request.fields = fields.joinToString(separator = ",")
       }
 
-      return@withContext request.execute().drafts ?: emptyList()
+      return@withContext request.execute()?.drafts ?: emptyList()
     }
 
     /**
