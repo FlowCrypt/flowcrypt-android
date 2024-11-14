@@ -616,6 +616,14 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           REQUEST_CODE_PROCESS_AND_FORWARD -> {
             forward(updatedMessage)
           }
+
+          REQUEST_CODE_PROCESS_AND_REPLY -> {
+            replyTo(message)
+          }
+
+          REQUEST_CODE_PROCESS_AND_REPLY_ALL -> {
+            replyAllTo(message)
+          }
         }
       } else {
         toast(R.string.unknown_error)
@@ -636,7 +644,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE -> {
           bundle.getBundle(FixNeedPassphraseIssueDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
             processActionForMessageBasedOnIncomingBundle(it) { message ->
-              processMessageClick(message)
+              val actionRequestCode = it.getInt(KEY_EXTRA_REQUEST_CODE)
+              val attachmentId = it.getString(KEY_EXTRA_ATTACHMENT_ID)
+              processMessage(
+                message = message, requestCode = actionRequestCode, attachmentId = attachmentId
+              )
             }
           }
         }
@@ -797,11 +809,21 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   }
 
   private fun replyTo(message: MessagesInThreadListAdapter.Message) {
-    startActivity(prepareReply(message, MessageType.REPLY))
+    if (message.incomingMessageInfo != null) {
+      startActivity(prepareReply(message, MessageType.REPLY))
+    } else {
+      //we need to process the message before continue
+      processMessage(message = message, requestCode = REQUEST_CODE_PROCESS_AND_REPLY)
+    }
   }
 
   private fun replyAllTo(message: MessagesInThreadListAdapter.Message) {
-    startActivity(prepareReply(message, MessageType.REPLY_ALL))
+    if (message.incomingMessageInfo != null) {
+      startActivity(prepareReply(message, MessageType.REPLY_ALL))
+    } else {
+      //we need to process the message before continue
+      processMessage(message = message, requestCode = REQUEST_CODE_PROCESS_AND_REPLY_ALL)
+    }
   }
 
   private fun prepareReply(message: MessagesInThreadListAdapter.Message, replyType: Int) =
@@ -816,17 +838,23 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
 
   private fun forward(message: MessagesInThreadListAdapter.Message) {
+    if (message.incomingMessageInfo == null) {
+      //we need to process the message before continue
+      processMessage(message = message, requestCode = REQUEST_CODE_PROCESS_AND_FORWARD)
+      return
+    }
+
     if (message.attachments.none { it.isEmbeddedAndPossiblyEncrypted() || (it.isDecrypted && it.uri == null) }) {
       startActivity(
         CreateMessageActivity.generateIntent(
           context = context,
           messageType = MessageType.FORWARD,
           msgEncryptionType = message.messageEntity.getMessageEncryptionType(),
-          msgInfo = message.incomingMessageInfo?.toReplyVersion(
+          msgInfo = message.incomingMessageInfo.toReplyVersion(
             requireContext(),
             CONTENT_MAX_ALLOWED_LENGTH
           ),
-          attachments = (if (message.incomingMessageInfo?.encryptionType == MessageEncryptionType.ENCRYPTED) {
+          attachments = (if (message.incomingMessageInfo.encryptionType == MessageEncryptionType.ENCRYPTED) {
             message.attachments.map {
               it.copy(
                 isLazyForwarded = !it.isEmbedded,
@@ -841,17 +869,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       )
     } else {
       //we need to process the message again and keep attachments in RAM for forwarding
-      showDialogFragment(navController) {
-        object : NavDirections {
-          override val actionId = R.id.process_message_dialog_graph
-          override val arguments = ProcessMessageDialogFragmentArgs(
-            requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-            requestCode = REQUEST_CODE_PROCESS_AND_FORWARD,
-            message = message,
-            attachmentId = REQUEST_CODE_PROCESS_AND_FORWARD.toString()
-          ).toBundle()
-        }
-      }
+      processMessage(
+        message = message,
+        requestCode = REQUEST_CODE_PROCESS_AND_FORWARD,
+        attachmentId = REQUEST_CODE_PROCESS_AND_FORWARD.toString()
+      )
     }
   }
 
@@ -878,32 +900,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     message: MessagesInThreadListAdapter.Message,
     forceProcess: Boolean = false
   ) {
-    if (message.messageEntity.hasPgp == true) {
-      val keysStorage = KeysStorageImpl.getInstance(requireContext())
-      val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
-      if (fingerprints.isNotEmpty()) {
-        showNeedPassphraseDialog(
-          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
-          requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE,
-          fingerprints = fingerprints,
-          bundle = Bundle().apply { putLong(KEY_EXTRA_MESSAGE_ID, message.id) }
-        )
-        return
-      }
-    }
-
     if (message.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED || forceProcess) {
       if (message.incomingMessageInfo == null || forceProcess) {
-        showDialogFragment(navController) {
-          return@showDialogFragment object : NavDirections {
-            override val actionId = R.id.process_message_dialog_graph
-            override val arguments = ProcessMessageDialogFragmentArgs(
-              requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-              requestCode = REQUEST_CODE_PROCESS_WHOLE_MESSAGE,
-              message = message
-            ).toBundle()
-          }
-        }
+        processMessage(message = message, requestCode = REQUEST_CODE_PROCESS_WHOLE_MESSAGE)
       } else {
         threadDetailsViewModel.onMessageClicked(message)
       }
@@ -990,17 +989,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           && attachmentInfo.isDecrypted
           && attachmentInfo.uri == null -> {
         //need to process message again and store attachment in RAM cache
-        showDialogFragment(navController) {
-          object : NavDirections {
-            override val actionId = R.id.process_message_dialog_graph
-            override val arguments = ProcessMessageDialogFragmentArgs(
-              requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-              requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD,
-              message = message,
-              attachmentId = attachmentInfo.path
-            ).toBundle()
-          }
-        }
+        processMessage(
+          message = message,
+          requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD,
+          attachmentId = attachmentInfo.path
+        )
       }
 
       else -> {
@@ -1060,17 +1053,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
         attachmentInfo.isDecrypted && attachmentInfo.uri == null -> {
           //need to process message again and store attachment in RAM cache
-          showDialogFragment(navController) {
-            object : NavDirections {
-              override val actionId = R.id.process_message_dialog_graph
-              override val arguments = ProcessMessageDialogFragmentArgs(
-                requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
-                requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW,
-                message = message,
-                attachmentId = attachmentInfo.path
-              ).toBundle()
-            }
-          }
+          processMessage(
+            message = message,
+            requestCode = REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW,
+            attachmentId = attachmentInfo.path
+          )
         }
 
         else -> {
@@ -1088,6 +1075,42 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             }
           }
         }
+      }
+    }
+  }
+
+  private fun processMessage(
+    message: MessagesInThreadListAdapter.Message,
+    requestCode: Int,
+    attachmentId: String? = null
+  ) {
+    if (message.messageEntity.hasPgp == true) {
+      val keysStorage = KeysStorageImpl.getInstance(requireContext())
+      val fingerprints = keysStorage.getFingerprintsWithEmptyPassphrase()
+      if (fingerprints.isNotEmpty()) {
+        showNeedPassphraseDialog(
+          requestKey = REQUEST_KEY_FIX_MISSING_PASSPHRASE + args.messageEntityId.toString(),
+          requestCode = REQUEST_CODE_FIX_MISSING_PASSPHRASE_BEFORE_PROCESS_MESSAGE,
+          fingerprints = fingerprints,
+          bundle = Bundle().apply {
+            putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+            putInt(KEY_EXTRA_REQUEST_CODE, requestCode)
+            putString(KEY_EXTRA_ATTACHMENT_ID, attachmentId)
+          }
+        )
+        return
+      }
+    }
+
+    showDialogFragment(navController) {
+      object : NavDirections {
+        override val actionId = R.id.process_message_dialog_graph
+        override val arguments = ProcessMessageDialogFragmentArgs(
+          requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+          requestCode = requestCode,
+          message = message,
+          attachmentId = attachmentId
+        ).toBundle()
       }
     }
   }
@@ -1304,6 +1327,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
   companion object {
     private const val KEY_EXTRA_MESSAGE_ID = "MESSAGE_ID"
     private const val KEY_EXTRA_ATTACHMENT_ID = "ATTACHMENT_ID"
+    private const val KEY_EXTRA_REQUEST_CODE = "REQUEST_CODE"
 
     private val REQUEST_KEY_PROCESS_MESSAGE = GeneralUtil.generateUniqueExtraKey(
       "REQUEST_KEY_PROCESS_MESSAGE",
@@ -1364,7 +1388,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     private const val REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD = 1011
     private const val REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW = 1012
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_AFTER_PROCESS_MESSAGE = 1013
-    private const val REQUEST_CODE_PROCESS_AND_FORWARD = 1014
+    private const val REQUEST_CODE_PROCESS_AND_REPLY = 1014
+    private const val REQUEST_CODE_PROCESS_AND_REPLY_ALL = 1015
+    private const val REQUEST_CODE_PROCESS_AND_FORWARD = 1016
 
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
