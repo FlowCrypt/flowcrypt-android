@@ -30,6 +30,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
+import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
@@ -458,6 +459,29 @@ data class MessageEntity(
         append(timeSpannable)
       }
     } else charSequence
+  }
+
+  fun toUpdatedThreadCopy(messageEntity: MessageEntity, thread: GmailThreadInfo): MessageEntity {
+    return copy(
+      id = messageEntity.id,
+      uid = messageEntity.uid,
+      subject = thread.subject,
+      threadMessagesCount = thread.messagesCount,
+      threadDraftsCount = thread.draftsCount,
+      labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
+      hasAttachments = thread.hasAttachments,
+      fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
+      hasPgp = thread.hasPgpThings,
+      flags = if (thread.hasUnreadMessages) {
+        messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+      } else {
+        if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+          messageEntity.flags
+        } else {
+          messageEntity.flags.plus("${MessageFlag.SEEN.value} ")
+        }
+      }
+    )
   }
 
   private fun prepareDateHeaderValue(context: Context): String {

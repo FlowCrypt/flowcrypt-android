@@ -22,15 +22,9 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.disposition
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.extractSubject
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getAttachmentInfoList
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getDraftsCount
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueLabelsSet
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getUniqueRecipients
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasAttachments
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasUnreadMessages
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isMimeType
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.toThreadInfo
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.model.KeyImportDetails
@@ -419,8 +413,7 @@ class GmailApiHelper {
               responseHeaders: HttpHeaders?
             ) {
               t?.let { thread ->
-                val gmailThreadInfo = extractGmailThreadInfo(accountEntity, thread, context)
-                listResult.add(gmailThreadInfo)
+                listResult.add(thread.toThreadInfo(context, accountEntity))
               }
             }
 
@@ -442,39 +435,26 @@ class GmailApiHelper {
       format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
       fields: List<String>? = null
-    ): GmailThreadInfo = withContext(Dispatchers.IO)
+    ): GmailThreadInfo? = withContext(Dispatchers.IO)
     {
-      val gmailApiService = generateGmailApiService(context, accountEntity)
-
-      val request = gmailApiService
-        .users()
-        .threads()
-        .get(DEFAULT_USER_ID, threadId)
-        .setFormat(format)
-
-      metadataHeaders?.let { metadataHeaders ->
-        request.metadataHeaders = metadataHeaders
-      }
-
-      fields?.let { fields ->
-        request.fields = fields.joinToString(separator = ",")
-      }
-
-      val thread = request.execute()
-      val gmailThreadInfo = extractGmailThreadInfo(accountEntity, thread, context)
-
-      return@withContext gmailThreadInfo
+      return@withContext getThread(
+        context = context,
+        accountEntity = accountEntity,
+        threadId = threadId,
+        format = format,
+        metadataHeaders = metadataHeaders,
+        fields = fields
+      )?.toThreadInfo(context, accountEntity)
     }
 
-    suspend fun loadMessagesInThread(
+    suspend fun getThread(
       context: Context,
       accountEntity: AccountEntity,
       threadId: String,
       format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
       fields: List<String>? = null
-    ): List<Message> = withContext(Dispatchers.IO)
-    {
+    ): Thread? = withContext(Dispatchers.IO) {
       val gmailApiService = generateGmailApiService(context, accountEntity)
 
       val request = gmailApiService
@@ -491,7 +471,7 @@ class GmailApiHelper {
         request.fields = fields.joinToString(separator = ",")
       }
 
-      return@withContext request.execute()?.messages ?: emptyList()
+      return@withContext request.execute()
     }
 
     suspend fun loadMsgs(
@@ -1290,30 +1270,6 @@ class GmailApiHelper {
           processException(it)
         } ?: e
       }
-    }
-
-    private fun extractGmailThreadInfo(
-      accountEntity: AccountEntity,
-      thread: Thread,
-      context: Context
-    ): GmailThreadInfo {
-      val receiverEmail = accountEntity.email
-      val gmailThreadInfo = GmailThreadInfo(
-        id = thread.id,
-        lastMessage = requireNotNull(
-          thread.messages?.lastOrNull {
-            !it.labelIds.contains(LABEL_DRAFT)
-          } ?: thread.messages.first()),
-        messagesCount = thread.messages?.size ?: 0,
-        draftsCount = thread.getDraftsCount(),
-        recipients = thread.getUniqueRecipients(receiverEmail),
-        subject = thread.extractSubject(context, receiverEmail),
-        labels = thread.getUniqueLabelsSet(),
-        hasAttachments = thread.hasAttachments(),
-        hasPgpThings = thread.hasPgp(),
-        hasUnreadMessages = thread.hasUnreadMessages()
-      )
-      return gmailThreadInfo
     }
   }
 }

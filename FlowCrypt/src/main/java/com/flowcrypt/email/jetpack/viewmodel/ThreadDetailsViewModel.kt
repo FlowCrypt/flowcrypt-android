@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -20,6 +21,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInReplyTo
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.toThreadInfo
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
@@ -369,15 +371,32 @@ class ThreadDetailsViewModel(
     if (threadMessageEntity.threadIdAsHEX.isNullOrEmpty() || !activeAccount.isGoogleSignInAccount) {
       return Result.success(Data(silentUpdate = silentUpdate, list = listOf()))
     } else {
-      val threadHeader =
-        prepareThreadHeader(roomDatabase.msgDao().getMsgById(threadMessageEntityId))
-
       try {
-        val messagesInThread = GmailApiHelper.loadMessagesInThread(
-          getApplication(),
-          activeAccount,
-          threadMessageEntity.threadIdAsHEX
-        ).toMutableList().apply {
+        val thread = GmailApiHelper.getThread(
+          context = getApplication(),
+          accountEntity = activeAccount,
+          threadId = threadMessageEntity.threadIdAsHEX,
+          format = GmailApiHelper.RESPONSE_FORMAT_FULL
+        ) ?: error("Thread not found")
+
+        val threadInfo = thread.toThreadInfo(getApplication(), activeAccount)
+        //keep thread info updated in the local cache
+        roomDatabase.msgDao().updateSuspend(
+          MessageEntity.genMessageEntities(
+            context = getApplication(),
+            account = activeAccount.email,
+            accountType = activeAccount.accountType,
+            label = localFolder.fullName,
+            msgsList = listOf(threadInfo.lastMessage),
+            isNew = false,
+            onlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
+          ) { message, messageEntity ->
+            if (message.threadId == threadMessageEntity.threadIdAsHEX) {
+              messageEntity.toUpdatedThreadCopy(threadMessageEntity, threadInfo)
+            } else messageEntity
+          })
+
+        val messagesInThread = (thread.messages ?: emptyList()).toMutableList().apply {
           //try to put drafts in the right position
           val drafts = filter { it.isDraft() }
           drafts.forEach { draft ->
@@ -405,10 +424,6 @@ class ThreadDetailsViewModel(
             messages = messagesInThread.filter { it.isDraft() }
           ).associateBy({ it.message.id }, { it.id })
         } else emptyMap()
-
-        //update the actual thread size
-        roomDatabase.msgDao()
-          .updateSuspend(threadMessageEntity.copy(threadMessagesCount = messagesInThread.size))
 
         val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
         val messageEntitiesBasedOnServerResult = MessageEntity.genMessageEntities(
@@ -503,6 +518,11 @@ class ThreadDetailsViewModel(
           } ?: messageItemBasedOnDataFromServer
         }
 
+        val threadHeader = prepareThreadHeader(
+          messageEntity = roomDatabase.msgDao().getMsgById(threadMessageEntityId),
+          threadInfo = threadInfo
+        )
+
         return Result.success(
           Data(
             silentUpdate = silentUpdate,
@@ -516,7 +536,10 @@ class ThreadDetailsViewModel(
     }
   }
 
-  private suspend fun prepareThreadHeader(messageEntity: MessageEntity?): MessagesInThreadListAdapter.ThreadHeader =
+  private suspend fun prepareThreadHeader(
+    messageEntity: MessageEntity?,
+    threadInfo: GmailThreadInfo? = null
+  ): MessagesInThreadListAdapter.ThreadHeader =
     withContext(Dispatchers.IO) {
       val account =
         getActiveAccountSuspend() ?: return@withContext MessagesInThreadListAdapter.ThreadHeader(
@@ -530,13 +553,13 @@ class ThreadDetailsViewModel(
 
       return@withContext try {
         //try to get the last changes from a server
-        val latestLabelIds = GmailApiHelper.loadThreadInfo(
+        val latestLabelIds = (threadInfo ?: GmailApiHelper.loadThreadInfo(
           context = getApplication(),
           accountEntity = account,
           threadId = messageEntity?.threadIdAsHEX ?: "",
           fields = listOf("id", "messages/labelIds"),
           format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
-        ).labels
+        ))?.labels ?: error("Thread not found")
         if (cachedLabelIds == null
           || !(latestLabelIds.containsAll(cachedLabelIds)
               && cachedLabelIds.containsAll(latestLabelIds))

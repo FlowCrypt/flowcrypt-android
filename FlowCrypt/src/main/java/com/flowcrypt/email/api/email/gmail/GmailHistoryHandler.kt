@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.LABEL_TRASH
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.labelsToImapFlags
 import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -182,9 +181,7 @@ object GmailHistoryHandler {
             threadDraftsCount = thread.draftsCount,
             labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
             hasAttachments = thread.hasAttachments,
-            fromAddresses = InternetAddress.toString(
-              thread.recipients.toTypedArray()
-            ),
+            fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
             hasPgp = thread.hasPgpThings
           )
         }
@@ -211,26 +208,7 @@ object GmailHistoryHandler {
               onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
             ) { message, messageEntity ->
               if (message.threadId == thread.id) {
-                messageEntity.copy(
-                  id = threadMessageEntity.id,
-                  uid = threadMessageEntity.uid,
-                  subject = thread.subject,
-                  threadMessagesCount = thread.messagesCount,
-                  threadDraftsCount = thread.draftsCount,
-                  labelIds = thread.labels.joinToString(separator = LABEL_IDS_SEPARATOR),
-                  hasAttachments = thread.hasAttachments,
-                  fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
-                  hasPgp = thread.hasPgpThings,
-                  flags = if (thread.hasUnreadMessages) {
-                    threadMessageEntity.flags?.replace(MessageFlag.SEEN.value, "")
-                  } else {
-                    if (threadMessageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-                      threadMessageEntity.flags
-                    } else {
-                      threadMessageEntity.flags.plus("${MessageFlag.SEEN.value} ")
-                    }
-                  }
-                )
+                messageEntity.toUpdatedThreadCopy(threadMessageEntity, thread)
               } else messageEntity
             }
           }

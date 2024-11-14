@@ -8,6 +8,9 @@ package com.flowcrypt.email.extensions.com.google.api.services.gmail.model
 import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.LABEL_DRAFT
+import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.google.api.services.gmail.model.Thread
 import jakarta.mail.internet.InternetAddress
@@ -56,7 +59,7 @@ fun Thread.getUniqueLabelsSet(): Set<String> {
 }
 
 fun Thread.getDraftsCount(): Int {
-  return messages?.filter { it.labelIds.contains(GmailApiHelper.LABEL_DRAFT) }?.size ?: 0
+  return messages?.filter { it.labelIds.contains(LABEL_DRAFT) }?.size ?: 0
 }
 
 fun Thread.hasUnreadMessages(): Boolean {
@@ -90,4 +93,27 @@ fun Thread.extractSubject(context: Context, receiverEmail: String): String {
     }?.getSubject()
     ?: messages?.getOrNull(0)?.getSubject()
     ?: context.getString(R.string.no_subject)
+}
+
+fun Thread.toThreadInfo(
+  context: Context,
+  accountEntity: AccountEntity
+): GmailThreadInfo {
+  val receiverEmail = accountEntity.email
+  val gmailThreadInfo = GmailThreadInfo(
+    id = id,
+    lastMessage = requireNotNull(
+      messages?.lastOrNull {
+        !it.labelIds.contains(LABEL_DRAFT)
+      } ?: messages.first()),
+    messagesCount = messages?.size ?: 0,
+    draftsCount = getDraftsCount(),
+    recipients = getUniqueRecipients(receiverEmail),
+    subject = extractSubject(context, receiverEmail),
+    labels = getUniqueLabelsSet(),
+    hasAttachments = hasAttachments(),
+    hasPgpThings = hasPgp(),
+    hasUnreadMessages = hasUnreadMessages()
+  )
+  return gmailThreadInfo
 }
