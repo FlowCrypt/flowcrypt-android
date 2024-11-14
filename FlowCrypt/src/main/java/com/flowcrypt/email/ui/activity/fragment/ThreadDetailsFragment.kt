@@ -612,6 +612,10 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                 processDownloadAttachment(attachmentInfo, updatedMessage)
               }
           }
+
+          REQUEST_CODE_PROCESS_AND_FORWARD -> {
+            forward(updatedMessage)
+          }
         }
       } else {
         toast(R.string.unknown_error)
@@ -812,20 +816,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     )
 
   private fun forward(message: MessagesInThreadListAdapter.Message) {
-    startActivity(
-      CreateMessageActivity.generateIntent(
-        context = context,
-        messageType = MessageType.FORWARD,
-        msgEncryptionType = message.messageEntity.getMessageEncryptionType(),
-        msgInfo = message.incomingMessageInfo?.toReplyVersion(
-          requireContext(),
-          CONTENT_MAX_ALLOWED_LENGTH
-        ),
-      //attachments = prepareAttachmentsForForwarding().toTypedArray()
-      )
-    )
-    //todo-denbond7 need to handle this case
-    /*if (message.attachments.none { it.isEmbeddedAndPossiblyEncrypted() }) {
+    if (message.attachments.none { it.isEmbeddedAndPossiblyEncrypted() || (it.isDecrypted && it.uri == null) }) {
       startActivity(
         CreateMessageActivity.generateIntent(
           context = context,
@@ -835,24 +826,33 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             requireContext(),
             CONTENT_MAX_ALLOWED_LENGTH
           ),
-          attachments = prepareAttachmentsForForwarding().toTypedArray()
+          attachments = (if (message.incomingMessageInfo?.encryptionType == MessageEncryptionType.ENCRYPTED) {
+            message.attachments.map {
+              it.copy(
+                isLazyForwarded = !it.isEmbedded,
+                name = if (it.isPossiblyEncrypted) FilenameUtils.removeExtension(it.name) else it.name,
+                decryptWhenForward = it.isPossiblyEncrypted
+              )
+            }
+          } else {
+            message.attachments.map { it.copy(isLazyForwarded = !it.isEmbedded) }
+          }).toTypedArray()
         )
       )
     } else {
-      navController?.navigate(
+      //we need to process the message again and keep attachments in RAM for forwarding
+      showDialogFragment(navController) {
         object : NavDirections {
-          override val actionId =
-            R.id.prepare_downloaded_attachments_for_forwarding_dialog_graph
-          override val arguments =
-            DecryptDownloadedAttachmentsBeforeForwardingDialogFragmentArgs(
-              requestKey = REQUEST_KEY_PREPARE_DOWNLOADED_ATTACHMENTS_FOR_FORWARDING + args.messageEntityId.toString(),
-              attachments = attachmentsRecyclerViewAdapter.currentList.filter {
-                it.isEmbeddedAndPossiblyEncrypted()
-              }.toTypedArray()
-            ).toBundle()
+          override val actionId = R.id.process_message_dialog_graph
+          override val arguments = ProcessMessageDialogFragmentArgs(
+            requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
+            requestCode = REQUEST_CODE_PROCESS_AND_FORWARD,
+            message = message,
+            attachmentId = REQUEST_CODE_PROCESS_AND_FORWARD.toString()
+          ).toBundle()
         }
-      )
-    }*/
+      }
+    }
   }
 
   private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
@@ -1364,6 +1364,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     private const val REQUEST_CODE_PROCESS_ATTACHMENT_DOWNLOAD = 1011
     private const val REQUEST_CODE_PROCESS_ATTACHMENT_PREVIEW = 1012
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_AFTER_PROCESS_MESSAGE = 1013
+    private const val REQUEST_CODE_PROCESS_AND_FORWARD = 1014
 
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
