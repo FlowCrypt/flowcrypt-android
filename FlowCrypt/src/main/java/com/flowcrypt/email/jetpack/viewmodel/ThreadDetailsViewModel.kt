@@ -464,7 +464,9 @@ class ThreadDetailsViewModel(
             candidatesToBeInserted.add(entity)
           } else if (existingVersion.copy(id = null) != entity) {
             candidatesToBeUpdated.add(entity.copy(id = existingVersion.id))
-            MsgsCacheManager.removeMessage(existingVersion.id.toString())
+            if (existingVersion.flags != entity.flags) {
+              MsgsCacheManager.removeMessage(existingVersion.id.toString())
+            }
           }
         }
         val candidatesToBeDeleted =

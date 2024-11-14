@@ -879,7 +879,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun tryToOpenTheFreshestMessage(data: List<MessagesInThreadListAdapter.Item>) {
     if (isActive && data.size > 1) {
-      val hasProcessedMessages = messagesInThreadListAdapter.currentList.any {
+      val hasProcessedMessages = data.any {
         it is MessagesInThreadListAdapter.Message && it.incomingMessageInfo != null
       }
       val existing = messagesInThreadListAdapter.currentList.getOrNull(1)
