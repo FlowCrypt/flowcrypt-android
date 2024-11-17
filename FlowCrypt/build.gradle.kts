@@ -439,9 +439,9 @@ dependencies {
   implementation("androidx.activity:activity-ktx:1.9.3")
   implementation("androidx.fragment:fragment-ktx:1.8.4")
   implementation("androidx.work:work-runtime-ktx:2.9.1")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.8.3")
-  implementation("androidx.navigation:navigation-ui-ktx:2.8.3")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.8.3")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.8.4")
+  implementation("androidx.navigation:navigation-ui-ktx:2.8.4")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.8.4")
   implementation("androidx.webkit:webkit:1.12.1")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
