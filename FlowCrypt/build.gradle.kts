@@ -404,7 +404,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  testImplementation("org.robolectric:robolectric:4.12.2")
+  testImplementation("org.robolectric:robolectric:4.14")
   //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
   testImplementation("junit:junit:4.13.2")
