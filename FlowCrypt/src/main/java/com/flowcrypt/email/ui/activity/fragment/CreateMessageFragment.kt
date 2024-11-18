@@ -192,9 +192,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     override fun onChipDeleted(
       recipientType: Message.RecipientType,
-      recipientInfo: RecipientChipRecyclerViewAdapter.RecipientInfo
+      recipientItem: RecipientChipRecyclerViewAdapter.RecipientItem
     ) {
-      val email = recipientInfo.recipientWithPubKeys.recipient.email
+      val email = recipientItem.recipientWithPubKeys.recipient.email
       composeMsgViewModel.removeRecipient(recipientType, email)
     }
 
@@ -1482,7 +1482,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun updateAutoCompleteAdapter(recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>) {
+  private fun updateAutoCompleteAdapter(recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientItem>) {
     val emails = recipients.keys
     toAutoCompleteResultRecyclerViewAdapter.submitList(
       toAutoCompleteResultRecyclerViewAdapter.currentList.map {
@@ -1492,7 +1492,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun updateChipAdapter(
     recipientType: Message.RecipientType,
-    recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>
+    recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientItem>
   ) {
     when (recipientType) {
       Message.RecipientType.TO -> toRecipientsChipRecyclerViewAdapter.submitList(
