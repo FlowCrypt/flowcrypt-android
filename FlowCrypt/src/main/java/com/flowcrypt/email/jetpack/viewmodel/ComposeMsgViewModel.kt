@@ -33,8 +33,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   AccountViewModel(application) {
   private val recipientLookUpManager = RecipientLookUpManager(
     application = application,
-    roomDatabase = roomDatabase,
-    viewModelScope = viewModelScope
+    roomDatabase = roomDatabase
   ) { recipientInfo ->
     val recipientItem = RecipientItem(
       recipientInfo.recipientType,

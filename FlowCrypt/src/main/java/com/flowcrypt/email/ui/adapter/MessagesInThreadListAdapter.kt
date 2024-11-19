@@ -429,7 +429,7 @@ class MessagesInThreadListAdapter(
 
       if (message.incomingMessageInfo != null) {
         updateMsgView(message, onMessageActionsListener)
-        updatePgpBadges(message.incomingMessageInfo)
+        updatePgpBadges(message)
       }
     }
 
@@ -460,8 +460,9 @@ class MessagesInThreadListAdapter(
       }
     }
 
-    private fun updatePgpBadges(incomingMessageInfo: IncomingMessageInfo) {
+    private fun updatePgpBadges(message: Message) {
       val badges = mutableListOf<PgpBadgeListAdapter.PgpBadge>()
+      val incomingMessageInfo: IncomingMessageInfo = message.incomingMessageInfo ?: return
 
       if (incomingMessageInfo.encryptionType == MessageEncryptionType.ENCRYPTED) {
         badges.add(PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED))
@@ -477,7 +478,11 @@ class MessagesInThreadListAdapter(
           }
 
           verificationResult.hasUnverifiedSignatures -> {
-            PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
+            if (message.hasActiveSignatureVerification) {
+              PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.VERIFYING_SIGNATURE)
+            } else {
+              PgpBadgeListAdapter.PgpBadge(PgpBadgeListAdapter.PgpBadge.Type.CAN_NOT_VERIFY_SIGNATURE)
+            }
           }
 
           verificationResult.isPartialSigned -> {
@@ -985,7 +990,8 @@ class MessagesInThreadListAdapter(
     override val type: Type,
     val isHeadersDetailsExpanded: Boolean,
     val attachments: List<AttachmentInfo>,
-    val incomingMessageInfo: IncomingMessageInfo? = null
+    val incomingMessageInfo: IncomingMessageInfo? = null,
+    val hasActiveSignatureVerification: Boolean = false
   ) : Item(), Parcelable {
     override val id: Long
       get() = messageEntity.uid

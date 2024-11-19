@@ -23,10 +23,10 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
@@ -42,9 +42,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.pgpainless.PGPainless
-import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
-import org.pgpainless.util.Passphrase
 
 /**
  * @author Denys Bondarenko
@@ -262,60 +259,15 @@ class ProcessMessageViewModel(
 
   private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot):
       Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
-    val uri = msgSnapshot.getUri(0)
     val accountEntity = getActiveAccountSuspend()
       ?: throw java.lang.NullPointerException("Account is null")
-    if (uri != null) {
-      val context: Context = getApplication()
-      try {
-        val inputStream =
-          context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
-        val keys = PGPainless.readKeyRing()
-          .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
-
-        val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
-          srcInputStream = inputStream,
-          secretKeys = keys,
-          protector = PasswordBasedSecretKeyRingProtector.forKey(
-            keys.first(),
-            Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
-          )
-        )
-
-        val processedMimeMessage = PgpMsg.processMimeMessage(
-          context = getApplication(),
-          inputStream = decryptionStream,
-          skipAttachmentsRawData = skipAttachmentsRawData
-        )
-
-        preResultsProcessing(processedMimeMessage.blocks)
-        return@withContext Result.success(processedMimeMessage)
-      } catch (e: Exception) {
-        return@withContext Result.exception(e)
-      }
-    } else {
-      val byteArray = msgSnapshot.getByteArray(0)
-      return@withContext processingByteArray(byteArray)
-    }
-  }
-
-  private suspend fun processingByteArray(rawMimeBytes: ByteArray?):
-      Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
-    return@withContext if (rawMimeBytes == null) {
-      Result.exception(throwable = IllegalArgumentException("empty byte array"))
-    } else {
-      try {
-        val processedMimeMessageResult = PgpMsg.processMimeMessage(
-          context = getApplication(),
-          inputStream = rawMimeBytes.inputStream(),
-          skipAttachmentsRawData = skipAttachmentsRawData
-        )
-        preResultsProcessing(processedMimeMessageResult.blocks)
-        return@withContext Result.success(processedMimeMessageResult)
-      } catch (e: Exception) {
-        return@withContext Result.exception(throwable = e)
-      }
+    return@withContext msgSnapshot.processing(
+      context = getApplication(),
+      accountEntity = accountEntity,
+      skipAttachmentsRawData
+    ) { blocks ->
+      preResultsProcessing(blocks)
     }
   }
 

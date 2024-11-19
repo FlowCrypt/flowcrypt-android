@@ -193,8 +193,7 @@ object PgpMsg {
     context: Context,
     inputStream: InputStream,
     skipAttachmentsRawData: Boolean = false
-  ):
-      ProcessedMimeMessageResult = withContext(Dispatchers.IO) {
+  ): ProcessedMimeMessageResult = withContext(Dispatchers.IO) {
     val keysStorage = KeysStorageImpl.getInstance(context)
     val accountSecretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
     val protector = keysStorage.getSecretKeyRingProtector()

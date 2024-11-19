@@ -583,6 +583,30 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       ) as? MessagesInThreadListAdapter.Message?
       val requestCode = bundle.getInt(ProcessMessageDialogFragment.KEY_REQUEST_CODE)
       if (message != null) {
+        val hasUnverifiedSignatures =
+          message.incomingMessageInfo?.verificationResult?.hasUnverifiedSignatures ?: false
+        val hasActiveSignatureVerification = if (hasUnverifiedSignatures) {
+          val messageFromAddresses = message.incomingMessageInfo?.getFrom()?.map {
+            it.address.lowercase()
+          } ?: emptyList()
+
+          val alreadyCheckedFromAddresses =
+            threadDetailsViewModel.sessionFromRecipientsStateFlow.value.filter {
+              !it.isUpdating
+            }.map { it.recipientWithPubKeys.recipient.email }
+
+          if (alreadyCheckedFromAddresses.containsAll(messageFromAddresses)
+            || messageFromAddresses.isEmpty()
+          ) {
+            false
+          } else {
+            threadDetailsViewModel.fetchAndUpdateInfoAboutRecipients(messageFromAddresses)
+            true
+          }
+        } else {
+          false
+        }
+
         val updatedMessage = message.copy(
           type = MessagesInThreadListAdapter.Type.MESSAGE_EXPANDED,
           attachments = message.attachments.map { attachmentInfo ->
@@ -591,7 +615,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             } else {
               attachmentInfo
             }
-          }
+          },
+          hasActiveSignatureVerification = hasActiveSignatureVerification
         )
 
         threadDetailsViewModel.onMessageChanged(updatedMessage)

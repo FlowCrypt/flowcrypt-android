@@ -18,9 +18,7 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.ApiException
 import jakarta.mail.Message
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
@@ -31,7 +29,6 @@ import java.util.concurrent.ConcurrentHashMap
 class RecipientLookUpManager(
   private val application: Application,
   private val roomDatabase: FlowCryptRoomDatabase,
-  private val viewModelScope: CoroutineScope,
   private val updateListener: (recipientInfo: RecipientInfo) -> Unit
 ) {
   private val lookUpCandidates = ConcurrentHashMap<String, RecipientInfo>()
@@ -41,40 +38,40 @@ class RecipientLookUpManager(
     Dispatchers.IO.limitedParallelism(PARALLELISM_COUNT)
 
   suspend fun enqueue(recipientInfo: RecipientInfo) = withContext(Dispatchers.IO) {
-    viewModelScope.launch {
-      val email = recipientInfo.recipientWithPubKeys.recipient.email
-      if (recipientsSessionCache.containsKey(email)) {
-        //we return a value from the session cache
+    val email = recipientInfo.recipientWithPubKeys.recipient.email
+    if (recipientsSessionCache.containsKey(email)) {
+      //we return a value from the session cache
+      updateListener.invoke(
+        recipientInfo.copy(
+          isUpdating = false,
+          recipientWithPubKeys = requireNotNull(recipientsSessionCache[email])
+        )
+      )
+    } else {
+      lookUpCandidates[email] = recipientInfo
+      if (!recipientInfo.isUpdating) {
+        updateListener.invoke(recipientInfo.copy(isUpdating = true))
+      }
+      try {
+        val recipientWithPubKeysAfterLookUp = lookUp(email)
+        dequeue(email)
+        if (recipientWithPubKeysAfterLookUp.hasUsablePubKey()) {
+          recipientsSessionCache[email] = recipientWithPubKeysAfterLookUp
+        }
         updateListener.invoke(
           recipientInfo.copy(
             isUpdating = false,
-            recipientWithPubKeys = requireNotNull(recipientsSessionCache[email])
+            recipientWithPubKeys = recipientWithPubKeysAfterLookUp
           )
         )
-      } else {
-        lookUpCandidates[email] = recipientInfo
-        if (!recipientInfo.isUpdating) {
-          updateListener.invoke(recipientInfo.copy(isUpdating = true))
-        }
-        try {
-          val recipientWithPubKeysAfterLookUp = lookUp(email)
-          dequeue(email)
-          if (recipientWithPubKeysAfterLookUp.hasUsablePubKey()) {
-            recipientsSessionCache[email] = recipientWithPubKeysAfterLookUp
-          }
-          updateListener.invoke(
-            recipientInfo.copy(
-              isUpdating = false,
-              recipientWithPubKeys = recipientWithPubKeysAfterLookUp
-            )
-          )
-        } catch (e: Exception) {
-          e.printStackTrace()
-          updateListener.invoke(recipientInfo.copy(isUpdating = false))
-        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        updateListener.invoke(recipientInfo.copy(isUpdating = false))
       }
     }
   }
+
+  fun hasActiveJobs(): Boolean = lookUpCandidates.isNotEmpty()
 
   private suspend fun lookUp(email: String): RecipientWithPubKeys = withContext(Dispatchers.IO) {
     val emailLowerCase = email.lowercase()

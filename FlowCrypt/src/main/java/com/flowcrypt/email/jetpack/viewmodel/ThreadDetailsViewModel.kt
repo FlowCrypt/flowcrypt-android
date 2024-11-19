@@ -18,6 +18,9 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInReplyTo
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
@@ -26,7 +29,9 @@ import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter.Message
+import com.flowcrypt.email.util.RecipientLookUpManager
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import jakarta.mail.Message.RecipientType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +68,20 @@ class ThreadDetailsViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
       )
+
+  private val recipientLookUpManager = RecipientLookUpManager(
+    application = application,
+    roomDatabase = roomDatabase
+  ) { recipientInfo ->
+    sessionFromRecipientsMutableStateFlow.update {
+      it.toMutableSet().apply { add(recipientInfo) }
+    }
+  }
+
+  private val sessionFromRecipientsMutableStateFlow: MutableStateFlow<Set<RecipientLookUpManager.RecipientInfo>> =
+    MutableStateFlow(emptySet())
+  val sessionFromRecipientsStateFlow: StateFlow<Set<RecipientLookUpManager.RecipientInfo>> =
+    sessionFromRecipientsMutableStateFlow.asStateFlow()
 
   @OptIn(ExperimentalCoroutinesApi::class)
   val localFolderFlow: StateFlow<LocalFolder?> =
@@ -171,38 +190,56 @@ class ThreadDetailsViewModel(
   init {
     subscribeToAutomaticallyUpdateLabels()
     viewModelScope.launch {
-      messagesInThreadFlow.collectLatest {
-        if (it.status == Result.Status.SUCCESS) {
-          val messageItems = it.data?.list?.filterIsInstance<Message>() ?: return@collectLatest
-          if (messageItems.isEmpty()) {
-            return@collectLatest
-          }
+      keepThreadMessageEntityFresh()
+    }
 
-          val threadMessageEntity =
-            roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return@collectLatest
+    viewModelScope.launch {
+      sessionFromRecipientsStateFlow.collectLatest {
+        if (!recipientLookUpManager.hasActiveJobs() && it.isNotEmpty()) {
+          val recipientsWithUsablePubKey = sessionFromRecipientsStateFlow.value
+            .filter { recipientInfo ->
+              recipientInfo.recipientWithPubKeys.hasUsablePubKey()
+            }.map { recipientInfo ->
+              recipientInfo.recipientWithPubKeys.recipient.email
+            }
 
-          val isThreadFullySeen = messageItems.all { item -> item.messageEntity.isSeen }
-          if (threadMessageEntity.isSeen != isThreadFullySeen) {
-            roomDatabase.msgDao().getMsgById(threadMessageEntityId)?.let { messageEntity ->
-              roomDatabase.msgDao().updateSuspend(
-                messageEntity.copy(
-                  labelIds = messageEntity.labelIds
-                    ?.split(MessageEntity.LABEL_IDS_SEPARATOR)
-                    ?.toMutableSet()
-                    ?.apply {
-                      remove(GmailApiHelper.LABEL_UNREAD)
-                    }?.joinToString(MessageEntity.LABEL_IDS_SEPARATOR),
-                  flags = if (isThreadFullySeen) {
-                    if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-                      messageEntity.flags
-                    } else {
-                      messageEntity.flags?.plus("${MessageFlag.SEEN.value} ")
-                    }
-                  } else {
-                    messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
-                  }
+          val messagesWithActiveSignatureVerification = messagesInThreadFlow.value.data?.list
+            ?.filterIsInstance<Message>()
+            ?.filter { message ->
+              message.hasActiveSignatureVerification
+            } ?: emptyList()
+
+          messagesWithActiveSignatureVerification.forEach { message ->
+            val messageFromAddresses = message.incomingMessageInfo?.getFrom()
+              ?.map { internetAddress ->
+                internetAddress.address.lowercase()
+              } ?: emptyList()
+
+            if (recipientsWithUsablePubKey.containsAll(messageFromAddresses)) {
+              try {
+                val messageEntity = message.messageEntity
+                val existedMsgSnapshot =
+                  requireNotNull(MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString()))
+                val verificationResult = requireNotNull(
+                  existedMsgSnapshot.processing(
+                    context = getApplication(),
+                    accountEntity = getActiveAccountSuspend() ?: error("Account is null"),
+                    skipAttachmentsRawData = true
+                  ).data?.verificationResult
                 )
-              )
+                onMessageChanged(
+                  message.copy(
+                    incomingMessageInfo = message.incomingMessageInfo?.copy(
+                      verificationResult = verificationResult
+                    ),
+                    hasActiveSignatureVerification = false
+                  )
+                )
+              } catch (e: Exception) {
+                onMessageChanged(message.copy(hasActiveSignatureVerification = false))
+              }
+            } else {
+              onMessageChanged(message.copy(hasActiveSignatureVerification = false))
             }
           }
         }
@@ -357,6 +394,24 @@ class ThreadDetailsViewModel(
       }
     }
   }
+
+  fun fetchAndUpdateInfoAboutRecipients(from: Collection<String>) {
+    viewModelScope.launch {
+      from.forEach {
+        recipientLookUpManager.enqueue(
+          RecipientLookUpManager.RecipientInfo(
+            FROM,
+            RecipientWithPubKeys(
+              RecipientEntity(id = System.currentTimeMillis(), email = it),
+              emptyList()
+            )
+          )
+        )
+      }
+    }
+  }
+
+  class FROM : RecipientType("From")
 
   private suspend fun loadMessagesInternal(
     clearCache: Boolean = false,
@@ -607,6 +662,45 @@ class ThreadDetailsViewModel(
     }
   }
 
+  private suspend fun keepThreadMessageEntityFresh() {
+    messagesInThreadFlow.collectLatest {
+      if (it.status == Result.Status.SUCCESS) {
+        val messageItems = it.data?.list?.filterIsInstance<Message>() ?: return@collectLatest
+        if (messageItems.isEmpty()) {
+          return@collectLatest
+        }
+
+        val threadMessageEntity =
+          roomDatabase.msgDao().getMsgById(threadMessageEntityId) ?: return@collectLatest
+
+        val isThreadFullySeen = messageItems.all { item -> item.messageEntity.isSeen }
+        if (threadMessageEntity.isSeen != isThreadFullySeen) {
+          roomDatabase.msgDao().getMsgById(threadMessageEntityId)?.let { messageEntity ->
+            roomDatabase.msgDao().updateSuspend(
+              messageEntity.copy(
+                labelIds = messageEntity.labelIds
+                  ?.split(MessageEntity.LABEL_IDS_SEPARATOR)
+                  ?.toMutableSet()
+                  ?.apply {
+                    remove(GmailApiHelper.LABEL_UNREAD)
+                  }?.joinToString(MessageEntity.LABEL_IDS_SEPARATOR),
+                flags = if (isThreadFullySeen) {
+                  if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                    messageEntity.flags
+                  } else {
+                    messageEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+                  }
+                } else {
+                  messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+                }
+              )
+            )
+          }
+        }
+      }
+    }
+  }
+
   private fun getFolderFullName() = if (localFolder.searchQuery == null) {
     localFolder.fullName
   } else {
@@ -618,4 +712,8 @@ class ThreadDetailsViewModel(
     val list: List<MessagesInThreadListAdapter.Item>,
     val timeSnapshot: Long = System.currentTimeMillis()
   )
+
+  companion object {
+    val FROM = FROM()
+  }
 }
