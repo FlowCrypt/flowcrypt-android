@@ -194,56 +194,7 @@ class ThreadDetailsViewModel(
     }
 
     viewModelScope.launch {
-      sessionFromRecipientsStateFlow.collectLatest {
-        if (!recipientLookUpManager.hasActiveJobs() && it.isNotEmpty()) {
-          val recipientsWithUsablePubKey = sessionFromRecipientsStateFlow.value
-            .filter { recipientInfo ->
-              recipientInfo.recipientWithPubKeys.hasUsablePubKey()
-            }.map { recipientInfo ->
-              recipientInfo.recipientWithPubKeys.recipient.email
-            }
-
-          val messagesWithActiveSignatureVerification = messagesInThreadFlow.value.data?.list
-            ?.filterIsInstance<Message>()
-            ?.filter { message ->
-              message.hasActiveSignatureVerification
-            } ?: emptyList()
-
-          messagesWithActiveSignatureVerification.forEach { message ->
-            val messageFromAddresses = message.incomingMessageInfo?.getFrom()
-              ?.map { internetAddress ->
-                internetAddress.address.lowercase()
-              } ?: emptyList()
-
-            if (recipientsWithUsablePubKey.containsAll(messageFromAddresses)) {
-              try {
-                val messageEntity = message.messageEntity
-                val existedMsgSnapshot =
-                  requireNotNull(MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString()))
-                val verificationResult = requireNotNull(
-                  existedMsgSnapshot.processing(
-                    context = getApplication(),
-                    accountEntity = getActiveAccountSuspend() ?: error("Account is null"),
-                    skipAttachmentsRawData = true
-                  ).data?.verificationResult
-                )
-                onMessageChanged(
-                  message.copy(
-                    incomingMessageInfo = message.incomingMessageInfo?.copy(
-                      verificationResult = verificationResult
-                    ),
-                    hasActiveSignatureVerification = false
-                  )
-                )
-              } catch (e: Exception) {
-                onMessageChanged(message.copy(hasActiveSignatureVerification = false))
-              }
-            } else {
-              onMessageChanged(message.copy(hasActiveSignatureVerification = false))
-            }
-          }
-        }
-      }
+      setupAutoSignatureReVerification()
     }
   }
 
@@ -695,6 +646,59 @@ class ThreadDetailsViewModel(
                 }
               )
             )
+          }
+        }
+      }
+    }
+  }
+
+  private suspend fun setupAutoSignatureReVerification() {
+    sessionFromRecipientsStateFlow.collectLatest {
+      if (!recipientLookUpManager.hasActiveJobs() && it.isNotEmpty()) {
+        val recipientsWithUsablePubKey = sessionFromRecipientsStateFlow.value
+          .filter { recipientInfo ->
+            recipientInfo.recipientWithPubKeys.hasUsablePubKey()
+          }.map { recipientInfo ->
+            recipientInfo.recipientWithPubKeys.recipient.email
+          }
+
+        val messagesWithActiveSignatureVerification = messagesInThreadFlow.value.data?.list
+          ?.filterIsInstance<Message>()
+          ?.filter { message ->
+            message.hasActiveSignatureVerification
+          } ?: emptyList()
+
+        messagesWithActiveSignatureVerification.forEach { message ->
+          val messageFromAddresses = message.incomingMessageInfo?.getFrom()
+            ?.map { internetAddress ->
+              internetAddress.address.lowercase()
+            } ?: emptyList()
+
+          if (recipientsWithUsablePubKey.containsAll(messageFromAddresses)) {
+            try {
+              val messageEntity = message.messageEntity
+              val existedMsgSnapshot =
+                requireNotNull(MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString()))
+              val verificationResult = requireNotNull(
+                existedMsgSnapshot.processing(
+                  context = getApplication(),
+                  accountEntity = getActiveAccountSuspend() ?: error("Account is null"),
+                  skipAttachmentsRawData = true
+                ).data?.verificationResult
+              )
+              onMessageChanged(
+                message.copy(
+                  incomingMessageInfo = message.incomingMessageInfo?.copy(
+                    verificationResult = verificationResult
+                  ),
+                  hasActiveSignatureVerification = false
+                )
+              )
+            } catch (e: Exception) {
+              onMessageChanged(message.copy(hasActiveSignatureVerification = false))
+            }
+          } else {
+            onMessageChanged(message.copy(hasActiveSignatureVerification = false))
           }
         }
       }
