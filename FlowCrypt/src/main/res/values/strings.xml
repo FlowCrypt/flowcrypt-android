@@ -573,7 +573,7 @@
     <string name="add_recipient_to_send_message">Please add at least one recipient in \"To\" to send this message</string>
     <string name="send_feedback_failed_hint">There was an error sending message. Our direct email is %1$s.\n\nError details:\n%2$s</string>
     <string name="edit_draft">Edit draft</string>
-    <string name="draft_saved">Draft saved</string>
+    <string name="saving_draft">Saving draft</string>
     <string name="fetching_drafts_info_failed">Fetching drafts info failed. Please try again.</string>
     <string name="no_recipients">(no recipients)</string>
     <string name="could_not_save_draft">Could not save a draft\n\nError details:\n%1$s</string>

@@ -322,17 +322,21 @@ class MessagesInThreadListAdapter(
       }
 
       binding.imageButtonEditDraft.apply {
-        visibleOrGone(message.messageEntity.isDraft)
+        visibleOrGone(message.messageEntity.isDraft && !message.hasActiveDraftUploadingProcess)
         setOnClickListener {
           onMessageActionsListener.onEditDraft(message)
         }
       }
 
       binding.imageButtonDeleteDraft.apply {
-        visibleOrGone(message.messageEntity.isDraft)
+        visibleOrGone(message.messageEntity.isDraft && !message.hasActiveDraftUploadingProcess)
         setOnClickListener {
           onMessageActionsListener.onDeleteDraft(message)
         }
+      }
+
+      binding.progressBarSavingDraft.apply {
+        visibleOrGone(message.messageEntity.isDraft && message.hasActiveDraftUploadingProcess)
       }
 
       binding.imageButtonReplyAll.apply {
@@ -991,7 +995,8 @@ class MessagesInThreadListAdapter(
     val isHeadersDetailsExpanded: Boolean,
     val attachments: List<AttachmentInfo>,
     val incomingMessageInfo: IncomingMessageInfo? = null,
-    val hasActiveSignatureVerification: Boolean = false
+    val hasActiveSignatureVerification: Boolean = false,
+    val hasActiveDraftUploadingProcess: Boolean = false
   ) : Item(), Parcelable {
     override val id: Long
       get() = messageEntity.uid

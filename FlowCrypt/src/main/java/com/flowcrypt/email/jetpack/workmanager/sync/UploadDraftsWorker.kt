@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.workmanager.sync
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
@@ -127,10 +128,25 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
         }
         val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
         try {
+          setProgress(
+            workDataOf(
+              EXTRA_KEY_MESSAGE_UID to existingDraftEntity.uid,
+              EXTRA_KEY_STATE to STATE_UPLOADING
+            )
+          )
           val lastVersion = drafts.maxBy { it.lastModified() }
           val inputStream = KeyStoreCryptoManager.getCipherInputStream(lastVersion.inputStream())
           val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
           action.invoke(existingDraftEntity, mimeMessage)
+
+          if (existingDraftEntity.threadId != null) {
+            val threadEntity = roomDatabase.msgDao().getThreadMessageEntity(
+              existingDraftEntity.account,
+              existingDraftEntity.folder,
+              existingDraftEntity.threadId
+            )
+            setProgress(workDataOf("threadId" to (threadEntity?.id ?: 0L)))
+          }
           drafts.forEach { FileAndDirectoryUtils.deleteFile(it) }
           if ((directory.listFiles() ?: emptyArray<File>()).isEmpty()) {
             FileAndDirectoryUtils.deleteDir(directory)
@@ -159,14 +175,32 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           }
 
           continue
+        } finally {
+          setProgress(
+            workDataOf(
+              EXTRA_KEY_MESSAGE_UID to existingDraftEntity.uid,
+              EXTRA_KEY_STATE to STATE_UPLOAD_COMPLETED
+            )
+          )
         }
       }
 
       attemptsCount++
     }
+
+    setProgress(
+      workDataOf(EXTRA_KEY_STATE to STATE_COMMON_UPLOAD_COMPLETED)
+    )
   }
 
   companion object {
+    const val EXTRA_KEY_MESSAGE_UID = "MESSAGE_UID"
+    const val EXTRA_KEY_STATE = "STATE"
+
+    const val STATE_UPLOADING = 0
+    const val STATE_UPLOAD_COMPLETED = 1
+    const val STATE_COMMON_UPLOAD_COMPLETED = 2
+
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPLOAD_DRAFTS"
     const val MAX_ATTEMPTS_COUNT = 10
 

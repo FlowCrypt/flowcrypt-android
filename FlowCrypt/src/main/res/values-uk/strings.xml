@@ -489,7 +489,7 @@
     <string name="add_recipient_to_send_message">Щоб надіслати це повідомлення, додайте принаймні одного одержувача в поле \"Кому\"</string>
     <string name="send_feedback_failed_hint">Під час відправки повідомлення виникла помилка. Будь ласка, напишіть нам безпосередньо на %1$s.\n\nДеталі помилки:\n%2$s</string>
     <string name="edit_draft">Редагувати чорновик</string>
-    <string name="draft_saved">Чорновик збережено</string>
+    <string name="saving_draft">Збереження чорновика</string>
     <string name="fetching_drafts_info_failed">Не вдалося отримати інформацію про чорновики. Будь ласка, спробуйте ще раз.</string>
     <string name="no_recipients">(без отримувачів)</string>
     <string name="could_not_save_draft">Не вдалося зберегти чорновик\n\nДеталі помилки:\n%1$s</string>

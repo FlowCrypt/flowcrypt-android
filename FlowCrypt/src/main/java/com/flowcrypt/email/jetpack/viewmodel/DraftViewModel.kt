@@ -101,7 +101,7 @@ class DraftViewModel(
       if (isSavingDraftNeeded) {
         if (showNotification) {
           withContext(Dispatchers.Main) {
-            context.toast(context.getString(R.string.draft_saved))
+            context.toast(context.getString(R.string.saving_draft))
           }
         }
         withContext(Dispatchers.IO) {
@@ -119,7 +119,7 @@ class DraftViewModel(
         }
       } else if (showNotification && timeToCompare < draftFingerprint.timeInMilliseconds) {
         withContext(Dispatchers.Main) {
-          context.toast(context.getString(R.string.draft_saved))
+          context.toast(context.getString(R.string.saving_draft))
         }
       }
     }

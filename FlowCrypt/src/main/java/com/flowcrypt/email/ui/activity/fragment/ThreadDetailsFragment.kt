@@ -31,6 +31,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.work.WorkManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
@@ -70,6 +71,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UploadDraftsWorker
 import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -287,6 +289,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     subscribeToImportingAdditionalPrivateKeys()
     subscribeToChoosePublicKeyDialogFragment()
     subscribeToDecryptAttachmentViaDialog()
+    subscribeToDraftsUpdates()
   }
 
   override fun onSetupActionBarMenu(menuHost: MenuHost) {
@@ -830,6 +833,42 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           ?: return@setFragmentResultListener
 
       previewAttachment(EmbeddedAttachmentsProvider.Cache.getInstance().addAndGet(attachmentInfo))
+    }
+  }
+
+  private fun subscribeToDraftsUpdates() {
+    launchAndRepeatWithViewLifecycle(Lifecycle.State.CREATED) {
+      WorkManager.getInstance(requireContext())
+        .getWorkInfosForUniqueWorkFlow(UploadDraftsWorker.GROUP_UNIQUE_TAG)
+        .collect { workInfoList ->
+          val workInfo = workInfoList.firstOrNull() ?: return@collect
+          val messageUID = workInfo.progress.getLong(UploadDraftsWorker.EXTRA_KEY_MESSAGE_UID, -1)
+          val state = workInfo.progress.getInt(UploadDraftsWorker.EXTRA_KEY_STATE, -1)
+
+          val message = messagesInThreadListAdapter.currentList.firstOrNull {
+            it is MessagesInThreadListAdapter.Message && it.messageEntity.uid == messageUID
+          } as? MessagesInThreadListAdapter.Message
+
+          if (message != null) {
+            when (state) {
+              UploadDraftsWorker.STATE_UPLOADING -> {
+                threadDetailsViewModel.onMessageChanged(
+                  message.copy(hasActiveDraftUploadingProcess = true)
+                )
+              }
+
+              UploadDraftsWorker.STATE_UPLOAD_COMPLETED -> {
+                threadDetailsViewModel.loadMessages(silentUpdate = true)
+              }
+            }
+          } else if (state == UploadDraftsWorker.STATE_COMMON_UPLOAD_COMPLETED) {
+            if (messagesInThreadListAdapter.currentList.any {
+                it is MessagesInThreadListAdapter.Message && it.hasActiveDraftUploadingProcess
+              }) {
+              threadDetailsViewModel.loadMessages(silentUpdate = true)
+            }
+          }
+        }
     }
   }
 

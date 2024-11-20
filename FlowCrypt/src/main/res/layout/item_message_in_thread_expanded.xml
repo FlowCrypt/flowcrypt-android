@@ -96,6 +96,17 @@
             app:layout_goneMarginRight="@dimen/default_margin_medium"
             app:srcCompat="@drawable/ic_baseline_edit_draft_24" />
 
+        <ProgressBar
+            android:id="@+id/progressBarSavingDraft"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginRight="@dimen/default_margin_medium" />
+
         <TextView
             android:id="@+id/textViewDate"
             android:layout_width="0dp"
