@@ -131,6 +131,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           setProgress(
             workDataOf(
               EXTRA_KEY_MESSAGE_UID to existingDraftEntity.uid,
+              EXTRA_KEY_THREAD_ID to existingDraftEntity.threadId,
               EXTRA_KEY_STATE to STATE_UPLOADING
             )
           )
@@ -138,15 +139,6 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           val inputStream = KeyStoreCryptoManager.getCipherInputStream(lastVersion.inputStream())
           val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
           action.invoke(existingDraftEntity, mimeMessage)
-
-          if (existingDraftEntity.threadId != null) {
-            val threadEntity = roomDatabase.msgDao().getThreadMessageEntity(
-              existingDraftEntity.account,
-              existingDraftEntity.folder,
-              existingDraftEntity.threadId
-            )
-            setProgress(workDataOf("threadId" to (threadEntity?.id ?: 0L)))
-          }
           drafts.forEach { FileAndDirectoryUtils.deleteFile(it) }
           if ((directory.listFiles() ?: emptyArray<File>()).isEmpty()) {
             FileAndDirectoryUtils.deleteDir(directory)
@@ -179,6 +171,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           setProgress(
             workDataOf(
               EXTRA_KEY_MESSAGE_UID to existingDraftEntity.uid,
+              EXTRA_KEY_THREAD_ID to existingDraftEntity.threadId,
               EXTRA_KEY_STATE to STATE_UPLOAD_COMPLETED
             )
           )
@@ -195,6 +188,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
 
   companion object {
     const val EXTRA_KEY_MESSAGE_UID = "MESSAGE_UID"
+    const val EXTRA_KEY_THREAD_ID = "THREAD_ID"
     const val EXTRA_KEY_STATE = "STATE"
 
     const val STATE_UPLOADING = 0

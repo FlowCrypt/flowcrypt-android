@@ -482,6 +482,13 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                   .messages()
                   .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
                   .execute()
+                  .apply {
+                    setProgress(
+                      workDataOf(
+                        EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE to msgEntity.threadId,
+                      )
+                    )
+                  }
               } else {
                 try {
                   gmail
@@ -495,7 +502,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                       },
                       mediaContent
                     ).execute().apply {
-                      setProgress(workDataOf(EXTRA_KEY_ID_OF_SENT_DRAFT to msgEntity.draftId))
+                      setProgress(
+                        workDataOf(
+                          EXTRA_KEY_ID_OF_SENT_DRAFT to msgEntity.draftId,
+                          EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE to msgEntity.threadId,
+                        )
+                      )
                     }
                 } catch (e: GoogleJsonResponseException) {
                   val isDraftNotFound = e.details.errors.any {
@@ -509,6 +521,13 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                       .messages()
                       .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
                       .execute()
+                      .apply {
+                        setProgress(
+                          workDataOf(
+                            EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE to msgEntity.threadId,
+                          )
+                        )
+                      }
                   } else {
                     throw e
                   }
@@ -592,6 +611,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
 
   companion object {
     const val EXTRA_KEY_ID_OF_SENT_DRAFT = "ID_OF_SENT_DRAFT"
+    const val EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE = "THREAD_ID_OF_SENT_MESSAGE"
 
     private val TAG = MessagesSenderWorker::class.java.simpleName
     private val NOTIFICATION_ID = R.id.notification_id_sending_msgs_worker

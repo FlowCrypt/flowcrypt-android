@@ -858,29 +858,40 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         .collect { workInfoList ->
           val workInfo = workInfoList.firstOrNull() ?: return@collect
           val messageUID = workInfo.progress.getLong(UploadDraftsWorker.EXTRA_KEY_MESSAGE_UID, -1)
+          val threadId = workInfo.progress.getLong(UploadDraftsWorker.EXTRA_KEY_THREAD_ID, -1)
           val state = workInfo.progress.getInt(UploadDraftsWorker.EXTRA_KEY_STATE, -1)
+          val currentThreadId = threadDetailsViewModel.threadMessageEntityFlow.value?.threadId
 
           val message = messagesInThreadListAdapter.currentList.firstOrNull {
             it is MessagesInThreadListAdapter.Message && it.messageEntity.uid == messageUID
           } as? MessagesInThreadListAdapter.Message
 
-          if (message != null) {
-            when (state) {
-              UploadDraftsWorker.STATE_UPLOADING -> {
-                threadDetailsViewModel.onMessageChanged(
-                  message.copy(hasActiveDraftUploadingProcess = true)
-                )
-              }
+          when {
+            message != null -> {
+              when (state) {
+                UploadDraftsWorker.STATE_UPLOADING -> {
+                  threadDetailsViewModel.onMessageChanged(
+                    message.copy(hasActiveDraftUploadingProcess = true)
+                  )
+                }
 
-              UploadDraftsWorker.STATE_UPLOAD_COMPLETED -> {
-                threadDetailsViewModel.loadMessages(silentUpdate = true)
+                UploadDraftsWorker.STATE_UPLOAD_COMPLETED -> {
+                  threadDetailsViewModel.loadMessages(silentUpdate = true)
+                }
               }
             }
-          } else if (state == UploadDraftsWorker.STATE_COMMON_UPLOAD_COMPLETED) {
-            if (messagesInThreadListAdapter.currentList.any {
-                it is MessagesInThreadListAdapter.Message && it.hasActiveDraftUploadingProcess
-              }) {
+
+            threadId == currentThreadId
+                && state == UploadDraftsWorker.STATE_UPLOAD_COMPLETED -> {
               threadDetailsViewModel.loadMessages(silentUpdate = true)
+            }
+
+            state == UploadDraftsWorker.STATE_COMMON_UPLOAD_COMPLETED -> {
+              if (messagesInThreadListAdapter.currentList.any {
+                  it is MessagesInThreadListAdapter.Message && it.hasActiveDraftUploadingProcess
+                }) {
+                threadDetailsViewModel.loadMessages(silentUpdate = true)
+              }
             }
           }
         }
@@ -891,10 +902,22 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         .getWorkInfosForUniqueWorkFlow(MessagesSenderWorker.NAME)
         .collect { workInfoList ->
           val workInfo = workInfoList.firstOrNull() ?: return@collect
+          val threadIdOfSentMessage =
+            workInfo.progress.getLong(MessagesSenderWorker.EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE, -1)
           val draftId = workInfo.progress.getString(MessagesSenderWorker.EXTRA_KEY_ID_OF_SENT_DRAFT)
-            ?: return@collect
 
-          deleteDraftFromLocalCache(draftId)
+          when {
+            !draftId.isNullOrEmpty() -> {
+              deleteDraftFromLocalCache(draftId)
+            }
+
+            threadIdOfSentMessage != -1L -> {
+              val currentThreadId = threadDetailsViewModel.threadMessageEntityFlow.value?.threadId
+              if (currentThreadId == threadIdOfSentMessage) {
+                threadDetailsViewModel.loadMessages(silentUpdate = true)
+              }
+            }
+          }
         }
     }
   }
