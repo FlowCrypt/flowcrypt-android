@@ -83,6 +83,8 @@ class ThreadDetailsViewModel(
   val sessionFromRecipientsStateFlow: StateFlow<Set<RecipientLookUpManager.RecipientInfo>> =
     sessionFromRecipientsMutableStateFlow.asStateFlow()
 
+  val allOutboxMessagesFlow = roomDatabase.msgDao().getAllOutboxMessagesFlow()
+
   @OptIn(ExperimentalCoroutinesApi::class)
   val localFolderFlow: StateFlow<LocalFolder?> =
     threadMessageEntityFlow.mapLatest { threadMessageEntity ->

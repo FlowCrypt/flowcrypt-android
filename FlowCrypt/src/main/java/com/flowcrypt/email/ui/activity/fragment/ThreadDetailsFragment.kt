@@ -492,6 +492,20 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
 
     launchAndRepeatWithViewLifecycle {
+      threadDetailsViewModel.allOutboxMessagesFlow.collect { messageEntities ->
+        val threadId =
+          threadDetailsViewModel.threadMessageEntityFlow.value?.threadId ?: return@collect
+        val draftsToBeDeletedInLocalCache = messageEntities.filter {
+          it.threadId == threadId && !it.draftId.isNullOrEmpty()
+        }
+
+        draftsToBeDeletedInLocalCache.forEach {
+          it.draftId?.let { draftId -> deleteDraftFromLocalCache(draftId) }
+        }
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.messageActionsAvailabilityStateFlow.collect {
         activity?.invalidateOptionsMenu()
       }

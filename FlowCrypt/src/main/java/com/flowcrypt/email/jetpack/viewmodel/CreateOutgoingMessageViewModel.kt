@@ -66,17 +66,24 @@ class CreateOutgoingMessageViewModel(
         val activeAccount = getActiveAccountSuspend()
           ?: throw IllegalStateException("No active account")
 
-        val replyTo = outgoingMessageInfo.replyToMessageEntityId?.let {
-          roomDatabase.msgDao().getMsgById(it)?.replyToAddresses
+        val replyToMessageEntity = outgoingMessageInfo.replyToMessageEntityId?.let {
+          roomDatabase.msgDao().getMsgById(it)
         }
-        messageEntity = outgoingMessageInfo.toMessageEntity(
+        val template = outgoingMessageInfo.toMessageEntity(
           folder = JavaEmailConstants.FOLDER_OUTBOX,
           flags = Flags(Flags.Flag.SEEN),
-          replyTo = replyTo,
+          replyTo = replyToMessageEntity?.replyToAddresses,
           password = outgoingMessageInfo.password?.let {
             KeyStoreCryptoManager.encrypt(String(it)).toByteArray()
           }
         )
+
+        messageEntity = if (replyToMessageEntity != null) {
+          template.copy(threadId = replyToMessageEntity.threadId)
+        } else {
+          template
+        }
+
         val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
         messageEntity = messageEntity.copy(id = messageId, uid = messageId)
         roomDatabase.msgDao().updateSuspend(messageEntity)

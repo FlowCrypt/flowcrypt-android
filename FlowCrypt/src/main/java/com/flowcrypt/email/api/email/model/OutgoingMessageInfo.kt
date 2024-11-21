@@ -43,6 +43,7 @@ data class OutgoingMessageInfo(
   @Expose val signature: String? = null,
   @Expose val quotedTextForReply: String? = null,
   @Expose val draftId: String? = null,
+  @Expose val draftThreadId: Long? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -91,6 +92,7 @@ data class OutgoingMessageInfo(
     if (signature != other.signature) return false
     if (quotedTextForReply != other.quotedTextForReply) return false
     if (draftId != other.draftId) return false
+    if (draftThreadId != other.draftThreadId) return false
     return true
   }
 
@@ -113,6 +115,7 @@ data class OutgoingMessageInfo(
     result = 31 * result + (signature?.hashCode() ?: 0)
     result = 31 * result + (quotedTextForReply?.hashCode() ?: 0)
     result = 31 * result + (draftId?.hashCode() ?: 0)
+    result = 31 * result + (draftThreadId?.hashCode() ?: 0)
     return result
   }
 
@@ -146,7 +149,8 @@ data class OutgoingMessageInfo(
       },
       password = password,
       attachmentsDirectory = UUID.randomUUID().toString(),
-      draftId = draftId
+      draftId = draftId,
+      threadId = draftThreadId
     )
   }
 }

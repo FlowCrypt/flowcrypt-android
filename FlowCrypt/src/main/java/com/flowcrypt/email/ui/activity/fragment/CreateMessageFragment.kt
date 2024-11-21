@@ -320,7 +320,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             MessageType.REPLY,
             MessageType.REPLY_ALL
           )
-        }
+        },
+        draftThreadId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
+          args.incomingMessageInfo?.msgEntity?.threadId
+        } else null
       )
     )
   }
