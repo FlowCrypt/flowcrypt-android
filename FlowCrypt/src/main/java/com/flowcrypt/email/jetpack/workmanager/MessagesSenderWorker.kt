@@ -19,6 +19,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -493,7 +494,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                         id = msgEntity.draftId
                       },
                       mediaContent
-                    ).execute()
+                    ).execute().apply {
+                      setProgress(workDataOf(EXTRA_KEY_ID_OF_SENT_DRAFT to msgEntity.draftId))
+                    }
                 } catch (e: GoogleJsonResponseException) {
                   val isDraftNotFound = e.details.errors.any {
                     it.message == "Requested entity was not found."
@@ -588,9 +591,11 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     }
 
   companion object {
+    const val EXTRA_KEY_ID_OF_SENT_DRAFT = "ID_OF_SENT_DRAFT"
+
     private val TAG = MessagesSenderWorker::class.java.simpleName
     private val NOTIFICATION_ID = R.id.notification_id_sending_msgs_worker
-    val NAME = MessagesSenderWorker::class.java.simpleName
+    val NAME: String = MessagesSenderWorker::class.java.simpleName
 
     fun enqueue(context: Context, forceSending: Boolean = false) {
       val constraints = Constraints.Builder()

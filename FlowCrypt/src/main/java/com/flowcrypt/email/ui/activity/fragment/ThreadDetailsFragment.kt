@@ -63,6 +63,7 @@ import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ThreadDetailsViewModel
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteDraftsWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
@@ -869,6 +870,28 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             }
           }
         }
+    }
+
+    launchAndRepeatWithViewLifecycle(Lifecycle.State.CREATED) {
+      WorkManager.getInstance(requireContext())
+        .getWorkInfosForUniqueWorkFlow(MessagesSenderWorker.NAME)
+        .collect { workInfoList ->
+          val workInfo = workInfoList.firstOrNull() ?: return@collect
+          val draftId = workInfo.progress.getString(MessagesSenderWorker.EXTRA_KEY_ID_OF_SENT_DRAFT)
+            ?: return@collect
+
+          deleteDraftFromLocalCache(draftId)
+        }
+    }
+  }
+
+  private fun deleteDraftFromLocalCache(draftId: String) {
+    val message = messagesInThreadListAdapter.currentList.firstOrNull {
+      it is MessagesInThreadListAdapter.Message && it.messageEntity.draftId == draftId
+    } as? MessagesInThreadListAdapter.Message
+
+    if (message != null) {
+      threadDetailsViewModel.deleteMessageFromCache(message)
     }
   }
 
