@@ -37,7 +37,7 @@ data class OutgoingMessageInfo(
   @Expose val encryptionType: MessageEncryptionType? = null,
   @Expose @MessageType val messageType: Int = MessageType.NEW,
   @Expose val replyToMessageEntityId: Long? = null,
-  @Expose val uid: Long = 0,
+  @Expose val uid: Long = System.currentTimeMillis(),
   @Expose val password: CharArray? = null,
   @Expose val timestamp: Long = System.currentTimeMillis(),
   @Expose val signature: String? = null,

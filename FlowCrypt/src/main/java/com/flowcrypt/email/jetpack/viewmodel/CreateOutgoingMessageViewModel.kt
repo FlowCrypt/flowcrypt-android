@@ -85,14 +85,13 @@ class CreateOutgoingMessageViewModel(
         }
 
         val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
-        messageEntity = messageEntity.copy(id = messageId, uid = messageId)
+        messageEntity = messageEntity.copy(id = messageId, uid = outgoingMessageInfo.uid)
         roomDatabase.msgDao().updateSuspend(messageEntity)
 
         updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
         ProcessingOutgoingMessageInfoHelper.process(
           context = context,
           originalOutgoingMessageInfo = outgoingMessageInfo.copy(
-            uid = messageId,
             atts = outgoingMessageInfo.atts?.map {
               it.copy(
                 email = outgoingMessageInfo.account,

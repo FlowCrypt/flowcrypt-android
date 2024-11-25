@@ -122,10 +122,22 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
       for (directory in directories) {
         val directoryName = directory.name
         val existingDraftEntity = roomDatabase.msgDao().getMsgById(directoryName.toLong())
+
         if (existingDraftEntity == null) {
           FileAndDirectoryUtils.deleteDir(directory)
           continue
         }
+
+        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        if (activeAccount != null) {
+          val outgoingMessages = roomDatabase.msgDao().getOutboxMsgsSuspend(activeAccount.email)
+          if (outgoingMessages.any { it.uid == existingDraftEntity.uid }) {
+            //it looks like a user sent a message for this draft
+            FileAndDirectoryUtils.deleteDir(directory)
+            continue
+          }
+        }
+
         val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
         try {
           setProgress(

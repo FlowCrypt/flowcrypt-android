@@ -296,7 +296,7 @@ class DraftViewModel(
         account = accountEntity.email,
         accountType = accountEntity.accountType,
         label = folderDrafts.fullName,
-        uid = System.currentTimeMillis(),
+        uid = outgoingMessageInfo.uid,
         info = outgoingMessageInfo,
         flags = listOf(MessageFlag.DRAFT, MessageFlag.SEEN)
       ).copy(
@@ -318,6 +318,14 @@ class DraftViewModel(
         roomDatabase.msgDao().updateSuspend(
           draftEntity.copy(state = MessageState.PENDING_DELETING_DRAFT.value)
         )
+
+        val draftsDir = CacheManager.getDraftDirectory(getApplication())
+
+        draftsDir.walkTopDown().firstOrNull {
+          it.name == draftEntity.id.toString()
+        }?.let { currentMsgDraftDir ->
+          FileAndDirectoryUtils.deleteDir(currentMsgDraftDir)
+        }
 
         DeleteDraftsWorker.enqueue(getApplication())
       }
