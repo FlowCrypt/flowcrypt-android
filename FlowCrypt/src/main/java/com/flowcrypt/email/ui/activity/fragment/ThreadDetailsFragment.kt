@@ -935,16 +935,14 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             workInfo.progress.getLong(MessagesSenderWorker.EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE, -1)
           val draftId = workInfo.progress.getString(MessagesSenderWorker.EXTRA_KEY_ID_OF_SENT_DRAFT)
 
-          when {
-            !draftId.isNullOrEmpty() -> {
-              deleteDraftFromLocalCache(draftId)
-            }
+          if (!draftId.isNullOrEmpty()) {
+            deleteDraftFromLocalCache(draftId)
+          }
 
-            threadIdOfSentMessage != -1L -> {
-              val currentThreadId = threadDetailsViewModel.threadMessageEntityFlow.value?.threadId
-              if (currentThreadId == threadIdOfSentMessage) {
-                threadDetailsViewModel.loadMessages(silentUpdate = true)
-              }
+          if (threadIdOfSentMessage != -1L) {
+            val currentThreadId = threadDetailsViewModel.threadMessageEntityFlow.value?.threadId
+            if (currentThreadId == threadIdOfSentMessage) {
+              threadDetailsViewModel.loadMessages(silentUpdate = true)
             }
           }
         }
