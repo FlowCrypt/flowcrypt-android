@@ -647,6 +647,7 @@
     <string name="thread_was_deleted">Бесіду видалено</string>
     <string name="permissions_granted_and_now_you_can_download_attachments">Дозволи надано, і тепер ви можете завантажити вкладені файли</string>
     <string name="delete_draft">Видалити чернетку?</string>
+    <string name="thread_was_deleted_or_moved">Бесіду видалено або переміщено</string>
     <plurals name="drafts_count">
         <item quantity="one" tools:ignore="ImpliedQuantity">Чорновик</item>
         <item quantity="few">Чорновики(%1$d)</item>

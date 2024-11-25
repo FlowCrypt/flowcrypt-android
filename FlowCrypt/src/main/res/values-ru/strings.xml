@@ -646,6 +646,7 @@
     <string name="thread_was_deleted">Переписка удалена</string>
     <string name="permissions_granted_and_now_you_can_download_attachments">Разрешения предоставлены и теперь Вы можете загружать вложения.</string>
     <string name="delete_draft">Удалить черновик?</string>
+    <string name="thread_was_deleted_or_moved">Переписка удалена или перемещена</string>
     <plurals name="drafts_count">
         <item quantity="one" tools:ignore="ImpliedQuantity">Черновик</item>
         <item quantity="few">Черновики(%1$d)</item>

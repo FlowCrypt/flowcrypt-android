@@ -657,6 +657,7 @@
     <string name="thread_was_deleted">The thread was deleted</string>
     <string name="permissions_granted_and_now_you_can_download_attachments">The permissions have been granted, and now you can download attachments</string>
     <string name="delete_draft">Delete draft?</string>
+    <string name="thread_was_deleted_or_moved">The thread was deleted or moved</string>
     <plurals name="drafts_count">
         <item quantity="one">Draft</item>
         <item quantity="other">Drafts(%1$d)</item>

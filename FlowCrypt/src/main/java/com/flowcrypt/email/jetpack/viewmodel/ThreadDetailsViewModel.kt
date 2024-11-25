@@ -6,7 +6,9 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
@@ -31,6 +33,7 @@ import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter.Message
 import com.flowcrypt.email.util.RecipientLookUpManager
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
+import com.flowcrypt.email.util.exception.ThreadNotFoundException
 import jakarta.mail.Message.RecipientType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -388,6 +391,12 @@ class ThreadDetailsViewModel(
         ) ?: error("Thread not found")
 
         val threadInfo = thread.toThreadInfo(getApplication(), activeAccount)
+
+        if (!threadInfo.labels.contains(localFolder.fullName)) {
+          val context: Context = getApplication()
+          throw ThreadNotFoundException(context.getString(R.string.thread_was_deleted_or_moved))
+        }
+
         //keep thread info updated in the local cache
         roomDatabase.msgDao().updateSuspend(
           MessageEntity.genMessageEntities(

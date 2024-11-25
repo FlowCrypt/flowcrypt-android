@@ -99,7 +99,10 @@ import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.ThreadNotFoundException
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import org.apache.commons.io.FilenameUtils
+import java.net.HttpURLConnection
 
 /**
  * @author Denys Bondarenko
@@ -471,6 +474,32 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           }
 
           Result.Status.EXCEPTION -> {
+            val actionsForMissedThreadSituation = {
+              toast(getString(R.string.thread_was_deleted_or_moved))
+              navController?.navigateUp()
+              threadDetailsViewModel.deleteThread()
+            }
+
+            when (it.exception) {
+              is GoogleJsonResponseException -> if (it.exception.details.code == HttpURLConnection.HTTP_NOT_FOUND
+                && it.exception.details.errors.any { errorInfo ->
+                  errorInfo.reason.equals("notFound", true)
+                }
+              ) {
+                if (isActive) {
+                  actionsForMissedThreadSituation.invoke()
+                  return@collect
+                }
+              }
+
+              is ThreadNotFoundException -> {
+                if (isActive) {
+                  actionsForMissedThreadSituation.invoke()
+                  return@collect
+                }
+              }
+            }
+
             if (it.data?.silentUpdate == true) {
               toast(it.exceptionMsg)
             } else {
