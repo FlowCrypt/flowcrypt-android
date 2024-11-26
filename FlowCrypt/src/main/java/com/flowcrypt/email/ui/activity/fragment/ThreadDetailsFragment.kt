@@ -103,6 +103,7 @@ import com.flowcrypt.email.util.exception.ThreadNotFoundException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import org.apache.commons.io.FilenameUtils
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -905,21 +906,32 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                 }
 
                 UploadDraftsWorker.STATE_UPLOAD_COMPLETED -> {
-                  threadDetailsViewModel.loadMessages(silentUpdate = true)
+                  threadDetailsViewModel.loadMessages(
+                    silentUpdate = true,
+                    delayInMilliseconds = TimeUnit.SECONDS.toMillis(1)
+                  )
                 }
               }
             }
 
             threadId == currentThreadId
                 && state == UploadDraftsWorker.STATE_UPLOAD_COMPLETED -> {
-              threadDetailsViewModel.loadMessages(silentUpdate = true)
+              threadDetailsViewModel.loadMessages(
+                silentUpdate = true,
+                delayInMilliseconds = TimeUnit.SECONDS.toMillis(1)
+              )
             }
 
             state == UploadDraftsWorker.STATE_COMMON_UPLOAD_COMPLETED -> {
-              if (messagesInThreadListAdapter.currentList.any {
-                  it is MessagesInThreadListAdapter.Message && it.hasActiveDraftUploadingProcess
-                }) {
-                threadDetailsViewModel.loadMessages(silentUpdate = true)
+              if (currentThreadId != null) {
+                val threadIdList =
+                  workInfo.progress.getLongArray(UploadDraftsWorker.EXTRA_KEY_THREAD_ID_LIST)
+                    ?: return@collect
+
+
+                if (currentThreadId in threadIdList) {
+                  threadDetailsViewModel.loadMessages(silentUpdate = true)
+                }
               }
             }
           }

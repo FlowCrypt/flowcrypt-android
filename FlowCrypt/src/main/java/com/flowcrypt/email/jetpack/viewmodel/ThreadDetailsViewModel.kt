@@ -37,6 +37,7 @@ import com.flowcrypt.email.util.exception.ThreadNotFoundException
 import jakarta.mail.Message.RecipientType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -203,11 +204,20 @@ class ThreadDetailsViewModel(
     }
   }
 
-  fun loadMessages(clearCache: Boolean = false, silentUpdate: Boolean = false) {
+  fun loadMessages(
+    clearCache: Boolean = false,
+    silentUpdate: Boolean = false,
+    delayInMilliseconds: Long = 0
+  ) {
     viewModelScope.launch {
       if (!silentUpdate) {
         loadMessagesManuallyMutableStateFlow.value = Result.loading()
       }
+
+      if (delayInMilliseconds > 0) {
+        delay(delayInMilliseconds)
+      }
+
       loadMessagesManuallyMutableStateFlow.value =
         controlledRunnerForLoadingMessages.cancelPreviousThenRun {
           return@cancelPreviousThenRun loadMessagesInternal(

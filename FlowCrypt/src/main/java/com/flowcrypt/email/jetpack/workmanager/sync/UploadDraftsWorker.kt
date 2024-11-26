@@ -113,6 +113,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     val draftsDir = CacheManager.getDraftDirectory(applicationContext)
     val directories = draftsDir.listFiles(FileFilter { it.isDirectory }) ?: emptyArray()
     var attemptsCount = 0
+    val setOfThreadToBeAffected = mutableSetOf<Long>()
     while (attemptsCount < MAX_ATTEMPTS_COUNT && FileUtils.listFiles(
         draftsDir,
         TrueFileFilter.INSTANCE,
@@ -187,6 +188,8 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
               EXTRA_KEY_STATE to STATE_UPLOAD_COMPLETED
             )
           )
+
+          existingDraftEntity.threadId?.let { setOfThreadToBeAffected.add(it) }
         }
       }
 
@@ -194,13 +197,17 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     }
 
     setProgress(
-      workDataOf(EXTRA_KEY_STATE to STATE_COMMON_UPLOAD_COMPLETED)
+      workDataOf(
+        EXTRA_KEY_STATE to STATE_COMMON_UPLOAD_COMPLETED,
+        EXTRA_KEY_THREAD_ID_LIST to setOfThreadToBeAffected.toTypedArray(),
+      )
     )
   }
 
   companion object {
     const val EXTRA_KEY_MESSAGE_UID = "MESSAGE_UID"
     const val EXTRA_KEY_THREAD_ID = "THREAD_ID"
+    const val EXTRA_KEY_THREAD_ID_LIST = "THREAD_ID_LIST"
     const val EXTRA_KEY_STATE = "STATE"
 
     const val STATE_UPLOADING = 0
