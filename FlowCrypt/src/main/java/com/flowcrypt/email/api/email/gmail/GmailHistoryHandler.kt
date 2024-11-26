@@ -55,7 +55,7 @@ object GmailHistoryHandler {
                                                updateCandidatesMap,
                                                labelsToBeUpdatedMap ->
       val applicationContext = context.applicationContext
-      if (accountEntity.useConversationMode && !localFolder.isDrafts) {
+      if (accountEntity.useConversationMode) {
         handleHistoryForConversationMode(
           context = applicationContext,
           accountEntity = accountEntity,

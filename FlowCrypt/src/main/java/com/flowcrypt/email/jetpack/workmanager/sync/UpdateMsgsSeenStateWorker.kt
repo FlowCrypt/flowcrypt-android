@@ -62,7 +62,7 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
 
   private suspend fun changeMsgsReadState(account: AccountEntity, state: MessageState) =
     withContext(Dispatchers.IO) {
-      changeMsgsReadStateInternal(account, state) { folderName, entities ->
+      changeMsgsReadStateInternal(account, state) { _, entities ->
         executeGMailAPICall(applicationContext) {
           val removeLabelIds = if (state == MessageState.PENDING_MARK_READ) {
             listOf(GmailApiHelper.LABEL_UNREAD)
@@ -72,7 +72,7 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) :
             null
           } else listOf(GmailApiHelper.LABEL_UNREAD)
 
-          if (account.useConversationMode && folderName != GmailApiHelper.LABEL_DRAFT) {
+          if (account.useConversationMode) {
             GmailApiHelper.changeLabelsForThreads(
               context = applicationContext,
               accountEntity = account,

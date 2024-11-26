@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -19,6 +19,7 @@ import jakarta.mail.Store
 /**
  * @author Denys Bondarenko
  */
+//need to think about this one
 class SyncDraftsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
   override fun useIndependentConnection(): Boolean = true
@@ -28,6 +29,10 @@ class SyncDraftsWorker(context: Context, params: WorkerParameters) :
   }
 
   override suspend fun runAPIAction(accountEntity: AccountEntity) {
+    if (accountEntity.useConversationMode) {
+      return
+    }
+
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
     val folderDrafts = foldersManager.folderDrafts ?: return
     val existingSyncedDrafts = roomDatabase.msgDao().getMsgsSuspend(

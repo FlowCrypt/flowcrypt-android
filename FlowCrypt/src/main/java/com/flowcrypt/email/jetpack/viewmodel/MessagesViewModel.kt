@@ -473,7 +473,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         val draftIdsMap: Map<String, String>
         val gmailThreadInfoList: List<GmailThreadInfo>
 
-        if (accountEntity.useConversationMode && !localFolder.isDrafts) {
+        if (accountEntity.useConversationMode) {
           val threadsResponse = GmailApiHelper.loadThreads(
             context = getApplication(),
             accountEntity = accountEntity,
@@ -544,7 +544,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             msgs,
             draftIdsMap
           ) { message, messageEntity ->
-            if (accountEntity.useConversationMode && !localFolder.isDrafts) {
+            if (accountEntity.useConversationMode) {
               val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
               if (thread != null) {
                 messageEntity.copy(
@@ -702,7 +702,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
         val nextPageToken: String
         val gmailThreadInfoList: List<GmailThreadInfo>
-        val messages = if (accountEntity.useConversationMode && !localFolder.isDrafts) {
+        val messages = if (accountEntity.useConversationMode) {
           val threadsResponse = GmailApiHelper.loadThreads(
             context = getApplication(),
             accountEntity = accountEntity,
@@ -771,7 +771,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
             localFolder.copy(fullName = JavaEmailConstants.FOLDER_SEARCH),
             messages
           ) { message, messageEntity ->
-            if (accountEntity.useConversationMode && !localFolder.isDrafts) {
+            if (accountEntity.useConversationMode) {
               val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
               if (thread != null) {
                 messageEntity.copy(

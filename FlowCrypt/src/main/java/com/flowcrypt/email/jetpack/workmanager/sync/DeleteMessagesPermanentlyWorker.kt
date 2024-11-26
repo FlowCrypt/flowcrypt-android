@@ -54,9 +54,9 @@ class DeleteMessagesPermanentlyWorker(context: Context, params: WorkerParameters
     }
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity) = withContext(Dispatchers.IO) {
-    deleteMsgsPermanentlyInternal(account) { folderName, entities ->
+    deleteMsgsPermanentlyInternal(account) { _, entities ->
       executeGMailAPICall(applicationContext) {
-        if (account.useConversationMode && folderName != GmailApiHelper.LABEL_DRAFT) {
+        if (account.useConversationMode) {
           val resultMap = GmailApiHelper.deleteThreadsPermanently(
             context = applicationContext,
             accountEntity = account,
