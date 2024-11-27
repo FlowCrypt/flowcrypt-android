@@ -243,10 +243,14 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           messageEntity.getThreadSpannableString(context).let { spannableString ->
             SpannableStringBuilder(senderAddress).apply {
               if (spannableString.isNotEmpty()) {
-                if (spannableString.startsWith("(")) {
-                  append(" ")
-                } else {
-                  append(", ")
+                when {
+                  spannableString.startsWith("(") -> {
+                    append(" ")
+                  }
+
+                  senderAddress.isNotEmpty() -> {
+                    append(", ")
+                  }
                 }
               }
               append(spannableString)

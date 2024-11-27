@@ -302,7 +302,8 @@ class DraftViewModel(
       ).copy(
         state = MessageState.PENDING_UPLOADING_DRAFT.value,
         threadId = gmailThreadId,
-        labelIds = GmailApiHelper.LABEL_DRAFT
+        labelIds = GmailApiHelper.LABEL_DRAFT,
+        isVisible = false
       )
       val id = roomDatabase.msgDao().insertSuspend(newDraftMessageEntity)
       return@withContext newDraftMessageEntity.copy(

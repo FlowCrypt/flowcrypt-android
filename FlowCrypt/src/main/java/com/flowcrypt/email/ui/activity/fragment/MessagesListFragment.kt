@@ -561,10 +561,16 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   private fun isItSyncOrCachedFolder(localFolder: LocalFolder?): Boolean {
+    val checkDrafts = if (account?.useConversationMode == true) {
+      false
+    } else {
+      isDraftsFolder
+    }
+
     return localFolder?.fullName.equals(
       JavaEmailConstants.FOLDER_INBOX,
       ignoreCase = true
-    ) || isOutboxFolder || isDraftsFolder
+    ) || isOutboxFolder || checkDrafts
   }
 
   /**
@@ -903,7 +909,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 msgsViewModel.changeMsgsState(
                   ids = ids,
                   localFolder = it,
-                  newMsgState = if (it.isDrafts) {
+                  newMsgState = if (account?.useConversationMode == false && it.isDrafts) {
                     MessageState.PENDING_DELETING_DRAFT
                   } else {
                     MessageState.PENDING_DELETING

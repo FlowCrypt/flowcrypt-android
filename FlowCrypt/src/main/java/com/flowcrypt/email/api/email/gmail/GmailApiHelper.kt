@@ -768,7 +768,8 @@ class GmailApiHelper {
         .users()
         .history()
         .list(DEFAULT_USER_ID)
-        .setStartHistoryId(historyId).apply {
+        .setStartHistoryId(historyId)
+        .apply {
           if (!localFolder.isAll) {
             labelId = localFolder.fullName
           }
