@@ -178,7 +178,7 @@ class ThreadDetailsViewModel(
         this[MessageAction.MOVE_TO_SPAM] = false
       }
 
-      if (foldersManager.folderTrash == null) {
+      if (foldersManager.folderTrash == null || localFolder.isDrafts) {
         this[MessageAction.DELETE] = false
       }
     }

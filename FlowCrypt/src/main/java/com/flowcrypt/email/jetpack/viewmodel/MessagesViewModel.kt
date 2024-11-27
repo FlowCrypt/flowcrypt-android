@@ -188,8 +188,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           } else {
             IMAPStoreManager.getConnection(accountEntity.id)?.executeWithResult { store ->
               refreshMsgsInternal(accountEntity, store, localFolder)
-            }
-              ?: Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+            } ?: Result.exception(
+              NullPointerException(
+                "There is no active connection for ${accountEntity.email}"
+              )
+            )
           }
         }
 

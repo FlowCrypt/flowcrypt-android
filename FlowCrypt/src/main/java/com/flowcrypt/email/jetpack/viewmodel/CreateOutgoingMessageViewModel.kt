@@ -96,7 +96,7 @@ class CreateOutgoingMessageViewModel(
               it.copy(
                 email = outgoingMessageInfo.account,
                 folder = JavaEmailConstants.FOLDER_OUTBOX,
-                uid = messageId,
+                uid = messageEntity.uid,
                 type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
               )
             },
@@ -104,7 +104,7 @@ class CreateOutgoingMessageViewModel(
               it.copy(
                 email = outgoingMessageInfo.account,
                 folder = JavaEmailConstants.FOLDER_OUTBOX,
-                uid = messageId,
+                uid = messageEntity.uid,
                 fwdFolder = it.folder,
                 fwdUid = it.uid,
                 type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }

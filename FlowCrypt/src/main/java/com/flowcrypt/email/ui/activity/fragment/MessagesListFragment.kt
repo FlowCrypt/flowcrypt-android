@@ -578,7 +578,11 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
    */
   private fun refreshMsgs() {
     currentFolder?.let {
-      msgsViewModel.refreshMsgs(it)
+      if (adapter.currentList?.isEmpty() == true) {
+        msgsViewModel.loadMsgsFromRemoteServer()
+      } else {
+        msgsViewModel.refreshMsgs(it)
+      }
     }
   }
 
@@ -982,6 +986,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         menu?.findItem(R.id.menuActionMarkAsNotSpam)?.isVisible = isMarkNotSpamActionEnabled()
         menu?.findItem(R.id.menuActionChangeLabels)?.isVisible =
           account?.isGoogleSignInAccount == true
+        menu?.findItem(R.id.menuActionDeleteMessage)?.isVisible = !isDraftsFolder
 
         val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
         menuActionMarkRead?.isVisible = isChangeSeenStateActionEnabled()

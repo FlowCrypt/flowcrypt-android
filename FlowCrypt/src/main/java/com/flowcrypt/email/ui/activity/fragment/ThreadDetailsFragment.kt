@@ -457,19 +457,28 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
           Result.Status.SUCCESS -> {
             val items = it.data?.list
-            if (items.isNullOrEmpty()) {
-              if (it.data?.silentUpdate == true) {
-                navController?.navigateUp()
-                showStatus(getString(R.string.no_results)) {
-                  threadDetailsViewModel.loadMessages(clearCache = true)
+            when {
+              items.isNullOrEmpty() -> {
+                if (it.data?.silentUpdate == true) {
+                  navController?.navigateUp()
+                  showStatus(getString(R.string.no_results)) {
+                    threadDetailsViewModel.loadMessages(clearCache = true)
+                  }
                 }
               }
-            } else {
-              binding?.swipeRefreshLayout?.isEnabled = true
-              messagesInThreadListAdapter.submitList(items)
-              showContent()
-              if (!it.data.silentUpdate) {
-                tryToOpenTheFreshestMessage(items)
+
+              items.size == 1 -> {
+                threadDetailsViewModel.deleteThread()
+                navController?.navigateUp()
+              }
+
+              else -> {
+                binding?.swipeRefreshLayout?.isEnabled = true
+                messagesInThreadListAdapter.submitList(items)
+                showContent()
+                if (!it.data.silentUpdate) {
+                  tryToOpenTheFreshestMessage(items)
+                }
               }
             }
           }

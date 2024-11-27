@@ -234,14 +234,8 @@ abstract class MessageDao : BaseDao<MessageEntity> {
     )
   ): Int
 
-  @Query("SELECT COUNT(*) FROM messages WHERE account = :account AND folder = :folder")
-  abstract fun count(account: String?, folder: String?): Int
-
-  @Query("SELECT COUNT(*) FROM messages WHERE account = :account AND folder = :folder")
+  @Query("SELECT COUNT(*) FROM messages WHERE account = :account AND folder = :folder AND is_visible = 1")
   abstract suspend fun countSuspend(account: String?, folder: String?): Int?
-
-  @Query("SELECT max(uid) FROM messages WHERE account = :account AND folder = :folder")
-  abstract fun getLastUIDOfMsgForLabel(account: String?, folder: String?): Int
 
   @Query(
     "SELECT * FROM messages " +
