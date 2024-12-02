@@ -156,7 +156,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     object : MessagesInThreadListAdapter.AdapterListener {
       override fun onDataSubmitted(list: List<MessagesInThreadListAdapter.Item>?) {
         val freshestMessageInConversation =
-          (list?.getOrNull(1) as? MessagesInThreadListAdapter.Message)
+          (list?.lastOrNull() as? MessagesInThreadListAdapter.Message)
         updateThreadReplyButtons(
           if (freshestMessageInConversation?.messageEntity?.isDraft == true) {
             null
@@ -429,7 +429,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     binding?.layoutReplyButtons?.replyAllButton?.gone()
     binding?.layoutReplyButtons?.forwardButton?.gone()
 
-    binding?.recyclerViewThreads?.apply {
+    binding?.recyclerViewMessages?.apply {
       val linearLayoutManager = LinearLayoutManager(context)
       layoutManager = linearLayoutManager
       addItemDecoration(
@@ -1056,13 +1056,14 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       }
       val existing = messagesInThreadListAdapter.currentList.getOrNull(1)
           as? MessagesInThreadListAdapter.Message
-      val firstMessage = data[1] as? MessagesInThreadListAdapter.Message
+      val lastMessage = data.lastOrNull() as? MessagesInThreadListAdapter.Message
 
       if (!hasProcessedMessages && existing != null && existing.type == MessagesInThreadListAdapter.Type.MESSAGE_COLLAPSED
         && existing.incomingMessageInfo == null
       ) {
-        if (firstMessage != null && firstMessage.incomingMessageInfo == null) {
-          processMessageClick(firstMessage)
+        if (lastMessage != null && lastMessage.incomingMessageInfo == null) {
+          binding?.recyclerViewMessages?.layoutManager?.scrollToPosition(data.size - 1)
+          processMessageClick(lastMessage)
         }
       }
     }

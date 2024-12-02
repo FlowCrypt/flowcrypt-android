@@ -442,7 +442,7 @@ class ThreadDetailsViewModel(
               }
             }
           }
-        }.reversed()
+        }
 
         val fetchedDraftIdsMap = if (messagesInThread.any { it.isDraft() }) {
           GmailApiHelper.loadBaseDraftInfoInParallel(

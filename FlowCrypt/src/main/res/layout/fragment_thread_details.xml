@@ -39,7 +39,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewThreads"
+            android:id="@+id/recyclerViewMessages"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/layoutReplyButtons"
@@ -47,6 +47,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:itemCount="8"
+            android:clipToPadding="false"
+            android:paddingBottom="64dp"
+            android:scrollbars="vertical"
             tools:listitem="@layout/item_message_in_thread_collapsed">
 
         </androidx.recyclerview.widget.RecyclerView>
@@ -65,7 +68,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            app:constraint_referenced_ids="layoutReplyButtons,recyclerViewThreads" />
+            app:constraint_referenced_ids="layoutReplyButtons,recyclerViewMessages" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
