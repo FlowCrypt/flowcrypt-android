@@ -413,7 +413,7 @@ class ThreadDetailsViewModel(
             context = getApplication(),
             account = activeAccount.email,
             accountType = activeAccount.accountType,
-            label = localFolder.fullName,
+            label = getFolderFullName(),
             msgsList = listOf(threadInfo.lastMessage),
             isNew = false,
             onlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
