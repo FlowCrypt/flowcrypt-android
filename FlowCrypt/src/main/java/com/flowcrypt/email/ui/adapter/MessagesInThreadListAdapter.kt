@@ -247,11 +247,7 @@ class MessagesInThreadListAdapter(
       binding.imageViewAvatar.useGlideToApplyImageFromSource(
         source = AvatarModelLoader.SCHEMA_AVATAR + senderAddress
       )
-      binding.textViewSnippet.text = if (messageEntity.hasPgp == true) {
-        context.getString(R.string.preview_is_not_available_for_messages_with_pgp)
-      } else {
-        messageEntity.snippet
-      }
+      binding.textViewSnippet.text = messageEntity.snippet
       binding.tVTo.text = messageEntity.generateToText(context)
       binding.textViewSender.apply {
         if (messageEntity.isSeen) {

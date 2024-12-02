@@ -652,7 +652,6 @@
     <string name="please_specify_your_signature_here">Please specify your signature here</string>
     <string name="make_backup_in_the_email_box">Make a backup in the email box</string>
     <string name="make_backup_explanation_text">Save the given passphrase-protected PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
-    <string name="preview_is_not_available_for_messages_with_pgp">The preview is not available for messages with PGP</string>
     <string name="draft">Draft</string>
     <string name="permissions_granted_and_now_you_can_download_attachments">The permissions have been granted, and now you can download attachments</string>
     <string name="delete_draft">Delete draft?</string>

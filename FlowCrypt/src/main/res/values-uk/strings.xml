@@ -642,7 +642,6 @@
     <string name="please_specify_your_signature_here">Будь ласка, вкажіть свій підпис тут</string>
     <string name="make_backup_in_the_email_box">Зробіть резервну копію в електронній скриньці</string>
     <string name="make_backup_explanation_text">Зберегти надані секретні ключі PGP, захищені парольною фразою, як резервну копію в папці «Вхідні». Це допоможе отримати Вам доступ до Ваших зашифрованих повідомлень з інших пристроїв (за умови надання Вашої парольної фрази). Ви можете спокійно залишити його у папці "Вхідні" або заархівувати.\n\nЯкщо Вам не потрібна така резервна копія, вимкніть цю опцію.</string>
-    <string name="preview_is_not_available_for_messages_with_pgp">Попередній перегляд недоступний для повідомлень з PGP</string>
     <string name="draft">Чорновик</string>
     <string name="permissions_granted_and_now_you_can_download_attachments">Дозволи надано, і тепер ви можете завантажити вкладені файли</string>
     <string name="delete_draft">Видалити чернетку?</string>
