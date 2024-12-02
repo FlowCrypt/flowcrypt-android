@@ -82,14 +82,14 @@ fun Thread.hasPgp(): Boolean {
 
 fun Thread.extractSubject(context: Context, receiverEmail: String): String {
   return messages?.getOrNull(0)?.takeIf { message ->
-    message.getRecipients("From").any { internetAddress ->
+    (message.getRecipients("From").any { internetAddress ->
       internetAddress.address.equals(receiverEmail, true)
-    } || (messages?.size ?: 0) == 1
+    } || (messages?.size ?: 0) == 1) && !message.isDraft()
   }?.getSubject()
     ?: messages.firstOrNull { message ->
       message.getRecipients("From").any { internetAddress ->
         internetAddress.address.equals(receiverEmail, true)
-      }
+      } && !message.isDraft()
     }?.getSubject()
     ?: messages?.getOrNull(0)?.getSubject()
     ?: context.getString(R.string.no_subject)
