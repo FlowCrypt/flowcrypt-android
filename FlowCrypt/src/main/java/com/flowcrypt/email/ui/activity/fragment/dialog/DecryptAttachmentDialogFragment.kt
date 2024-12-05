@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
@@ -20,13 +19,15 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentDecryptAttachmentBinding
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.DecryptAttachmentViewModel
+import com.flowcrypt.email.util.GeneralUtil
 import org.apache.commons.io.FilenameUtils
 
 /**
@@ -98,13 +99,12 @@ class DecryptAttachmentDialogFragment : BaseDialogFragment() {
                 bundleOf(
                   KEY_ATTACHMENT to args.attachmentInfo.copy(
                     uri = null,
-                    type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
-                      FilenameUtils.getExtension(newFileName).lowercase()
-                    ) ?: args.attachmentInfo.type,
+                    type = newFileName.getPossibleAndroidMimeType() ?: args.attachmentInfo.type,
                     rawData = byteArray,
                     name = newFileName
                   ),
-                  KEY_REQUEST_CODE to args.requestCode
+                  KEY_REQUEST_CODE to args.requestCode,
+                  KEY_INCOMING_BUNDLE to args.bundle
                 )
               )
             }
@@ -125,6 +125,9 @@ class DecryptAttachmentDialogFragment : BaseDialogFragment() {
 
   companion object {
     const val KEY_ATTACHMENT = "KEY_ATTACHMENT"
+    val KEY_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_INCOMING_BUNDLE", DecryptAttachmentDialogFragment::class.java
+    )
     const val KEY_REQUEST_CODE = "KEY_REQUEST_CODE"
   }
 }

@@ -81,7 +81,7 @@ class ComposeScreenReplyWithGmailApiSignatureFlowTest :
     waitForObjectWithText(getResString(R.string.reply_all_encrypted), TimeUnit.SECONDS.toMillis(10))
 
     //click on replyAll
-    openReplyScreen(R.id.layoutReplyButton, SUBJECT_EXISTING_ENCRYPTED)
+    openReplyScreen(R.id.replyButton, SUBJECT_EXISTING_ENCRYPTED)
 
     //need to wait while all action for reply case will be applied
     Thread.sleep(1000)

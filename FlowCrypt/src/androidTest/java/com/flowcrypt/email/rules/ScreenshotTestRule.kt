@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.rules
@@ -13,6 +13,7 @@ import android.webkit.MimeTypeMap
 import androidx.test.core.app.canTakeScreenshot
 import androidx.test.core.app.takeScreenshot
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import org.apache.commons.io.FilenameUtils
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
@@ -49,7 +50,7 @@ class ScreenshotTestRule : TestWatcher() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val contentResolver = context.contentResolver
         val fileExtension = FilenameUtils.getExtension(filename).lowercase()
-        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+        val mimeType = filename.getPossibleAndroidMimeType()
 
         val contentValues = ContentValues().apply {
           put(MediaStore.Images.Media.DISPLAY_NAME, filename)

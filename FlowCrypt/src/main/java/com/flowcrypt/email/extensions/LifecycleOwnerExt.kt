@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions
@@ -111,7 +111,8 @@ fun LifecycleOwner.showNeedPassphraseDialog(
   logicType: Long = FixNeedPassphraseIssueDialogFragment.LogicType.AT_LEAST_ONE,
   requestCode: Int = 0,
   customTitle: String? = null,
-  showKeys: Boolean = true
+  showKeys: Boolean = true,
+  bundle: Bundle? = null
 ) {
   if (navController?.currentDestination?.id == R.id.fixNeedPassphraseIssueDialogFragment) {
     //it prevents blinking
@@ -127,7 +128,8 @@ fun LifecycleOwner.showNeedPassphraseDialog(
         logicType = logicType,
         requestCode = requestCode,
         customTitle = customTitle,
-        showKeys = showKeys
+        showKeys = showKeys,
+        bundle = bundle
       ).toBundle()
     }
   }

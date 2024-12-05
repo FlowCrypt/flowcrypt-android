@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.database.entity
@@ -14,6 +14,7 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
@@ -30,7 +31,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Entity(
-  tableName = AccountEntity.TABLE_NAME,
+  tableName = "accounts",
   indices = [
     Index(name = "email_account_type_in_accounts", value = ["email", "account_type"], unique = true)
   ]
@@ -40,7 +41,7 @@ data class AccountEntity(
   @PrimaryKey(autoGenerate = true)
   @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
   val email: String,
-  @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
+  @ColumnInfo(name = "account_type") val accountType: String,
   @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
   @ColumnInfo(name = "given_name", defaultValue = "NULL") val givenName: String? = null,
   @ColumnInfo(name = "family_name", defaultValue = "NULL") val familyName: String? = null,
@@ -83,13 +84,12 @@ data class AccountEntity(
   @ColumnInfo(name = "service_pgp_private_key") val servicePgpPrivateKey: ByteArray,
   @ColumnInfo(name = "signature", defaultValue = "NULL") val signature: String? = null,
   @ColumnInfo(name = "use_alias_signatures", defaultValue = "0") val useAliasSignatures: Boolean = false,
+  @ColumnInfo(name = "use_conversation_mode", defaultValue = "0") val useConversationMode: Boolean = false,
 ) : Parcelable {
 
   @IgnoredOnParcel
   @Ignore
-  val account: Account = Account(this.email.ifEmpty { "unknown" },
-    accountType ?: this.email.substring(this.email.indexOf('@') + 1).lowercase()
-      .ifEmpty { "unknown" })
+  val account: Account = Account(this.email.ifEmpty { ACCOUNT_TYPE_UNKNOWN }, accountType)
 
   @IgnoredOnParcel
   @Ignore
@@ -109,7 +109,9 @@ data class AccountEntity(
     useStartTlsForSmtp: Boolean = false,
   ) : this(
     email = requireNotNull(googleSignInAccount.email).lowercase(),
-    accountType = googleSignInAccount.account?.type?.lowercase(),
+    accountType = googleSignInAccount.account?.type?.lowercase() ?: EmailUtil.getDomain(
+      requireNotNull(googleSignInAccount.email)
+    ).ifEmpty { ACCOUNT_TYPE_UNKNOWN },
     displayName = googleSignInAccount.displayName,
     givenName = googleSignInAccount.givenName,
     familyName = googleSignInAccount.familyName,
@@ -142,14 +144,14 @@ data class AccountEntity(
     useCustomerFesUrl = useCustomerFesUrl,
     servicePgpPassphrase = "",
     servicePgpPrivateKey = byteArrayOf(),
-    useAliasSignatures = true
+    useAliasSignatures = true,
+    useConversationMode = true
   )
 
   constructor(authCredentials: AuthCredentials, clientConfiguration: ClientConfiguration? = null) :
       this(
         email = authCredentials.email.lowercase(),
-        accountType =
-        authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).lowercase(),
+        accountType = EmailUtil.getDomain(authCredentials.email).ifEmpty { ACCOUNT_TYPE_UNKNOWN },
         displayName = authCredentials.displayName,
         givenName = null,
         familyName = null,
@@ -183,7 +185,7 @@ data class AccountEntity(
   constructor(email: String) :
       this(
         email = email,
-        accountType = null,
+        accountType = EmailUtil.getDomain(email).ifEmpty { ACCOUNT_TYPE_UNKNOWN },
         displayName = null,
         givenName = null,
         familyName = null,
@@ -305,6 +307,7 @@ data class AccountEntity(
     if (!servicePgpPrivateKey.contentEquals(other.servicePgpPrivateKey)) return false
     if (signature != other.signature) return false
     if (useAliasSignatures != other.useAliasSignatures) return false
+    if (useConversationMode != other.useConversationMode) return false
 
     return true
   }
@@ -312,7 +315,7 @@ data class AccountEntity(
   override fun hashCode(): Int {
     var result = id?.hashCode() ?: 0
     result = 31 * result + email.hashCode()
-    result = 31 * result + (accountType?.hashCode() ?: 0)
+    result = 31 * result + accountType.hashCode()
     result = 31 * result + (displayName?.hashCode() ?: 0)
     result = 31 * result + (givenName?.hashCode() ?: 0)
     result = 31 * result + (familyName?.hashCode() ?: 0)
@@ -343,12 +346,13 @@ data class AccountEntity(
     result = 31 * result + servicePgpPrivateKey.contentHashCode()
     result = 31 * result + (signature?.hashCode() ?: 0)
     result = 31 * result + useAliasSignatures.hashCode()
+    result = 31 * result + useConversationMode.hashCode()
     return result
   }
 
   companion object {
-    const val TABLE_NAME = "accounts"
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
+    const val ACCOUNT_TYPE_UNKNOWN = "unknown"
   }
 }

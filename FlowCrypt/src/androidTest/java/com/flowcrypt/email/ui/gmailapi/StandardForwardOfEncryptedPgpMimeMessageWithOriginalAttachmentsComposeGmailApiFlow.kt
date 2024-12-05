@@ -102,7 +102,7 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
     Thread.sleep(2000)
 
     //click on forward
-    openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_PGP_MIME)
+    openReplyScreen(R.id.forwardButton, SUBJECT_EXISTING_PGP_MIME)
 
     //switch to standard mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -135,20 +135,21 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
       val fwdTextPart = multipart.getBodyPart(0)
       val expectedMessageText = outgoingMessageConfiguration.message + IncomingMessageInfo(
         msgEntity = MessageEntity(
-          email = "",
+          account = "",
+          accountType = "",
           folder = "",
           uid = 0,
-          fromAddress = DEFAULT_FROM_RECIPIENT,
+          fromAddresses = DEFAULT_FROM_RECIPIENT,
           subject = SUBJECT_EXISTING_PGP_MIME,
           receivedDate = DATE_EXISTING_PGP_MIME,
-          toAddress = InternetAddress.toString(
+          toAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_TO_RECIPIENT
               )
             )
           ),
-          ccAddress = InternetAddress.toString(
+          ccAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_CC_RECIPIENT

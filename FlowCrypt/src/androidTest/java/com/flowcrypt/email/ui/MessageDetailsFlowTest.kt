@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -64,7 +64,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.base.BaseMessageDetailsFlowTest
 import com.flowcrypt.email.util.GeneralUtil
@@ -83,7 +83,6 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -130,7 +129,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testReplyButton() {
     val incomingMessageInfo = testStandardMsgPlaintextInternal()
-    onView(withId(R.id.layoutReplyButton))
+    onView(withId(R.id.replyButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
@@ -147,7 +146,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testReplyAllButton() {
     val incomingMessageInfo = testStandardMsgPlaintextInternal()
-    onView(withId(R.id.layoutReplyAllButton))
+    onView(withId(R.id.replyAllButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
@@ -158,7 +157,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testFwdButton() {
     testStandardMsgPlaintextInternal()
-    onView(withId(R.id.layoutFwdButton))
+    onView(withId(R.id.forwardButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
@@ -558,7 +557,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(
         scrollToHolder(
           withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.from),
               value = "Denis Bondarenko <denbond7@flowcrypt.test>"
             )
@@ -569,7 +568,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(
         scrollToHolder(
           withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.reply_to),
               value = "Denis Bondarenko <denbond7@flowcrypt.test>"
             )
@@ -580,7 +579,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(
         scrollToHolder(
           withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.to),
               value = "default@flowcrypt.test"
             )
@@ -591,7 +590,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(
         scrollToHolder(
           withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.cc),
               value = "ccuser@test"
             )
@@ -610,7 +609,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .perform(
         scrollToHolder(
           withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.date),
               value = datetime
             )
@@ -1228,7 +1227,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     )
 
     val inlineAttachmentMessageBlock =
-      msgInfo?.msgBlocks?.filterIsInstance(InlineAttMsgBlock::class.java)?.first()
+      msgInfo?.msgBlocks?.filterIsInstance<InlineAttMsgBlock>()?.first()
 
     assertEquals(2, msgInfo?.msgBlocks?.size)
     assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo?.msgBlocks?.get(0)?.type)

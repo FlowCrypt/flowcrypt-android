@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager
@@ -19,6 +19,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -44,9 +45,9 @@ import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.FileContent
-import org.eclipse.angus.mail.imap.IMAPFolder
-import org.eclipse.angus.mail.util.MailConnectException
+import com.google.api.services.gmail.model.Draft
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.Flags
 import jakarta.mail.Folder
@@ -58,6 +59,8 @@ import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.util.MailConnectException
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -227,26 +230,13 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           msgStates = listOf(MessageState.QUEUED.value)
         )
 
-        if (CollectionUtils.isEmpty(list)) {
+        if (list.isEmpty()) {
           break
         }
 
-        val iterator = list.iterator()
-        var msgEntity: MessageEntity? = null
-
-        while (iterator.hasNext()) {
-          val tempMsgDetails = iterator.next()
-          if (tempMsgDetails.uid > lastMsgUID) {
-            msgEntity = tempMsgDetails
-            break
-          }
+        var msgEntity = (list.firstOrNull { it.uid > lastMsgUID } ?: list.first()).apply {
+          lastMsgUID = uid
         }
-
-        if (msgEntity == null) {
-          msgEntity = list[0]
-        }
-
-        lastMsgUID = msgEntity.uid
 
         try {
           roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
@@ -254,17 +244,24 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           delay(2000)
 
           val attachments = roomDatabase.attachmentDao()
-            .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+            .getAttachments(
+              account = email,
+              accountType = account.accountType,
+              label = JavaEmailConstants.FOLDER_OUTBOX,
+              uid = msgEntity.uid
+            )
           val isMsgSent = sendMsg(account, msgEntity, attachments, sess, store)
 
           if (!isMsgSent) {
             continue
           }
 
-          msgEntity = roomDatabase.msgDao()
+          val existingMessageEntity = roomDatabase.msgDao()
             .getMsgSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+            ?: return@withContext
+          msgEntity = existingMessageEntity
 
-          if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
+          if (msgEntity.msgState == MessageState.SENT) {
             roomDatabase.msgDao().deleteSuspend(msgEntity)
             OutgoingMessagesManager.deleteOutgoingMessage(
               applicationContext,
@@ -288,10 +285,10 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(applicationContext)) {
-            msgEntity?.let {
-              if (msgEntity.msgState !== MessageState.SENT) {
+            if (msgEntity.msgState != MessageState.SENT) {
+              msgEntity.copy(state = MessageState.QUEUED.value).let {
                 roomDatabase.msgDao()
-                  .updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
+                  .updateSuspend(it)
               }
             }
             throw e
@@ -320,9 +317,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
             }
 
-            msgEntity?.let {
+            msgEntity.copy(state = newMsgState.value, errorMsg = e.message).let {
               roomDatabase.msgDao()
-                .updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
+                .updateSuspend(it)
             }
           }
 
@@ -354,8 +351,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
         }
         val msgEntity = list.first()
         try {
-          val attachments = roomDatabase.attachmentDao()
-            .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+          val attachments = roomDatabase.attachmentDao().getAttachments(
+            account = email,
+            accountType = account.accountType,
+            label = JavaEmailConstants.FOLDER_OUTBOX,
+            uid = msgEntity.uid
+          )
 
           val mimeMsg = EmailUtil.createMimeMsg(applicationContext, sess, msgEntity, attachments)
 
@@ -424,8 +425,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     details: MessageEntity
   ) =
     withContext(Dispatchers.IO) {
-      FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().deleteAttSuspend(
+      roomDatabase.attachmentDao().deleteAttachments(
         account = account.email,
+        accountType = account.accountType,
         label = JavaEmailConstants.FOLDER_OUTBOX,
         uid = details.uid
       )
@@ -459,7 +461,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
                 mimeMsg.writeTo(out)
               }
 
-              val threadId = msgEntity.threadId
+              val threadId = msgEntity.threadIdAsHEX
                 ?: mimeMsg.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null)
                   ?.let { replyMsgId ->
                     GmailApiHelper.executeWithResult {
@@ -474,12 +476,63 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
               }
 
               val mediaContent = FileContent(Constants.MIME_TYPE_RFC822, copyOfMimeMsg)
+              gmailMsg = if (msgEntity.draftId.isNullOrEmpty()) {
+                gmail
+                  .users()
+                  .messages()
+                  .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
+                  .execute()
+                  .apply {
+                    setProgress(
+                      workDataOf(
+                        EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE to msgEntity.threadId,
+                      )
+                    )
+                  }
+              } else {
+                try {
+                  gmail
+                    .users()
+                    .drafts()
+                    .send(
+                      GmailApiHelper.DEFAULT_USER_ID,
+                      Draft().apply {
+                        message = gmailMsg
+                        id = msgEntity.draftId
+                      },
+                      mediaContent
+                    ).execute().apply {
+                      setProgress(
+                        workDataOf(
+                          EXTRA_KEY_ID_OF_SENT_DRAFT to msgEntity.draftId,
+                          EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE to msgEntity.threadId,
+                        )
+                      )
+                    }
+                } catch (e: GoogleJsonResponseException) {
+                  val isDraftNotFound = e.details.errors.any {
+                    it.message == "Requested entity was not found."
+                  }
 
-              gmailMsg = gmail
-                .users()
-                .messages()
-                .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
-                .execute()
+                  if (isDraftNotFound) {
+                    //try to send via messages().send()
+                    gmail
+                      .users()
+                      .messages()
+                      .send(GmailApiHelper.DEFAULT_USER_ID, gmailMsg, mediaContent)
+                      .execute()
+                      .apply {
+                        setProgress(
+                          workDataOf(
+                            EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE to msgEntity.threadId,
+                          )
+                        )
+                      }
+                  } else {
+                    throw e
+                  }
+                }
+              }
 
               if (gmailMsg.id == null) {
                 return@withContext false
@@ -557,9 +610,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) :
     }
 
   companion object {
+    const val EXTRA_KEY_ID_OF_SENT_DRAFT = "ID_OF_SENT_DRAFT"
+    const val EXTRA_KEY_THREAD_ID_OF_SENT_MESSAGE = "THREAD_ID_OF_SENT_MESSAGE"
+
     private val TAG = MessagesSenderWorker::class.java.simpleName
     private val NOTIFICATION_ID = R.id.notification_id_sending_msgs_worker
-    val NAME = MessagesSenderWorker::class.java.simpleName
+    val NAME: String = MessagesSenderWorker::class.java.simpleName
 
     fun enqueue(context: Context, forceSending: Boolean = false) {
       val constraints = Constraints.Builder()

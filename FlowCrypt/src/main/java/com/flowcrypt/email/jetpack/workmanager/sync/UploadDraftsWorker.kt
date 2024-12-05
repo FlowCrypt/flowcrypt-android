@@ -8,11 +8,13 @@ package com.flowcrypt.email.jetpack.workmanager.sync
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.threadIdAsLong
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.CacheManager
@@ -30,6 +32,9 @@ import java.io.File
 import java.io.FileFilter
 import java.util.Properties
 
+/**
+ * @author Denys Bondarenko
+ */
 class UploadDraftsWorker(context: Context, params: WorkerParameters) :
   BaseSyncWorker(context, params) {
   override suspend fun runIMAPAction(accountEntity: AccountEntity, store: Store) {
@@ -66,7 +71,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           account = account,
           mimeMessage = mimeMessage,
           draftId = draftId,
-          threadId = messageEntity.threadId
+          threadId = messageEntity.threadIdAsHEX
         )
 
         val message = GmailApiHelper.loadMsgInfoSuspend(
@@ -78,7 +83,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
             "threadId",
             "historyId"
           ),
-          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+          format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
 
         val freshestMessageEntity =
@@ -86,7 +91,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
 
         val messageEntityWithoutStateChange = messageEntity.copy(
           uid = message.uid,
-          threadId = message.threadId,
+          threadId = message.threadIdAsLong,
           draftId = draft.id,
           historyId = message.historyId.toString()
         )
@@ -108,6 +113,7 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
     val draftsDir = CacheManager.getDraftDirectory(applicationContext)
     val directories = draftsDir.listFiles(FileFilter { it.isDirectory }) ?: emptyArray()
     var attemptsCount = 0
+    val setOfThreadToBeAffected = mutableSetOf<Long>()
     while (attemptsCount < MAX_ATTEMPTS_COUNT && FileUtils.listFiles(
         draftsDir,
         TrueFileFilter.INSTANCE,
@@ -117,12 +123,31 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
       for (directory in directories) {
         val directoryName = directory.name
         val existingDraftEntity = roomDatabase.msgDao().getMsgById(directoryName.toLong())
+
         if (existingDraftEntity == null) {
           FileAndDirectoryUtils.deleteDir(directory)
           continue
         }
+
+        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
+        if (activeAccount != null) {
+          val outgoingMessages = roomDatabase.msgDao().getOutboxMsgsSuspend(activeAccount.email)
+          if (outgoingMessages.any { it.uid == existingDraftEntity.uid }) {
+            //it looks like a user sent a message for this draft
+            FileAndDirectoryUtils.deleteDir(directory)
+            continue
+          }
+        }
+
         val drafts = directory.listFiles(FileFilter { it.isFile }) ?: emptyArray()
         try {
+          setProgress(
+            workDataOf(
+              EXTRA_KEY_MESSAGE_UID to existingDraftEntity.uid,
+              EXTRA_KEY_THREAD_ID to existingDraftEntity.threadId,
+              EXTRA_KEY_STATE to STATE_UPLOADING
+            )
+          )
           val lastVersion = drafts.maxBy { it.lastModified() }
           val inputStream = KeyStoreCryptoManager.getCipherInputStream(lastVersion.inputStream())
           val mimeMessage = MimeMessage(Session.getInstance(Properties()), inputStream)
@@ -155,14 +180,40 @@ class UploadDraftsWorker(context: Context, params: WorkerParameters) :
           }
 
           continue
+        } finally {
+          setProgress(
+            workDataOf(
+              EXTRA_KEY_MESSAGE_UID to existingDraftEntity.uid,
+              EXTRA_KEY_THREAD_ID to existingDraftEntity.threadId,
+              EXTRA_KEY_STATE to STATE_UPLOAD_COMPLETED
+            )
+          )
+
+          existingDraftEntity.threadId?.let { setOfThreadToBeAffected.add(it) }
         }
       }
 
       attemptsCount++
     }
+
+    setProgress(
+      workDataOf(
+        EXTRA_KEY_STATE to STATE_COMMON_UPLOAD_COMPLETED,
+        EXTRA_KEY_THREAD_ID_LIST to setOfThreadToBeAffected.toTypedArray(),
+      )
+    )
   }
 
   companion object {
+    const val EXTRA_KEY_MESSAGE_UID = "MESSAGE_UID"
+    const val EXTRA_KEY_THREAD_ID = "THREAD_ID"
+    const val EXTRA_KEY_THREAD_ID_LIST = "THREAD_ID_LIST"
+    const val EXTRA_KEY_STATE = "STATE"
+
+    const val STATE_UPLOADING = 0
+    const val STATE_UPLOAD_COMPLETED = 1
+    const val STATE_COMMON_UPLOAD_COMPLETED = 2
+
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPLOAD_DRAFTS"
     const val MAX_ATTEMPTS_COUNT = 10
 
