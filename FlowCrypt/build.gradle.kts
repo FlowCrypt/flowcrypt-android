@@ -471,7 +471,7 @@ dependencies {
   implementation("org.pgpainless:pgpainless-core:1.6.7")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
   implementation("org.eclipse.angus:gimap:2.0.3")
-  implementation("commons-io:commons-io:2.17.0")
+  implementation("commons-io:commons-io:2.18.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.11.4")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
