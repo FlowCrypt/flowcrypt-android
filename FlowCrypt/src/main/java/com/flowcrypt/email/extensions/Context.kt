@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions
@@ -10,6 +10,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.widget.Toast
+import com.flowcrypt.email.FlowCryptApplication
 
 /**
  * @author Denys Bondarenko
@@ -35,4 +36,13 @@ fun Context?.hasActiveConnection(): Boolean {
       activeNetwork?.isConnectedOrConnecting == true
     }
   } ?: false
+}
+
+/**
+ * Check if the app is in the foreground or visible..
+ *
+ * @return true if the app is foregrounded or visible.
+ */
+fun Context?.isAppForegrounded(): Boolean {
+  return (this as? FlowCryptApplication)?.appForegroundedObserver?.isAppForegrounded ?: false
 }

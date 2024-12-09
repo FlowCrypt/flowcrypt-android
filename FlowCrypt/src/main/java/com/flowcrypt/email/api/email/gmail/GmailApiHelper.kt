@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   DenBond7
- *   Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.gmail
@@ -15,6 +13,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.api.GMailRawAttachmentFilterInputStream
 import com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
+import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -22,9 +21,11 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.contentId
-import com.flowcrypt.email.extensions.disposition
-import com.flowcrypt.email.extensions.isMimeType
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.disposition
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getAttachmentInfoList
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isMimeType
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.toThreadInfo
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
@@ -41,6 +42,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import com.google.api.client.googleapis.json.GoogleJsonError
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.client.http.HttpHeaders
+import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.GenericJson
 import com.google.api.client.json.gson.GsonFactory
@@ -52,8 +54,11 @@ import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.History
 import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListMessagesResponse
+import com.google.api.services.gmail.model.ListThreadsResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
+import com.google.api.services.gmail.model.ModifyThreadRequest
+import com.google.api.services.gmail.model.Thread
 import jakarta.mail.Flags
 import jakarta.mail.MessagingException
 import jakarta.mail.Part
@@ -76,6 +81,9 @@ import java.net.ProtocolException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Properties
+import java.util.logging.ConsoleHandler
+import java.util.logging.Level
+import java.util.logging.Logger
 import javax.net.ssl.SSLException
 
 /**
@@ -114,8 +122,9 @@ class GmailApiHelper {
     private const val COUNT_OF_LOADED_EMAILS_BY_STEP =
       JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP.toLong()
     const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
-    const val MESSAGE_RESPONSE_FORMAT_FULL = "full"
-    const val MESSAGE_RESPONSE_FORMAT_MINIMAL = "minimal"
+    const val RESPONSE_FORMAT_FULL = "full"
+    const val RESPONSE_FORMAT_MINIMAL = "minimal"
+    const val RESPONSE_FORMAT_METADATA = "metadata"
 
     private val FULL_INFO_WITHOUT_DATA = listOf(
       "id",
@@ -131,6 +140,14 @@ class GmailApiHelper {
       "payload/headers",
       "payload/body",
       "payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)"
+    )
+
+    val THREAD_BASE_INFO = listOf(
+      "id",
+      "historyId",
+      "messages/id",
+      "messages/threadId",
+      "messages/labelIds",
     )
 
     suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> =
@@ -181,12 +198,10 @@ class GmailApiHelper {
       val credential = generateGoogleAccountCredential(context, account)
 
       val transport = NetHttpTransport()
-      /*if (EmailUtil.hasEnabledDebug(context)) {
-        Logger.getLogger(HttpTransport::class.java.name).apply {
-          level = Level.CONFIG
-          addHandler(object : ConsoleHandler() {}.apply { level = Level.CONFIG })
-        }
-      }*/
+      Logger.getLogger(HttpTransport::class.java.name).apply {
+        level = Level.CONFIG
+        addHandler(object : ConsoleHandler() {}.apply { level = Level.CONFIG })
+      }
 
       val factory = GsonFactory.getDefaultInstance()
       val appName = context.getString(R.string.app_name)
@@ -230,19 +245,57 @@ class GmailApiHelper {
     suspend fun getWholeMimeMessageInputStream(
       context: Context,
       account: AccountEntity?,
-      messageEntity: MessageEntity
+      messageId: String
     ): InputStream = withContext(Dispatchers.IO) {
-      val msgId = messageEntity.uidAsHEX
       val gmailApiService = generateGmailApiService(context, account)
 
       val message = gmailApiService
         .users()
         .messages()
-        .get(DEFAULT_USER_ID, msgId)
+        .get(DEFAULT_USER_ID, messageId)
         .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
       message.fields = "raw"
 
       return@withContext Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()))
+    }
+
+    suspend fun loadThreads(
+      context: Context,
+      accountEntity: AccountEntity,
+      localFolder: LocalFolder,
+      maxResult: Long = COUNT_OF_LOADED_EMAILS_BY_STEP,
+      fields: List<String>? = null,
+      nextPageToken: String? = null
+    ): ListThreadsResponse = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val request = gmailApiService
+        .users()
+        .threads()
+        .list(DEFAULT_USER_ID)
+        .setPageToken(nextPageToken)
+        .setMaxResults(maxResult)
+
+      fields?.let { fields ->
+        request.fields = fields.joinToString(separator = ",")
+      }
+
+      if (!localFolder.isAll) {
+        request.labelIds = listOf(localFolder.fullName)
+      }
+
+      if (localFolder.searchQuery.isNullOrEmpty()) {
+        if (accountEntity.showOnlyEncrypted == true) {
+          request.q =
+            (EmailUtil.genPgpThingsSearchTerm(accountEntity) as? GmailRawSearchTerm)?.pattern
+        }
+      } else {
+        request.q = (EmailUtil.generateSearchTerm(
+          accountEntity,
+          localFolder
+        ) as? GmailRawSearchTerm)?.pattern
+      }
+
+      return@withContext request.execute()
     }
 
     suspend fun loadMsgsBaseInfo(
@@ -296,7 +349,7 @@ class GmailApiHelper {
       accountEntity: AccountEntity,
       messages: List<Message>,
       localFolder: LocalFolder,
-      format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      format: String = RESPONSE_FORMAT_FULL,
       stepValue: Int = 10
     ): List<Message> = withContext(Dispatchers.IO)
     {
@@ -305,9 +358,127 @@ class GmailApiHelper {
       }
     }
 
+    suspend fun loadGmailThreadInfoInParallel(
+      context: Context,
+      accountEntity: AccountEntity,
+      threads: List<Thread>,
+      format: String = RESPONSE_FORMAT_FULL,
+      fields: List<String>? = null,
+      stepValue: Int = 10
+    ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
+    {
+      return@withContext useParallel(list = threads, stepValue = stepValue) { list ->
+        loadThreadsInfo(
+          context = context,
+          accountEntity = accountEntity,
+          threads = list,
+          format = format,
+          fields = fields
+        )
+      }
+    }
+
+    suspend fun loadThreadsInfo(
+      context: Context,
+      accountEntity: AccountEntity,
+      threads: Collection<Thread>,
+      format: String = RESPONSE_FORMAT_FULL,
+      metadataHeaders: List<String>? = null,
+      fields: List<String>? = null
+    ): List<GmailThreadInfo> = withContext(Dispatchers.IO)
+    {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      val listResult = mutableListOf<GmailThreadInfo>()
+
+      for (thread in threads) {
+        val request = gmailApiService
+          .users()
+          .threads()
+          .get(DEFAULT_USER_ID, thread.id)
+          .setFormat(format)
+
+        metadataHeaders?.let { metadataHeaders ->
+          request.metadataHeaders = metadataHeaders
+        }
+
+        fields?.let { fields ->
+          request.fields = fields.joinToString(separator = ",")
+        }
+
+        request.queue(
+          batch,
+          object : JsonBatchCallback<Thread>() {
+            override fun onSuccess(
+              t: Thread?,
+              responseHeaders: HttpHeaders?
+            ) {
+              t?.let { thread ->
+                listResult.add(thread.toThreadInfo(context, accountEntity))
+              }
+            }
+
+            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+              IllegalStateException(e?.toPrettyString()).printStackTraceIfDebugOnly()
+            }
+          })
+      }
+
+      batch.execute()
+
+      return@withContext listResult
+    }
+
+    suspend fun loadThreadInfo(
+      context: Context,
+      accountEntity: AccountEntity,
+      threadId: String,
+      format: String = RESPONSE_FORMAT_FULL,
+      metadataHeaders: List<String>? = null,
+      fields: List<String>? = null
+    ): GmailThreadInfo? = withContext(Dispatchers.IO)
+    {
+      return@withContext getThread(
+        context = context,
+        accountEntity = accountEntity,
+        threadId = threadId,
+        format = format,
+        metadataHeaders = metadataHeaders,
+        fields = fields
+      )?.toThreadInfo(context, accountEntity)
+    }
+
+    suspend fun getThread(
+      context: Context,
+      accountEntity: AccountEntity,
+      threadId: String,
+      format: String = RESPONSE_FORMAT_FULL,
+      metadataHeaders: List<String>? = null,
+      fields: List<String>? = null
+    ): Thread? = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+
+      val request = gmailApiService
+        .users()
+        .threads()
+        .get(DEFAULT_USER_ID, threadId)
+        .setFormat(format)
+
+      metadataHeaders?.let { metadataHeaders ->
+        request.metadataHeaders = metadataHeaders
+      }
+
+      fields?.let { fields ->
+        request.fields = fields.joinToString(separator = ",")
+      }
+
+      return@withContext request.execute()
+    }
+
     suspend fun loadMsgs(
       context: Context, accountEntity: AccountEntity, messages: Collection<Message>,
-      localFolder: LocalFolder, format: String = MESSAGE_RESPONSE_FORMAT_FULL,
+      localFolder: LocalFolder, format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null, fields: List<String>? = FULL_INFO_WITHOUT_DATA
     ): List<Message> = withContext(Dispatchers.IO)
     {
@@ -385,6 +556,46 @@ class GmailApiHelper {
         .execute()
     }
 
+    suspend fun changeLabelsForThreads(
+      context: Context,
+      accountEntity: AccountEntity,
+      threadIdList: Collection<String>,
+      addLabelIds: List<String>? = null,
+      removeLabelIds: List<String>? = null
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      if (addLabelIds == null && removeLabelIds == null) {
+        return@withContext emptyMap<String, Boolean>()
+      }
+
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      val resultMap = mutableMapOf<String, Boolean>()
+      threadIdList.forEach { threadId ->
+        val request = gmailApiService
+          .users()
+          .threads()
+          .modify(DEFAULT_USER_ID, threadId, ModifyThreadRequest().apply {
+            this.addLabelIds = addLabelIds
+            this.removeLabelIds = removeLabelIds
+          })
+
+        request.queue(batch, object : JsonBatchCallback<Thread>() {
+          override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {
+            resultMap[threadId] = true
+          }
+
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[threadId] = true
+          }
+        })
+      }
+
+      batch.execute()
+
+      return@withContext resultMap
+    }
+
     suspend fun deleteMsgsPermanently(
       context: Context, accountEntity: AccountEntity,
       ids: List<String>
@@ -401,6 +612,33 @@ class GmailApiHelper {
       }
     }
 
+    suspend fun deleteThreadsPermanently(
+      context: Context, accountEntity: AccountEntity,
+      ids: Collection<String>
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+      val resultMap = mutableMapOf<String, Boolean>()
+      ids.forEach { id ->
+        val request = gmailApiService
+          .users()
+          .threads()
+          .delete(DEFAULT_USER_ID, id)
+        request.queue(batch, object : JsonBatchCallback<Void>() {
+          override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = true
+          }
+
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = false
+          }
+        })
+      }
+
+      batch.execute()
+      return@withContext resultMap
+    }
+
     suspend fun deleteDrafts(
       context: Context,
       accountEntity: AccountEntity,
@@ -411,6 +649,7 @@ class GmailApiHelper {
         val gmailApiService = generateGmailApiService(context, accountEntity)
         val batch = gmailApiService.batch()
 
+        val result = mutableListOf<Pair<String, Boolean>>()
         for (id in list) {
           val request = gmailApiService
             .users()
@@ -418,39 +657,78 @@ class GmailApiHelper {
             .delete(DEFAULT_USER_ID, id)
 
           request.queue(batch, object : JsonBatchCallback<Void>() {
-            override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {}
-            override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {}
-          })
-        }
-
-        batch.execute()
-        return@useParallel list
-      }
-    }
-
-    suspend fun moveToTrash(context: Context, accountEntity: AccountEntity, ids: List<String>) =
-      withContext(Dispatchers.IO) {
-        val gmailApiService = generateGmailApiService(context, accountEntity)
-        val batch = gmailApiService.batch()
-
-        for (id in ids) {
-          val request = gmailApiService
-            .users()
-            .messages()
-            .trash(DEFAULT_USER_ID, id)
-          request.queue(batch, object : JsonBatchCallback<Message>() {
-            override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
-              //need to think about it
+            override fun onSuccess(t: Void?, responseHeaders: HttpHeaders?) {
+              result.add(Pair(id, true))
             }
 
             override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
-              //need to think about it
+              result.add(Pair(id, false))
             }
           })
         }
 
         batch.execute()
+        return@useParallel result
+      }.associateBy({ it.first }, { it.second })
+    }
+
+    suspend fun moveToTrash(
+      context: Context,
+      accountEntity: AccountEntity,
+      ids: List<String>
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+      val resultMap = mutableMapOf<String, Boolean>()
+
+      ids.forEach { id ->
+        val request = gmailApiService
+          .users()
+          .messages()
+          .trash(DEFAULT_USER_ID, id)
+        request.queue(batch, object : JsonBatchCallback<Message>() {
+          override fun onSuccess(t: Message?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = true
+          }
+
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = false
+          }
+        })
       }
+
+      batch.execute()
+      return@withContext resultMap
+    }
+
+    suspend fun moveThreadsToTrash(
+      context: Context,
+      accountEntity: AccountEntity,
+      ids: Collection<String>
+    ): Map<String, Boolean> = withContext(Dispatchers.IO) {
+      val gmailApiService = generateGmailApiService(context, accountEntity)
+      val batch = gmailApiService.batch()
+
+      val resultMap = mutableMapOf<String, Boolean>()
+      ids.forEach { id ->
+        val request = gmailApiService
+          .users()
+          .threads()
+          .trash(DEFAULT_USER_ID, id)
+        request.queue(batch, object : JsonBatchCallback<Thread>() {
+          override fun onSuccess(t: Thread?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = true
+          }
+
+          override fun onFailure(e: GoogleJsonError?, responseHeaders: HttpHeaders?) {
+            resultMap[id] = false
+          }
+        })
+      }
+
+      batch.execute()
+      return@withContext resultMap
+    }
 
     suspend fun loadTrashMsgs(context: Context, accountEntity: AccountEntity): List<Message> =
       withContext(Dispatchers.IO) {
@@ -492,7 +770,8 @@ class GmailApiHelper {
         .users()
         .history()
         .list(DEFAULT_USER_ID)
-        .setStartHistoryId(historyId).apply {
+        .setStartHistoryId(historyId)
+        .apply {
           if (!localFolder.isAll) {
             labelId = localFolder.fullName
           }
@@ -531,102 +810,6 @@ class GmailApiHelper {
       return@withContext historyList
     }
 
-    suspend fun processHistory(
-      localFolder: LocalFolder,
-      historyList: List<History>,
-      action: suspend (
-        deleteCandidatesUIDs: Set<Long>,
-        newCandidatesMap: Map<Long, Message>,
-        updateCandidatesMap: Map<Long, Flags>,
-        labelsToBeUpdatedMap: Map<Long, String>
-      ) -> Unit
-    ) = withContext(Dispatchers.IO)
-    {
-      val deleteCandidatesUIDs = mutableSetOf<Long>()
-      val newCandidatesMap = mutableMapOf<Long, Message>()
-      val updateCandidates = mutableMapOf<Long, Flags>()
-      val labelsToBeUpdatedMap = mutableMapOf<Long, String>()
-      val isDrafts = localFolder.isDrafts
-
-      for (history in historyList) {
-        history.messagesDeleted?.let { messagesDeleted ->
-          for (historyMsgDeleted in messagesDeleted) {
-            newCandidatesMap.remove(historyMsgDeleted.message.uid)
-            updateCandidates.remove(historyMsgDeleted.message.uid)
-            deleteCandidatesUIDs.add(historyMsgDeleted.message.uid)
-          }
-        }
-
-        history.messagesAdded?.let { messagesAdded ->
-          for (historyMsgAdded in messagesAdded) {
-            if (LABEL_DRAFT in (historyMsgAdded.message.labelIds ?: emptyList()) && !isDrafts) {
-              //skip adding drafts to non-Drafts folder
-              continue
-            }
-            deleteCandidatesUIDs.remove(historyMsgAdded.message.uid)
-            updateCandidates.remove(historyMsgAdded.message.uid)
-            newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
-          }
-        }
-
-        history.labelsRemoved?.let { labelsRemoved ->
-          for (historyLabelRemoved in labelsRemoved) {
-            val historyMessageLabelIds = historyLabelRemoved?.message?.labelIds ?: emptyList()
-            labelsToBeUpdatedMap[historyLabelRemoved.message.uid] =
-              historyMessageLabelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
-            if (localFolder.fullName in (historyLabelRemoved.labelIds ?: emptyList())) {
-              newCandidatesMap.remove(historyLabelRemoved.message.uid)
-              updateCandidates.remove(historyLabelRemoved.message.uid)
-              deleteCandidatesUIDs.add(historyLabelRemoved.message.uid)
-              continue
-            }
-
-            if (LABEL_TRASH in (historyLabelRemoved.labelIds ?: emptyList())) {
-              val message = historyLabelRemoved.message
-              if (localFolder.fullName in historyMessageLabelIds) {
-                deleteCandidatesUIDs.remove(message.uid)
-                updateCandidates.remove(message.uid)
-                newCandidatesMap[message.uid] = message
-                continue
-              }
-            }
-
-            val existedFlags = labelsToImapFlags(historyMessageLabelIds)
-            updateCandidates[historyLabelRemoved.message.uid] = existedFlags
-          }
-        }
-
-        history.labelsAdded?.let { labelsAdded ->
-          for (historyLabelAdded in labelsAdded) {
-            labelsToBeUpdatedMap[historyLabelAdded.message.uid] = historyLabelAdded.message
-              .labelIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
-            if (localFolder.fullName in (historyLabelAdded.labelIds ?: emptyList())) {
-              deleteCandidatesUIDs.remove(historyLabelAdded.message.uid)
-              updateCandidates.remove(historyLabelAdded.message.uid)
-              newCandidatesMap[historyLabelAdded.message.uid] = historyLabelAdded.message
-              continue
-            }
-
-            if ((historyLabelAdded.labelIds ?: emptyList()).contains(LABEL_TRASH)) {
-              newCandidatesMap.remove(historyLabelAdded.message.uid)
-              updateCandidates.remove(historyLabelAdded.message.uid)
-              deleteCandidatesUIDs.add(historyLabelAdded.message.uid)
-              continue
-            }
-
-            val existedFlags = labelsToImapFlags(historyLabelAdded.message.labelIds ?: emptyList())
-            updateCandidates[historyLabelAdded.message.uid] = existedFlags
-          }
-        }
-      }
-      action.invoke(
-        deleteCandidatesUIDs,
-        newCandidatesMap,
-        updateCandidates,
-        labelsToBeUpdatedMap
-      )
-    }
-
     suspend fun identifyAttachments(
       msgEntities: List<MessageEntity>, msgs: List<Message>,
       account: AccountEntity, localFolder: LocalFolder, roomDatabase: FlowCryptRoomDatabase
@@ -636,13 +819,14 @@ class GmailApiHelper {
       for (msg in msgs) {
         try {
           if (msg.uid in savedMsgUIDsSet) {
-            attachments.addAll(getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+            attachments.addAll(msg.payload.getAttachmentInfoList().mapNotNull { attachmentInfo ->
               AttachmentEntity.fromAttInfo(
-                attachmentInfo.copy(
+                attachmentInfo = attachmentInfo.copy(
                   email = account.email,
                   folder = localFolder.fullName,
                   uid = msg.uid
-                )
+                ),
+                accountType = account.accountType
               )
             })
           }
@@ -828,41 +1012,6 @@ class GmailApiHelper {
         .setFormat(format)
         .setFields(fields?.joinToString(separator = ","))
         .execute()
-    }
-
-    /**
-     * Get information about attachments from the given [MessagePart]
-     *
-     * @param depth          The depth of the given [MessagePart]
-     * @param messagePart    The given [MessagePart]
-     * @return a list of found attachments
-     */
-    fun getAttsInfoFromMessagePart(
-      messagePart: MessagePart,
-      depth: String = "0"
-    ): MutableList<AttachmentInfo> {
-      val attachmentInfoList = mutableListOf<AttachmentInfo>()
-      if (messagePart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-        for ((index, part) in (messagePart.parts ?: emptyList()).withIndex()) {
-          attachmentInfoList.addAll(
-            getAttsInfoFromMessagePart(
-              part,
-              "$depth${AttachmentInfo.DEPTH_SEPARATOR}${index}"
-            )
-          )
-        }
-      } else if (Part.ATTACHMENT.equals(messagePart.disposition(), ignoreCase = true)) {
-        val attachmentInfoBuilder = AttachmentInfo.Builder()
-        attachmentInfoBuilder.name = messagePart.filename ?: depth
-        attachmentInfoBuilder.encodedSize = messagePart.body?.getSize()?.toLong() ?: 0
-        attachmentInfoBuilder.type = messagePart.mimeType ?: ""
-        attachmentInfoBuilder.id = messagePart.contentId()
-          ?: EmailUtil.generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
-        attachmentInfoBuilder.path = depth
-        attachmentInfoList.add(attachmentInfoBuilder.build())
-      }
-
-      return attachmentInfoList
     }
 
     /**
@@ -1055,7 +1204,7 @@ class GmailApiHelper {
         request.fields = fields.joinToString(separator = ",")
       }
 
-      return@withContext request.execute().drafts ?: emptyList()
+      return@withContext request.execute()?.drafts ?: emptyList()
     }
 
     /**
@@ -1073,7 +1222,7 @@ class GmailApiHelper {
         .setSelectedAccount(account)
     }
 
-    private fun labelsToImapFlags(labelIds: List<String>): Flags {
+    fun labelsToImapFlags(labelIds: Collection<String>): Flags {
       val flags = Flags()
       labelIds.forEach {
         when (it) {

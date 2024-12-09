@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service.attachment
@@ -21,7 +21,6 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.provider.MediaStore
 import android.text.TextUtils
-import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
@@ -36,6 +35,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
@@ -45,7 +45,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +55,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -512,7 +512,10 @@ class AttachmentDownloadManagerService : LifecycleService() {
             if (!Thread.currentThread().isInterrupted) {
               val uri = storeFileToSharedFolder(context, attTempFile)
               listener?.onAttDownloaded(
-                attInfo = att.copy(name = finalFileName),
+                attInfo = att.copy(
+                  name = finalFileName,
+                  type = finalFileName.getPossibleAndroidMimeType() ?: att.type
+                ),
                 uri = uri,
                 useContentApp = account.isHandlingAttachmentRestricted()
               )
@@ -529,7 +532,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
                 context = context,
                 accountEntity = account,
                 msgId = att.uid.toHex(),
-                format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+                format = GmailApiHelper.RESPONSE_FORMAT_FULL
               )
               val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = att.path)
                 ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))
@@ -599,7 +602,12 @@ class AttachmentDownloadManagerService : LifecycleService() {
         } else {
           val uri = storeFileToSharedFolder(context, attTempFile)
           listener?.onAttDownloaded(
-            attInfo = att.copy(name = finalFileName),
+            attInfo = att.copy(
+              name = finalFileName,
+              type = if (att.isPossiblyEncrypted) {
+                finalFileName.getPossibleAndroidMimeType() ?: att.type
+              } else att.type
+            ),
             uri = uri,
             useContentApp = useContentApp
           )
@@ -618,8 +626,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(finalFileName).lowercase()
-      val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+      val mimeType = finalFileName.getPossibleAndroidMimeType()
 
       val contentValues = ContentValues().apply {
         put(MediaStore.DownloadColumns.DISPLAY_NAME, finalFileName)

@@ -7,13 +7,13 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
-import android.webkit.MimeTypeMap
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import kotlinx.coroutines.Dispatchers
@@ -82,9 +82,7 @@ class DecryptDownloadedAttachmentsBeforeForwardingViewModel(
 
           val attachmentInfoWithDecryptedData = attachmentInfo.copy(
             rawData = decryptedData,
-            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
-              FilenameUtils.getExtension(newFileName).lowercase()
-            ) ?: Constants.MIME_TYPE_BINARY_DATA,
+            type = newFileName.getPossibleAndroidMimeType() ?: Constants.MIME_TYPE_BINARY_DATA,
             name = newFileName
           )
 

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -42,10 +42,14 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getAttachmentInfoList
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeSigned
+import com.flowcrypt.email.extensions.kotlin.processing
 import com.flowcrypt.email.extensions.uid
 import com.flowcrypt.email.jetpack.livedata.SkipInitialValueObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
@@ -57,9 +61,6 @@ import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
-import org.eclipse.angus.mail.imap.IMAPBodyPart
-import org.eclipse.angus.mail.imap.IMAPFolder
-import org.eclipse.angus.mail.imap.IMAPMessage
 import jakarta.mail.BodyPart
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
@@ -82,9 +83,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.pgpainless.PGPainless
-import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
-import org.pgpainless.util.Passphrase
+import org.eclipse.angus.mail.imap.IMAPBodyPart
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPMessage
 import java.io.BufferedInputStream
 import java.io.InputStream
 import java.util.Collections
@@ -125,7 +126,7 @@ class MsgDetailsViewModel(
         if (it.isNotEmpty()) {
           emit(
             roomDatabase.msgDao().getMsgSuspend(
-              account = messageEntity.email,
+              account = messageEntity.account,
               folder = messageEntity.folder,
               uid = messageEntity.uid
             )
@@ -139,7 +140,7 @@ class MsgDetailsViewModel(
       liveData {
         emit(
           roomDatabase.msgDao().getMsgSuspend(
-            account = messageEntity.email,
+            account = messageEntity.account,
             folder = messageEntity.folder,
             uid = messageEntity.uid
           )
@@ -159,8 +160,11 @@ class MsgDetailsViewModel(
           val byteArray = OutgoingMessagesManager.getOutgoingMessageFromFile(
             application,
             requireNotNull(messageEntity.id)
-          )
-          val processingResult = processingByteArray(byteArray)
+          ) ?: byteArrayOf()
+          passphraseNeededLiveData.postValue(emptyList())
+          val processingResult = byteArray.processing(context = getApplication()) { blocks ->
+            preResultsProcessing(blocks)
+          }
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
           emit(processingResult)
         }
@@ -278,7 +282,8 @@ class MsgDetailsViewModel(
 
   @OptIn(ExperimentalCoroutinesApi::class)
   private val separatedAttachmentsFlow = roomDatabase.attachmentDao().getAttachmentsFlow(
-    account = messageEntity.email,
+    account = messageEntity.account,
+    accountType = messageEntity.accountType,
     label = messageEntity.folder,
     uid = messageEntity.uid
   ).mapLatest { list ->
@@ -326,15 +331,14 @@ class MsgDetailsViewModel(
           val cachedLabelIds =
             freshestMessageEntity?.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
           try {
-            val message = GmailApiHelper.loadMsgInfoSuspend(
+            val latestLabelIds = GmailApiHelper.loadMsgInfoSuspend(
               context = getApplication(),
               accountEntity = account,
               msgId = messageEntity.uidAsHEX,
               fields = null,
-              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_MINIMAL
-            )
+              format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
+            ).labelIds
 
-            val latestLabelIds = message.labelIds
             if (cachedLabelIds == null
               || !(latestLabelIds.containsAll(cachedLabelIds)
                   && cachedLabelIds.containsAll(latestLabelIds))
@@ -371,7 +375,7 @@ class MsgDetailsViewModel(
             folderType in setOf(FoldersManager.FolderType.JUNK, FoldersManager.FolderType.SPAM)
         } else {
           this[MessageAction.MOVE_TO_INBOX] = folderType !in listOf(
-            FoldersManager.FolderType.TRASH,
+            FoldersManager.FolderType.INBOX,
             FoldersManager.FolderType.DRAFTS,
             FoldersManager.FolderType.OUTBOX,
           )
@@ -486,7 +490,7 @@ class MsgDetailsViewModel(
         val accountEntity = getActiveAccountSuspend() ?: return@launch
 
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
-          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.email).size
+          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.account).size
           val outboxLabel = roomDatabase.labelDao().getLabelSuspend(
             account = accountEntity.email,
             accountType = accountEntity.accountType,
@@ -545,57 +549,14 @@ class MsgDetailsViewModel(
 
   private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot):
       Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
-    val uri = msgSnapshot.getUri(0)
     passphraseNeededLiveData.postValue(emptyList())
     val accountEntity = getActiveAccountSuspend()
       ?: throw java.lang.NullPointerException("Account is null")
-    if (uri != null) {
-      val context: Context = getApplication()
-      try {
-        val inputStream =
-          context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
-
-        val keys = PGPainless.readKeyRing()
-          .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
-
-        val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
-          srcInputStream = inputStream,
-          secretKeys = keys,
-          protector = PasswordBasedSecretKeyRingProtector.forKey(
-            keys.first(),
-            Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
-          )
-        )
-
-        val processedMimeMessage = PgpMsg.processMimeMessage(
-          context = getApplication(),
-          inputStream = decryptionStream
-        )
-
-        preResultsProcessing(processedMimeMessage.blocks)
-        return@withContext Result.success(processedMimeMessage)
-      } catch (e: Exception) {
-        return@withContext Result.exception(e)
-      }
-    } else {
-      val byteArray = msgSnapshot.getByteArray(0)
-      return@withContext processingByteArray(byteArray)
-    }
-  }
-
-  private suspend fun processingByteArray(rawMimeBytes: ByteArray?):
-      Result<PgpMsg.ProcessedMimeMessageResult?> = withContext(Dispatchers.IO) {
-    return@withContext if (rawMimeBytes == null) {
-      Result.exception(throwable = IllegalArgumentException("empty byte array"))
-    } else {
-      try {
-        val processedMimeMessageResult =
-          PgpMsg.processMimeMessage(getApplication(), rawMimeBytes.inputStream())
-        preResultsProcessing(processedMimeMessageResult.blocks)
-        return@withContext Result.success(processedMimeMessageResult)
-      } catch (e: Exception) {
-        return@withContext Result.exception(throwable = e)
-      }
+    return@withContext msgSnapshot.processing(
+      context = getApplication(),
+      accountEntity = accountEntity
+    ) { blocks ->
+      preResultsProcessing(blocks)
     }
   }
 
@@ -644,7 +605,7 @@ class MsgDetailsViewModel(
               accountEntity = accountEntity,
               msgId = messageEntity.uidAsHEX,
               fields = null,
-              format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+              format = GmailApiHelper.RESPONSE_FORMAT_FULL
             )
             msgSize = msgFullInfo.sizeEstimate
             val originalMsg = GmaiAPIMimeMessage(
@@ -663,7 +624,7 @@ class MsgDetailsViewModel(
                 GmailApiHelper.getWholeMimeMessageInputStream(
                   context = getApplication(),
                   account = accountEntity,
-                  messageEntity = messageEntity
+                  messageId = msgFullInfo.id
                 )
               )
               MsgsCacheManager.storeMsg(
@@ -911,7 +872,8 @@ class MsgDetailsViewModel(
                   JavaEmailConstants.FOLDER_SEARCH
                 },
                 uid = msgUid
-              )
+              ),
+              accountType = accountEntity.accountType
             )
           }
 
@@ -930,16 +892,16 @@ class MsgDetailsViewModel(
           context = getApplication(),
           accountEntity = accountEntity,
           msgId = messageEntity.uidAsHEX,
-          format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+          format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
-        val attachments =
-          GmailApiHelper.getAttsInfoFromMessagePart(msg.payload).mapNotNull { attachmentInfo ->
+        val attachments = msg.payload.getAttachmentInfoList().mapNotNull { attachmentInfo ->
             AttachmentEntity.fromAttInfo(
-              attachmentInfo.copy(
+              attachmentInfo = attachmentInfo.copy(
                 email = accountEntity.email,
                 folder = localFolder.fullName,
                 uid = msg.uid
-              )
+              ),
+              accountType = accountEntity.accountType
             )
           }
         FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao()
@@ -948,15 +910,6 @@ class MsgDetailsViewModel(
         e.printStackTrace()
       }
     }
-
-  enum class MessageAction {
-    DELETE,
-    ARCHIVE,
-    MOVE_TO_INBOX,
-    MOVE_TO_SPAM,
-    MARK_AS_NOT_SPAM,
-    CHANGE_LABELS
-  }
 
   /**
    * This class will be used to identify the fetching progress.

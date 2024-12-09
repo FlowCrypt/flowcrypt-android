@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -160,7 +160,8 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
         setRecipients(Message.RecipientType.TO, arrayOf(InternetAddress("user@flowcrypt.test")))
       }
       val messageEntity = MessageEntity.genMsgEntity(
-        email = addAccountToDatabaseRule.account.email,
+        account = addAccountToDatabaseRule.account.email,
+        accountType = addAccountToDatabaseRule.account.accountType,
         label = JavaEmailConstants.FOLDER_OUTBOX,
         msg = mimeMessage,
         uid = 1,
