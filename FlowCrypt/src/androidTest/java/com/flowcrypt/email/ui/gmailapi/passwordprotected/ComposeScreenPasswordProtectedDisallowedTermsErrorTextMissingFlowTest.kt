@@ -41,9 +41,9 @@ import org.junit.runner.RunWith
   subject = "",
   isNew = true
 )
-class ComposeScreenPasswordProtectedDisallowedTermsNullFlowTest :
+class ComposeScreenPasswordProtectedDisallowedTermsErrorTextMissingFlowTest :
   BaseComposeScreenPasswordProtectedDisallowedTermsTest(
-    ACCOUNT_ENTITY_WITH_MISSING_OPTIONAL_PROPERTIES
+    ACCOUNT_ENTITY_WITH_MISSING_ERROR_TEXT
   ) {
 
   @get:Rule
@@ -70,6 +70,12 @@ class ComposeScreenPasswordProtectedDisallowedTermsNullFlowTest :
   }
 
   companion object {
-    val ACCOUNT_ENTITY_WITH_MISSING_OPTIONAL_PROPERTIES = BASE_ACCOUNT_ENTITY.copy()
+    val ACCOUNT_ENTITY_WITH_MISSING_ERROR_TEXT =
+      BASE_ACCOUNT_ENTITY.copy(
+        clientConfiguration = BASE_ACCOUNT_ENTITY.clientConfiguration?.copy(
+          disallowPasswordMessagesErrorText = null,
+          disallowPasswordMessagesForTerms = TERMS
+        )
+      )
   }
 }

@@ -5,9 +5,15 @@
 
 package com.flowcrypt.email.ui.gmailapi.passwordprotected
 
+import android.app.Instrumentation
+import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.openLinkWithText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasData
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -21,6 +27,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -32,7 +39,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@FlowCryptTestSettings(useCommonIdling = false)
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 @OutgoingMessageConfiguration(
   to = [],
   cc = [],
@@ -41,9 +48,9 @@ import org.junit.runner.RunWith
   subject = "",
   isNew = true
 )
-class ComposeScreenPasswordProtectedDisallowedTermsNullFlowTest :
+class ComposeScreenPasswordProtectedDisallowedTermsFlowTest :
   BaseComposeScreenPasswordProtectedDisallowedTermsTest(
-    ACCOUNT_ENTITY_WITH_MISSING_OPTIONAL_PROPERTIES
+    ACCOUNT_ENTITY_WITH_EXISTING_OPTIONAL_PARAMETERS
   ) {
 
   @get:Rule
@@ -60,16 +67,34 @@ class ComposeScreenPasswordProtectedDisallowedTermsNullFlowTest :
       .around(ScreenshotTestRule())
 
   @Test
-  fun testMissingOptionalPropertiesInClientConfiguration() {
+  fun testDialogWithErrorText() {
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(
-      withText(getResString(R.string.sending_message_must_not_be_empty))
-    ).check(matches(isDisplayed()))
+
+    isDialogWithTextDisplayed(
+      decorView,
+      ERROR_TEXT
+    )
+
+    //test that URL is openable
+    val expectingIntent = allOf(hasAction(Intent.ACTION_VIEW), hasData(URL))
+    //mocking intent to prevent actual navigation during test
+    Intents.intending(expectingIntent).respondWith(Instrumentation.ActivityResult(0, null))
+    //performing action
+    onView(withText(ERROR_TEXT))
+      .perform(openLinkWithText(URL))
+    //asserting our expected intent was recorded
+    Intents.intended(expectingIntent)
   }
 
   companion object {
-    val ACCOUNT_ENTITY_WITH_MISSING_OPTIONAL_PROPERTIES = BASE_ACCOUNT_ENTITY.copy()
+    val ACCOUNT_ENTITY_WITH_EXISTING_OPTIONAL_PARAMETERS =
+      BASE_ACCOUNT_ENTITY.copy(
+        clientConfiguration = BASE_ACCOUNT_ENTITY.clientConfiguration?.copy(
+          disallowPasswordMessagesErrorText = ERROR_TEXT,
+          disallowPasswordMessagesForTerms = TERMS
+        )
+      )
   }
 }

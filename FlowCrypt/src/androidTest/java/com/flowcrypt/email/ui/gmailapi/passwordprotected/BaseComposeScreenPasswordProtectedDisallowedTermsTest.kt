@@ -51,7 +51,7 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
       )
     //need to leave focus from 'To' field. move the focus to the next view
     onView(withId(R.id.editTextEmailSubject))
-      .perform(scrollTo(), click())
+      .perform(scrollTo(), replaceText(SUBJECT), click())
 
     onView(withId(R.id.btnSetWebPortalPassword))
       .check(matches(isDisplayed()))
@@ -73,13 +73,22 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
 
     onView(withId(R.id.btSetPassword))
       .perform(click())
-
-    onView(withId(R.id.menuActionSend))
-      .check(matches(isDisplayed()))
-      .perform(click())
   }
 
   companion object {
     private const val PASSWORD = "Qwerty1234@"
+    const val URL = "https://flowcrypt.com"
+    const val SUBJECT =
+      "Android developers from Europe and across the globe will converge this year at droidcon in London"
+    const val ERROR_TEXT =
+      "Password-protected messages are disabled, please check $URL"
+
+    val TERMS = listOf(
+      "Droid",
+      "Android",
+      "ANDROID",
+      "android",
+      "AnDroid"
+    )
   }
 }
