@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -1568,6 +1568,21 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             )
           )
           return false
+        }
+
+        if (account?.clientConfiguration?.hasRestrictionForPasswordProtectedMessages() == true) {
+          val terms = account?.clientConfiguration?.disallowPasswordMessagesForTerms ?: emptyList()
+          if (binding?.editTextEmailSubject?.text?.contains(
+              terms.joinToString("|").toRegex(RegexOption.IGNORE_CASE)
+            ) == true
+          ) {
+            showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = account?.clientConfiguration?.disallowPasswordMessagesErrorText,
+              useLinkify = true
+            )
+            return false
+          }
         }
       }
     }
