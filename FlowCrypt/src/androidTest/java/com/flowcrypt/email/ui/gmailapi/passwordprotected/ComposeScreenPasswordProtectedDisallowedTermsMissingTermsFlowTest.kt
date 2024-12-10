@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.gmailapi.passwordprotected
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -64,9 +65,7 @@ class ComposeScreenPasswordProtectedDisallowedTermsMissingTermsFlowTest :
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(
-      withText(getResString(R.string.sending_message_must_not_be_empty))
-    ).check(matches(isDisplayed()))
+    onView(withText(ERROR_TEXT)).check(doesNotExist())
   }
 
   companion object {
