@@ -10,6 +10,8 @@ import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.openLinkWithText
+import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
@@ -68,24 +70,55 @@ class ComposeScreenPasswordProtectedDisallowedTermsFlowTest :
 
   @Test
   fun testDialogWithErrorText() {
-    onView(withId(R.id.menuActionSend))
-      .check(matches(isDisplayed()))
-      .perform(click())
+    intentsRelease()
 
-    isDialogWithTextDisplayed(
-      decorView,
-      ERROR_TEXT
-    )
+    MATCHING_SUBJECTS.forEach { subject ->
+      onView(withId(R.id.editTextEmailSubject))
+        .perform(scrollTo(), click(), replaceText(subject))
 
-    //test that URL is openable
-    val expectingIntent = allOf(hasAction(Intent.ACTION_VIEW), hasData(URL))
-    //mocking intent to prevent actual navigation during test
-    Intents.intending(expectingIntent).respondWith(Instrumentation.ActivityResult(0, null))
-    //performing action
-    onView(withText(ERROR_TEXT))
-      .perform(openLinkWithText(URL))
-    //asserting our expected intent was recorded
-    Intents.intended(expectingIntent)
+      onView(withId(R.id.menuActionSend))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+      isDialogWithTextDisplayed(
+        decorView,
+        ERROR_TEXT
+      )
+
+      Intents.init()
+      //test that URL is openable
+      val expectingIntent = allOf(hasAction(Intent.ACTION_VIEW), hasData(URL))
+      //mocking intent to prevent actual navigation during test
+      Intents.intending(expectingIntent).respondWith(Instrumentation.ActivityResult(0, null))
+      //performing action
+      onView(withText(ERROR_TEXT))
+        .perform(openLinkWithText(URL))
+      //asserting our expected intent was recorded
+      Intents.intended(expectingIntent)
+      Thread.sleep(1000)
+      Intents.release()
+
+      onView(withId(android.R.id.button1))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    }
+  }
+
+  @Test
+  fun testDialogWithoutErrorText() {
+    NON_MATCHING_SUBJECTS.forEach { subject ->
+      onView(withId(R.id.editTextEmailSubject))
+        .perform(scrollTo(), click(), replaceText(subject))
+      Thread.sleep(1000)
+
+      onView(withId(R.id.menuActionSend))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+      onView(
+        withText(getResString(R.string.sending_message_must_not_be_empty))
+      ).check(matches(isDisplayed()))
+    }
   }
 
   companion object {

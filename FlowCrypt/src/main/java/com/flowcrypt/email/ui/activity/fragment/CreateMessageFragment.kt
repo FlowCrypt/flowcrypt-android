@@ -1587,11 +1587,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     if (isWebPortalPasswordEnabled &&
       account?.clientConfiguration?.hasRestrictionForPasswordProtectedMessages() == true
     ) {
-      val terms = account?.clientConfiguration?.disallowPasswordMessagesForTerms ?: emptyList()
-      if (binding?.editTextEmailSubject?.text?.contains(
-          terms.joinToString("|").toRegex(RegexOption.IGNORE_CASE)
-        ) == true
-      ) {
+      val termsRegex = account?.clientConfiguration?.getDisallowPasswordMessagesForTermsRegex()
+      if (termsRegex?.find(binding?.editTextEmailSubject?.text ?: "") != null) {
         showInfoDialog(
           dialogTitle = "",
           dialogMsg = account?.clientConfiguration?.disallowPasswordMessagesErrorText,

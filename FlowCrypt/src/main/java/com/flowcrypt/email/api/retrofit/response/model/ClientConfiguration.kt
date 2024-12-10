@@ -225,6 +225,17 @@ data class ClientConfiguration(
     return flags?.firstOrNull { it == configurationProperty } != null
   }
 
+  fun getDisallowPasswordMessagesForTermsRegex(): Regex? {
+    return disallowPasswordMessagesForTerms?.joinToString(
+      separator = "|",
+      prefix = "(",
+      postfix = ")"
+    ) {
+      val escapedTerm = Regex.escape(it)
+      "(\\s$escapedTerm\\s|^$escapedTerm\\s|\\s$escapedTerm$|^$escapedTerm$)"
+    }?.toRegex(setOf(RegexOption.IGNORE_CASE))
+  }
+
   @Parcelize
   enum class ConfigurationProperty : Parcelable {
     NO_PRV_CREATE,
