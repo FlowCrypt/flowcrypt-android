@@ -503,8 +503,6 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
       Thread.sleep(outgoingMessageConfiguration.timeoutBeforeMovingToComposeInMilliseconds)
     }
 
-    Thread.sleep(1000)
-
     //open the compose screen
     onView(withId(R.id.floatActionButtonCompose))
       .check(matches(isDisplayed()))
