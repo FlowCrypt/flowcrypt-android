@@ -83,21 +83,24 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
       "[Classification: Data Control: Internal Data Control] Quarter results",
       "Conference information [Classification: Data Control: Internal Data Control]",
       "[Classification: Data Control: Internal Data Control]",
-      "Conference information [Classification: Data Control: Internal Data Control] Android"
+      "aaaa[Classification: Data Control: Internal Data Control]bbb",
+      "[droid]",
+      "check -droid- case",
     )
 
     val NON_MATCHING_SUBJECTS = listOf(
-      "[Classification: Data Control: Internal Data Control]! Quarter results",
-      "Conference information [Classification: Data Control: Internal Data Control])",
-      "([Classification: Data Control: Internal Data Control]",
-      "Conference information ([Classification: Data Control: Internal Data Control]) Android"
+      "[1Classification: Data Control: Internal Data Control] Quarter results",
+      "Conference information [1Classification: Data Control: Internal Data Control]",
+      "[1Classification: Data Control: Internal Data Control]",
+      "aaaa[1Classification: Data Control: Internal Data Control]bbb",
+      "Microdroid androids",
     )
 
     const val ERROR_TEXT =
       "Password-protected messages are disabled, please check $URL"
 
     val TERMS = listOf(
-      "vendor",
+      "droid",
       "[Classification: Data Control: Internal Data Control]",
     )
   }
