@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -79,7 +79,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     enableDeprecatedSHA1ForPGPainlessPolicy()
 
     //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
-    PGPainless.getPolicy().isEnableKeyParameterValidation = true
+    PGPainless.getPolicy().enableKeyParameterValidation = true
   }
 
   private fun setupGlobalSettingsForJavaMail() {
@@ -101,7 +101,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   private fun enableDeprecatedSHA1ForPGPainlessPolicy() {
     @Suppress("KotlinConstantConditions")
     if (BuildConfig.FLAVOR != Constants.FLAVOR_NAME_ENTERPRISE) {
-      PGPainless.getPolicy().signatureHashAlgorithmPolicy = HashAlgorithmPolicy(
+      PGPainless.getPolicy().dataSignatureHashAlgorithmPolicy = HashAlgorithmPolicy(
         HashAlgorithm.SHA512, listOf(
           HashAlgorithm.SHA512,
           HashAlgorithm.SHA384,

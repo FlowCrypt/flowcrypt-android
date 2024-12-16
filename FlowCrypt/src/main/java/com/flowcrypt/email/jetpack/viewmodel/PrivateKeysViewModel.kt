@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   DenBond7
- *   Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -498,7 +496,7 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         protectPrivateKeysLiveData.value =
           Result.success(PgpKey.parsePrivateKeys(encryptedKeysSource).map { key ->
             key.copy(
-              tempPassphrase = passphrase.chars,
+              tempPassphrase = passphrase.getChars(),
               importInfo = (key.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
                 importSourceType = sourceTypeInfo[key.fingerprint]
               )

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -146,14 +146,14 @@ class PgpKeyTest {
   @Test
   fun testReadCorruptedPrivateKey() {
     try {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = true
+      PGPainless.getPolicy().enableKeyParameterValidation = true
       val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
       val passphrase = Passphrase.fromPassword("123")
       assertThrows(KeyIntegrityException::class.java) {
         PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
       }
     } finally {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = false
+      PGPainless.getPolicy().enableKeyParameterValidation = false
     }
   }
 

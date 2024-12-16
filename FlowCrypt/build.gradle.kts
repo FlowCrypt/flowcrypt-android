@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 
@@ -209,6 +209,7 @@ android {
       "META-INF/*.DSA",
       "META-INF/*.RSA",
       "META-INF/javamail.providers",
+      "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
     )
   }
 
