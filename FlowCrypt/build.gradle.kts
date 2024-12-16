@@ -439,9 +439,9 @@ dependencies {
   implementation("androidx.activity:activity-ktx:1.9.3")
   implementation("androidx.fragment:fragment-ktx:1.8.4")
   implementation("androidx.work:work-runtime-ktx:2.9.1")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.8.3")
-  implementation("androidx.navigation:navigation-ui-ktx:2.8.3")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.8.3")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.8.4")
+  implementation("androidx.navigation:navigation-ui-ktx:2.8.4")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.8.4")
   implementation("androidx.webkit:webkit:1.12.1")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
@@ -471,9 +471,9 @@ dependencies {
   implementation("org.pgpainless:pgpainless-core:1.6.7")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
   implementation("org.eclipse.angus:gimap:2.0.3")
-  implementation("commons-io:commons-io:2.17.0")
+  implementation("commons-io:commons-io:2.18.0")
   implementation("net.openid:appauth:0.11.1")
-  implementation("ch.acra:acra-http:5.11.4")
+  implementation("ch.acra:acra-http:5.12.0")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
 
   constraints {
