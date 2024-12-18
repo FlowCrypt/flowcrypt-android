@@ -171,26 +171,28 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
       val incomingMessageInfo = getMsgInfo(
         path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
         mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt",
-        simpleAttInfo,
+        atts = arrayOf(simpleAttInfo),
         accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
-      )
+      ) {
+        it?.copy(msgEntity = it.msgEntity.copy(accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE))
+      }
 
       //close the notification bar if needed
       if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
         device.pressBack()
       }
 
-      waitForObjectWithText(
-        requireNotNull(incomingMessageInfo?.text),
-        TimeUnit.SECONDS.toMillis(10)
-      )
+      baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo) {
+        waitForObjectWithText(
+          requireNotNull(incomingMessageInfo?.text),
+          TimeUnit.SECONDS.toMillis(10)
+        )
 
-      waitForObjectWithText(
-        requireNotNull(simpleAttInfo?.name),
-        TimeUnit.SECONDS.toMillis(10)
-      )
-
-      baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo)
+        waitForObjectWithText(
+          requireNotNull(simpleAttInfo?.name),
+          TimeUnit.SECONDS.toMillis(10)
+        )
+      }
 
       onView(withId(R.id.imageViewAttIcon))
         .check(matches(withDrawable(R.drawable.ic_attachment)))

@@ -101,7 +101,7 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     waitForObjectWithText(MESSAGE_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on replyAll
-    openReplyScreen(R.id.layoutReplyAllButton, SUBJECT_EXISTING_STANDARD)
+    openReplyScreen(R.id.replyAllButton, SUBJECT_EXISTING_STANDARD)
 
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
@@ -130,10 +130,11 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
         MESSAGE + EmailUtil.genReplyContent(
           IncomingMessageInfo(
             msgEntity = MessageEntity(
-              email = "",
+              account = "",
+              accountType = "",
               folder = "",
               uid = 0,
-              fromAddress = DEFAULT_FROM_RECIPIENT,
+              fromAddresses = DEFAULT_FROM_RECIPIENT,
               receivedDate = DATE_EXISTING_STANDARD
 
             ),

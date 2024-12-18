@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager
@@ -28,12 +28,12 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -122,9 +122,11 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
         val msgEntity = detailsList[0]
         val msgAttsDir = File(attCacheDir, msgEntity.attachmentsDirectory!!)
         try {
-          val atts = roomDatabase.attachmentDao().getAttachmentsSuspend(
-            account.email,
-            JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid
+          val atts = roomDatabase.attachmentDao().getAttachments(
+            account = account.email,
+            accountType = account.accountType,
+            label = JavaEmailConstants.FOLDER_OUTBOX,
+            uid = msgEntity.uid
           ).filter { it.isForwarded }
 
           if (atts.isEmpty()) {
@@ -183,7 +185,7 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
                   context = applicationContext,
                   accountEntity = account,
                   msgId = it,
-                  format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+                  format = GmailApiHelper.RESPONSE_FORMAT_FULL
                 )
               }
               ?: return@withContext MessageState.ERROR_ORIGINAL_MESSAGE_MISSING

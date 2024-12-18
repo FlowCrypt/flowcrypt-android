@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.database.dao
@@ -75,7 +75,6 @@ interface BaseDao<T> {
 
   @Query("SELECT sqlite_sequence.seq FROM sqlite_sequence WHERE name = :table")
   suspend fun getLastAutoIncrementId(table: String?): Long?
-
 
   companion object {
     fun <M> doOperationViaSteps(

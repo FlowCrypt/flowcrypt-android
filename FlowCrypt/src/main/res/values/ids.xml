@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 
 <resources>
@@ -14,6 +14,7 @@
     <item name="iVStatusImg" type="id" />
     <item name="tVEmpty" type="id" />
     <item name="iVEmptyImg" type="id" />
+    <item name="buttonRetry" type="id" />
     <item name="webView" type="id" />
 
     <item name="progress_id_start_of_loading_new_messages" type="id" />
