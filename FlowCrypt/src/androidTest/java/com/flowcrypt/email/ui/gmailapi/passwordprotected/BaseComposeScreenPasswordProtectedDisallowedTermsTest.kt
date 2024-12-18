@@ -86,6 +86,17 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
       "aaaa[Classification: Data Control: Internal Data Control]bbb",
       "[droid]",
       "check -droid- case",
+      "TEST-FEATURE",
+      "[test-feature}",
+      "before {test-feature}",
+      "[test-feature] after",
+      "before [test-feature} after",
+      "test-feature",
+      "test-feature after",
+      "before test-feature",
+      "before test-feature after",
+      "before TEST-feature after",
+      "before {TEST-feature} after"
     )
 
     val NON_MATCHING_SUBJECTS = listOf(
@@ -94,6 +105,12 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
       "[1Classification: Data Control: Internal Data Control]",
       "aaaa[1Classification: Data Control: Internal Data Control]bbb",
       "Microdroid androids",
+      "beforetest-feature",
+      "test-featureafter",
+      "beforetest-featureafter",
+      "before {TEST-feature}after",
+      "before{TEST-feature} after",
+      "before{TEST-feature}after"
     )
 
     const val ERROR_TEXT =
@@ -101,6 +118,7 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
 
     val TERMS = listOf(
       "droid",
+      "test-feature",
       "[Classification: Data Control: Internal Data Control]",
     )
   }
