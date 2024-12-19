@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: ivan
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
@@ -14,10 +14,8 @@ import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.getCurveName
 import org.pgpainless.key.OpenPgpV4Fingerprint
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve
-import org.pgpainless.key.info.KeyInfo
 import org.pgpainless.key.info.KeyRingInfo
 import java.io.IOException
 import java.time.Instant
@@ -40,11 +38,7 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
     algorithm = keyRingInfo.algorithm.name,
     algorithmId = keyRingInfo.algorithm.algorithmId,
     bits = if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else 0,
-    curve = when (keyRingInfo.algorithm) {
-      PublicKeyAlgorithm.ECDSA, PublicKeyAlgorithm.ECDH -> KeyInfo.getCurveName(publicKey)
-      PublicKeyAlgorithm.EDDSA -> EdDSACurve._Ed25519.getName() // for EDDSA KeyInfo.getCurveName(publicKey) return null
-      else -> null
-    }
+    curve = runCatching { publicKey.getCurveName() }.getOrNull()
   )
 
   val keyIdList = publicKeys.iterator().asSequence().toList()

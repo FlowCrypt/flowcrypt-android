@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -187,7 +187,7 @@ object PgpKey {
 
   private fun encryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
     return PGPainless.modifyKeyRing(key)
-      .changePassphraseFromOldPassphrase(null)
+      .changePassphraseFromOldPassphrase(Passphrase.emptyPassphrase())
       .withSecureDefaultSettings()
       .toNewPassphrase(passphrase)
       .done()

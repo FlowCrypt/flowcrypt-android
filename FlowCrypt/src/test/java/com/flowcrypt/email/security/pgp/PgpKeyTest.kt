@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -146,15 +146,52 @@ class PgpKeyTest {
   @Test
   fun testReadCorruptedPrivateKey() {
     try {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = true
+      PGPainless.getPolicy().enableKeyParameterValidation = true
       val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
       val passphrase = Passphrase.fromPassword("123")
       assertThrows(KeyIntegrityException::class.java) {
         PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
       }
     } finally {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = false
+      PGPainless.getPolicy().enableKeyParameterValidation = false
     }
+  }
+
+  @Test
+  fun testRejectingSHA1KeysForDefaultPGPainlessPolicy() {
+    /*
+    WIP
+
+    val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+    assertThrows(NoSuchElementException::class.java) {
+      //PGPainless.readKeyRing().keyRingCollection(keyWithSHA1Algo, false)
+      PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
+    }*/
+  }
+
+  @Test
+  fun testAcceptingSHA1KeysForModifiedPGPainlessPolicy() {
+    /*
+    WIP
+
+    val originalSignatureHashAlgorithmPolicy = PGPainless.getPolicy().signatureHashAlgorithmPolicy
+    try {
+      val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+      PGPainless.getPolicy().signatureHashAlgorithmPolicy = HashAlgorithmPolicy(
+        HashAlgorithm.SHA512, listOf(
+          HashAlgorithm.SHA512,
+          HashAlgorithm.SHA384,
+          HashAlgorithm.SHA256,
+          HashAlgorithm.SHA224,
+          HashAlgorithm.SHA1
+        )
+      )
+      val parseKeyResult = PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
+      assertEquals(1, parseKeyResult.size)
+      assertEquals("5DE92AB364B3100D89FBF460241512660BDDC426", parseKeyResult.first().fingerprint)
+    } finally {
+      PGPainless.getPolicy().signatureHashAlgorithmPolicy = originalSignatureHashAlgorithmPolicy
+    }*/
   }
 
   fun replaceVersionInKey(key: String?): String {

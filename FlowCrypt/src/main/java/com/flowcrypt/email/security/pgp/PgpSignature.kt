@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -34,7 +34,7 @@ object PgpSignature {
           srcStream,
           multiPassStrategy.messageOutputStream
         )
-        String(multiPassStrategy.bytes)
+        String(multiPassStrategy.getBytes())
       } catch (e: Exception) {
         if (isSilent) {
           e.printStackTrace()

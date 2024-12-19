@@ -66,7 +66,7 @@ class EditPrivateKeyViewModel(val fingerprint: String, application: Application)
         roomDatabase.keysDao().updateSuspend(entity.copy(privateKey = encryptedPrvKey))
 
         //update contacts and pub keys
-        val email = userId.email.lowercase()
+        val email = userId.email?.lowercase() ?: ""
         var cachedRecipientWithPubKeys = roomDatabase.recipientDao()
           .getRecipientWithPubKeysByEmailSuspend(email)
 

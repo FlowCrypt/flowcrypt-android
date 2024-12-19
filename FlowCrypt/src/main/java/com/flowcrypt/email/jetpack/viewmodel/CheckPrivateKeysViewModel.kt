@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -150,7 +150,7 @@ class CheckPrivateKeysViewModel(
         resultList.add(
           CheckResult(
             pgpKeyRingDetails = copy,
-            passphrase = passphrase.chars ?: throw IllegalArgumentException(),
+            passphrase = passphrase.getChars() ?: throw IllegalArgumentException(),
             e = e
           )
         )
