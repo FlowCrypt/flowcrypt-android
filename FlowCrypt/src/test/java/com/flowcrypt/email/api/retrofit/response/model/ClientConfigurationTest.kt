@@ -18,11 +18,13 @@ class ClientConfigurationTest {
     val clientConfiguration = ClientConfiguration(
       disallowPasswordMessagesForTerms = listOf(
         "droid",
+        "test-feature",
         "[Classification: Data Control: Internal Data Control]",
       )
     )
 
     val regex = requireNotNull(clientConfiguration.getDisallowPasswordMessagesForTermsRegex())
+    println(regex)
 
     val matchingSubjects = listOf(
       "[Classification: Data Control: Internal Data Control] Quarter results",
@@ -31,6 +33,17 @@ class ClientConfigurationTest {
       "aaaa[Classification: Data Control: Internal Data Control]bbb",
       "[droid]",
       "check -droid- case",
+      "TEST-FEATURE",
+      "[test-feature}",
+      "before {test-feature}",
+      "[test-feature] after",
+      "before [test-feature} after",
+      "test-feature",
+      "test-feature after",
+      "before test-feature",
+      "before test-feature after",
+      "before TEST-feature after",
+      "before {TEST-feature} after"
     )
 
     val nonMatchingSubjects = listOf(
@@ -39,6 +52,12 @@ class ClientConfigurationTest {
       "[1Classification: Data Control: Internal Data Control]",
       "aaaa[1Classification: Data Control: Internal Data Control]bbb",
       "Microdroid androids",
+      "beforetest-feature",
+      "test-featureafter",
+      "beforetest-featureafter",
+      "before {TEST-feature}after",
+      "before{TEST-feature} after",
+      "before{TEST-feature}after"
     )
     matchingSubjects.forEach { subject ->
       assertNotNull("Exception in :$subject", regex.find(subject))

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
@@ -18,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -178,6 +179,7 @@ class AddOtherAccountFragmentInIsolationTest : AddOtherAccountBaseTest() {
   }
 
   @Test
+  @FlakyTest
   fun testVisibilityOfSmtpAuthField() {
     enableAdvancedMode()
 
