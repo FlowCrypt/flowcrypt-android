@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -55,8 +55,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
-import org.eclipse.angus.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
+import org.eclipse.angus.mail.util.MailConnectException
 import java.net.SocketTimeoutException
 
 /**
@@ -114,7 +114,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       R.id.spinnerImapSecurityType -> {
         val (_, _, defImapPort) = parent.adapter.getItem(position) as SecurityType
         if (isImapSpinnerRestored) {
-          binding?.editTextImapPort?.setText(defImapPort.toString())
+          binding?.editTextImapPort?.setText("$defImapPort")
         } else {
           isImapSpinnerRestored = true
         }
@@ -123,7 +123,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       R.id.spinnerSmtpSecyrityType -> {
         val (_, _, _, defSmtpPort) = parent.adapter.getItem(position) as SecurityType
         if (isSmtpSpinnerRestored) {
-          binding?.editTextSmtpPort?.setText(defSmtpPort.toString())
+          binding?.editTextSmtpPort?.setText("$defSmtpPort")
         } else {
           isSmtpSpinnerRestored = true
         }
@@ -295,9 +295,9 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       }
       binding?.editTextUserName?.setText(nonNullAuthCreds.username)
       binding?.editTextImapServer?.setText(nonNullAuthCreds.imapServer)
-      binding?.editTextImapPort?.setText(nonNullAuthCreds.imapPort.toString())
+      binding?.editTextImapPort?.setText("${nonNullAuthCreds.imapPort}")
       binding?.editTextSmtpServer?.setText(nonNullAuthCreds.smtpServer)
-      binding?.editTextSmtpPort?.setText(nonNullAuthCreds.smtpPort.toString())
+      binding?.editTextSmtpPort?.setText("${nonNullAuthCreds.smtpPort}")
       binding?.checkBoxRequireSignInForSmtp?.isChecked = nonNullAuthCreds.hasCustomSignInForSmtp
       binding?.editTextSmtpUsername?.setText(nonNullAuthCreds.smtpSigInUsername)
       binding?.editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)

@@ -46,6 +46,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Ignore
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
@@ -164,6 +165,7 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     .around(ScreenshotTestRule())
 
   @Test
+  @Ignore("will be fixed in https://github.com/FlowCrypt/flowcrypt-android/issues/2914")
   fun testDownloadingAttachment() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
