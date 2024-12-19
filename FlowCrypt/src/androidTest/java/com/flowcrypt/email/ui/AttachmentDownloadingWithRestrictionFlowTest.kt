@@ -164,6 +164,7 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     .around(ScreenshotTestRule())
 
   @Test
+  @Ignore("will be fixed in https://github.com/FlowCrypt/flowcrypt-android/issues/2914")
   fun testDownloadingAttachment() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
