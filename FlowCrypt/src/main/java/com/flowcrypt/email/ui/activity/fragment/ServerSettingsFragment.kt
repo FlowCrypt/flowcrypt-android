@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -26,13 +26,13 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.databinding.FragmentServerSettingsBinding
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
-import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
-import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.hideKeyboard
+import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.jetpack.viewmodel.AccountSettingsViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
@@ -41,8 +41,8 @@ import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
-import org.eclipse.angus.mail.util.MailConnectException
 import kotlinx.coroutines.launch
+import org.eclipse.angus.mail.util.MailConnectException
 import java.net.SocketTimeoutException
 
 /**
@@ -108,7 +108,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     binding?.spinnerImapSecurityType?.onItemSelected { parent, _, position, _ ->
       val securityType = parent?.adapter?.getItem(position) as SecurityType
       if (isImapSpinnerRestored) {
-        binding?.editTextImapPort?.setText(securityType.defImapPort.toString())
+        binding?.editTextImapPort?.setText("${securityType.defImapPort}")
       } else {
         isImapSpinnerRestored = true
       }
@@ -117,7 +117,7 @@ class ServerSettingsFragment : BaseFragment<FragmentServerSettingsBinding>(), Pr
     binding?.spinnerSmtpSecurityType?.onItemSelected { parent, _, position, _ ->
       val securityType = parent?.adapter?.getItem(position) as SecurityType
       if (isSmtpSpinnerRestored) {
-        binding?.editTextSmtpPort?.setText(securityType.defSmtpPort.toString())
+        binding?.editTextSmtpPort?.setText("${securityType.defSmtpPort}")
       } else {
         isSmtpSpinnerRestored = true
       }
