@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 package com.flowcrypt.email.ui.activity
 
@@ -417,7 +417,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         R.layout.navigation_view_item_with_amount, binding.navigationView, false
       )
       val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-      textViewMsgsCount.text = folder.msgCount.toString()
+      textViewMsgsCount.text = "${folder.msgCount}"
       menuItem.actionView = view
     } else {
       menuItem.actionView = null
