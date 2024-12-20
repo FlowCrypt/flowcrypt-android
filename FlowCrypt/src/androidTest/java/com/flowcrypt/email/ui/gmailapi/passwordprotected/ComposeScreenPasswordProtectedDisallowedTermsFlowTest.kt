@@ -35,6 +35,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -76,6 +77,8 @@ class ComposeScreenPasswordProtectedDisallowedTermsFlowTest :
       onView(withId(R.id.editTextEmailSubject))
         .perform(scrollTo(), click(), replaceText(subject))
 
+      waitForObjectWithText(subject, TimeUnit.SECONDS.toMillis(5))
+
       onView(withId(R.id.menuActionSend))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -95,7 +98,6 @@ class ComposeScreenPasswordProtectedDisallowedTermsFlowTest :
         .perform(openLinkWithText(URL))
       //asserting our expected intent was recorded
       Intents.intended(expectingIntent)
-      Thread.sleep(1000)
       Intents.release()
 
       onView(withId(android.R.id.button1))

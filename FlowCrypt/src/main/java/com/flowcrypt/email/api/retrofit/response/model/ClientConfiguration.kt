@@ -226,7 +226,7 @@ data class ClientConfiguration(
   }
 
   fun getDisallowPasswordMessagesForTermsRegex(): Regex? {
-    val startAndEntWithAnyNonWordCharacterRegex = "^\\W.*\\W\$".toRegex(RegexOption.IGNORE_CASE)
+    val startAndEndWithAnyNonWordCharacterRegex = "^\\W.*\\W\$".toRegex(RegexOption.IGNORE_CASE)
 
     return disallowPasswordMessagesForTerms?.joinToString(
       separator = "|",
@@ -234,10 +234,10 @@ data class ClientConfiguration(
       postfix = ")"
     ) { term ->
       val escapedTerm = Regex.escape(term)
-      if (startAndEntWithAnyNonWordCharacterRegex.matches(term)) {
+      if (startAndEndWithAnyNonWordCharacterRegex.matches(term)) {
         "($escapedTerm)"
       } else {
-        "(\\W$escapedTerm\\W)"
+        "(((^|\\s)+[^\\sa-zA-Z0-9_]$escapedTerm[^\\sa-zA-Z0-9_](\$|\\s)+)|((^|\\s)+$escapedTerm(\$|\\s)+))"
       }
     }?.toRegex(setOf(RegexOption.IGNORE_CASE))
   }
