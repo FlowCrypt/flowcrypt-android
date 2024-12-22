@@ -467,7 +467,7 @@ dependencies {
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
   implementation("org.jsoup:jsoup:1.18.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
   implementation("org.pgpainless:pgpainless-core:1.6.7")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
   implementation("org.eclipse.angus:gimap:2.0.3")
