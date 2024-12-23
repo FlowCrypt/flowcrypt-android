@@ -163,14 +163,20 @@ class PgpKeyTest {
   }
 
   @Test
-  fun testRejectingSHA1KeysForDefaultPGPainlessPolicy() {
-    val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+  fun testRejectingSHA1KeysForModifiedPGPainlessPolicy() {
     val policy = PGPainless.getPolicy()
-    val certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
-      policy.certificationSignatureHashAlgorithmPolicy
-    assertFalse(certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
-    assertThrows(PGPException::class.java) {
-      PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
+    val originalSignatureHashAlgorithmPolicy = policy.certificationSignatureHashAlgorithmPolicy
+    try {
+      val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+      assertFalse(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
+      assertThrows(PGPException::class.java) {
+        PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
+      }
+    } finally {
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        originalSignatureHashAlgorithmPolicy
     }
   }
 
