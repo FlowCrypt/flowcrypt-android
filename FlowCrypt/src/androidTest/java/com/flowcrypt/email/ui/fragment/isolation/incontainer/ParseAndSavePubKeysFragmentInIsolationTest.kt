@@ -36,8 +36,7 @@ import com.flowcrypt.email.ui.activity.fragment.ParseAndSavePubKeysFragmentArgs
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
-import org.hamcrest.Matchers.not
-import org.junit.Ignore
+import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -49,7 +48,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Temporary disabled")
 class ParseAndSavePubKeysFragmentInIsolationTest : BaseTest() {
 
   private val existingPgpKeyDetails =
@@ -87,14 +85,17 @@ class ParseAndSavePubKeysFragmentInIsolationTest : BaseTest() {
     )
 
     onView(withId(R.id.rVPubKeys))
-      .check(matches(withRecyclerViewItemCount(5)))
+      .check(matches(withRecyclerViewItemCount(6)))
 
     onView(withId(R.id.rVPubKeys))
       .check(
         matches(
-          not(
-            hasItem(
-              withChild(
+          hasItem(
+            withChild(
+              allOf(
+                hasSibling(
+                  withText(getResString(R.string.cannot_be_used_for_encryption))
+                ),
                 hasSibling(
                   withText(
                     getResString(
