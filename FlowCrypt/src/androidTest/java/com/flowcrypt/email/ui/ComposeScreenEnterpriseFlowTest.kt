@@ -30,7 +30,6 @@ import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -43,7 +42,6 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @EnterpriseTest
-@Ignore("Temporary disabled")
 class ComposeScreenEnterpriseFlowTest : BaseComposeScreenTest() {
 
   @get:Rule
