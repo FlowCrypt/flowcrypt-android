@@ -407,7 +407,7 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.12.2")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
@@ -446,7 +446,7 @@ dependencies {
   implementation("androidx.webkit:webkit:1.12.1")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
-  implementation("com.google.android.gms:play-services-auth:21.2.0")
+  implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.11.0")
@@ -467,8 +467,8 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.18.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+  implementation("org.jsoup:jsoup:1.18.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
   implementation("org.pgpainless:pgpainless-core:1.7.2")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
   implementation("org.eclipse.angus:gimap:2.0.3")
