@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.org.pgpainless.util
@@ -12,5 +12,5 @@ import org.pgpainless.util.Passphrase
  */
 val Passphrase.asString: String?
   get() {
-    return chars?.let { String(it) }
+    return runCatching { getChars() }.getOrNull()?.let { String(it) }
   }

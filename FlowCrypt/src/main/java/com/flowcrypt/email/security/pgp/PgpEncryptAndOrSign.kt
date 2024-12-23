@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -172,7 +172,7 @@ object PgpEncryptAndOrSign {
     generateDetachedSignatures: Boolean = false,
   ): EncryptionStream {
     val encOpt = EncryptionOptions().apply {
-      passphrase?.let { addPassphrase(passphrase) }
+      passphrase?.let { addMessagePassphrase(passphrase) }
       pgpPublicKeyRingCollection?.forEach {
         addRecipient(it)
       }
@@ -207,10 +207,10 @@ object PgpEncryptAndOrSign {
         ProducerOptions.encrypt(encOpt)
       }
 
-    producerOptions.isAsciiArmor = doArmor
-    producerOptions.isHideArmorHeaders = doArmor && hideArmorMeta
+    producerOptions.setAsciiArmor(doArmor)
+    producerOptions.setHideArmorHeaders(doArmor && hideArmorMeta)
 
-    fileName?.let { producerOptions.fileName = it }
+    fileName?.let { producerOptions.setFileName(it) }
 
     return PGPainless.encryptAndOrSign()
       .onOutputStream(destOutputStream)
