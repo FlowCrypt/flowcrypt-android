@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.retrofit.response.model
@@ -15,7 +15,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class ClientConfiguration constructor(
+data class ClientConfiguration(
   @Expose val flags: List<ConfigurationProperty>? = null,
   @SerializedName("custom_keyserver_url")
   @Expose val customKeyserverUrl: String? = null,
@@ -30,7 +30,11 @@ data class ClientConfiguration constructor(
   @SerializedName("enforce_keygen_expire_months")
   @Expose val enforceKeygenExpireMonths: Int? = null,
   @SerializedName("in_memory_pass_phrase_session_length")
-  @Expose val inMemoryPassPhraseSessionLength: Int? = null
+  @Expose val inMemoryPassPhraseSessionLength: Int? = null,
+  @SerializedName("disallow_password_messages_for_terms")
+  @Expose val disallowPasswordMessagesForTerms: List<String>? = null,
+  @SerializedName("disallow_password_messages_error_text")
+  @Expose val disallowPasswordMessagesErrorText: String? = null,
 ) : Parcelable {
 
   val inMemoryPassPhraseSessionLengthNormalized: Int?
@@ -203,8 +207,39 @@ data class ClientConfiguration constructor(
     return hasProperty(ConfigurationProperty.HIDE_ARMOR_META)
   }
 
+  /**
+   * With this option, the app must check the subjects of composed password-protected email
+   * messages for specified strings(defined in [disallowPasswordMessagesForTerms]).
+   * If any configured terms are found, the application should display an error message
+   * (defined in [disallowPasswordMessagesErrorText])
+   * indicating that the password encryption method is incompatible with the composed message.
+   *
+   * ref https://github.com/FlowCrypt/flowcrypt-android/issues/2905
+   */
+  fun hasRestrictionForPasswordProtectedMessages(): Boolean {
+    return !disallowPasswordMessagesForTerms.isNullOrEmpty()
+        && !disallowPasswordMessagesErrorText.isNullOrEmpty()
+  }
+
   fun hasProperty(configurationProperty: ConfigurationProperty): Boolean {
     return flags?.firstOrNull { it == configurationProperty } != null
+  }
+
+  fun getDisallowPasswordMessagesForTermsRegex(): Regex? {
+    val startAndEndWithAnyNonWordCharacterRegex = "^\\W.*\\W\$".toRegex(RegexOption.IGNORE_CASE)
+
+    return disallowPasswordMessagesForTerms?.joinToString(
+      separator = "|",
+      prefix = "(",
+      postfix = ")"
+    ) { term ->
+      val escapedTerm = Regex.escape(term)
+      if (startAndEndWithAnyNonWordCharacterRegex.matches(term)) {
+        "($escapedTerm)"
+      } else {
+        "(((^|\\s)+[^\\sa-zA-Z0-9_]$escapedTerm[^\\sa-zA-Z0-9_](\$|\\s)+)|((^|\\s)+$escapedTerm(\$|\\s)+))"
+      }
+    }?.toRegex(setOf(RegexOption.IGNORE_CASE))
   }
 
   @Parcelize

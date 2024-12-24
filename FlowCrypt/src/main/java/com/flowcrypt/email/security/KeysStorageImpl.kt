@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security
@@ -111,7 +111,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return rings.map {
       val pgpKeyRingDetails = it.toPgpKeyRingDetails()
       val passphrase = getPassphraseByFingerprint(pgpKeyRingDetails.fingerprint)
-      pgpKeyRingDetails.copy(tempPassphrase = passphrase?.chars)
+      pgpKeyRingDetails.copy(tempPassphrase = passphrase?.getChars())
     }
   }
 
@@ -161,12 +161,12 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   override fun getSecretKeyRingProtector(): SecretKeyRingProtector {
     val availablePGPSecretKeyRings = getPGPSecretKeyRings()
     val passphraseProvider = object : SecretKeyPassphraseProvider {
-      override fun getPassphraseFor(keyId: Long): Passphrase? {
-        return doGetPassphrase(keyId, true)
+      override fun getPassphraseFor(keyId: Long?): Passphrase? {
+        return keyId?.let { doGetPassphrase(keyId, true) }
       }
 
-      override fun hasPassphrase(keyId: Long): Boolean {
-        return doGetPassphrase(keyId, false) != null
+      override fun hasPassphrase(keyId: Long?): Boolean {
+        return keyId != null && doGetPassphrase(keyId, false) != null
       }
 
       private fun doGetPassphrase(keyId: Long, throwException: Boolean): Passphrase? {

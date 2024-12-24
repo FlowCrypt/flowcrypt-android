@@ -842,15 +842,15 @@ object PgpMsg {
 
             keyIdOfSigningKeys.addAll(invalidSignatureFailures.filter {
               it.validationException.message?.matches("Missing verification key.?".toRegex()) == true
-            }.mapNotNull { it.signatureVerification.signature.keyID })
+            }.map { it.signature.keyID })
           }
 
           if (verifiedSignatures.isEmpty()) {
             verifiedSignatures.addAll(messageMetadata.verifiedSignatures)
           } else {
-            val keyIdsOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey?.keyId }
+            val keyIdsOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey.keyId }
             val keyIdsOfCurrentVerifiedSignatures = messageMetadata.verifiedSignatures.map {
-              it.signingKey?.keyId
+              it.signingKey.keyId
             }
             if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
               hasMixedSignatures = true
@@ -1369,7 +1369,7 @@ object PgpMsg {
 
   private fun moveElementsOutOfAnchorTag(element: Element, parent: Element) {
     if (element.tag().normalName() == "a" && element.hasAttr(FC_INNER_TEXT_TYPE_ATTR)) {
-      val children = element.children().map { it as Node }.toTypedArray()
+      val children = element.children().map { it }.toTypedArray()
       val n = element.childrenSize()
       var index = 0
       while (index < n && parent.child(index) !== element) ++index

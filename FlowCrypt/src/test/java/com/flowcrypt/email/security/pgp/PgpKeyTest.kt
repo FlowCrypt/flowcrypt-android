@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -10,15 +10,20 @@ import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.util.TestUtil
+import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import org.pgpainless.util.Passphrase
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -146,14 +151,51 @@ class PgpKeyTest {
   @Test
   fun testReadCorruptedPrivateKey() {
     try {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = true
+      PGPainless.getPolicy().enableKeyParameterValidation = true
       val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
       val passphrase = Passphrase.fromPassword("123")
       assertThrows(KeyIntegrityException::class.java) {
         PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
       }
     } finally {
-      PGPainless.getPolicy().isEnableKeyParameterValidation = false
+      PGPainless.getPolicy().enableKeyParameterValidation = false
+    }
+  }
+
+  @Test
+  fun testRejectingSHA1KeysForModifiedPGPainlessPolicy() {
+    val policy = PGPainless.getPolicy()
+    val originalSignatureHashAlgorithmPolicy = policy.certificationSignatureHashAlgorithmPolicy
+    try {
+      val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+      assertFalse(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
+      assertThrows(PGPException::class.java) {
+        PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
+      }
+    } finally {
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        originalSignatureHashAlgorithmPolicy
+    }
+  }
+
+  @Test
+  fun testAcceptingSHA1KeysForModifiedPGPainlessPolicy() {
+    val policy = PGPainless.getPolicy()
+    val originalSignatureHashAlgorithmPolicy = policy.certificationSignatureHashAlgorithmPolicy
+    try {
+      assertFalse(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
+      val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+      assertTrue(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
+      val parseKeyResult = PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
+      assertEquals(1, parseKeyResult.size)
+      assertEquals("5DE92AB364B3100D89FBF460241512660BDDC426", parseKeyResult.first().fingerprint)
+    } finally {
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        originalSignatureHashAlgorithmPolicy
     }
   }
 

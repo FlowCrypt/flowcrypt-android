@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 
@@ -209,6 +209,7 @@ android {
       "META-INF/*.DSA",
       "META-INF/*.RSA",
       "META-INF/javamail.providers",
+      "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
     )
   }
 
@@ -395,7 +396,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.6.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.9.1")
+  androidTestImplementation("androidx.work:work-testing:2.10.0")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -404,12 +405,12 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  testImplementation("org.robolectric:robolectric:4.12.2")
+  testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
-  testImplementation("io.github.classgraph:classgraph:4.8.176")
+  testImplementation("io.github.classgraph:classgraph:4.8.179")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -434,22 +435,22 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.13.1")
+  implementation("androidx.core:core-ktx:1.15.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.9.3")
-  implementation("androidx.fragment:fragment-ktx:1.8.4")
-  implementation("androidx.work:work-runtime-ktx:2.9.1")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.8.4")
-  implementation("androidx.navigation:navigation-ui-ktx:2.8.4")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.8.4")
+  implementation("androidx.fragment:fragment-ktx:1.8.5")
+  implementation("androidx.work:work-runtime-ktx:2.10.0")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.8.5")
+  implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.8.5")
   implementation("androidx.webkit:webkit:1.12.1")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
-  implementation("com.google.android.gms:play-services-auth:21.2.0")
+  implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.11.0")
-  implementation("com.google.api-client:google-api-client-android:2.6.0")
+  implementation("com.google.api-client:google-api-client-android:2.7.1")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
@@ -466,14 +467,14 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.18.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-  implementation("org.pgpainless:pgpainless-core:1.6.7")
+  implementation("org.jsoup:jsoup:1.18.3")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+  implementation("org.pgpainless:pgpainless-core:1.7.2")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
   implementation("org.eclipse.angus:gimap:2.0.3")
-  implementation("commons-io:commons-io:2.17.0")
+  implementation("commons-io:commons-io:2.18.0")
   implementation("net.openid:appauth:0.11.1")
-  implementation("ch.acra:acra-http:5.11.4")
+  implementation("ch.acra:acra-http:5.12.0")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
 
   constraints {

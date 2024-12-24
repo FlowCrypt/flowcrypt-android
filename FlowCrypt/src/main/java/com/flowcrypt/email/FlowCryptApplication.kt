@@ -41,7 +41,6 @@ import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 import org.acra.sender.HttpSender
 import org.pgpainless.PGPainless
-import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -87,7 +86,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     enableDeprecatedSHA1ForPGPainlessPolicy()
 
     //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
-    PGPainless.getPolicy().isEnableKeyParameterValidation = true
+    PGPainless.getPolicy().enableKeyParameterValidation = true
   }
 
   private fun setupGlobalSettingsForJavaMail() {
@@ -108,16 +107,18 @@ class FlowCryptApplication : Application(), Configuration.Provider {
    */
   private fun enableDeprecatedSHA1ForPGPainlessPolicy() {
     @Suppress("KotlinConstantConditions")
-    if (BuildConfig.FLAVOR != Constants.FLAVOR_NAME_ENTERPRISE) {
-      PGPainless.getPolicy().signatureHashAlgorithmPolicy = HashAlgorithmPolicy(
-        HashAlgorithm.SHA512, listOf(
-          HashAlgorithm.SHA512,
-          HashAlgorithm.SHA384,
-          HashAlgorithm.SHA256,
-          HashAlgorithm.SHA224,
-          HashAlgorithm.SHA1
-        )
-      )
+    if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+      PGPainless.getPolicy().dataSignatureHashAlgorithmPolicy =
+        HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+    } else {
+      PGPainless.getPolicy().dataSignatureHashAlgorithmPolicy =
+        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+
+      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
     }
   }
 

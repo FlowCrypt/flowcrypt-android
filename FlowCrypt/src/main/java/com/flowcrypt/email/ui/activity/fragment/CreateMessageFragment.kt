@@ -1552,6 +1552,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       return false
     }
 
+    var isWebPortalPasswordEnabled = false
     if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
       if (composeMsgViewModel.allRecipients.any { it.value.isUpdating }) {
         toast(R.string.please_wait_while_information_about_recipients_will_be_updated)
@@ -1564,6 +1565,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       val password = composeMsgViewModel.webPortalPasswordStateFlow.value
       if (password.isNotEmpty()) {
+        isWebPortalPasswordEnabled = true
         val keysStorage = KeysStorageImpl.getInstance(requireContext())
         if (keysStorage.hasPassphrase(Passphrase(password.toString().toCharArray()))) {
           showInfoDialog(
@@ -1595,6 +1597,21 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.editTextEmailSubject?.requestFocus()
       return false
     }
+
+    if (isWebPortalPasswordEnabled &&
+      account?.clientConfiguration?.hasRestrictionForPasswordProtectedMessages() == true
+    ) {
+      val termsRegex = account?.clientConfiguration?.getDisallowPasswordMessagesForTermsRegex()
+      if (termsRegex?.find(binding?.editTextEmailSubject?.text ?: "") != null) {
+        showInfoDialog(
+          dialogTitle = "",
+          dialogMsg = account?.clientConfiguration?.disallowPasswordMessagesErrorText,
+          useLinkify = true
+        )
+        return false
+      }
+    }
+
     if (composeMsgViewModel.attachmentsStateFlow.value.isEmpty() && binding?.editTextEmailMessage?.text?.isEmpty() == true) {
       showInfoSnackbar(
         binding?.editTextEmailMessage,
