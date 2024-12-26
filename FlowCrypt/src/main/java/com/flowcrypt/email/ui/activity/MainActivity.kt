@@ -415,7 +415,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       R.layout.navigation_view_item_with_amount, binding.navigationView, false
     )
     val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-    textViewMsgsCount.text = folder.msgCount.takeIf { it > 0 }?.toString()
+    textViewMsgsCount.text = "${folder.msgCount.takeIf { it > 0 }}"
     menuItem.actionView = view
   }
 
