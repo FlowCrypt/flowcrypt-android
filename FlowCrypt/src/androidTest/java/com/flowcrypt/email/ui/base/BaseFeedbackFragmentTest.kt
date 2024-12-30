@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
@@ -20,6 +20,6 @@ abstract class BaseFeedbackFragmentTest : BaseTest() {
           "SGQ4ADpmmXunpe7TYyMRB2t/IQapb3HLbfZlKDTWVqv95rL4VGJTtLltrSTuzpB7XGk13C8Dj8fNY77SrB+5bT" +
           "M0empyso5HTKLcdM8cHIu0Sz4yAgAVj29yuFbCq9x6S6oH7vkL1RIf/+CFeP17HNVfX5IMAAAAASUVORK5CYII="
 
-    val SCREENSHOT_BYTE_ARRAY: ByteArray = Base64.decode(SCREENSHOT_BASE64, Base64.DEFAULT)
+    val SCREENSHOT_BYTE_ARRAY: ByteArray = Base64.decode(SCREENSHOT_BASE64, Base64.NO_WRAP)
   }
 }
