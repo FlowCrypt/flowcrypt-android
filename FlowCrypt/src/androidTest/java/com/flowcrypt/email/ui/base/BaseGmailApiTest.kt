@@ -477,6 +477,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
+      MESSAGE_ID_THREAD_SINGLE_MESSAGE -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_SINGLE_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
+          subject = SUBJECT_SINGLE,
+          includeBinaryAttachment = false
+        ).toString()
+      )
+
       MESSAGE_ID_EXISTING_STANDARD -> baseResponse.setBody(
         genStandardMessage(
           threadId = THREAD_ID_EXISTING_STANDARD,
@@ -543,6 +552,22 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
 
       THREAD_ID_NO_ATTACHMENTS -> baseResponse.setBody(
         genThreadWithNoAttachments()
+      )
+
+      THREAD_ID_SINGLE_MESSAGE -> baseResponse.setBody(
+        com.google.api.services.gmail.model.Thread().apply {
+          factory = GsonFactory.getDefaultInstance()
+          id = THREAD_ID_SINGLE_MESSAGE
+          messages = listOf(
+            genStandardMessage(
+              threadId = THREAD_ID_SINGLE_MESSAGE,
+              messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
+              subject = SUBJECT_SINGLE,
+              includeBinaryAttachment = false,
+              isFullFormat = true
+            ),
+          )
+        }.toString()
       )
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -1152,9 +1177,12 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val THREAD_ID_NO_ATTACHMENTS = "200000e222d6c004"
     const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_1 = "5555555559993001"
     const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 = "5555555559993002"
+    const val THREAD_ID_SINGLE_MESSAGE = "200000e222d6c005"
+    const val MESSAGE_ID_THREAD_SINGLE_MESSAGE = "5555555559995001"
 
 
     const val SUBJECT_NO_ATTACHMENTS = "No attachments"
+    const val SUBJECT_SINGLE = "Single"
 
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111111"
@@ -1254,6 +1282,9 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         },
         com.google.api.services.gmail.model.Thread().apply {
           id = THREAD_ID_NO_ATTACHMENTS
+        },
+        com.google.api.services.gmail.model.Thread().apply {
+          id = THREAD_ID_SINGLE_MESSAGE
         },
         /*com.google.api.services.gmail.model.Thread().apply {
           id = THREAD_ID_EXISTING_ONLY_ENCRYPTED

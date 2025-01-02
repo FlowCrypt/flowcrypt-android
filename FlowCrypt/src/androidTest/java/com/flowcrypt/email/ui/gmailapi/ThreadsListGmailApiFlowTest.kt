@@ -18,6 +18,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -42,6 +43,7 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
   BASE_ACCOUNT_ENTITY.copy(useConversationMode = true)
 ) {
@@ -87,72 +89,44 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //test thread with 2 standard messages with attachments
-    onView(withId(R.id.recyclerViewMsgs))
-      .perform(
-        RecyclerViewActions.scrollTo<ViewHolder>(
-          allOf(
-            hasDescendant(
-              allOf(
-                withId(R.id.textViewSubject),
-                withText(SUBJECT_EXISTING_STANDARD)
-              ),
-            ),
-            hasDescendant(
-              allOf(
-                withId(R.id.textViewSenderAddress),
-                withText("From (2)")
-              ),
-            ),
-            hasDescendant(
-              allOf(
-                withId(R.id.imageViewAtts),
-                withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
-              ),
-            ),
-            hasDescendant(
-              allOf(
-                withId(R.id.viewHasPgp),
-                withEffectiveVisibility(ViewMatchers.Visibility.GONE)
-              ),
-            ),
-          )
-        )
-      )
+    checkThreadRowDetails(
+      subject = SUBJECT_EXISTING_STANDARD,
+      senderPattern = "From (2)",
+      hasAttachments = true,
+      hasPgp = false
+    )
 
     //test thread with 2 encrypted messages with attachments
-    onView(withId(R.id.recyclerViewMsgs))
-      .perform(
-        RecyclerViewActions.scrollTo<ViewHolder>(
-          allOf(
-            hasDescendant(
-              allOf(
-                withId(R.id.textViewSubject),
-                withText(SUBJECT_EXISTING_ENCRYPTED)
-              ),
-            ),
-            hasDescendant(
-              allOf(
-                withId(R.id.textViewSenderAddress),
-                withText("From (2)")
-              ),
-            ),
-            hasDescendant(
-              allOf(
-                withId(R.id.imageViewAtts),
-                withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
-              ),
-            ),
-            hasDescendant(
-              allOf(
-                withId(R.id.viewHasPgp),
-                withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
-              ),
-            ),
-          )
-        )
-      )
+    checkThreadRowDetails(
+      subject = SUBJECT_EXISTING_ENCRYPTED,
+      senderPattern = "From (2)",
+      hasAttachments = true,
+      hasPgp = true
+    )
 
     //test thread with 2 standard messages without attachments
+    checkThreadRowDetails(
+      subject = SUBJECT_NO_ATTACHMENTS,
+      senderPattern = "From (2)",
+      hasAttachments = false,
+      hasPgp = false
+    )
+
+    //test thread with 1 message in thread
+    checkThreadRowDetails(
+      subject = SUBJECT_SINGLE,
+      senderPattern = "From",
+      hasAttachments = true,
+      hasPgp = false
+    )
+  }
+
+  private fun checkThreadRowDetails(
+    subject: String,
+    senderPattern: String,
+    hasAttachments: Boolean,
+    hasPgp: Boolean,
+  ) {
     onView(withId(R.id.recyclerViewMsgs))
       .perform(
         RecyclerViewActions.scrollTo<ViewHolder>(
@@ -160,25 +134,37 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
             hasDescendant(
               allOf(
                 withId(R.id.textViewSubject),
-                withText(SUBJECT_NO_ATTACHMENTS)
+                withText(subject)
               ),
             ),
             hasDescendant(
               allOf(
                 withId(R.id.textViewSenderAddress),
-                withText("From (2)")
+                withText(senderPattern)
               ),
             ),
             hasDescendant(
               allOf(
                 withId(R.id.imageViewAtts),
-                withEffectiveVisibility(ViewMatchers.Visibility.GONE)
+                withEffectiveVisibility(
+                  if (hasAttachments) {
+                    ViewMatchers.Visibility.VISIBLE
+                  } else {
+                    ViewMatchers.Visibility.GONE
+                  }
+                )
               ),
             ),
             hasDescendant(
               allOf(
                 withId(R.id.viewHasPgp),
-                withEffectiveVisibility(ViewMatchers.Visibility.GONE)
+                withEffectiveVisibility(
+                  if (hasPgp) {
+                    ViewMatchers.Visibility.VISIBLE
+                  } else {
+                    ViewMatchers.Visibility.GONE
+                  }
+                )
               ),
             ),
           )
