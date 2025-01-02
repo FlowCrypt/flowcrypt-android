@@ -459,6 +459,24 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
+          subject = SUBJECT_NO_ATTACHMENTS,
+          includeAttachments = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          subject = "Re: $SUBJECT_NO_ATTACHMENTS",
+          includeAttachments = false
+        ).toString()
+      )
+
       MESSAGE_ID_EXISTING_STANDARD -> baseResponse.setBody(
         genStandardMessage(
           threadId = THREAD_ID_EXISTING_STANDARD,
@@ -521,6 +539,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
 
       THREAD_ID_ONLY_ENCRYPTED -> baseResponse.setBody(
         genThreadWithOnlyEncryptedMessages()
+      )
+
+      THREAD_ID_NO_ATTACHMENTS -> baseResponse.setBody(
+        genThreadWithNoAttachments()
       )
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -588,12 +610,35 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
       )
     }.toString()
 
+  private fun genThreadWithNoAttachments() =
+    com.google.api.services.gmail.model.Thread().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = THREAD_ID_NO_ATTACHMENTS
+      messages = listOf(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
+          subject = SUBJECT_NO_ATTACHMENTS,
+          isFullFormat = true,
+          includeAttachments = false
+        ),
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          subject = "Re: $SUBJECT_NO_ATTACHMENTS",
+          isFullFormat = true,
+          includeAttachments = false
+        )
+      )
+    }.toString()
+
   private fun genStandardMessage(
     threadId: String,
     messageId: String,
     labels: List<String> = listOf(JavaEmailConstants.FOLDER_INBOX),
     subject: String = SUBJECT_EXISTING_STANDARD,
     isFullFormat: Boolean = false,
+    includeAttachments: Boolean = true,
     includeBinaryAttachment: Boolean = true
   ) =
     com.google.api.services.gmail.model.Message().apply {
@@ -660,69 +705,76 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
               }
             )
           },
-          MessagePart().apply {
-            partId = "1"
-            mimeType = "text/plain"
-            filename = ATTACHMENT_NAME_1
-            headers = listOf(
-              MessagePartHeader().apply {
-                name = "Content-Type"
-                value = "text/plain; charset=\\\"US-ASCII\\\"; name=\\\"$ATTACHMENT_NAME_1\\\""
-              },
-              MessagePartHeader().apply {
-                name = "Content-Disposition"
-                value = "attachment; filename=\\\"$ATTACHMENT_NAME_1\\\""
-              },
-              MessagePartHeader().apply {
-                name = "Content-Transfer-Encoding"
-                value = "base64"
-              },
-              MessagePartHeader().apply {
-                name = "Content-ID"
-                value = "f_lr8zar5y0"
-              },
-              MessagePartHeader().apply {
-                name = "X-Attachment-Id"
-                value = "f_lr8zar5y0"
-              },
-            )
-            body = MessagePartBody().apply {
-              attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
-              setSize(attachmentsDataCache[0].size)
-            }
-          },
-        ).apply {
-          if (includeBinaryAttachment) {
-            MessagePart().apply {
-              partId = "2"
-              mimeType = "application/pgp-keys"
-              filename = ATTACHMENT_NAME_3
-              headers = listOf(
-                MessagePartHeader().apply {
-                  name = "Content-Type"
-                  value = "application/pgp-keys; name=\\\"$ATTACHMENT_NAME_3\\\""
-                },
-                MessagePartHeader().apply {
-                  name = "Content-Disposition"
-                  value = "attachment; filename=\\\"$ATTACHMENT_NAME_3\\\""
-                },
-                MessagePartHeader().apply {
-                  name = "Content-Transfer-Encoding"
-                  value = "base64"
-                },
-                MessagePartHeader().apply {
-                  name = "Content-ID"
-                  value = "f_lr8zar681"
-                },
-                MessagePartHeader().apply {
-                  name = "X-Attachment-Id"
-                  value = "f_lr8zar681"
-                },
-              )
-              body = MessagePartBody().apply {
-                attachmentId = ATTACHMENT_SECOND_OF_EXISTING_STANDARD
-                setSize(attachmentsDataCache[2].size)
+        ).toMutableList().apply {
+          if (includeAttachments) {
+            add(
+              MessagePart().apply {
+                partId = "1"
+                mimeType = "text/plain"
+                filename = ATTACHMENT_NAME_1
+                headers = listOf(
+                  MessagePartHeader().apply {
+                    name = "Content-Type"
+                    value = "text/plain; charset=\\\"US-ASCII\\\"; name=\\\"$ATTACHMENT_NAME_1\\\""
+                  },
+                  MessagePartHeader().apply {
+                    name = "Content-Disposition"
+                    value = "attachment; filename=\\\"$ATTACHMENT_NAME_1\\\""
+                  },
+                  MessagePartHeader().apply {
+                    name = "Content-Transfer-Encoding"
+                    value = "base64"
+                  },
+                  MessagePartHeader().apply {
+                    name = "Content-ID"
+                    value = "f_lr8zar5y0"
+                  },
+                  MessagePartHeader().apply {
+                    name = "X-Attachment-Id"
+                    value = "f_lr8zar5y0"
+                  },
+                )
+                body = MessagePartBody().apply {
+                  attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+                  setSize(attachmentsDataCache[0].size)
+                }
               }
+            )
+
+            if (includeBinaryAttachment) {
+              add(
+                MessagePart().apply {
+                  partId = "2"
+                  mimeType = "application/pgp-keys"
+                  filename = ATTACHMENT_NAME_3
+                  headers = listOf(
+                    MessagePartHeader().apply {
+                      name = "Content-Type"
+                      value = "application/pgp-keys; name=\\\"$ATTACHMENT_NAME_3\\\""
+                    },
+                    MessagePartHeader().apply {
+                      name = "Content-Disposition"
+                      value = "attachment; filename=\\\"$ATTACHMENT_NAME_3\\\""
+                    },
+                    MessagePartHeader().apply {
+                      name = "Content-Transfer-Encoding"
+                      value = "base64"
+                    },
+                    MessagePartHeader().apply {
+                      name = "Content-ID"
+                      value = "f_lr8zar681"
+                    },
+                    MessagePartHeader().apply {
+                      name = "X-Attachment-Id"
+                      value = "f_lr8zar681"
+                    },
+                  )
+                  body = MessagePartBody().apply {
+                    attachmentId = ATTACHMENT_SECOND_OF_EXISTING_STANDARD
+                    setSize(attachmentsDataCache[2].size)
+                  }
+                }
+              )
             }
           }
         }
@@ -1097,6 +1149,12 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1 = "5555555559992001"
     const val MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2 = "5555555559992002"
     const val THREAD_ID_STANDARD_AND_ENCRYPTED = "200000e222d6c003"
+    const val THREAD_ID_NO_ATTACHMENTS = "200000e222d6c004"
+    const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_1 = "5555555559993001"
+    const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 = "5555555559993002"
+
+
+    const val SUBJECT_NO_ATTACHMENTS = "No attachments"
 
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111111"
@@ -1193,6 +1251,9 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         },
         com.google.api.services.gmail.model.Thread().apply {
           id = THREAD_ID_ONLY_ENCRYPTED
+        },
+        com.google.api.services.gmail.model.Thread().apply {
+          id = THREAD_ID_NO_ATTACHMENTS
         },
         /*com.google.api.services.gmail.model.Thread().apply {
           id = THREAD_ID_EXISTING_ONLY_ENCRYPTED

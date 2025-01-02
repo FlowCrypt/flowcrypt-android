@@ -82,7 +82,7 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
     .around(ScreenshotTestRule())
 
   @Test
-  fun testCorrectThreadDetails() {
+  fun testShowCorrectThreadsDetailsInList() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
@@ -146,6 +146,39 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
               allOf(
                 withId(R.id.viewHasPgp),
                 withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+              ),
+            ),
+          )
+        )
+      )
+
+    //test thread with 2 standard messages without attachments
+    onView(withId(R.id.recyclerViewMsgs))
+      .perform(
+        RecyclerViewActions.scrollTo<ViewHolder>(
+          allOf(
+            hasDescendant(
+              allOf(
+                withId(R.id.textViewSubject),
+                withText(SUBJECT_NO_ATTACHMENTS)
+              ),
+            ),
+            hasDescendant(
+              allOf(
+                withId(R.id.textViewSenderAddress),
+                withText("From (2)")
+              ),
+            ),
+            hasDescendant(
+              allOf(
+                withId(R.id.imageViewAtts),
+                withEffectiveVisibility(ViewMatchers.Visibility.GONE)
+              ),
+            ),
+            hasDescendant(
+              allOf(
+                withId(R.id.viewHasPgp),
+                withEffectiveVisibility(ViewMatchers.Visibility.GONE)
               ),
             ),
           )
