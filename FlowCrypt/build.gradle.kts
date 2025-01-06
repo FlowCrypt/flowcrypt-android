@@ -123,7 +123,6 @@ android {
         "SHARED_TENANT_FES_URL",
         "\"https://flowcrypt.test/shared-tenant-fes/\""
       )
-      buildConfigField("String", "BACKEND_URL", "\"https://flowcrypt.test/backend/\"")
       buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "false")
       buildConfigField("String", "HTTP_LOG_LEVEL", "\"NONE\"")
       resValue("string", "gradle_is_http_log_enabled", "false")
@@ -154,7 +153,6 @@ android {
         "SHARED_TENANT_FES_URL",
         "\"https://flowcrypt.com/shared-tenant-fes/\""
       )
-      buildConfigField("String", "BACKEND_URL", "\"https://flowcrypt.com/api/\"")
       resValue("string", "gradle_is_acra_enabled", "true")
       resValue("string", "gradle_is_mail_debug_enabled", "false")
       resValue("string", "gradle_is_http_log_enabled", "false")
