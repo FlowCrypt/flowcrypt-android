@@ -135,6 +135,14 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
       hasAttachments = true,
       hasPgp = false
     )
+
+    //test thread with one message in thread + few draft
+    checkThreadRowDetails(
+      subject = SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS,
+      senderPattern = "From, Drafts(2) (3)",
+      hasAttachments = true,
+      hasPgp = false
+    )
   }
 
   private fun checkThreadRowDetails(

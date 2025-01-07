@@ -526,6 +526,26 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
+      MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1,
+      MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2,
+      MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+          messageId = messageId,
+          subject = when (messageId) {
+            MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1 -> SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS
+            else -> "Re: $SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS"
+          },
+          labels = when (messageId) {
+            MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2,
+            MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 -> listOf(JavaEmailConstants.FOLDER_DRAFT)
+
+            else -> listOf(JavaEmailConstants.FOLDER_INBOX)
+          },
+          includeBinaryAttachment = false
+        ).toString()
+      )
+
       MESSAGE_ID_EXISTING_STANDARD -> baseResponse.setBody(
         genStandardMessage(
           threadId = THREAD_ID_EXISTING_STANDARD,
@@ -604,6 +624,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
 
       THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS -> baseResponse.setBody(
         genThreadWithFewMessagesFewDrafts()
+      )
+
+      THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS -> baseResponse.setBody(
+        genThreadWithOneMessageFewDrafts()
       )
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -766,6 +790,36 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         threadId = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS,
         messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_4,
         subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS",
+        includeBinaryAttachment = false,
+        isFullFormat = true,
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithOneMessageFewDrafts() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS
+    messages = listOf(
+      genStandardMessage(
+        threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1,
+        subject = SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2,
+        subject = "Re: $SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS",
+        includeBinaryAttachment = false,
+        isFullFormat = true,
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3,
+        subject = "Re: $SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS",
         includeBinaryAttachment = false,
         isFullFormat = true,
         labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
@@ -1304,12 +1358,17 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_2 = "5555555559997002"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_3 = "5555555559997003"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_4 = "5555555559997004"
+    const val THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS = "200000e222d6c008"
+    const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1 = "5555555559998001"
+    const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2 = "5555555559998002"
+    const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 = "5555555559998003"
 
 
     const val SUBJECT_NO_ATTACHMENTS = "No attachments"
     const val SUBJECT_SINGLE = "Single"
     const val SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT = "few messages in thread + 1 draft"
     const val SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS = "few messages in thread + few drafts"
+    const val SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS = "one message in thread + few drafts"
 
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111111"
@@ -1407,6 +1466,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         Thread().apply { id = THREAD_ID_SINGLE_MESSAGE },
         Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT },
         Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS },
+        Thread().apply { id = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS },
         /*com.google.api.services.gmail.model.Thread().apply {
           id = THREAD_ID_EXISTING_ONLY_ENCRYPTED
         },*/
