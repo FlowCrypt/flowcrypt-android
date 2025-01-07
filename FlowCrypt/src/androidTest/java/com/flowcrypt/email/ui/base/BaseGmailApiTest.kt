@@ -253,9 +253,19 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path == genPathToGetAttachment(
-        MESSAGE_ID_EXISTING_STANDARD,
-        ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+      request.method == "GET" && request.path in listOf(
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_EXISTING_STANDARD,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -328,10 +338,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           BatchModifyMessagesRequest::class.java
         )
 
-        if (batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_STANDARD)
-          || batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_ENCRYPTED)
-          || batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_PGP_MIME)
-        ) {
+        val handledIds = arrayOf(
+          MESSAGE_ID_EXISTING_STANDARD,
+          MESSAGE_ID_EXISTING_ENCRYPTED,
+          MESSAGE_ID_EXISTING_PGP_MIME,
+          MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+        )
+
+        if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         } else {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -590,6 +605,25 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
 
       MESSAGE_ID_EXISTING_PGP_MIME -> baseResponse.setBody(
         genPGPMimeMessage(isFullFormat = true)
+      )
+
+      MESSAGE_ID_THREAD_ONLY_STANDARD_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          includeBinaryAttachment = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_STANDARD_2 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          subject = "Re: $SUBJECT_EXISTING_STANDARD",
+          includeBinaryAttachment = false,
+          isFullFormat = true
+        ).toString()
       )
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
