@@ -491,10 +491,11 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
             }
 
             when (it.exception) {
-              is GoogleJsonResponseException -> if (it.exception.details.code == HttpURLConnection.HTTP_NOT_FOUND
-                && it.exception.details.errors.any { errorInfo ->
+              is GoogleJsonResponseException -> if (
+                it.exception.details?.code == HttpURLConnection.HTTP_NOT_FOUND
+                && it.exception.details.errors?.any { errorInfo ->
                   errorInfo.reason.equals("notFound", true)
-                }
+                } == true
               ) {
                 if (isActive) {
                   actionsForMissedThreadSituation.invoke()

@@ -85,7 +85,7 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
 
   @Test
   fun testShowCorrectThreadsDetailsInList() {
-    //need to wait while the app loads the messages list
+    //need to wait while the app loads the thread list
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //test thread with 2 standard messages with attachments

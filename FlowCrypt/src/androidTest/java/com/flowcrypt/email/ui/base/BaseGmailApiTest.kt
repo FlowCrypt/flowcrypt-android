@@ -266,6 +266,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_2,
           attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
         ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -344,6 +348,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           MESSAGE_ID_EXISTING_PGP_MIME,
           MESSAGE_ID_THREAD_ONLY_STANDARD_1,
           MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          MESSAGE_ID_THREAD_SINGLE_MESSAGE,
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
@@ -605,6 +610,16 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
 
       MESSAGE_ID_EXISTING_PGP_MIME -> baseResponse.setBody(
         genPGPMimeMessage(isFullFormat = true)
+      )
+
+      MESSAGE_ID_THREAD_SINGLE_MESSAGE -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_SINGLE_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
+          subject = SUBJECT_SINGLE,
+          includeBinaryAttachment = false,
+          isFullFormat = true
+        ).toString()
       )
 
       MESSAGE_ID_THREAD_ONLY_STANDARD_1 -> baseResponse.setBody(
@@ -1399,7 +1414,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
 
 
     const val SUBJECT_NO_ATTACHMENTS = "No attachments"
-    const val SUBJECT_SINGLE = "Single"
+    const val SUBJECT_SINGLE = "Single message"
     const val SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT = "few messages in thread + 1 draft"
     const val SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS = "few messages in thread + few drafts"
     const val SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS = "one message in thread + few drafts"
