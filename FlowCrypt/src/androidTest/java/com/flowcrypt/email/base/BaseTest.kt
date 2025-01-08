@@ -41,6 +41,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -285,6 +286,17 @@ abstract class BaseTest : BaseActivityTestImplementation {
   protected fun waitForObjectWithText(text: String, timeoutInMilliseconds: Long = 0) {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     device.wait(Until.hasObject(By.text(text)), timeoutInMilliseconds)
+  }
+
+  protected fun waitForObjectWithResourceName(
+    resourceName: String,
+    timeoutInMilliseconds: Long = 0
+  ) {
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    device.wait(
+      Until.hasObject(By.res("${BuildConfig.APPLICATION_ID}:id/$resourceName")),
+      timeoutInMilliseconds
+    )
   }
 
   fun getTargetContext(): Context {
