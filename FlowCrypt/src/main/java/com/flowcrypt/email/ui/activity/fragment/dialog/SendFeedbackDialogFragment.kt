@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -19,11 +19,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentSendFeedbackDialogBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.viewmodel.SendFeedbackViewModel
 import com.flowcrypt.email.util.exception.ApiException
@@ -83,7 +83,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(KEY_RESULT to (it.data?.isSent == true))
+              bundleOf(KEY_RESULT to true)
             )
             countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
           }

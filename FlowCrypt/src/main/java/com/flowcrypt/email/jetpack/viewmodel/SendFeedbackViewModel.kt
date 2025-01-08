@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -41,7 +41,7 @@ class SendFeedbackViewModel(application: Application) : BaseAndroidViewModel(app
       postFeedbackMutableStateFlow.value =
         Result.loading(progressMsg = context.getString(R.string.sending))
       val screenShotBase64 =
-        Base64.encodeToString(screenshot?.byteArray ?: byteArrayOf(), Base64.DEFAULT)
+        Base64.encodeToString(screenshot?.byteArray ?: byteArrayOf(), Base64.NO_WRAP)
 
       try {
         postFeedbackMutableStateFlow.value = ApiClientRepository.Backend.postHelpFeedback(
