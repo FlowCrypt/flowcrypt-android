@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.retrofit
@@ -53,15 +53,17 @@ interface RetrofitApiServiceInterface {
   ): Response<WelcomeMessageResponse>
 
   /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/api/help/feedback"
+   * This method create a [Call] object for the API "https://https://flowcrypt.com/shared-tenant-fes/api/v1/account/feedback"
+   *
+   * ref https://github.com/FlowCrypt/flowcrypt-android/pull/2171#discussion_r1084124018
+   * ref https://github.com/FlowCrypt/flowcrypt-android/issues/2827
    *
    * @param body POJO model for requests
    * @return [<]
    */
-  //@POST(BuildConfig.SHARED_TENANT_FES_URL + "help/feedback")
-  //ref https://github.com/FlowCrypt/flowcrypt-android/pull/2171#discussion_r1084124018
-  @POST(BuildConfig.BACKEND_URL + "help/feedback")
-  suspend fun backendPostHelpFeedback(@Body body: PostHelpFeedbackModel): Response<PostHelpFeedbackResponse>
+  @POST(BuildConfig.SHARED_TENANT_FES_URL + "api/v1/account/feedback")
+  suspend fun backendPostHelpFeedback(@Body body: PostHelpFeedbackModel):
+      Response<PostHelpFeedbackResponse>
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/pub"
