@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.base
 
 import android.text.format.Formatter
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
@@ -17,7 +16,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
@@ -48,12 +46,9 @@ import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragmentArgs
-import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Description
-import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
@@ -296,23 +291,6 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .check(matches(withToolBarText(title)))
 
     return incomingMessageInfo
-  }
-
-  protected fun withHeaderInfo(header: MessageHeadersListAdapter.Header):
-      Matcher<RecyclerView.ViewHolder> {
-    return object : BoundedMatcher<RecyclerView.ViewHolder,
-        MessageHeadersListAdapter.ViewHolder>(
-      MessageHeadersListAdapter.ViewHolder::class.java
-    ) {
-      override fun matchesSafely(holder: MessageHeadersListAdapter.ViewHolder): Boolean {
-        return holder.binding.tVHeaderName.text.toString() == header.name
-            && holder.binding.tVHeaderValue.text.toString() == header.value
-      }
-
-      override fun describeTo(description: Description) {
-        description.appendText("with: $header")
-      }
-    }
   }
 
   protected fun testPgpBadges(

@@ -55,6 +55,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withMessageHeaderInfo
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -556,7 +557,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
+          withMessageHeaderInfo(
             MessageHeadersListAdapter.Header(
               name = getResString(R.string.from),
               value = "Denis Bondarenko <denbond7@flowcrypt.test>"
@@ -567,7 +568,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
+          withMessageHeaderInfo(
             MessageHeadersListAdapter.Header(
               name = getResString(R.string.reply_to),
               value = "Denis Bondarenko <denbond7@flowcrypt.test>"
@@ -578,7 +579,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
+          withMessageHeaderInfo(
             MessageHeadersListAdapter.Header(
               name = getResString(R.string.to),
               value = "default@flowcrypt.test"
@@ -589,7 +590,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
+          withMessageHeaderInfo(
             MessageHeadersListAdapter.Header(
               name = getResString(R.string.cc),
               value = "ccuser@test"
@@ -608,7 +609,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
+          withMessageHeaderInfo(
             MessageHeadersListAdapter.Header(
               name = getResString(R.string.date),
               value = datetime
