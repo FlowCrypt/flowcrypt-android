@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.gmailapi.base
 
+import android.text.format.Formatter
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -26,12 +28,15 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextContentMatcher
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundTint
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
+import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.base.BaseGmailApiTest
 import com.flowcrypt.email.ui.base.BaseGmailLabelsFlowTest.GmailApiLabelMatcher
 import okhttp3.mockwebserver.Dispatcher
@@ -163,6 +168,58 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
                 )
               )
             )
+          )
+        )
+    }
+  }
+
+  protected fun checkAttachments(pairs: List<Pair<String, Long>>) {
+    if (pairs.isEmpty()) {
+      onView(allOf(withId(R.id.rVAttachments), isDisplayed()))
+        .check(matches(withEmptyRecyclerView()))
+      return
+    }
+
+    onView(allOf(withId(R.id.rVAttachments), isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(pairs.size)))
+
+    pairs.forEach { pair ->
+      onView(allOf(withId(R.id.rVAttachments), isDisplayed()))
+        .perform(
+          scrollTo<ViewHolder>(
+            allOf(
+              hasDescendant(
+                allOf(
+                  withId(R.id.textViewAttachmentName),
+                  withText(pair.first)
+                )
+              ),
+              hasDescendant(
+                allOf(
+                  withId(R.id.textViewAttSize),
+                  withText(Formatter.formatFileSize(getTargetContext(), pair.second))
+                )
+              ),
+              hasDescendant(withId(R.id.imageButtonPreviewAtt)),
+              hasDescendant(withId(R.id.imageButtonDownloadAtt)),
+            )
+          )
+        )
+    }
+  }
+
+  protected fun testPgpBadges(
+    badgeCount: Int,
+    vararg badgeTypes: PgpBadgeListAdapter.PgpBadge.Type
+  ) {
+    onView(allOf(withId(R.id.rVPgpBadges), isDisplayed()))
+      .check(matches(withRecyclerViewItemCount(badgeCount)))
+
+    for (badgeType in badgeTypes) {
+      onView(allOf(withId(R.id.rVPgpBadges), isDisplayed()))
+        .perform(
+          RecyclerViewActions.scrollToHolder(
+            withPgpBadge(PgpBadgeListAdapter.PgpBadge(badgeType))
           )
         )
     }

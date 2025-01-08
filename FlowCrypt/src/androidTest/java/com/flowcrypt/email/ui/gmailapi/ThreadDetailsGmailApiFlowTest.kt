@@ -26,6 +26,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
+import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.gmailapi.base.BaseThreadDetailsGmailApiFlowTest
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
@@ -151,6 +152,22 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       onView(allOf(withId(R.id.rVMsgDetails), isDisplayed()))
         .perform(scrollToHolder(withMessageHeaderInfo(it)))
     }
+
+    //check badges
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED
+    )
+
+    //check WebView content
+
+    //check attachments
+    checkAttachments(
+      listOf(
+        Pair(ATTACHMENT_NAME_1, attachmentsDataCache[0].size.toLong())
+      )
+    )
 
     //check reply buttons
     checkReplyButtons(isEncryptedMode = false)
