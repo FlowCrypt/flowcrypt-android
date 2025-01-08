@@ -1385,9 +1385,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         when (it.status) {
           Result.Status.SUCCESS -> {
             val accountEntity = it.data ?: return@collect
-
             if (accountEntity.useAliasSignatures) {
-              val position = binding?.spinnerFrom?.selectedItemPosition ?: return@collect
+              val position = binding?.spinnerFrom?.selectedItemPosition?.takeIf { position ->
+                position != Spinner.INVALID_POSITION
+              } ?: return@collect
               val sendAs =
                 (fromAddressesAdapter?.getItem(position) as? CharSequence) ?: return@collect
               applyAliasSignature(sendAs)
