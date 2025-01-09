@@ -150,5 +150,9 @@ class CustomMatchers {
         MessageHeadersListAdapterViewHolderMatcher {
       return MessageHeadersListAdapterViewHolderMatcher(header)
     }
+
+    fun hasItemAtPosition(position: Int, matcher: Matcher<View>): RecyclerViewHasViewAtPosition {
+      return RecyclerViewHasViewAtPosition(position, matcher)
+    }
   }
 }

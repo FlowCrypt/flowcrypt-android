@@ -28,6 +28,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItemAtPosition
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withMessageHeaderInfo
@@ -249,6 +250,7 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
   }
 
   protected fun checkBaseMessageDetailsInTread(
+    messagesCount: Int,
     fromAddress: String,
     datetimeInMilliseconds: Long
   ) {
@@ -267,10 +269,15 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
     onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
       .perform(
         scrollTo<ViewHolder>(
-          hasDescendant(
-            allOf(
-              withId(R.id.textViewDate),
-              withText(DateTimeUtil.formatSameDayTime(getTargetContext(), datetimeInMilliseconds))
+          allOf(
+            hasDescendant(
+              withId(R.id.imageButtonMoreOptions)
+            ),
+            hasDescendant(
+              allOf(
+                withId(R.id.textViewDate),
+                withText(DateTimeUtil.formatSameDayTime(getTargetContext(), datetimeInMilliseconds))
+              )
             )
           )
         )
@@ -279,8 +286,8 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
     //open headers details and check them
     onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
       .perform(
-        RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(
-          1,
+        RecyclerViewActions.actionOnItem<ViewHolder>(
+          hasDescendant(withId(R.id.iBShowDetails)),
           ClickOnViewInRecyclerViewItem(R.id.iBShowDetails)
         )
       )
@@ -316,6 +323,69 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
       onView(allOf(withId(R.id.rVMsgDetails), isDisplayed()))
         .perform(scrollToHolder(withMessageHeaderInfo(it)))
     }
+  }
+
+  protected fun checkCollapsedState(
+    position: Int,
+    hasPgp: Boolean,
+    hasAttachments: Boolean,
+    needToCollapseVisibleExpandedItem: Boolean = true
+  ) {
+    if (needToCollapseVisibleExpandedItem) {
+      collapseVisibleExpandedItem()
+    }
+
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .check(
+        matches(
+          hasItemAtPosition(
+            position = position,
+            matcher = hasDescendant(
+              allOf(
+                withId(R.id.viewHasAttachments),
+                withEffectiveVisibility(
+                  if (hasAttachments) {
+                    ViewMatchers.Visibility.VISIBLE
+                  } else {
+                    ViewMatchers.Visibility.GONE
+                  }
+                )
+              )
+            )
+          )
+        )
+      )
+
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .check(
+        matches(
+          hasItemAtPosition(
+            position = position,
+            matcher = hasDescendant(
+              allOf(
+                withId(R.id.viewHasPgp),
+                withEffectiveVisibility(
+                  if (hasPgp) {
+                    ViewMatchers.Visibility.VISIBLE
+                  } else {
+                    ViewMatchers.Visibility.GONE
+                  }
+                )
+              )
+            )
+          )
+        )
+      )
+  }
+
+  protected fun collapseVisibleExpandedItem() {
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .perform(
+        RecyclerViewActions.actionOnItem<ViewHolder>(
+          hasDescendant(withId(R.id.layoutHeader)),
+          ClickOnViewInRecyclerViewItem(R.id.layoutHeader)
+        )
+      )
   }
 
   companion object {

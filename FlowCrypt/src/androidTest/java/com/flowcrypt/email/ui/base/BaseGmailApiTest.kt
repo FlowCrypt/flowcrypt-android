@@ -290,6 +290,14 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
           attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
         ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -362,6 +370,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           MESSAGE_ID_THREAD_ONLY_STANDARD_2,
           MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
           MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
+          MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
@@ -668,6 +678,24 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           subject = "Re: $SUBJECT_EXISTING_STANDARD",
           includeBinaryAttachment = false,
           isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
+          subject = SUBJECT_EXISTING_ENCRYPTED,
+          isFullFormat = true,
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          subject = "Re: $SUBJECT_EXISTING_ENCRYPTED",
+          isFullFormat = true,
         ).toString()
       )
 

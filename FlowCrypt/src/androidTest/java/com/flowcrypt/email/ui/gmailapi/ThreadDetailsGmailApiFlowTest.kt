@@ -102,6 +102,7 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
+      messagesCount = 1,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_STANDARD
     )
@@ -117,6 +118,7 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkReplyButtons(isEncryptedMode = false)
+    checkCollapsedState(1, hasPgp = false, hasAttachments = true)
   }
 
   @Test
@@ -130,6 +132,7 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
+      messagesCount = 1,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_ENCRYPTED
     )
@@ -146,5 +149,40 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkReplyButtons(isEncryptedMode = true)
+    checkCollapsedState(1, hasPgp = true, hasAttachments = true)
+  }
+
+  @Test
+  fun testThreadDetailsWithFewEncryptedMessages() {
+    openThreadBasedOnPosition(0)
+    checkCorrectThreadDetails(
+      messagesCount = 2,
+      threadSubject = SUBJECT_EXISTING_ENCRYPTED,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
+    checkBaseMessageDetailsInTread(
+      messagesCount = 2,
+      fromAddress = "From",
+      datetimeInMilliseconds = DATE_EXISTING_ENCRYPTED
+    )
+    checkPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+    checkWebViewText(MESSAGE_EXISTING_ENCRYPTED)
+    checkAttachments(
+      listOf(
+        Pair(ATTACHMENT_NAME_1 + "." + Constants.PGP_FILE_EXT, -1),
+        Pair(ATTACHMENT_NAME_3 + "." + Constants.PGP_FILE_EXT, -1)
+      )
+    )
+    checkReplyButtons(isEncryptedMode = true)
+    checkCollapsedState(1, hasPgp = true, hasAttachments = true)
+    checkCollapsedState(
+      2, hasPgp = true, hasAttachments = true, needToCollapseVisibleExpandedItem = false
+    )
   }
 }
