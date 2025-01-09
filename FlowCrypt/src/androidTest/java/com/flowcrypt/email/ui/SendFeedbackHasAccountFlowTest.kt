@@ -71,7 +71,7 @@ class SendFeedbackHasAccountFlowTest : BaseFeedbackFragmentTest() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(getTargetContext()).gson
 
-        if (request.path?.startsWith("/backend/help/feedback") == true) {
+        if (request.path?.startsWith("/shared-tenant-fes/api/v1/account/feedback") == true) {
           return handlePostFeedbackRequest(gson)
         }
 
