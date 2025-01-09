@@ -267,7 +267,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
         ),
         genPathToGetAttachment(
-          messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
           attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
         ),
       ) -> {
@@ -281,9 +281,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path == genPathToGetAttachment(
-        MESSAGE_ID_EXISTING_ENCRYPTED,
-        ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+      request.method == "GET" && request.path in listOf(
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_EXISTING_ENCRYPTED,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -311,9 +317,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path == genPathToGetAttachment(
-        MESSAGE_ID_EXISTING_ENCRYPTED,
-        ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+      request.method == "GET" && request.path in listOf(
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_EXISTING_ENCRYPTED,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -348,7 +360,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           MESSAGE_ID_EXISTING_PGP_MIME,
           MESSAGE_ID_THREAD_ONLY_STANDARD_1,
           MESSAGE_ID_THREAD_ONLY_STANDARD_2,
-          MESSAGE_ID_THREAD_SINGLE_MESSAGE,
+          MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+          MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
@@ -498,12 +511,20 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
-      MESSAGE_ID_THREAD_SINGLE_MESSAGE -> baseResponse.setBody(
+      MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE -> baseResponse.setBody(
         genStandardMessage(
-          threadId = THREAD_ID_SINGLE_MESSAGE,
-          messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
-          subject = SUBJECT_SINGLE,
+          threadId = THREAD_ID_SINGLE_STANDARD_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+          subject = SUBJECT_SINGLE_STANDARD,
           includeBinaryAttachment = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          subject = SUBJECT_SINGLE_ENCRYPTED
         ).toString()
       )
 
@@ -612,12 +633,21 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         genPGPMimeMessage(isFullFormat = true)
       )
 
-      MESSAGE_ID_THREAD_SINGLE_MESSAGE -> baseResponse.setBody(
+      MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE -> baseResponse.setBody(
         genStandardMessage(
-          threadId = THREAD_ID_SINGLE_MESSAGE,
-          messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
-          subject = SUBJECT_SINGLE,
+          threadId = THREAD_ID_SINGLE_STANDARD_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+          subject = SUBJECT_SINGLE_STANDARD,
           includeBinaryAttachment = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          subject = SUBJECT_SINGLE_ENCRYPTED,
           isFullFormat = true
         ).toString()
       )
@@ -663,8 +693,12 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         genThreadWithNoAttachments()
       )
 
-      THREAD_ID_SINGLE_MESSAGE -> baseResponse.setBody(
-        genThreadWithSingleMessage()
+      THREAD_ID_SINGLE_STANDARD_MESSAGE -> baseResponse.setBody(
+        genThreadWithSingleStandardMessage()
+      )
+
+      THREAD_ID_SINGLE_ENCRYPTED_MESSAGE -> baseResponse.setBody(
+        genThreadWithSingleEncryptedMessage()
       )
 
       THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT -> baseResponse.setBody(
@@ -766,15 +800,28 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
       )
     }.toString()
 
-  private fun genThreadWithSingleMessage() = Thread().apply {
+  private fun genThreadWithSingleStandardMessage() = Thread().apply {
     factory = GsonFactory.getDefaultInstance()
-    id = THREAD_ID_SINGLE_MESSAGE
+    id = THREAD_ID_SINGLE_STANDARD_MESSAGE
     messages = listOf(
       genStandardMessage(
-        threadId = THREAD_ID_SINGLE_MESSAGE,
-        messageId = MESSAGE_ID_THREAD_SINGLE_MESSAGE,
-        subject = SUBJECT_SINGLE,
+        threadId = THREAD_ID_SINGLE_STANDARD_MESSAGE,
+        messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+        subject = SUBJECT_SINGLE_STANDARD,
         includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithSingleEncryptedMessage() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE
+    messages = listOf(
+      genEncryptedMessage(
+        threadId = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE,
+        messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+        subject = SUBJECT_SINGLE_ENCRYPTED,
         isFullFormat = true
       ),
     )
@@ -1396,8 +1443,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val THREAD_ID_NO_ATTACHMENTS = "200000e222d6c004"
     const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_1 = "5555555559993001"
     const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 = "5555555559993002"
-    const val THREAD_ID_SINGLE_MESSAGE = "200000e222d6c005"
-    const val MESSAGE_ID_THREAD_SINGLE_MESSAGE = "5555555559995001"
+    const val THREAD_ID_SINGLE_STANDARD_MESSAGE = "200000e222d6c005"
+    const val MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE = "5555555559995001"
     const val THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT = "200000e222d6c006"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1 = "5555555559996001"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2 = "5555555559996002"
@@ -1411,10 +1458,12 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1 = "5555555559998001"
     const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2 = "5555555559998002"
     const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 = "5555555559998003"
-
+    const val THREAD_ID_SINGLE_ENCRYPTED_MESSAGE = "200000e222d6c009"
+    const val MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE = "5555555559999001"
 
     const val SUBJECT_NO_ATTACHMENTS = "No attachments"
-    const val SUBJECT_SINGLE = "Single message"
+    const val SUBJECT_SINGLE_STANDARD = "Single standard message"
+    const val SUBJECT_SINGLE_ENCRYPTED = "Single encrypted message"
     const val SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT = "few messages in thread + 1 draft"
     const val SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS = "few messages in thread + few drafts"
     const val SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS = "one message in thread + few drafts"
@@ -1512,7 +1561,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         Thread().apply { id = THREAD_ID_ONLY_STANDARD },
         Thread().apply { id = THREAD_ID_ONLY_ENCRYPTED },
         Thread().apply { id = THREAD_ID_NO_ATTACHMENTS },
-        Thread().apply { id = THREAD_ID_SINGLE_MESSAGE },
+        Thread().apply { id = THREAD_ID_SINGLE_STANDARD_MESSAGE },
+        Thread().apply { id = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE },
         Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT },
         Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS },
         Thread().apply { id = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS },

@@ -5,13 +5,15 @@
 
 package com.flowcrypt.email.ui.gmailapi.base
 
+import android.text.format.DateUtils
 import android.text.format.Formatter
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollToHolder
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -19,7 +21,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.web.assertion.TagSoupDocumentParser
 import androidx.test.espresso.web.assertion.WebViewAssertions.webContent
 import androidx.test.espresso.web.matcher.DomMatchers.elementByXPath
 import androidx.test.espresso.web.sugar.Web.onWebView
@@ -29,6 +30,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withMessageHeaderInfo
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withPgpBadge
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextContentMatcher
@@ -36,14 +38,18 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withViewBackgroundT
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
+import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.base.BaseGmailApiTest
 import com.flowcrypt.email.ui.base.BaseGmailLabelsFlowTest.GmailApiLabelMatcher
+import com.flowcrypt.email.util.DateTimeUtil
+import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.`is`
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -154,7 +160,7 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
 
     for (label in labels) {
       onView(allOf(withId(R.id.recyclerViewLabels), isDisplayed()))
-        .perform(RecyclerViewActions.scrollToHolder(GmailApiLabelMatcher(label)))
+        .perform(scrollToHolder(GmailApiLabelMatcher(label)))
         .check(
           matches(
             hasDescendant(
@@ -188,27 +194,29 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
         .perform(
           scrollTo<ViewHolder>(
             allOf(
-              hasDescendant(
-                allOf(
-                  withId(R.id.textViewAttachmentName),
-                  withText(pair.first)
-                )
-              ),
-              hasDescendant(
-                allOf(
-                  withId(R.id.textViewAttSize),
-                  withText(Formatter.formatFileSize(getTargetContext(), pair.second))
-                )
-              ),
-              hasDescendant(withId(R.id.imageButtonPreviewAtt)),
-              hasDescendant(withId(R.id.imageButtonDownloadAtt)),
+              listOfNotNull(
+                hasDescendant(
+                  allOf(
+                    withId(R.id.textViewAttachmentName),
+                    withText(pair.first)
+                  )
+                ),
+                hasDescendant(
+                  allOf(
+                    withId(R.id.textViewAttSize),
+                    withText(Formatter.formatFileSize(getTargetContext(), pair.second))
+                  )
+                ).takeIf { pair.second > 0 },
+                hasDescendant(withId(R.id.imageButtonPreviewAtt)),
+                hasDescendant(withId(R.id.imageButtonDownloadAtt)),
+              )
             )
           )
         )
     }
   }
 
-  protected fun testPgpBadges(
+  protected fun checkPgpBadges(
     badgeCount: Int,
     vararg badgeTypes: PgpBadgeListAdapter.PgpBadge.Type
   ) {
@@ -218,28 +226,96 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
     for (badgeType in badgeTypes) {
       onView(allOf(withId(R.id.rVPgpBadges), isDisplayed()))
         .perform(
-          RecyclerViewActions.scrollToHolder(
+          scrollToHolder(
             withPgpBadge(PgpBadgeListAdapter.PgpBadge(badgeType))
           )
         )
     }
   }
 
-  protected fun checkWebViewText(html: String?) {
-    val document = TagSoupDocumentParser.newInstance().parse(html)
-    val bodyElements = document.getElementsByTagName("body")
-
-    val content = (0 until bodyElements.length)
-      .asSequence()
-      .map { bodyElements.item(it) }
-      .filter { it.textContent.isNotEmpty() }
-      .joinToString(separator = "\n") { it.textContent }
-      .trim()
-
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
+  protected fun checkWebViewText(content: String?) {
+    onWebView(allOf(withId(R.id.emailWebView), isDisplayed())).forceJavascriptEnabled()
+    onWebView(allOf(withId(R.id.emailWebView), isDisplayed()))
       .check(webContent(elementByXPath("/html/body", withTextContentMatcher(`is`(content)))))
-    //.check(webContent(withBody(withTextContentMatcher(`is`(content)))))
+  }
+
+  protected fun openThreadBasedOnPosition(position: Int) {
+    onView(allOf(withId(R.id.recyclerViewMsgs), isDisplayed())).perform(
+      RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(position, click())
+    )
+
+    //need to wait while the app loads the messages list and render the last one
+    waitForObjectWithResourceName("imageButtonReplyAll", TimeUnit.SECONDS.toMillis(10))
+  }
+
+  protected fun checkBaseMessageDetailsInTread(
+    fromAddress: String,
+    datetimeInMilliseconds: Long
+  ) {
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .perform(
+        scrollTo<ViewHolder>(
+          hasDescendant(
+            allOf(
+              withId(R.id.textViewSenderAddress),
+              withText(fromAddress)
+            )
+          )
+        )
+      )
+
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .perform(
+        scrollTo<ViewHolder>(
+          hasDescendant(
+            allOf(
+              withId(R.id.textViewDate),
+              withText(DateTimeUtil.formatSameDayTime(getTargetContext(), datetimeInMilliseconds))
+            )
+          )
+        )
+      )
+
+    //open headers details and check them
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .perform(
+        RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(
+          1,
+          ClickOnViewInRecyclerViewItem(R.id.iBShowDetails)
+        )
+      )
+
+    val messageHeadersList = listOf(
+      MessageHeadersListAdapter.Header(
+        name = getResString(R.string.from),
+        value = DEFAULT_FROM_RECIPIENT
+      ),
+      MessageHeadersListAdapter.Header(
+        name = getResString(R.string.reply_to),
+        value = DEFAULT_FROM_RECIPIENT
+      ),
+      MessageHeadersListAdapter.Header(
+        name = getResString(R.string.to),
+        value = EXISTING_MESSAGE_TO_RECIPIENT
+      ),
+      MessageHeadersListAdapter.Header(
+        name = getResString(R.string.cc),
+        value = EXISTING_MESSAGE_CC_RECIPIENT
+      ),
+      MessageHeadersListAdapter.Header(
+        name = getResString(R.string.date),
+        value = DateUtils.formatDateTime(
+          getTargetContext(),
+          datetimeInMilliseconds,
+          DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_SHOW_YEAR
+        )
+      )
+    )
+
+    messageHeadersList.forEach {
+      onView(allOf(withId(R.id.rVMsgDetails), isDisplayed()))
+        .perform(scrollToHolder(withMessageHeaderInfo(it)))
+    }
   }
 
   companion object {
