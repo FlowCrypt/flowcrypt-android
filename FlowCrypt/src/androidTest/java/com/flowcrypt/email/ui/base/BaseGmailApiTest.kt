@@ -295,6 +295,14 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
         ),
         genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
           messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
           attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
         ),
@@ -372,6 +380,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
           MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
           MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+          MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
@@ -597,6 +607,23 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+          subject = SUBJECT_MIXED_MESSAGES,
+          includeAttachments = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_2 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          subject = "Re: $SUBJECT_MIXED_MESSAGES"
+        ).toString()
+      )
+
       MESSAGE_ID_EXISTING_STANDARD -> baseResponse.setBody(
         genStandardMessage(
           threadId = THREAD_ID_EXISTING_STANDARD,
@@ -699,6 +726,25 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+          subject = SUBJECT_MIXED_MESSAGES,
+          includeAttachments = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_2 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          subject = "Re: $SUBJECT_MIXED_MESSAGES",
+          isFullFormat = true
+        ).toString()
+      )
+
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
@@ -739,6 +785,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
 
       THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS -> baseResponse.setBody(
         genThreadWithOneMessageFewDrafts()
+      )
+
+      THREAD_ID_MIXED_MESSAGES -> baseResponse.setBody(
+        genThreadWithMixedMessages()
       )
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -947,6 +997,26 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         includeBinaryAttachment = false,
         isFullFormat = true,
         labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithMixedMessages() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_MIXED_MESSAGES
+    messages = listOf(
+      genStandardMessage(
+        threadId = THREAD_ID_MIXED_MESSAGES,
+        messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+        subject = SUBJECT_MIXED_MESSAGES,
+        includeAttachments = false,
+        isFullFormat = true
+      ),
+      genEncryptedMessage(
+        threadId = THREAD_ID_MIXED_MESSAGES,
+        messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+        subject = "Re: $SUBJECT_MIXED_MESSAGES",
+        isFullFormat = true
       ),
     )
   }.toString()
@@ -1488,6 +1558,9 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 = "5555555559998003"
     const val THREAD_ID_SINGLE_ENCRYPTED_MESSAGE = "200000e222d6c009"
     const val MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE = "5555555559999001"
+    const val THREAD_ID_MIXED_MESSAGES = "200000e222d6c010"
+    const val MESSAGE_ID_THREAD_MIXED_MESSAGES_1 = "5555555559910001"
+    const val MESSAGE_ID_THREAD_MIXED_MESSAGES_2 = "5555555559910002"
 
     const val SUBJECT_NO_ATTACHMENTS = "No attachments"
     const val SUBJECT_SINGLE_STANDARD = "Single standard message"
@@ -1495,6 +1568,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT = "few messages in thread + 1 draft"
     const val SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS = "few messages in thread + few drafts"
     const val SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS = "one message in thread + few drafts"
+    const val SUBJECT_MIXED_MESSAGES = "Mixed messages"
 
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111111"
@@ -1594,9 +1668,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT },
         Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS },
         Thread().apply { id = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS },
-        /*com.google.api.services.gmail.model.Thread().apply {
-          id = THREAD_ID_EXISTING_ONLY_ENCRYPTED
-        },*/
+        Thread().apply { id = THREAD_ID_MIXED_MESSAGES },
       )
     }
 

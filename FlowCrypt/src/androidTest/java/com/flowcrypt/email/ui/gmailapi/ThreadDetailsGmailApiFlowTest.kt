@@ -93,7 +93,7 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
 
   @Test
   fun testThreadDetailsWithSingleStandardMessage() {
-    openThreadBasedOnPosition(4)
+    openThreadBasedOnPosition(5)
     checkCorrectThreadDetails(
       messagesCount = 1,
       threadSubject = SUBJECT_SINGLE_STANDARD,
@@ -183,6 +183,79 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
     checkCollapsedState(1, hasPgp = true, hasAttachments = true)
     checkCollapsedState(
       2, hasPgp = true, hasAttachments = true, needToCollapseVisibleExpandedItem = false
+    )
+  }
+
+  @Test
+  fun testThreadDetailsWithFewStandardMessages() {
+    openThreadBasedOnPosition(3)
+    checkCorrectThreadDetails(
+      messagesCount = 2,
+      threadSubject = SUBJECT_EXISTING_STANDARD,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
+    checkBaseMessageDetailsInTread(
+      messagesCount = 2,
+      fromAddress = "From",
+      datetimeInMilliseconds = DATE_EXISTING_STANDARD
+    )
+    checkPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED
+    )
+    checkWebViewText(MESSAGE_EXISTING_STANDARD)
+    checkAttachments(
+      listOf(
+        Pair(ATTACHMENT_NAME_1, attachmentsDataCache[0].size.toLong())
+      )
+    )
+    checkReplyButtons(isEncryptedMode = false)
+    checkCollapsedState(1, hasPgp = false, hasAttachments = true)
+    checkCollapsedState(
+      2,
+      hasPgp = false,
+      hasAttachments = true,
+      needToCollapseVisibleExpandedItem = false
+    )
+  }
+
+  @Test
+  fun testThreadDetailsWithMixedMessages() {
+    openThreadBasedOnPosition(2)
+    checkCorrectThreadDetails(
+      messagesCount = 2,
+      threadSubject = SUBJECT_MIXED_MESSAGES,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
+    checkBaseMessageDetailsInTread(
+      messagesCount = 2,
+      fromAddress = "From",
+      datetimeInMilliseconds = DATE_EXISTING_ENCRYPTED
+    )
+    checkPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+    checkWebViewText(MESSAGE_EXISTING_ENCRYPTED)
+    checkAttachments(
+      listOf(
+        Pair(ATTACHMENT_NAME_1 + "." + Constants.PGP_FILE_EXT, -1),
+        Pair(ATTACHMENT_NAME_3 + "." + Constants.PGP_FILE_EXT, -1)
+      )
+    )
+    checkReplyButtons(isEncryptedMode = true)
+    checkCollapsedState(1, hasPgp = false, hasAttachments = false)
+    checkCollapsedState(
+      2,
+      hasPgp = true,
+      hasAttachments = true,
+      needToCollapseVisibleExpandedItem = false
     )
   }
 }
