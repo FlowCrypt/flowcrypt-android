@@ -258,4 +258,36 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       needToCollapseVisibleExpandedItem = false
     )
   }
+
+  @Test
+  fun testThreadDetailsWithMessagesWithoutAttachments() {
+    openThreadBasedOnPosition(4)
+    checkCorrectThreadDetails(
+      messagesCount = 2,
+      threadSubject = SUBJECT_NO_ATTACHMENTS,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
+    checkBaseMessageDetailsInTread(
+      messagesCount = 2,
+      fromAddress = "From",
+      datetimeInMilliseconds = DATE_EXISTING_STANDARD
+    )
+    checkPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED
+    )
+    checkWebViewText(MESSAGE_EXISTING_STANDARD)
+    checkAttachments(listOf())
+    checkReplyButtons(isEncryptedMode = false)
+    checkCollapsedState(1, hasPgp = false, hasAttachments = false)
+    checkCollapsedState(
+      2,
+      hasPgp = false,
+      hasAttachments = false,
+      needToCollapseVisibleExpandedItem = false
+    )
+  }
 }

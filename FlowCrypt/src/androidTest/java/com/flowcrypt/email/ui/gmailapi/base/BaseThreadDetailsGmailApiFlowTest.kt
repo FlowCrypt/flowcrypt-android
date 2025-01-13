@@ -182,7 +182,7 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
 
   protected fun checkAttachments(pairs: List<Pair<String, Long>>) {
     if (pairs.isEmpty()) {
-      onView(allOf(withId(R.id.rVAttachments), isDisplayed()))
+      onView(allOf(withId(R.id.rVAttachments)))
         .check(matches(withEmptyRecyclerView()))
       return
     }

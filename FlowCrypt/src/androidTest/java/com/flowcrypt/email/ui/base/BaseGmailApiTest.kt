@@ -382,6 +382,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
           MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
           MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
+          MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
@@ -741,6 +743,16 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           threadId = THREAD_ID_MIXED_MESSAGES,
           messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
           subject = "Re: $SUBJECT_MIXED_MESSAGES",
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          subject = "Re: $SUBJECT_NO_ATTACHMENTS",
+          includeAttachments = false,
           isFullFormat = true
         ).toString()
       )
