@@ -7,12 +7,17 @@ package com.flowcrypt.email.ui.gmailapi
 
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.Constants
@@ -29,12 +34,14 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.gmailapi.base.BaseThreadDetailsGmailApiFlowTest
+import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -337,5 +344,66 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
     checkWebViewText(MESSAGE_EXISTING_STANDARD)
     checkAttachments(listOf())
     checkReplyButtons(isVisible = false)
+  }
+
+  @Test
+  fun testDeleteDraftInThread() {
+    openThreadBasedOnPosition(6)
+    checkCorrectThreadDetails(
+      messagesCount = 3,
+      threadSubject = SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
+
+    //check that a draft is displayed
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .perform(
+        scrollTo<ViewHolder>(
+          allOf(
+            hasDescendant(
+              allOf(
+                withId(R.id.imageButtonEditDraft),
+                withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+              )
+            ),
+            hasDescendant(
+              allOf(
+                withId(R.id.imageButtonDeleteDraft),
+                withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+              )
+            )
+          )
+        )
+      )
+    checkWebViewText(MESSAGE_EXISTING_STANDARD)
+
+    //check that reply buttons are hidden
+    checkReplyButtons(isVisible = false)
+
+    //delete the draft
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .perform(
+        RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(
+          3,
+          ClickOnViewInRecyclerViewItem(R.id.imageButtonDeleteDraft)
+        )
+      )
+
+    onView(withText(getResString(R.string.delete)))
+      .inRoot(isDialog())
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    //check that the draft delete from the messages list
+    Thread.sleep(TimeUnit.SECONDS.toMillis(2))
+    checkCorrectThreadDetails(
+      messagesCount = 2,
+      threadSubject = SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
   }
 }

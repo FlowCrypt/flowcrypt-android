@@ -29,6 +29,7 @@ import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.gmail.model.BatchDeleteMessagesRequest
 import com.google.api.services.gmail.model.BatchModifyMessagesRequest
 import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.Label
@@ -392,6 +393,24 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+        } else {
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        }
+      }
+
+      request.method == "POST" && request.path == "/gmail/v1/users/me/messages/batchDelete" -> {
+        val source = GzipSource(request.body)
+        val batchDeleteMessagesRequest = GsonFactory.getDefaultInstance().fromInputStream(
+          source.buffer().inputStream(),
+          BatchDeleteMessagesRequest::class.java
+        )
+
+        val handledIds = arrayOf(
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+        )
+
+        if (handledIds.any { batchDeleteMessagesRequest.ids.contains(it) }) {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         } else {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
