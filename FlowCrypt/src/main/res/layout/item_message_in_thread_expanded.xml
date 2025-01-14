@@ -76,7 +76,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/default_margin_content_small"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/reply_all"
+            android:contentDescription="@string/delete_draft"
             android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@+id/imageButtonEditDraft"
             app:layout_constraintTop_toTopOf="parent"

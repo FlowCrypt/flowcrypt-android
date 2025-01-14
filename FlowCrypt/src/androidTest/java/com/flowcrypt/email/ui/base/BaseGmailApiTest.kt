@@ -30,7 +30,9 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.BatchModifyMessagesRequest
+import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.Label
+import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
@@ -384,6 +386,9 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
           MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
           MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1,
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2,
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
@@ -470,6 +475,24 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", "multipart/mixed; boundary=$boundary")
           .setBody(content)
+      }
+
+      request.method == "GET" && request.path == "/gmail/v1/users/me/drafts?fields=drafts/id,drafts/message/id&q=rfc822msgid:$MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setHeader("Content-Type", Json.MEDIA_TYPE)
+          .setBody(
+            ListDraftsResponse().apply {
+              factory = GsonFactory.getDefaultInstance()
+              drafts = listOf(
+                Draft().apply {
+                  id = DRAFT_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3
+                  message = com.google.api.services.gmail.model.Message().apply {
+                    id = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3
+                  }
+                }
+              )
+            }.toString()
+          )
       }
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -564,7 +587,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
             MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> listOf(JavaEmailConstants.FOLDER_DRAFT)
             else -> listOf(JavaEmailConstants.FOLDER_INBOX)
           },
-          includeBinaryAttachment = false
+          includeAttachments = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> false
+            else -> true
+          },
+          includeBinaryAttachment = false,
+          from = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> addAccountToDatabaseRule.account.email
+            else -> DEFAULT_FROM_RECIPIENT
+          }
         ).toString()
       )
 
@@ -757,6 +788,18 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+          messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+          subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT",
+          includeAttachments = false,
+          isFullFormat = true,
+          labels = listOf(JavaEmailConstants.FOLDER_DRAFT),
+          from = addAccountToDatabaseRule.account.email
+        ).toString()
+      )
+
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
@@ -939,9 +982,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         threadId = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT,
         messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
         subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT",
-        includeBinaryAttachment = false,
+        includeAttachments = false,
         isFullFormat = true,
-        labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT),
+        from = addAccountToDatabaseRule.account.email
       ),
     )
   }.toString()
@@ -1038,6 +1082,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     messageId: String,
     labels: List<String> = listOf(JavaEmailConstants.FOLDER_INBOX),
     subject: String = SUBJECT_EXISTING_STANDARD,
+    from: String = DEFAULT_FROM_RECIPIENT,
     isFullFormat: Boolean = false,
     includeAttachments: Boolean = true,
     includeBinaryAttachment: Boolean = true
@@ -1054,7 +1099,13 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         partId = ""
         mimeType = "multipart/mixed"
         filename = ""
-        headers = prepareMessageHeaders(subject, DATE_EXISTING_STANDARD, boundary)
+        headers = prepareMessageHeaders(
+          subject = subject,
+          dateInMilliseconds = DATE_EXISTING_STANDARD,
+          boundary = boundary,
+          messageId = messageId,
+          from = from
+        )
         body = MessagePartBody().apply {
           setSize(0)
         }
@@ -1202,8 +1253,12 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         partId = ""
         mimeType = "multipart/mixed"
         filename = ""
-        headers =
-          prepareMessageHeaders(subject, DATE_EXISTING_ENCRYPTED, boundary)
+        headers = prepareMessageHeaders(
+          subject = subject,
+          dateInMilliseconds = DATE_EXISTING_ENCRYPTED,
+          boundary = boundary,
+          messageId = messageId
+        )
         body = MessagePartBody().apply {
           setSize(0)
         }
@@ -1364,7 +1419,11 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
   private fun prepareMessageHeaders(
     subject: String,
     dateInMilliseconds: Long,
-    boundary: String
+    boundary: String,
+    from: String = DEFAULT_FROM_RECIPIENT,
+    to: String = EXISTING_MESSAGE_TO_RECIPIENT,
+    cc: String = EXISTING_MESSAGE_CC_RECIPIENT,
+    messageId: String = EmailUtil.generateContentId()
   ) = listOf(
     MessagePartHeader().apply {
       name = "MIME-Version"
@@ -1376,7 +1435,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     },
     MessagePartHeader().apply {
       name = "Message-ID"
-      value = EmailUtil.generateContentId()
+      value = messageId
     },
     MessagePartHeader().apply {
       name = "Subject"
@@ -1384,15 +1443,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     },
     MessagePartHeader().apply {
       name = "From"
-      value = DEFAULT_FROM_RECIPIENT
+      value = from
     },
     MessagePartHeader().apply {
       name = "To"
-      value = EXISTING_MESSAGE_TO_RECIPIENT
+      value = to
     },
     MessagePartHeader().apply {
       name = "Cc"
-      value = EXISTING_MESSAGE_CC_RECIPIENT
+      value = cc
     },
     MessagePartHeader().apply {
       name = "Content-Type"
@@ -1414,9 +1473,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         mimeType = "multipart/encrypted"
         filename = ""
         headers = prepareMessageHeaders(
-          SUBJECT_EXISTING_PGP_MIME,
-          DATE_EXISTING_PGP_MIME,
-          boundary
+          subject = SUBJECT_EXISTING_PGP_MIME,
+          dateInMilliseconds = DATE_EXISTING_PGP_MIME,
+          boundary = boundary,
+          messageId = MESSAGE_ID_EXISTING_PGP_MIME
         ).filterNot {
           it.name == "Content-Type"
         }.toMutableList().apply {
@@ -1559,6 +1619,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1 = "5555555559996001"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2 = "5555555559996002"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 = "5555555559996003"
+    const val DRAFT_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 = "r565555555559996003"
     const val THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS = "200000e222d6c007"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_1 = "5555555559997001"
     const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_2 = "5555555559997002"

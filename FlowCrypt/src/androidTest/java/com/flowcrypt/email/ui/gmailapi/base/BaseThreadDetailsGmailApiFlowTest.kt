@@ -16,6 +16,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
 import androidx.test.espresso.contrib.RecyclerViewActions.scrollToHolder
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -50,6 +51,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.not
 import java.util.concurrent.TimeUnit
 
 /**
@@ -82,7 +84,48 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
     }
   )
 
-  protected fun checkReplyButtons(isEncryptedMode: Boolean) {
+  protected fun checkReplyButtons(isVisible: Boolean = true, isEncryptedMode: Boolean = true) {
+    if (!isVisible) {
+      onView(
+        allOf(
+          withId(R.id.replyButton),
+          withParent(
+            allOf(
+              withId(R.id.layoutReplyButtons),
+              withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+              hasSibling(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+            )
+          )
+        )
+      ).check(matches(not(isDisplayed())))
+      onView(
+        allOf(
+          withId(R.id.replyAllButton),
+          withParent(
+            allOf(
+              withId(R.id.layoutReplyButtons),
+              withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+              hasSibling(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+            )
+          )
+        )
+      ).check(matches(not(isDisplayed())))
+      onView(
+        allOf(
+          withId(R.id.forwardButton),
+          withParent(
+            allOf(
+              withId(R.id.layoutReplyButtons),
+              withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+              hasSibling(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+            )
+          )
+        )
+      ).check(matches(not(isDisplayed())))
+
+      return
+    }
+
     val tintColor = if (isEncryptedMode) {
       R.color.colorPrimary
     } else {
@@ -250,9 +293,9 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
   }
 
   protected fun checkBaseMessageDetailsInTread(
-    messagesCount: Int,
     fromAddress: String,
-    datetimeInMilliseconds: Long
+    datetimeInMilliseconds: Long,
+    headersMapTransformation: (Map<String, String>) -> Map<String, String> = { it }
   ) {
     onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
       .perform(
@@ -292,32 +335,19 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
         )
       )
 
-    val messageHeadersList = listOf(
-      MessageHeadersListAdapter.Header(
-        name = getResString(R.string.from),
-        value = DEFAULT_FROM_RECIPIENT
-      ),
-      MessageHeadersListAdapter.Header(
-        name = getResString(R.string.reply_to),
-        value = DEFAULT_FROM_RECIPIENT
-      ),
-      MessageHeadersListAdapter.Header(
-        name = getResString(R.string.to),
-        value = EXISTING_MESSAGE_TO_RECIPIENT
-      ),
-      MessageHeadersListAdapter.Header(
-        name = getResString(R.string.cc),
-        value = EXISTING_MESSAGE_CC_RECIPIENT
-      ),
-      MessageHeadersListAdapter.Header(
-        name = getResString(R.string.date),
-        value = DateUtils.formatDateTime(
+    val messageHeadersList = headersMapTransformation.invoke(
+      mapOf(
+        getResString(R.string.from) to DEFAULT_FROM_RECIPIENT,
+        getResString(R.string.reply_to) to DEFAULT_FROM_RECIPIENT,
+        getResString(R.string.to) to EXISTING_MESSAGE_TO_RECIPIENT,
+        getResString(R.string.cc) to EXISTING_MESSAGE_CC_RECIPIENT,
+        getResString(R.string.date) to DateUtils.formatDateTime(
           getTargetContext(),
           datetimeInMilliseconds,
           DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_SHOW_YEAR
         )
       )
-    )
+    ).map { MessageHeadersListAdapter.Header(name = it.key, value = it.value) }
 
     messageHeadersList.forEach {
       onView(allOf(withId(R.id.rVMsgDetails), isDisplayed()))

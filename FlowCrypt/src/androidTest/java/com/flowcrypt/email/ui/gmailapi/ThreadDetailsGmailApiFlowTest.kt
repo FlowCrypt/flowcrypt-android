@@ -5,9 +5,18 @@
 
 package com.flowcrypt.email.ui.gmailapi
 
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.asInternetAddress
@@ -20,6 +29,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.gmailapi.base.BaseThreadDetailsGmailApiFlowTest
+import org.hamcrest.Matchers.allOf
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -102,7 +112,6 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
-      messagesCount = 1,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_STANDARD
     )
@@ -132,7 +141,6 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
-      messagesCount = 1,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_ENCRYPTED
     )
@@ -163,7 +171,6 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
-      messagesCount = 2,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_ENCRYPTED
     )
@@ -197,7 +204,6 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
-      messagesCount = 2,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_STANDARD
     )
@@ -233,7 +239,6 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
-      messagesCount = 2,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_ENCRYPTED
     )
@@ -270,7 +275,6 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
     checkBaseMessageDetailsInTread(
-      messagesCount = 2,
       fromAddress = "From",
       datetimeInMilliseconds = DATE_EXISTING_STANDARD
     )
@@ -289,5 +293,57 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       hasAttachments = false,
       needToCollapseVisibleExpandedItem = false
     )
+  }
+
+  @Test
+  fun testThreadDetailsFewMessagesAndSingleDraft() {
+    openThreadBasedOnPosition(6)
+    checkCorrectThreadDetails(
+      messagesCount = 3,
+      threadSubject = SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
+
+    checkBaseMessageDetailsInTread(
+      fromAddress = "me (Draft)",
+      datetimeInMilliseconds = DATE_EXISTING_STANDARD
+    ) {
+      it.toMutableMap().apply {
+        put(getResString(R.string.from), addAccountToDatabaseRule.account.email)
+        put(getResString(R.string.reply_to), addAccountToDatabaseRule.account.email)
+        put(getResString(R.string.to), addAccountToDatabaseRule.account.email)
+      }
+    }
+
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+      .perform(
+        scrollTo<ViewHolder>(
+          allOf(
+            hasDescendant(
+              allOf(
+                withId(R.id.imageButtonEditDraft),
+                withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+              )
+            ),
+            hasDescendant(
+              allOf(
+                withId(R.id.imageButtonDeleteDraft),
+                withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+              )
+            )
+          )
+        )
+      )
+
+    checkPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED
+    )
+    checkWebViewText(MESSAGE_EXISTING_STANDARD)
+    checkAttachments(listOf())
+    checkReplyButtons(isVisible = false)
   }
 }
