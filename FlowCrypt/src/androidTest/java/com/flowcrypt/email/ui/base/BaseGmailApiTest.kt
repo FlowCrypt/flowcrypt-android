@@ -1096,7 +1096,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     )
   }.toString()
 
-  private fun genStandardMessage(
+  protected fun genStandardMessage(
     threadId: String,
     messageId: String,
     labels: List<String> = listOf(JavaEmailConstants.FOLDER_INBOX),
