@@ -52,6 +52,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
+import org.junit.Before
 import java.util.concurrent.TimeUnit
 
 /**
@@ -83,6 +84,12 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
       )
     }
   )
+
+  @Before
+  fun waitForThreadsList() {
+    //need to wait while the app loads the thread list
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(20))
+  }
 
   protected fun checkReplyButtons(isVisible: Boolean = true, isEncryptedMode: Boolean = true) {
     if (!isVisible) {

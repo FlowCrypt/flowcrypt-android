@@ -30,13 +30,11 @@ import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.gmailapi.base.BaseThreadDetailsGmailApiFlowTest
 import org.hamcrest.Matchers.allOf
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -94,12 +92,6 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
     .around(customLabelsRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
-
-  @Before
-  fun waitForThreadsList() {
-    //need to wait while the app loads the thread list
-    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(20))
-  }
 
   @Test
   fun testThreadDetailsWithSingleStandardMessage() {
