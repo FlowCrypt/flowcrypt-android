@@ -78,7 +78,10 @@ class ThreadDetailsAttachmentsActionsGmailApiFlowTest : BaseThreadDetailsGmailAp
         )
       )
 
-    waitForObjectWithText(getResString(R.string.warning_don_not_have_content_app))
+    waitForObjectWithText(
+      getResString(R.string.warning_don_not_have_content_app),
+      TimeUnit.SECONDS.toMillis(10)
+    )
     isDialogWithTextDisplayed(decorView, getResString(R.string.warning_don_not_have_content_app))
   }
 
