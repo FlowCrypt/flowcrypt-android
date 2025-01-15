@@ -123,7 +123,7 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
     //test thread with a few messages in thread + 1 draft
     checkThreadRowDetails(
       subject = SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT,
-      senderPattern = "From, Draft (3)",
+      senderPattern = "From, me, Draft (3)",
       hasAttachments = true,
       hasPgp = false
     )
