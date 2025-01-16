@@ -67,7 +67,7 @@ class ComposeScreenReplyWithGmailApiSignatureFlowTest :
   @Test
   fun testAddingSignatureAfterStart() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
