@@ -88,7 +88,7 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
   @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on the encrypted message
     onView(withId(R.id.recyclerViewMsgs))

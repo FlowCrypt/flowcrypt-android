@@ -498,9 +498,7 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
       return
     }
 
-    if (outgoingMessageConfiguration.timeoutBeforeMovingToComposeInMilliseconds > 0) {
-      Thread.sleep(outgoingMessageConfiguration.timeoutBeforeMovingToComposeInMilliseconds)
-    }
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //open the compose screen
     onView(withId(R.id.floatActionButtonCompose))
