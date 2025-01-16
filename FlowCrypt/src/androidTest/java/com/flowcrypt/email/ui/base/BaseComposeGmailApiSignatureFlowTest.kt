@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.base
 
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
@@ -25,7 +26,7 @@ import java.net.HttpURLConnection
 /**
  * @author Denys Bondarenko
  */
-abstract class BaseComposeGmailApiSignatureFlowTest() :
+abstract class BaseComposeGmailApiSignatureFlowTest :
   BaseComposeGmailFlow(
     accountEntity = BASE_ACCOUNT_ENTITY.copy(useAliasSignatures = true)
   ) {
@@ -78,8 +79,10 @@ abstract class BaseComposeGmailApiSignatureFlowTest() :
       .perform(scrollTo())
       .check(matches(withText("\n\n$SIGNATURE_FOR_MAIN")))
 
+    Espresso.closeSoftKeyboard()
+
     onView(withId(R.id.imageButtonAliases))
-      .perform(click())
+      .perform(scrollTo(), click())
 
     onView(withText(ALIAS_EMAIL))
       .check(matches(isDisplayed()))
