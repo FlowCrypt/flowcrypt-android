@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
@@ -138,27 +139,26 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
   protected open fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
     return when {
       request.path?.startsWith("/attester/pub", ignoreCase = true) == true -> {
-        val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+        val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()?.lowercase()
+        val mapOfPublicKeysBasedOnRecipient = mapOf(
+          requireNotNull(DEFAULT_FROM_RECIPIENT.asInternetAddress()?.address)
+              to defaultFromPgpKeyDetails.publicKey,
+          requireNotNull(DEFAULT_TO_RECIPIENT.asInternetAddress()?.address)
+              to defaultToPgpKeyDetails.publicKey,
+          requireNotNull(DEFAULT_CC_RECIPIENT.asInternetAddress()?.address)
+              to defaultCcPgpKeyDetails.publicKey,
+          requireNotNull(DEFAULT_BCC_RECIPIENT.asInternetAddress()?.address)
+              to defaultBccPgpKeyDetails.publicKey,
+          requireNotNull(EXISTING_MESSAGE_CC_RECIPIENT.asInternetAddress()?.address)
+              to existingCcPgpKeyDetails.publicKey,
+        )
 
         return when {
-          lastSegment?.lowercase() in arrayOf(
-            DEFAULT_FROM_RECIPIENT,
-            DEFAULT_TO_RECIPIENT,
-            DEFAULT_CC_RECIPIENT,
-            DEFAULT_BCC_RECIPIENT,
-            EXISTING_MESSAGE_CC_RECIPIENT,
-          ) -> {
+          lastSegment in mapOfPublicKeysBasedOnRecipient.keys -> {
             MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
               .setBody(
-                when (lastSegment?.lowercase()) {
-                  DEFAULT_FROM_RECIPIENT -> defaultFromPgpKeyDetails.publicKey
-                  DEFAULT_TO_RECIPIENT -> defaultToPgpKeyDetails.publicKey
-                  DEFAULT_CC_RECIPIENT -> defaultCcPgpKeyDetails.publicKey
-                  DEFAULT_BCC_RECIPIENT -> defaultBccPgpKeyDetails.publicKey
-                  EXISTING_MESSAGE_CC_RECIPIENT -> existingCcPgpKeyDetails.publicKey
-                  else -> ""
-                }
+                mapOfPublicKeysBasedOnRecipient.getOrDefault(lastSegment, "")
               )
           }
 
