@@ -37,6 +37,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -76,7 +77,7 @@ class SearchMessagesGmailApiFlowTest : BaseGmailApiTest() {
   @Test
   fun testSearchMessages() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
@@ -86,7 +87,7 @@ class SearchMessagesGmailApiFlowTest : BaseGmailApiTest() {
       .perform(pressKey(KeyEvent.KEYCODE_ENTER))
 
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
