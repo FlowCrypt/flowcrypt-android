@@ -89,6 +89,8 @@ class SearchMessagesGmailApiFlowTest : BaseGmailApiTest() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
+    onView(withId(com.google.android.material.R.id.search_close_btn)).perform(click())
+
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
       .perform(
