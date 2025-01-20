@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -87,6 +87,7 @@ import org.pgpainless.key.info.KeyRingInfo
 import java.io.File
 import java.net.HttpURLConnection
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -117,7 +118,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testEmptyRecipient() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.recyclerViewChipsTo))
       .check(matches(isDisplayed()))
@@ -135,7 +140,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testEmptyEmailSubject() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
@@ -208,7 +216,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSwitchBetweenEncryptionTypes() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     val messageEncryptionType = defaultMsgEncryptionType
 
@@ -274,7 +285,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testAddingAtts() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
@@ -320,7 +334,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testDeletingAtts() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
@@ -331,9 +348,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     for (att in atts) {
       addAttAndCheck(att)
     }
-
-    //Need to wait while the layout will be updated. Some emulators work fast and fail this place
-    Thread.sleep(500)
 
     for (att in atts) {
       deleteAtt(att)
@@ -515,7 +529,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSharePubKeySingle() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
@@ -525,6 +542,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val att = EmailUtil.genAttInfoFromPubKey(
       addPrivateKeyToDatabaseRule.pgpKeyRingDetails,
       addPrivateKeyToDatabaseRule.accountEntity.email
+    )
+
+    waitForObjectWithText(
+      requireNotNull(att?.name),
+      TimeUnit.SECONDS.toMillis(10)
     )
 
     onView(withText(att?.name))
@@ -577,7 +599,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     )
 
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
@@ -585,6 +610,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .perform(click())
 
     val att = EmailUtil.genAttInfoFromPubKey(keyDetails, addAccountToDatabaseRule.account.email)
+    waitForObjectWithText(
+      requireNotNull(att?.name),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withText(att?.name))
       .check(matches(isDisplayed()))
