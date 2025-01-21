@@ -9,6 +9,7 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
@@ -304,18 +305,12 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testMaxTotalAttachmentSize() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
-
-    onView(withId(R.id.editTextEmailAddress))
-      .perform(
-        clearText(),
-        pressImeActionButton()
-      )
+    Espresso.closeSoftKeyboard()
 
     val fileWithBiggerSize = TestGeneralUtil.createFileWithGivenSize(
       Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule
     )
-    addAttachment(fileWithBiggerSize)
+    addAttachment(fileWithBiggerSize, 0)
 
     val sizeWarningMsg = getResString(
       R.string.template_warning_max_total_attachments_size,
@@ -864,8 +859,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(doesNotExist())
   }
 
-  private fun addAttAndCheck(att: File) {
-    addAttachment(att)
+  private fun addAttAndCheck(
+    att: File,
+    waitingTimeoutInMilliseconds: Long = TimeUnit.SECONDS.toMillis(10)
+  ) {
+    addAttachment(att, waitingTimeoutInMilliseconds)
     onView(withText(att.name))
       .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
   }

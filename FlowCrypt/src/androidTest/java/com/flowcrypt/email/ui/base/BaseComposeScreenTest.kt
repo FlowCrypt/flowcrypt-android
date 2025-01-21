@@ -133,7 +133,10 @@ abstract class BaseComposeScreenTest : BaseTest() {
       )
   }
 
-  protected fun addAttachment(att: File) {
+  protected fun addAttachment(
+    att: File,
+    waitingTimeoutInMilliseconds: Long = TimeUnit.SECONDS.toMillis(10)
+  ) {
     val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
     intending(
       allOf(
@@ -144,10 +147,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
     onView(withId(R.id.menuActionAttachFile))
       .check(matches(isDisplayed()))
       .perform(click())
-    waitForObjectWithText(
-      att.name,
-      TimeUnit.SECONDS.toMillis(10)
-    )
+    waitForObjectWithText(att.name, waitingTimeoutInMilliseconds)
   }
 
   companion object{
