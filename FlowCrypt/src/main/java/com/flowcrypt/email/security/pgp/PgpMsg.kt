@@ -58,7 +58,6 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.decryption_verification.SignatureVerification
@@ -1234,9 +1233,10 @@ object PgpMsg {
           <!DOCTYPE html>
           <html>
           <head>
-              <meta name="viewport" content="width=device-width"/>
+              <meta name="viewport" content="width=device-width">
               <style>
                 body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
+                blockquote { border-left: 1px solid #CCCCCC; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px; }
                 body img { display: inline !important; height: auto !important; max-width: 95% !important; }
                 body pre { white-space: pre-wrap !important; }
                 body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
