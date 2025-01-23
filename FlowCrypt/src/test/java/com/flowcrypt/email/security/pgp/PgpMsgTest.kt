@@ -1,7 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *     Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -565,7 +564,7 @@ class PgpMsgTest {
     val head = parts[0]
     assertTrue(head.contains("<!DOCTYPE html>"))
     assertTrue(head.contains("<style>"))
-    assertTrue(head.contains("<meta name=\"viewport\" content=\"width=device-width\"/>"))
+    assertTrue(head.contains("<meta name=\"viewport\" content=\"width=device-width\">"))
     val foot = parts[2]
     assertTrue(foot.contains("</html>"))
     val body = parts[1]
