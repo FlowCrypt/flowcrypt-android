@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.workmanager.sync
@@ -12,20 +12,16 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.gmail.GmailHistoryHandler
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.hasPgp
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.GmailAPIException
-import com.google.api.services.gmail.model.History
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.FetchProfile
 import jakarta.mail.Folder
 import jakarta.mail.Store
 import jakarta.mail.UIDFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.math.BigInteger
 import java.net.HttpURLConnection
 
@@ -114,7 +110,7 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, accountEntity)
     val inboxLocalFolder = foldersManager.findInboxFolder() ?: return@withContext
     val newestMsg =
-      roomDatabase.msgDao().getNewestMsg(account = accountEntity.email, inboxLocalFolder.fullName)
+      roomDatabase.msgDao().getNewestMsgOrThread(accountEntity, inboxLocalFolder.fullName)
     val labelEntity = roomDatabase.labelDao()
       .getLabelSuspend(accountEntity.email, accountEntity.accountType, inboxLocalFolder.fullName)
     val labelEntityHistoryId = BigInteger(labelEntity?.historyId ?: "0")
@@ -131,7 +127,16 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
             historyId = labelEntityHistoryId.max(msgEntityHistoryId)
           )
 
-          handleMsgsFromHistory(accountEntity, inboxLocalFolder, historyList)
+          GmailHistoryHandler.handleHistory(
+            applicationContext,
+            accountEntity,
+            inboxLocalFolder,
+            historyList
+          ) { deleteCandidatesUIDs, _, updateCandidatesMap, _ ->
+            tryToRemoveNotifications(deleteCandidatesUIDs.keys)
+            tryToShowNotificationsForNewMessages(accountEntity, inboxLocalFolder)
+            removeNotificationForSeenMessages(updateCandidatesMap.mapValues { it.value.second })
+          }
         } catch (e: Exception) {
           if (e is GmailAPIException && e.code == HttpURLConnection.HTTP_NOT_FOUND) {
             /*
@@ -150,57 +155,6 @@ open class InboxIdleSyncWorker(context: Context, params: WorkerParameters) :
           }
         }
       }
-    }
-  }
-
-  private suspend fun handleMsgsFromHistory(
-    accountEntity: AccountEntity, localFolder: LocalFolder,
-    historyList: List<History>
-  ) = withContext(Dispatchers.IO) {
-    GmailApiHelper.processHistory(localFolder, historyList) { deleteCandidatesUIDs,
-                                                              newCandidatesMap,
-                                                              updateCandidatesMap,
-                                                              labelsToBeUpdatedMap ->
-      val email = accountEntity.email
-      processDeletedMsgs(accountEntity, localFolder.fullName, deleteCandidatesUIDs)
-
-      val newCandidates = newCandidatesMap.values.toList()
-      if (newCandidates.isNotEmpty()) {
-        val msgs = GmailApiHelper.loadMsgsInParallel(
-          applicationContext, accountEntity,
-          newCandidates, localFolder
-        ).run {
-          if (accountEntity.showOnlyEncrypted == true) {
-            filter { it.hasPgp() }
-          } else this
-        }
-
-        val isOnlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
-        val isNew = !GeneralUtil.isAppForegrounded()
-
-        val msgEntities = MessageEntity.genMessageEntities(
-          context = applicationContext,
-          email = email,
-          label = localFolder.fullName,
-          msgsList = msgs,
-          isNew = isNew,
-          onlyPgpModeEnabled = isOnlyPgpModeEnabled
-        )
-
-        processNewMsgs(accountEntity, localFolder, msgEntities)
-        GmailApiHelper.identifyAttachments(
-          msgEntities,
-          msgs,
-          accountEntity,
-          localFolder,
-          roomDatabase
-        )
-      }
-
-      processUpdatedMsgs(accountEntity, localFolder.fullName, updateCandidatesMap)
-
-      roomDatabase.msgDao()
-        .updateGmailLabels(accountEntity.email, localFolder.fullName, labelsToBeUpdatedMap)
     }
   }
 

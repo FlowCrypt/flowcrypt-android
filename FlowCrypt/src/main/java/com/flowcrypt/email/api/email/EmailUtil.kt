@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email
@@ -62,6 +62,7 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import jakarta.mail.internet.MimeMultipart
+import jakarta.mail.internet.MimeUtility
 import jakarta.mail.search.AndTerm
 import jakarta.mail.search.BodyTerm
 import jakarta.mail.search.FromStringTerm
@@ -615,11 +616,15 @@ class EmailUtil {
       } as HashMap<Long, Boolean>
     }
 
-    fun hasEncryptedData(rawMsg: String?) =
-      rawMsg?.contains("-----BEGIN PGP MESSAGE-----") == true
+    fun hasEncryptedData(rawMsg: String?): Boolean {
+      return "^-----BEGIN PGP MESSAGE-----".toRegex(RegexOption.MULTILINE)
+        .containsMatchIn(rawMsg ?: "")
+    }
 
-    fun hasSignedData(rawMsg: String?) =
-      rawMsg?.contains("-----BEGIN PGP SIGNED MESSAGE-----") == true
+    fun hasSignedData(rawMsg: String?): Boolean {
+      return "^-----BEGIN PGP SIGNED MESSAGE-----".toRegex(RegexOption.MULTILINE)
+        .containsMatchIn(rawMsg ?: "")
+    }
 
     fun genPgpThingsSearchTerm(account: AccountEntity): SearchTerm {
       return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
@@ -689,7 +694,7 @@ class EmailUtil {
       }
 
       return@withContext when (outgoingMsgInfo.messageType) {
-        MessageType.NEW, MessageType.FORWARD, MessageType.DRAFT -> {
+        MessageType.NEW, MessageType.DRAFT -> {
           prepareNewMsg(
             session = session,
             info = outgoingMsgInfo,
@@ -703,6 +708,20 @@ class EmailUtil {
 
         MessageType.REPLY, MessageType.REPLY_ALL -> {
           prepareReplyMsg(
+            context = context,
+            accountEntity = accountEntity,
+            session = session,
+            info = outgoingMsgInfo,
+            pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
+            prvKeys = prvKeys,
+            protector = ringProtector,
+            hideArmorMeta = hideArmorMeta
+          )
+        }
+
+        MessageType.FORWARD -> {
+          prepareForwardedMsg(
             context = context,
             accountEntity = accountEntity,
             session = session,
@@ -1014,6 +1033,65 @@ class EmailUtil {
       return@withContext msg
     }
 
+    private suspend fun prepareForwardedMsg(
+      context: Context,
+      accountEntity: AccountEntity,
+      session: Session,
+      info: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
+      protectedPubKeys: List<String>? = null,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
+    ): MimeMessage = withContext(Dispatchers.IO) {
+      val replyToMimeMessage = getReplyToMimeMessage(context, accountEntity, session, info)
+      return@withContext prepareNewMsg(
+        session = session,
+        info = info,
+        pubKeys = pubKeys,
+        protectedPubKeys = protectedPubKeys,
+        prvKeys = prvKeys,
+        protector = protector,
+        hideArmorMeta = hideArmorMeta
+      ).apply {
+        //based on [MimeMessage.reply()]
+        val msgId = replyToMimeMessage.messageID
+        if (msgId != null) {
+          setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, msgId)
+        }
+
+        /*
+         * Set the References header as described in RFC 2822:
+         *
+         * The "References:" field will contain the contents of the parent's
+         * "References:" field (if any) followed by the contents of the parent's
+         * "Message-ID:" field (if any).  If the parent message does not contain
+         * a "References:" field but does have an "In-Reply-To:" field
+         * containing a single message identifier, then the "References:" field
+         * will contain the contents of the parent's "In-Reply-To:" field
+         * followed by the contents of the parent's "Message-ID:" field (if
+         * any).  If the parent has none of the "References:", "In-Reply-To:",
+         * or "Message-ID:" fields, then the new message will have no
+         * "References:" field.
+         */
+        var refs = getHeader(JavaEmailConstants.HEADER_REFERENCES, " ")
+        if (refs == null) {
+          // XXX - should only use if it contains a single message identifier
+          refs = getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, " ")
+        }
+        if (msgId != null) {
+          refs = if (refs != null) {
+            MimeUtility.unfold(refs) + " " + msgId
+          } else {
+            msgId
+          }
+        }
+        if (refs != null) {
+          setHeader(JavaEmailConstants.HEADER_REFERENCES, MimeUtility.fold(12, refs))
+        }
+      }
+    }
+
     fun genReplyMessage(
       replyToMsg: MimeMessage,
       info: OutgoingMessageInfo,
@@ -1162,6 +1240,25 @@ class EmailUtil {
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
     ): Message = withContext(Dispatchers.IO) {
+      val replyToMimeMessage = getReplyToMimeMessage(context, accountEntity, session, info)
+
+      return@withContext genReplyMessage(
+        replyToMsg = replyToMimeMessage,
+        info = info,
+        pubKeys = pubKeys,
+        protectedPubKeys = protectedPubKeys,
+        prvKeys = prvKeys,
+        protector = protector,
+        hideArmorMeta = hideArmorMeta
+      )
+    }
+
+    private suspend fun getReplyToMimeMessage(
+      context: Context,
+      accountEntity: AccountEntity,
+      session: Session,
+      info: OutgoingMessageInfo,
+    ): MimeMessage {
       val replyToMessageEntityId = info.replyToMessageEntityId
         ?: throw IllegalArgumentException("replyToMessageEntityId is null")
 
@@ -1186,16 +1283,7 @@ class EmailUtil {
           Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
         )
       )
-
-      return@withContext genReplyMessage(
-        replyToMsg = FlowCryptMimeMessage(session, decryptionStream),
-        info = info,
-        pubKeys = pubKeys,
-        protectedPubKeys = protectedPubKeys,
-        prvKeys = prvKeys,
-        protector = protector,
-        hideArmorMeta = hideArmorMeta
-      )
+      return FlowCryptMimeMessage(session, decryptionStream)
     }
 
     private fun prepareBodyPart(

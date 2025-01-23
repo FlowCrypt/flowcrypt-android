@@ -26,7 +26,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -50,6 +49,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -90,7 +90,7 @@ class EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlo
   @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on the standard message
     onView(withId(R.id.recyclerViewMsgs))
@@ -98,10 +98,10 @@ class EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlo
         POSITION_EXISTING_STANDARD, click()))
 
     //wait the message details rendering
-    Thread.sleep(1000)
+    waitForObjectWithText(MESSAGE_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on forward
-    openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_STANDARD)
+    openReplyScreen(R.id.forwardButton, SUBJECT_EXISTING_STANDARD)
 
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
@@ -135,20 +135,21 @@ class EncryptedForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlo
       val encryptedMessagePart = multipart.getBodyPart(0)
       val expectedText = outgoingMessageConfiguration.message + IncomingMessageInfo(
         msgEntity = MessageEntity(
-          email = "",
+          account = "",
+          accountType = "",
           folder = "",
           uid = 0,
-          fromAddress = DEFAULT_FROM_RECIPIENT,
+          fromAddresses = DEFAULT_FROM_RECIPIENT,
           subject = SUBJECT_EXISTING_STANDARD,
           receivedDate = DATE_EXISTING_STANDARD,
-          toAddress = InternetAddress.toString(
+          toAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_TO_RECIPIENT
               )
             )
           ),
-          ccAddress = InternetAddress.toString(
+          ccAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_CC_RECIPIENT

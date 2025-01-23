@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service
@@ -28,12 +28,12 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.ThreadDetailsFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
-import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -115,10 +115,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       }
 
       val builder = NotificationCompat.Builder(
-        context, NotificationChannelManager
-          .CHANNEL_ID_MESSAGES
-      )
-        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
+        context, NotificationChannelManager.CHANNEL_ID_MESSAGES
+      ).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setCategory(NotificationCompat.CATEGORY_EMAIL)
         .setSmallIcon(R.drawable.ic_email_encrypted)
@@ -133,11 +131,11 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         )
         .setDeleteIntent(
           genDeletePendingIntent(
-            context,
-            msg.uid.toInt(),
-            account,
-            localFolder,
-            msg
+            context = context,
+            requestCode = msg.uid.toInt(),
+            account = account,
+            localFolder = localFolder,
+            msgs = listOf(msg)
           )
         )
         .setAutoCancel(true)
@@ -145,7 +143,15 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setStyle(NotificationCompat.BigTextStyle().bigText(msg.subject))
         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
         .setContentText(msg.subject)
-        .setContentIntent(getMsgDetailsPendingIntent(context, msg.uid.toInt(), localFolder, msg))
+        .setContentIntent(
+          getMsgDetailsPendingIntent(
+            context = context,
+            accountEntity = account,
+            requestCode = msg.uid.toInt(),
+            localFolder = localFolder,
+            messageEntity = msg
+          )
+        )
         .setDefaults(Notification.DEFAULT_ALL)
         .setSubText(account.email)
 
@@ -203,8 +209,11 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setContentIntent(getInboxPendingIntent(context))
         .setDeleteIntent(
           genDeletePendingIntent(
-            context, NOTIFICATIONS_GROUP_MESSAGES,
-            account, localFolder, msgs
+            context = context,
+            requestCode = NOTIFICATIONS_GROUP_MESSAGES,
+            account = account,
+            localFolder = localFolder,
+            msgs = msgs
           )
         )
         .setDefaults(Notification.DEFAULT_ALL)
@@ -225,18 +234,10 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun genDeletePendingIntent(
-    context: Context, requestCode: Int,
-    account: AccountEntity, localFolder: LocalFolder,
-    messageEntity: MessageEntity
-  ): PendingIntent {
-    val msgs = ArrayList<MessageEntity>()
-    msgs.add(messageEntity)
-    return genDeletePendingIntent(context, requestCode, account, localFolder, msgs)
-  }
-
-  private fun genDeletePendingIntent(
-    context: Context, requestCode: Int,
-    account: AccountEntity, localFolder: LocalFolder,
+    context: Context,
+    requestCode: Int,
+    account: AccountEntity,
+    localFolder: LocalFolder,
     msgs: List<MessageEntity>
   ): PendingIntent {
     val intent = Intent(context, MarkMessagesAsOldBroadcastReceiver::class.java)
@@ -244,12 +245,11 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_EMAIL, account.email)
     intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_LABEL, localFolder.fullName)
 
-    if (!CollectionUtils.isEmpty(msgs)) {
-      val uidList = ArrayList<String>()
-      for (msg in msgs) {
-        uidList.add(msg.uid.toString())
-      }
-      intent.putStringArrayListExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_UID_LIST, uidList)
+    if (msgs.isNotEmpty()) {
+      intent.putStringArrayListExtra(
+        MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_UID_LIST,
+        ArrayList(msgs.map { it.uid.toString() })
+      )
     }
 
     return PendingIntent.getBroadcast(
@@ -269,11 +269,31 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun getMsgDetailsPendingIntent(
-    context: Context, requestCode: Int, localFolder: LocalFolder, messageEntity: MessageEntity
+    context: Context,
+    accountEntity: AccountEntity,
+    requestCode: Int,
+    localFolder: LocalFolder,
+    messageEntity: MessageEntity
   ): PendingIntent {
-    return requireNotNull(
-      NavDeepLinkBuilder(context)
-        .setGraph(R.navigation.nav_graph)
+    val navDeepLinkBuilder = NavDeepLinkBuilder(context)
+      .setGraph(R.navigation.nav_graph)
+      .setComponentName(MainActivity::class.java)
+
+    if (accountEntity.isGoogleSignInAccount
+      && accountEntity.useAPI
+      && accountEntity.useConversationMode
+      && messageEntity.id != null
+    ) {
+      navDeepLinkBuilder
+        .setDestination(R.id.threadDetailsFragment)
+        .setArguments(
+          ThreadDetailsFragmentArgs(
+            messageEntityId = messageEntity.id,
+            localFolder = localFolder
+          ).toBundle()
+        )
+    } else {
+      navDeepLinkBuilder
         .setDestination(R.id.messageDetailsFragment)
         .setArguments(
           MessageDetailsFragmentArgs(
@@ -281,7 +301,10 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
             localFolder = localFolder
           ).toBundle()
         )
-        .setComponentName(MainActivity::class.java)
+    }
+
+    return requireNotNull(
+      navDeepLinkBuilder
         .createTaskStackBuilder()
         .getPendingIntent(
           requestCode, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

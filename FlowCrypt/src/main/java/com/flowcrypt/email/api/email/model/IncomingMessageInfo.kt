@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.model
@@ -26,7 +26,7 @@ import java.util.regex.Pattern
  * @author Denys Bondarenko
  */
 @Parcelize
-data class IncomingMessageInfo constructor(
+data class IncomingMessageInfo(
   val msgEntity: MessageEntity,
   val localFolder: LocalFolder,
   val text: String? = null,
@@ -42,7 +42,7 @@ data class IncomingMessageInfo constructor(
   fun getReplyTo(): List<InternetAddress> = msgEntity.replyToAddress
 
   fun getReplyToWithoutOwnerAddress(): List<InternetAddress> = getReplyTo().filter {
-    !it.address.equals(msgEntity.email, true)
+    !it.address.equals(msgEntity.account, true)
   }
 
   fun getReceiveDate(): Date = Date(msgEntity.receivedDate ?: 0)
@@ -97,7 +97,7 @@ data class IncomingMessageInfo constructor(
             //remove all addresses that To has
             ccSet.removeAll(toRecipients.toSet())
             //remove aliases as Gmail does and the owner address
-            val fromAddress = msgEntity.email
+            val fromAddress = msgEntity.account
             ccSet.removeAll { internetAddress ->
               aliases.any { alias -> internetAddress.address.equals(alias, ignoreCase = true) }
                   || fromAddress.equals(internetAddress.address, true)
@@ -146,6 +146,20 @@ data class IncomingMessageInfo constructor(
       ccAddresses = ccAddresses,
       bccAddresses = bccAddresses
     )
+  }
+
+  fun toReplyVersion(context: Context, maxContentSize: Int): IncomingMessageInfo {
+    return copy(msgBlocks = emptyList(), text = clipLargeText(context, text, maxContentSize))
+  }
+
+  private fun clipLargeText(context: Context, text: String?, maxContentSize: Int): String? {
+    return when {
+      (text?.length ?: 0) > maxContentSize -> {
+        text?.take(maxContentSize) + "\n\n" + context.getString(R.string.clipped_message_too_large)
+      }
+
+      else -> text
+    }
   }
 
   private fun prepareRecipientsLineForForwarding(recipients: List<InternetAddress>?): String {

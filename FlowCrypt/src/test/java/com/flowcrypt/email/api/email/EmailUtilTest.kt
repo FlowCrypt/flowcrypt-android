@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email
@@ -101,10 +101,11 @@ class EmailUtilTest {
     val receivedDate = Instant.now()
     val incomingMessageInfo = IncomingMessageInfo(
       msgEntity = MessageEntity(
-        email = accountEntity.email,
+        account = accountEntity.email,
+        accountType = accountEntity.accountType,
         folder = "INBOX",
         uid = 123,
-        fromAddress = InternetAddress.toString(replyToMIME.from),
+        fromAddresses = InternetAddress.toString(replyToMIME.from),
         receivedDate = receivedDate.toEpochMilli()
       ),
       localFolder = LocalFolder(

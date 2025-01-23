@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.base
@@ -41,6 +41,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -287,6 +288,17 @@ abstract class BaseTest : BaseActivityTestImplementation {
     device.wait(Until.hasObject(By.text(text)), timeoutInMilliseconds)
   }
 
+  protected fun waitForObjectWithResourceName(
+    resourceName: String,
+    timeoutInMilliseconds: Long = 0
+  ) {
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    device.wait(
+      Until.hasObject(By.res("${BuildConfig.APPLICATION_ID}:id/$resourceName")),
+      timeoutInMilliseconds
+    )
+  }
+
   fun getTargetContext(): Context {
     return InstrumentationRegistry.getInstrumentation().targetContext
   }
@@ -308,13 +320,13 @@ abstract class BaseTest : BaseActivityTestImplementation {
     )
     val incomingMsgInfo = action?.invoke(defaultIncomingMsgInfo) ?: defaultIncomingMsgInfo
     incomingMsgInfo?.msgEntity?.let {
+      roomDatabase.msgDao().deleteByUIDs(it.account, it.folder, listOf(it.uid))
       val uri = roomDatabase.msgDao().insert(it)
-      val attEntities = mutableListOf<AttachmentEntity>()
-
-      for (attInfo in atts) {
-        attInfo?.let { info ->
-          AttachmentEntity.fromAttInfo(info)?.let { candidate -> attEntities.add(candidate) }
-        }
+      val attEntities = atts.mapNotNull { attachmentInfo ->
+        if (attachmentInfo != null) AttachmentEntity.fromAttInfo(
+          attachmentInfo,
+          accountEntity.accountType
+        ) else null
       }
 
       roomDatabase.attachmentDao().insert(attEntities)

@@ -192,9 +192,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     override fun onChipDeleted(
       recipientType: Message.RecipientType,
-      recipientInfo: RecipientChipRecyclerViewAdapter.RecipientInfo
+      recipientItem: RecipientChipRecyclerViewAdapter.RecipientItem
     ) {
-      val email = recipientInfo.recipientWithPubKeys.recipient.email
+      val email = recipientItem.recipientWithPubKeys.recipient.email
       composeMsgViewModel.removeRecipient(recipientType, email)
     }
 
@@ -320,7 +320,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
             MessageType.REPLY,
             MessageType.REPLY_ALL
           )
-        }
+        },
+        draftThreadId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
+          args.incomingMessageInfo?.msgEntity?.threadId
+        } else null
       )
     )
   }
@@ -518,7 +521,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     super.onAccountInfoRefreshed(accountEntity)
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-        account = accountEntity?.email
+        account = accountEntity?.email,
+        accountType = accountEntity?.accountType
       )
     )
 
@@ -905,7 +909,8 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       draftViewModel.setupWithInitializationData(
         initializationData = initializationData,
-        timeInMilliseconds = startOfSessionInMilliseconds
+        timeInMilliseconds = startOfSessionInMilliseconds,
+        skipCheckingSignature = args.messageType == MessageType.DRAFT
       )
     }
 
@@ -1063,7 +1068,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
-    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value
+    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+      draftId = draftViewModel.getSessionDraftMessageEntity()?.draftId
+    )
 
     navController?.navigate(
       CreateMessageFragmentDirections
@@ -1385,6 +1392,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         when (it.status) {
           Result.Status.SUCCESS -> {
             val accountEntity = it.data ?: return@collect
+
+            if (args.messageType == MessageType.DRAFT) {
+              composeMsgViewModel.markSignatureUsed()
+              return@collect
+            }
+
             if (accountEntity.useAliasSignatures) {
               val position = binding?.spinnerFrom?.selectedItemPosition?.takeIf { position ->
                 position != Spinner.INVALID_POSITION
@@ -1472,7 +1485,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun updateAutoCompleteAdapter(recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>) {
+  private fun updateAutoCompleteAdapter(recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientItem>) {
     val emails = recipients.keys
     toAutoCompleteResultRecyclerViewAdapter.submitList(
       toAutoCompleteResultRecyclerViewAdapter.currentList.map {
@@ -1482,7 +1495,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun updateChipAdapter(
     recipientType: Message.RecipientType,
-    recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>
+    recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientItem>
   ) {
     when (recipientType) {
       Message.RecipientType.TO -> toRecipientsChipRecyclerViewAdapter.submitList(
@@ -2143,6 +2156,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     var useNewSignature = false
 
     val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
+    if (oldSignature == null && args.messageType == MessageType.DRAFT) {
+      val extractedSignature = aliases.firstOrNull { alias ->
+        alias.plainTextSignature != null && binding?.editTextEmailMessage?.text?.contains(
+          ("^${alias.plainTextSignature}$").toRegex(RegexOption.MULTILINE)
+        ) == true
+      }?.plainTextSignature
+
+      if (!extractedSignature.isNullOrEmpty()) {
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            signature = extractedSignature
+          )
+        )
+      }
+
+      return
+    }
+
     val messageHasOldSignature = oldSignature != null && binding?.editTextEmailMessage?.text?.contains(
       ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
     ) == true

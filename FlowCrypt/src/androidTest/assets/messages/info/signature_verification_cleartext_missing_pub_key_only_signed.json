@@ -9,7 +9,8 @@
   ],
   "msgEntity": {
     "cc": [],
-    "email": "default@flowcrypt.test",
+    "account": "default@flowcrypt.test",
+    "accountType": "flowcrypt.test",
     "flags": "\\SEEN ",
     "folder": "INBOX",
     "from": [
@@ -19,7 +20,7 @@
         "personal": "DenBond7"
       }
     ],
-    "fromAddress": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
+    "fromAddresses": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
     "hasAttachments": false,
     "id": 40,
     "isNew": false,
@@ -27,7 +28,7 @@
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1659711309000,
-    "replyTo": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
+    "replyToAddresses": "DenBond7 \u003cdenbond7@flowcrypt.test\u003e",
     "replyToAddress": [
       {
         "address": "denbond7@flowcrypt.test",
@@ -43,7 +44,7 @@
         "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@flowcrypt.test",
+    "toAddresses": "default@flowcrypt.test",
     "uid": 48,
     "uidAsHEX": "30"
   },

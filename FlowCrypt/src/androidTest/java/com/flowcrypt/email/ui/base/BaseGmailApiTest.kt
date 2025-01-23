@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
@@ -29,14 +30,19 @@ import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.api.client.json.Json
 import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.gmail.model.BatchDeleteMessagesRequest
 import com.google.api.services.gmail.model.BatchModifyMessagesRequest
+import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.Label
+import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListLabelsResponse
 import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
+import com.google.api.services.gmail.model.ListThreadsResponse
 import com.google.api.services.gmail.model.MessagePart
 import com.google.api.services.gmail.model.MessagePartBody
 import com.google.api.services.gmail.model.MessagePartHeader
+import com.google.api.services.gmail.model.Thread
 import jakarta.activation.DataHandler
 import jakarta.activation.DataSource
 import jakarta.mail.Message
@@ -133,27 +139,26 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
   protected open fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
     return when {
       request.path?.startsWith("/attester/pub", ignoreCase = true) == true -> {
-        val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+        val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()?.lowercase()
+        val mapOfPublicKeysBasedOnRecipient = mapOf(
+          requireNotNull(DEFAULT_FROM_RECIPIENT.asInternetAddress()?.address)
+              to defaultFromPgpKeyDetails.publicKey,
+          requireNotNull(DEFAULT_TO_RECIPIENT.asInternetAddress()?.address)
+              to defaultToPgpKeyDetails.publicKey,
+          requireNotNull(DEFAULT_CC_RECIPIENT.asInternetAddress()?.address)
+              to defaultCcPgpKeyDetails.publicKey,
+          requireNotNull(DEFAULT_BCC_RECIPIENT.asInternetAddress()?.address)
+              to defaultBccPgpKeyDetails.publicKey,
+          requireNotNull(EXISTING_MESSAGE_CC_RECIPIENT.asInternetAddress()?.address)
+              to existingCcPgpKeyDetails.publicKey,
+        )
 
         return when {
-          lastSegment?.lowercase() in arrayOf(
-            DEFAULT_FROM_RECIPIENT,
-            DEFAULT_TO_RECIPIENT,
-            DEFAULT_CC_RECIPIENT,
-            DEFAULT_BCC_RECIPIENT,
-            EXISTING_MESSAGE_CC_RECIPIENT,
-          ) -> {
+          lastSegment in mapOfPublicKeysBasedOnRecipient.keys -> {
             MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
               .setBody(
-                when (lastSegment?.lowercase()) {
-                  DEFAULT_FROM_RECIPIENT -> defaultFromPgpKeyDetails.publicKey
-                  DEFAULT_TO_RECIPIENT -> defaultToPgpKeyDetails.publicKey
-                  DEFAULT_CC_RECIPIENT -> defaultCcPgpKeyDetails.publicKey
-                  DEFAULT_BCC_RECIPIENT -> defaultBccPgpKeyDetails.publicKey
-                  EXISTING_MESSAGE_CC_RECIPIENT -> existingCcPgpKeyDetails.publicKey
-                  else -> ""
-                }
+                mapOfPublicKeysBasedOnRecipient.getOrDefault(lastSegment, "")
               )
           }
 
@@ -197,46 +202,24 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         )
       }
 
-      request.method == "GET" && request.path == genPathForMessageWithSomeFilds(
-        MESSAGE_ID_EXISTING_STANDARD
-      ) -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", Json.MEDIA_TYPE)
-          .setBody(genExistingStandardMessage())
+      request.path == "/gmail/v1/users/me/threads?labelIds=${JavaEmailConstants.FOLDER_INBOX}&maxResults=45" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
+          LIST_THREADS_RESPONSE_ALL_THREADS.toString()
+        )
       }
 
-      request.method == "GET" && request.path == genPathForMessageWithSomeFilds(
-        MESSAGE_ID_EXISTING_ENCRYPTED
-      ) -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", Json.MEDIA_TYPE)
-          .setBody(genExistingEncryptedMessage())
+      request.method == "GET" && request.path?.matches(
+        REGEX_USER_MESSAGES_GET_WITH_FIELDS_FORMAT_FULL
+      ) == true -> {
+        genUserMessagesGetWithFieldsFormatFullResponse(request.path ?: "")
       }
 
-      request.method == "GET" && request.path == genPathForMessageWithSomeFilds(
-        MESSAGE_ID_EXISTING_PGP_MIME
-      ) -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", Json.MEDIA_TYPE)
-          .setBody(genExistingPGPMimeMessage())
+      request.method == "GET" && request.path?.matches(REGEX_USER_MESSAGES_GET_FORMAT_FULL) == true -> {
+        genUserMessagesGetFormatFullResponse(request.path ?: "")
       }
 
-      request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_STANDARD}?format=full" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", Json.MEDIA_TYPE)
-          .setBody(genExistingStandardMessage(isFullFormat = true))
-      }
-
-      request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_ENCRYPTED}?format=full" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", Json.MEDIA_TYPE)
-          .setBody(genExistingEncryptedMessage(isFullFormat = true))
-      }
-
-      request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_PGP_MIME}?format=full" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", Json.MEDIA_TYPE)
-          .setBody(genExistingPGPMimeMessage(isFullFormat = true))
+      request.method == "GET" && request.path?.matches(REGEX_USER_THREADS_GET_FORMAT_FULL) == true -> {
+        genUserThreadsGetFormatFullResponse(request.path ?: "")
       }
 
       request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_STANDARD}?format=minimal" -> {
@@ -273,9 +256,23 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path == genPathToGetAttachment(
-        MESSAGE_ID_EXISTING_STANDARD,
-        ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+      request.method == "GET" && request.path in listOf(
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_EXISTING_STANDARD,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -287,9 +284,31 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path == genPathToGetAttachment(
-        MESSAGE_ID_EXISTING_ENCRYPTED,
-        ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+      request.method == "GET" && request.path in listOf(
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_EXISTING_ENCRYPTED,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          attachmentId = ATTACHMENT_FIRST_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -317,9 +336,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path == genPathToGetAttachment(
-        MESSAGE_ID_EXISTING_ENCRYPTED,
-        ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+      request.method == "GET" && request.path in listOf(
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_EXISTING_ENCRYPTED,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
+        genPathToGetAttachment(
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          attachmentId = ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED
+        ),
       ) -> {
         MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
           .setHeader("Content-Type", Json.MEDIA_TYPE)
@@ -348,10 +373,44 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           BatchModifyMessagesRequest::class.java
         )
 
-        if (batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_STANDARD)
-          || batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_ENCRYPTED)
-          || batchModifyMessagesRequest.ids.contains(MESSAGE_ID_EXISTING_PGP_MIME)
-        ) {
+        val handledIds = arrayOf(
+          MESSAGE_ID_EXISTING_STANDARD,
+          MESSAGE_ID_EXISTING_ENCRYPTED,
+          MESSAGE_ID_EXISTING_PGP_MIME,
+          MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+          MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
+          MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+          MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
+          MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1,
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2,
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+        )
+
+        if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+        } else {
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        }
+      }
+
+      request.method == "POST" && request.path == "/gmail/v1/users/me/messages/batchDelete" -> {
+        val source = GzipSource(request.body)
+        val batchDeleteMessagesRequest = GsonFactory.getDefaultInstance().fromInputStream(
+          source.buffer().inputStream(),
+          BatchDeleteMessagesRequest::class.java
+        )
+
+        val handledIds = arrayOf(
+          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+        )
+
+        if (handledIds.any { batchDeleteMessagesRequest.ids.contains(it) }) {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         } else {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -437,11 +496,380 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           .setBody(content)
       }
 
+      request.method == "GET" && request.path == "/gmail/v1/users/me/drafts?fields=drafts/id,drafts/message/id&q=rfc822msgid:$MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setHeader("Content-Type", Json.MEDIA_TYPE)
+          .setBody(
+            ListDraftsResponse().apply {
+              factory = GsonFactory.getDefaultInstance()
+              drafts = listOf(
+                Draft().apply {
+                  id = DRAFT_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3
+                  message = com.google.api.services.gmail.model.Message().apply {
+                    id = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3
+                  }
+                }
+              )
+            }.toString()
+          )
+      }
+
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
 
-  private fun genPathForMessageWithSomeFilds(messageId: String) =
+  private fun genUserMessagesGetWithFieldsFormatFullResponse(path: String): MockResponse {
+    val messageId =
+      REGEX_USER_MESSAGES_GET_WITH_FIELDS_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
+    val baseResponse = MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+
+    return when (messageId) {
+      MESSAGE_ID_THREAD_ONLY_STANDARD_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          includeBinaryAttachment = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_STANDARD_2 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          subject = "Re: $SUBJECT_EXISTING_STANDARD",
+          includeBinaryAttachment = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          subject = "Re: $SUBJECT_EXISTING_ENCRYPTED",
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
+          subject = SUBJECT_NO_ATTACHMENTS,
+          includeAttachments = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          subject = "Re: $SUBJECT_NO_ATTACHMENTS",
+          includeAttachments = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_SINGLE_STANDARD_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+          subject = SUBJECT_SINGLE_STANDARD,
+          includeBinaryAttachment = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          subject = SUBJECT_SINGLE_ENCRYPTED
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+          messageId = messageId,
+          subject = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1 -> SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT
+            else -> "Re: $SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT"
+          },
+          labels = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> listOf(JavaEmailConstants.FOLDER_DRAFT)
+            else -> listOf(JavaEmailConstants.FOLDER_INBOX)
+          },
+          includeAttachments = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> false
+            else -> true
+          },
+          includeBinaryAttachment = false,
+          from = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> addAccountToDatabaseRule.account.email
+            else -> DEFAULT_FROM_RECIPIENT
+          }
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_1,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_2,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_3,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_4 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS,
+          messageId = messageId,
+          subject = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_1 -> SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT
+            else -> "Re: $SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS"
+          },
+          labels = when (messageId) {
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_3,
+            MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_4 -> listOf(JavaEmailConstants.FOLDER_DRAFT)
+
+            else -> listOf(JavaEmailConstants.FOLDER_INBOX)
+          },
+          includeBinaryAttachment = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1,
+      MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2,
+      MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+          messageId = messageId,
+          subject = when (messageId) {
+            MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1 -> SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS
+            else -> "Re: $SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS"
+          },
+          labels = when (messageId) {
+            MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2,
+            MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 -> listOf(JavaEmailConstants.FOLDER_DRAFT)
+
+            else -> listOf(JavaEmailConstants.FOLDER_INBOX)
+          },
+          includeBinaryAttachment = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+          subject = SUBJECT_MIXED_MESSAGES,
+          includeAttachments = false
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_2 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          subject = "Re: $SUBJECT_MIXED_MESSAGES"
+        ).toString()
+      )
+
+      MESSAGE_ID_EXISTING_STANDARD -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_EXISTING_STANDARD,
+          messageId = MESSAGE_ID_EXISTING_STANDARD
+        ).toString()
+      )
+
+      MESSAGE_ID_EXISTING_ENCRYPTED -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_EXISTING_ENCRYPTED,
+          messageId = MESSAGE_ID_EXISTING_ENCRYPTED
+        ).toString()
+      )
+
+      MESSAGE_ID_EXISTING_PGP_MIME -> baseResponse.setBody(genPGPMimeMessage())
+
+      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+  }
+
+  private fun genUserMessagesGetFormatFullResponse(path: String): MockResponse {
+    val messageId = REGEX_USER_MESSAGES_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
+    val baseResponse = MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+
+    return when (messageId) {
+      MESSAGE_ID_EXISTING_STANDARD -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_EXISTING_STANDARD,
+          messageId = MESSAGE_ID_EXISTING_STANDARD,
+          isFullFormat = true,
+        ).toString()
+      )
+
+      MESSAGE_ID_EXISTING_ENCRYPTED -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_EXISTING_ENCRYPTED,
+          messageId = MESSAGE_ID_EXISTING_ENCRYPTED,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_EXISTING_PGP_MIME -> baseResponse.setBody(
+        genPGPMimeMessage(isFullFormat = true)
+      )
+
+      MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_SINGLE_STANDARD_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+          subject = SUBJECT_SINGLE_STANDARD,
+          includeBinaryAttachment = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE,
+          messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+          subject = SUBJECT_SINGLE_ENCRYPTED,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_STANDARD_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          includeBinaryAttachment = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_STANDARD_2 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          subject = "Re: $SUBJECT_EXISTING_STANDARD",
+          includeBinaryAttachment = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
+          subject = SUBJECT_EXISTING_ENCRYPTED,
+          isFullFormat = true,
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          subject = "Re: $SUBJECT_EXISTING_ENCRYPTED",
+          isFullFormat = true,
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_1 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+          subject = SUBJECT_MIXED_MESSAGES,
+          includeAttachments = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_2 -> baseResponse.setBody(
+        genEncryptedMessage(
+          threadId = THREAD_ID_MIXED_MESSAGES,
+          messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+          subject = "Re: $SUBJECT_MIXED_MESSAGES",
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          subject = "Re: $SUBJECT_NO_ATTACHMENTS",
+          includeAttachments = false,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 -> baseResponse.setBody(
+        genStandardMessage(
+          threadId = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+          messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+          subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT",
+          includeAttachments = false,
+          isFullFormat = true,
+          labels = listOf(JavaEmailConstants.FOLDER_DRAFT),
+          from = addAccountToDatabaseRule.account.email
+        ).toString()
+      )
+
+      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+  }
+
+  private fun genUserThreadsGetFormatFullResponse(path: String): MockResponse {
+    val threadId = REGEX_USER_THREADS_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
+    val baseResponse = MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+
+    return when (threadId) {
+      THREAD_ID_ONLY_STANDARD -> baseResponse.setBody(
+        genThreadWithOnlyStandardMessages()
+      )
+
+      THREAD_ID_ONLY_ENCRYPTED -> baseResponse.setBody(
+        genThreadWithOnlyEncryptedMessages()
+      )
+
+      THREAD_ID_NO_ATTACHMENTS -> baseResponse.setBody(
+        genThreadWithNoAttachments()
+      )
+
+      THREAD_ID_SINGLE_STANDARD_MESSAGE -> baseResponse.setBody(
+        genThreadWithSingleStandardMessage()
+      )
+
+      THREAD_ID_SINGLE_ENCRYPTED_MESSAGE -> baseResponse.setBody(
+        genThreadWithSingleEncryptedMessage()
+      )
+
+      THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT -> baseResponse.setBody(
+        genThreadWithFewMessagesAndSingleDraft()
+      )
+
+      THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS -> baseResponse.setBody(
+        genThreadWithFewMessagesFewDrafts()
+      )
+
+      THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS -> baseResponse.setBody(
+        genThreadWithOneMessageFewDrafts()
+      )
+
+      THREAD_ID_MIXED_MESSAGES -> baseResponse.setBody(
+        genThreadWithMixedMessages()
+      )
+
+      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+  }
+
+  private fun genPathForMessageWithSomeFields(messageId: String) =
     "/gmail/v1/users/me/messages/$messageId?fields=" +
         "id," +
         "threadId," +
@@ -462,20 +890,241 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     "/gmail/v1/users/me/messages/${messageId}/attachments/${attachmentId}" +
         "?fields=data&prettyPrint=false"
 
-  private fun genExistingStandardMessage(isFullFormat: Boolean = false) =
+  private fun genThreadWithOnlyStandardMessages() =
+    Thread().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = THREAD_ID_ONLY_STANDARD
+      messages = listOf(
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+          isFullFormat = true,
+          includeBinaryAttachment = false
+        ),
+        genStandardMessage(
+          threadId = THREAD_ID_ONLY_STANDARD,
+          messageId = MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+          subject = "Re: $SUBJECT_EXISTING_STANDARD",
+          isFullFormat = true,
+          includeBinaryAttachment = false
+        )
+      )
+    }.toString()
+
+  private fun genThreadWithOnlyEncryptedMessages() =
+    Thread().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = THREAD_ID_ONLY_ENCRYPTED
+      messages = listOf(
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
+          isFullFormat = true
+        ),
+        genEncryptedMessage(
+          threadId = THREAD_ID_ONLY_ENCRYPTED,
+          messageId = MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+          subject = "Re: $SUBJECT_EXISTING_ENCRYPTED",
+          isFullFormat = true
+        )
+      )
+    }.toString()
+
+  private fun genThreadWithNoAttachments() =
+    Thread().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = THREAD_ID_NO_ATTACHMENTS
+      messages = listOf(
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
+          subject = SUBJECT_NO_ATTACHMENTS,
+          isFullFormat = true,
+          includeAttachments = false
+        ),
+        genStandardMessage(
+          threadId = THREAD_ID_NO_ATTACHMENTS,
+          messageId = MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+          subject = "Re: $SUBJECT_NO_ATTACHMENTS",
+          isFullFormat = true,
+          includeAttachments = false
+        )
+      )
+    }.toString()
+
+  private fun genThreadWithSingleStandardMessage() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_SINGLE_STANDARD_MESSAGE
+    messages = listOf(
+      genStandardMessage(
+        threadId = THREAD_ID_SINGLE_STANDARD_MESSAGE,
+        messageId = MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+        subject = SUBJECT_SINGLE_STANDARD,
+        includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithSingleEncryptedMessage() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE
+    messages = listOf(
+      genEncryptedMessage(
+        threadId = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE,
+        messageId = MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+        subject = SUBJECT_SINGLE_ENCRYPTED,
+        isFullFormat = true
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithFewMessagesAndSingleDraft() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT
+    messages = listOf(
+      genStandardMessage(
+        threadId = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+        messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1,
+        subject = SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+        includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+        messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2,
+        subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT",
+        includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT,
+        messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+        subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT",
+        includeAttachments = false,
+        isFullFormat = true,
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT),
+        from = addAccountToDatabaseRule.account.email
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithFewMessagesFewDrafts() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS
+    messages = listOf(
+      genStandardMessage(
+        threadId = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_1,
+        subject = SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS,
+        includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_2,
+        subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS",
+        includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_3,
+        subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS",
+        includeBinaryAttachment = false,
+        isFullFormat = true,
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_4,
+        subject = "Re: $SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS",
+        includeBinaryAttachment = false,
+        isFullFormat = true,
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithOneMessageFewDrafts() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS
+    messages = listOf(
+      genStandardMessage(
+        threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1,
+        subject = SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        includeBinaryAttachment = false,
+        isFullFormat = true
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2,
+        subject = "Re: $SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS",
+        includeBinaryAttachment = false,
+        isFullFormat = true,
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      ),
+      genStandardMessage(
+        threadId = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS,
+        messageId = MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3,
+        subject = "Re: $SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS",
+        includeBinaryAttachment = false,
+        isFullFormat = true,
+        labels = listOf(JavaEmailConstants.FOLDER_DRAFT)
+      ),
+    )
+  }.toString()
+
+  private fun genThreadWithMixedMessages() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_MIXED_MESSAGES
+    messages = listOf(
+      genStandardMessage(
+        threadId = THREAD_ID_MIXED_MESSAGES,
+        messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+        subject = SUBJECT_MIXED_MESSAGES,
+        includeAttachments = false,
+        isFullFormat = true
+      ),
+      genEncryptedMessage(
+        threadId = THREAD_ID_MIXED_MESSAGES,
+        messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+        subject = "Re: $SUBJECT_MIXED_MESSAGES",
+        isFullFormat = true
+      ),
+    )
+  }.toString()
+
+  protected fun genStandardMessage(
+    threadId: String,
+    messageId: String,
+    labels: List<String> = listOf(JavaEmailConstants.FOLDER_INBOX),
+    subject: String = SUBJECT_EXISTING_STANDARD,
+    from: String = DEFAULT_FROM_RECIPIENT,
+    isFullFormat: Boolean = false,
+    includeAttachments: Boolean = true,
+    includeBinaryAttachment: Boolean = true
+  ) =
     com.google.api.services.gmail.model.Message().apply {
       factory = GsonFactory.getDefaultInstance()
-      id = MESSAGE_ID_EXISTING_STANDARD
-      threadId = THREAD_ID_EXISTING_STANDARD
-      labelIds = listOf(JavaEmailConstants.FOLDER_INBOX)
-      snippet = SUBJECT_EXISTING_STANDARD
+      id = messageId
+      this.threadId = threadId
+      labelIds = labels
+      snippet = subject
       historyId = HISTORY_ID_STANDARD
       val boundary = "000000000000fbd8c4060ea7c59b"
       payload = MessagePart().apply {
         partId = ""
         mimeType = "multipart/mixed"
         filename = ""
-        headers = prepareMessageHeaders(SUBJECT_EXISTING_STANDARD, DATE_EXISTING_STANDARD, boundary)
+        headers = prepareMessageHeaders(
+          subject = subject,
+          dateInMilliseconds = DATE_EXISTING_STANDARD,
+          boundary = boundary,
+          messageId = messageId,
+          from = from
+        )
         body = MessagePartBody().apply {
           setSize(0)
         }
@@ -489,7 +1138,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
               value = "multipart/alternative; boundary=\\\"000000000000fbd8c2060ea7c59b\\\""
             })
             body = MessagePartBody().apply { setSize(0) }
-            parts = listOf(
+            parts = mutableListOf(
               MessagePart().apply {
                 partId = "0.0"
                 mimeType = "text/plain"
@@ -527,89 +1176,108 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
               }
             )
           },
-          MessagePart().apply {
-            partId = "1"
-            mimeType = "text/plain"
-            filename = ATTACHMENT_NAME_1
-            headers = listOf(
-              MessagePartHeader().apply {
-                name = "Content-Type"
-                value = "text/plain; charset=\\\"US-ASCII\\\"; name=\\\"$ATTACHMENT_NAME_1\\\""
-              },
-              MessagePartHeader().apply {
-                name = "Content-Disposition"
-                value = "attachment; filename=\\\"$ATTACHMENT_NAME_1\\\""
-              },
-              MessagePartHeader().apply {
-                name = "Content-Transfer-Encoding"
-                value = "base64"
-              },
-              MessagePartHeader().apply {
-                name = "Content-ID"
-                value = "f_lr8zar5y0"
-              },
-              MessagePartHeader().apply {
-                name = "X-Attachment-Id"
-                value = "f_lr8zar5y0"
-              },
+        ).toMutableList().apply {
+          if (includeAttachments) {
+            add(
+              MessagePart().apply {
+                partId = "1"
+                mimeType = "text/plain"
+                filename = ATTACHMENT_NAME_1
+                headers = listOf(
+                  MessagePartHeader().apply {
+                    name = "Content-Type"
+                    value = "text/plain; charset=\\\"US-ASCII\\\"; name=\\\"$ATTACHMENT_NAME_1\\\""
+                  },
+                  MessagePartHeader().apply {
+                    name = "Content-Disposition"
+                    value = "attachment; filename=\\\"$ATTACHMENT_NAME_1\\\""
+                  },
+                  MessagePartHeader().apply {
+                    name = "Content-Transfer-Encoding"
+                    value = "base64"
+                  },
+                  MessagePartHeader().apply {
+                    name = "Content-ID"
+                    value = "f_lr8zar5y0"
+                  },
+                  MessagePartHeader().apply {
+                    name = "X-Attachment-Id"
+                    value = "f_lr8zar5y0"
+                  },
+                )
+                body = MessagePartBody().apply {
+                  attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
+                  setSize(attachmentsDataCache[0].size)
+                }
+              }
             )
-            body = MessagePartBody().apply {
-              attachmentId = ATTACHMENT_FIRST_OF_EXISTING_STANDARD
-              setSize(attachmentsDataCache[0].size)
-            }
-          },
-          MessagePart().apply {
-            partId = "2"
-            mimeType = "image/png"
-            filename = ATTACHMENT_NAME_3
-            headers = listOf(
-              MessagePartHeader().apply {
-                name = "Content-Type"
-                value = "image/png; name=\\\"$ATTACHMENT_NAME_3\\\""
-              },
-              MessagePartHeader().apply {
-                name = "Content-Disposition"
-                value = "attachment; filename=\\\"$ATTACHMENT_NAME_3\\\""
-              },
-              MessagePartHeader().apply {
-                name = "Content-Transfer-Encoding"
-                value = "base64"
-              },
-              MessagePartHeader().apply {
-                name = "Content-ID"
-                value = "f_lr8zar681"
-              },
-              MessagePartHeader().apply {
-                name = "X-Attachment-Id"
-                value = "f_lr8zar681"
-              },
-            )
-            body = MessagePartBody().apply {
-              attachmentId = ATTACHMENT_SECOND_OF_EXISTING_STANDARD
-              setSize(attachmentsDataCache[2].size)
+
+            if (includeBinaryAttachment) {
+              add(
+                MessagePart().apply {
+                  partId = "2"
+                  mimeType = "application/pgp-keys"
+                  filename = ATTACHMENT_NAME_3
+                  headers = listOf(
+                    MessagePartHeader().apply {
+                      name = "Content-Type"
+                      value = "application/pgp-keys; name=\\\"$ATTACHMENT_NAME_3\\\""
+                    },
+                    MessagePartHeader().apply {
+                      name = "Content-Disposition"
+                      value = "attachment; filename=\\\"$ATTACHMENT_NAME_3\\\""
+                    },
+                    MessagePartHeader().apply {
+                      name = "Content-Transfer-Encoding"
+                      value = "base64"
+                    },
+                    MessagePartHeader().apply {
+                      name = "Content-ID"
+                      value = "f_lr8zar681"
+                    },
+                    MessagePartHeader().apply {
+                      name = "X-Attachment-Id"
+                      value = "f_lr8zar681"
+                    },
+                  )
+                  body = MessagePartBody().apply {
+                    attachmentId = ATTACHMENT_SECOND_OF_EXISTING_STANDARD
+                    setSize(attachmentsDataCache[2].size)
+                  }
+                }
+              )
             }
           }
-        )
+        }
       }
       internalDate = DATE_EXISTING_STANDARD
       sizeEstimate = 0 // we don't care about this parameter
-    }.toString()
+    }
 
-  private fun genExistingEncryptedMessage(isFullFormat: Boolean = false) =
-    com.google.api.services.gmail.model.Message().apply {
+  private fun genEncryptedMessage(
+    threadId: String,
+    messageId: String,
+    labels: List<String> = listOf(JavaEmailConstants.FOLDER_INBOX),
+    subject: String = SUBJECT_EXISTING_ENCRYPTED,
+    isFullFormat: Boolean = false
+  ) = com.google.api.services.gmail.model.Message().apply {
       factory = GsonFactory.getDefaultInstance()
-      id = MESSAGE_ID_EXISTING_ENCRYPTED
-      threadId = THREAD_ID_EXISTING_ENCRYPTED
-      labelIds = listOf(JavaEmailConstants.FOLDER_INBOX)
-      snippet = SUBJECT_EXISTING_ENCRYPTED
+    id = messageId
+    this.threadId = threadId
+    labelIds = labels
+    snippet = subject
       historyId = HISTORY_ID_ENCRYPTED
       val boundary = "000000000000fbd8c4060ea7c69b"
       payload = MessagePart().apply {
         partId = ""
         mimeType = "multipart/mixed"
         filename = ""
-        headers =
-          prepareMessageHeaders(SUBJECT_EXISTING_ENCRYPTED, DATE_EXISTING_ENCRYPTED, boundary)
+        headers = prepareMessageHeaders(
+          subject = subject,
+          dateInMilliseconds = DATE_EXISTING_ENCRYPTED,
+          boundary = boundary,
+          messageId = messageId
+        )
         body = MessagePartBody().apply {
           setSize(0)
         }
@@ -673,7 +1341,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
       }
       internalDate = DATE_EXISTING_ENCRYPTED
       sizeEstimate = 0 // we don't care about this parameter
-    }.toString()
+  }
 
   private fun generateHeadersForEncryptedAttachment(fileName: String, id: String) = listOf(
     MessagePartHeader().apply {
@@ -770,7 +1438,11 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
   private fun prepareMessageHeaders(
     subject: String,
     dateInMilliseconds: Long,
-    boundary: String
+    boundary: String,
+    from: String = DEFAULT_FROM_RECIPIENT,
+    to: String = EXISTING_MESSAGE_TO_RECIPIENT,
+    cc: String = EXISTING_MESSAGE_CC_RECIPIENT,
+    messageId: String = EmailUtil.generateContentId()
   ) = listOf(
     MessagePartHeader().apply {
       name = "MIME-Version"
@@ -782,7 +1454,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     },
     MessagePartHeader().apply {
       name = "Message-ID"
-      value = EmailUtil.generateContentId()
+      value = messageId
     },
     MessagePartHeader().apply {
       name = "Subject"
@@ -790,15 +1462,15 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     },
     MessagePartHeader().apply {
       name = "From"
-      value = DEFAULT_FROM_RECIPIENT
+      value = from
     },
     MessagePartHeader().apply {
       name = "To"
-      value = EXISTING_MESSAGE_TO_RECIPIENT
+      value = to
     },
     MessagePartHeader().apply {
       name = "Cc"
-      value = EXISTING_MESSAGE_CC_RECIPIENT
+      value = cc
     },
     MessagePartHeader().apply {
       name = "Content-Type"
@@ -806,7 +1478,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     },
   )
 
-  private fun genExistingPGPMimeMessage(isFullFormat: Boolean = false) =
+  private fun genPGPMimeMessage(isFullFormat: Boolean = false) =
     com.google.api.services.gmail.model.Message().apply {
       factory = GsonFactory.getDefaultInstance()
       id = MESSAGE_ID_EXISTING_PGP_MIME
@@ -820,9 +1492,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         mimeType = "multipart/encrypted"
         filename = ""
         headers = prepareMessageHeaders(
-          SUBJECT_EXISTING_PGP_MIME,
-          DATE_EXISTING_PGP_MIME,
-          boundary
+          subject = SUBJECT_EXISTING_PGP_MIME,
+          dateInMilliseconds = DATE_EXISTING_PGP_MIME,
+          boundary = boundary,
+          messageId = MESSAGE_ID_EXISTING_PGP_MIME
         ).filterNot {
           it.name == "Content-Type"
         }.toMutableList().apply {
@@ -949,6 +1622,46 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val POSITION_EXISTING_STANDARD = 1
     const val POSITION_EXISTING_PGP_MIME = 2
 
+    const val THREAD_ID_ONLY_STANDARD = "200000e222d6c001"
+    const val MESSAGE_ID_THREAD_ONLY_STANDARD_1 = "5555555559991001"
+    const val MESSAGE_ID_THREAD_ONLY_STANDARD_2 = "5555555559991002"
+    const val THREAD_ID_ONLY_ENCRYPTED = "200000e222d6c002"
+    const val MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1 = "5555555559992001"
+    const val MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2 = "5555555559992002"
+    const val THREAD_ID_STANDARD_AND_ENCRYPTED = "200000e222d6c003"
+    const val THREAD_ID_NO_ATTACHMENTS = "200000e222d6c004"
+    const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_1 = "5555555559993001"
+    const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 = "5555555559993002"
+    const val THREAD_ID_SINGLE_STANDARD_MESSAGE = "200000e222d6c005"
+    const val MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE = "5555555559995001"
+    const val THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT = "200000e222d6c006"
+    const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1 = "5555555559996001"
+    const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2 = "5555555559996002"
+    const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 = "5555555559996003"
+    const val DRAFT_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3 = "r565555555559996003"
+    const val THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS = "200000e222d6c007"
+    const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_1 = "5555555559997001"
+    const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_2 = "5555555559997002"
+    const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_3 = "5555555559997003"
+    const val MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_FEW_DRAFTS_4 = "5555555559997004"
+    const val THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS = "200000e222d6c008"
+    const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_1 = "5555555559998001"
+    const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_2 = "5555555559998002"
+    const val MESSAGE_ID_THREAD_ONE_MESSAGE_WITH_FEW_DRAFTS_3 = "5555555559998003"
+    const val THREAD_ID_SINGLE_ENCRYPTED_MESSAGE = "200000e222d6c009"
+    const val MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE = "5555555559999001"
+    const val THREAD_ID_MIXED_MESSAGES = "200000e222d6c010"
+    const val MESSAGE_ID_THREAD_MIXED_MESSAGES_1 = "5555555559910001"
+    const val MESSAGE_ID_THREAD_MIXED_MESSAGES_2 = "5555555559910002"
+
+    const val SUBJECT_NO_ATTACHMENTS = "No attachments"
+    const val SUBJECT_SINGLE_STANDARD = "Single standard message"
+    const val SUBJECT_SINGLE_ENCRYPTED = "Single encrypted message"
+    const val SUBJECT_FEW_MESSAGES_WITH_SINGLE_DRAFT = "few messages in thread + 1 draft"
+    const val SUBJECT_FEW_MESSAGES_WITH_FEW_DRAFTS = "few messages in thread + few drafts"
+    const val SUBJECT_ONE_MESSAGE_WITH_FEW_DRAFTS = "one message in thread + few drafts"
+    const val SUBJECT_MIXED_MESSAGES = "Mixed messages"
+
     const val MESSAGE_ID_EXISTING_STANDARD = "5555555555555551"
     const val THREAD_ID_EXISTING_STANDARD = "1111111111111111"
     const val DATE_EXISTING_STANDARD = 1704963592000
@@ -958,7 +1671,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val ATTACHMENT_SECOND_OF_EXISTING_STANDARD = "22222222222222222"
 
     const val MESSAGE_ID_EXISTING_ENCRYPTED = "5555555555555552"
-    const val THREAD_ID_EXISTING_ENCRYPTED = "1111v111111111112"
+    const val THREAD_ID_EXISTING_ENCRYPTED = "1111111111111112"
     const val DATE_EXISTING_ENCRYPTED = 1704963599000
     const val SUBJECT_EXISTING_ENCRYPTED = "Encrypted"
     const val MESSAGE_EXISTING_ENCRYPTED = "Encrypted message"
@@ -966,7 +1679,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val ATTACHMENT_SECOND_OF_EXISTING_ENCRYPTED = "22222222222222224"
 
     const val MESSAGE_ID_EXISTING_PGP_MIME = "5555555555555553"
-    const val THREAD_ID_EXISTING_PGP_MIME = "1111v111111111113"
+    const val THREAD_ID_EXISTING_PGP_MIME = "1111111111111113"
     const val DATE_EXISTING_PGP_MIME = 1704963581000
     const val SUBJECT_EXISTING_PGP_MIME = "PGP/MIME Encrypted"
     const val MESSAGE_EXISTING_PGP_MIME = "PGP/MIME"
@@ -975,15 +1688,26 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     val HISTORY_ID_ENCRYPTED = BigInteger("53163327")
     val HISTORY_ID_PGP_MIME = BigInteger("53163027")
 
+    val REGEX_USER_MESSAGES_GET_WITH_FIELDS_FORMAT_FULL =
+      ("/gmail/v1/users/me/messages/(.{16})\\?fields=id," +
+          "threadId,labelIds,snippet,sizeEstimate,historyId,internalDate,payload/partId," +
+          "payload/mimeType,payload/filename,payload/headers,payload/body," +
+          "payload/parts\\(partId,mimeType,filename,headers," +
+          "body/size,body/attachmentId\\)&format=full").toRegex()
+    val REGEX_USER_MESSAGES_GET_FORMAT_FULL =
+      ("/gmail/v1/users/me/messages/(.{16})\\?format=full").toRegex()
+    val REGEX_USER_THREADS_GET_FORMAT_FULL =
+      ("/gmail/v1/users/me/threads/(.{16})\\?format=full").toRegex()
+
     const val ATTACHMENT_NAME_1 = "text.txt"
     const val ATTACHMENT_NAME_2 = "text1.txt"
     const val ATTACHMENT_NAME_3 = "binary_key.key"
     const val ATTACHMENT_PGP_MIME = "encrypted.asc"
 
-    const val DEFAULT_FROM_RECIPIENT = "default_from@flowcrypt.test"
-    const val DEFAULT_TO_RECIPIENT = "default_to@flowcrypt.test"
-    const val DEFAULT_CC_RECIPIENT = "default_cc@flowcrypt.test"
-    const val DEFAULT_BCC_RECIPIENT = "default_bcc@flowcrypt.test"
+    const val DEFAULT_FROM_RECIPIENT = "From <default_from@flowcrypt.test>"
+    const val DEFAULT_TO_RECIPIENT = "To <default_to@flowcrypt.test>"
+    const val DEFAULT_CC_RECIPIENT = "Cc <default_cc@flowcrypt.test>"
+    const val DEFAULT_BCC_RECIPIENT = "Bcc <default_bcc@flowcrypt.test>"
 
     val existingCcPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
       EXISTING_MESSAGE_CC_RECIPIENT,
@@ -1022,6 +1746,21 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         com.google.api.services.gmail.model.Message().apply {
           id = MESSAGE_ID_EXISTING_PGP_MIME
         }
+      )
+    }
+
+    val LIST_THREADS_RESPONSE_ALL_THREADS = ListThreadsResponse().apply {
+      factory = GsonFactory.getDefaultInstance()
+      threads = listOf(
+        Thread().apply { id = THREAD_ID_ONLY_STANDARD },
+        Thread().apply { id = THREAD_ID_ONLY_ENCRYPTED },
+        Thread().apply { id = THREAD_ID_NO_ATTACHMENTS },
+        Thread().apply { id = THREAD_ID_SINGLE_STANDARD_MESSAGE },
+        Thread().apply { id = THREAD_ID_SINGLE_ENCRYPTED_MESSAGE },
+        Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_SINGLE_DRAFT },
+        Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS },
+        Thread().apply { id = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS },
+        Thread().apply { id = THREAD_ID_MIXED_MESSAGES },
       )
     }
 

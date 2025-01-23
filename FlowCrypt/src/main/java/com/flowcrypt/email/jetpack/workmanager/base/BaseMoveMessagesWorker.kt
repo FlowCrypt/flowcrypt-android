@@ -15,13 +15,13 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.BaseSyncWorker
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 
 /**
  * @author Denys Bondarenko
@@ -51,9 +51,10 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
     withContext(Dispatchers.IO) {
       val localDestinationFolder = getDestinationFolderForIMAP(account) ?: return@withContext
 
-      moveMessagesInternal(account) { folderName, uidList ->
+      moveMessagesInternal(account) { folderName, entities ->
         store.getFolder(folderName).use { folder ->
           val remoteSrcFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val uidList = entities.map { it.uid }
           val msgs: List<Message> =
             remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
           val remoteDestFolder = store.getFolder(localDestinationFolder.fullName) as IMAPFolder
@@ -66,16 +67,32 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
     }
 
   private suspend fun moveMessages(account: AccountEntity) = withContext(Dispatchers.IO) {
-    moveMessagesInternal(account) { folderName, uidList ->
+    moveMessagesInternal(account) { folderName, entities ->
       executeGMailAPICall(applicationContext) {
         val gmailApiLabelsData = getAddAndRemoveLabelIdsForGmailAPI(folderName)
-        GmailApiHelper.changeLabels(
-          context = applicationContext,
-          accountEntity = account,
-          ids = uidList.map { java.lang.Long.toHexString(it).lowercase() },
-          addLabelIds = gmailApiLabelsData.addLabelIds,
-          removeLabelIds = gmailApiLabelsData.removeLabelIds
-        )
+
+        if (account.useConversationMode) {
+          val resultMap = GmailApiHelper.changeLabelsForThreads(
+            context = applicationContext,
+            accountEntity = account,
+            threadIdList = entities.mapNotNull { it.threadIdAsHEX }.toSet(),
+            addLabelIds = gmailApiLabelsData.addLabelIds,
+            removeLabelIds = gmailApiLabelsData.removeLabelIds
+          )
+
+          val successList = resultMap.filter { it.value }.keys
+          val threadMessageEntitiesToBeDeleted = entities.filter { it.threadIdAsHEX in successList }
+          cleanSomeThreadsCache(threadMessageEntitiesToBeDeleted, account)
+        } else {
+          val uidList = entities.map { it.uid }
+          GmailApiHelper.changeLabels(
+            context = applicationContext,
+            accountEntity = account,
+            ids = uidList.map { java.lang.Long.toHexString(it).lowercase() },
+            addLabelIds = gmailApiLabelsData.addLabelIds,
+            removeLabelIds = gmailApiLabelsData.removeLabelIds
+          )
+        }
       }
 
       delay(2000)
@@ -84,7 +101,7 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
 
   private suspend fun moveMessagesInternal(
     account: AccountEntity,
-    action: suspend (folderName: String, uidList: List<Long>) -> Unit
+    action: suspend (folderName: String, messageEntities: List<MessageEntity>) -> Unit
   ) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
@@ -109,8 +126,8 @@ abstract class BaseMoveMessagesWorker(context: Context, params: WorkerParameters
           continue
         }
 
+        action.invoke(srcFolder, filteredMessages)
         val uidList = filteredMessages.map { it.uid }
-        action.invoke(srcFolder, uidList)
         val movedMessages = messagesToMove.filter { it.uid in uidList }
           .map { it.copy(state = MessageState.NONE.value) }
         onMessagesMovedOnServer(account, srcFolder, movedMessages)

@@ -11,13 +11,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
-import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragmentArgs
+import com.flowcrypt.email.ui.activity.fragment.ThreadDetailsFragment
+import com.flowcrypt.email.ui.activity.fragment.ThreadDetailsFragmentArgs
 
 /**
  * @author Denys Bondarenko
  */
-class FragmentsAdapter(
+class ThreadDetailsFragmentsAdapter(
   private val localFolder: LocalFolder,
   initialList: List<MessageEntity>,
   fragment: Fragment,
@@ -45,11 +45,11 @@ class FragmentsAdapter(
   override fun getItemCount(): Int = asyncListDiffer.currentList.size
 
   override fun createFragment(position: Int): Fragment =
-    MessageDetailsFragment().apply {
-      arguments = MessageDetailsFragmentArgs(
-        messageEntity = asyncListDiffer.currentList[position],
+    ThreadDetailsFragment().apply {
+      arguments = ThreadDetailsFragmentArgs(
+        messageEntityId = asyncListDiffer.currentList[position].id ?: 0,
         localFolder = localFolder,
-        isViewPagerMode = true
+        isViewPagerMode = true,
       ).toBundle()
     }
 
@@ -67,9 +67,5 @@ class FragmentsAdapter(
 
   fun getItem(position: Int): MessageEntity? {
     return asyncListDiffer.currentList.getOrNull(position)
-  }
-
-  fun getItemPositionById(id: Long): Int {
-    return asyncListDiffer.currentList.indexOfFirst { item -> item.id == id }
   }
 }

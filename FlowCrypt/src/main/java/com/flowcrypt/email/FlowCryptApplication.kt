@@ -8,6 +8,9 @@ package com.flowcrypt.email
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -48,6 +51,9 @@ import java.util.concurrent.TimeUnit
  * @author Denys Bondarenko
  */
 class FlowCryptApplication : Application(), Configuration.Provider {
+
+  val appForegroundedObserver = AppForegroundedObserver()
+
   override val workManagerConfiguration: Configuration
     get() = Configuration.Builder()
       .setMinimumLoggingLevel(
@@ -60,6 +66,8 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun onCreate() {
     super.onCreate()
+    ProcessLifecycleOwner.get().lifecycle.addObserver(appForegroundedObserver)
+
     setupGlobalSettingsForJavaMail()
     setupPGPainless()
     setupKeysStorage()
@@ -258,6 +266,21 @@ class FlowCryptApplication : Application(), Configuration.Provider {
           )
         }
       }
+    }
+  }
+
+  class AppForegroundedObserver : DefaultLifecycleObserver {
+    val isAppForegrounded: Boolean
+      get() {
+        return isAppForegroundedInternal
+      }
+    private var isAppForegroundedInternal = false
+    override fun onStart(owner: LifecycleOwner) {
+      isAppForegroundedInternal = true
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+      isAppForegroundedInternal = false
     }
   }
 }

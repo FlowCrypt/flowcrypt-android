@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.adapter
@@ -8,18 +8,18 @@ package com.flowcrypt.email.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.databinding.ItemMimeHeaderBinding
 
 /**
  * @author Denys Bondarenko
  */
-class MsgDetailsRecyclerViewAdapter :
-  ListAdapter<MsgDetailsRecyclerViewAdapter.Header,
-      MsgDetailsRecyclerViewAdapter.ViewHolder>(DiffUtilCallBack()) {
+class MessageHeadersListAdapter :
+  ListAdapter<MessageHeadersListAdapter.Header,
+      MessageHeadersListAdapter.ViewHolder>(DiffUtilCallBack()) {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(
@@ -32,12 +32,11 @@ class MsgDetailsRecyclerViewAdapter :
   }
 
   inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    val tVHeaderName: TextView = itemView.findViewById(R.id.tVHeaderName)
-    val tVHeaderValue: TextView = itemView.findViewById(R.id.tVHeaderValue)
+    val binding = ItemMimeHeaderBinding.bind(itemView)
 
     fun bindTo(item: Header?) {
-      tVHeaderName.text = item?.name
-      tVHeaderValue.text = item?.value
+      binding.tVHeaderName.text = item?.name
+      binding.tVHeaderValue.text = item?.value
     }
   }
 

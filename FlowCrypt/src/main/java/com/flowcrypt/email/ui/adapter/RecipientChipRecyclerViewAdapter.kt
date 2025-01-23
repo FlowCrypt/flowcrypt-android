@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.adapter
@@ -27,6 +27,7 @@ import com.flowcrypt.email.databinding.ChipRecipientItemBinding
 import com.flowcrypt.email.databinding.ComposeAddRecipientItemBinding
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.util.RecipientLookUpManager
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
@@ -82,7 +83,7 @@ class RecipientChipRecyclerViewAdapter(
   ) {
     when (holder) {
       is AddViewHolder -> holder.bind()
-      is ChipViewHolder -> holder.bind(getItem(position).itemData as RecipientInfo)
+      is ChipViewHolder -> holder.bind(getItem(position).itemData as RecipientItem)
       is MoreViewHolder -> holder.bind(getItem(position).itemData as ItemData.More)
     }
   }
@@ -91,7 +92,7 @@ class RecipientChipRecyclerViewAdapter(
     return getItem(position).type
   }
 
-  fun submitList(recipients: Map<String, RecipientInfo>, isModifyingEnabled: Boolean = true) {
+  fun submitList(recipients: Map<String, RecipientItem>, isModifyingEnabled: Boolean = true) {
     val filteredList = recipients.values
       .take(if (hasInputFocus()) recipients.size else MAX_VISIBLE_ITEMS_COUNT)
     val hasUpdatingInHiddenItems = (recipients.values - filteredList.toSet()).any { it.isUpdating }
@@ -172,26 +173,26 @@ class RecipientChipRecyclerViewAdapter(
 
   inner class ChipViewHolder(itemView: View) : BaseViewHolder(itemView) {
     val binding = ChipRecipientItemBinding.bind(itemView)
-    fun bind(recipientInfo: RecipientInfo) {
+    fun bind(recipientItem: RecipientItem) {
       val chip = binding.chip
-      chip.text = recipientInfo.recipientWithPubKeys.recipient.name
-        ?: recipientInfo.recipientWithPubKeys.recipient.email
+      chip.text = recipientItem.recipientWithPubKeys.recipient.name
+        ?: recipientItem.recipientWithPubKeys.recipient.email
 
-      updateChipBackgroundColor(chip, recipientInfo)
-      updateChipTextColor(chip, recipientInfo)
-      updateChipIcon(chip, recipientInfo)
+      updateChipBackgroundColor(chip, recipientItem)
+      updateChipTextColor(chip, recipientItem)
+      updateChipIcon(chip, recipientItem)
 
-      chip.isCloseIconVisible = recipientInfo.isModifyingEnabled
+      chip.isCloseIconVisible = recipientItem.isModifyingEnabled
       chip.setOnCloseIconClickListener {
-        onChipsListener.onChipDeleted(recipientType, recipientInfo)
+        onChipsListener.onChipDeleted(recipientType, recipientItem)
       }
     }
 
-    private fun updateChipBackgroundColor(chip: Chip, recipientInfo: RecipientInfo) {
-      val recipientWithPubKeys = recipientInfo.recipientWithPubKeys
+    private fun updateChipBackgroundColor(chip: Chip, recipientItem: RecipientItem) {
+      val recipientWithPubKeys = recipientItem.recipientWithPubKeys
 
       val color = when {
-        recipientInfo.isUpdating -> {
+        recipientItem.isUpdating -> {
           MaterialColors.getColor(
             chip.context,
             com.google.android.material.R.attr.colorSurface,
@@ -217,9 +218,9 @@ class RecipientChipRecyclerViewAdapter(
       chip.chipBackgroundColor = ColorStateList.valueOf(color)
     }
 
-    private fun updateChipTextColor(chip: Chip, recipientInfo: RecipientInfo) {
+    private fun updateChipTextColor(chip: Chip, recipientItem: RecipientItem) {
       val color = when {
-        recipientInfo.isUpdating -> {
+        recipientItem.isUpdating -> {
           MaterialColors.getColor(
             chip.context,
             com.google.android.material.R.attr.colorOnSurface,
@@ -239,8 +240,8 @@ class RecipientChipRecyclerViewAdapter(
       chip.setTextColor(color)
     }
 
-    private fun updateChipIcon(chip: Chip, recipientInfo: RecipientInfo) {
-      chip.chipIcon = if (recipientInfo.isUpdating) prepareProgressDrawable() else null
+    private fun updateChipIcon(chip: Chip, recipientItem: RecipientItem) {
+      chip.chipIcon = if (recipientItem.isUpdating) prepareProgressDrawable() else null
     }
   }
 
@@ -260,11 +261,11 @@ class RecipientChipRecyclerViewAdapter(
   interface OnChipsListener {
     fun onEmailAddressTyped(recipientType: Message.RecipientType, email: CharSequence)
     fun onEmailAddressAdded(recipientType: Message.RecipientType, email: CharSequence)
-    fun onChipDeleted(recipientType: Message.RecipientType, recipientInfo: RecipientInfo)
+    fun onChipDeleted(recipientType: Message.RecipientType, recipientItem: RecipientItem)
     fun onAddFieldFocusChanged(recipientType: Message.RecipientType, hasFocus: Boolean)
   }
 
-  data class RecipientInfo(
+  data class RecipientItem(
     val recipientType: Message.RecipientType,
     val recipientWithPubKeys: RecipientWithPubKeys,
     val creationTime: Long = System.currentTimeMillis(),
@@ -273,6 +274,16 @@ class RecipientChipRecyclerViewAdapter(
     val isModifyingEnabled: Boolean = true
   ) : ItemData {
     override val uniqueId: Long = requireNotNull(recipientWithPubKeys.recipient.id)
+
+    fun toRecipientInfo(): RecipientLookUpManager.RecipientInfo {
+      return RecipientLookUpManager.RecipientInfo(
+        recipientType = recipientType,
+        recipientWithPubKeys = recipientWithPubKeys,
+        creationTime = creationTime,
+        isUpdating = isUpdating,
+        isUpdateFailed = isUpdateFailed
+      )
+    }
   }
 
   data class Item(@Type val type: Int, val itemData: ItemData)

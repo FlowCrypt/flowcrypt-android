@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.gmailapi
 
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
@@ -88,8 +87,8 @@ class ComposeScreenForwardWithGmailApiSignatureFlowTest :
     //wait the message details rendering
     waitForObjectWithText(getResString(R.string.reply_all_encrypted), TimeUnit.SECONDS.toMillis(10))
 
-    //click on replyAll
-    openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_ENCRYPTED)
+    //click on forward button
+    openReplyScreen(R.id.forwardButton, SUBJECT_EXISTING_ENCRYPTED)
 
     //need to wait while all action for reply case will be applied
     Thread.sleep(1000)

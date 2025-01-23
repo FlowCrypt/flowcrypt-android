@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -20,15 +20,15 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentDownloadAttachmentBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.invisible
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.DownloadAttachmentViewModel
-import com.flowcrypt.email.security.SecurityUtils
 import org.apache.commons.io.FilenameUtils
 
 /**
@@ -94,19 +94,36 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
 
           Result.Status.SUCCESS -> {
             navController?.navigateUp()
+            val finalName = if (args.attachmentInfo.isPossiblyEncrypted) {
+              /*
+               We need to drop the last extension section in the final result
+               as we return a decrypted file here.
+               */
+              FilenameUtils.getBaseName(args.attachmentInfo.name)
+            } else {
+              args.attachmentInfo.name
+            }
+
             it.data?.let { byteArray ->
               setFragmentResult(
                 args.requestKey,
                 bundleOf(
                   KEY_ATTACHMENT to args.attachmentInfo.copy(
                     rawData = byteArray,
-                    name = if (SecurityUtils.isPossiblyEncryptedData(args.attachmentInfo.name)) {
-                      FilenameUtils.getBaseName(args.attachmentInfo.name)
+                    name = finalName,
+                    type = if (args.attachmentInfo.isPossiblyEncrypted) {
+                      /*
+                       We need to specify a new MIME type based on the new attachment name
+                       after decryption. It will help the Android system use a right app
+                       to open this attachment.
+                      */
+                      finalName.getPossibleAndroidMimeType() ?: args.attachmentInfo.type
                     } else {
-                      args.attachmentInfo.name
-                    }
+                      args.attachmentInfo.type
+                    },
                   ),
-                  KEY_REQUEST_CODE to args.requestCode
+                  KEY_REQUEST_CODE to args.requestCode,
+                  KEY_INCOMING_BUNDLE to args.bundle
                 )
               )
             }
@@ -134,5 +151,6 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
   companion object {
     const val KEY_ATTACHMENT = "KEY_ATTACHMENT"
     const val KEY_REQUEST_CODE = "KEY_REQUEST_CODE"
+    const val KEY_INCOMING_BUNDLE = "KEY_INCOMING_BUNDLE"
   }
 }
