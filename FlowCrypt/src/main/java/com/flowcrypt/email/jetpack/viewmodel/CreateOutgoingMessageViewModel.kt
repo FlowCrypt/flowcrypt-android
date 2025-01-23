@@ -66,31 +66,37 @@ class CreateOutgoingMessageViewModel(
         val activeAccount = getActiveAccountSuspend()
           ?: throw IllegalStateException("No active account")
 
-        val replyTo = outgoingMessageInfo.replyToMessageEntityId?.let {
-          roomDatabase.msgDao().getMsgById(it)?.replyTo
+        val replyToMessageEntity = outgoingMessageInfo.replyToMessageEntityId?.let {
+          roomDatabase.msgDao().getMsgById(it)
         }
-        messageEntity = outgoingMessageInfo.toMessageEntity(
+        val template = outgoingMessageInfo.toMessageEntity(
           folder = JavaEmailConstants.FOLDER_OUTBOX,
           flags = Flags(Flags.Flag.SEEN),
-          replyTo = replyTo,
+          replyTo = replyToMessageEntity?.replyToAddresses,
           password = outgoingMessageInfo.password?.let {
             KeyStoreCryptoManager.encrypt(String(it)).toByteArray()
           }
         )
+
+        messageEntity = if (replyToMessageEntity != null) {
+          template.copy(threadId = replyToMessageEntity.threadId)
+        } else {
+          template
+        }
+
         val messageId = roomDatabase.msgDao().insertSuspend(messageEntity)
-        messageEntity = messageEntity.copy(id = messageId, uid = messageId)
+        messageEntity = messageEntity.copy(id = messageId, uid = outgoingMessageInfo.uid)
         roomDatabase.msgDao().updateSuspend(messageEntity)
 
         updateOutgoingMsgCount(activeAccount.email, activeAccount.accountType)
         ProcessingOutgoingMessageInfoHelper.process(
           context = context,
           originalOutgoingMessageInfo = outgoingMessageInfo.copy(
-            uid = messageId,
             atts = outgoingMessageInfo.atts?.map {
               it.copy(
                 email = outgoingMessageInfo.account,
                 folder = JavaEmailConstants.FOLDER_OUTBOX,
-                uid = messageId,
+                uid = messageEntity.uid,
                 type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
               )
             },
@@ -98,7 +104,7 @@ class CreateOutgoingMessageViewModel(
               it.copy(
                 email = outgoingMessageInfo.account,
                 folder = JavaEmailConstants.FOLDER_OUTBOX,
-                uid = messageId,
+                uid = messageEntity.uid,
                 fwdFolder = it.folder,
                 fwdUid = it.uid,
                 type = it.type.ifEmpty { Constants.MIME_TYPE_BINARY_DATA }
@@ -117,7 +123,7 @@ class CreateOutgoingMessageViewModel(
             DownloadForwardedAttachmentsWorker.enqueue(context)
           } else {
             val existingMsgEntity = roomDatabase.msgDao().getMsg(
-              messageEntity.email, messageEntity.folder, messageEntity.uid
+              messageEntity.account, messageEntity.folder, messageEntity.uid
             ) ?: throw IllegalStateException("A message is not exist")
             if (outgoingMessageInfo.encryptionType == MessageEncryptionType.ENCRYPTED
               && outgoingMessageInfo.isPasswordProtected == true

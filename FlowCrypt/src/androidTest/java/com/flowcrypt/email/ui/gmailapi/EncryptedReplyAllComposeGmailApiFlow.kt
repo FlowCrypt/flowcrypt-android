@@ -88,7 +88,7 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
   @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
@@ -102,7 +102,7 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
     waitForObjectWithText(getResString(R.string.reply_all_encrypted), TimeUnit.SECONDS.toMillis(10))
 
     //click on replyAll
-    openReplyScreen(R.id.layoutReplyAllButton, SUBJECT_EXISTING_ENCRYPTED)
+    openReplyScreen(R.id.replyAllButton, SUBJECT_EXISTING_ENCRYPTED)
 
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
@@ -148,10 +148,11 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
       val expectedText = MESSAGE + EmailUtil.genReplyContent(
         IncomingMessageInfo(
           msgEntity = MessageEntity(
-            email = "",
+            account = "",
+            accountType = "",
             folder = "",
             uid = 0,
-            fromAddress = DEFAULT_FROM_RECIPIENT,
+            fromAddresses = DEFAULT_FROM_RECIPIENT,
             receivedDate = DATE_EXISTING_ENCRYPTED
 
           ),

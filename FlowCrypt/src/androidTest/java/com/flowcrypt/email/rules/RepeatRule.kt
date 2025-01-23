@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.rules
@@ -27,7 +27,7 @@ class RepeatRule(private val retryCount: Int = 3) : BaseRule() {
             base.evaluate()
             println(description.displayName.toString() + ": run " + (i + 1) + " completed")
           } catch (t: Throwable) {
-            System.err.println(description.displayName.toString() + ": run " + (i + 1) + " failed")
+            System.err.println(description.displayName.toString() + ": run " + (i + 1) + " of $attempts failed")
             throw t
           }
         }

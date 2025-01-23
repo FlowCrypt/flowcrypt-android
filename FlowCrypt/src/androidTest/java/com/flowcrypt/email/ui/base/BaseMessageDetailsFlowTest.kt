@@ -1,12 +1,11 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
 
 import android.text.format.Formatter
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
@@ -17,7 +16,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
@@ -48,12 +46,9 @@ import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragmentArgs
-import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.Description
-import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
@@ -117,46 +112,53 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     Thread.sleep(1000)//temporary added to complete test. Idling issue
     onView(withId(R.id.imageButtonReplyAll))
       .check(matches(isDisplayed()))
-    onView(withId(R.id.layoutReplyButton))
+    onView(withId(R.id.replyButton))
       .perform(scrollTo())
       .check(matches(isDisplayed()))
-    onView(withId(R.id.layoutReplyAllButton))
+    onView(withId(R.id.replyAllButton))
       .check(matches(isDisplayed()))
-    onView(withId(R.id.layoutFwdButton))
+    onView(withId(R.id.forwardButton))
       .check(matches(isDisplayed()))
 
     val buttonsColorId: Int
     if (msgEntity.isEncrypted == true) {
       buttonsColorId = R.color.colorPrimary
-      onView(withId(R.id.textViewReply))
+      onView(withId(R.id.replyButton))
         .check(matches(withText(getResString(R.string.reply_encrypted))))
-      onView(withId(R.id.textViewReplyAll))
+      onView(withId(R.id.replyAllButton))
         .check(matches(withText(getResString(R.string.reply_all_encrypted))))
-      onView(withId(R.id.textViewFwd))
+      onView(withId(R.id.forwardButton))
         .check(matches(withText(getResString(R.string.forward_encrypted))))
     } else {
       buttonsColorId = R.color.red
-      onView(withId(R.id.textViewReply))
+      onView(withId(R.id.replyButton))
         .check(matches(withText(getResString(R.string.reply))))
-      onView(withId(R.id.textViewReplyAll))
+      onView(withId(R.id.replyAllButton))
         .check(matches(withText(getResString(R.string.reply_all))))
-      onView(withId(R.id.textViewFwd))
+      onView(withId(R.id.forwardButton))
         .check(matches(withText(getResString(R.string.forward))))
     }
 
-    onView(withId(R.id.imageViewReply))
+    onView(withId(R.id.replyButton))
       .check(matches(withDrawable(resId = R.drawable.ic_reply, tintColor = buttonsColorId)))
-    onView(withId(R.id.imageViewReplyAll))
+    onView(withId(R.id.replyAllButton))
       .check(matches(withDrawable(resId = R.drawable.ic_reply_all, tintColor = buttonsColorId)))
-    onView(withId(R.id.imageViewFwd))
+    onView(withId(R.id.forwardButton))
       .check(matches(withDrawable(resId = R.drawable.ic_forward, tintColor = buttonsColorId)))
   }
 
-  protected fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, att: AttachmentInfo?) {
+  protected fun baseCheckWithAtt(
+    incomingMsgInfo: IncomingMessageInfo?,
+    att: AttachmentInfo?,
+    actionBeforeProceed: () -> Unit = {}
+  ) {
     assertThat(incomingMsgInfo, notNullValue())
 
     val msgEntity = incomingMsgInfo!!.msgEntity
     launchActivity(msgEntity)
+
+    actionBeforeProceed.invoke()
+
     matchHeader(incomingMsgInfo)
     Thread.sleep(1000)//temporary added to complete test. Idling issue
     //checkWebViewText(incomingMsgInfo.text) temporary disabled
@@ -289,23 +291,6 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .check(matches(withToolBarText(title)))
 
     return incomingMessageInfo
-  }
-
-  protected fun withHeaderInfo(header: MsgDetailsRecyclerViewAdapter.Header):
-      Matcher<RecyclerView.ViewHolder> {
-    return object : BoundedMatcher<RecyclerView.ViewHolder,
-        MsgDetailsRecyclerViewAdapter.ViewHolder>(
-      MsgDetailsRecyclerViewAdapter.ViewHolder::class.java
-    ) {
-      override fun matchesSafely(holder: MsgDetailsRecyclerViewAdapter.ViewHolder): Boolean {
-        return holder.tVHeaderName.text.toString() == header.name
-            && holder.tVHeaderValue.text.toString() == header.value
-      }
-
-      override fun describeTo(description: Description) {
-        description.appendText("with: $header")
-      }
-    }
   }
 
   protected fun testPgpBadges(

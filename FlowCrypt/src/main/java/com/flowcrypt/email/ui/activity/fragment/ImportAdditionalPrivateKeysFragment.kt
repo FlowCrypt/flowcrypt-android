@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -221,7 +221,10 @@ class ImportAdditionalPrivateKeysFragment :
             it.data?.let { pair ->
               setFragmentResult(
                 args.requestKey,
-                bundleOf(KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second))
+                bundleOf(
+                  KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second),
+                  KEY_INCOMING_BUNDLE to args.bundle
+                )
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
@@ -418,6 +421,10 @@ class ImportAdditionalPrivateKeysFragment :
 
     val KEY_IMPORTED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_IMPORTED_PRIVATE_KEYS", ImportAdditionalPrivateKeysFragment::class.java
+    )
+
+    val KEY_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_INCOMING_BUNDLE", ImportAdditionalPrivateKeysFragment::class.java
     )
   }
 }

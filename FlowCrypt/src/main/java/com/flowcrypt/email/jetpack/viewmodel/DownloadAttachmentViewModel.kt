@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -19,7 +19,6 @@ import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,9 +28,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 
 /**
  * @author Denys Bondarenko
@@ -99,7 +98,7 @@ class DownloadAttachmentViewModel(val attachmentInfo: AttachmentInfo, applicatio
       context = context,
       accountEntity = account,
       msgId = attachmentInfo.uid.toHex(),
-      format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+      format = GmailApiHelper.RESPONSE_FORMAT_FULL
     )
     val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = attachmentInfo.path)
       ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))

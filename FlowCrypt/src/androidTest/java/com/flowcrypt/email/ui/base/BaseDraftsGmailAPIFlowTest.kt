@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
@@ -473,7 +473,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
 
     const val DRAFT_ID_SECOND = "r5555555555555555552"
     const val MESSAGE_ID_SECOND = "5555555555555552"
-    const val THREAD_ID_SECOND = "11111111111111112"
+    const val THREAD_ID_SECOND = "1111111111111112"
     const val MESSAGE_SUBJECT_SECOND = "second"
   }
 }

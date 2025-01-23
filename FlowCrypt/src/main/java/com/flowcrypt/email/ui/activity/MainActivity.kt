@@ -410,18 +410,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     val itemPosition = mailLabels?.subMenu?.size() ?: return
     if (itemPosition == 0) return
     val menuItem = mailLabels.subMenu?.getItem(itemPosition - 1) ?: return
-
-    if ((foldersManager.getFolderByAlias(label)?.msgCount ?: 0) > 0) {
-      val folder = foldersManager.getFolderByAlias(label) ?: return
-      val view = layoutInflater.inflate(
-        R.layout.navigation_view_item_with_amount, binding.navigationView, false
-      )
-      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-      textViewMsgsCount.text = folder.msgCount.takeIf { it > 0 }?.let { "$it" }
-      menuItem.actionView = view
-    } else {
-      menuItem.actionView = null
-    }
+    val folder = foldersManager.getFolderByAlias(label) ?: return
+    val view = layoutInflater.inflate(
+      R.layout.navigation_view_item_with_amount, binding.navigationView, false
+    )
+    val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
+    textViewMsgsCount.text = folder.msgCount.takeIf { it > 0 }?.let { "$it" }
+    menuItem.actionView = view
   }
 
   private fun handleLogoutFromSystemSettings(intent: Intent?): Boolean {
@@ -445,11 +440,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
         roomDatabase.accountDao().logout(accountEntity)
         removeAccountFromAccountManager(accountEntity)
-
-        //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
-        //remove all info about the given account from the local db
-        roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
-        roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
 
         val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
         if (newActiveAccount == null) {
@@ -596,13 +586,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       super.onDrawerOpened(drawerView)
       UpdateLabelsWorker.enqueue(context = this@MainActivity)
       labelsViewModel.updateOutboxMsgsCount()
-    }
-
-    override fun onDrawerClosed(drawerView: View) {
-      super.onDrawerClosed(drawerView)
-      if (binding.navigationView.menu.getItem(0)?.isVisible == false) {
-        navigationViewManager?.navHeaderBinding?.layoutUserDetails?.performClick()
-      }
     }
 
     override fun onDrawerStateChanged(newState: Int) {

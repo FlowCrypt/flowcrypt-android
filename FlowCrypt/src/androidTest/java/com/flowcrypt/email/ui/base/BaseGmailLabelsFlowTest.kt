@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
@@ -91,7 +91,8 @@ abstract class BaseGmailLabelsFlowTest : BaseMessageDetailsFlowTest() {
     val originalMessageEntity = incomingMsgInfo?.msgEntity ?: return@getMsgInfo null
     return@getMsgInfo incomingMsgInfo.copy(
       msgEntity = originalMessageEntity.copy(
-        labelIds = labelsIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR)
+        labelIds = labelsIds.joinToString(MessageEntity.LABEL_IDS_SEPARATOR),
+        accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE
       )
     )
   }

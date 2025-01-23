@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.rules
@@ -11,6 +11,6 @@ package com.flowcrypt.email.rules
 @Retention()
 @Target(
   AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER,
-  AnnotationTarget.PROPERTY_SETTER, AnnotationTarget.ANNOTATION_CLASS
+  AnnotationTarget.PROPERTY_SETTER, AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS
 )
 annotation class Repeat(val value: Int = 1)

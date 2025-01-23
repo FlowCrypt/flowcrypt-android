@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email
@@ -56,6 +56,10 @@ object MsgsCacheManager {
         inputStream.copyTo(it)
       }
     }
+
+  fun removeMessage(key: String): Boolean {
+    return diskLruCache.remove(key)
+  }
 
   fun getMsgAsByteArray(key: String): ByteArray {
     return diskLruCache[key]?.getByteArray(0) ?: return byteArrayOf()

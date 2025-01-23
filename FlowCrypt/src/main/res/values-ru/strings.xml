@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="prompt_subject">Тема</string>
     <string name="send">Отправить</string>
@@ -483,7 +488,7 @@
     <string name="add_recipient_to_send_message">Пожалуйста, добавьте хотя бы одного получателя в поле \"Кому\" для отправки этого сообщения</string>
     <string name="send_feedback_failed_hint">При отправке сообщения произошла ошибка. Пожалуйста, напишите нам напрямую на %1$s.\n\nДетали ошибки:\n%2$s</string>
     <string name="edit_draft">Редактировать черновик</string>
-    <string name="draft_saved">Черновик сохранен</string>
+    <string name="saving_draft">Сохранение черновика</string>
     <string name="fetching_drafts_info_failed">Не удалось загрузить информацию о черновиках. Пожалуйста, попробуйте еще раз.</string>
     <string name="no_recipients">(без получателей)</string>
     <string name="could_not_save_draft">Не удалось сохранить черновик\n\nДетали ошибки:\n%1$s</string>
@@ -550,6 +555,11 @@
         <item quantity="one">Удалить это %1$d сообщение навсегда?</item>
         <item quantity="few">Удалить эти %1$d сообщения навсегда?</item>
         <item quantity="many">Удалить эти %1$d сообщений навсегда?</item>
+    </plurals>
+    <plurals name="delete_thread_question">
+        <item quantity="one">Удалить этот %1$d разговор навсегда?</item>
+        <item quantity="few">Удалить эти %1$d переписки навсегда?</item>
+        <item quantity="many">Удалить эти %1$d переписок навсегда?</item>
     </plurals>
     <plurals name="found_folder">
         <item quantity="other">Папки не найдены</item>
@@ -631,4 +641,13 @@
     <string name="please_specify_your_signature_here">Пожалуйста, укажите здесь свою подпись</string>
     <string name="make_backup_in_the_email_box">Сделайте резервную копию в почтовом ящике</string>
     <string name="make_backup_explanation_text">Сохранить предоставленные закрытые ключи PGP, защищенные парольной фразой, в качестве резервной копии в папке «Входящие». Это поможет Вам получить доступ к Вашим зашифрованным сообщениям с других устройств (при условии предоставление Вашей парольной фразы). Вы можете безопасно оставить его в своем почтовом ящике или заархивировать.\n\nЕсли Вам не нужна такая резервная копия, отключите эту опцию.</string>
+    <string name="draft">Черновик</string>
+    <string name="permissions_granted_and_now_you_can_download_attachments">Разрешения предоставлены и теперь Вы можете загружать вложения.</string>
+    <string name="delete_draft">Удалить черновик?</string>
+    <string name="thread_was_deleted_or_moved">Переписка удалена или перемещена</string>
+    <plurals name="drafts_count">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Черновик</item>
+        <item quantity="few">Черновики(%1$d)</item>
+        <item quantity="many">Черновики(%1$d)</item>
+    </plurals>
 </resources>

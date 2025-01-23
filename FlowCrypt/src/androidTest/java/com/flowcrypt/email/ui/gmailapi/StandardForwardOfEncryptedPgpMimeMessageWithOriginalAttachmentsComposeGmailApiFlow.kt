@@ -48,6 +48,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -86,9 +87,8 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
 
   @Test
   fun testSending() {
-
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on the encrypted message
     onView(withId(R.id.recyclerViewMsgs))
@@ -99,10 +99,10 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
       )
 
     //wait the message details rendering
-    Thread.sleep(2000)
+    waitForObjectWithText(MESSAGE_EXISTING_PGP_MIME, TimeUnit.SECONDS.toMillis(10))
 
     //click on forward
-    openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_PGP_MIME)
+    openReplyScreen(R.id.forwardButton, SUBJECT_EXISTING_PGP_MIME)
 
     //switch to standard mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -135,20 +135,21 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
       val fwdTextPart = multipart.getBodyPart(0)
       val expectedMessageText = outgoingMessageConfiguration.message + IncomingMessageInfo(
         msgEntity = MessageEntity(
-          email = "",
+          account = "",
+          accountType = "",
           folder = "",
           uid = 0,
-          fromAddress = DEFAULT_FROM_RECIPIENT,
+          fromAddresses = DEFAULT_FROM_RECIPIENT,
           subject = SUBJECT_EXISTING_PGP_MIME,
           receivedDate = DATE_EXISTING_PGP_MIME,
-          toAddress = InternetAddress.toString(
+          toAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_TO_RECIPIENT
               )
             )
           ),
-          ccAddress = InternetAddress.toString(
+          ccAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_CC_RECIPIENT

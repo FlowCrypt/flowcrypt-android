@@ -30,6 +30,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.ScrollView
+import androidx.core.widget.NestedScrollView
 import java.util.ArrayList
 
 /**
@@ -44,7 +45,7 @@ import java.util.ArrayList
  *
  * See https://github.com/k9mail/k-9
  */
-class NonLockingScrollView : ScrollView {
+class NonLockingScrollView : NestedScrollView {
   /**
    * The list of children who should always receive touch events, and not have them intercepted.
    */

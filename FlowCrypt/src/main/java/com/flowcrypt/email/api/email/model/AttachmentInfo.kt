@@ -1,23 +1,21 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.model
 
 import android.net.Uri
 import android.os.Parcelable
-import android.webkit.MimeTypeMap
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import com.flowcrypt.email.security.SecurityUtils
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import org.apache.commons.io.FilenameUtils
 
 /**
  * Simple POJO which defines information about email attachments.
@@ -56,7 +54,7 @@ data class AttachmentInfo(
   )
 
   @IgnoredOnParcel
-  val isPossiblyEncrypted = RawBlockParser.ENCRYPTED_FILE_REGEX.containsMatchIn(name ?: "")
+  val isPossiblyEncrypted = SecurityUtils.isPossiblyEncryptedData(name ?: "")
 
   @IgnoredOnParcel
   val uniqueStringId: String
@@ -118,7 +116,7 @@ data class AttachmentInfo(
   }
 
   fun getAndroidMimeType(): String? {
-    return MimeTypeMap.getSingleton().getMimeTypeFromExtension(FilenameUtils.getExtension(name))
+    return name.getPossibleAndroidMimeType()
   }
 
   fun isHidden() = when {
