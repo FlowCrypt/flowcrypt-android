@@ -28,7 +28,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.MenuHost
@@ -576,7 +575,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
       ) {
         this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(requireContext(), intent)
-        addAtts()
+        addAttachmentsFromExtras()
       } else {
         args.incomingMessageInfo?.localFolder?.let {
           this.folderType = FoldersManager.getFolderType(it)
@@ -599,22 +598,22 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun addAtts() {
+  private fun addAttachmentsFromExtras() {
     val sizeWarningMsg = getString(
       R.string.template_warning_max_total_attachments_size,
       FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
     )
 
     extraActionInfo?.atts?.forEach { attachmentInfo ->
-      if (ContentResolver.SCHEME_FILE.equals(attachmentInfo.uri?.scheme, ignoreCase = true)) {
+      val uri = attachmentInfo.uri ?: return@forEach
+      if (ContentResolver.SCHEME_FILE.equals(uri.scheme, ignoreCase = true)) {
         // we skip attachments that have SCHEME_FILE as deprecated
         return
       }
 
       if (hasAbilityToAddAtt(attachmentInfo)) {
-
         if (attachmentInfo.getSafeName().isEmpty()) {
-          val msg = "attachmentInfo.getName() is empty, uri = " + attachmentInfo.uri!!
+          val msg = "attachmentInfo.getName() is empty, uri = $uri"
           ExceptionUtil.handleError(NullPointerException(msg))
           return
         }
@@ -629,16 +628,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
 
         try {
-          val inputStream = requireContext().contentResolver.openInputStream(attachmentInfo.uri!!)
-
-          if (inputStream != null) {
+          requireContext().contentResolver.openInputStream(uri)?.use { inputStream ->
             FileUtils.copyInputStreamToFile(inputStream, draftAtt)
-            val uri = FileProvider.getUriForFile(
-              requireContext(),
-              Constants.FILE_PROVIDER_AUTHORITY,
-              draftAtt
+            composeMsgViewModel.addAttachments(
+              listOf(attachmentInfo.copy(uri = Uri.fromFile(draftAtt)))
             )
-            composeMsgViewModel.addAttachments(listOf(attachmentInfo.copy(uri = uri)))
           }
         } catch (e: IOException) {
           e.printStackTrace()
