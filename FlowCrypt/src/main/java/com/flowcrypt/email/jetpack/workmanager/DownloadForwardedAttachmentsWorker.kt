@@ -135,6 +135,14 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
           if (attachmentEntities.isEmpty()) {
             roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
             continue
+          } else {
+            if (!tempDirectoryForForwardedAttachments.exists()) {
+              if (!tempDirectoryForForwardedAttachments.mkdirs()) {
+                throw IllegalStateException(
+                  "Creating cache directory ${tempDirectoryForForwardedAttachments.name} failed!"
+                )
+              }
+            }
           }
 
           val msgState = getNewMsgState(
@@ -240,6 +248,7 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
     action: suspend (attachmentEntity: AttachmentEntity) -> InputStream?
   ): MessageState = withContext(Dispatchers.IO) {
     var msgState = MessageState.QUEUED
+    FileAndDirectoryUtils.cleanDir(parentDirectory)
     for (attachmentEntity in attachmentEntities) {
       if (!attachmentEntity.isForwarded) {
         continue
@@ -257,7 +266,6 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
         }
 
         attachmentEntity.fileUri == null -> {
-          FileAndDirectoryUtils.cleanDir(parentDirectory)
           val inputStream = action.invoke(attachmentEntity)
           val tempFile = File(parentDirectory, UUID.randomUUID().toString())
           if (inputStream != null) {
@@ -271,7 +279,7 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
               FileUtils.moveFile(tempFile, attFile)
               uri = Uri.fromFile(attFile)
             } else {
-              FileAndDirectoryUtils.cleanDir(forwardedAttachmentsCacheDir)
+              FileAndDirectoryUtils.cleanDir(parentDirectory)
               //It means the user has already deleted the current message. We don't need to download other attachments.
               break
             }
