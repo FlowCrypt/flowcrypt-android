@@ -108,6 +108,7 @@ import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -604,13 +605,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
     )
 
-    extraActionInfo?.atts?.forEach { attachmentInfo ->
+    extraActionInfo?.atts?.filter {
+      //we skip attachments that have SCHEME_FILE as prohibited(unsafe)
+      !ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
+    }?.forEach { attachmentInfo ->
       val uri = attachmentInfo.uri ?: return@forEach
-      if (ContentResolver.SCHEME_FILE.equals(uri.scheme, ignoreCase = true)) {
-        // we skip attachments that have SCHEME_FILE as deprecated
-        return
-      }
-
       if (hasAbilityToAddAtt(attachmentInfo)) {
         if (attachmentInfo.getSafeName().isEmpty()) {
           val msg = "attachmentInfo.getName() is empty, uri = $uri"
@@ -637,14 +636,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         } catch (e: IOException) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
-
           if (!draftAtt.delete()) {
-            Log.e(TAG, "Delete " + draftAtt.name + " failed!")
+            LogsUtil.d(TAG, "Deleting ${draftAtt.name} failed!")
           }
         }
 
       } else {
-        Toast.makeText(context, sizeWarningMsg, Toast.LENGTH_SHORT).show()
+        toast(sizeWarningMsg, Toast.LENGTH_SHORT)
         return@forEach
       }
     }
