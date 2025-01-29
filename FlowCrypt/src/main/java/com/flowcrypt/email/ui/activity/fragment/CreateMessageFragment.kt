@@ -1615,7 +1615,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       return false
     }
     return (composeMsgViewModel.attachmentsStateFlow.value.isEmpty()
-        || !composeMsgViewModel.hasAttachmentsWithExternalStorageUri)
+        || !composeMsgViewModel.hasAttachmentsWittForeignExternalStorageUri)
   }
 
   private fun usePasswordIfNeeded(): CharArray? {
