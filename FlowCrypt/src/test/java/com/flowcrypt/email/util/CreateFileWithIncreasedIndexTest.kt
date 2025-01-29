@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: denbond7
+ * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.util
@@ -15,8 +15,7 @@ import org.junit.rules.TemporaryFolder
  */
 class CreateFileWithIncreasedIndexTest {
   @get:Rule
-  val temporaryFolder: TemporaryFolder =
-    TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
+  val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   fun fileWithExistedNameOnce() {

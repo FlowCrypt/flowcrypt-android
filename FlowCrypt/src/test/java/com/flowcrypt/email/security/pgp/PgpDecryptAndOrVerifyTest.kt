@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: denbond7
+ * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -36,8 +36,7 @@ import java.util.UUID
 class PgpDecryptAndOrVerifyTest {
 
   @get:Rule
-  val temporaryFolder: TemporaryFolder =
-    TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
+  val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   @Ignore("need to add realization")
@@ -65,8 +64,8 @@ class PgpDecryptAndOrVerifyTest {
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
         listOf(
-          senderPGPSecretKeyRing.certificate,
-          receiverPGPSecretKeyRing.certificate
+          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
+          KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
         )
       ),
       doArmor = false
@@ -105,8 +104,8 @@ class PgpDecryptAndOrVerifyTest {
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
         listOf(
-          senderPGPSecretKeyRing.certificate,
-          receiverPGPSecretKeyRing.certificate
+          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
+          KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
         )
       ),
       doArmor = false
@@ -186,8 +185,8 @@ class PgpDecryptAndOrVerifyTest {
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
         listOf(
-          senderPGPSecretKeyRing.certificate,
-          receiverPGPSecretKeyRing.certificate
+          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
+          KeyRingUtils.publicKeyRingFrom(receiverPGPSecretKeyRing)
         )
       ),
       doArmor = shouldSrcBeArmored
