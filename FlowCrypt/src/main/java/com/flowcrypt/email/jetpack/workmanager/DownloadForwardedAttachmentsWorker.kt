@@ -60,7 +60,7 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
         if (!attachmentsCacheDir.exists()) {
           if (!attachmentsCacheDir.mkdirs()) {
             throw IllegalStateException(
-              "Create cache directory " + attachmentsCacheDir.name + " failed!"
+              "Creating cache directory ${attachmentsCacheDir.name} failed!"
             )
           }
         }
@@ -68,7 +68,7 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
         if (!forwardedAttachmentsCacheDir.exists()) {
           if (!forwardedAttachmentsCacheDir.mkdirs()) {
             throw IllegalStateException(
-              "Create cache directory " + forwardedAttachmentsCacheDir.name + " failed!"
+              "Creating cache directory ${forwardedAttachmentsCacheDir.name} failed!"
             )
           }
         }
