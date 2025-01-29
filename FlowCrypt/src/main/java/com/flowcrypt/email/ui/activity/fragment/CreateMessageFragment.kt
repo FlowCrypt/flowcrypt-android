@@ -1904,6 +1904,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 R.string.no_conn_msg_sent_later
               }
             )
+            FileAndDirectoryUtils.cleanDir(draftCacheDir)
             activity?.finish()
           }
 
