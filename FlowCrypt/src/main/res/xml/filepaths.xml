@@ -7,4 +7,9 @@
     <external-path
         name="external_files"
         path="Download/FlowCrypt" />
+
+    <!-- path for files shared by the app -->
+    <external-files-path
+        name="shared"
+        path="shared/" />
 </paths>
