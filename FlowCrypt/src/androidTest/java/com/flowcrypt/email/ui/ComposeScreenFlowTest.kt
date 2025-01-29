@@ -907,7 +907,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     @get:ClassRule
     @JvmStatic
-    val temporaryFolderRule = TemporaryFolder()
+    val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
     @get:ClassRule
     @JvmStatic
