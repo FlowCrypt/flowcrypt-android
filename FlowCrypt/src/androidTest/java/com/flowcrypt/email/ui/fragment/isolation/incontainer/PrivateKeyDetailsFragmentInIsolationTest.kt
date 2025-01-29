@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.fragment.isolation.incontainer
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
@@ -164,7 +163,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
     val details = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
 
     val file = File(
-      getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+      getTargetContext().getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED),
       "0x" + details.fingerprint + ".asc"
     )
 

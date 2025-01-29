@@ -675,21 +675,36 @@ class AttachmentDownloadManagerService : LifecycleService() {
      */
     private fun storeLegacy(attFile: File, context: Context): Uri {
       val fileName = finalFileName
-      val fileDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-      var sharedFile = File(fileDir, fileName)
-      sharedFile = if (sharedFile.exists()) {
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(fileDir, fileName)
-      } else {
-        sharedFile
+      val flowCryptDirectoryForDownloadsName = "FlowCrypt"
+      val fileDir =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).apply {
+          if (!exists()) {
+            if (!mkdir()) {
+              error("Creating ${Environment.DIRECTORY_DOWNLOADS} failed!")
+            }
+          }
+        }
+
+      val flowCryptDirectoryForDownloads = File(fileDir, flowCryptDirectoryForDownloadsName).apply {
+        if (!exists()) {
+          if (!mkdir()) {
+            error("Creating FlowCrypt directory in ${Environment.DIRECTORY_DOWNLOADS} failed!")
+          }
+        }
       }
 
-      finalFileName = sharedFile.name
-      val srcInputStream = attFile.inputStream()
-      val destOutputStream = FileUtils.openOutputStream(sharedFile)
-      srcInputStream.use { srcStream ->
-        destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
+      var downloadedFile = File(flowCryptDirectoryForDownloads, fileName)
+      downloadedFile = if (downloadedFile.exists()) {
+        FileAndDirectoryUtils.createFileWithIncreasedIndex(flowCryptDirectoryForDownloads, fileName)
+      } else {
+        downloadedFile
       }
-      return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
+
+      finalFileName = downloadedFile.name
+      attFile.inputStream().use { srcStream ->
+        FileUtils.openOutputStream(downloadedFile).use { outStream -> srcStream.copyTo(outStream) }
+      }
+      return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, downloadedFile)
     }
 
     fun setListener(listener: OnDownloadAttachmentListener) {

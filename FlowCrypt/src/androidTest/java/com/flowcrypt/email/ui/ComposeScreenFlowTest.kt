@@ -97,7 +97,7 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class ComposeScreenFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-  private val temporaryFolderRule = TemporaryFolder()
+  private val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -907,7 +907,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     @get:ClassRule
     @JvmStatic
-    val temporaryFolderRule = TemporaryFolder()
+    val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
     @get:ClassRule
     @JvmStatic

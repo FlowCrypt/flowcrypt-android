@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -122,7 +121,7 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
     val fileName = "0x" + keyDetails.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     val file =
-      File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
+      File(getTargetContext().getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED), fileName)
 
     if (file.exists()) {
       file.delete()

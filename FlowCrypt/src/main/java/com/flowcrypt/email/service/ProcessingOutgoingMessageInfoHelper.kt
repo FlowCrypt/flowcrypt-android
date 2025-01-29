@@ -1,13 +1,12 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service
 
 import android.content.Context
 import android.net.Uri
-import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -145,9 +144,7 @@ object ProcessingOutgoingMessageInfoHelper {
           pubKeys = requireNotNull(pubKeys),
           fileName = originalAttName,
         )
-        uri = FileProvider.getUriForFile(
-          context, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile
-        )
+        uri = Uri.fromFile(encryptedTempFile)
         name = encryptedTempFile.name
       } else {
         var cachedAtt = File(attsCacheDir, originalAttName)
@@ -157,7 +154,7 @@ object ProcessingOutgoingMessageInfoHelper {
         }
 
         FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
-        uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
+        uri = Uri.fromFile(cachedAtt)
       }
 
       cachedAtts.add(
