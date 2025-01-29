@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option java_package = "com.flowcrypt.email";
+option java_multiple_files = true;
+
+message AppPreferences {
+  optional string downloads_folder = 1;
+}

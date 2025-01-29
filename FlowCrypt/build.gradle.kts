@@ -5,6 +5,7 @@
 
 
 import com.android.ddmlib.DdmPreferences
+import com.google.protobuf.gradle.id
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -21,6 +22,7 @@ plugins {
   id("kotlin-parcelize")
   id("com.google.devtools.ksp")
   id("org.ajoberstar.grgit")
+  id("com.google.protobuf")
 }
 
 val keystoreProperties = Properties()
@@ -283,6 +285,7 @@ androidComponents {
   }
 }
 
+//plugins settings
 easylauncher {
   buildTypes {
     register("debug") {
@@ -323,6 +326,25 @@ easylauncher {
           textSizeRatio = 0.2f,
         )
       )
+    }
+  }
+}
+
+protobuf {
+  protoc {
+    artifact = "com.google.protobuf:protoc:4.29.3"
+  }
+
+  // Generates the java Protobuf-lite code for the Protobufs in this project. See
+  // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
+  // for more information.
+  generateProtoTasks {
+    all().forEach {
+      it.builtins {
+        id("java") {
+          option("lite")
+        }
+      }
     }
   }
 }
@@ -442,6 +464,7 @@ dependencies {
   implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
   implementation("androidx.navigation:navigation-runtime-ktx:2.8.5")
   implementation("androidx.webkit:webkit:1.12.1")
+  implementation("androidx.datastore:datastore:1.1.2")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
   implementation("com.google.android.gms:play-services-auth:21.3.0")
@@ -452,6 +475,7 @@ dependencies {
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
+  implementation("com.google.protobuf:protobuf-javalite:4.29.3")
 
   implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
