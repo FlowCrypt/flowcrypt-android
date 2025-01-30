@@ -176,7 +176,6 @@ object PgpMsg {
     "em" to arrayOf("style"), // Typescript: tests rely on this, could potentially remove
     "td" to arrayOf("width", "height"),
     "hr" to arrayOf("color", "height"),
-    "summary" to arrayOf("data-open", "data-close"),
   )
 
   private val ALLOWED_PROTOCOLS = arrayOf(
@@ -532,12 +531,9 @@ object PgpMsg {
 
     val originalDocument = Jsoup.parse(dirtyHtml, "", Parser.xmlParser())
     originalDocument.select("div.gmail_quote").firstOrNull()?.let { element ->
+      //we wrap Gmail quote with 'details' tag
       val generation = Element("details").apply {
-        appendChild(
-          Element("summary").apply {
-            attr("data-open", "Hide quoted text")
-            attr("data-close", "Show quoted text")
-          })
+        appendChild(Element("summary"))
         appendChild(Element("br"))
       }
       element.replaceWith(generation)
@@ -1285,8 +1281,10 @@ object PgpMsg {
                 body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
                 blockquote { border-left: 1px solid #CCCCCC; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px; }
                 body img { display: inline !important; height: auto !important; max-width: 95% !important; }
-                details[open] summary::after { content: attr(data-open); }
-                details:not([open]) summary::after { content: attr(data-close); }
+                details > summary { list-style-type: none; }
+                details > summary::-webkit-details-marker { display: none; }
+                details > summary::before { content: '▪▪▪'; color: #31a217; border: 2px solid; border-radius: 5px; padding: 0px 5px 0px 5px; font-size: 75%; }
+                summary:active:before { opacity: 0.5; }
                 body pre { white-space: pre-wrap !important; }
                 body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
                 @media (prefers-color-scheme: dark) {
