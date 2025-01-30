@@ -60,6 +60,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
+import org.jsoup.parser.Parser
 import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.decryption_verification.SignatureVerification
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -160,7 +161,9 @@ object PgpMsg {
     "strong",
     "strike",
     "code",
-    "img"
+    "img",
+    "details",
+    "summary",
   )
 
   private val ALLOWED_ATTRS = mapOf(
@@ -172,7 +175,8 @@ object PgpMsg {
     "p" to arrayOf("color"),
     "em" to arrayOf("style"), // Typescript: tests rely on this, could potentially remove
     "td" to arrayOf("width", "height"),
-    "hr" to arrayOf("color", "height")
+    "hr" to arrayOf("color", "height"),
+    "summary" to arrayOf("data-open", "data-close"),
   )
 
   private val ALLOWED_PROTOCOLS = arrayOf(
@@ -525,6 +529,21 @@ object PgpMsg {
    */
   fun sanitizeHtmlKeepBasicTags(dirtyHtml: String?): String? {
     if (dirtyHtml == null) return null
+
+    val originalDocument = Jsoup.parse(dirtyHtml, "", Parser.xmlParser())
+    originalDocument.select("div.gmail_quote").firstOrNull()?.let { element ->
+      val generation = Element("details").apply {
+        appendChild(
+          Element("summary").apply {
+            attr("data-open", "Hide quoted text")
+            attr("data-close", "Show quoted text")
+          })
+        appendChild(Element("br"))
+      }
+      element.replaceWith(generation)
+      generation.appendChild(element)
+    }
+
     val imgContentReplaceable = "IMG_ICON_${generateRandomSuffix()}"
     var remoteContentReplacedWithLink = false
     val policyFactory = HtmlPolicyBuilder()
@@ -617,7 +636,7 @@ object PgpMsg {
       .allowAttributesOnElementsExt(ALLOWED_ATTRS)
       .toFactory()
 
-    val cleanHtml1 = policyFactory.sanitize(dirtyHtml)
+    val cleanHtml1 = policyFactory.sanitize(originalDocument.html())
     val document = Jsoup.parse(cleanHtml1)
     document.outputSettings().prettyPrint(false)
 
@@ -1266,6 +1285,8 @@ object PgpMsg {
                 body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
                 blockquote { border-left: 1px solid #CCCCCC; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px; }
                 body img { display: inline !important; height: auto !important; max-width: 95% !important; }
+                details[open] summary::after { content: attr(data-open); }
+                details:not([open]) summary::after { content: attr(data-close); }
                 body pre { white-space: pre-wrap !important; }
                 body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
                 @media (prefers-color-scheme: dark) {
