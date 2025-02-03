@@ -7,7 +7,10 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.ContentResolver
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import java.io.InvalidObjectException
 
 /**
@@ -99,9 +103,19 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val allRecipients: Map<String, RecipientItem>
     get() = recipientsTo + recipientsCc + recipientsBcc
 
-  val hasAttachmentsWithExternalStorageUri: Boolean
-    get() = attachmentsStateFlow.value.any {
-      ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
+  val hasAttachmentsWittForeignExternalStorageUri: Boolean
+    get() {
+      val context: Context = getApplication()
+      val draftsCacheDirUri = Uri.fromFile(File(context.cacheDir, Constants.DRAFT_CACHE_DIR))
+
+      return attachmentsStateFlow.value.any {
+        val parentUri = it.uri?.buildUpon()?.path(
+          it.uri.path?.dropLast(it.uri.lastPathSegment?.length?.plus(1) ?: 0)
+        )?.build()
+
+        ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
+            && parentUri != draftsCacheDirUri
+      }
     }
 
   private val outgoingMessageInfoMutableStateFlow: MutableStateFlow<OutgoingMessageInfo> =

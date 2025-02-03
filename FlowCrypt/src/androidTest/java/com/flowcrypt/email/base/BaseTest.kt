@@ -42,6 +42,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -387,5 +388,8 @@ abstract class BaseTest : BaseActivityTestImplementation {
   companion object{
     const val NOTIFICATION_RESOURCES_NAME =
       "com.android.systemui:id/expandableNotificationRow"
+
+    val SHARED_FOLDER = InstrumentationRegistry.getInstrumentation().targetContext
+      .getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED)
   }
 }
