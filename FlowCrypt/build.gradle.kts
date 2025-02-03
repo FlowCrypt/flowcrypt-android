@@ -405,7 +405,7 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.10")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
@@ -447,7 +447,7 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.code.gson:gson:2.11.0")
+  implementation("com.google.code.gson:gson:2.12.1")
   implementation("com.google.api-client:google-api-client-android:2.7.2")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
@@ -477,7 +477,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.17.1") {
+    implementation("commons-codec:commons-codec:1.18.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }
