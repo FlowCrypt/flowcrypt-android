@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -74,6 +74,7 @@ class Constants {
     const val FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded"
     const val ATTACHMENTS_CACHE_DIR = "attachments"
     const val DRAFT_CACHE_DIR = "draft"
+    const val EXTERNAL_FILES_PATH_SHARED = "shared"
 
     /**
      * The password quality types.

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity
@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.navigation.NavHostController
 import androidx.navigation.ui.AppBarConfiguration
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -26,7 +27,9 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.FlavorSettings
+import java.io.File
 
 /**
  * This activity describes a logic of send encrypted or standard message.
@@ -71,6 +74,7 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
     isNavigationArrowDisplayed = true
     val navGraph = navController.navInflater.inflate(R.navigation.create_msg_graph)
     navController.setGraph(navGraph, intent.extras)
+    FileAndDirectoryUtils.cleanDir(File(cacheDir, Constants.DRAFT_CACHE_DIR))
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

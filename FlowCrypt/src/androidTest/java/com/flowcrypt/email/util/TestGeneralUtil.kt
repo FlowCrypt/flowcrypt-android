@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: ivan
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.util
@@ -9,7 +9,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.test.core.app.ApplicationProvider
@@ -97,7 +96,7 @@ object TestGeneralUtil {
   fun createFileWithContent(fileName: String, byteArray: ByteArray): File {
     val file = File(
       InstrumentationRegistry.getInstrumentation().targetContext
-        .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName
+        .getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED), fileName
     )
     try {
       FileOutputStream(file).use { outputStream -> outputStream.write(byteArray) }
