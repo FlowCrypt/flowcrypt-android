@@ -55,6 +55,7 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
+import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.ui.widget.TileDrawable
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -81,7 +82,8 @@ class MessagesInThreadListAdapter(
   /**
    * A cache of the last content height of WebView. It will help to prevent the content blinking
    */
-  private val mapWebViewHeight = mutableMapOf<Int, Int>()
+  private val mapWebViewHeight = mutableMapOf<Long, Int>()
+  private val mapWebViewExpandedStates = mutableMapOf<Long, Boolean>()
 
   override fun getItemViewType(position: Int): Int {
     val item = getItem(position)
@@ -152,9 +154,11 @@ class MessagesInThreadListAdapter(
     //try to cache the last content height of WebView. It will help to prevent the content blinking
     if (holder is MessageExpandedViewHolder) {
       val position = holder.bindingAdapterPosition
+      val message = (getItem(position) as? Message) ?: return
       val holderWebViewHeight = holder.binding.emailWebView.height
       if (holderWebViewHeight != 0) {
-        mapWebViewHeight[position] = holderWebViewHeight
+        mapWebViewHeight[message.id] = holderWebViewHeight
+        mapWebViewExpandedStates[message.id] = holder.binding.emailWebView.isContentExpanded
       }
     }
   }
@@ -240,7 +244,7 @@ class MessagesInThreadListAdapter(
       itemView.setOnClickListener {
         onMessageActionsListener.onMessageClick(position, message)
         if (message.incomingMessageInfo == null) {
-          mapWebViewHeight.remove(position)
+          mapWebViewHeight.remove(message.id)
         }
       }
       val senderAddress = messageEntity.generateFromText(context)
@@ -423,7 +427,8 @@ class MessagesInThreadListAdapter(
 
       binding.emailWebView.apply {
         updateLayoutParams {
-          height = mapWebViewHeight[position] ?: LayoutParams.WRAP_CONTENT
+          //this code prevents content blinking
+          height = mapWebViewHeight[message.id]?.takeIf { it > 0 } ?: LayoutParams.WRAP_CONTENT
         }
       }
 
@@ -535,7 +540,7 @@ class MessagesInThreadListAdapter(
 
           MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
             if (!isHtmlDisplayed) {
-              setupWebView(block)
+              setupWebView(message, block)
               isHtmlDisplayed = true
             }
           }
@@ -577,10 +582,16 @@ class MessagesInThreadListAdapter(
       }
     }
 
-    private fun setupWebView(block: MsgBlock) {
+    private fun setupWebView(message: Message, block: MsgBlock) {
       binding.emailWebView.configure()
 
-      val text = block.content?.clip(context, TEXT_MAX_SIZE) ?: ""
+      val shouldBeExpandedIfPossible = mapWebViewExpandedStates[message.id] ?: false
+      val text = block.content?.let {
+        if (shouldBeExpandedIfPossible) it.replaceFirst(
+          "<details>",
+          "<details open>"
+        ) else it
+      }?.clip(context, TEXT_MAX_SIZE) ?: ""
 
       binding.emailWebView.loadDataWithBaseURL(
         null,
@@ -589,6 +600,17 @@ class MessagesInThreadListAdapter(
         StandardCharsets.UTF_8.displayName(),
         null
       )
+
+      binding.emailWebView.setOnPageLoadingListener(object : EmailWebView.OnPageLoadingListener {
+        override fun onPageLoading(newProgress: Int) {
+          if (newProgress >= 100) {
+            //to prevent wrong WebView size need to back using LayoutParams.WRAP_CONTENT
+            binding.emailWebView.apply {
+              updateLayoutParams { height = LayoutParams.WRAP_CONTENT }
+            }
+          }
+        }
+      })
     }
 
     private fun genPublicKeyPart(

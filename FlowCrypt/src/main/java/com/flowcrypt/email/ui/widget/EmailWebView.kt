@@ -1,12 +1,13 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.widget
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Point
 import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
@@ -37,6 +38,33 @@ class EmailWebView : WebView {
     defStyleAttr
   )
 
+  val isContentExpanded: Boolean
+    get() = currentSize.y > sizeOfContentAfterLoading.y
+
+  private var sizeOfContentAfterLoading = Point()
+  private var currentSize = Point()
+
+  private var isContentLoaded = false
+
+  override fun loadDataWithBaseURL(
+    baseUrl: String?,
+    data: String,
+    mimeType: String?,
+    encoding: String?,
+    historyUrl: String?
+  ) {
+    isContentLoaded = false
+    super.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl)
+  }
+
+  override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
+    super.onSizeChanged(w, h, ow, oh)
+    currentSize = Point(w, h)
+    if (isContentLoaded && sizeOfContentAfterLoading.x == 0) {
+      sizeOfContentAfterLoading = Point(w, h)
+    }
+  }
+
   /**
    * This method does job of configure the current [WebView]
    */
@@ -48,6 +76,7 @@ class EmailWebView : WebView {
     webChromeClient = object : WebChromeClient() {
       override fun onProgressChanged(view: WebView, newProgress: Int) {
         super.onProgressChanged(view, newProgress)
+        isContentLoaded = newProgress >= 100
         onPageLoadingListener?.onPageLoading(newProgress)
       }
     }
