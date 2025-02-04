@@ -38,7 +38,7 @@ class EmailWebView : WebView {
     defStyleAttr
   )
 
-  val isContentExpanded: Boolean
+  val isContentExpandedAfterInitialLoading: Boolean
     get() = currentSize.y > sizeOfContentAfterLoading.y
 
   private var sizeOfContentAfterLoading = Point()

@@ -158,7 +158,8 @@ class MessagesInThreadListAdapter(
       val holderWebViewHeight = holder.binding.emailWebView.height
       if (holderWebViewHeight != 0) {
         mapWebViewHeight[message.id] = holderWebViewHeight
-        mapWebViewExpandedStates[message.id] = holder.binding.emailWebView.isContentExpanded
+        mapWebViewExpandedStates[message.id] =
+          holder.binding.emailWebView.isContentExpandedAfterInitialLoading
       }
     }
   }
@@ -604,7 +605,7 @@ class MessagesInThreadListAdapter(
       binding.emailWebView.setOnPageLoadingListener(object : EmailWebView.OnPageLoadingListener {
         override fun onPageLoading(newProgress: Int) {
           if (newProgress >= 100) {
-            //to prevent wrong WebView size need to back using LayoutParams.WRAP_CONTENT
+            //to prevent wrong WebView size need to use LayoutParams.WRAP_CONTENT
             binding.emailWebView.apply {
               updateLayoutParams { height = LayoutParams.WRAP_CONTENT }
             }
