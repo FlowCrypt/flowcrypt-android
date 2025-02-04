@@ -538,6 +538,7 @@ object PgpMsg {
       }
       element.replaceWith(generation)
       generation.appendChild(element)
+      generation.after(Element("br"))
     }
 
     val imgContentReplaceable = "IMG_ICON_${generateRandomSuffix()}"
