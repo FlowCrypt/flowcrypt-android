@@ -124,8 +124,6 @@
     <string name="waiting_to_load">Waiting to load</string>
     <string name="download_complete">Download complete</string>
     <string name="template_attachment_already_loading">Attachment \"%1$s\" is already loading</string>
-    <string name="cannot_save_attachment_without_permission">The attachment cannot be saved without the write external
-        storage permission</string>
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
@@ -653,7 +651,6 @@
     <string name="make_backup_in_the_email_box">Make a backup in the email box</string>
     <string name="make_backup_explanation_text">Save the given passphrase-protected PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
     <string name="draft">Draft</string>
-    <string name="permissions_granted_and_now_you_can_download_attachments">The permissions have been granted, and now you can download attachments</string>
     <string name="delete_draft">Delete draft?</string>
     <string name="thread_was_deleted_or_moved">The thread was deleted or moved</string>
     <plurals name="drafts_count">

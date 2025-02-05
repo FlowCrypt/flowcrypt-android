@@ -40,6 +40,7 @@ android {
     versionCode = extra["appVersionCode"] as Int
     versionName = extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
 
     /*
      The following argument makes the Android Test Orchestrator run its

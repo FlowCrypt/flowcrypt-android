@@ -1,11 +1,10 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
 
-import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
@@ -33,7 +32,7 @@ import org.robolectric.annotation.Config
  * @author Denys Bondarenko
  */
 @RunWith(ParameterizedRobolectricTestRunner::class)
-@Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
+@Config(manifest = Config.NONE, minSdk = BuildConfig.MIN_SDK_VERSION)
 class ParcelableTest(val name: String, private val currentClass: Class<Parcelable>) {
 
   private lateinit var objectInstance: Parcelable

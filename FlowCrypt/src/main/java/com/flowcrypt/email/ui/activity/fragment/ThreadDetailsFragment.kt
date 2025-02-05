@@ -5,12 +5,9 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -19,8 +16,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ListView
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -141,16 +136,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       }
     }
   }
-  private val requestPermissionLauncher =
-    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-      toast(
-        if (isGranted) {
-          R.string.permissions_granted_and_now_you_can_download_attachments
-        } else {
-          R.string.cannot_save_attachment_without_permission
-        }, Toast.LENGTH_LONG
-      )
-    }
 
   private val messagesInThreadListAdapter = MessagesInThreadListAdapter(
     object : MessagesInThreadListAdapter.AdapterListener {
@@ -1328,16 +1313,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       )
     ) return
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
-      ContextCompat.checkSelfPermission(
-        requireContext(),
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
-      ) == PackageManager.PERMISSION_GRANTED
-    ) {
-      downloadAttachment(attachmentInfo, message)
-    } else {
-      requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    }
+    downloadAttachment(attachmentInfo, message)
   }
 
   private fun downloadAttachment(
