@@ -153,8 +153,7 @@ class MessagesInThreadListAdapter(
     super.onViewRecycled(holder)
     //try to cache the last content height of WebView. It will help to prevent the content blinking
     if (holder is MessageExpandedViewHolder) {
-      val position = holder.bindingAdapterPosition
-      val message = (getItem(position) as? Message) ?: return
+      val message = holder.messageSourceInstance ?: return
       val holderWebViewHeight = holder.binding.emailWebView.height
       if (holderWebViewHeight != 0) {
         mapWebViewHeight[message.id] = holderWebViewHeight
@@ -305,6 +304,10 @@ class MessagesInThreadListAdapter(
 
     private val messageHeadersListAdapter = MessageHeadersListAdapter()
     private val pgpBadgeListAdapter = PgpBadgeListAdapter()
+    private var messageSource: Message? = null
+
+    val messageSourceInstance: Message?
+      get() = messageSource
 
     init {
       initSomeRecyclerViews()
@@ -315,6 +318,7 @@ class MessagesInThreadListAdapter(
       message: Message,
       onMessageActionsListener: OnMessageActionsListener
     ) {
+      messageSource = message
       binding.layoutHeader.setOnClickListener {
         onMessageActionsListener.onMessageClick(
           position,
