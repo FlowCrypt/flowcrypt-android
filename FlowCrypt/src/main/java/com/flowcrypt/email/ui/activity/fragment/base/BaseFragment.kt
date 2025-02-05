@@ -1,13 +1,12 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +17,6 @@ import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.androidx.fragment.app.doBaseUISetup
-import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
@@ -212,11 +210,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
   }
 
   protected fun isConnected(): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      connectionLifecycleObserver.connectionLiveData.value ?: false
-    } else {
-      context.hasActiveConnection()
-    }
+    return connectionLifecycleObserver.connectionLiveData.value ?: false
   }
 
   protected fun showAuthIssueHint(

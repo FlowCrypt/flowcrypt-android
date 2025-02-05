@@ -140,7 +140,6 @@
     <string name="source_has_wrong_pgp_structure">Наданий Вами вміст не схожий на дійсний %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Вміст Вашого файлу не схожий на дійсний %1$s ключ PGP.</string>
     <string name="attachment_not_found">Вкладення не знайдене</string>
-    <string name="cannot_save_attachment_without_permission">Вкладення неможливо зберегти без дозволу на запис до зовнішнього сховища</string>
     <string name="sync">Синхронізація</string>
     <string name="switch_to_secure_email">Переключитись на безпечне повідомлення</string>
     <string name="supported_public_key_not_found">Підтримуваний відкритий ключ не знайдено</string>
@@ -643,7 +642,6 @@
     <string name="make_backup_in_the_email_box">Зробіть резервну копію в електронній скриньці</string>
     <string name="make_backup_explanation_text">Зберегти надані секретні ключі PGP, захищені парольною фразою, як резервну копію в папці «Вхідні». Це допоможе отримати Вам доступ до Ваших зашифрованих повідомлень з інших пристроїв (за умови надання Вашої парольної фрази). Ви можете спокійно залишити його у папці "Вхідні" або заархівувати.\n\nЯкщо Вам не потрібна така резервна копія, вимкніть цю опцію.</string>
     <string name="draft">Чорновик</string>
-    <string name="permissions_granted_and_now_you_can_download_attachments">Дозволи надано, і тепер ви можете завантажити вкладені файли</string>
     <string name="delete_draft">Видалити чернетку?</string>
     <string name="thread_was_deleted_or_moved">Бесіду видалено або переміщено</string>
     <plurals name="drafts_count">

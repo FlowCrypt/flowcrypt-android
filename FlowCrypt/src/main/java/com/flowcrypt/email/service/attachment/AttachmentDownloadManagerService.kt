@@ -10,8 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Binder
-import android.os.Build
-import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
@@ -22,11 +20,8 @@ import android.os.RemoteException
 import android.provider.MediaStore
 import android.text.TextUtils
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.core.content.FileProvider
 import androidx.lifecycle.LifecycleService
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -40,7 +35,6 @@ import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
-import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -510,7 +504,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
             FileUtils.copyInputStreamToFile(inputStream, attTempFile)
             attTempFile = decryptFileIfNeeded(context, attTempFile)
             if (!Thread.currentThread().isInterrupted) {
-              val uri = storeFileToSharedFolder(context, attTempFile)
+              val uri = storeFileUsingScopedStorage(context, attTempFile)
               listener?.onAttDownloaded(
                 attInfo = att.copy(
                   name = finalFileName,
@@ -600,7 +594,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
         if (Thread.currentThread().isInterrupted) {
           listener?.onCanceled(att.copy(name = finalFileName))
         } else {
-          val uri = storeFileToSharedFolder(context, attTempFile)
+          val uri = storeFileUsingScopedStorage(context, attTempFile)
           listener?.onAttDownloaded(
             attInfo = att.copy(
               name = finalFileName,
@@ -615,15 +609,6 @@ class AttachmentDownloadManagerService : LifecycleService() {
       }
     }
 
-    private fun storeFileToSharedFolder(context: Context, attFile: File): Uri {
-      return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        storeFileUsingScopedStorage(context, attFile)
-      } else {
-        storeLegacy(attFile, context)
-      }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
       val mimeType = finalFileName.getPossibleAndroidMimeType()
@@ -668,43 +653,6 @@ class AttachmentDownloadManagerService : LifecycleService() {
       }, null, null)
 
       return fileUri
-    }
-
-    /**
-     * We use this method to support saving files on Android 9 and less which uses an old approach.
-     */
-    private fun storeLegacy(attFile: File, context: Context): Uri {
-      val fileName = finalFileName
-      val flowCryptDirectoryForDownloadsName = "FlowCrypt"
-      val fileDir =
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).apply {
-          if (!exists()) {
-            if (!mkdir()) {
-              error("Creating ${Environment.DIRECTORY_DOWNLOADS} failed!")
-            }
-          }
-        }
-
-      val flowCryptDirectoryForDownloads = File(fileDir, flowCryptDirectoryForDownloadsName).apply {
-        if (!exists()) {
-          if (!mkdir()) {
-            error("Creating FlowCrypt directory in ${Environment.DIRECTORY_DOWNLOADS} failed!")
-          }
-        }
-      }
-
-      var downloadedFile = File(flowCryptDirectoryForDownloads, fileName)
-      downloadedFile = if (downloadedFile.exists()) {
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(flowCryptDirectoryForDownloads, fileName)
-      } else {
-        downloadedFile
-      }
-
-      finalFileName = downloadedFile.name
-      attFile.inputStream().use { srcStream ->
-        FileUtils.openOutputStream(downloadedFile).use { outStream -> srcStream.copyTo(outStream) }
-      }
-      return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, downloadedFile)
     }
 
     fun setListener(listener: OnDownloadAttachmentListener) {
