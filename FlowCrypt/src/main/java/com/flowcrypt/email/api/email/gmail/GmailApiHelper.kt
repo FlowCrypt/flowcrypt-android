@@ -32,6 +32,7 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FlavorSettings
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.GmailAPIException
@@ -198,9 +199,11 @@ class GmailApiHelper {
       val credential = generateGoogleAccountCredential(context, account)
 
       val transport = NetHttpTransport()
-      Logger.getLogger(HttpTransport::class.java.name).apply {
-        level = Level.CONFIG
-        addHandler(object : ConsoleHandler() {}.apply { level = Level.CONFIG })
+      if (GeneralUtil.isDebugBuild() && EmailUtil.hasEnabledDebug(context)) {
+        Logger.getLogger(HttpTransport::class.java.name).apply {
+          level = Level.CONFIG
+          addHandler(object : ConsoleHandler() {}.apply { level = Level.CONFIG })
+        }
       }
 
       val factory = GsonFactory.getDefaultInstance()
