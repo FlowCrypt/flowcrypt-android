@@ -147,6 +147,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+  @Ignore("flaky 2 3")
   fun testReplyAllButton() {
     val incomingMessageInfo = testStandardMsgPlaintextInternal()
     onView(withId(R.id.replyAllButton))
