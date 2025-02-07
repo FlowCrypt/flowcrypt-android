@@ -7,6 +7,7 @@
 set -o xtrace
 
 attempts=$1
+script_name=$2
 
 if [[ -z attempts ]]; then
   echo "Please specify attempts count"
@@ -27,7 +28,7 @@ for ((i=1;i<=attempts;i++)); do
     sleep 60
     "$ANDROID_HOME/emulator/emulator" -avd ci-emulator -no-snapshot -no-window -no-boot-anim -no-audio -gpu auto -read-only -no-metrics &
     ./script/ci-wait-for-emulator.sh
-    ./script/ci-instrumentation-tests-without-mailserver.sh 4 2
+    ./script/$script_name
     testResults=$?
     if [[ $testResults -ne 0 ]]; then
       echo "Attempt $i failed"
