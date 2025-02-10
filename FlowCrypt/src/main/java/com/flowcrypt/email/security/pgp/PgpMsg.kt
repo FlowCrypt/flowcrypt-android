@@ -60,6 +60,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
+import org.jsoup.parser.Parser
 import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.decryption_verification.SignatureVerification
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -160,7 +161,9 @@ object PgpMsg {
     "strong",
     "strike",
     "code",
-    "img"
+    "img",
+    "details",
+    "summary",
   )
 
   private val ALLOWED_ATTRS = mapOf(
@@ -172,7 +175,7 @@ object PgpMsg {
     "p" to arrayOf("color"),
     "em" to arrayOf("style"), // Typescript: tests rely on this, could potentially remove
     "td" to arrayOf("width", "height"),
-    "hr" to arrayOf("color", "height")
+    "hr" to arrayOf("color", "height"),
   )
 
   private val ALLOWED_PROTOCOLS = arrayOf(
@@ -525,6 +528,19 @@ object PgpMsg {
    */
   fun sanitizeHtmlKeepBasicTags(dirtyHtml: String?): String? {
     if (dirtyHtml == null) return null
+
+    val originalDocument = Jsoup.parse(dirtyHtml, "", Parser.xmlParser())
+    originalDocument.select("div.gmail_quote").firstOrNull()?.let { element ->
+      //we wrap Gmail quote with 'details' tag
+      val generation = Element("details").apply {
+        appendChild(Element("summary"))
+        appendChild(Element("br"))
+      }
+      element.replaceWith(generation)
+      generation.appendChild(element)
+      generation.after(Element("br"))
+    }
+
     val imgContentReplaceable = "IMG_ICON_${generateRandomSuffix()}"
     var remoteContentReplacedWithLink = false
     val policyFactory = HtmlPolicyBuilder()
@@ -617,7 +633,7 @@ object PgpMsg {
       .allowAttributesOnElementsExt(ALLOWED_ATTRS)
       .toFactory()
 
-    val cleanHtml1 = policyFactory.sanitize(dirtyHtml)
+    val cleanHtml1 = policyFactory.sanitize(originalDocument.html())
     val document = Jsoup.parse(cleanHtml1)
     document.outputSettings().prettyPrint(false)
 
@@ -1266,6 +1282,10 @@ object PgpMsg {
                 body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
                 blockquote { border-left: 1px solid #CCCCCC; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px; }
                 body img { display: inline !important; height: auto !important; max-width: 95% !important; }
+                details > summary { list-style-type: none; }
+                details > summary::-webkit-details-marker { display: none; }
+                details > summary::before { content: '▪▪▪'; color: #31a217; border: 2px solid; border-radius: 5px; padding: 0px 5px 0px 5px; font-size: 75%; }
+                summary:active:before { opacity: 0.5; }
                 body pre { white-space: pre-wrap !important; }
                 body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
                 @media (prefers-color-scheme: dark) {

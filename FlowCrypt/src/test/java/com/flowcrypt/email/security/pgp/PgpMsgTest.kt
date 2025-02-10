@@ -17,11 +17,14 @@ import com.flowcrypt.email.util.TestUtil
 import com.google.gson.JsonParser
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
+import kotlinx.coroutines.runBlocking
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.jsoup.Jsoup
+import org.jsoup.parser.Parser
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
@@ -527,6 +530,89 @@ class PgpMsgTest {
       "other/plain-google-security-alert-20210416-084836-UTC-html-content.txt"
     )
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
+  }
+
+  @Test
+  fun testGmailQuotesParsingAndHtmlManipulation() {
+    val mimeMessageRaw = """
+      To: default@flowcrypt.test
+      From: denbond7@flowcrypt.test
+      Subject: test
+      Date: Sun, 17 Mar 2019 11:46:37 +0000
+      Message-Id: <1552823197874-dd5800d9-54ca1a01-c548da66@flowcrypt.test>
+      MIME-Version: 1.0
+      Content-Type: multipart/alternative; boundary="000000000000a02340062c4d860a"
+
+      --000000000000a02340062c4d860a
+      Content-Type: text/plain; charset="UTF-8"
+      Content-Transfer-Encoding: quoted-printable
+
+      Your Android devices are always getting better thanks to new features and
+      updates rolling out all the time
+
+      On Wed, Jan 22, 2025 at 5:55=E2=80=AFPM Den <denbond7@flowcrypt.test> wrote:
+
+      > Today, Android 15 starts rolling out to Pixel devices. These updates
+      > include security features that help keep your sensitive health, financial
+      > and personal information protected from theft and fraud.
+      >
+      > --
+      > Regards,
+      > Den
+      >
+
+
+      --=20
+      Regards,
+      Den
+
+      --000000000000a02340062c4d860a
+      Content-Type: text/html; charset="UTF-8"
+      Content-Transfer-Encoding: quoted-printable
+
+      <div dir=3D"ltr"> <span style=3D"color:rgb(95,99,104);font-family:&quot;Goo=
+      gle Sans&quot;,roboto,arial,helvetica;font-size:16px">Your Android devices =
+      are always getting better thanks to new features and updates rolling out al=
+      l the time</span></div><br><div class=3D"gmail_quote gmail_quote_container"=
+      > <div dir=3D"ltr" class=3D"gmail_attr">On Wed, Jan 22, 2025 at 5:55 PM Den=
+       &lt;<a href=3D"mailto:denbond7@flowcrypt.test">denbond7@flowcrypt.test</a>=
+      &gt; wrote:<br></div> <blockquote class=3D"gmail_quote" style=3D"margin:0px=
+       0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex"> <d=
+      iv dir=3D"ltr"> <div><span style=3D"color:rgb(95,99,104);font-family:&quot;=
+      Google Sans&quot;,roboto,arial,helvetica;font-size:16px">Today, Android 15 =
+      starts rolling out to Pixel devices. These updates include security feature=
+      s that help keep your sensitive health, financial and personal information =
+      protected from theft and fraud.</span> </div> <div><br></div> <span class=
+      =3D"gmail_signature_prefix">-- </span><br> <div dir=3D"ltr" class=3D"gmail_=
+      signature"> <div dir=3D"ltr"> <div> <div dir=3D"ltr">Regards,</div> <div di=
+      r=3D"ltr">Den</div> </div> </div> </div> </div> </blockquote></div><div><br=
+       clear=3D"all"></div><div><br></div><span class=3D"gmail_signature_prefix">=
+      -- </span><br><div dir=3D"ltr" class=3D"gmail_signature"> <div dir=3D"ltr">=
+       <div>Regards,</div> <div>Den</div> </div></div>
+
+      --000000000000a02340062c4d860a--
+    """.trimIndent()
+
+    val processedMimeMessageResult = runBlocking {
+      PgpMsg.processMimeMessage(
+        MimeMessage(Session.getInstance(Properties()), mimeMessageRaw.toInputStream()),
+        PGPPublicKeyRingCollection(listOf()),
+        PGPSecretKeyRingCollection(listOf()),
+        SecretKeyRingProtector.unprotectedKeys(),
+      )
+    }
+
+    assertEquals(1, processedMimeMessageResult.blocks.size)
+
+    val plainHtmlBlock = processedMimeMessageResult.blocks.first {
+      it.type == MsgBlock.Type.PLAIN_HTML
+    }
+
+    val document = Jsoup.parse(requireNotNull(plainHtmlBlock.content), "", Parser.xmlParser())
+    assertNotNull(document.select("details").first())
+    assertEquals(1, document.select("details").size)
+    assertNotNull(document.select("summary").first())
+    assertEquals(1, document.select("summary").size)
   }
 
   private data class RenderedBlock(
