@@ -93,6 +93,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ThreadNotFoundException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
@@ -592,6 +593,21 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
                 }
               }
           }
+
+        REQUEST_CODE_DOWNLOAD_FILE_AGAIN -> {
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            bundle.getBundle(TwoWayDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)
+              ?.let {
+                processActionForMessageAndAttachmentBasedOnIncomingBundle(it) { attachmentInfo, message ->
+                  processDownloadAttachment(
+                    attachmentInfo = attachmentInfo,
+                    message = message,
+                    forcedDownload = true
+                  )
+                }
+              }
+          }
+        }
 
         REQUEST_CODE_SHOW_TWO_WAY_DIALOG_FOR_DELETING_DRAFT ->
           if (result == TwoWayDialogFragment.RESULT_OK) {
@@ -1303,7 +1319,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun processDownloadAttachment(
     attachmentInfo: AttachmentInfo,
-    message: MessagesInThreadListAdapter.Message
+    message: MessagesInThreadListAdapter.Message,
+    forcedDownload: Boolean = false
   ) {
     if (
       checkAndShowNeedPassphraseDialogIfNeeded(
@@ -1313,14 +1330,42 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       )
     ) return
 
-    downloadAttachment(attachmentInfo, message)
+    downloadAttachment(
+      attachmentInfo = attachmentInfo,
+      message = message,
+      forcedDownload = forcedDownload
+    )
   }
 
   private fun downloadAttachment(
     attachmentInfo: AttachmentInfo,
-    message: MessagesInThreadListAdapter.Message
+    message: MessagesInThreadListAdapter.Message,
+    forcedDownload: Boolean = false
   ) {
     val documentId = EmbeddedAttachmentsProvider.Cache.getInstance().getDocumentId(attachmentInfo)
+
+    if (!forcedDownload && FileAndDirectoryUtils.Downloads.isFileAlreadyExist(
+        context = requireContext(),
+        fileName = attachmentInfo.getSafeName()
+      )
+    ) {
+      showTwoWayDialog(
+        requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+        requestCode = REQUEST_CODE_DOWNLOAD_FILE_AGAIN,
+        dialogTitle = "",
+        dialogMsg = getString(
+          R.string.file_already_exists_in_download,
+          attachmentInfo.getSafeName()
+        ),
+        positiveButtonTitle = getString(R.string.download),
+        negativeButtonTitle = getString(android.R.string.cancel),
+        bundle = Bundle().apply {
+          putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+          putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+        }
+      )
+      return
+    }
 
     when {
       attachmentInfo.uri != null && documentId != null -> {
@@ -1541,6 +1586,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     private const val REQUEST_CODE_PROCESS_AND_REPLY = 1014
     private const val REQUEST_CODE_PROCESS_AND_REPLY_ALL = 1015
     private const val REQUEST_CODE_PROCESS_AND_FORWARD = 1016
+    private const val REQUEST_CODE_DOWNLOAD_FILE_AGAIN = 1017
 
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
