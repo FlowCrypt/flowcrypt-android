@@ -59,6 +59,12 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     return getFileDescriptor(getBytesForDocumentId(documentId))
   }
 
+  override fun getDocumentType(documentId: String?): String {
+    return documentId?.let {
+      Cache.getInstance().get(documentId)?.type ?: super.getDocumentType(documentId)
+    } ?: super.getDocumentType(documentId)
+  }
+
   private fun getBytesForDocumentId(documentId: String): ByteArray {
     val attachmentInfo = Cache.getInstance().get(documentId)
     return requireNotNull(attachmentInfo?.rawData)
