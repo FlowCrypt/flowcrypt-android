@@ -253,10 +253,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {}
 
-      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        onPreviewClick(attachmentInfo)
-      }
-
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null) {
           val intent = GeneralUtil.genViewAttachmentIntent(attachmentInfo.uri, attachmentInfo)

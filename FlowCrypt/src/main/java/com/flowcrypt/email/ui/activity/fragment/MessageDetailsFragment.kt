@@ -201,10 +201,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         }
       }
 
-      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        onPreviewClick(attachmentInfo)
-      }
-
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null) {
           if (attachmentInfo.isPossiblyEncrypted) {

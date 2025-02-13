@@ -1,10 +1,12 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.util
 
+import android.content.Context
+import android.provider.MediaStore
 import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.io.IOException
@@ -17,6 +19,21 @@ import java.util.regex.Pattern
  * @author Denys Bondarenko
  */
 class FileAndDirectoryUtils {
+  object Downloads {
+    fun isFileAlreadyExist(context: Context, fileName: String): Boolean {
+      return context.contentResolver.query(
+        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+        arrayOf(
+          MediaStore.Files.FileColumns._ID,
+          MediaStore.Files.FileColumns.DISPLAY_NAME
+        ),
+        MediaStore.Downloads.DISPLAY_NAME + " = ?",
+        arrayOf(fileName),
+        null
+      )?.use { it.moveToNext() } ?: false
+    }
+  }
+
   companion object {
     /**
      * Cleans an input directory.

@@ -418,8 +418,6 @@ class MessagesInThreadListAdapter(
             onMessageActionsListener.onAttachmentDownloadClick(attachmentInfo, message)
           }
 
-          override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {}
-
           override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
             onMessageActionsListener.onAttachmentPreviewClick(attachmentInfo, message)
           }
