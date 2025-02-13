@@ -474,7 +474,7 @@ class GeneralUtil {
       Intent.createChooser(
         Intent()
         .setAction(Intent.ACTION_VIEW)
-          .setDataAndType(uri, "*/*")
+          .setDataAndType(uri, "image/jpg")
         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
           .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), null
       )

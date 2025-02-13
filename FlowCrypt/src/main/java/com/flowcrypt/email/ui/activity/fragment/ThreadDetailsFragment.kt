@@ -1292,6 +1292,13 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun previewAttachment(attachmentInfo: AttachmentInfo) {
     val intent = if (attachmentInfo.uri != null) {
+      toast(
+        "Debug: Original = ${attachmentInfo.type}, final = ${
+          Intent.normalizeMimeType(
+            attachmentInfo.type
+          )
+        }"
+      )
       GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
       toast(getString(R.string.preview_is_not_available))
