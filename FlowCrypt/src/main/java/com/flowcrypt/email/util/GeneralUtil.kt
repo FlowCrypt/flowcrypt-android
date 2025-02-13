@@ -470,12 +470,14 @@ class GeneralUtil {
         }
       }
 
-    fun genViewAttachmentIntent(uri: Uri, attachmentInfo: AttachmentInfo) =
-      Intent()
+    fun genViewAttachmentIntent(uri: Uri, attachmentInfo: AttachmentInfo): Intent =
+      Intent.createChooser(
+        Intent()
         .setAction(Intent.ACTION_VIEW)
-        .setDataAndType(uri, Intent.normalizeMimeType(attachmentInfo.type))
+          .setDataAndType(uri, "*/*")
         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+          .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), null
+      )
 
     suspend fun getGoogleIdTokenSilently(
       context: Context,
