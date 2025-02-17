@@ -39,6 +39,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
@@ -109,6 +110,7 @@ import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDeco
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -255,7 +257,15 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null) {
-          val intent = GeneralUtil.genViewAttachmentIntent(attachmentInfo.uri, attachmentInfo)
+          val intent = GeneralUtil.genViewAttachmentIntent(
+            uri = attachmentInfo.uri,
+            attachmentInfo = attachmentInfo,
+            useCommonPattern = SharedPreferencesHelper.getBoolean(
+              sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext()),
+              key = Constants.PREFERENCES_KEY_ATTACHMENTS_DISABLE_SMART_MODE_FOR_PREVIEW,
+              defaultValue = false
+            )
+          )
           try {
             startActivity(intent)
           } catch (e: ActivityNotFoundException) {

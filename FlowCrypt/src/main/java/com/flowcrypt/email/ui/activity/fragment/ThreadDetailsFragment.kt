@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.WorkManager
 import com.flowcrypt.email.Constants
@@ -95,6 +96,7 @@ import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ThreadNotFoundException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import org.apache.commons.io.FilenameUtils
@@ -1292,14 +1294,15 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun previewAttachment(attachmentInfo: AttachmentInfo) {
     val intent = if (attachmentInfo.uri != null) {
-      toast(
-        "Debug: Original = ${attachmentInfo.type}, final = ${
-          Intent.normalizeMimeType(
-            attachmentInfo.type
-          )
-        }"
+      GeneralUtil.genViewAttachmentIntent(
+        uri = requireNotNull(attachmentInfo.uri),
+        attachmentInfo = attachmentInfo,
+        useCommonPattern = SharedPreferencesHelper.getBoolean(
+          sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext()),
+          key = Constants.PREFERENCES_KEY_ATTACHMENTS_DISABLE_SMART_MODE_FOR_PREVIEW,
+          defaultValue = false
+        )
       )
-      GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
     } else {
       toast(getString(R.string.preview_is_not_available))
       return
