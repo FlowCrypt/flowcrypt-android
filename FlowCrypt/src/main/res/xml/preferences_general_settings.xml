@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:key="attachments_category"
+        app:title="@string/attachments">
+
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            app:key="@string/preferences_key_attachments_disable_smart_mode_for_preview"
+            app:title="@string/disable_smart_mode_for_attachments_preview" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

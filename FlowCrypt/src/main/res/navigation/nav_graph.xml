@@ -145,6 +145,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_signatureSettingsFragment"
             app:destination="@id/signatureSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_generalSettingsFragment"
+            app:destination="@id/generalSettingsFragment" />
     </fragment>
 
     <fragment
@@ -277,6 +280,11 @@
         android:name="com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment"
         android:label="@string/legal"
         tools:layout="@layout/fragment_legal" />
+
+    <fragment
+        android:id="@+id/generalSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.GeneralSettingsFragment"
+        android:label="@string/general" />
 
     <fragment
         android:id="@+id/serverSettingsFragment"

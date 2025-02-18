@@ -42,6 +42,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
@@ -131,6 +132,7 @@ import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.ui.widget.TileDrawable
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.GmailAPIException
@@ -199,10 +201,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         } else {
           processDownloadAttachment(attachmentInfo)
         }
-      }
-
-      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        onPreviewClick(attachmentInfo)
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
@@ -1828,7 +1826,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     useContentApp: Boolean = false
   ) {
     val intent = if (attachmentInfo.uri != null) {
-      GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
+      GeneralUtil.genViewAttachmentIntent(
+        uri = requireNotNull(attachmentInfo.uri),
+        attachmentInfo = attachmentInfo,
+        useCommonPattern = SharedPreferencesHelper.getBoolean(
+          sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext()),
+          key = Constants.PREFERENCES_KEY_ATTACHMENTS_DISABLE_SMART_MODE_FOR_PREVIEW,
+          defaultValue = false
+        )
+      )
     } else {
       toast(getString(R.string.preview_is_not_available))
       return

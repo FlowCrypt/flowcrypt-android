@@ -470,12 +470,26 @@ class GeneralUtil {
         }
       }
 
-    fun genViewAttachmentIntent(uri: Uri, attachmentInfo: AttachmentInfo) =
-      Intent()
-        .setAction(Intent.ACTION_VIEW)
-        .setDataAndType(uri, Intent.normalizeMimeType(attachmentInfo.type))
-        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    fun genViewAttachmentIntent(
+      uri: Uri,
+      attachmentInfo: AttachmentInfo,
+      useCommonPattern: Boolean = false
+    ): Intent {
+      return Intent.createChooser(
+        Intent()
+          .setAction(Intent.ACTION_VIEW)
+          .setDataAndType(
+            uri,
+            if (useCommonPattern) {
+              "*/*"
+            } else {
+              Intent.normalizeMimeType(attachmentInfo.type)
+            }
+          )
+          .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), null
+      )
+    }
 
     suspend fun getGoogleIdTokenSilently(
       context: Context,
