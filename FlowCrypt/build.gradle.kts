@@ -381,7 +381,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.5")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.6")
   uiTestsImplementation("androidx.test:core-ktx:1.6.1")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
@@ -436,12 +436,12 @@ dependencies {
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.15.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
-  implementation("androidx.activity:activity-ktx:1.9.3")
-  implementation("androidx.fragment:fragment-ktx:1.8.5")
+  implementation("androidx.activity:activity-ktx:1.10.0")
+  implementation("androidx.fragment:fragment-ktx:1.8.6")
   implementation("androidx.work:work-runtime-ktx:2.10.0")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.8.5")
-  implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.8.5")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.8.7")
+  implementation("androidx.navigation:navigation-ui-ktx:2.8.7")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.8.7")
   implementation("androidx.webkit:webkit:1.12.1")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
