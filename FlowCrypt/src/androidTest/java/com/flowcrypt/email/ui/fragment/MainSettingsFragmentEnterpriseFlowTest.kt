@@ -68,8 +68,14 @@ class MainSettingsFragmentEnterpriseFlowTest :
 
   @Test
   fun testHiddenOrVisibleItems() {
+    //should be hidden as we have NO_PRV_BACKUP
     onView(withText(getResString(R.string.backups)))
       .check(doesNotExist())
+    //should be hidden as we have RESTRICT_ANDROID_ATTACHMENT_HANDLING
+    onView(withText(getResString(R.string.general)))
+      .check(doesNotExist())
+
+    //should be visible
     onView(withText(getResString(R.string.security_and_privacy)))
       .check(matches(isDisplayed()))
     onView(withText(getResString(R.string.contacts)))
@@ -78,8 +84,6 @@ class MainSettingsFragmentEnterpriseFlowTest :
       .check(matches(isDisplayed()))
     onView(withText(getResString(R.string.attester)))
       .check(matches(isDisplayed()))
-    onView(withText(getResString(R.string.general)))
-      .check(doesNotExist())
     onView(withText(getResString(R.string.experimental)))
       .check(matches(isDisplayed()))
   }
