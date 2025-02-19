@@ -20,19 +20,25 @@ import jakarta.mail.internet.InternetAddress
  */
 fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
   return mutableListOf<InternetAddress>().apply {
-    val filteredHeaders = messages?.flatMap { message ->
-      if (message?.payload?.headers?.any {
-          it.name in listOf(
-            "From",
-            "To",
-            "Cc",
-            "Delivered-To"
-          ) && it.value.contains(account, true)
-        } == true) {
-        message.payload?.headers?.filter { header ->
-          header.name == "From"
-        } ?: emptyList()
-      } else emptyList()
+    val filteredHeaders = if ((messages?.size ?: 0) > 1) {
+      messages?.flatMap { message ->
+        if (message?.payload?.headers?.any {
+            it.name in listOf(
+              "From",
+              "To",
+              "Cc",
+              "Delivered-To"
+            ) && it.value.contains(account, true)
+          } == true) {
+          message.payload?.headers?.filter { header ->
+            header.name == "From"
+          } ?: emptyList()
+        } else emptyList()
+      }
+    } else {
+      messages.firstOrNull()?.payload?.headers?.filter { header ->
+        header.name == "From"
+      }
     }
 
     val mapOfUniqueRecipients = mutableMapOf<String, InternetAddress>()
