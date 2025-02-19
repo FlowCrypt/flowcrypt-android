@@ -623,23 +623,6 @@ class AttachmentDownloadManagerService : LifecycleService() {
       val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
 
       requireNotNull(fileUri)
-
-      //we should check maybe a file is already exist. Then we will use the file name from the system
-      val cursor =
-        resolver.query(fileUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
-      cursor?.let {
-        if (it.moveToFirst()) {
-          val nameIndex = it.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
-          if (nameIndex != -1) {
-            val nameFromSystem = it.getString(nameIndex)
-            if (nameFromSystem != finalFileName) {
-              finalFileName = nameFromSystem
-            }
-          }
-        }
-      }
-      cursor?.close()
-
       val srcInputStream = attFile.inputStream()
       val destOutputStream = resolver.openOutputStream(fileUri)
         ?: throw IllegalArgumentException("provided URI could not be opened")
@@ -651,6 +634,23 @@ class AttachmentDownloadManagerService : LifecycleService() {
       resolver.update(fileUri, ContentValues().apply {
         put(MediaStore.Downloads.IS_PENDING, 0)
       }, null, null)
+
+      resolver.query(
+        fileUri,
+        arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME),
+        null,
+        null,
+        null
+      )
+        ?.use { cursor ->
+          //we should check maybe a file is already exist.
+          //Then we will use the file name from the system.
+          if (cursor.moveToFirst()) {
+            finalFileName = cursor.getString(
+              cursor.getColumnIndexOrThrow(MediaStore.DownloadColumns.DISPLAY_NAME)
+            )
+          }
+        }
 
       return fileUri
     }
