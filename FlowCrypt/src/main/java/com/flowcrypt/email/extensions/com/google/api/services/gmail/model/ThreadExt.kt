@@ -23,35 +23,29 @@ fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
     if (messages == null || messages.isEmpty()) {
       return@apply
     }
+    val fromHeaderName = "From"
 
     val filteredHeaders = if (messages.size > 1) {
       //if we have more than one message in a conversation,
       //firstly we will try to filter only active recipients
       messages.flatMap { message ->
+        val listOfAcceptedHeaders = listOf(
+          fromHeaderName,
+          "To",
+          "Cc",
+          "Delivered-To"
+        )
         if (message.payload?.headers?.any {
-            it.name in listOf(
-              "From",
-              "To",
-              "Cc",
-              "Delivered-To"
-            ) && it.value.contains(account, true)
+            it.name in listOfAcceptedHeaders && it.value.contains(account, true)
           } == true) {
-          message.payload?.headers?.filter { header ->
-            header.name == "From"
-          } ?: emptyList()
+          message.filterHeadersWithName(fromHeaderName)
         } else emptyList()
       }.ifEmpty {
         //otherwise we will use all recipients
-        messages.flatMap { message ->
-          message.payload?.headers?.filter { header ->
-            header.name == "From"
-          } ?: emptyList()
-        }
+        messages.flatMap { message -> message.filterHeadersWithName(fromHeaderName) }
       }
     } else {
-      messages.first().payload?.headers?.filter { header ->
-        header.name == "From"
-      } ?: emptyList()
+      messages.first().filterHeadersWithName(fromHeaderName)
     }
 
     val mapOfUniqueRecipients = mutableMapOf<String, InternetAddress>()
