@@ -643,6 +643,9 @@
     <string name="draft">Черновик</string>
     <string name="delete_draft">Удалить черновик?</string>
     <string name="thread_was_deleted_or_moved">Переписка удалена или перемещена</string>
+    <string name="file_already_exists_in_download">\'%1$s\' уже существует в Download. Хотите загрузить его снова?</string>
+    <string name="general">Общиe</string>
+    <string name="disable_smart_mode_for_attachments_preview">Отключить интеллектуальный режим для предварительного просмотра вложений</string>
     <plurals name="drafts_count">
         <item quantity="one" tools:ignore="ImpliedQuantity">Черновик</item>
         <item quantity="few">Черновики(%1$d)</item>
