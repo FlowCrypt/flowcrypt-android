@@ -646,13 +646,9 @@ class AttachmentDownloadManagerService : LifecycleService() {
           //we should check maybe a file is already exist.
           //Then we will use the file name from the system.
           if (cursor.moveToFirst()) {
-            val nameIndex = cursor.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
-            if (nameIndex != -1) {
-              val nameFromSystem = cursor.getString(nameIndex)
-              if (nameFromSystem != finalFileName) {
-                finalFileName = nameFromSystem
-              }
-            }
+            finalFileName = cursor.getString(
+              cursor.getColumnIndexOrThrow(MediaStore.DownloadColumns.DISPLAY_NAME)
+            )
           }
         }
 
