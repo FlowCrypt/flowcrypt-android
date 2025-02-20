@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.google.api.services.gmail.model.Message
+import com.google.api.services.gmail.model.MessagePartHeader
 import jakarta.mail.internet.InternetAddress
 
 /**
@@ -76,4 +77,8 @@ fun Message.isDraft(): Boolean {
 
 fun Message.hasAttachments(): Boolean {
   return payload?.hasAttachments() ?: false
+}
+
+fun Message.filterHeadersWithName(name: String): List<MessagePartHeader> {
+  return payload?.headers?.filter { header -> header.name == name } ?: emptyList()
 }
