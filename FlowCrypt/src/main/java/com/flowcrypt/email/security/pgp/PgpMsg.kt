@@ -1214,7 +1214,7 @@ object PgpMsg {
 
           MsgBlock.Type.PLAIN_TEXT -> {
             val html = fmtMsgContentBlockAsHtml(
-              content.toEscapedHtml(),
+              checkAndReturnQuotesFormatIfFound(content) ?: content.toEscapedHtml(),
               if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
             )
             msgContentAsHtml.append(html)
@@ -1269,6 +1269,13 @@ object PgpMsg {
       msgContentAsText.append("[image: ${alt}]\n")
     }
 
+    /*blockquote:nth-child(even){ *//*for first blockquote *//*
+      border-left: 1px solid red; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px;
+    }
+    blockquote:nth-child(odd){ *//*for second blockquote *//*
+      border-left: 1px solid #31a217; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px;
+    }*/
+
     return FormattedContentBlockResult(
       text = msgContentAsText.toString().trim(),
       contentBlock = MsgBlockFactory.fromContent(
@@ -1302,6 +1309,68 @@ object PgpMsg {
         """.trimIndent(), isOpenPGPMimeSigned = false
       )
     )
+  }
+
+  private fun checkAndReturnQuotesFormatIfFound(content: String): String? {
+    return buildQuotes(originalContent = content, unwrapContent = false)?.outerHtml()
+  }
+
+  private fun buildQuotes(originalContent: String, unwrapContent: Boolean = true): Element? {
+    val content = if (unwrapContent) {
+      //remove > at the beginning of all lines to define next quotes level
+      val patternQuotesSign = "^>([^\\S\\r\\n])?".toRegex(RegexOption.MULTILINE)
+      originalContent.replace(patternQuotesSign, "")
+    } else {
+      originalContent
+    }
+
+    val newLineStringPattern = "\\r\\n|\\r|\\n"
+    val patternQuotes = "(^>.*\$($newLineStringPattern))+".toRegex(RegexOption.MULTILINE)
+    val patternNewLine = "($newLineStringPattern)".toRegex(RegexOption.MULTILINE)
+    val br = "<br>"
+    val tagDiv = "div"
+    val tagBlockquote = "blockquote"
+
+    val matchingResult = patternQuotes.find(content)?.groups?.firstOrNull()
+      ?: return Element(tagDiv).apply {
+        append(content.replace(patternNewLine, br))
+      }.takeIf { unwrapContent }
+    val quotes = matchingResult.value
+
+    return Element(tagDiv).apply {
+      //append text before quotes. Replace CRLF with <br> to transform to HTML.
+      if (matchingResult.range.first > 0) {
+        append(content.substring(0, matchingResult.range.first).replace(patternNewLine, br))
+      }
+
+      //append quotes
+      if (!unwrapContent) {
+        appendChild(
+          Element(tagDiv).apply {
+            attr("class", "gmail_quote")
+            appendChild(
+              Element(tagBlockquote).apply {
+                buildQuotes(quotes)?.let { appendChild(it) }
+              }
+            )
+          }
+        )
+      } else {
+        appendChild(
+          Element(tagBlockquote).apply {
+            buildQuotes(quotes)?.let { appendChild(it) }
+          }
+        )
+      }
+
+      //append text after quotes. Replace CRLF with <br> to transform to HTML.
+      if (matchingResult.range.last < content.length) {
+        append(
+          content.substring(matchingResult.range.last + 1, content.length)
+            .replace(patternNewLine, br)
+        )
+      }
+    }
   }
 
   /**
