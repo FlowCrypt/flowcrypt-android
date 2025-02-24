@@ -20,9 +20,10 @@ import jakarta.mail.internet.InternetAddress
  */
 fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
   return mutableListOf<InternetAddress>().apply {
-    if (messages == null || messages.isEmpty()) {
+    if (messages.isNullOrEmpty()) {
       return@apply
     }
+
     val fromHeaderName = "From"
 
     val filteredHeaders = if (messages.size > 1) {
@@ -42,7 +43,7 @@ fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
         } else emptyList()
       }.ifEmpty {
         //otherwise we will use all recipients
-        messages.flatMap { message -> message.filterHeadersWithName(fromHeaderName) }
+        messages.flatMap { it.filterHeadersWithName(fromHeaderName) }
       }
     } else {
       messages.first().filterHeadersWithName(fromHeaderName)
