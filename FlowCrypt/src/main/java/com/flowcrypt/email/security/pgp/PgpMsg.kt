@@ -531,7 +531,7 @@ object PgpMsg {
     if (dirtyHtml == null) return null
 
     val originalDocument = Jsoup.parse(dirtyHtml, "", Parser.xmlParser())
-    originalDocument.select("div.gmail_quote").firstOrNull()?.let { element ->
+    originalDocument.select("div.gmail_quote,div.flowcrypt_quote").firstOrNull()?.let { element ->
       //we wrap Gmail quote with 'details' tag
       val generation = Element("details").apply {
         appendChild(Element("summary"))
@@ -1357,7 +1357,7 @@ object PgpMsg {
       } else {
         appendChild(
           Element(tagDiv).apply {
-            attr("class", "gmail_quote")
+            attr("class", "flowcrypt_quote")
             //for better UI experience we need to extract the quote header of the first quote
             //and add it separately
             val quotesHeader =
