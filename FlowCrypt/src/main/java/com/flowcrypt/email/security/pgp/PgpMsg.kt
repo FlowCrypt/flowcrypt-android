@@ -59,6 +59,7 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.Entities
 import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
 import org.owasp.html.HtmlPolicyBuilder
@@ -1326,21 +1327,19 @@ object PgpMsg {
 
     val newLineStringPattern = "\\r\\n|\\r|\\n"
     val patternQuotes = "(^>.*\$($newLineStringPattern))+".toRegex(RegexOption.MULTILINE)
-    val patternNewLine = "($newLineStringPattern)".toRegex(RegexOption.MULTILINE)
-    val br = "<br>"
     val tagDiv = "div"
     val tagBlockquote = "blockquote"
 
     val matchingResult = patternQuotes.find(content)?.groups?.firstOrNull()
       ?: return Element(tagDiv).apply {
-        append(content.replace(patternNewLine, br))
+        append(prepareHtmlFromGivenText(content))
       }.takeIf { unwrapContent }
     val quotes = matchingResult.value
 
     return Element(tagDiv).apply {
-      //append text before quotes. Replace CRLF with <br> to transform to HTML.
+      //prepend text before quotes
       if (matchingResult.range.first > 0) {
-        append(content.substring(0, matchingResult.range.first).replace(patternNewLine, br))
+        prepend(prepareHtmlFromGivenText(content.substring(0, matchingResult.range.first)))
       }
 
       //append quotes
@@ -1363,14 +1362,28 @@ object PgpMsg {
         )
       }
 
-      //append text after quotes. Replace CRLF with <br> to transform to HTML.
+      //append text after quotes
       if (matchingResult.range.last < content.length) {
         append(
-          content.substring(matchingResult.range.last + 1, content.length)
-            .replace(patternNewLine, br)
+          prepareHtmlFromGivenText(content.substring(matchingResult.range.last + 1, content.length))
         )
       }
     }
+  }
+
+  private fun prepareHtmlFromGivenText(content: String): String {
+    val newLineStringPattern = "\\r\\n|\\r|\\n"
+    val patternNewLine = "($newLineStringPattern)".toRegex()
+    val patternEscapedEmailAddress = "&lt;(\\S+@\\S+)&gt;".toRegex()
+    val emailAddressReplacement = "<a href=mailto:\$1>\$1</a>"
+    val br = "<br>"
+    return Entities
+      //escape given text to fit HTML standard
+      .escape(content)
+      //Prepare <a href> for email addresses.
+      .replace(patternEscapedEmailAddress, emailAddressReplacement)
+      //Replace CRLF with <br> to transform to HTML.
+      .replace(patternNewLine, br)
   }
 
   /**
