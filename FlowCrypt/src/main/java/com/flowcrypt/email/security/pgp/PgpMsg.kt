@@ -1326,7 +1326,12 @@ object PgpMsg {
     }
 
     val newLineStringPattern = "\\r\\n|\\r|\\n"
-    val patternQuotes = "(^>.*\$($newLineStringPattern))+".toRegex(RegexOption.MULTILINE)
+    val beforeQuotesHeaderStringPattern = "^.*:($newLineStringPattern){1,2}"
+    val patternQuotes = (if (unwrapContent) {
+      "(^>.*\$($newLineStringPattern))+"
+    } else {
+      "($beforeQuotesHeaderStringPattern)(^>.*\$($newLineStringPattern))+"
+    }).toRegex(RegexOption.MULTILINE)
     val tagDiv = "div"
     val tagBlockquote = "blockquote"
 
@@ -1343,21 +1348,28 @@ object PgpMsg {
       }
 
       //append quotes
-      if (!unwrapContent) {
+      if (unwrapContent) {
         appendChild(
-          Element(tagDiv).apply {
-            attr("class", "gmail_quote")
-            appendChild(
-              Element(tagBlockquote).apply {
-                buildQuotes(quotes)?.let { appendChild(it) }
-              }
-            )
+          Element(tagBlockquote).apply {
+            buildQuotes(quotes)?.let { appendChild(it) }
           }
         )
       } else {
         appendChild(
-          Element(tagBlockquote).apply {
-            buildQuotes(quotes)?.let { appendChild(it) }
+          Element(tagDiv).apply {
+            attr("class", "gmail_quote")
+            //for better UI experience we need to extract the quote header of the first quote
+            //and add it separately
+            val quotesHeader =
+              quotes.replace("(^>.*\$($newLineStringPattern))+".toRegex(RegexOption.MULTILINE), "")
+            append(prepareHtmlFromGivenText(quotesHeader))
+
+            appendChild(
+              Element(tagBlockquote).apply {
+                //here we should pass clear quotes and drop the first quote header
+                buildQuotes(quotes.replaceFirst(quotesHeader, ""))?.let { appendChild(it) }
+              }
+            )
           }
         )
       }
