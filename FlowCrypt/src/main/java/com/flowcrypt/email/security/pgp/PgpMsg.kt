@@ -1270,13 +1270,6 @@ object PgpMsg {
       msgContentAsText.append("[image: ${alt}]\n")
     }
 
-    /*blockquote:nth-child(even){ *//*for first blockquote *//*
-      border-left: 1px solid red; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px;
-    }
-    blockquote:nth-child(odd){ *//*for second blockquote *//*
-      border-left: 1px solid #31a217; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px;
-    }*/
-
     return FormattedContentBlockResult(
       text = msgContentAsText.toString().trim(),
       contentBlock = MsgBlockFactory.fromContent(
