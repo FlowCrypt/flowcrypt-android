@@ -59,6 +59,7 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.Entities
 import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
 import org.owasp.html.HtmlPolicyBuilder
@@ -530,7 +531,7 @@ object PgpMsg {
     if (dirtyHtml == null) return null
 
     val originalDocument = Jsoup.parse(dirtyHtml, "", Parser.xmlParser())
-    originalDocument.select("div.gmail_quote").firstOrNull()?.let { element ->
+    originalDocument.select("div.gmail_quote,div.flowcrypt_quote").firstOrNull()?.let { element ->
       //we wrap Gmail quote with 'details' tag
       val generation = Element("details").apply {
         appendChild(Element("summary"))
@@ -1214,7 +1215,7 @@ object PgpMsg {
 
           MsgBlock.Type.PLAIN_TEXT -> {
             val html = fmtMsgContentBlockAsHtml(
-              content.toEscapedHtml(),
+              checkAndReturnQuotesFormatIfFound(content) ?: content.toEscapedHtml(),
               if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
             )
             msgContentAsHtml.append(html)
@@ -1302,6 +1303,92 @@ object PgpMsg {
         """.trimIndent(), isOpenPGPMimeSigned = false
       )
     )
+  }
+
+  private fun checkAndReturnQuotesFormatIfFound(content: String): String? {
+    return buildQuotes(originalContent = content, unwrapContent = false)?.outerHtml()
+  }
+
+  private fun buildQuotes(originalContent: String, unwrapContent: Boolean = true): Element? {
+    val content = if (unwrapContent) {
+      //remove > at the beginning of all lines to define next quotes level
+      val patternQuotesSign = "^>([^\\S\\r\\n])?".toRegex(RegexOption.MULTILINE)
+      originalContent.replace(patternQuotesSign, "")
+    } else {
+      originalContent
+    }
+
+    val newLineStringPattern = "\\r\\n|\\r|\\n"
+    val beforeQuotesHeaderStringPattern = "^.*:($newLineStringPattern){1,2}"
+    val patternQuotes = (if (unwrapContent) {
+      "(^>.*\$($newLineStringPattern))+"
+    } else {
+      "($beforeQuotesHeaderStringPattern)(^>.*\$($newLineStringPattern))+"
+    }).toRegex(RegexOption.MULTILINE)
+    val tagDiv = "div"
+    val tagBlockquote = "blockquote"
+
+    val matchingResult = patternQuotes.find(content)?.groups?.firstOrNull()
+      ?: return Element(tagDiv).apply {
+        append(prepareHtmlFromGivenText(content))
+      }.takeIf { unwrapContent }
+    val quotes = matchingResult.value
+
+    return Element(tagDiv).apply {
+      //prepend text before quotes
+      if (matchingResult.range.first > 0) {
+        prepend(prepareHtmlFromGivenText(content.substring(0, matchingResult.range.first)))
+      }
+
+      //append quotes
+      if (unwrapContent) {
+        appendChild(
+          Element(tagBlockquote).apply {
+            buildQuotes(quotes)?.let { appendChild(it) }
+          }
+        )
+      } else {
+        appendChild(
+          Element(tagDiv).apply {
+            attr("class", "flowcrypt_quote")
+            //for better UI experience we need to extract the quote header of the first quote
+            //and add it separately
+            val quotesHeader =
+              quotes.replace("(^>.*\$($newLineStringPattern))+".toRegex(RegexOption.MULTILINE), "")
+            append(prepareHtmlFromGivenText(quotesHeader))
+
+            appendChild(
+              Element(tagBlockquote).apply {
+                //here we should pass clear quotes and drop the first quote header
+                buildQuotes(quotes.replaceFirst(quotesHeader, ""))?.let { appendChild(it) }
+              }
+            )
+          }
+        )
+      }
+
+      //append text after quotes
+      if (matchingResult.range.last < content.length) {
+        append(
+          prepareHtmlFromGivenText(content.substring(matchingResult.range.last + 1, content.length))
+        )
+      }
+    }
+  }
+
+  private fun prepareHtmlFromGivenText(content: String): String {
+    val newLineStringPattern = "\\r\\n|\\r|\\n"
+    val patternNewLine = "($newLineStringPattern)".toRegex()
+    val patternEscapedEmailAddress = "&lt;(\\S+@\\S+)&gt;".toRegex()
+    val emailAddressReplacement = "<a href=mailto:\$1>\$1</a>"
+    val br = "<br>"
+    return Entities
+      //escape given text to fit HTML standard
+      .escape(content)
+      //Prepare <a href> for email addresses.
+      .replace(patternEscapedEmailAddress, emailAddressReplacement)
+      //Replace CRLF with <br> to transform to HTML.
+      .replace(patternNewLine, br)
   }
 
   /**

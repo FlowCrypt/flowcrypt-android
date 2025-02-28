@@ -615,6 +615,133 @@ class PgpMsgTest {
     assertEquals(1, document.select("summary").size)
   }
 
+  @Test
+  fun testQuotesParsingAndHtmlManipulationForPlainMode() {
+    val mimeMessageRaw = """
+    MIME-Version: 1.0
+    Date: Mon, 24 Feb 2025 17:02:47 +0200
+    Message-ID: <messageid@flowcrypt.test>
+    Subject: Re: Quotes for plain text
+    From: Den at FlowCrypt <den@flowcrypt.test>
+    To: DenBond7 <denbond7@flowcrypt.test>
+    Content-Type: text/plain; charset="UTF-8"
+    Content-Transfer-Encoding: quoted-printable
+    
+    reply 2
+    
+    The top-level build.gradle.kts file (for the Kotlin DSL) or
+    build.gradle file (for the Groovy DSL) is located in the root project
+    directory. It typically defines the common versions of plugins used by
+    modules in your project.
+    
+    The following code sample describes the default settings and DSL
+    elements in the top-level build script after creating a new project
+    
+    On Mon, Feb 24, 2025 at 5:02=E2=80=AFPM DenBond7 <denbond7@flowcrypt.tes=
+    t> wrote:
+    >
+    > 2
+    >
+    > Creating custom build configurations requires you to make changes to
+    > one or more build configuration files. These plain-text files use a
+    > domain-specific language (DSL) to describe and manipulate the build
+    > logic using Kotlin script, which is a flavor of the Kotlin language.
+    > You can also use Groovy, which is a dynamic language for the Java
+    > Virtual Machine (JVM), to configure your builds.
+    >
+    > You don't need to know Kotlin script or Groovy to start configuring
+    > your build because the Android Gradle plugin introduces most of the
+    > DSL elements you need. To learn more about the Android Gradle plugin
+    > DSL, read the DSL reference documentation. Kotlin script also relies
+    > on the underlying Gradle Kotlin DSL
+    >
+    > When starting a new project, Android Studio automatically creates some
+    > of these files for you and populates them based on sensible defaults.
+    > For an overview of the created files, see Android build structure.
+    >
+    > =D0=BF=D0=BD, 24 =D0=BB=D1=8E=D1=82. 2025=E2=80=AF=D1=80. =D0=BE 17:01 De=
+    n at FlowCrypt <den@flowcrypt.test> =D0=BF=D0=B8=D1=88=D0=B5:
+    > >
+    > > reply 1
+    > >
+    > > Build types define certain properties that Gradle uses when building
+    > > and packaging your app. Build types are typically configured for
+    > > different stages of your development lifecycle.
+    > >
+    > > For example, the debug build type enables debug options and signs the
+    > > app with the debug key, while the release build type may shrink,
+    > > obfuscate, and sign your app with a release key for distribution.
+    > >
+    > > You must define at least one build type to build your app. Android
+    > > Studio creates the debug and release build types by default. To start
+    > > customizing packaging settings for your app, learn how to configure
+    > > build types.
+    > >
+    > >
+    > > On Mon, Feb 24, 2025 at 5:00=E2=80=AFPM DenBond7 <denbond7@flowcrypt.tes=
+    t> wrote:
+    > > >
+    > > > 1
+    > > >
+    > > > The Android build system compiles app resources and source code and
+    > > > packages them into APKs or Android App Bundles that you can test,
+    > > > deploy, sign, and distribute.
+    > > >
+    > > > In Gradle build overview and Android build structure, we discussed
+    > > > build concepts and the structure of an Android app. Now it's time to
+    > > > configure the build.
+    > > >
+    > > >
+    > > > --
+    > > > Regards,
+    > > > Denys Bondarenko
+    > >
+    > >
+    > >
+    > > --
+    > > Regards,
+    > > Den at FlowCrypt
+    >
+    >
+    >
+    > --
+    > Regards,
+    > Denys Bondarenko
+    
+    
+    
+    --=20
+    Regards,
+    Den at FlowCrypt""".trimIndent()
+
+    val processedMimeMessageResult = runBlocking {
+      PgpMsg.processMimeMessage(
+        MimeMessage(Session.getInstance(Properties()), mimeMessageRaw.toInputStream()),
+        PGPPublicKeyRingCollection(listOf()),
+        PGPSecretKeyRingCollection(listOf()),
+        SecretKeyRingProtector.unprotectedKeys(),
+      )
+    }
+
+    assertEquals(1, processedMimeMessageResult.blocks.size)
+
+    val plainHtmlBlock = processedMimeMessageResult.blocks.first {
+      it.type == MsgBlock.Type.PLAIN_HTML
+    }
+
+    val document = Jsoup.parse(requireNotNull(plainHtmlBlock.content), "", Parser.xmlParser())
+    assertNotNull(document.select("details").first())
+    assertEquals(1, document.select("details").size)
+    assertNotNull(document.select("summary").first())
+    assertEquals(1, document.select("summary").size)
+
+    val quotes = document.select("blockquote")
+    assertEquals(3, quotes.size)
+    assertTrue(quotes[0].text().startsWith("2 Creating custom build configurations requires"))
+    assertTrue(quotes[1].text().startsWith("reply 1"))
+    assertTrue(quotes[2].text().startsWith("1 The Android build system"))
+  }
+
   private data class RenderedBlock(
     val rendered: Boolean,
     val frameColor: String?,
