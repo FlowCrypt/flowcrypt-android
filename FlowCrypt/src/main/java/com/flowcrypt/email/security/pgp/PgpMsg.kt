@@ -7,7 +7,7 @@ package com.flowcrypt.email.security.pgp
 
 import android.content.Context
 import android.util.Base64
-import android.util.Patterns
+import androidx.core.util.PatternsCompat
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
@@ -1380,7 +1380,7 @@ object PgpMsg {
   private fun prepareHtmlFromGivenText(content: String): String {
     val newLineStringPattern = "\\r\\n|\\r|\\n"
     val patternNewLine = "($newLineStringPattern)".toRegex()
-    val emailAddressPattern = Patterns.EMAIL_ADDRESS.pattern()
+    val emailAddressPattern = PatternsCompat.EMAIL_ADDRESS.pattern()
     val patternEscapedEmailAddress = "(&lt;|<)?($emailAddressPattern)(&gt;|>)?".toRegex()
     val emailAddressReplacement = "\$1<a href=mailto:\$2>\$2</a>\$4"
     val br = "<br>"

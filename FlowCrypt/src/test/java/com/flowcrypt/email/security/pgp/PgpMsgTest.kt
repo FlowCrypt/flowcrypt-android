@@ -742,6 +742,90 @@ class PgpMsgTest {
     assertTrue(quotes[2].text().startsWith("1 The Android build system"))
   }
 
+  @Test
+  fun testQuotesParsingAndHtmlManipulationForEncryptedMessages() {
+    val mimeMessageRaw = """
+    Date: Tue, 4 Mar 2025 15:14:00 +0200 (GMT+02:00)
+    From: default@flowcrypt.test
+    To: default@flowcrypt.test
+    Message-ID: <255254603.1.1741101240147@flowcrypt.test>
+    Subject: TEst
+    Mime-Version: 1.0
+    Content-Type: multipart/mixed; 
+      boundary="----=_Part_0_124883294.1741101240093"
+    
+    ------=_Part_0_124883294.1741101240093
+    Content-Type: text/plain; charset=us-ascii
+    Content-Transfer-Encoding: 7bit
+    
+    -----BEGIN PGP MESSAGE-----
+    Version: PGPainless
+    
+    wV4DTxRYvSK3u1MSAQdA0rQBDv6Qe3gj8IWoEkn0r6W7+Uz/zyz0YI6DCLA2h3Ew
+    bM+5OX93DKqTkaLWbV0VcuN4ACPOb+4nyWIhb/lQq468FO7y2rqMFah0LcTJfTWr
+    wV4DTxRYvSK3u1MSAQdA/iyqemW8rY+ka18ANSph7TD8u3INnwT6Wt5BhcHzOTQw
+    hPcE7cge7naa351khAsVRMgXZS4jzxR0WQw3E/truKHcprpCaQis0dgsiTxURTm+
+    0sCWAdMfNsQa1GUZVredhzYCVRg6iiieU1k42vhwxYe8GMO/s+aWQgwR2EhenqKz
+    0utgBCc1uP0o0fzIKdyirdCmlrSwk1yAhiU1/mR0p7Yl29vDdhRWjz7UEV1nfbwg
+    1CAh7028G0YTFItwnPCCYDYYP1R0pPSffnuVV/BLuEfk0JiXUaa1ar73v5Sepfkm
+    RKWX0PuM0IIY2+d78pCfr4puci2qwMGDX9hdTvp+qk+QolpFnVP7YUlDZTu5N8Q7
+    GYrz0YJBXCvrkCNbu5UcssTRNyYyHB7sDT+XD+kE3uKcMat1cl190Gm6WFYB5I8x
+    H3jhdxj8HyrazAyI3Lra/rtLIRg0zFbQ8Q7nb96gAzi3KU0gTdXPJzbMetlwF0cT
+    Q027sUsEQ4L3PBVFNy6SYRRsQiS3o3CVaRkRlOEqsl+ix2S8bASh9bIl7Ode8+jz
+    l8r4umM+zyWe
+    =HJxV
+    -----END PGP MESSAGE-----
+    
+    ------=_Part_0_124883294.1741101240093--
+    """.trimIndent()
+
+    val privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+        "Version: PGPainless\n" +
+        "\n" +
+        "lIYEYIq7phYJKwYBBAHaRw8BAQdAat45rrh+gvQwWwJw5eScq3Pdxt/8d+lWNVSm\n" +
+        "kImXcRP+CQMCvWfx3mzDdd5g6c59LcPqADK0p70/7ZmTkp3ZC1YViTprg4tQt/PF\n" +
+        "QJL+VPCG+BF9bWyFcfxKe+KAnXRTWml5O6xrv6ZkiNmAxoYyO1shzLQWZGVmYXVs\n" +
+        "dEBmbG93Y3J5cHQudGVzdIh4BBMWCgAgBQJgirumAhsDBRYCAwEABAsJCAcFFQoJ\n" +
+        "CAsCHgECGQEACgkQIl+AI8INCVcysgD/cu23M07rImuV5gIl98uOnSIR+QnHUD/M\n" +
+        "I34b7iY/iTQBALMIsqO1PwYl2qKwmXb5lSoMj5SmnzRRE2RwAFW3AiMCnIsEYIq7\n" +
+        "phIKKwYBBAGXVQEFAQEHQA8q7iPr+0OXqBGBSAL6WNDjzHuBsG7uiu5w8l/A6v8l\n" +
+        "AwEIB/4JAwK9Z/HebMN13mCOF6Wy/9oZK4d0DW9cNLuQDeRVZejxT8oFMm7G8iGw\n" +
+        "CGNjIWWcQSvctBZtHwgcMeplCW7tmzkD3Nq/ty50lCwQQd6gZSXMiHUEGBYKAB0F\n" +
+        "AmCKu6YCGwwFFgIDAQAECwkIBwUVCgkICwIeAQAKCRAiX4Ajwg0JV+sbAQCv4LVM\n" +
+        "0+AN54ivWa4vPRyYOfSQ1FqsipkYLJce+xwUeAD+LZpEVCypFtGWQVdeSJVxIHx3\n" +
+        "k40IfHsK0fGgR+NrRAw=\n" +
+        "=osuI\n" +
+        "-----END PGP PRIVATE KEY BLOCK-----"
+
+    val secretKeyRing = PgpKey.extractSecretKeyRing(privateKey)
+    val processedMimeMessageResult = runBlocking {
+      PgpMsg.processMimeMessage(
+        MimeMessage(Session.getInstance(Properties()), mimeMessageRaw.toInputStream()),
+        PGPPublicKeyRingCollection(listOf()),
+        PGPSecretKeyRingCollection(listOf(secretKeyRing)),
+        SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("android")),
+      )
+    }
+
+    assertEquals(1, processedMimeMessageResult.blocks.size)
+
+    val plainHtmlBlock = processedMimeMessageResult.blocks.first {
+      it.type == MsgBlock.Type.PLAIN_HTML
+    }
+
+    val document = Jsoup.parse(requireNotNull(plainHtmlBlock.content), "", Parser.xmlParser())
+    assertNotNull(document.select("details").first())
+    assertEquals(1, document.select("details").size)
+    assertNotNull(document.select("summary").first())
+    assertEquals(1, document.select("summary").size)
+
+    val quotes = document.select("blockquote")
+    assertEquals(3, quotes.size)
+    assertTrue(quotes[0].text().startsWith("Sender 2"))
+    assertTrue(quotes[1].text().startsWith("Reply 1"))
+    assertTrue(quotes[2].text().startsWith("Sender 1"))
+  }
+
   private data class RenderedBlock(
     val rendered: Boolean,
     val frameColor: String?,
