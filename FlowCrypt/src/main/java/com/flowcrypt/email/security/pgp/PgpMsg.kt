@@ -7,6 +7,7 @@ package com.flowcrypt.email.security.pgp
 
 import android.content.Context
 import android.util.Base64
+import androidx.core.util.PatternsCompat
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
@@ -793,15 +794,12 @@ object PgpMsg {
     return decryptedContent.replace(FC_REPLY_TOKEN_REGEX, "")
   }
 
-  fun stripPublicKeys(decryptedContent: String, foundPublicKeys: MutableList<String>): String {
-    val normalizedTextAndBlocks = RawBlockParser.detectBlocks(decryptedContent)
-    for (block in normalizedTextAndBlocks) {
-      if (block.type == RawBlockParser.RawBlockType.PGP_PUBLIC_KEY && block.content.isNotEmpty()) {
-        val content = block.content
-        foundPublicKeys.add(String(content))
-      }
+  private fun extractPublicKeysIfFound(decryptedContent: String): List<String> {
+    return RawBlockParser.detectBlocks(decryptedContent).filter {
+      it.type == RawBlockParser.RawBlockType.PGP_PUBLIC_KEY && it.content.isNotEmpty()
+    }.map {
+      String(it.content)
     }
-    return decryptedContent
   }
 
   private fun processExtractedMsgBlocks(
@@ -1312,7 +1310,7 @@ object PgpMsg {
   private fun buildQuotes(originalContent: String, unwrapContent: Boolean = true): Element? {
     val content = if (unwrapContent) {
       //remove > at the beginning of all lines to define next quotes level
-      val patternQuotesSign = "^>([^\\S\\r\\n])?".toRegex(RegexOption.MULTILINE)
+      val patternQuotesSign = "^(\\s)?>([^\\S\\r\\n])?".toRegex(RegexOption.MULTILINE)
       originalContent.replace(patternQuotesSign, "")
     } else {
       originalContent
@@ -1321,9 +1319,9 @@ object PgpMsg {
     val newLineStringPattern = "\\r\\n|\\r|\\n"
     val beforeQuotesHeaderStringPattern = "^.*:($newLineStringPattern){1,2}"
     val patternQuotes = (if (unwrapContent) {
-      "(^>.*\$($newLineStringPattern))+"
+      "(^(\\s)?>.*\$($newLineStringPattern)?)+"
     } else {
-      "($beforeQuotesHeaderStringPattern)(^>.*\$($newLineStringPattern))+"
+      "($beforeQuotesHeaderStringPattern)(^(\\s)?>.*\$($newLineStringPattern)?)+"
     }).toRegex(RegexOption.MULTILINE)
     val tagDiv = "div"
     val tagBlockquote = "blockquote"
@@ -1354,7 +1352,10 @@ object PgpMsg {
             //for better UI experience we need to extract the quote header of the first quote
             //and add it separately
             val quotesHeader =
-              quotes.replace("(^>.*\$($newLineStringPattern))+".toRegex(RegexOption.MULTILINE), "")
+              quotes.replace(
+                "(^(\\s)?>.*\$($newLineStringPattern)?)+".toRegex(RegexOption.MULTILINE),
+                ""
+              )
             append(prepareHtmlFromGivenText(quotesHeader))
 
             appendChild(
@@ -1379,8 +1380,9 @@ object PgpMsg {
   private fun prepareHtmlFromGivenText(content: String): String {
     val newLineStringPattern = "\\r\\n|\\r|\\n"
     val patternNewLine = "($newLineStringPattern)".toRegex()
-    val patternEscapedEmailAddress = "&lt;(\\S+@\\S+)&gt;".toRegex()
-    val emailAddressReplacement = "<a href=mailto:\$1>\$1</a>"
+    val emailAddressPattern = PatternsCompat.EMAIL_ADDRESS.pattern()
+    val patternEscapedEmailAddress = "(&lt;|<)?($emailAddressPattern)(&gt;|>)?".toRegex()
+    val emailAddressReplacement = "\$1<a href=mailto:\$2>\$2</a>\$4"
     val br = "<br>"
     return Entities
       //escape given text to fit HTML standard
@@ -1501,11 +1503,10 @@ object PgpMsg {
   private fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): Collection<MsgBlock> {
     if (decryptedContent == null) return emptyList()
     val blocks = mutableListOf<MsgBlock>()
-    val armoredKeys = mutableListOf<String>()
-    val content = stripPublicKeys(
-      stripFcReplyToken(extractFcAttachments(String(decryptedContent), blocks)),
-      armoredKeys
-    ).toEscapedHtml()
+    val strippedContent = stripFcReplyToken(extractFcAttachments(String(decryptedContent), blocks))
+    val armoredKeys = extractPublicKeysIfFound(strippedContent)
+    val content =
+      checkAndReturnQuotesFormatIfFound(strippedContent) ?: strippedContent.toEscapedHtml()
     blocks.add(
       MsgBlockFactory.fromContent(
         MsgBlock.Type.DECRYPTED_HTML,
