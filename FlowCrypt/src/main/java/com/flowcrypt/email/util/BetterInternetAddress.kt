@@ -3,12 +3,6 @@
  * Contributors: denbond7
  */
 
-/*
- * © 2021-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   Ivan Pizhenko
- */
-
 package com.flowcrypt.email.util
 
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
@@ -62,7 +56,7 @@ class BetterInternetAddress(str: String, verifySpecialCharacters: Boolean = true
     private const val VALID_PERSONAL_NAME_WITH_EMAIL =
       "([$ALPHANUM\\p{Punct}\\p{Space}]*)<($VALID_EMAIL)>"
 
-    val VALID_EMAIL_REGEX = VALID_EMAIL.toRegex(RegexOption.IGNORE_CASE)
+    private val VALID_EMAIL_REGEX = VALID_EMAIL.toRegex(RegexOption.IGNORE_CASE)
     private val VALID_PERSONAL_NAME_WITH_EMAIL_REGEX = VALID_PERSONAL_NAME_WITH_EMAIL.toRegex()
 
     // if these appear in the display-name they must be double quoted
