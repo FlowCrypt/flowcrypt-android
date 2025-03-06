@@ -9,6 +9,7 @@ import android.content.Context
 import android.util.Base64
 import androidx.core.util.PatternsCompat
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.model.AlternativeContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
@@ -1193,7 +1194,7 @@ object PgpMsg {
     val msgContentAsText = StringBuilder()
     for (block in allContentBlocks.filterNot { MimeUtils.isPlainImgAtt(it) }) {
       if (block.content != null) {
-        val content = block.content!!
+        val content = requireNotNull(block.content)
         when (block.type) {
           MsgBlock.Type.DECRYPTED_TEXT -> {
             val html = fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.GREEN)
@@ -1246,6 +1247,20 @@ object PgpMsg {
               )
             )
             msgContentAsText.append(content).append('\n')
+          }
+        }
+      } else {
+        when (block) {
+          is AlternativeContentMsgBlock -> {
+            val htmlVersionBlock = block.htmlVersionBlock
+            htmlVersionBlock.content?.stripHtmlRootTags()?.let { html ->
+              msgContentAsHtml.append(fmtMsgContentBlockAsHtml(html, FrameColor.GREEN))
+            }
+
+            val plainVersionBlock = block.plainVersionBlock
+            msgContentAsText
+              .append(plainVersionBlock.content)
+              .append('\n')
           }
         }
       }
@@ -1502,15 +1517,26 @@ object PgpMsg {
 
   private fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): Collection<MsgBlock> {
     if (decryptedContent == null) return emptyList()
+    val decryptedText = String(decryptedContent)
     val blocks = mutableListOf<MsgBlock>()
-    val strippedContent = stripFcReplyToken(extractFcAttachments(String(decryptedContent), blocks))
+    val strippedContent = stripFcReplyToken(extractFcAttachments(decryptedText, blocks))
     val armoredKeys = extractPublicKeysIfFound(strippedContent)
     val content =
       checkAndReturnQuotesFormatIfFound(strippedContent) ?: strippedContent.toEscapedHtml()
     blocks.add(
-      MsgBlockFactory.fromContent(
-        MsgBlock.Type.DECRYPTED_HTML,
-        content,
+      //we need to add two alternative versions:
+      //formatted HTML + original text(will be used for a reply)
+      AlternativeContentMsgBlock(
+        htmlVersionBlock = MsgBlockFactory.fromContent(
+          MsgBlock.Type.DECRYPTED_HTML,
+          content,
+          isOpenPGPMimeSigned = false
+        ),
+        plainVersionBlock = MsgBlockFactory.fromContent(
+          MsgBlock.Type.DECRYPTED_TEXT,
+          decryptedText,
+          isOpenPGPMimeSigned = false
+        ),
         isOpenPGPMimeSigned = false
       )
     )
