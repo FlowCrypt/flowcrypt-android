@@ -34,6 +34,13 @@ android {
   namespace = "com.flowcrypt.email"
 
   defaultConfig {
+    /*
+     The following argument makes the Android Test Orchestrator run its
+     "pm clear" command after each test invocation. This command ensures
+     that the app"s state is completely cleared between tests.
+     */
+    testInstrumentationRunnerArguments += mapOf("clearPackageData" to "true")
+
     applicationId = "com.flowcrypt.email"
     minSdk = extra["minSdkVersion"] as Int
     targetSdk = extra["targetSdkVersion"] as Int
@@ -41,13 +48,6 @@ android {
     versionName = extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
-
-    /*
-     The following argument makes the Android Test Orchestrator run its
-     "pm clear" command after each test invocation. This command ensures
-     that the app"s state is completely cleared between tests.
-     */
-    testInstrumentationRunnerArguments += mapOf("clearPackageData" to "true")
     multiDexEnabled = true
   }
 
