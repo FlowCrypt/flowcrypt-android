@@ -98,10 +98,12 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       sameInstance(
         AlternativeContentMsgBlock::class.java,
         AlternativeContentMsgBlock(
-          htmlVersionBlock = MsgBlockFactory.fromContent(
+          otherBlocks = listOf(
+            MsgBlockFactory.fromContent(
             MsgBlock.Type.DECRYPTED_HTML,
             "some html content",
             isOpenPGPMimeSigned = false
+            )
           ),
           plainVersionBlock = MsgBlockFactory.fromContent(
             MsgBlock.Type.DECRYPTED_TEXT,

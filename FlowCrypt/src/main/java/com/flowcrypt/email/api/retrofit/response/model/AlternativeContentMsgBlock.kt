@@ -15,8 +15,8 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class AlternativeContentMsgBlock(
   @Expose override val error: MsgBlockError? = null,
-  @Expose val htmlVersionBlock: MsgBlock,
   @Expose val plainVersionBlock: MsgBlock,
+  @Expose val otherBlocks: List<MsgBlock>,
   @Expose override val isOpenPGPMimeSigned: Boolean
 ) : MsgBlock {
   @IgnoredOnParcel
