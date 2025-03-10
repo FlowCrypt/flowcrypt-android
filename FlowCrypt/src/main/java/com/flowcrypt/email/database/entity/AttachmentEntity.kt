@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.database.entity
 
-import android.net.Uri
 import android.provider.BaseColumns
+import androidx.core.net.toUri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -68,7 +68,7 @@ data class AttachmentEntity(
       encodedSize = encodedSize ?: 0,
       type = type,
       id = attachmentId,
-      uri = if (fileUri.isNullOrEmpty()) null else Uri.parse(fileUri),
+      uri = if (fileUri.isNullOrEmpty()) null else fileUri.toUri(),
       fwdFolder = forwardedFolder,
       fwdUid = forwardedUid ?: -1,
       path = path,

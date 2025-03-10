@@ -14,6 +14,7 @@ import android.graphics.Bitmap
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.createBitmap
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
@@ -264,7 +265,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     val drawable = ResourcesCompat.getDrawable(
       context.resources, R.mipmap.ic_launcher,
       context.theme
-    ) ?: return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    ) ?: return createBitmap(1, 1)
     return GeneralUtil.drawableToBitmap(drawable)
   }
 

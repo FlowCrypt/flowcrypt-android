@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.base
@@ -19,17 +19,18 @@ import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.viewModels
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.security.pgp.PgpPwd
 import com.flowcrypt.email.util.exception.IllegalTextForStrengthMeasuringException
@@ -177,16 +178,16 @@ abstract class BasePassphraseStrengthFragment<T : ViewBinding> : BaseFragment<T>
 
   private fun parseColor(): Int {
     return try {
-      Color.parseColor(pwdStrengthResult?.word?.color)
-    } catch (e: IllegalArgumentException) {
+      requireNotNull(pwdStrengthResult?.word?.color).toColorInt()
+    } catch (e: Exception) {
       e.printStackTrace()
 
       when (pwdStrengthResult?.word?.color) {
-        "orange" -> Color.parseColor("#FFA500")
+        "orange" -> "#FFA500".toColorInt()
 
-        "darkorange" -> Color.parseColor("#FF8C00")
+        "darkorange" -> "#FF8C00".toColorInt()
 
-        "darkred" -> Color.parseColor("#8B0000")
+        "darkred" -> "#8B0000".toColorInt()
 
         else -> Color.DKGRAY
       }
