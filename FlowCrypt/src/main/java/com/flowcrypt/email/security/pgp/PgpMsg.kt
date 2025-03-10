@@ -1200,7 +1200,10 @@ object PgpMsg {
   ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
-    for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
+    val plainImageBlocks = filterBlocksViaTree(allContentBlocks) {
+      MimeUtils.isPlainImgAtt(it)
+    }
+    for (plainImageBlock in plainImageBlocks) {
       var contentId = (plainImageBlock as AttMsgBlock).attMeta.contentId ?: ""
       if (contentId.isNotEmpty()) {
         contentId =
@@ -1303,6 +1306,25 @@ object PgpMsg {
         """.trimIndent(), isOpenPGPMimeSigned = false
       )
     )
+  }
+
+  private fun filterBlocksViaTree(
+    blocks: List<MsgBlock>,
+    predicate: (MsgBlock) -> Boolean
+  ): List<MsgBlock> {
+    return mutableListOf<MsgBlock>().apply {
+      blocks.forEach { block ->
+        when {
+          block is AlternativeContentMsgBlock -> {
+            addAll(filterBlocksViaTree(block.otherBlocks, predicate))
+          }
+
+          predicate(block) -> {
+            add(block)
+          }
+        }
+      }
+    }
   }
 
   private fun handleMsgBlock(
