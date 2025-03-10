@@ -8,6 +8,7 @@ package com.flowcrypt.email
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.core.content.edit
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -211,10 +212,9 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
     if (sharedPreferences.all.isEmpty()) {
       if (!sharedPreferences.contains(Constants.PREF_KEY_INSTALL_VERSION)) {
-        sharedPreferences
-          .edit()
-          .putString(Constants.PREF_KEY_INSTALL_VERSION, BuildConfig.VERSION_NAME)
-          .apply()
+        sharedPreferences.edit {
+          putString(Constants.PREF_KEY_INSTALL_VERSION, BuildConfig.VERSION_NAME)
+        }
       }
     }
   }

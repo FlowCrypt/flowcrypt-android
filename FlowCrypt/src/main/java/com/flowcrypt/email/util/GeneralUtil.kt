@@ -26,6 +26,8 @@ import android.webkit.MimeTypeMap
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -369,7 +371,7 @@ class GeneralUtil {
       )
 
       val intent = Intent(Intent.ACTION_VIEW)
-      intent.data = Uri.parse(url)
+      intent.data = url.toUri()
       if (intent.resolveActivity(context.packageManager) != null) {
         intent.data?.let {
           customTabsIntent.launchUrl(context, it)
@@ -390,13 +392,9 @@ class GeneralUtil {
       }
 
       val bitmap: Bitmap = if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        createBitmap(1, 1)
       } else {
-        Bitmap.createBitmap(
-          drawable.intrinsicWidth,
-          drawable.intrinsicHeight,
-          Bitmap.Config.ARGB_8888
-        )
+        createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
       }
 
       val canvas = Canvas(bitmap)
@@ -596,7 +594,7 @@ class GeneralUtil {
       messages: Array<Message>
     ) = withContext(Dispatchers.IO) {
       try {
-        val isSentFolder = imapFolder?.attributes?.contains("\\Sent") ?: true
+        val isSentFolder = imapFolder?.attributes?.contains("\\Sent") != false
 
         if (isSentFolder) {
           val emailAndNamePairs = mutableListOf<Pair<String, String?>>()

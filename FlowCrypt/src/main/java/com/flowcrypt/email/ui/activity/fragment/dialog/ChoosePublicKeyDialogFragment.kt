@@ -16,6 +16,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
+import androidx.core.util.size
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -174,7 +175,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     val selectedAtts = ArrayList<AttachmentInfo>()
     val checkedItemPositions = listViewKeys?.checkedItemPositions
     if (checkedItemPositions != null) {
-      for (i in 0 until checkedItemPositions.size()) {
+      for (i in 0 until checkedItemPositions.size) {
         val key = checkedItemPositions.keyAt(i)
         if (checkedItemPositions.get(key)) {
           selectedAtts.add(atts[key])

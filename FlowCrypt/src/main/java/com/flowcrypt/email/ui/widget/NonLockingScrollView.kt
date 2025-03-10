@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 /*
@@ -30,8 +30,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.ScrollView
+import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
-import java.util.ArrayList
 
 /**
  * A [ScrollView] that will never lock scrolling in a particular direction.
@@ -119,7 +119,7 @@ class NonLockingScrollView : NestedScrollView {
   }
 
   private fun canViewReceivePointerEvents(child: View): Boolean {
-    return child.visibility == View.VISIBLE || child.animation != null
+    return child.isVisible || child.animation != null
   }
 
   private fun getActionMasked(ev: MotionEvent): Int {

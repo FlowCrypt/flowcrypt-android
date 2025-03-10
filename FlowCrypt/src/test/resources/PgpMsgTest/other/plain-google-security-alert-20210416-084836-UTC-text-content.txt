@@ -1,13 +1,15 @@
-[remote content blocked for your privacy]
+[image: Google]
+FlowCrypt iOS App was granted access to your Google Account
 
-FlowCrypt iOS App was granted access to your Google Account 
-[img]flowcrypt.compatibility&#64;gmail.com
- 
-[img]
-If you did not grant access, you should check this activity and secure your account.
-[img]
-[img]Check activity
+
+flowcrypt.compatibility@gmail.com
+
+If you did not grant access, you should check this activity and secure your
+account.
+Check activity
+<https://accounts.google.com/AccountChooser?Email=flowcrypt.compatibility@gmail.com&continue=https://myaccount.google.com/alert/nt/1618562915000?rfn%3D127%26rfnc%3D1%26eid%3D3253523840714405517%26et%3D0%26anexp%3Dnret-fa>
 You can also see security activity at
 https://myaccount.google.com/notifications
-You received this email to let you know about important changes to your Google Account and services.
+You received this email to let you know about important changes to your
+Google Account and services.
 © 2021 Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA

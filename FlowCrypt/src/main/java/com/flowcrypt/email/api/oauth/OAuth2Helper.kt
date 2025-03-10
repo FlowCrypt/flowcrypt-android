@@ -1,11 +1,11 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.oauth
 
-import android.net.Uri
+import androidx.core.net.toUri
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * @author Denys Bondarenko
  */
 class OAuth2Helper {
-  enum class Provider constructor(val openidConfigurationUrl: String) {
+  enum class Provider(val openidConfigurationUrl: String) {
     MICROSOFT(OPENID_CONFIGURATION_URL_MICROSOFT)
   }
 
@@ -53,7 +53,7 @@ class OAuth2Helper {
         configuration,
         MICROSOFT_AZURE_APP_ID,
         ResponseTypeValues.CODE,
-        Uri.parse(redirectUri)
+        redirectUri.toUri()
       )
         .setResponseMode(AuthorizationRequest.ResponseMode.QUERY)
         .setPrompt(AuthorizationRequest.Prompt.SELECT_ACCOUNT)

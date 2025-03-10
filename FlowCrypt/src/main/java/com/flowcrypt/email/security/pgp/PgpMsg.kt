@@ -9,6 +9,7 @@ import android.content.Context
 import android.util.Base64
 import androidx.core.util.PatternsCompat
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.model.AlternativeContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
@@ -29,7 +30,6 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.jakarta.mail.hasPgpThings
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeEncrypted
@@ -354,34 +354,56 @@ object PgpMsg {
       //it's a multipart that should be investigated.
       part.isMultipart() -> {
         val multiPart = part.content as Multipart
-        val isMultipartAlternative = part.isMultipartAlternative()
-        var isAlternativePartUsed = false
-        for (partCount in 0 until multiPart.count) {
-          val subPart = multiPart.getBodyPart(partCount)
-          if (!subPart.isMultipart() && isMultipartAlternative && multiPart.count > 1) {
-            //if it multipart/alternative case with more than 1 part
-            //we should handle only one part and skip other
-            if (isAlternativePartUsed) {
-              continue
-            } else if (subPart.isPlainText()) {
-              if (subPart.hasPgpThings()) {
-                isAlternativePartUsed = true
-              } else {
-                //we prefer to use HTML part if there are no PGP things
-                continue
-              }
-            }
+        if (part.isMultipartAlternative()) {
+          val parts = mutableListOf<Part>()
+          for (partCount in 0 until multiPart.count) {
+            parts.add(multiPart.getBodyPart(partCount))
           }
 
-          blocks.addAll(
-            extractMsgBlocksFromPart(
-              part = subPart,
+          val partWithPlainText = parts.firstOrNull { it.isPlainText() }
+          if (partWithPlainText != null) {
+            val plainVersionBlock = extractMsgBlocksFromPart(
+              part = partWithPlainText,
               verificationPublicKeys = verificationPublicKeys,
               secretKeys = secretKeys,
               protector = protector,
               isOpenPGPMimeSigned = isOpenPGPMimeSigned
+            ).firstOrNull()
+
+            val otherBlocks = (parts - partWithPlainText).flatMap { alternativePart ->
+              extractMsgBlocksFromPart(
+                part = alternativePart,
+                verificationPublicKeys = verificationPublicKeys,
+                secretKeys = secretKeys,
+                protector = protector,
+                isOpenPGPMimeSigned = isOpenPGPMimeSigned
+              )
+            }
+
+            if (plainVersionBlock != null) {
+              blocks.add(
+                AlternativeContentMsgBlock(
+                  plainVersionBlock = plainVersionBlock,
+                  otherBlocks = otherBlocks,
+                  isOpenPGPMimeSigned = isOpenPGPMimeSigned
+                )
+              )
+            } else {
+              blocks.addAll(otherBlocks)
+            }
+          }
+        } else {
+          for (partCount in 0 until multiPart.count) {
+            blocks.addAll(
+              extractMsgBlocksFromPart(
+                part = multiPart.getBodyPart(partCount),
+                verificationPublicKeys = verificationPublicKeys,
+                secretKeys = secretKeys,
+                protector = protector,
+                isOpenPGPMimeSigned = isOpenPGPMimeSigned
+              )
             )
-          )
+          }
         }
       }
 
@@ -838,7 +860,7 @@ object PgpMsg {
         }
 
         if (!isEncrypted) {
-          isEncrypted = messageMetadata?.isEncrypted ?: false
+          isEncrypted = messageMetadata?.isEncrypted == true
         }
 
         if (messageMetadata?.isSigned == true) {
@@ -1178,7 +1200,10 @@ object PgpMsg {
   ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
-    for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
+    val plainImageBlocks = filterBlocksViaTree(allContentBlocks) {
+      MimeUtils.isPlainImgAtt(it)
+    }
+    for (plainImageBlock in plainImageBlocks) {
       var contentId = (plainImageBlock as AttMsgBlock).attMeta.contentId ?: ""
       if (contentId.isNotEmpty()) {
         contentId =
@@ -1191,62 +1216,42 @@ object PgpMsg {
 
     val msgContentAsHtml = StringBuilder()
     val msgContentAsText = StringBuilder()
+
+    fun collectDataFromMsgBlock(
+      block: MsgBlock,
+      useHtml: Boolean = true,
+      usePlainText: Boolean = true
+    ) = {
+      handleMsgBlock(block, inlineImagesByCid) { html, plainText ->
+        html?.takeIf { useHtml }?.let {
+          msgContentAsHtml.append(html)
+        }
+        plainText?.takeIf { usePlainText }?.let { text ->
+          msgContentAsText.append(text).append('\n')
+        }
+      }
+    }
+
     for (block in allContentBlocks.filterNot { MimeUtils.isPlainImgAtt(it) }) {
-      if (block.content != null) {
-        val content = block.content!!
-        when (block.type) {
-          MsgBlock.Type.DECRYPTED_TEXT -> {
-            val html = fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.GREEN)
-            msgContentAsHtml.append(html)
-            msgContentAsText.append(content).append('\n')
+      when (block) {
+        is AlternativeContentMsgBlock -> {
+          val htmlVersionBlock = block.otherBlocks.firstOrNull()
+          htmlVersionBlock?.let { htmlBlock ->
+            collectDataFromMsgBlock(
+              block = htmlBlock,
+              useHtml = true,
+              usePlainText = false
+            ).invoke()
           }
+          collectDataFromMsgBlock(
+            block = block.plainVersionBlock,
+            useHtml = false,
+            usePlainText = true
+          ).invoke()
+        }
 
-          MsgBlock.Type.DECRYPTED_HTML -> {
-            // Typescript comment: todo: add support for inline imgs? when included using cid
-            var html = content.stripHtmlRootTags()
-            html = fmtMsgContentBlockAsHtml(html, FrameColor.GREEN)
-            msgContentAsHtml.append(html)
-            msgContentAsText
-              .append(sanitizeHtmlStripAllTags(content)?.unescapeHtml())
-              .append('\n')
-          }
-
-          MsgBlock.Type.PLAIN_TEXT -> {
-            val html = fmtMsgContentBlockAsHtml(
-              checkAndReturnQuotesFormatIfFound(content) ?: content.toEscapedHtml(),
-              if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
-            )
-            msgContentAsHtml.append(html)
-            msgContentAsText.append(content).append('\n')
-          }
-
-          MsgBlock.Type.PLAIN_HTML -> {
-            val stripped = content.stripHtmlRootTags()
-            val dirtyHtmlWithImgs = fillInlineHtmlImages(stripped, inlineImagesByCid)
-            msgContentAsHtml.append(
-              fmtMsgContentBlockAsHtml(
-                dirtyHtmlWithImgs,
-                if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
-              )
-            )
-            val text = sanitizeHtmlStripAllTags(dirtyHtmlWithImgs)?.unescapeHtml()
-            msgContentAsText.append(text).append('\n')
-          }
-
-          MsgBlock.Type.VERIFIED_MSG, MsgBlock.Type.SIGNED_CONTENT -> {
-            msgContentAsHtml.append(fmtMsgContentBlockAsHtml(content, FrameColor.GRAY))
-            msgContentAsText.append(sanitizeHtmlStripAllTags(content)).append('\n')
-          }
-
-          else -> {
-            msgContentAsHtml.append(
-              fmtMsgContentBlockAsHtml(
-                content,
-                if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
-              )
-            )
-            msgContentAsText.append(content).append('\n')
-          }
+        else -> {
+          collectDataFromMsgBlock(block = block).invoke()
         }
       }
     }
@@ -1303,7 +1308,95 @@ object PgpMsg {
     )
   }
 
-  private fun checkAndReturnQuotesFormatIfFound(content: String): String? {
+  private fun filterBlocksViaTree(
+    blocks: List<MsgBlock>,
+    predicate: (MsgBlock) -> Boolean
+  ): List<MsgBlock> {
+    return mutableListOf<MsgBlock>().apply {
+      blocks.forEach { block ->
+        when {
+          block is AlternativeContentMsgBlock -> {
+            addAll(filterBlocksViaTree(block.otherBlocks, predicate))
+          }
+
+          predicate(block) -> {
+            add(block)
+          }
+        }
+      }
+    }
+  }
+
+  private fun handleMsgBlock(
+    block: MsgBlock,
+    inlineImagesByCid: MutableMap<String, MsgBlock>,
+    action: (html: String?, plainText: String?) -> Unit
+  ) {
+    val content = block.content ?: return
+    when (block.type) {
+      MsgBlock.Type.DECRYPTED_TEXT -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.GREEN),
+          content
+        )
+      }
+
+      MsgBlock.Type.DECRYPTED_HTML -> {
+        // Typescript comment: todo: add support for inline imgs? when included using cid
+        action.invoke(
+          fmtMsgContentBlockAsHtml(content.stripHtmlRootTags(), FrameColor.GREEN),
+          "${sanitizeHtmlStripAllTags(content)?.unescapeHtml()}"
+        )
+      }
+
+      MsgBlock.Type.PLAIN_TEXT -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(
+            checkAndReturnQuotesFormatIfFound(content) ?: content.toEscapedHtml(),
+            if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
+          ),
+          content
+        )
+      }
+
+      MsgBlock.Type.PLAIN_HTML -> {
+        val stripped = content.stripHtmlRootTags()
+        val dirtyHtmlWithImages = fillInlineHtmlImages(stripped, inlineImagesByCid)
+        val html = fmtMsgContentBlockAsHtml(
+          dirtyHtmlWithImages,
+          if (block.isOpenPGPMimeSigned) {
+            FrameColor.GRAY
+          } else {
+            FrameColor.PLAIN
+          }
+        )
+        action.invoke(html, sanitizeHtmlStripAllTags(dirtyHtmlWithImages)?.unescapeHtml())
+      }
+
+      MsgBlock.Type.VERIFIED_MSG, MsgBlock.Type.SIGNED_CONTENT -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(content, FrameColor.GRAY),
+          sanitizeHtmlStripAllTags(content)
+        )
+      }
+
+      else -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(
+            content,
+            if (block.isOpenPGPMimeSigned) {
+              FrameColor.GRAY
+            } else {
+              FrameColor.PLAIN
+            }
+          ),
+          content
+        )
+      }
+    }
+  }
+
+  fun checkAndReturnQuotesFormatIfFound(content: String): String? {
     return buildQuotes(originalContent = content, unwrapContent = false)?.outerHtml()
   }
 
@@ -1502,15 +1595,28 @@ object PgpMsg {
 
   private fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): Collection<MsgBlock> {
     if (decryptedContent == null) return emptyList()
+    val decryptedText = String(decryptedContent)
     val blocks = mutableListOf<MsgBlock>()
-    val strippedContent = stripFcReplyToken(extractFcAttachments(String(decryptedContent), blocks))
+    val strippedContent = stripFcReplyToken(extractFcAttachments(decryptedText, blocks))
     val armoredKeys = extractPublicKeysIfFound(strippedContent)
     val content =
       checkAndReturnQuotesFormatIfFound(strippedContent) ?: strippedContent.toEscapedHtml()
     blocks.add(
-      MsgBlockFactory.fromContent(
-        MsgBlock.Type.DECRYPTED_HTML,
-        content,
+      //we need to add two alternative versions:
+      //formatted HTML + original text(will be used for a reply)
+      AlternativeContentMsgBlock(
+        otherBlocks = listOf(
+          MsgBlockFactory.fromContent(
+          MsgBlock.Type.DECRYPTED_HTML,
+          content,
+          isOpenPGPMimeSigned = false
+          )
+        ),
+        plainVersionBlock = MsgBlockFactory.fromContent(
+          MsgBlock.Type.DECRYPTED_TEXT,
+          decryptedText,
+          isOpenPGPMimeSigned = false
+        ),
         isOpenPGPMimeSigned = false
       )
     )

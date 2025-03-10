@@ -31,6 +31,8 @@ import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
+import androidx.core.view.get
+import androidx.core.view.size
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -349,7 +351,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             isClickable = false
             isFocusable = false
             isFocusableInTouchMode = false
-            isChecked = accountEntity.showOnlyEncrypted ?: false
+            isChecked = accountEntity.showOnlyEncrypted == true
           }
 
           if (!accountEntity.isGoogleSignInAccount) {
@@ -372,7 +374,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       foldersManager?.run {
         val folders =
           getSortedServerFolders() + customLabels.sortedBy { it.folderAlias?.lowercase() }
-        val isGoogleAccount = activeAccount?.isGoogleSignInAccount ?: false
+        val isGoogleAccount = activeAccount?.isGoogleSignInAccount == true
 
         folders.forEach { localFolder ->
           val isGmailApiCategories = foldersManager.accountEntity.isGoogleSignInAccount
@@ -407,9 +409,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun addOutboxLabel(foldersManager: FoldersManager, mailLabels: MenuItem?, label: String) {
-    val itemPosition = mailLabels?.subMenu?.size() ?: return
+    val itemPosition = mailLabels?.subMenu?.size ?: return
     if (itemPosition == 0) return
-    val menuItem = mailLabels.subMenu?.getItem(itemPosition - 1) ?: return
+    val menuItem = mailLabels.subMenu?.get(itemPosition - 1) ?: return
     val folder = foldersManager.getFolderByAlias(label) ?: return
     val view = layoutInflater.inflate(
       R.layout.navigation_view_item_with_amount, binding.navigationView, false

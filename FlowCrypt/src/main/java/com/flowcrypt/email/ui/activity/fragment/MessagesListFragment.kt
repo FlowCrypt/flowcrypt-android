@@ -30,6 +30,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
@@ -149,12 +150,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private val isOutboxFolder: Boolean
     get() {
-      return currentFolder?.isOutbox ?: false
+      return currentFolder?.isOutbox == true
     }
 
   private val isDraftsFolder: Boolean
     get() {
-      return currentFolder?.isDrafts ?: false
+      return currentFolder?.isDrafts == true
     }
 
   private val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
@@ -392,7 +393,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       return
     }
 
-    val isOutbox = currentFolder?.isOutbox ?: false
+    val isOutbox = currentFolder?.isOutbox == true
     val isDraft = msgEntity.isDraft
     val isRawMsgAvailable =
       OutgoingMessagesManager.isMessageExist(requireContext(), msgEntity.id ?: -1)
@@ -683,7 +684,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       private val icon: Drawable?
         get() = context?.let { ContextCompat.getDrawable(it, R.drawable.ic_archive_white_24dp) }
       private val background: ColorDrawable?
-        get() = context?.let { ColorDrawable(ContextCompat.getColor(it, R.color.colorPrimaryDark)) }
+        get() = context?.let { ContextCompat.getColor(it, R.color.colorPrimaryDark).toDrawable() }
 
       override fun onMove(
         recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
