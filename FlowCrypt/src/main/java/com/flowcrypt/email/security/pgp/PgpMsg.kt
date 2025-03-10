@@ -1374,7 +1374,7 @@ object PgpMsg {
     }
   }
 
-  private fun checkAndReturnQuotesFormatIfFound(content: String): String? {
+  fun checkAndReturnQuotesFormatIfFound(content: String): String? {
     return buildQuotes(originalContent = content, unwrapContent = false)?.outerHtml()
   }
 
