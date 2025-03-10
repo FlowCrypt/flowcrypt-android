@@ -42,6 +42,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -86,6 +87,7 @@ import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
+import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.model.DialogItem
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -553,7 +555,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
             && (binding?.spinnerFrom?.adapter?.count ?: 0) > selectedItemPosition
           ) {
-            val isItemEnabled = fromAddressesAdapter?.isEnabled(selectedItemPosition) ?: true
+            val isItemEnabled = fromAddressesAdapter?.isEnabled(selectedItemPosition) != false
             binding?.editTextFrom?.setTextColor(if (isItemEnabled) originalColor else colorGray)
           }
         }
@@ -983,13 +985,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsFromServiceInfo() {
-    binding?.editTextEmailSubject?.isFocusable = args.serviceInfo?.isSubjectEditable ?: false
+    binding?.editTextEmailSubject?.isFocusable = args.serviceInfo?.isSubjectEditable == true
     binding?.editTextEmailSubject?.isFocusableInTouchMode =
-      args.serviceInfo?.isSubjectEditable ?: false
+      args.serviceInfo?.isSubjectEditable == true
 
-    binding?.editTextEmailMessage?.isFocusable = args.serviceInfo?.isMsgEditable ?: false
+    binding?.editTextEmailMessage?.isFocusable = args.serviceInfo?.isMsgEditable == true
     binding?.editTextEmailMessage?.isFocusableInTouchMode =
-      args.serviceInfo?.isMsgEditable ?: false
+      args.serviceInfo?.isMsgEditable == true
 
     if (args.serviceInfo?.systemMsg?.isNotEmpty() == true) {
       binding?.editTextEmailMessage?.setText(args.serviceInfo?.systemMsg)
@@ -1361,6 +1363,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
                 ContextCompat.getColor(context, R.color.colorPrimary), BlendModeCompat.MODULATE
               )
+
+            if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+              RefreshClientConfigurationWorker.enqueue(requireContext())
+            }
           }
         }
       }
@@ -1498,7 +1504,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     when (recipientType) {
       Message.RecipientType.TO -> toRecipientsChipRecyclerViewAdapter.submitList(
         recipients,
-        args.serviceInfo?.isToFieldEditable ?: true
+        args.serviceInfo?.isToFieldEditable != false
       )
 
       Message.RecipientType.CC -> ccRecipientsChipRecyclerViewAdapter.submitList(recipients)
