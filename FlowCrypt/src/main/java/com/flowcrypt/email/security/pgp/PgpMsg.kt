@@ -362,13 +362,13 @@ object PgpMsg {
 
           val partWithPlainText = parts.firstOrNull { it.isPlainText() }
           if (partWithPlainText != null) {
-            val plainVersionBlock = extractMsgBlocksFromPart(
+            val plainBlocks = extractMsgBlocksFromPart(
               part = partWithPlainText,
               verificationPublicKeys = verificationPublicKeys,
               secretKeys = secretKeys,
               protector = protector,
               isOpenPGPMimeSigned = isOpenPGPMimeSigned
-            ).firstOrNull()
+            ).toList()
 
             val otherBlocks = (parts - partWithPlainText).flatMap { alternativePart ->
               extractMsgBlocksFromPart(
@@ -380,10 +380,10 @@ object PgpMsg {
               )
             }
 
-            if (plainVersionBlock != null) {
+            if (plainBlocks.isNotEmpty()) {
               blocks.add(
                 AlternativeContentMsgBlock(
-                  plainVersionBlock = plainVersionBlock,
+                  plainBlocks = plainBlocks,
                   otherBlocks = otherBlocks,
                   isOpenPGPMimeSigned = isOpenPGPMimeSigned
                 )
@@ -658,7 +658,7 @@ object PgpMsg {
       .toFactory()
 
     val cleanHtml1 = policyFactory.sanitize(originalDocument.html())
-    val document = Jsoup.parse(cleanHtml1)
+    val document = Jsoup.parse(cleanHtml1, "", Parser.xmlParser())
     document.outputSettings().prettyPrint(false)
 
     moveElementsOutOfAnchorTag(document)
@@ -1612,10 +1612,12 @@ object PgpMsg {
           isOpenPGPMimeSigned = false
           )
         ),
-        plainVersionBlock = MsgBlockFactory.fromContent(
+        plainBlocks = listOf(
+          MsgBlockFactory.fromContent(
           MsgBlock.Type.DECRYPTED_TEXT,
           decryptedText,
           isOpenPGPMimeSigned = false
+          )
         ),
         isOpenPGPMimeSigned = false
       )

@@ -105,10 +105,12 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
             isOpenPGPMimeSigned = false
             )
           ),
-          plainVersionBlock = MsgBlockFactory.fromContent(
+          plainBlocks = listOf(
+            MsgBlockFactory.fromContent(
             MsgBlock.Type.DECRYPTED_TEXT,
             "some plain text content",
             isOpenPGPMimeSigned = false
+            )
           ),
           isOpenPGPMimeSigned = false
         )
