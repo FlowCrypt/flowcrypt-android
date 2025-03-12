@@ -67,7 +67,7 @@ fun String.toEscapedHtml(): String {
     .replace("<", "&lt;")
     .replace(">", "&gt;")
     .replace("/", "&#x2F;")
-    .replace("\n", "<br/>")
+    .replace("\n", "<br>")
 }
 
 fun String.unescapeHtml(): String {
