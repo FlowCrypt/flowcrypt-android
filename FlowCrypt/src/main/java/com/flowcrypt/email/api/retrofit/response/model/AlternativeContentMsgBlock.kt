@@ -26,4 +26,8 @@ data class AlternativeContentMsgBlock(
   @IgnoredOnParcel
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.ALTERNATIVE
+
+  @IgnoredOnParcel
+  val allBlocks: List<MsgBlock>
+    get() = plainBlocks + otherBlocks
 }
