@@ -491,7 +491,6 @@ class PgpMsgTest {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testParseDecryptMsgPlainInlineImage() {
     val text = loadResourceAsString("other/plain-inline-image.txt")
     val keys = TestKeys.KEYS["rsa1"]!!.listOfKeysWithPassPhrase

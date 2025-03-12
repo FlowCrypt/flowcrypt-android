@@ -1118,6 +1118,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     val attachmentNameUiObject2 = device.findObject(By.textContains(baseAttachmentName))
     assertNotNull(attachmentNameUiObject2)
     val downloadCompleteLabelUiObject2 = device.findObject(By.text(downloadCompleteLabel))
+    assertNotNull(downloadCompleteLabelUiObject2)
     assertEquals(downloadCompleteLabel, downloadCompleteLabelUiObject2.text)
     device.pressHome()
   }
