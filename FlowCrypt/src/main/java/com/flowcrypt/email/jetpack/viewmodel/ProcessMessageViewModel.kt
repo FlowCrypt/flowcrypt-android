@@ -25,6 +25,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.containsLabel
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -289,7 +290,7 @@ class ProcessMessageViewModel(
           format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
 
-        if (msgFullInfo.containsLabel(localFolder) == false) {
+        if (!msgFullInfo.isDraft() && msgFullInfo.containsLabel(localFolder) == false) {
           throw MessageNotFoundException("Message doesn't contain label = ${localFolder.fullName}")
         }
 

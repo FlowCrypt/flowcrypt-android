@@ -27,6 +27,7 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ProcessMessageViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.util.exception.GmailAPIException
 import com.flowcrypt.email.util.exception.MessageNotFoundException
 
 /**
@@ -120,8 +121,9 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
           }
 
           Result.Status.EXCEPTION -> {
-            when (it.exception) {
-              is MessageNotFoundException -> {
+            when {
+              (it.exception is MessageNotFoundException)
+                  || (it.exception is GmailAPIException && it.exception.code == 404) -> {
                 (dialog as? AlertDialog)?.getButton(AlertDialog.BUTTON_NEGATIVE)?.text =
                   getString(android.R.string.ok)
                 showStatus(msg = getString(R.string.message_not_found_please_reload_the_thread))
