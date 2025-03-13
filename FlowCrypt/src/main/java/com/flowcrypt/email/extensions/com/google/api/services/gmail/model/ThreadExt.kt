@@ -24,7 +24,9 @@ fun Thread.getUniqueRecipients(account: String, localFolder: LocalFolder?): List
   return mutableListOf<InternetAddress>().apply {
     val filteredMessages = messages?.filter {
       it.canBeUsed(localFolder)
-    }?.takeIf { isNotEmpty() } ?: return@apply
+    }?.takeIf {
+      it.isNotEmpty()
+    } ?: return@apply
     val fromHeaderName = "From"
 
     val filteredHeaders = if (filteredMessages.size > 1) {
