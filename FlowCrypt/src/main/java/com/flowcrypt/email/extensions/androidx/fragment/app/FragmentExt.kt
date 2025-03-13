@@ -17,7 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
-import androidx.navigation.Navigation
+import androidx.navigation.findNavController
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -61,8 +61,8 @@ val Fragment.supportActionBar: ActionBar?
 val Fragment.navController: NavController?
   get() = activity?.let {
     try {
-      Navigation.findNavController(it, R.id.fragmentContainerView)
-    } catch (e: Exception) {
+      it.findNavController(R.id.fragmentContainerView)
+    } catch (_: Exception) {
       return@let null
     }
   }

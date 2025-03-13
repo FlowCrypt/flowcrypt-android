@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service
@@ -197,7 +197,8 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
      * @param context Interface to global information about an application environment.
      */
     fun stop(context: Context) {
-      context.stopService(Intent(context, PassPhrasesInRAMService::class.java))
+      val intent = Intent(context, PassPhrasesInRAMService::class.java)
+      context.stopService(intent)
     }
   }
 }

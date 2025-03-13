@@ -413,7 +413,11 @@ class PgpMsgTest {
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", TEXT_SPECIAL_CHARS)))
+
+    checkRenderedBlock(
+      block,
+      listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS))
+    )
   }
 
   @Test
@@ -437,7 +441,11 @@ class PgpMsgTest {
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS)))
+
+    checkRenderedBlock(
+      block,
+      listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS))
+    )
   }
 
   @Test
@@ -460,7 +468,11 @@ class PgpMsgTest {
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "GREEN", HTML_SPECIAL_CHARS)))
+
+    checkRenderedBlock(
+      block,
+      listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS))
+    )
   }
 
   @Test
@@ -487,12 +499,13 @@ class PgpMsgTest {
       secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
-    assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
+    assertEquals("Below\n[image: image.png]\nAbove", result.text)
     assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(2, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
     val htmlContent = loadResourceAsString("other/plain-inline-image-html-content.txt")
+
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
 
@@ -521,7 +534,7 @@ class PgpMsgTest {
     val textContent = loadResourceAsString(
       "other/plain-google-security-alert-20210416-084836-UTC-text-content.txt"
     )
-    assertEquals(textContent, result.text)
+    assertEquals(textContent.replace("\n", "\r\n"), result.text)
     assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
@@ -529,6 +542,7 @@ class PgpMsgTest {
     val htmlContent = loadResourceAsString(
       "other/plain-google-security-alert-20210416-084836-UTC-html-content.txt"
     )
+
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
 
@@ -613,6 +627,17 @@ class PgpMsgTest {
     assertEquals(1, document.select("details").size)
     assertNotNull(document.select("summary").first())
     assertEquals(1, document.select("summary").size)
+
+    //check that plain text was generated correctly and quotes for reply will be correct
+    val documentForPlainVersion = Jsoup.parse(
+      requireNotNull(PgpMsg.checkAndReturnQuotesFormatIfFound(processedMimeMessageResult.text)),
+      "",
+      Parser.xmlParser()
+    )
+
+    val quotesForPlainVersion = documentForPlainVersion.select("blockquote")
+    assertEquals(1, quotesForPlainVersion.size)
+    assertTrue(quotesForPlainVersion[0].text().startsWith("Today, Android 15"))
   }
 
   @Test
@@ -740,6 +765,19 @@ class PgpMsgTest {
     assertTrue(quotes[0].text().startsWith("2 Creating custom build configurations requires"))
     assertTrue(quotes[1].text().startsWith("reply 1"))
     assertTrue(quotes[2].text().startsWith("1 The Android build system"))
+
+    //check that plain text was generated correctly and quotes for reply will be correct
+    val documentForPlainVersion = Jsoup.parse(
+      requireNotNull(PgpMsg.checkAndReturnQuotesFormatIfFound(processedMimeMessageResult.text)),
+      "",
+      Parser.xmlParser()
+    )
+
+    val quotesForPlainVersion = documentForPlainVersion.select("blockquote")
+    assertEquals(3, quotesForPlainVersion.size)
+    assertTrue(quotes[0].text().startsWith("2 Creating custom build configurations requires"))
+    assertTrue(quotes[1].text().startsWith("reply 1"))
+    assertTrue(quotes[2].text().startsWith("1 The Android build system"))
   }
 
   @Test
@@ -824,6 +862,19 @@ class PgpMsgTest {
     assertTrue(quotes[0].text().startsWith("Sender 2"))
     assertTrue(quotes[1].text().startsWith("Reply 1"))
     assertTrue(quotes[2].text().startsWith("Sender 1"))
+
+    //check that plain text was generated correctly and quotes for reply will be correct
+    val documentForPlainVersion = Jsoup.parse(
+      requireNotNull(PgpMsg.checkAndReturnQuotesFormatIfFound(processedMimeMessageResult.text)),
+      "",
+      Parser.xmlParser()
+    )
+
+    val quotesForPlainVersion = documentForPlainVersion.select("blockquote")
+    assertEquals(3, quotesForPlainVersion.size)
+    assertTrue(quotesForPlainVersion[0].text().startsWith("Sender 2"))
+    assertTrue(quotesForPlainVersion[1].text().startsWith("Reply 1"))
+    assertTrue(quotesForPlainVersion[2].text().startsWith("Sender 1"))
   }
 
   private data class RenderedBlock(
