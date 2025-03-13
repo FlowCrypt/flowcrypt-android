@@ -23,6 +23,9 @@
             android:name="message"
             app:argType="com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter$Message" />
         <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+        <argument
             android:name="attachmentId"
             android:defaultValue="@null"
             app:argType="string"

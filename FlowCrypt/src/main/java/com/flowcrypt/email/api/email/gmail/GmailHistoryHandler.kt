@@ -106,6 +106,7 @@ object GmailHistoryHandler {
     val gmailThreadsListWithBaseInfo = GmailApiHelper.loadGmailThreadInfoInParallel(
       context = context,
       accountEntity = accountEntity,
+      localFolder = localFolder,
       threads = threadIds.map { Thread().apply { id = it } },
       format = GmailApiHelper.RESPONSE_FORMAT_FULL,
       fields = GmailApiHelper.THREAD_BASE_INFO
@@ -150,6 +151,7 @@ object GmailHistoryHandler {
       val gmailThreadInfoList = GmailApiHelper.loadGmailThreadInfoInParallel(
         context = context,
         accountEntity = accountEntity,
+        localFolder = localFolder,
         threads = uniqueThreadIdList.map { Thread().apply { id = it } },
         format = GmailApiHelper.RESPONSE_FORMAT_FULL
       )
@@ -170,7 +172,7 @@ object GmailHistoryHandler {
           label = localFolder.fullName,
           msgsList = threadsToBeAdded,
           isNew = isNew,
-          onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
+          onlyPgpModeEnabled = accountEntity.showOnlyEncrypted == true
         ) { message, messageEntity ->
           val thread = gmailThreadInfoList.firstOrNull { it.id == message.threadId }
             ?: return@genMessageEntities messageEntity
@@ -205,7 +207,7 @@ object GmailHistoryHandler {
               label = localFolder.fullName,
               msgsList = listOf(thread.lastMessage),
               isNew = isNew,
-              onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false
+              onlyPgpModeEnabled = accountEntity.showOnlyEncrypted == true
             ) { message, messageEntity ->
               if (message.threadId == thread.id) {
                 messageEntity.toUpdatedThreadCopy(threadMessageEntity, thread)
@@ -299,7 +301,7 @@ object GmailHistoryHandler {
         label = localFolder.fullName,
         msgsList = messages,
         isNew = isNew,
-        onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
+        onlyPgpModeEnabled = accountEntity.showOnlyEncrypted == true,
         draftIdsMap = draftIdsMap
       )
 

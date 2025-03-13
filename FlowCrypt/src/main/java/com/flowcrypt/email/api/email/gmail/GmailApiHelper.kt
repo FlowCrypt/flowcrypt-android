@@ -364,6 +364,7 @@ class GmailApiHelper {
     suspend fun loadGmailThreadInfoInParallel(
       context: Context,
       accountEntity: AccountEntity,
+      localFolder: LocalFolder? = null,
       threads: List<Thread>,
       format: String = RESPONSE_FORMAT_FULL,
       fields: List<String>? = null,
@@ -374,6 +375,7 @@ class GmailApiHelper {
         loadThreadsInfo(
           context = context,
           accountEntity = accountEntity,
+          localFolder = localFolder,
           threads = list,
           format = format,
           fields = fields
@@ -384,6 +386,7 @@ class GmailApiHelper {
     suspend fun loadThreadsInfo(
       context: Context,
       accountEntity: AccountEntity,
+      localFolder: LocalFolder? = null,
       threads: Collection<Thread>,
       format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
@@ -418,7 +421,7 @@ class GmailApiHelper {
               responseHeaders: HttpHeaders?
             ) {
               t?.let { thread ->
-                listResult.add(thread.toThreadInfo(context, accountEntity))
+                listResult.add(thread.toThreadInfo(context, accountEntity, localFolder))
               }
             }
 
@@ -436,6 +439,7 @@ class GmailApiHelper {
     suspend fun loadThreadInfo(
       context: Context,
       accountEntity: AccountEntity,
+      localFolder: LocalFolder,
       threadId: String,
       format: String = RESPONSE_FORMAT_FULL,
       metadataHeaders: List<String>? = null,
@@ -449,7 +453,7 @@ class GmailApiHelper {
         format = format,
         metadataHeaders = metadataHeaders,
         fields = fields
-      )?.toThreadInfo(context, accountEntity)
+      )?.toThreadInfo(context, accountEntity, localFolder)
     }
 
     suspend fun getThread(
