@@ -355,10 +355,7 @@ object PgpMsg {
       part.isMultipart() -> {
         val multiPart = part.content as Multipart
         if (part.isMultipartAlternative()) {
-          val parts = mutableListOf<Part>()
-          for (partCount in 0 until multiPart.count) {
-            parts.add(multiPart.getBodyPart(partCount))
-          }
+          val parts = (0 until multiPart.count).map { multiPart.getBodyPart(it) }
 
           val partWithPlainText = parts.firstOrNull { it.isPlainText() }
           if (partWithPlainText != null) {
@@ -960,48 +957,50 @@ object PgpMsg {
     var hasInvalidSignatures = false
     val keyIdsOfSigningKeys = mutableSetOf<Long>()
 
-    if (block.type in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
-      val messageMetadata = when (block) {
-        is DecryptedAndOrSignedContentMsgBlock -> {
-          block.messageMetadata
-        }
-
-        is SignedMsgBlock -> {
-          block.openPgpMetadata
-        }
-
-        else -> null
-      }
-
-      hasEncryptedContent = messageMetadata?.isEncrypted == true
-
-      if (messageMetadata?.isSigned == true) {
-        hasSignedContent = true
-
-        if (messageMetadata.rejectedInlineSignatures.isNotEmpty()
-          || messageMetadata.rejectedDetachedSignatures.isNotEmpty()
-        ) {
-          val invalidSignatureFailures = messageMetadata.rejectedInlineSignatures +
-              messageMetadata.rejectedDetachedSignatures
-
-          hasInvalidSignatures = invalidSignatureFailures.any {
-            it.validationException.underlyingException != null
-          }
-
-          keyIdsOfSigningKeys.addAll(invalidSignatureFailures.filter {
-            it.validationException.message?.matches("Missing verification key.?".toRegex()) == true
-          }.map { it.signature.keyID })
-        }
-      }
-
-      action.invoke(
-        hasEncryptedContent,
-        hasSignedContent,
-        hasInvalidSignatures,
-        keyIdsOfSigningKeys,
-        messageMetadata?.verifiedSignatures ?: emptyList()
-      )
+    if (block.type !in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
+      return
     }
+
+    val messageMetadata = when (block) {
+      is DecryptedAndOrSignedContentMsgBlock -> {
+        block.messageMetadata
+      }
+
+      is SignedMsgBlock -> {
+        block.openPgpMetadata
+      }
+
+      else -> null
+    }
+
+    hasEncryptedContent = messageMetadata?.isEncrypted == true
+
+    if (messageMetadata?.isSigned == true) {
+      hasSignedContent = true
+
+      if (messageMetadata.rejectedInlineSignatures.isNotEmpty()
+        || messageMetadata.rejectedDetachedSignatures.isNotEmpty()
+      ) {
+        val invalidSignatureFailures = messageMetadata.rejectedInlineSignatures +
+            messageMetadata.rejectedDetachedSignatures
+
+        hasInvalidSignatures = invalidSignatureFailures.any {
+          it.validationException.underlyingException != null
+        }
+
+        keyIdsOfSigningKeys.addAll(invalidSignatureFailures.filter {
+          it.validationException.message?.matches("Missing verification key.?".toRegex()) == true
+        }.map { it.signature.keyID })
+      }
+    }
+
+    action.invoke(
+      hasEncryptedContent,
+      hasSignedContent,
+      hasInvalidSignatures,
+      keyIdsOfSigningKeys,
+      messageMetadata?.verifiedSignatures ?: emptyList()
+    )
   }
 
   private fun extractInnerBlocks(
