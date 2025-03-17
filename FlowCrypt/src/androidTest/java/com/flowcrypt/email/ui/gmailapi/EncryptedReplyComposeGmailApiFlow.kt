@@ -48,6 +48,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -88,7 +89,7 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
   @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
@@ -99,10 +100,10 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
       )
 
     //wait the message details rendering
-    Thread.sleep(1000)
+    waitForObjectWithText(MESSAGE_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on reply
-    openReplyScreen(R.id.layoutReplyButton, SUBJECT_EXISTING_STANDARD)
+    openReplyScreen(R.id.replyButton, SUBJECT_EXISTING_STANDARD)
 
     //switch to encrypted mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -148,10 +149,11 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
       val expectedText = MESSAGE + EmailUtil.genReplyContent(
         IncomingMessageInfo(
           msgEntity = MessageEntity(
-            email = "",
+            account = "",
+            accountType = "",
             folder = "",
             uid = 0,
-            fromAddress = DEFAULT_FROM_RECIPIENT,
+            fromAddresses = DEFAULT_FROM_RECIPIENT,
             receivedDate = DATE_EXISTING_STANDARD
 
           ),
@@ -168,7 +170,7 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
             hasSignedParts = false,
             hasMixedSignatures = false,
             isPartialSigned = false,
-            keyIdOfSigningKeys = emptyList(),
+            keyIdOfSigningKeys = emptySet(),
             hasBadSignatures = false
           )
         )

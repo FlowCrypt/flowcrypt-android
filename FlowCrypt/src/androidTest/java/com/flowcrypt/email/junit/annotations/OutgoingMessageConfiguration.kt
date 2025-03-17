@@ -25,6 +25,5 @@ annotation class OutgoingMessageConfiguration(
   val subject: String,
   val message: String,
   val isNew: Boolean = true,
-  val timeoutToWaitSendingInMilliseconds: Long = 15000L,
-  val timeoutBeforeMovingToComposeInMilliseconds: Long = 0L
+  val timeoutToWaitSendingInMilliseconds: Long = 15000L
 )

@@ -1,28 +1,23 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.Manifest
 import android.accounts.AuthenticatorException
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Shader
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.text.Html
-import android.text.SpannableStringBuilder
-import android.text.format.DateUtils
 import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.Menu
@@ -35,11 +30,9 @@ import android.widget.CompoundButton
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.core.text.toSpannable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -49,6 +42,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
@@ -93,8 +87,6 @@ import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.exceptionMsgWithStack
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.jakarta.mail.internet.getFormattedString
-import com.flowcrypt.email.extensions.jakarta.mail.internet.personalOrEmail
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.extensions.visibleOrInvisible
@@ -110,6 +102,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.MarkAsNotSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToSpamWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
+import com.flowcrypt.email.model.MessageAction
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
@@ -131,7 +124,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.DownloadAttachmentDialogF
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
-import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.VerticalSpaceMarginItemDecoration
@@ -139,6 +132,7 @@ import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.ui.widget.TileDrawable
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.GmailAPIException
@@ -150,7 +144,6 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import jakarta.mail.AuthenticationFailedException
-import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FilenameUtils
@@ -187,15 +180,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     }
   }
 
-  val requestPermissionLauncher =
-    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-      if (isGranted) {
-        downloadAttachment()
-      } else {
-        toast(R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG)
-      }
-    }
-
   private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
     isDeleteEnabled = false,
     attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
@@ -217,10 +201,6 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         } else {
           processDownloadAttachment(attachmentInfo)
         }
-      }
-
-      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        onPreviewClick(attachmentInfo)
       }
 
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
@@ -284,7 +264,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val recipientsViewModel: RecipientsViewModel by viewModels()
-  private val msgDetailsAdapter = MsgDetailsRecyclerViewAdapter()
+  private val msgDetailsAdapter = MessageHeadersListAdapter()
   private val pgpBadgeListAdapter = PgpBadgeListAdapter()
   private val gmailApiLabelsListAdapter = GmailApiLabelsListAdapter(
     object : GmailApiLabelsListAdapter.OnLabelClickListener {
@@ -377,20 +357,20 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         val menuActionChangeLabels = menu.findItem(R.id.menuActionChangeLabels)
 
         menuItemArchiveMsg?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.ARCHIVE
+          MessageAction.ARCHIVE
         )
         menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
         menuActionMoveToInbox?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.MOVE_TO_INBOX
+          MessageAction.MOVE_TO_INBOX
         )
         menuActionMarkUnread?.isVisible =
           !JavaEmailConstants.FOLDER_OUTBOX.equals(args.messageEntity.folder, ignoreCase = true)
         menuActionMoveToSpam?.isVisible = isMoveToSpamActionEnabled
         menuActionMarkAsNotSpam?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.MARK_AS_NOT_SPAM
+          MessageAction.MARK_AS_NOT_SPAM
         )
         menuActionChangeLabels?.isVisible = msgDetailsViewModel.getMessageActionAvailability(
-          MsgDetailsViewModel.MessageAction.CHANGE_LABELS
+          MessageAction.CHANGE_LABELS
         )
 
         menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
@@ -491,7 +471,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.layoutReplyButton -> {
+      R.id.replyButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
             context, MessageType.REPLY, msgEncryptType, prepareMsgInfoForReply()
@@ -499,7 +479,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         )
       }
 
-      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
+      R.id.imageButtonReplyAll, R.id.replyAllButton -> {
         startActivity(
           CreateMessageActivity.generateIntent(
             context, MessageType.REPLY_ALL, msgEncryptType, prepareMsgInfoForReply()
@@ -513,12 +493,12 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
         popup.setOnMenuItemClickListener {
           when (it.itemId) {
             R.id.menuActionReply -> {
-              binding?.layoutReplyButtons?.layoutReplyButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.replyButton?.let { view -> onClick(view) }
               true
             }
 
             R.id.menuActionForward -> {
-              binding?.layoutReplyButtons?.layoutFwdButton?.let { view -> onClick(view) }
+              binding?.layoutReplyButtons?.forwardButton?.let { view -> onClick(view) }
               true
             }
 
@@ -532,7 +512,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
 
 
-      R.id.layoutFwdButton -> {
+      R.id.forwardButton -> {
         if (attachmentsRecyclerViewAdapter.currentList.none {
             it.isEmbeddedAndPossiblyEncrypted()
           }) {
@@ -672,7 +652,7 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   private fun showSendersPublicKeyDialog() {
     showChoosePublicKeyDialogFragment(
       requestKey = REQUEST_KEY_CHOOSE_PUBLIC_KEY + args.messageEntity.id?.toString(),
-      email = args.messageEntity.email,
+      email = args.messageEntity.account,
       choiceMode = ListView.CHOICE_MODE_SINGLE,
       titleResourceId = R.plurals.tell_sender_to_update_their_settings
     )
@@ -919,104 +899,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
   }
 
   private fun updateMsgDetails(messageEntity: MessageEntity) {
-    binding?.tVTo?.text = prepareToText()
-
-    val headers = mutableListOf<MsgDetailsRecyclerViewAdapter.Header>().apply {
-      add(
-        MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.from),
-          value = formatAddresses(messageEntity.from)
-        )
-      )
-
-      if (messageEntity.replyToAddress.isNotEmpty()) {
-        add(
-          MsgDetailsRecyclerViewAdapter.Header(
-            name = getString(R.string.reply_to),
-            value = formatAddresses(messageEntity.replyToAddress)
-          )
-        )
-      }
-
-      add(
-        MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.to),
-          value = formatAddresses(messageEntity.to).ifEmpty { getString(R.string.no_recipients) }
-        )
-      )
-
-      if (messageEntity.cc.isNotEmpty()) {
-        add(
-          MsgDetailsRecyclerViewAdapter.Header(
-            name = getString(R.string.cc),
-            value = formatAddresses(messageEntity.cc)
-          )
-        )
-      }
-
-      add(
-        MsgDetailsRecyclerViewAdapter.Header(
-          name = getString(R.string.date),
-          value = prepareDateHeaderValue(messageEntity)
-        )
-      )
-    }
-
-    msgDetailsAdapter.submitList(headers)
+    binding?.tVTo?.text = messageEntity.generateToText(requireContext())
+    msgDetailsAdapter.submitList(messageEntity.generateDetailsHeaders(requireContext()))
   }
-
-  private fun prepareDateHeaderValue(messageEntity: MessageEntity): String {
-    val dateInMilliseconds: Long =
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
-        messageEntity.sentDate ?: 0
-      } else {
-        messageEntity.receivedDate ?: 0
-      }
-
-    val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or
-        DateUtils.FORMAT_SHOW_YEAR
-    return DateUtils.formatDateTime(context, dateInMilliseconds, flags)
-  }
-
-  private fun prepareToText(): String {
-    val stringBuilder = SpannableStringBuilder()
-    val meAddress = args.messageEntity.to.firstOrNull {
-      it.address.equals(args.messageEntity.email, true)
-    }
-    val leftAddresses: List<InternetAddress>
-    if (meAddress == null) {
-      leftAddresses = args.messageEntity.to
-    } else {
-      stringBuilder.append(getString(R.string.me))
-      leftAddresses = ArrayList(args.messageEntity.to) - meAddress
-      if (leftAddresses.isNotEmpty()) {
-        stringBuilder.append(", ")
-      }
-    }
-
-    val to = leftAddresses.foldIndexed(stringBuilder) { index, builder, it ->
-      builder.append(it.personalOrEmail)
-      if (index != leftAddresses.size - 1) {
-        builder.append(",")
-      }
-      builder
-    }.toSpannable()
-
-    return getString(R.string.to_receiver, to)
-  }
-
-  private fun formatAddresses(addresses: List<InternetAddress>) =
-    addresses.foldIndexed(SpannableStringBuilder()) { index, builder, it ->
-      if (index < MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE) {
-        builder.append(it.getFormattedString())
-        if (index != addresses.size - 1) {
-          builder.append("\n")
-        }
-      } else if (index == MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE + 1) {
-        builder.append(getString(R.string.and_others))
-      }
-      builder
-    }.toSpannable()
 
   private fun updateMsgView() {
     val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
@@ -1182,38 +1067,35 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
    */
   private fun updateReplyButtons() {
     if (binding?.layoutReplyButtons != null) {
-      val imageViewReply = binding?.layoutReplyButtons?.imageViewReply
-      val imageViewReplyAll = binding?.layoutReplyButtons?.imageViewReplyAll
-      val imageViewFwd = binding?.layoutReplyButtons?.imageViewFwd
-
-      val textViewReply = binding?.layoutReplyButtons?.textViewReply
-      val textViewReplyAll = binding?.layoutReplyButtons?.textViewReplyAll
-      val textViewFwd = binding?.layoutReplyButtons?.textViewFwd
+      val replyButton = binding?.layoutReplyButtons?.replyButton
+      val replyAllButton = binding?.layoutReplyButtons?.replyAllButton
+      val forwardButton = binding?.layoutReplyButtons?.forwardButton
 
       val buttonsColorId: Int
 
       if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
         buttonsColorId = R.color.colorPrimary
-        textViewReply?.setText(R.string.reply_encrypted)
-        textViewReplyAll?.setText(R.string.reply_all_encrypted)
-        textViewFwd?.setText(R.string.forward_encrypted)
+        replyButton?.setText(R.string.reply_encrypted)
+        replyAllButton?.setText(R.string.reply_all_encrypted)
+        forwardButton?.setText(R.string.forward_encrypted)
       } else {
         buttonsColorId = R.color.red
-        textViewReply?.setText(R.string.reply)
-        textViewReplyAll?.setText(R.string.reply_all)
-        textViewFwd?.setText(R.string.forward)
+        replyButton?.setText(R.string.reply)
+        replyAllButton?.setText(R.string.reply_all)
+        forwardButton?.setText(R.string.forward)
       }
 
-      val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
+      val colorStateList =
+        ColorStateList.valueOf(ContextCompat.getColor(requireContext(), buttonsColorId))
 
       binding?.imageButtonReplyAll?.imageTintList = colorStateList
-      imageViewReply?.imageTintList = colorStateList
-      imageViewReplyAll?.imageTintList = colorStateList
-      imageViewFwd?.imageTintList = colorStateList
+      replyButton?.iconTint = colorStateList
+      replyAllButton?.iconTint = colorStateList
+      forwardButton?.iconTint = colorStateList
 
-      binding?.layoutReplyButtons?.layoutReplyButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.layoutFwdButton?.setOnClickListener(this)
-      binding?.layoutReplyButtons?.layoutReplyAllButton?.setOnClickListener(this)
+      replyButton?.setOnClickListener(this)
+      replyAllButton?.setOnClickListener(this)
+      forwardButton?.setOnClickListener(this)
       binding?.layoutReplyButtons?.root?.visibleOrGone(
         !args.messageEntity.isOutboxMsg && !args.messageEntity.isDraft
       )
@@ -1944,7 +1826,15 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
     useContentApp: Boolean = false
   ) {
     val intent = if (attachmentInfo.uri != null) {
-      GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
+      GeneralUtil.genViewAttachmentIntent(
+        uri = requireNotNull(attachmentInfo.uri),
+        attachmentInfo = attachmentInfo,
+        useCommonPattern = SharedPreferencesHelper.getBoolean(
+          sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext()),
+          key = Constants.PREFERENCES_KEY_ATTACHMENTS_DISABLE_SMART_MODE_FOR_PREVIEW,
+          defaultValue = false
+        )
+      )
     } else {
       toast(getString(R.string.preview_is_not_available))
       return
@@ -2114,23 +2004,13 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
       }
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
-      ContextCompat.checkSelfPermission(
-        requireContext(),
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
-      ) == PackageManager.PERMISSION_GRANTED
-    ) {
-      downloadAttachment()
-    } else {
-      requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    }
+    downloadAttachment()
   }
 
   companion object {
     private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val REQUEST_CODE_SHOW_WARNING_DIALOG_FOR_DOWNLOADING_DANGEROUS_FILE = 104
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
-    private const val MAX_ALLOWED_RECIPIENTS_IN_HEADER_VALUE = 10
 
     private const val REQUEST_CODE_SAVE_ATTACHMENT = 1000
     private const val REQUEST_CODE_PREVIEW_ATTACHMENT = 1001

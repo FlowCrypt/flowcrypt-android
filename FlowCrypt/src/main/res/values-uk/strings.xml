@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="prompt_subject">Тема</string>
     <string name="send">Відправити</string>
@@ -135,7 +140,6 @@
     <string name="source_has_wrong_pgp_structure">Наданий Вами вміст не схожий на дійсний %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Вміст Вашого файлу не схожий на дійсний %1$s ключ PGP.</string>
     <string name="attachment_not_found">Вкладення не знайдене</string>
-    <string name="cannot_save_attachment_without_permission">Вкладення неможливо зберегти без дозволу на запис до зовнішнього сховища</string>
     <string name="sync">Синхронізація</string>
     <string name="switch_to_secure_email">Переключитись на безпечне повідомлення</string>
     <string name="supported_public_key_not_found">Підтримуваний відкритий ключ не знайдено</string>
@@ -484,7 +488,7 @@
     <string name="add_recipient_to_send_message">Щоб надіслати це повідомлення, додайте принаймні одного одержувача в поле \"Кому\"</string>
     <string name="send_feedback_failed_hint">Під час відправки повідомлення виникла помилка. Будь ласка, напишіть нам безпосередньо на %1$s.\n\nДеталі помилки:\n%2$s</string>
     <string name="edit_draft">Редагувати чорновик</string>
-    <string name="draft_saved">Чорновик збережено</string>
+    <string name="saving_draft">Збереження чорновика</string>
     <string name="fetching_drafts_info_failed">Не вдалося отримати інформацію про чорновики. Будь ласка, спробуйте ще раз.</string>
     <string name="no_recipients">(без отримувачів)</string>
     <string name="could_not_save_draft">Не вдалося зберегти чорновик\n\nДеталі помилки:\n%1$s</string>
@@ -551,6 +555,11 @@
         <item quantity="one">Видалити це %1$d повідомлення назавжди?</item>
         <item quantity="few">Видалити ці %1$d повідомлення назавжди?</item>
         <item quantity="many">Видалити ці %1$d повідомлень назавжди?</item>
+    </plurals>
+    <plurals name="delete_thread_question">
+        <item quantity="one">Видалити цю %1$d бесіду назавжди?</item>
+        <item quantity="few">Видалити ці %1$d бесіди назавжди?</item>
+        <item quantity="many">Видалити ці %1$d бесід назавжди?</item>
     </plurals>
     <plurals name="found_folder">
         <item quantity="other">Теки відсутні</item>
@@ -632,4 +641,16 @@
     <string name="please_specify_your_signature_here">Будь ласка, вкажіть свій підпис тут</string>
     <string name="make_backup_in_the_email_box">Зробіть резервну копію в електронній скриньці</string>
     <string name="make_backup_explanation_text">Зберегти надані секретні ключі PGP, захищені парольною фразою, як резервну копію в папці «Вхідні». Це допоможе отримати Вам доступ до Ваших зашифрованих повідомлень з інших пристроїв (за умови надання Вашої парольної фрази). Ви можете спокійно залишити його у папці "Вхідні" або заархівувати.\n\nЯкщо Вам не потрібна така резервна копія, вимкніть цю опцію.</string>
+    <string name="draft">Чорновик</string>
+    <string name="delete_draft">Видалити чернетку?</string>
+    <string name="thread_was_deleted_or_moved">Бесіду видалено або переміщено</string>
+    <string name="file_already_exists_in_download">\'%1$s\' уже існує в Download. Бажаєте завантажити його знову?</string>
+    <string name="general">Загальні</string>
+    <string name="disable_smart_mode_for_attachments_preview">Вимкнути розумний режим для попереднього перегляду вкладень</string>
+    <string name="message_not_found_please_reload_the_thread">Повідомлення не знайдено. Схоже, його перемістили або видалили. Оновіть бесіду, щоб отримати останні оновлення.</string>
+    <plurals name="drafts_count">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Чорновик</item>
+        <item quantity="few">Чорновики(%1$d)</item>
+        <item quantity="many">Чорновики(%1$d)</item>
+    </plurals>
 </resources>

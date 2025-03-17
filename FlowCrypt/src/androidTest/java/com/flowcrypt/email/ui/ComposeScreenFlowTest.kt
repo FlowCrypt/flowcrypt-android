@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -9,6 +9,7 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
@@ -87,6 +88,7 @@ import org.pgpainless.key.info.KeyRingInfo
 import java.io.File
 import java.net.HttpURLConnection
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -95,7 +97,7 @@ import java.time.Instant
 @RunWith(AndroidJUnit4::class)
 class ComposeScreenFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-  private val temporaryFolderRule = TemporaryFolder()
+  private val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -117,7 +119,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testEmptyRecipient() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.recyclerViewChipsTo))
       .check(matches(isDisplayed()))
@@ -135,7 +141,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testEmptyEmailSubject() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
@@ -208,7 +217,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSwitchBetweenEncryptionTypes() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     val messageEncryptionType = defaultMsgEncryptionType
 
@@ -274,7 +286,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testAddingAtts() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
@@ -290,18 +305,12 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testMaxTotalAttachmentSize() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
-
-    onView(withId(R.id.editTextEmailAddress))
-      .perform(
-        clearText(),
-        pressImeActionButton()
-      )
+    Espresso.closeSoftKeyboard()
 
     val fileWithBiggerSize = TestGeneralUtil.createFileWithGivenSize(
       Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES + 1024, temporaryFolderRule
     )
-    addAttachment(fileWithBiggerSize)
+    addAttachment(fileWithBiggerSize, 0)
 
     val sizeWarningMsg = getResString(
       R.string.template_warning_max_total_attachments_size,
@@ -320,7 +329,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testDeletingAtts() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
@@ -331,9 +343,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     for (att in atts) {
       addAttAndCheck(att)
     }
-
-    //Need to wait while the layout will be updated. Some emulators work fast and fail this place
-    Thread.sleep(500)
 
     for (att in atts) {
       deleteAtt(att)
@@ -515,7 +524,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSharePubKeySingle() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
@@ -525,6 +537,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val att = EmailUtil.genAttInfoFromPubKey(
       addPrivateKeyToDatabaseRule.pgpKeyRingDetails,
       addPrivateKeyToDatabaseRule.accountEntity.email
+    )
+
+    waitForObjectWithText(
+      requireNotNull(att?.name),
+      TimeUnit.SECONDS.toMillis(10)
     )
 
     onView(withText(att?.name))
@@ -577,7 +594,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     )
 
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
@@ -585,6 +605,10 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .perform(click())
 
     val att = EmailUtil.genAttInfoFromPubKey(keyDetails, addAccountToDatabaseRule.account.email)
+    waitForObjectWithText(
+      requireNotNull(att?.name),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     onView(withText(att?.name))
       .check(matches(isDisplayed()))
@@ -835,8 +859,11 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(doesNotExist())
   }
 
-  private fun addAttAndCheck(att: File) {
-    addAttachment(att)
+  private fun addAttAndCheck(
+    att: File,
+    waitingTimeoutInMilliseconds: Long = TimeUnit.SECONDS.toMillis(10)
+  ) {
+    addAttachment(att, waitingTimeoutInMilliseconds)
     onView(withText(att.name))
       .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
   }
@@ -880,7 +907,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     @get:ClassRule
     @JvmStatic
-    val temporaryFolderRule = TemporaryFolder()
+    val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
     @get:ClassRule
     @JvmStatic

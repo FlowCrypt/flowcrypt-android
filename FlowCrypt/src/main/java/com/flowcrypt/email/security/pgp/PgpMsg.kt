@@ -7,7 +7,9 @@ package com.flowcrypt.email.security.pgp
 
 import android.content.Context
 import android.util.Base64
+import androidx.core.util.PatternsCompat
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.model.AlternativeContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.AttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
@@ -16,6 +18,7 @@ import com.flowcrypt.email.api.retrofit.response.model.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedAttLinkMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.EncryptedSubjectBlock
 import com.flowcrypt.email.api.retrofit.response.model.GenericMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.InlineAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockError
 import com.flowcrypt.email.api.retrofit.response.model.MsgBlockFactory
@@ -27,7 +30,6 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.extensions.jakarta.mail.hasPgpThings
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeEncrypted
@@ -58,8 +60,9 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
+import org.jsoup.nodes.Entities
 import org.jsoup.nodes.TextNode
+import org.jsoup.parser.Parser
 import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.decryption_verification.SignatureVerification
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -160,7 +163,9 @@ object PgpMsg {
     "strong",
     "strike",
     "code",
-    "img"
+    "img",
+    "details",
+    "summary",
   )
 
   private val ALLOWED_ATTRS = mapOf(
@@ -172,7 +177,7 @@ object PgpMsg {
     "p" to arrayOf("color"),
     "em" to arrayOf("style"), // Typescript: tests rely on this, could potentially remove
     "td" to arrayOf("width", "height"),
-    "hr" to arrayOf("color", "height")
+    "hr" to arrayOf("color", "height"),
   )
 
   private val ALLOWED_PROTOCOLS = arrayOf(
@@ -188,8 +193,11 @@ object PgpMsg {
     .allowAttributesOnElementsExt(ALLOWED_ATTRS)
     .toFactory()
 
-  suspend fun processMimeMessage(context: Context, inputStream: InputStream):
-      ProcessedMimeMessageResult = withContext(Dispatchers.IO) {
+  suspend fun processMimeMessage(
+    context: Context,
+    inputStream: InputStream,
+    skipAttachmentsRawData: Boolean = false
+  ): ProcessedMimeMessageResult = withContext(Dispatchers.IO) {
     val keysStorage = KeysStorageImpl.getInstance(context)
     val accountSecretKeys = PGPSecretKeyRingCollection(keysStorage.getPGPSecretKeyRings())
     val protector = keysStorage.getSecretKeyRingProtector()
@@ -215,7 +223,8 @@ object PgpMsg {
       msg = msg,
       verificationPublicKeys = PGPPublicKeyRingCollection(verificationPublicKeys),
       secretKeys = accountSecretKeys,
-      protector = protector
+      protector = protector,
+      skipAttachmentsRawData = skipAttachmentsRawData
     )
   }
 
@@ -235,7 +244,8 @@ object PgpMsg {
     msg: MimeMessage,
     verificationPublicKeys: PGPPublicKeyRingCollection = PGPPublicKeyRingCollection(listOf()),
     secretKeys: PGPSecretKeyRingCollection,
-    protector: SecretKeyRingProtector
+    protector: SecretKeyRingProtector,
+    skipAttachmentsRawData: Boolean = false
   ): ProcessedMimeMessageResult {
     val extractedMsgBlocks = extractMsgBlocksFromPart(
       part = msg,
@@ -243,7 +253,10 @@ object PgpMsg {
       secretKeys = secretKeys,
       protector = protector
     )
-    return processExtractedMsgBlocks(extractedMsgBlocks)
+    return processExtractedMsgBlocks(
+      msgBlocks = extractedMsgBlocks,
+      skipAttachmentsRawData = skipAttachmentsRawData
+    )
   }
 
   fun extractMsgBlocksFromPart(
@@ -341,34 +354,53 @@ object PgpMsg {
       //it's a multipart that should be investigated.
       part.isMultipart() -> {
         val multiPart = part.content as Multipart
-        val isMultipartAlternative = part.isMultipartAlternative()
-        var isAlternativePartUsed = false
-        for (partCount in 0 until multiPart.count) {
-          val subPart = multiPart.getBodyPart(partCount)
-          if (!subPart.isMultipart() && isMultipartAlternative && multiPart.count > 1) {
-            //if it multipart/alternative case with more than 1 part
-            //we should handle only one part and skip other
-            if (isAlternativePartUsed) {
-              continue
-            } else if (subPart.isPlainText()) {
-              if (subPart.hasPgpThings()) {
-                isAlternativePartUsed = true
-              } else {
-                //we prefer to use HTML part if there are no PGP things
-                continue
-              }
-            }
-          }
+        if (part.isMultipartAlternative()) {
+          val parts = (0 until multiPart.count).map { multiPart.getBodyPart(it) }
 
-          blocks.addAll(
-            extractMsgBlocksFromPart(
-              part = subPart,
+          val partWithPlainText = parts.firstOrNull { it.isPlainText() }
+          if (partWithPlainText != null) {
+            val plainBlocks = extractMsgBlocksFromPart(
+              part = partWithPlainText,
               verificationPublicKeys = verificationPublicKeys,
               secretKeys = secretKeys,
               protector = protector,
               isOpenPGPMimeSigned = isOpenPGPMimeSigned
+            ).toList()
+
+            val otherBlocks = (parts - partWithPlainText).flatMap { alternativePart ->
+              extractMsgBlocksFromPart(
+                part = alternativePart,
+                verificationPublicKeys = verificationPublicKeys,
+                secretKeys = secretKeys,
+                protector = protector,
+                isOpenPGPMimeSigned = isOpenPGPMimeSigned
+              )
+            }
+
+            if (plainBlocks.isNotEmpty()) {
+              blocks.add(
+                AlternativeContentMsgBlock(
+                  plainBlocks = plainBlocks,
+                  otherBlocks = otherBlocks,
+                  isOpenPGPMimeSigned = isOpenPGPMimeSigned
+                )
+              )
+            } else {
+              blocks.addAll(otherBlocks)
+            }
+          }
+        } else {
+          for (partCount in 0 until multiPart.count) {
+            blocks.addAll(
+              extractMsgBlocksFromPart(
+                part = multiPart.getBodyPart(partCount),
+                verificationPublicKeys = verificationPublicKeys,
+                secretKeys = secretKeys,
+                protector = protector,
+                isOpenPGPMimeSigned = isOpenPGPMimeSigned
+              )
             )
-          )
+          }
         }
       }
 
@@ -517,6 +549,19 @@ object PgpMsg {
    */
   fun sanitizeHtmlKeepBasicTags(dirtyHtml: String?): String? {
     if (dirtyHtml == null) return null
+
+    val originalDocument = Jsoup.parse(dirtyHtml, "", Parser.xmlParser())
+    originalDocument.select("div.gmail_quote,div.flowcrypt_quote").firstOrNull()?.let { element ->
+      //we wrap Gmail quote with 'details' tag
+      val generation = Element("details").apply {
+        appendChild(Element("summary"))
+        appendChild(Element("br"))
+      }
+      element.replaceWith(generation)
+      generation.appendChild(element)
+      generation.after(Element("br"))
+    }
+
     val imgContentReplaceable = "IMG_ICON_${generateRandomSuffix()}"
     var remoteContentReplacedWithLink = false
     val policyFactory = HtmlPolicyBuilder()
@@ -609,8 +654,8 @@ object PgpMsg {
       .allowAttributesOnElementsExt(ALLOWED_ATTRS)
       .toFactory()
 
-    val cleanHtml1 = policyFactory.sanitize(dirtyHtml)
-    val document = Jsoup.parse(cleanHtml1)
+    val cleanHtml1 = policyFactory.sanitize(originalDocument.html())
+    val document = Jsoup.parse(cleanHtml1, "", Parser.xmlParser())
     document.outputSettings().prettyPrint(false)
 
     moveElementsOutOfAnchorTag(document)
@@ -768,18 +813,18 @@ object PgpMsg {
     return decryptedContent.replace(FC_REPLY_TOKEN_REGEX, "")
   }
 
-  fun stripPublicKeys(decryptedContent: String, foundPublicKeys: MutableList<String>): String {
-    val normalizedTextAndBlocks = RawBlockParser.detectBlocks(decryptedContent)
-    for (block in normalizedTextAndBlocks) {
-      if (block.type == RawBlockParser.RawBlockType.PGP_PUBLIC_KEY && block.content.isNotEmpty()) {
-        val content = block.content
-        foundPublicKeys.add(String(content))
-      }
+  private fun extractPublicKeysIfFound(decryptedContent: String): List<String> {
+    return RawBlockParser.detectBlocks(decryptedContent).filter {
+      it.type == RawBlockParser.RawBlockType.PGP_PUBLIC_KEY && it.content.isNotEmpty()
+    }.map {
+      String(it.content)
     }
-    return decryptedContent
   }
 
-  private fun processExtractedMsgBlocks(msgBlocks: Collection<MsgBlock>): ProcessedMimeMessageResult {
+  private fun processExtractedMsgBlocks(
+    msgBlocks: Collection<MsgBlock>,
+    skipAttachmentsRawData: Boolean = false
+  ): ProcessedMimeMessageResult {
     var isEncrypted = false
     val contentBlocks = mutableListOf<MsgBlock>()
     val resultBlocks = mutableListOf<MsgBlock>()
@@ -789,7 +834,7 @@ object PgpMsg {
     var signedBlockCount = 0
     var isPartialSigned = false
     val verifiedSignatures = mutableListOf<SignatureVerification>()
-    val keyIdOfSigningKeys = mutableListOf<Long>()
+    val keyIdOfSigningKeys = mutableSetOf<Long>()
 
     for (block in msgBlocks) {
       // We don't need Base64 correction here, fromAttachment() does this for us
@@ -798,51 +843,39 @@ object PgpMsg {
       // So, at least meanwhile, not porting this:
       // block.content = isContentBlock(block.type)
       //     ? block.content.toUtfStr() : block.content.toRawBytesStr();
-      if (block.type in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
-        val messageMetadata = when (block) {
-          is DecryptedAndOrSignedContentMsgBlock -> {
-            block.messageMetadata
+
+      filterBlocksViaTree(listOf(block)) { innerBlock ->
+        innerBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES
+      }.forEach { pgpBlock ->
+        analyzeBlockForPgp(pgpBlock) { hasEncryptedContent,
+                                       hasSignedContent,
+                                       hasInvalidSignatures,
+                                       keyIdsOfSigningKeys,
+                                       verifiedSignaturesList ->
+          if (!isEncrypted) {
+            isEncrypted = hasEncryptedContent
           }
 
-          is SignedMsgBlock -> {
-            block.openPgpMetadata
+          if (hasSignedContent) {
+            signedBlockCount++
           }
 
-          else -> null
-        }
-
-        if (!isEncrypted) {
-          isEncrypted = messageMetadata?.isEncrypted ?: false
-        }
-
-        if (messageMetadata?.isSigned == true) {
-          signedBlockCount++
-
-          if (messageMetadata.rejectedInlineSignatures.isNotEmpty()
-            || messageMetadata.rejectedDetachedSignatures.isNotEmpty()
-          ) {
-            val invalidSignatureFailures = messageMetadata.rejectedInlineSignatures +
-                messageMetadata.rejectedDetachedSignatures
-
-            hasBadSignatures = invalidSignatureFailures.any {
-              it.validationException.underlyingException != null
-            }
-
-            keyIdOfSigningKeys.addAll(invalidSignatureFailures.filter {
-              it.validationException.message?.matches("Missing verification key.?".toRegex()) == true
-            }.map { it.signature.keyID })
+          if (!hasBadSignatures) {
+            hasBadSignatures = hasInvalidSignatures
           }
+
+          keyIdOfSigningKeys.addAll(keyIdsOfSigningKeys)
 
           if (verifiedSignatures.isEmpty()) {
-            verifiedSignatures.addAll(messageMetadata.verifiedSignatures)
+            verifiedSignatures.addAll(verifiedSignaturesList)
           } else {
             val keyIdsOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey.keyId }
-            val keyIdsOfCurrentVerifiedSignatures = messageMetadata.verifiedSignatures.map {
+            val keyIdsOfCurrentVerifiedSignatures = verifiedSignaturesList.map {
               it.signingKey.keyId
             }
             if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
               hasMixedSignatures = true
-              verifiedSignatures.addAll(messageMetadata.verifiedSignatures)
+              verifiedSignatures.addAll(verifiedSignaturesList)
             }
           }
         }
@@ -881,7 +914,23 @@ object PgpMsg {
 
     return ProcessedMimeMessageResult(
       text = fmtRes.text,
-      blocks = resultBlocks,
+      blocks = if (skipAttachmentsRawData) {
+        resultBlocks.map {
+          when (it) {
+            is DecryptedAttMsgBlock -> {
+              it.copy(attMeta = it.attMeta.copy(data = null))
+            }
+
+            is InlineAttMsgBlock -> {
+              it.copy(attMeta = it.attMeta.copy(data = null))
+            }
+
+            else -> it
+          }
+        }
+      } else {
+        resultBlocks
+      },
       verificationResult = VerificationResult(
         hasEncryptedParts = isEncrypted,
         hasSignedParts = signedBlockCount > 0,
@@ -890,6 +939,67 @@ object PgpMsg {
         keyIdOfSigningKeys = keyIdOfSigningKeys,
         hasBadSignatures = hasBadSignatures
       )
+    )
+  }
+
+  private fun analyzeBlockForPgp(
+    block: MsgBlock,
+    action: (
+      hasEncryptedContent: Boolean,
+      hasSignedContent: Boolean,
+      hasInvalidSignatures: Boolean,
+      keyIdsOfSigningKeys: Set<Long>,
+      verifiedSignaturesList: List<SignatureVerification>
+    ) -> Unit
+  ) {
+    var hasSignedContent = false
+    var hasEncryptedContent = false
+    var hasInvalidSignatures = false
+    val keyIdsOfSigningKeys = mutableSetOf<Long>()
+
+    if (block.type !in MsgBlock.Type.SIGNED_BLOCK_TYPES) {
+      return
+    }
+
+    val messageMetadata = when (block) {
+      is DecryptedAndOrSignedContentMsgBlock -> {
+        block.messageMetadata
+      }
+
+      is SignedMsgBlock -> {
+        block.openPgpMetadata
+      }
+
+      else -> null
+    }
+
+    hasEncryptedContent = messageMetadata?.isEncrypted == true
+
+    if (messageMetadata?.isSigned == true) {
+      hasSignedContent = true
+
+      if (messageMetadata.rejectedInlineSignatures.isNotEmpty()
+        || messageMetadata.rejectedDetachedSignatures.isNotEmpty()
+      ) {
+        val invalidSignatureFailures = messageMetadata.rejectedInlineSignatures +
+            messageMetadata.rejectedDetachedSignatures
+
+        hasInvalidSignatures = invalidSignatureFailures.any {
+          it.validationException.underlyingException != null
+        }
+
+        keyIdsOfSigningKeys.addAll(invalidSignatureFailures.filter {
+          it.validationException.message?.matches("Missing verification key.?".toRegex()) == true
+        }.map { it.signature.keyID })
+      }
+    }
+
+    action.invoke(
+      hasEncryptedContent,
+      hasSignedContent,
+      hasInvalidSignatures,
+      keyIdsOfSigningKeys,
+      messageMetadata?.verifiedSignatures ?: emptyList()
     )
   }
 
@@ -1132,11 +1242,15 @@ object PgpMsg {
   }
 
   private fun prepareFormattedContentBlock(
-    allContentBlocks: List<MsgBlock>
+    allContentBlocks: List<MsgBlock>,
+    stripHtmlRootTags: Boolean = false
   ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
-    for (plainImageBlock in allContentBlocks.filter { MimeUtils.isPlainImgAtt(it) }) {
+    val plainImageBlocks = filterBlocksViaTree(allContentBlocks) {
+      MimeUtils.isPlainImgAtt(it)
+    }
+    for (plainImageBlock in plainImageBlocks) {
       var contentId = (plainImageBlock as AttMsgBlock).attMeta.contentId ?: ""
       if (contentId.isNotEmpty()) {
         contentId =
@@ -1149,62 +1263,81 @@ object PgpMsg {
 
     val msgContentAsHtml = StringBuilder()
     val msgContentAsText = StringBuilder()
+
+    fun collectDataFromMsgBlock(
+      block: MsgBlock,
+      useHtml: Boolean = true,
+      usePlainText: Boolean = true
+    ) = {
+      handleMsgBlock(block, inlineImagesByCid) { html, plainText ->
+        html?.takeIf { useHtml }?.let {
+          msgContentAsHtml.append(html)
+        }
+        plainText?.takeIf { usePlainText }?.let { text ->
+          msgContentAsText.append(text).append('\n')
+        }
+      }
+    }
+
     for (block in allContentBlocks.filterNot { MimeUtils.isPlainImgAtt(it) }) {
-      if (block.content != null) {
-        val content = block.content!!
-        when (block.type) {
-          MsgBlock.Type.DECRYPTED_TEXT -> {
-            val html = fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.GREEN)
-            msgContentAsHtml.append(html)
-            msgContentAsText.append(content).append('\n')
+      when (block) {
+        is AlternativeContentMsgBlock -> {
+          if (block.plainBlocks.size > 1) {
+            prepareFormattedContentBlock(
+              allContentBlocks = block.plainBlocks,
+              stripHtmlRootTags = true
+            ).apply {
+              msgContentAsHtml.append(contentBlock.content)
+              msgContentAsText.append(text).append('\n')
+            }
+
+            //we skip otherBlocks if we have more than one plain block
+            continue
+          } else {
+            val singlePlainBlock = block.plainBlocks.first()
+            val singlePlainVersionHasDecryptedContent =
+              singlePlainBlock is DecryptedAndOrSignedContentMsgBlock
+            if (singlePlainVersionHasDecryptedContent) {
+              prepareFormattedContentBlock(
+                allContentBlocks = singlePlainBlock.blocks,
+                stripHtmlRootTags = true
+              ).apply {
+                msgContentAsHtml.append(contentBlock.content)
+                msgContentAsText.append(text).append('\n')
+              }
+              //we skip otherBlocks if plain version has decrypted content
+              continue
+            } else {
+              collectDataFromMsgBlock(
+                block = singlePlainBlock,
+                useHtml = false,
+                usePlainText = true
+              ).invoke()
+            }
           }
 
-          MsgBlock.Type.DECRYPTED_HTML -> {
-            // Typescript comment: todo: add support for inline imgs? when included using cid
-            var html = content.stripHtmlRootTags()
-            html = fmtMsgContentBlockAsHtml(html, FrameColor.GREEN)
-            msgContentAsHtml.append(html)
-            msgContentAsText
-              .append(sanitizeHtmlStripAllTags(content)?.unescapeHtml())
-              .append('\n')
+          val htmlVersionBlock = block.otherBlocks.firstOrNull()
+          htmlVersionBlock?.let { htmlBlock ->
+            collectDataFromMsgBlock(
+              block = htmlBlock,
+              useHtml = true,
+              usePlainText = false
+            ).invoke()
           }
+        }
 
-          MsgBlock.Type.PLAIN_TEXT -> {
-            val html = fmtMsgContentBlockAsHtml(
-              content.toEscapedHtml(),
-              if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
-            )
-            msgContentAsHtml.append(html)
-            msgContentAsText.append(content).append('\n')
-          }
-
-          MsgBlock.Type.PLAIN_HTML -> {
-            val stripped = content.stripHtmlRootTags()
-            val dirtyHtmlWithImgs = fillInlineHtmlImages(stripped, inlineImagesByCid)
-            msgContentAsHtml.append(
-              fmtMsgContentBlockAsHtml(
-                dirtyHtmlWithImgs,
-                if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
-              )
-            )
-            val text = sanitizeHtmlStripAllTags(dirtyHtmlWithImgs)?.unescapeHtml()
+        is DecryptedAndOrSignedContentMsgBlock -> {
+          prepareFormattedContentBlock(
+            allContentBlocks = block.blocks,
+            stripHtmlRootTags = true
+          ).apply {
+            msgContentAsHtml.append(contentBlock.content)
             msgContentAsText.append(text).append('\n')
           }
+        }
 
-          MsgBlock.Type.VERIFIED_MSG, MsgBlock.Type.SIGNED_CONTENT -> {
-            msgContentAsHtml.append(fmtMsgContentBlockAsHtml(content, FrameColor.GRAY))
-            msgContentAsText.append(sanitizeHtmlStripAllTags(content)).append('\n')
-          }
-
-          else -> {
-            msgContentAsHtml.append(
-              fmtMsgContentBlockAsHtml(
-                content,
-                if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
-              )
-            )
-            msgContentAsText.append(content).append('\n')
-          }
+        else -> {
+          collectDataFromMsgBlock(block = block).invoke()
         }
       }
     }
@@ -1230,30 +1363,213 @@ object PgpMsg {
       text = msgContentAsText.toString().trim(),
       contentBlock = MsgBlockFactory.fromContent(
         type = MsgBlock.Type.PLAIN_HTML,
-        """
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <meta name="viewport" content="width=device-width"/>
-              <style>
-                body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
-                body img { display: inline !important; height: auto !important; max-width: 95% !important; }
-                body pre { white-space: pre-wrap !important; }
-                body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
-                @media (prefers-color-scheme: dark) {
-                  .MsgBlock.GREEN   { background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG_DARK}); }
-                }
-
-                @media (prefers-color-scheme: light) {
-                  .MsgBlock.GREEN   { background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG_LIGHT}); }
-                }
-              </style>
-          </head>
-          <body>$msgContentAsHtml</body>
-          </html>
-        """.trimIndent(), isOpenPGPMimeSigned = false
+        content = msgContentAsHtml.toString().takeIf { stripHtmlRootTags } ?: """
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                      <meta name="viewport" content="width=device-width">
+                      <style>
+                        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
+                        blockquote { border-left: 1px solid #CCCCCC; margin: 0px 0px 0px 10px; padding:10px 0px 0px 10px; }
+                        body img { display: inline !important; height: auto !important; max-width: 95% !important; }
+                        details > summary { list-style-type: none; }
+                        details > summary::-webkit-details-marker { display: none; }
+                        details > summary::before { content: '▪▪▪'; color: #31a217; border: 2px solid; border-radius: 5px; padding: 0px 5px 0px 5px; font-size: 75%; }
+                        summary:active:before { opacity: 0.5; }
+                        body pre { white-space: pre-wrap !important; }
+                        body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
+                        @media (prefers-color-scheme: dark) {
+                          .MsgBlock.GREEN   { background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG_DARK}); }
+                        }
+        
+                        @media (prefers-color-scheme: light) {
+                          .MsgBlock.GREEN   { background-image: url(data:image/png;base64,${SEAMLESS_LOCK_BG_LIGHT}); }
+                        }
+                      </style>
+                  </head>
+                  <body>$msgContentAsHtml</body>
+                  </html>
+                """.trimIndent(), isOpenPGPMimeSigned = false
       )
     )
+  }
+
+  private fun filterBlocksViaTree(
+    blocks: List<MsgBlock>,
+    predicate: (MsgBlock) -> Boolean
+  ): List<MsgBlock> {
+    return mutableListOf<MsgBlock>().apply {
+      blocks.forEach { block ->
+        when {
+          block is AlternativeContentMsgBlock -> {
+            addAll(filterBlocksViaTree(block.allBlocks, predicate))
+          }
+
+          predicate(block) -> {
+            add(block)
+          }
+        }
+      }
+    }
+  }
+
+  private fun handleMsgBlock(
+    block: MsgBlock,
+    inlineImagesByCid: MutableMap<String, MsgBlock>,
+    action: (html: String?, plainText: String?) -> Unit
+  ) {
+    val content = block.content ?: return
+    when (block.type) {
+      MsgBlock.Type.DECRYPTED_TEXT -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(content.toEscapedHtml(), FrameColor.GREEN),
+          content
+        )
+      }
+
+      MsgBlock.Type.DECRYPTED_HTML -> {
+        // Typescript comment: todo: add support for inline imgs? when included using cid
+        action.invoke(
+          fmtMsgContentBlockAsHtml(content.stripHtmlRootTags(), FrameColor.GREEN),
+          "${sanitizeHtmlStripAllTags(content)?.unescapeHtml()}"
+        )
+      }
+
+      MsgBlock.Type.PLAIN_TEXT -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(
+            checkAndReturnQuotesFormatIfFound(content) ?: content.toEscapedHtml(),
+            if (block.isOpenPGPMimeSigned) FrameColor.GRAY else FrameColor.PLAIN
+          ),
+          content
+        )
+      }
+
+      MsgBlock.Type.PLAIN_HTML -> {
+        val stripped = content.stripHtmlRootTags()
+        val dirtyHtmlWithImages = fillInlineHtmlImages(stripped, inlineImagesByCid)
+        val html = fmtMsgContentBlockAsHtml(
+          dirtyHtmlWithImages,
+          if (block.isOpenPGPMimeSigned) {
+            FrameColor.GRAY
+          } else {
+            FrameColor.PLAIN
+          }
+        )
+        action.invoke(html, sanitizeHtmlStripAllTags(dirtyHtmlWithImages)?.unescapeHtml())
+      }
+
+      MsgBlock.Type.VERIFIED_MSG, MsgBlock.Type.SIGNED_CONTENT -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(content, FrameColor.GRAY),
+          sanitizeHtmlStripAllTags(content)
+        )
+      }
+
+      else -> {
+        action.invoke(
+          fmtMsgContentBlockAsHtml(
+            content,
+            if (block.isOpenPGPMimeSigned) {
+              FrameColor.GRAY
+            } else {
+              FrameColor.PLAIN
+            }
+          ),
+          content
+        )
+      }
+    }
+  }
+
+  fun checkAndReturnQuotesFormatIfFound(content: String): String? {
+    return buildQuotes(originalContent = content, unwrapContent = false)?.outerHtml()
+  }
+
+  private fun buildQuotes(originalContent: String, unwrapContent: Boolean = true): Element? {
+    val content = if (unwrapContent) {
+      //remove > at the beginning of all lines to define next quotes level
+      val patternQuotesSign = "^(\\s)?>([^\\S\\r\\n])?".toRegex(RegexOption.MULTILINE)
+      originalContent.replace(patternQuotesSign, "")
+    } else {
+      originalContent
+    }
+
+    val newLineStringPattern = "\\r\\n|\\r|\\n"
+    val beforeQuotesHeaderStringPattern = "^.*:($newLineStringPattern){1,2}"
+    val patternQuotes = (if (unwrapContent) {
+      "(^(\\s)?>.*\$($newLineStringPattern)?)+"
+    } else {
+      "($beforeQuotesHeaderStringPattern)(^(\\s)?>.*\$($newLineStringPattern)?)+"
+    }).toRegex(RegexOption.MULTILINE)
+    val tagDiv = "div"
+    val tagBlockquote = "blockquote"
+
+    val matchingResult = patternQuotes.find(content)?.groups?.firstOrNull()
+      ?: return Element(tagDiv).apply {
+        append(prepareHtmlFromGivenText(content))
+      }.takeIf { unwrapContent }
+    val quotes = matchingResult.value
+
+    return Element(tagDiv).apply {
+      //prepend text before quotes
+      if (matchingResult.range.first > 0) {
+        prepend(prepareHtmlFromGivenText(content.substring(0, matchingResult.range.first)))
+      }
+
+      //append quotes
+      if (unwrapContent) {
+        appendChild(
+          Element(tagBlockquote).apply {
+            buildQuotes(quotes)?.let { appendChild(it) }
+          }
+        )
+      } else {
+        appendChild(
+          Element(tagDiv).apply {
+            attr("class", "flowcrypt_quote")
+            //for better UI experience we need to extract the quote header of the first quote
+            //and add it separately
+            val quotesHeader =
+              quotes.replace(
+                "(^(\\s)?>.*\$($newLineStringPattern)?)+".toRegex(RegexOption.MULTILINE),
+                ""
+              )
+            append(prepareHtmlFromGivenText(quotesHeader))
+
+            appendChild(
+              Element(tagBlockquote).apply {
+                //here we should pass clear quotes and drop the first quote header
+                buildQuotes(quotes.replaceFirst(quotesHeader, ""))?.let { appendChild(it) }
+              }
+            )
+          }
+        )
+      }
+
+      //append text after quotes
+      if (matchingResult.range.last < content.length) {
+        append(
+          prepareHtmlFromGivenText(content.substring(matchingResult.range.last + 1, content.length))
+        )
+      }
+    }
+  }
+
+  private fun prepareHtmlFromGivenText(content: String): String {
+    val newLineStringPattern = "\\r\\n|\\r|\\n"
+    val patternNewLine = "($newLineStringPattern)".toRegex()
+    val emailAddressPattern = PatternsCompat.EMAIL_ADDRESS.pattern()
+    val patternEscapedEmailAddress = "(&lt;|<)?($emailAddressPattern)(&gt;|>)?".toRegex()
+    val emailAddressReplacement = "\$1<a href=mailto:\$2>\$2</a>\$4"
+    val br = "<br>"
+    return Entities
+      //escape given text to fit HTML standard
+      .escape(content)
+      //Prepare <a href> for email addresses.
+      .replace(patternEscapedEmailAddress, emailAddressReplacement)
+      //Replace CRLF with <br> to transform to HTML.
+      .replace(patternNewLine, br)
   }
 
   /**
@@ -1365,16 +1681,30 @@ object PgpMsg {
 
   private fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): Collection<MsgBlock> {
     if (decryptedContent == null) return emptyList()
+    val decryptedText = String(decryptedContent)
     val blocks = mutableListOf<MsgBlock>()
-    val armoredKeys = mutableListOf<String>()
-    val content = stripPublicKeys(
-      stripFcReplyToken(extractFcAttachments(String(decryptedContent), blocks)),
-      armoredKeys
-    ).toEscapedHtml()
+    val strippedContent = stripFcReplyToken(extractFcAttachments(decryptedText, blocks))
+    val armoredKeys = extractPublicKeysIfFound(strippedContent)
+    val content =
+      checkAndReturnQuotesFormatIfFound(strippedContent) ?: strippedContent.toEscapedHtml()
     blocks.add(
-      MsgBlockFactory.fromContent(
-        MsgBlock.Type.DECRYPTED_HTML,
-        content,
+      //we need to add two alternative versions:
+      //formatted HTML + original text(will be used for a reply)
+      AlternativeContentMsgBlock(
+        otherBlocks = listOf(
+          MsgBlockFactory.fromContent(
+          MsgBlock.Type.DECRYPTED_HTML,
+          content,
+          isOpenPGPMimeSigned = false
+          )
+        ),
+        plainBlocks = listOf(
+          MsgBlockFactory.fromContent(
+          MsgBlock.Type.DECRYPTED_TEXT,
+          decryptedText,
+          isOpenPGPMimeSigned = false
+          )
+        ),
         isOpenPGPMimeSigned = false
       )
     )

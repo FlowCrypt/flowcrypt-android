@@ -1,43 +1,34 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.ContentResolver
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.api.retrofit.ApiClientRepository
-import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
-import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.model.MessageEncryptionType
-import com.flowcrypt.email.security.model.PgpKeyRingDetails
-import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientInfo
-import com.flowcrypt.email.util.exception.ApiException
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter.RecipientItem
+import com.flowcrypt.email.util.RecipientLookUpManager
 import jakarta.mail.Message
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.IOException
+import java.io.File
 import java.io.InvalidObjectException
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * @author Denys Bondarenko
@@ -46,12 +37,20 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   AccountViewModel(application) {
   private val recipientLookUpManager = RecipientLookUpManager(
     application = application,
-    roomDatabase = roomDatabase,
-    viewModelScope = viewModelScope
-  ) {
-    replaceRecipient(Message.RecipientType.TO, it)
-    replaceRecipient(Message.RecipientType.CC, it)
-    replaceRecipient(Message.RecipientType.BCC, it)
+    roomDatabase = roomDatabase
+  ) { recipientInfo ->
+    val recipientItem = RecipientItem(
+      recipientInfo.recipientType,
+      recipientInfo.recipientWithPubKeys,
+      recipientInfo.creationTime,
+      recipientInfo.isUpdating,
+      recipientInfo.isUpdateFailed,
+      recipientInfo.isModifyingEnabled,
+    )
+
+    replaceRecipient(Message.RecipientType.TO, recipientItem)
+    replaceRecipient(Message.RecipientType.CC, recipientItem)
+    replaceRecipient(Message.RecipientType.BCC, recipientItem)
   }
 
   private val messageEncryptionTypeMutableStateFlow: MutableStateFlow<MessageEncryptionType> =
@@ -70,19 +69,19 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   val webPortalPasswordStateFlow: StateFlow<CharSequence> =
     webPortalPasswordMutableStateFlow.asStateFlow()
 
-  private val recipientsToMutableStateFlow: MutableStateFlow<MutableMap<String, RecipientInfo>> =
+  private val recipientsToMutableStateFlow: MutableStateFlow<MutableMap<String, RecipientItem>> =
     MutableStateFlow(mutableMapOf())
-  val recipientsToStateFlow: StateFlow<Map<String, RecipientInfo>> =
+  val recipientsToStateFlow: StateFlow<Map<String, RecipientItem>> =
     recipientsToMutableStateFlow.asStateFlow()
 
-  private val recipientsCcMutableStateFlow: MutableStateFlow<MutableMap<String, RecipientInfo>> =
+  private val recipientsCcMutableStateFlow: MutableStateFlow<MutableMap<String, RecipientItem>> =
     MutableStateFlow(mutableMapOf())
-  val recipientsCcStateFlow: StateFlow<Map<String, RecipientInfo>> =
+  val recipientsCcStateFlow: StateFlow<Map<String, RecipientItem>> =
     recipientsCcMutableStateFlow.asStateFlow()
 
-  private val recipientsBccMutableStateFlow: MutableStateFlow<MutableMap<String, RecipientInfo>> =
+  private val recipientsBccMutableStateFlow: MutableStateFlow<MutableMap<String, RecipientItem>> =
     MutableStateFlow(mutableMapOf())
-  val recipientsBccStateFlow: StateFlow<Map<String, RecipientInfo>> =
+  val recipientsBccStateFlow: StateFlow<Map<String, RecipientItem>> =
     recipientsBccMutableStateFlow.asStateFlow()
 
   val recipientsStateFlow = combine(
@@ -95,18 +94,28 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
 
   val msgEncryptionType: MessageEncryptionType
     get() = messageEncryptionTypeStateFlow.value
-  val recipientsTo: Map<String, RecipientInfo>
+  val recipientsTo: Map<String, RecipientItem>
     get() = recipientsToStateFlow.value
-  val recipientsCc: Map<String, RecipientInfo>
+  val recipientsCc: Map<String, RecipientItem>
     get() = recipientsCcStateFlow.value
-  val recipientsBcc: Map<String, RecipientInfo>
+  val recipientsBcc: Map<String, RecipientItem>
     get() = recipientsBccStateFlow.value
-  val allRecipients: Map<String, RecipientInfo>
+  val allRecipients: Map<String, RecipientItem>
     get() = recipientsTo + recipientsCc + recipientsBcc
 
-  val hasAttachmentsWithExternalStorageUri: Boolean
-    get() = attachmentsStateFlow.value.any {
-      ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
+  val hasAttachmentsWittForeignExternalStorageUri: Boolean
+    get() {
+      val context: Context = getApplication()
+      val draftsCacheDirUri = Uri.fromFile(File(context.cacheDir, Constants.DRAFT_CACHE_DIR))
+
+      return attachmentsStateFlow.value.any {
+        val parentUri = it.uri?.buildUpon()?.path(
+          it.uri.path?.dropLast(it.uri.lastPathSegment?.length?.plus(1) ?: 0)
+        )?.build()
+
+        ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
+            && parentUri != draftsCacheDirUri
+      }
     }
 
   private val outgoingMessageInfoMutableStateFlow: MutableStateFlow<OutgoingMessageInfo> =
@@ -179,17 +188,17 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
         } else null
 
       existingRecipient?.let {
-        val recipientInfo = RecipientInfo(recipientType, it)
+        val recipientItem = RecipientItem(recipientType, it)
         when (recipientType) {
           Message.RecipientType.TO -> recipientsToMutableStateFlow
           Message.RecipientType.CC -> recipientsCcMutableStateFlow
           Message.RecipientType.BCC -> recipientsBccMutableStateFlow
           else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
         }.update { map ->
-          map.toMutableMap().apply { put(normalizedEmail, RecipientInfo(recipientType, it)) }
+          map.toMutableMap().apply { put(normalizedEmail, RecipientItem(recipientType, it)) }
         }
 
-        recipientLookUpManager.enqueue(recipientInfo)
+        recipientLookUpManager.enqueue(recipientItem.toRecipientInfo())
       }
     }
   }
@@ -247,7 +256,7 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
   fun callLookUpForMissedPubKeys() {
     viewModelScope.launch {
       allRecipients.forEach { entry ->
-        recipientLookUpManager.enqueue(entry.value)
+        recipientLookUpManager.enqueue(entry.value.toRecipientInfo())
       }
     }
   }
@@ -256,220 +265,24 @@ class ComposeMsgViewModel(isCandidateToEncrypt: Boolean, application: Applicatio
     viewModelScope.launch {
       allRecipients.entries
         .firstOrNull { it.key.equals(email?.lowercase(), ignoreCase = true) }
-        ?.value?.let { recipientLookUpManager.enqueue(it) }
+        ?.value?.let { recipientLookUpManager.enqueue(it.toRecipientInfo()) }
     }
   }
 
   private fun replaceRecipient(
     recipientType: Message.RecipientType,
-    recipientInfo: RecipientInfo
+    recipientItem: RecipientItem
   ) {
     viewModelScope.launch {
-      val normalizedEmail = recipientInfo.recipientWithPubKeys.recipient.email
+      val normalizedEmail = recipientItem.recipientWithPubKeys.recipient.email
       when (recipientType) {
         Message.RecipientType.TO -> recipientsToMutableStateFlow
         Message.RecipientType.CC -> recipientsCcMutableStateFlow
         Message.RecipientType.BCC -> recipientsBccMutableStateFlow
         else -> throw InvalidObjectException("unknown RecipientType: $recipientType")
       }.update { map ->
-        map.toMutableMap().apply { replace(normalizedEmail, recipientInfo) }
+        map.toMutableMap().apply { replace(normalizedEmail, recipientItem) }
       }
-    }
-  }
-
-  class RecipientLookUpManager(
-    private val application: Application,
-    private val roomDatabase: FlowCryptRoomDatabase,
-    private val viewModelScope: CoroutineScope,
-    private val updateListener: (recipientInfo: RecipientInfo) -> Unit
-  ) {
-    private val lookUpCandidates = ConcurrentHashMap<String, RecipientInfo>()
-    private val recipientsSessionCache = ConcurrentHashMap<String, RecipientWithPubKeys>()
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val lookUpLimitedParallelismDispatcher =
-      Dispatchers.IO.limitedParallelism(PARALLELISM_COUNT)
-
-    suspend fun enqueue(recipientInfo: RecipientInfo) = withContext(Dispatchers.IO) {
-      viewModelScope.launch {
-        val email = recipientInfo.recipientWithPubKeys.recipient.email
-        if (recipientsSessionCache.containsKey(email)) {
-          //we return a value from the session cache
-          updateListener.invoke(
-            recipientInfo.copy(
-              isUpdating = false,
-              recipientWithPubKeys = requireNotNull(recipientsSessionCache[email])
-            )
-          )
-        } else {
-          lookUpCandidates[email] = recipientInfo
-          if (!recipientInfo.isUpdating) {
-            updateListener.invoke(recipientInfo.copy(isUpdating = true))
-          }
-          try {
-            val recipientWithPubKeysAfterLookUp = lookUp(email)
-            dequeue(email)
-            if (recipientWithPubKeysAfterLookUp.hasUsablePubKey()) {
-              recipientsSessionCache[email] = recipientWithPubKeysAfterLookUp
-            }
-            updateListener.invoke(
-              recipientInfo.copy(
-                isUpdating = false,
-                recipientWithPubKeys = recipientWithPubKeysAfterLookUp
-              )
-            )
-          } catch (e: Exception) {
-            e.printStackTrace()
-            updateListener.invoke(recipientInfo.copy(isUpdating = false))
-          }
-        }
-      }
-    }
-
-    private suspend fun lookUp(email: String): RecipientWithPubKeys = withContext(Dispatchers.IO) {
-      val emailLowerCase = email.lowercase()
-      var cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
-      if (cachedRecipientWithPubKeys == null) {
-        roomDatabase.recipientDao().insertSuspend(RecipientEntity(email = emailLowerCase))
-        cachedRecipientWithPubKeys =
-          roomDatabase.recipientDao().getRecipientWithPubKeysByEmailSuspend(emailLowerCase)
-      }
-
-      getPublicKeysFromRemoteServersInternal(email = emailLowerCase)?.let { pgpKeyDetailsList ->
-        cachedRecipientWithPubKeys?.let { recipientWithPubKeys ->
-          updateCachedInfoWithPubKeysFromLookUp(
-            recipientWithPubKeys,
-            pgpKeyDetailsList
-          )
-        }
-      }
-      cachedRecipientWithPubKeys = getCachedRecipientWithPubKeys(emailLowerCase)
-
-      return@withContext requireNotNull(cachedRecipientWithPubKeys)
-    }
-
-    fun dequeue(email: String) {
-      lookUpCandidates.remove(email)
-    }
-
-    private suspend fun getCachedRecipientWithPubKeys(emailLowerCase: String): RecipientWithPubKeys? =
-      withContext(Dispatchers.IO) {
-        val cachedRecipientWithPubKeys = roomDatabase.recipientDao()
-          .getRecipientWithPubKeysByEmailSuspend(emailLowerCase) ?: return@withContext null
-
-        for (publicKeyEntity in cachedRecipientWithPubKeys.publicKeys) {
-          try {
-            val result = PgpKey.parseKeys(source = publicKeyEntity.publicKey).pgpKeyDetailsList
-            publicKeyEntity.pgpKeyRingDetails = result.firstOrNull()
-          } catch (e: Exception) {
-            e.printStackTrace()
-            publicKeyEntity.isNotUsable = true
-          }
-        }
-        return@withContext cachedRecipientWithPubKeys
-      }
-
-    private suspend fun getPublicKeysFromRemoteServersInternal(email: String):
-        List<PgpKeyRingDetails>? = withContext(Dispatchers.IO) {
-      try {
-        val activeAccount = roomDatabase.accountDao().getActiveAccountSuspend()
-        if (!lookUpCandidates.containsKey(email)) {
-          return@withContext null
-        }
-        val response = pubLookup(email, activeAccount)
-
-        when (response.status) {
-          Result.Status.SUCCESS -> {
-            val sourceString = response.data?.pubkey
-            if (sourceString?.isNotEmpty() == true) {
-              val parsedResult = PgpKey.parseKeys(source = sourceString).pgpKeyDetailsList
-              if (parsedResult.isNotEmpty()) {
-                return@withContext parsedResult
-              }
-            }
-          }
-
-          Result.Status.ERROR -> {
-            throw ApiException(
-              response.apiError ?: ApiError(
-                code = -1,
-                message = "Unknown API error"
-              )
-            )
-          }
-
-          else -> {
-            throw response.exception ?: java.lang.Exception()
-          }
-        }
-      } catch (e: IOException) {
-        e.printStackTrace()
-      }
-
-      null
-    }
-
-    private suspend fun pubLookup(
-      email: String,
-      activeAccount: AccountEntity?
-    ): Result<PubResponse> = withContext(lookUpLimitedParallelismDispatcher) {
-      return@withContext ApiClientRepository.PubLookup.fetchPubKey(
-        context = application,
-        email = email,
-        clientConfiguration = activeAccount?.clientConfiguration
-      )
-    }
-
-    private suspend fun updateCachedInfoWithPubKeysFromLookUp(
-      cachedRecipientEntity: RecipientWithPubKeys,
-      fetchedPgpKeyRingDetailsList: List<PgpKeyRingDetails>
-    ) = withContext(Dispatchers.IO) {
-      val email = cachedRecipientEntity.recipient.email
-      val uniqueMapOfFetchedPubKeys =
-        deduplicateFetchedPubKeysByFingerprint(fetchedPgpKeyRingDetailsList)
-
-      val deDuplicatedListOfFetchedPubKeys = uniqueMapOfFetchedPubKeys.values
-      for (fetchedPgpKeyDetails in deDuplicatedListOfFetchedPubKeys) {
-        val existingPublicKeyEntity = cachedRecipientEntity.publicKeys.firstOrNull {
-          it.fingerprint == fetchedPgpKeyDetails.fingerprint
-        }
-        val existingPgpKeyDetails = existingPublicKeyEntity?.pgpKeyRingDetails
-        if (existingPgpKeyDetails != null) {
-          val isExistingKeyRevoked = existingPgpKeyDetails.isRevoked
-          if (!isExistingKeyRevoked && fetchedPgpKeyDetails.isNewerThan(existingPgpKeyDetails)) {
-            roomDatabase.pubKeyDao().updateSuspend(
-              existingPublicKeyEntity.copy(publicKey = fetchedPgpKeyDetails.publicKey.toByteArray())
-            )
-          }
-        } else {
-          roomDatabase.pubKeyDao()
-            .insertWithReplaceSuspend(fetchedPgpKeyDetails.toPublicKeyEntity(email))
-        }
-      }
-    }
-
-    private fun deduplicateFetchedPubKeysByFingerprint(
-      fetchedPgpKeyRingDetailsList: List<PgpKeyRingDetails>
-    ): Map<String, PgpKeyRingDetails> {
-      val uniqueMapOfFetchedPubKeys = mutableMapOf<String, PgpKeyRingDetails>()
-
-      for (fetchedPgpKeyDetails in fetchedPgpKeyRingDetailsList) {
-        val fetchedFingerprint = fetchedPgpKeyDetails.fingerprint
-        val alreadyEncounteredFetchedPgpKeyDetails = uniqueMapOfFetchedPubKeys[fetchedFingerprint]
-        if (alreadyEncounteredFetchedPgpKeyDetails == null) {
-          uniqueMapOfFetchedPubKeys[fetchedFingerprint] = fetchedPgpKeyDetails
-        } else {
-          if (fetchedPgpKeyDetails.isNewerThan(alreadyEncounteredFetchedPgpKeyDetails)) {
-            uniqueMapOfFetchedPubKeys[fetchedFingerprint] = fetchedPgpKeyDetails
-          }
-        }
-      }
-
-      return uniqueMapOfFetchedPubKeys
-    }
-
-    companion object {
-      const val PARALLELISM_COUNT = 10
     }
   }
 }

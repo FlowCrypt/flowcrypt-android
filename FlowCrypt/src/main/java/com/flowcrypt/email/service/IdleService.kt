@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service
@@ -19,21 +19,21 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.isAppForegrounded
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsAddedWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleMsgsRemovedWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.InboxIdleSyncWorker
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Flags
 import jakarta.mail.event.MessageChangedEvent
 import jakarta.mail.event.MessageCountEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
@@ -186,7 +186,7 @@ class IdleService : LifecycleService() {
           msg.flags
         )
 
-        if (!GeneralUtil.isAppForegrounded()) {
+        if (!applicationContext.isAppForegrounded()) {
           if (msg.flags.contains(Flags.Flag.SEEN)) {
             MessagesNotificationManager(applicationContext).cancel(remoteFolder.getUID(msg).toHex())
           }

@@ -1,6 +1,6 @@
 <!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
@@ -124,8 +124,6 @@
     <string name="waiting_to_load">Waiting to load</string>
     <string name="download_complete">Download complete</string>
     <string name="template_attachment_already_loading">Attachment \"%1$s\" is already loading</string>
-    <string name="cannot_save_attachment_without_permission">The attachment cannot be saved without the write external
-        storage permission</string>
     <string name="can_not_attach_this_file">Can\'t attach this file!</string>
     <string name="template_warning_max_total_attachments_size">Total size of added attachments should be under
         %1$s</string>
@@ -385,6 +383,10 @@
         <item quantity="one">Delete this message permanently?</item>
         <item quantity="other">Delete these %1$d messages permanently?</item>
     </plurals>
+    <plurals name="delete_thread_question">
+        <item quantity="one">Delete this thread permanently?</item>
+        <item quantity="other">Delete these %1$d thread permanently?</item>
+    </plurals>
     <string name="processing">Processing&#8230;</string>
     <string name="or_use_your_credentials_to_connect">or use your credentials to connect</string>
     <string name="advanced_settings">Advanced settings</string>
@@ -569,7 +571,7 @@
     <string name="add_recipient_to_send_message">Please add at least one recipient in \"To\" to send this message</string>
     <string name="send_feedback_failed_hint">There was an error sending message. Our direct email is %1$s.\n\nError details:\n%2$s</string>
     <string name="edit_draft">Edit draft</string>
-    <string name="draft_saved">Draft saved</string>
+    <string name="saving_draft">Saving draft</string>
     <string name="fetching_drafts_info_failed">Fetching drafts info failed. Please try again.</string>
     <string name="no_recipients">(no recipients)</string>
     <string name="could_not_save_draft">Could not save a draft\n\nError details:\n%1$s</string>
@@ -648,4 +650,15 @@
     <string name="please_specify_your_signature_here">Please specify your signature here</string>
     <string name="make_backup_in_the_email_box">Make a backup in the email box</string>
     <string name="make_backup_explanation_text">Save the given passphrase-protected PGP private keys as a backup in the inbox. It will help you access your encrypted messages from other devices (along with your pass phrase). You can safely leave it in your inbox or archive it.\n\nIf you don\'t need to have such a backup, please disable this option.</string>
+    <string name="draft">Draft</string>
+    <string name="delete_draft">Delete draft?</string>
+    <string name="thread_was_deleted_or_moved">The thread was deleted or moved</string>
+    <string name="file_already_exists_in_download">\'%1$s\' already exists in Download. Would you like to download it again?</string>
+    <string name="general">General</string>
+    <string name="disable_smart_mode_for_attachments_preview">Disable smart mode for attachments preview</string>
+    <string name="message_not_found_please_reload_the_thread">Message not found. It looks like it was moved or deleted. Please reload the thread to get the latest updates.</string>
+    <plurals name="drafts_count">
+        <item quantity="one">Draft</item>
+        <item quantity="other">Drafts(%1$d)</item>
+    </plurals>
 </resources>

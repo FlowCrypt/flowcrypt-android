@@ -9,6 +9,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import androidx.core.graphics.createBitmap
 import kotlin.math.abs
 
 /**
@@ -46,7 +47,7 @@ object AvatarGenerator {
   )
 
   fun generate(text: String, bitmapWidth: Int, bitmapHeight: Int, fontSize: Float): Bitmap {
-    val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
+    val bitmap = createBitmap(bitmapWidth, bitmapHeight)
     val canvas = Canvas(bitmap)
     //draw a circle
     canvas.drawCircle(
@@ -59,7 +60,8 @@ object AvatarGenerator {
     //draw a text
     textPaint.textSize = fontSize
     canvas.drawText(
-      text.substring(0, 2).uppercase(), (bitmapWidth / 2).toFloat(),
+      text.takeIf { it.length > 1 }?.substring(0, 2)?.uppercase() ?: text,
+      (bitmapWidth / 2).toFloat(),
       bitmapHeight / 2 - (textPaint.descent() + textPaint.ascent()) / 2, textPaint
     )
 

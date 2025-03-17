@@ -23,6 +23,7 @@ class MessagesViewPagerViewModel(
   private val localFolder: LocalFolder,
   application: Application
 ) : AccountViewModel(application) {
+
   val initialLiveData: LiveData<Result<List<MessageEntity>>> =
     activeAccountLiveData.switchMap { accountEntity ->
       liveData {
@@ -61,14 +62,14 @@ class MessagesViewPagerViewModel(
             Result.success(
               roomDatabase.msgDao()
                 .getMessagesForViewPager(
-                  activeAccount.email,
-                  if (localFolder.searchQuery.isNullOrEmpty()) {
+                  account = activeAccount.email,
+                  folder = if (localFolder.searchQuery.isNullOrEmpty()) {
                     localFolder.fullName
                   } else {
                     JavaEmailConstants.FOLDER_SEARCH
                   },
-                  messageEntity.receivedDate ?: 0,
-                  PAGE_SIZE / 2
+                  date = messageEntity.receivedDate ?: 0,
+                  limit = PAGE_SIZE / 2
                 )
             )
           )

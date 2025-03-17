@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -55,11 +55,14 @@ class Constants {
     const val PREF_KEY_MESSAGES_NOTIFICATION_FILTER = "preferences_key_messages_notification_filter"
     const val PREF_KEY_MANAGE_NOTIFICATIONS = "preferences_key_manage_notifications"
     const val PREF_KEY_SECURITY_CHANGE_PASS_PHRASE = "preferences_key_security_change_pass_phrase"
+    const val PREFERENCES_KEY_ATTACHMENTS_DISABLE_SMART_MODE_FOR_PREVIEW =
+      "preferences_key_attachments_disable_smart_mode_for_preview"
     const val PREF_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id"
     const val PREF_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed"
     const val PREF_KEY_BACKUPS = "pref_key_backups"
     const val PREF_KEY_INSTALL_VERSION = "pref_key_install_version"
     const val PREF_KEY_SERVER_SETTINGS = "pref_key_server_settings"
+    const val PREF_KEY_GENERAL = "pref_key_general"
 
     /**
      * The max total size off all attachment which can be send via the app.
@@ -74,6 +77,7 @@ class Constants {
     const val FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded"
     const val ATTACHMENTS_CACHE_DIR = "attachments"
     const val DRAFT_CACHE_DIR = "draft"
+    const val EXTERNAL_FILES_PATH_SHARED = "shared"
 
     /**
      * The password quality types.

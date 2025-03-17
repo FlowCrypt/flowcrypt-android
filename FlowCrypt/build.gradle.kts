@@ -34,19 +34,20 @@ android {
   namespace = "com.flowcrypt.email"
 
   defaultConfig {
-    applicationId = "com.flowcrypt.email"
-    minSdk = extra["minSdkVersion"] as Int
-    targetSdk = extra["targetSdkVersion"] as Int
-    versionCode = extra["appVersionCode"] as Int
-    versionName = extra["appVersionName"] as String
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
     /*
      The following argument makes the Android Test Orchestrator run its
      "pm clear" command after each test invocation. This command ensures
      that the app"s state is completely cleared between tests.
      */
     testInstrumentationRunnerArguments += mapOf("clearPackageData" to "true")
+
+    applicationId = "com.flowcrypt.email"
+    minSdk = extra["minSdkVersion"] as Int
+    targetSdk = extra["targetSdkVersion"] as Int
+    versionCode = extra["appVersionCode"] as Int
+    versionName = extra["appVersionName"] as String
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
     multiDexEnabled = true
   }
 
@@ -380,7 +381,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.5")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.6")
   uiTestsImplementation("androidx.test:core-ktx:1.6.1")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
@@ -405,7 +406,7 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.10")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
@@ -417,9 +418,9 @@ dependencies {
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
   implementation("androidx.browser:browser:1.8.0")
-  implementation("androidx.recyclerview:recyclerview:1.3.2")
+  implementation("androidx.recyclerview:recyclerview:1.4.0")
   implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
-  implementation("androidx.constraintlayout:constraintlayout:2.2.0")
+  implementation("androidx.constraintlayout:constraintlayout:2.2.1")
   implementation("androidx.test.espresso:espresso-idling-resource:3.6.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
   implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
@@ -435,20 +436,20 @@ dependencies {
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.15.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
-  implementation("androidx.activity:activity-ktx:1.9.3")
-  implementation("androidx.fragment:fragment-ktx:1.8.5")
+  implementation("androidx.activity:activity-ktx:1.10.1")
+  implementation("androidx.fragment:fragment-ktx:1.8.6")
   implementation("androidx.work:work-runtime-ktx:2.10.0")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.8.5")
-  implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.8.5")
-  implementation("androidx.webkit:webkit:1.12.1")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.8.9")
+  implementation("androidx.navigation:navigation-ui-ktx:2.8.9")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.8.9")
+  implementation("androidx.webkit:webkit:1.13.0")
 
   implementation("com.google.android.gms:play-services-base:18.5.0")
   implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.code.gson:gson:2.11.0")
-  implementation("com.google.api-client:google-api-client-android:2.7.1")
+  implementation("com.google.code.gson:gson:2.12.1")
+  implementation("com.google.api-client:google-api-client-android:2.7.2")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
@@ -477,7 +478,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.17.1") {
+    implementation("commons-codec:commons-codec:1.18.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }

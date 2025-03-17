@@ -6,8 +6,15 @@
 package com.flowcrypt.email.extensions.com.google.api.services.gmail.model
 
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.google.api.services.gmail.model.Message
+import com.google.api.services.gmail.model.MessagePartHeader
+import jakarta.mail.internet.InternetAddress
 
 /**
  * @author Denys Bondarenko
@@ -33,11 +40,63 @@ fun Message.hasPgp(): Boolean {
       && "multipart/encrypted" == baseContentType?.baseType?.lowercase()
       && baseContentType.getParameter("protocol")?.lowercase() == "application/pgp-encrypted"
 
-  val hasEncryptedParts = payload?.parts?.any { it.hasPgp() } ?: false
+  val hasEncryptedParts = payload?.parts?.any { it.hasPgp() } == true
 
   return EmailUtil.hasEncryptedData(snippet)
       || EmailUtil.hasSignedData(snippet)
       || isOpenPGPMimeSigned
       || isOpenPGPMimeEncrypted
       || hasEncryptedParts
+}
+
+fun Message.getRecipients(vararg recipientType: String): List<InternetAddress> {
+  return payload?.headers?.firstOrNull { header ->
+    header.name in recipientType
+  }?.value?.asInternetAddresses()?.toList() ?: emptyList()
+}
+
+fun Message.getSubject(): String? {
+  return payload?.headers?.firstOrNull { header ->
+    header.name == "Subject"
+  }?.value
+}
+
+fun Message.getInReplyTo(): String? {
+  return payload?.headers?.firstOrNull { header ->
+    header.name == JavaEmailConstants.HEADER_IN_REPLY_TO
+  }?.value
+}
+
+fun Message.getMessageId(): String? {
+  return payload?.headers?.firstOrNull { header ->
+    header.name == JavaEmailConstants.HEADER_MESSAGE_ID
+  }?.value
+}
+
+fun Message.isDraft(): Boolean {
+  return labelIds?.contains(GmailApiHelper.LABEL_DRAFT) == true
+}
+
+fun Message.hasAttachments(): Boolean {
+  return payload?.hasAttachments() == true
+}
+
+fun Message.filterHeadersWithName(name: String): List<MessagePartHeader> {
+  return payload?.headers?.filter { header -> header.name == name } ?: emptyList()
+}
+
+fun Message.containsLabel(localFolder: LocalFolder?): Boolean? {
+  return labelIds?.contains(localFolder?.fullName)
+}
+
+fun Message.isTrashed(): Boolean? {
+  return labelIds.contains(GmailApiHelper.LABEL_TRASH)
+}
+
+fun Message.canBeUsed(localFolder: LocalFolder?): Boolean {
+  return if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+    isTrashed() == true
+  } else {
+    isTrashed()?.not() != false
+  }
 }

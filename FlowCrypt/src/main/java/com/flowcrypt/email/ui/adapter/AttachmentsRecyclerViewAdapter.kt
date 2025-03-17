@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.adapter
@@ -76,10 +76,6 @@ class AttachmentsRecyclerViewAdapter(
         attachmentActionListener.onDeleteClick(attachmentInfo)
       }
 
-      itemView.setOnClickListener {
-        attachmentActionListener.onAttachmentClick(attachmentInfo)
-      }
-
       val value = progressMap[attachmentInfo.uniqueStringId]
       if (value?.progressInPercentage in 0..99) {
         imageViewAttIcon.setImageResource(R.drawable.stat_sys_download_blue)
@@ -103,7 +99,6 @@ class AttachmentsRecyclerViewAdapter(
 
   interface AttachmentActionListener {
     fun onDownloadClick(attachmentInfo: AttachmentInfo)
-    fun onAttachmentClick(attachmentInfo: AttachmentInfo)
     fun onPreviewClick(attachmentInfo: AttachmentInfo)
     fun onDeleteClick(attachmentInfo: AttachmentInfo)
   }

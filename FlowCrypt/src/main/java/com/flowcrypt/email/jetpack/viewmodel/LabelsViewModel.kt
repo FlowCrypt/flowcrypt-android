@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import kotlinx.coroutines.launch
@@ -32,11 +31,9 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
 
   val foldersManagerLiveData: LiveData<FoldersManager> = labelsLiveData.switchMap {
     liveData {
-      val foldersManager = activeAccountLiveData.value?.let { account ->
-        FoldersManager.build(account, it)
-      } ?: FoldersManager(AccountEntity(""))
-
-      emit(foldersManager)
+      activeAccountLiveData.value?.let { account ->
+        emit(FoldersManager.build(account, it))
+      }
     }
   }
 

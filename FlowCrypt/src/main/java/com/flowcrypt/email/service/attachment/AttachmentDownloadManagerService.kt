@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service.attachment
@@ -10,8 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Binder
-import android.os.Build
-import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
@@ -21,13 +19,9 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.provider.MediaStore
 import android.text.TextUtils
-import android.webkit.MimeTypeMap
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.core.content.FileProvider
 import androidx.lifecycle.LifecycleService
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -36,16 +30,15 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
+import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import com.flowcrypt.email.extensions.kotlin.toHex
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
-import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
-import org.eclipse.angus.mail.imap.IMAPFolder
 import jakarta.mail.Folder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +49,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -510,9 +504,12 @@ class AttachmentDownloadManagerService : LifecycleService() {
             FileUtils.copyInputStreamToFile(inputStream, attTempFile)
             attTempFile = decryptFileIfNeeded(context, attTempFile)
             if (!Thread.currentThread().isInterrupted) {
-              val uri = storeFileToSharedFolder(context, attTempFile)
+              val uri = storeFileUsingScopedStorage(context, attTempFile)
               listener?.onAttDownloaded(
-                attInfo = att.copy(name = finalFileName),
+                attInfo = att.copy(
+                  name = finalFileName,
+                  type = finalFileName.getPossibleAndroidMimeType() ?: att.type
+                ),
                 uri = uri,
                 useContentApp = account.isHandlingAttachmentRestricted()
               )
@@ -529,7 +526,7 @@ class AttachmentDownloadManagerService : LifecycleService() {
                 context = context,
                 accountEntity = account,
                 msgId = att.uid.toHex(),
-                format = GmailApiHelper.MESSAGE_RESPONSE_FORMAT_FULL
+                format = GmailApiHelper.RESPONSE_FORMAT_FULL
               )
               val attPart = GmailApiHelper.getAttPartByPath(msg.payload, neededPath = att.path)
                 ?: throw IllegalStateException(context.getString(R.string.attachment_not_found))
@@ -597,9 +594,14 @@ class AttachmentDownloadManagerService : LifecycleService() {
         if (Thread.currentThread().isInterrupted) {
           listener?.onCanceled(att.copy(name = finalFileName))
         } else {
-          val uri = storeFileToSharedFolder(context, attTempFile)
+          val uri = storeFileUsingScopedStorage(context, attTempFile)
           listener?.onAttDownloaded(
-            attInfo = att.copy(name = finalFileName),
+            attInfo = att.copy(
+              name = finalFileName,
+              type = if (att.isPossiblyEncrypted) {
+                finalFileName.getPossibleAndroidMimeType() ?: att.type
+              } else att.type
+            ),
             uri = uri,
             useContentApp = useContentApp
           )
@@ -607,19 +609,9 @@ class AttachmentDownloadManagerService : LifecycleService() {
       }
     }
 
-    private fun storeFileToSharedFolder(context: Context, attFile: File): Uri {
-      return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        storeFileUsingScopedStorage(context, attFile)
-      } else {
-        storeLegacy(attFile, context)
-      }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.Q)
     private fun storeFileUsingScopedStorage(context: Context, attFile: File): Uri {
       val resolver = context.contentResolver
-      val fileExtension = FilenameUtils.getExtension(finalFileName).lowercase()
-      val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+      val mimeType = finalFileName.getPossibleAndroidMimeType()
 
       val contentValues = ContentValues().apply {
         put(MediaStore.DownloadColumns.DISPLAY_NAME, finalFileName)
@@ -631,23 +623,6 @@ class AttachmentDownloadManagerService : LifecycleService() {
       val fileUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
 
       requireNotNull(fileUri)
-
-      //we should check maybe a file is already exist. Then we will use the file name from the system
-      val cursor =
-        resolver.query(fileUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
-      cursor?.let {
-        if (it.moveToFirst()) {
-          val nameIndex = it.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
-          if (nameIndex != -1) {
-            val nameFromSystem = it.getString(nameIndex)
-            if (nameFromSystem != finalFileName) {
-              finalFileName = nameFromSystem
-            }
-          }
-        }
-      }
-      cursor?.close()
-
       val srcInputStream = attFile.inputStream()
       val destOutputStream = resolver.openOutputStream(fileUri)
         ?: throw IllegalArgumentException("provided URI could not be opened")
@@ -660,29 +635,24 @@ class AttachmentDownloadManagerService : LifecycleService() {
         put(MediaStore.Downloads.IS_PENDING, 0)
       }, null, null)
 
+      resolver.query(
+        fileUri,
+        arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME),
+        null,
+        null,
+        null
+      )
+        ?.use { cursor ->
+          //we should check maybe a file is already exist.
+          //Then we will use the file name from the system.
+          if (cursor.moveToFirst()) {
+            finalFileName = cursor.getString(
+              cursor.getColumnIndexOrThrow(MediaStore.DownloadColumns.DISPLAY_NAME)
+            )
+          }
+        }
+
       return fileUri
-    }
-
-    /**
-     * We use this method to support saving files on Android 9 and less which uses an old approach.
-     */
-    private fun storeLegacy(attFile: File, context: Context): Uri {
-      val fileName = finalFileName
-      val fileDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-      var sharedFile = File(fileDir, fileName)
-      sharedFile = if (sharedFile.exists()) {
-        FileAndDirectoryUtils.createFileWithIncreasedIndex(fileDir, fileName)
-      } else {
-        sharedFile
-      }
-
-      finalFileName = sharedFile.name
-      val srcInputStream = attFile.inputStream()
-      val destOutputStream = FileUtils.openOutputStream(sharedFile)
-      srcInputStream.use { srcStream ->
-        destOutputStream.use { outStream -> srcStream.copyTo(outStream) }
-      }
-      return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
     }
 
     fun setListener(listener: OnDownloadAttachmentListener) {

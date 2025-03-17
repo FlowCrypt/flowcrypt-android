@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
@@ -38,6 +38,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import jakarta.mail.internet.InternetAddress
 import org.hamcrest.Matchers.allOf
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -132,7 +133,10 @@ abstract class BaseComposeScreenTest : BaseTest() {
       )
   }
 
-  protected fun addAttachment(att: File) {
+  protected fun addAttachment(
+    att: File,
+    waitingTimeoutInMilliseconds: Long = TimeUnit.SECONDS.toMillis(10)
+  ) {
     val intent = TestGeneralUtil.genIntentWithPersistedReadPermissionForFile(att)
     intending(
       allOf(
@@ -143,6 +147,7 @@ abstract class BaseComposeScreenTest : BaseTest() {
     onView(withId(R.id.menuActionAttachFile))
       .check(matches(isDisplayed()))
       .perform(click())
+    waitForObjectWithText(att.name, waitingTimeoutInMilliseconds)
   }
 
   companion object{

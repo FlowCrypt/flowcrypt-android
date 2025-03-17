@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
@@ -24,6 +24,8 @@
     <include app:graph="@navigation/decrypt_attachment_dialog_graph" />
     <include app:graph="@navigation/change_gmail_labels_for_single_message_dialog_graph" />
     <include app:graph="@navigation/prepare_downloaded_attachments_for_forwarding_dialog_graph" />
+    <include app:graph="@navigation/process_message_dialog_graph" />
+    <include app:graph="@navigation/delete_draft_dialog_graph" />
 
     <fragment
         android:id="@+id/mainSignInFragment"
@@ -143,6 +145,9 @@
         <action
             android:id="@+id/action_mainSettingsFragment_to_signatureSettingsFragment"
             app:destination="@id/signatureSettingsFragment" />
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_generalSettingsFragment"
+            app:destination="@id/generalSettingsFragment" />
     </fragment>
 
     <fragment
@@ -277,6 +282,11 @@
         tools:layout="@layout/fragment_legal" />
 
     <fragment
+        android:id="@+id/generalSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.preferences.GeneralSettingsFragment"
+        android:label="@string/general" />
+
+    <fragment
         android:id="@+id/serverSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.ServerSettingsFragment"
         android:label="@string/server_settings"
@@ -311,6 +321,18 @@
     </fragment>
 
     <fragment
+        android:id="@+id/viewPagerThreadDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ViewPagerThreadDetailsFragment"
+        tools:layout="@layout/fragment_message_details">
+        <argument
+            android:name="messageEntityId"
+            app:argType="long" />
+        <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+    </fragment>
+
+    <fragment
         android:id="@+id/messageDetailsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
         tools:layout="@layout/fragment_message_details">
@@ -324,6 +346,25 @@
             android:name="isViewPagerMode"
             app:argType="boolean"
             android:defaultValue="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/threadDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ThreadDetailsFragment"
+        tools:layout="@layout/fragment_new_message_details">
+        <argument
+            android:name="messageEntityId"
+            app:argType="long" />
+        <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+        <argument
+            android:name="isViewPagerMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <action
+            android:id="@+id/action_threadDetailsFragment_to_viewPagerMessageDetailsFragment"
+            app:destination="@id/viewPagerMessageDetailsFragment" />
     </fragment>
 
     <fragment
@@ -407,6 +448,9 @@
         <action
             android:id="@+id/action_messagesListFragment_to_viewPagerMessageDetailsFragment"
             app:destination="@id/viewPagerMessageDetailsFragment" />
+        <action
+            android:id="@+id/action_messagesListFragment_to_viewPagerThreadDetailsFragment"
+            app:destination="@id/viewPagerThreadDetailsFragment" />
     </fragment>
 
     <fragment

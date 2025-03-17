@@ -88,7 +88,7 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
   @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on the encrypted message
     onView(withId(R.id.recyclerViewMsgs))
@@ -102,7 +102,7 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
     waitForObjectWithText(getResString(R.string.forward_encrypted), TimeUnit.SECONDS.toMillis(10))
 
     //click on forward
-    openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_ENCRYPTED)
+    openReplyScreen(R.id.forwardButton, SUBJECT_EXISTING_ENCRYPTED)
 
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
@@ -133,20 +133,21 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
       val encryptedMessagePart = multipart.getBodyPart(0)
       val expectedText = outgoingMessageConfiguration.message + IncomingMessageInfo(
         msgEntity = MessageEntity(
-          email = "",
+          account = "",
+          accountType = "",
           folder = "",
           uid = 0,
-          fromAddress = DEFAULT_FROM_RECIPIENT,
+          fromAddresses = DEFAULT_FROM_RECIPIENT,
           subject = SUBJECT_EXISTING_ENCRYPTED,
           receivedDate = DATE_EXISTING_ENCRYPTED,
-          toAddress = InternetAddress.toString(
+          toAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_TO_RECIPIENT
               )
             )
           ),
-          ccAddress = InternetAddress.toString(
+          ccAddresses = InternetAddress.toString(
             arrayOf(
               InternetAddress(
                 EXISTING_MESSAGE_CC_RECIPIENT
@@ -167,7 +168,7 @@ class EncryptedForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFl
           hasSignedParts = false,
           hasMixedSignatures = false,
           isPartialSigned = false,
-          keyIdOfSigningKeys = emptyList(),
+          keyIdOfSigningKeys = emptySet(),
           hasBadSignatures = false
         )
       ).toInitializationData(

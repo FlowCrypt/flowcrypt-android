@@ -36,7 +36,6 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.security.pgp.PgpKey
-import com.flowcrypt.email.ui.DraftsGmailAPITestCorrectSendingFlowTest
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.google.api.client.json.gson.GsonFactory
@@ -122,8 +121,8 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
       request.method == "PUT" && request.path == LOCATION_URL -> {
         val message = com.google.api.services.gmail.model.Message().apply {
           factory = GsonFactory.getDefaultInstance()
-          id = DraftsGmailAPITestCorrectSendingFlowTest.MESSAGE_ID_SENT
-          threadId = DraftsGmailAPITestCorrectSendingFlowTest.THREAD_ID_SENT
+          id = MESSAGE_ID_SENT
+          threadId = THREAD_ID_SENT
           labelIds = listOf(JavaEmailConstants.FOLDER_SENT)
           raw = request.body.inputStream().readText()
         }
@@ -499,9 +498,7 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
       return
     }
 
-    if (outgoingMessageConfiguration.timeoutBeforeMovingToComposeInMilliseconds > 0) {
-      Thread.sleep(outgoingMessageConfiguration.timeoutBeforeMovingToComposeInMilliseconds)
-    }
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //open the compose screen
     onView(withId(R.id.floatActionButtonCompose))
