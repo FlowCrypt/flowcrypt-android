@@ -309,7 +309,7 @@ class ThreadDetailsViewModel(
           MessageState.PENDING_MARK_UNREAD -> {
             messageEntity.copy(
               state = newMsgState.value,
-              flags = messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+              flags = messageEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
             )
           }
 
@@ -479,7 +479,7 @@ class ThreadDetailsViewModel(
             candidatesToBeInserted.add(entity)
           } else if (existingVersion.copy(id = null) != entity) {
             candidatesToBeUpdated.add(entity.copy(id = existingVersion.id))
-            if (existingVersion.flags != entity.flags) {
+            if (existingVersion.flagsValueSet != entity.flagsValueSet) {
               MsgsCacheManager.removeMessage(existingVersion.id.toString())
             }
           }
@@ -527,7 +527,7 @@ class ThreadDetailsViewModel(
             it.id == messageItemBasedOnDataFromServer.id
           }?.let { item ->
             val existingMessageItem = item as Message
-            if (existingMessageItem.messageEntity.flags != messageEntity.flags) {
+            if (existingMessageItem.messageEntity.flagsValueSet != messageEntity.flagsValueSet) {
               messageItemBasedOnDataFromServer
             } else {
               existingMessageItem.copy(messageEntity = messageEntity)
@@ -649,10 +649,10 @@ class ThreadDetailsViewModel(
                   if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
                     messageEntity.flags
                   } else {
-                    messageEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+                    messageEntity.flags?.plus(" ${MessageFlag.SEEN.value}")
                   }
                 } else {
-                  messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+                  messageEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
                 }
               )
             )

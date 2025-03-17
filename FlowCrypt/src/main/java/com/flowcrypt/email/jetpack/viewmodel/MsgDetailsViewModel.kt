@@ -466,7 +466,7 @@ class MsgDetailsViewModel(
           MessageState.PENDING_MARK_UNREAD -> {
             msgEntity.copy(
               state = newMsgState.value,
-              flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+              flags = msgEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
             )
           }
 
@@ -531,7 +531,7 @@ class MsgDetailsViewModel(
   }
 
   fun getMessageActionAvailability(messageAction: MessageAction): Boolean {
-    return messageActionsAvailabilityStateFlow.value[messageAction] ?: false
+    return messageActionsAvailabilityStateFlow.value[messageAction] == true
   }
 
   private suspend fun reVerifySignaturesInternal(): Result<VerificationResult> =
@@ -839,10 +839,10 @@ class MsgDetailsViewModel(
           if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
             msgEntity.flags
           } else {
-            msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+            msgEntity.flags?.plus(" ${MessageFlag.SEEN.value}")
           }
         } else {
-          msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+          msgEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
         }
       )
     )

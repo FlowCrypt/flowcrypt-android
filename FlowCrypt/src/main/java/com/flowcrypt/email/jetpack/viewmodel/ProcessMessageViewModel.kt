@@ -26,6 +26,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.containsLabel
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isSent
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -290,7 +291,11 @@ class ProcessMessageViewModel(
           format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
 
-        if (!msgFullInfo.isDraft() && msgFullInfo.containsLabel(localFolder) == false) {
+        if (
+          !msgFullInfo.isDraft() &&
+          !msgFullInfo.isSent() &&
+          msgFullInfo.containsLabel(localFolder) == false
+        ) {
           throw MessageNotFoundException("Message doesn't contain label = ${localFolder.fullName}")
         }
 
@@ -375,10 +380,10 @@ class ProcessMessageViewModel(
           if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
             msgEntity.flags
           } else {
-            msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+            msgEntity.flags?.plus(" ${MessageFlag.SEEN.value}")
           }
         } else {
-          msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+          msgEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
         }
       )
     )

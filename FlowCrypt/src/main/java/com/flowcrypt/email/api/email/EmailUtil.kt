@@ -452,7 +452,10 @@ class EmailUtil {
       try {
         for (msg in msgs) {
           val flags = map[folder.getUID(msg)] ?: ""
-          if (!flags.equals(msg.flags.toString(), ignoreCase = true)) {
+          val existingFlags = flags.split(" ").map { it.uppercase() }.toSet()
+          val receivedFlags = msg.flags.toString().split(" ").map { it.uppercase() }.toSet()
+
+          if (existingFlags != receivedFlags) {
             updateCandidates.add(msg)
           }
         }
@@ -1171,7 +1174,7 @@ class EmailUtil {
           val attBodyPart = genBodyPartWithAtt(
             context = context,
             att = att,
-            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
+            shouldBeEncrypted = msgEntity.isEncrypted == true,
             publicKeys = publicKeys,
             secretKeys = secretKeys,
             ringProtector = ringProtector

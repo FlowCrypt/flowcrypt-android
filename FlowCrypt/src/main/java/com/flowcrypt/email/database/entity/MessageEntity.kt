@@ -148,11 +148,11 @@ data class MessageEntity(
 
   @IgnoredOnParcel
   @Ignore
-  val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
+  val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) == true
 
   @IgnoredOnParcel
   @Ignore
-  val isDraft: Boolean = flags?.contains(MessageFlag.DRAFT.value) ?: false
+  val isDraft: Boolean = flags?.contains(MessageFlag.DRAFT.value) == true
 
   @IgnoredOnParcel
   @Ignore
@@ -168,11 +168,15 @@ data class MessageEntity(
 
   @IgnoredOnParcel
   @Ignore
-  val isPasswordProtected = password?.isNotEmpty() ?: false
+  val isPasswordProtected = password?.isNotEmpty() == true
 
   @IgnoredOnParcel
   @Ignore
   val isGmailThread: Boolean = threadMessagesCount != null && threadMessagesCount > 0
+
+  @IgnoredOnParcel
+  @Ignore
+  val flagsValueSet = flags?.split(" ")?.filter { it.isNotEmpty() }?.map { it.uppercase() }?.toSet()
 
   /**
    * Generate a list of the all recipients.
@@ -473,6 +477,7 @@ data class MessageEntity(
       fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
       hasPgp = thread.hasPgpThings,
       flags = if (thread.hasUnreadMessages) {
+
         messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
       } else {
         if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
@@ -482,6 +487,10 @@ data class MessageEntity(
         }
       }
     )
+  }
+
+  fun flagsStringAfterRemoveSome(flagValue: String): String? {
+    return flags?.replace("(\\s)?$flagValue(\\s)?".toRegex(), "")
   }
 
   private fun prepareDateHeaderValue(context: Context): String {

@@ -60,7 +60,7 @@ abstract class BaseIdleWorker(context: Context, params: WorkerParameters) :
     accountEntity: AccountEntity, folderFullName: String
   ) = withContext(Dispatchers.IO) {
     val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, msgs)
-      .map { remoteFolder.getUID(it) to it.flags }.toMap()
+      .associate { remoteFolder.getUID(it) to it.flags }
     processUpdatedMsgs(accountEntity, folderFullName, updateCandidates)
   }
 
