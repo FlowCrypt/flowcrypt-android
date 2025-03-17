@@ -27,6 +27,8 @@ import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
 import com.flowcrypt.email.jetpack.viewmodel.ProcessMessageViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.util.exception.GmailAPIException
+import com.flowcrypt.email.util.exception.MessageNotFoundException
 
 /**
  * @author Denys Bondarenko
@@ -40,6 +42,7 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
       override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ProcessMessageViewModel(
           message = args.message,
+          localFolder = args.localFolder,
           skipAttachmentsRawData = args.attachmentId == null,
           application = requireActivity().application
         ) as T
@@ -118,8 +121,19 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
           }
 
           Result.Status.EXCEPTION -> {
-            showStatus(msg = it.exceptionMsg)
-            (dialog as? AlertDialog)?.getButton(AlertDialog.BUTTON_POSITIVE)?.visible()
+            when {
+              (it.exception is MessageNotFoundException)
+                  || (it.exception is GmailAPIException && it.exception.code == 404) -> {
+                (dialog as? AlertDialog)?.getButton(AlertDialog.BUTTON_NEGATIVE)?.text =
+                  getString(android.R.string.ok)
+                showStatus(msg = getString(R.string.message_not_found_please_reload_the_thread))
+              }
+
+              else -> {
+                showStatus(msg = it.exceptionMsg)
+                (dialog as? AlertDialog)?.getButton(AlertDialog.BUTTON_POSITIVE)?.visible()
+              }
+            }
           }
 
           else -> {}

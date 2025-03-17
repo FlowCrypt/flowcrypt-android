@@ -10,26 +10,29 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper.Companion.LABEL_DRAFT
 import com.flowcrypt.email.api.email.gmail.model.GmailThreadInfo
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
+import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.Thread
 import jakarta.mail.internet.InternetAddress
 
 /**
  * @author Denys Bondarenko
  */
-fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
+fun Thread.getUniqueRecipients(account: String, localFolder: LocalFolder?): List<InternetAddress> {
   return mutableListOf<InternetAddress>().apply {
-    if (messages.isNullOrEmpty()) {
-      return@apply
-    }
-
+    val filteredMessages = messages?.filter {
+      it.canBeUsed(localFolder)
+    }?.takeIf {
+      it.isNotEmpty()
+    } ?: return@apply
     val fromHeaderName = "From"
 
-    val filteredHeaders = if (messages.size > 1) {
+    val filteredHeaders = if (filteredMessages.size > 1) {
       //if we have more than one message in a conversation,
       //firstly we will try to filter only active recipients
-      messages.flatMap { message ->
+      filteredMessages.flatMap { message ->
         val listOfAcceptedHeaders = listOf(
           fromHeaderName,
           "To",
@@ -43,10 +46,10 @@ fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
         } else emptyList()
       }.ifEmpty {
         //otherwise we will use all recipients
-        messages.flatMap { it.filterHeadersWithName(fromHeaderName) }
+        filteredMessages.flatMap { it.filterHeadersWithName(fromHeaderName) }
       }
     } else {
-      messages.first().filterHeadersWithName(fromHeaderName)
+      filteredMessages.first().filterHeadersWithName(fromHeaderName)
     }
 
     val mapOfUniqueRecipients = mutableMapOf<String, InternetAddress>()
@@ -66,68 +69,81 @@ fun Thread.getUniqueRecipients(account: String): List<InternetAddress> {
   }
 }
 
-fun Thread.getUniqueLabelsSet(): Set<String> {
-  return messages?.flatMap { message ->
-    message.labelIds ?: emptyList()
+fun Thread.getUniqueLabelsSet(localFolder: LocalFolder?): Set<String> {
+  return messages?.filter {
+    it.canBeUsed(localFolder)
+  }?.flatMap {
+    it.labelIds ?: emptyList()
   }?.toSortedSet() ?: emptySet()
 }
 
-fun Thread.getDraftsCount(): Int {
-  return messages?.filter { it.labelIds.contains(LABEL_DRAFT) }?.size ?: 0
+fun Thread.getDraftsCount(localFolder: LocalFolder?): Int {
+  return messages?.filter {
+    it.canBeUsed(localFolder) && it.labelIds.contains(LABEL_DRAFT)
+  }?.size ?: 0
 }
 
-fun Thread.hasUnreadMessages(): Boolean {
-  return messages?.any { message ->
-    message.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) == true
-  } ?: false
+fun Thread.hasUnreadMessages(localFolder: LocalFolder?): Boolean {
+  return messages?.filter {
+    it.canBeUsed(localFolder)
+  }?.any {
+    it.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) == true
+  } == true
 }
 
-fun Thread.hasAttachments(): Boolean {
-  return messages?.any { message ->
-    message.hasAttachments()
-  } ?: false
+fun Thread.hasAttachments(localFolder: LocalFolder?): Boolean {
+  return messages?.filter { it.canBeUsed(localFolder) }?.any { it.hasAttachments() } == true
 }
 
-fun Thread.hasPgp(): Boolean {
-  return messages?.any { message ->
-    message.hasPgp()
-  } ?: false
+fun Thread.hasPgp(localFolder: LocalFolder?): Boolean {
+  return messages?.filter { it.canBeUsed(localFolder) }?.any { it.hasPgp() } == true
 }
 
-fun Thread.extractSubject(context: Context, receiverEmail: String): String {
-  return messages?.getOrNull(0)?.takeIf { message ->
+fun Thread.extractSubject(
+  context: Context,
+  receiverEmail: String,
+  localFolder: LocalFolder?
+): String {
+  val filteredMessages = messages?.filter { it.canBeUsed(localFolder) }
+
+  return filteredMessages?.getOrNull(0)?.takeIf { message ->
     (message.getRecipients("From").any { internetAddress ->
       internetAddress.address.equals(receiverEmail, true)
-    } || (messages?.size ?: 0) == 1) && !message.isDraft()
+    } || (filteredMessages.size) == 1) && !message.isDraft()
   }?.getSubject()
-    ?: messages.firstOrNull { message ->
+    ?: filteredMessages?.firstOrNull { message ->
       message.getRecipients("From").any { internetAddress ->
         internetAddress.address.equals(receiverEmail, true)
       } && !message.isDraft()
     }?.getSubject()
-    ?: messages?.getOrNull(0)?.getSubject()
+    ?: filteredMessages?.getOrNull(0)?.getSubject()
     ?: context.getString(R.string.no_subject)
+}
+
+fun Thread.filteredMessages(localFolder: LocalFolder?): List<Message> {
+  return messages?.filter { it.canBeUsed(localFolder) } ?: emptyList()
 }
 
 fun Thread.toThreadInfo(
   context: Context,
-  accountEntity: AccountEntity
+  accountEntity: AccountEntity,
+  localFolder: LocalFolder? = null
 ): GmailThreadInfo {
   val receiverEmail = accountEntity.email
+  val lastMessage = messages?.lastOrNull {
+    !it.labelIds.contains(LABEL_DRAFT) && it.canBeUsed(localFolder)
+  } ?: messages?.first()
   val gmailThreadInfo = GmailThreadInfo(
     id = id,
-    lastMessage = requireNotNull(
-      messages?.lastOrNull {
-        !it.labelIds.contains(LABEL_DRAFT)
-      } ?: messages.first()),
-    messagesCount = messages?.size ?: 0,
-    draftsCount = getDraftsCount(),
-    recipients = getUniqueRecipients(receiverEmail),
-    subject = extractSubject(context, receiverEmail),
-    labels = getUniqueLabelsSet(),
-    hasAttachments = hasAttachments(),
-    hasPgpThings = hasPgp(),
-    hasUnreadMessages = hasUnreadMessages()
+    lastMessage = requireNotNull(lastMessage),
+    messagesCount = messages?.filter { it.canBeUsed(localFolder) }?.size ?: 0,
+    draftsCount = getDraftsCount(localFolder),
+    recipients = getUniqueRecipients(receiverEmail, localFolder),
+    subject = extractSubject(context, receiverEmail, localFolder),
+    labels = getUniqueLabelsSet(localFolder),
+    hasAttachments = hasAttachments(localFolder),
+    hasPgpThings = hasPgp(localFolder),
+    hasUnreadMessages = hasUnreadMessages(localFolder)
   )
   return gmailThreadInfo
 }

@@ -104,6 +104,17 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
       hasPgp = true
     )
 
+    /*
+    test thread with 1 standard + 1 encrypted + 1 deleted messages
+    the app should show only 2 messages when we open INBOX(deleted message should be skipped)
+     */
+    checkThreadRowDetails(
+      subject = SUBJECT_MIXED_MESSAGES,
+      senderPattern = "From (2)",
+      hasAttachments = true,
+      hasPgp = true
+    )
+
     //test thread with 2 standard messages without attachments
     checkThreadRowDetails(
       subject = SUBJECT_NO_ATTACHMENTS,

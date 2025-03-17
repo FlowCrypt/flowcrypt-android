@@ -169,7 +169,7 @@ class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
             hasSignedParts = true,
             hasMixedSignatures = false,
             isPartialSigned = false,
-            keyIdOfSigningKeys = emptyList(),
+            keyIdOfSigningKeys = emptySet(),
             hasBadSignatures = false
           )
         )

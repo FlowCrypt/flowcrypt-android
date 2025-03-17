@@ -32,7 +32,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
@@ -121,8 +120,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     get() = threadDetailsViewModel.messagesInThreadFlow.value.status == Result.Status.SUCCESS
   private val threadMessageEntity: MessageEntity?
     get() = threadDetailsViewModel.threadMessageEntityFlow.value
-  private val localFolder: LocalFolder?
-    get() = threadDetailsViewModel.localFolderFlow.value
 
   private val args by navArgs<ThreadDetailsFragmentArgs>()
   private var isActive: Boolean = false
@@ -340,7 +337,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           R.id.menuActionDeleteMessage -> {
             val messageEntity = threadMessageEntity ?: return true
             if (!messageEntity.isOutboxMsg) {
-              if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+              if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
                   requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
                   requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
@@ -514,12 +511,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
 
     launchAndRepeatWithViewLifecycle {
-      threadDetailsViewModel.localFolderFlow.collect {
-        //do nothing. Just subscribe for updates to have the latest value async
-      }
-    }
-
-    launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.allOutboxMessagesFlow.collect { messageEntities ->
         val threadId =
           threadDetailsViewModel.threadMessageEntityFlow.value?.threadId ?: return@collect
@@ -645,7 +636,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       val requestCode = bundle.getInt(ProcessMessageDialogFragment.KEY_REQUEST_CODE)
       if (message != null) {
         val hasUnverifiedSignatures =
-          message.incomingMessageInfo?.verificationResult?.hasUnverifiedSignatures ?: false
+          message.incomingMessageInfo?.verificationResult?.hasUnverifiedSignatures == true
         val hasActiveSignatureVerification = if (hasUnverifiedSignatures) {
           val messageFromAddresses = message.incomingMessageInfo?.getFrom()?.map {
             it.address.lowercase()
@@ -1286,6 +1277,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
           requestCode = requestCode,
           message = message,
+          localFolder = args.localFolder,
           attachmentId = attachmentId
         ).toBundle()
       }

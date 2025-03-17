@@ -1,12 +1,13 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.util
 
 import android.net.Uri
 import android.text.TextUtils
+import androidx.core.net.toUri
 import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.InitializationData
 
@@ -47,7 +48,7 @@ class RFC6068Parser {
         end = schemaSpecific.length
       }
 
-      val newUri = Uri.parse("foo://bar?" + uri.encodedQuery)
+      val newUri = "foo://bar?${uri.encodedQuery}".toUri()
       val params = CaseInsensitiveParamWrapper(newUri)
 
       // Extract the recipient's email address from the mailto URI if there's one.

@@ -24,6 +24,8 @@ import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.containsLabel
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -31,6 +33,7 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.util.cache.DiskLruCache
+import com.flowcrypt.email.util.exception.MessageNotFoundException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -48,6 +51,7 @@ import kotlinx.coroutines.withContext
  */
 class ProcessMessageViewModel(
   private val message: MessagesInThreadListAdapter.Message,
+  private val localFolder: LocalFolder,
   private val skipAttachmentsRawData: Boolean,
   application: Application
 ) : AccountViewModel(application) {
@@ -285,6 +289,11 @@ class ProcessMessageViewModel(
           fields = null,
           format = GmailApiHelper.RESPONSE_FORMAT_FULL
         )
+
+        if (!msgFullInfo.isDraft() && msgFullInfo.containsLabel(localFolder) == false) {
+          throw MessageNotFoundException("Message doesn't contain label = ${localFolder.fullName}")
+        }
+
         val originalMsg = GmaiAPIMimeMessage(
           message = msgFullInfo,
           context = getApplication(),

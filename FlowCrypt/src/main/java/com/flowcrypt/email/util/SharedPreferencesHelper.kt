@@ -1,13 +1,13 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-
 import androidx.preference.PreferenceManager
 
 /**
@@ -31,6 +31,7 @@ class SharedPreferencesHelper {
       return sharedPreferences.getBoolean(key, defaultValue)
     }
 
+    @SuppressLint("UseKtx")
     fun setBoolean(sharedPreferences: SharedPreferences, key: String, value: Boolean): Boolean {
       val editor = sharedPreferences.edit()
       editor.putBoolean(key, value)
@@ -49,12 +50,7 @@ class SharedPreferencesHelper {
       return sharedPreferences.getLong(key, defaultValue)
     }
 
-    fun setLong(sharedPreferences: SharedPreferences, key: String, value: Long): Boolean {
-      val editor = sharedPreferences.edit()
-      editor.putLong(key, value)
-      return editor.commit()
-    }
-
+    @SuppressLint("UseKtx")
     fun setString(sharedPreferences: SharedPreferences, key: String, value: String): Boolean {
       val editor = sharedPreferences.edit()
       editor.putString(key, value)
@@ -65,6 +61,7 @@ class SharedPreferencesHelper {
       return sharedPreferences.getInt(key, defaultValue)
     }
 
+    @SuppressLint("UseKtx")
     fun setInt(sharedPreferences: SharedPreferences, key: String, value: Int): Boolean {
       val editor = sharedPreferences.edit()
       editor.putInt(key, value)
@@ -77,6 +74,7 @@ class SharedPreferencesHelper {
      * @param context Interface to global information about an application environment.
      * @return Returns true if the new values were successfully written to persistent storage.
      */
+    @SuppressLint("UseKtx")
     fun clear(context: Context): Boolean {
       return PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit()
     }

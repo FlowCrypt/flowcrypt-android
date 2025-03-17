@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.retrofit.response.model
@@ -83,7 +83,10 @@ interface MsgBlock : Parcelable {
     ENCRYPTED_SUBJECT,
 
     @SerializedName("securityWarning")
-    SECURITY_WARNING;
+    SECURITY_WARNING,
+
+    @SerializedName("alternative")
+    ALTERNATIVE;
 
     fun isContentBlockType(): Boolean = CONTENT_BLOCK_TYPES.contains(this)
 
@@ -105,7 +108,8 @@ interface MsgBlock : Parcelable {
         DECRYPTED_HTML,
         SIGNED_CONTENT,
         VERIFIED_MSG,
-        DECRYPTED_AND_OR_SIGNED_CONTENT
+        DECRYPTED_AND_OR_SIGNED_CONTENT,
+        ALTERNATIVE
       )
 
       val DECRYPTED_CONTENT_BLOCK_TYPES = setOf(
