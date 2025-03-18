@@ -457,7 +457,7 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-gson:2.11.0")
   implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
-  implementation("com.squareup.okio:okio:3.9.1")
+  implementation("com.squareup.okio:okio:3.10.2")
   implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
@@ -466,7 +466,7 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.18.3")
+  implementation("org.jsoup:jsoup:1.19.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
   implementation("org.pgpainless:pgpainless-core:1.7.2")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
