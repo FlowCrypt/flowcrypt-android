@@ -1297,9 +1297,16 @@ class EmailUtil {
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
     ): BodyPart {
+      val finalText = (info.msg + info.quotedTextForReply).takeIf {
+        info.messageType in arrayOf(
+          MessageType.REPLY,
+          MessageType.REPLY_ALL
+        ) && !info.quotedTextForReply.isNullOrEmpty()
+      } ?: info.msg ?: ""
+
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
         val encryptedContent = PgpEncryptAndOrSign.encryptAndOrSignMsg(
-          msg = info.msg ?: "",
+          msg = finalText,
           pubKeys = pubKeys ?: emptyList(),
           protectedPubKeys = protectedPubKeys,
           prvKeys = prvKeys,
@@ -1322,7 +1329,7 @@ class EmailUtil {
         }
       } else {
         MimeBodyPart().apply {
-          setText(info.msg ?: "")
+          setText(finalText)
         }
       }
     }

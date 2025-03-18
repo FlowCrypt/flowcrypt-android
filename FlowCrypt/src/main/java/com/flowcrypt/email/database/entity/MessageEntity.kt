@@ -477,13 +477,12 @@ data class MessageEntity(
       fromAddresses = InternetAddress.toString(thread.recipients.toTypedArray()),
       hasPgp = thread.hasPgpThings,
       flags = if (thread.hasUnreadMessages) {
-
-        messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+        messageEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
       } else {
         if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
           messageEntity.flags
         } else {
-          messageEntity.flags.plus("${MessageFlag.SEEN.value} ")
+          messageEntity.flags.plus(" ${MessageFlag.SEEN.value}")
         }
       }
     )

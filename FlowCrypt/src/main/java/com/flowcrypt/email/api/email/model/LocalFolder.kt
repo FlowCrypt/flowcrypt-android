@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.model
@@ -18,7 +18,7 @@ import kotlinx.parcelize.Parcelize
  * @author Denys Bondarenko
  */
 @Parcelize
-data class LocalFolder constructor(
+data class LocalFolder(
   val account: String,
   val fullName: String,
   var folderAlias: String? = null,
@@ -51,6 +51,9 @@ data class LocalFolder constructor(
 
   @IgnoredOnParcel
   val isDrafts: Boolean = FoldersManager.FolderType.DRAFTS == getFolderType()
+
+  @IgnoredOnParcel
+  val isTrash: Boolean = FoldersManager.FolderType.TRASH == getFolderType()
 
   fun getFolderType(): FoldersManager.FolderType? {
     return FoldersManager.getFolderType(this)

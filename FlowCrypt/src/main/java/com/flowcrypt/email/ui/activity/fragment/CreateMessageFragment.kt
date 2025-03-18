@@ -1076,19 +1076,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       CreateMessageFragmentDirections
         .actionCreateMessageFragmentToCreateOutgoingMessageDialogFragment(
           requestKey = REQUEST_KEY_CREATE_OUTGOING_MESSAGE,
-          outgoingMessageInfo = outgoingMessageInfo.copy(
-            msg = if (outgoingMessageInfo.quotedTextForReply?.isNotEmpty() == true &&
-              args.messageType in arrayOf(
-                MessageType.REPLY,
-                MessageType.REPLY_ALL
-              )
-            ) {
-              outgoingMessageInfo.msg + EmailUtil.genReplyContent(args.incomingMessageInfo)
-            } else {
-              outgoingMessageInfo.msg
-            },
-            password = usePasswordIfNeeded(),
-          )
+          outgoingMessageInfo = outgoingMessageInfo.copy(password = usePasswordIfNeeded())
         )
     )
   }
