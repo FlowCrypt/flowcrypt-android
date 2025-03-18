@@ -342,6 +342,6 @@ class DraftViewModel(
   )
 
   companion object {
-    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)
+    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(30)
   }
 }

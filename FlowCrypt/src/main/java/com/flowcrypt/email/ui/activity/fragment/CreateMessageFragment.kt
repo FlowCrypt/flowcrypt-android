@@ -318,11 +318,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
         messageType = args.messageType,
-        replyToMessageEntityId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
-          null
-        } else {
-          args.incomingMessageInfo?.msgEntity?.id
-        },
+        replyToMessageEntityId = args.incomingMessageInfo?.msgEntity?.id,
         quotedTextForReply = EmailUtil.genReplyContent(args.incomingMessageInfo).takeIf {
           args.messageType in arrayOf(
             MessageType.REPLY,
