@@ -93,6 +93,10 @@ fun Message.isTrashed(): Boolean? {
   return labelIds.contains(GmailApiHelper.LABEL_TRASH)
 }
 
+fun Message.isSent(): Boolean {
+  return labelIds.contains(GmailApiHelper.LABEL_SENT) == true
+}
+
 fun Message.canBeUsed(localFolder: LocalFolder?): Boolean {
   return if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
     isTrashed() == true
