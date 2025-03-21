@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.notifications
@@ -10,8 +10,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
@@ -43,7 +43,7 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
       } else {
         Intent(
           Intent.ACTION_VIEW,
-          Uri.parse("flowcrypt://email.flowcrypt.com/settings/security")
+          "flowcrypt://email.flowcrypt.com/settings/security".toUri()
         )
       }
 

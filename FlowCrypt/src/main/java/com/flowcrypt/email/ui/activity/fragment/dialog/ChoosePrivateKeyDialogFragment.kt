@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -12,15 +12,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
+import androidx.core.util.size
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentChoosePrivateKeyBinding
-import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -116,7 +117,7 @@ class ChoosePrivateKeyDialogFragment : BaseDialogFragment(), ListProgressBehavio
     val checkedItemPositions = binding?.listViewKeys?.checkedItemPositions
     val pgpKeyDetailsList = privateKeysViewModel.parseKeysResultLiveData.value?.data ?: emptyList()
     if (checkedItemPositions != null) {
-      for (i in 0 until checkedItemPositions.size()) {
+      for (i in 0 until checkedItemPositions.size) {
         val key = checkedItemPositions.keyAt(i)
         if (checkedItemPositions.get(key)) {
           selectedKeys.add(pgpKeyDetailsList[key])

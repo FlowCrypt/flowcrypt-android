@@ -452,7 +452,10 @@ class EmailUtil {
       try {
         for (msg in msgs) {
           val flags = map[folder.getUID(msg)] ?: ""
-          if (!flags.equals(msg.flags.toString(), ignoreCase = true)) {
+          val existingFlags = flags.split(" ").map { it.uppercase() }.toSet()
+          val receivedFlags = msg.flags.toString().split(" ").map { it.uppercase() }.toSet()
+
+          if (existingFlags != receivedFlags) {
             updateCandidates.add(msg)
           }
         }
@@ -694,7 +697,21 @@ class EmailUtil {
       }
 
       return@withContext when (outgoingMsgInfo.messageType) {
-        MessageType.NEW, MessageType.DRAFT -> {
+        MessageType.DRAFT -> {
+          prepareReplyFromDraft(
+            context = context,
+            accountEntity = accountEntity,
+            session = session,
+            outgoingMsgInfo = outgoingMsgInfo,
+            pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
+            prvKeys = prvKeys,
+            protector = ringProtector,
+            hideArmorMeta = hideArmorMeta
+          )
+        }
+
+        MessageType.NEW -> {
           prepareNewMsg(
             session = session,
             info = outgoingMsgInfo,
@@ -1033,6 +1050,42 @@ class EmailUtil {
       return@withContext msg
     }
 
+    suspend fun prepareReplyFromDraft(
+      context: Context,
+      accountEntity: AccountEntity,
+      session: Session,
+      outgoingMsgInfo: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
+      protectedPubKeys: List<String>? = null,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
+    ): MimeMessage = withContext(Dispatchers.IO) {
+      return@withContext prepareNewMsg(
+        session = session,
+        info = outgoingMsgInfo,
+        pubKeys = pubKeys,
+        protectedPubKeys = protectedPubKeys,
+        prvKeys = prvKeys,
+        protector = protector,
+        hideArmorMeta = hideArmorMeta
+      ).apply {
+        //we need to restore 'References' and 'In-Reply-To' headers to support correct conversation
+        val replyToMimeMessage =
+          getReplyToMimeMessage(context, accountEntity, session, outgoingMsgInfo)
+
+        replyToMimeMessage.getHeader(JavaEmailConstants.HEADER_REFERENCES)?.firstOrNull()
+          ?.let { references ->
+            setHeader(JavaEmailConstants.HEADER_REFERENCES, references)
+          }
+
+        replyToMimeMessage.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO)?.firstOrNull()
+          ?.let { inReplyTo ->
+            setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, inReplyTo)
+          }
+      }
+    }
+
     private suspend fun prepareForwardedMsg(
       context: Context,
       accountEntity: AccountEntity,
@@ -1171,7 +1224,7 @@ class EmailUtil {
           val attBodyPart = genBodyPartWithAtt(
             context = context,
             att = att,
-            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
+            shouldBeEncrypted = msgEntity.isEncrypted == true,
             publicKeys = publicKeys,
             secretKeys = secretKeys,
             ringProtector = ringProtector
@@ -1294,9 +1347,16 @@ class EmailUtil {
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
     ): BodyPart {
+      val finalText = (info.msg + info.quotedTextForReply).takeIf {
+        info.messageType in arrayOf(
+          MessageType.REPLY,
+          MessageType.REPLY_ALL
+        ) && !info.quotedTextForReply.isNullOrEmpty()
+      } ?: info.msg ?: ""
+
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
         val encryptedContent = PgpEncryptAndOrSign.encryptAndOrSignMsg(
-          msg = info.msg ?: "",
+          msg = finalText,
           pubKeys = pubKeys ?: emptyList(),
           protectedPubKeys = protectedPubKeys,
           prvKeys = prvKeys,
@@ -1319,7 +1379,7 @@ class EmailUtil {
         }
       } else {
         MimeBodyPart().apply {
-          setText(info.msg ?: "")
+          setText(finalText)
         }
       }
     }

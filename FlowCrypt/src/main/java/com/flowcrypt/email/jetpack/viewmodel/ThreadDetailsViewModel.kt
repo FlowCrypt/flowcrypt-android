@@ -23,6 +23,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.filteredMessages
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getInReplyTo
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.getMessageId
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isDraft
@@ -88,19 +89,6 @@ class ThreadDetailsViewModel(
     sessionFromRecipientsMutableStateFlow.asStateFlow()
 
   val allOutboxMessagesFlow = roomDatabase.msgDao().getAllOutboxMessagesFlow()
-
-  @OptIn(ExperimentalCoroutinesApi::class)
-  val localFolderFlow: StateFlow<LocalFolder?> =
-    threadMessageEntityFlow.mapLatest { threadMessageEntity ->
-      val activeAccount = getActiveAccountSuspend()
-        ?: return@mapLatest null
-      val foldersManager = FoldersManager.fromDatabaseSuspend(getApplication(), activeAccount)
-      return@mapLatest foldersManager.getFolderByFullName(threadMessageEntity?.folder)
-    }.stateIn(
-      scope = viewModelScope,
-      started = SharingStarted.WhileSubscribed(5000),
-      initialValue = null
-    )
 
   @OptIn(ExperimentalCoroutinesApi::class)
   private val threadHeaderFlow = threadMessageEntityFlow.mapLatest {
@@ -299,7 +287,7 @@ class ThreadDetailsViewModel(
   }
 
   fun getMessageActionAvailability(messageAction: MessageAction): Boolean {
-    return messageActionsAvailabilityStateFlow.value[messageAction] ?: false
+    return messageActionsAvailabilityStateFlow.value[messageAction] == true
   }
 
   fun changeMsgState(newMsgState: MessageState) {
@@ -321,7 +309,7 @@ class ThreadDetailsViewModel(
           MessageState.PENDING_MARK_UNREAD -> {
             messageEntity.copy(
               state = newMsgState.value,
-              flags = messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+              flags = messageEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
             )
           }
 
@@ -400,7 +388,7 @@ class ThreadDetailsViewModel(
           format = GmailApiHelper.RESPONSE_FORMAT_FULL
         ) ?: error("Thread not found")
 
-        val threadInfo = thread.toThreadInfo(getApplication(), activeAccount)
+        val threadInfo = thread.toThreadInfo(getApplication(), activeAccount, localFolder)
 
         if (!threadInfo.labels.contains(localFolder.fullName)) {
           val context: Context = getApplication()
@@ -416,14 +404,14 @@ class ThreadDetailsViewModel(
             label = getFolderFullName(),
             msgsList = listOf(threadInfo.lastMessage),
             isNew = false,
-            onlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
+            onlyPgpModeEnabled = activeAccount.showOnlyEncrypted == true
           ) { message, messageEntity ->
             if (message.threadId == threadMessageEntity.threadIdAsHEX) {
               messageEntity.toUpdatedThreadCopy(threadMessageEntity, threadInfo)
             } else messageEntity
           })
 
-        val messagesInThread = (thread.messages ?: emptyList()).toMutableList().apply {
+        val messagesInThread = thread.filteredMessages(localFolder).toMutableList().apply {
           //try to put drafts in the right position
           val drafts = filter { it.isDraft() }
           drafts.forEach { draft ->
@@ -452,7 +440,7 @@ class ThreadDetailsViewModel(
           ).associateBy({ it.message.id }, { it.id })
         } else emptyMap()
 
-        val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted ?: false
+        val isOnlyPgpModeEnabled = activeAccount.showOnlyEncrypted == true
         val messageEntitiesBasedOnServerResult = MessageEntity.genMessageEntities(
           context = getApplication(),
           account = activeAccount.email,
@@ -491,7 +479,7 @@ class ThreadDetailsViewModel(
             candidatesToBeInserted.add(entity)
           } else if (existingVersion.copy(id = null) != entity) {
             candidatesToBeUpdated.add(entity.copy(id = existingVersion.id))
-            if (existingVersion.flags != entity.flags) {
+            if (existingVersion.flagsValueSet != entity.flagsValueSet) {
               MsgsCacheManager.removeMessage(existingVersion.id.toString())
             }
           }
@@ -539,7 +527,7 @@ class ThreadDetailsViewModel(
             it.id == messageItemBasedOnDataFromServer.id
           }?.let { item ->
             val existingMessageItem = item as Message
-            if (existingMessageItem.messageEntity.flags != messageEntity.flags) {
+            if (existingMessageItem.messageEntity.flagsValueSet != messageEntity.flagsValueSet) {
               messageItemBasedOnDataFromServer
             } else {
               existingMessageItem.copy(messageEntity = messageEntity)
@@ -585,6 +573,7 @@ class ThreadDetailsViewModel(
         val latestLabelIds = (threadInfo ?: GmailApiHelper.loadThreadInfo(
           context = getApplication(),
           accountEntity = account,
+          localFolder = localFolder,
           threadId = messageEntity?.threadIdAsHEX ?: "",
           fields = listOf("id", "messages/labelIds"),
           format = GmailApiHelper.RESPONSE_FORMAT_MINIMAL
@@ -660,10 +649,10 @@ class ThreadDetailsViewModel(
                   if (messageEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
                     messageEntity.flags
                   } else {
-                    messageEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+                    messageEntity.flags?.plus(" ${MessageFlag.SEEN.value}")
                   }
                 } else {
-                  messageEntity.flags?.replace(MessageFlag.SEEN.value, "")
+                  messageEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
                 }
               )
             )

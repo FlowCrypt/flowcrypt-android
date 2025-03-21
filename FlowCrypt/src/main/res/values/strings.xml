@@ -653,6 +653,10 @@
     <string name="draft">Draft</string>
     <string name="delete_draft">Delete draft?</string>
     <string name="thread_was_deleted_or_moved">The thread was deleted or moved</string>
+    <string name="file_already_exists_in_download">\'%1$s\' already exists in Download. Would you like to download it again?</string>
+    <string name="general">General</string>
+    <string name="disable_smart_mode_for_attachments_preview">Disable smart mode for attachments preview</string>
+    <string name="message_not_found_please_reload_the_thread">Message not found. It looks like it was moved or deleted. Please reload the thread to get the latest updates.</string>
     <plurals name="drafts_count">
         <item quantity="one">Draft</item>
         <item quantity="other">Drafts(%1$d)</item>

@@ -227,6 +227,10 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
     )
   }
 
+  /**
+   * This conversation contains 1 standard + 1 encrypted + 1 deleted messages
+   * The app should show only 2 messages when we open INBOX(deleted message should be skipped)
+   */
   @Test
   fun testThreadDetailsWithMixedMessages() {
     openThreadBasedOnPosition(2)

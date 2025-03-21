@@ -176,7 +176,7 @@ class StandardForwardOfEncryptedMessageWithOriginalAttachmentsComposeGmailApiFlo
             hasSignedParts = false,
             hasMixedSignatures = false,
             isPartialSigned = false,
-            keyIdOfSigningKeys = emptyList(),
+            keyIdOfSigningKeys = emptySet(),
             hasBadSignatures = false
           )
         ).toInitializationData(

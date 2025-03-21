@@ -6,11 +6,11 @@
 package com.flowcrypt.email.extensions.kotlin
 
 import android.content.Context
-import android.graphics.Color
 import android.util.Patterns
 import android.util.TypedValue
 import android.webkit.MimeTypeMap
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
 import com.flowcrypt.email.util.UIUtil
@@ -67,7 +67,7 @@ fun String.toEscapedHtml(): String {
     .replace("<", "&lt;")
     .replace(">", "&gt;")
     .replace("/", "&#x2F;")
-    .replace("\n", "<br/>")
+    .replace("\n", "<br>")
 }
 
 fun String.unescapeHtml(): String {
@@ -140,7 +140,7 @@ fun String?.parseAsColorBasedOnDefaultSettings(
   secondDefaultColorResourceId: Int = R.color.gray
 ): Int {
   return runCatching {
-    Color.parseColor(this)
+    requireNotNull(this).toColorInt()
   }.getOrElse {
     TypedValue().also {
       context.theme.resolveAttribute(defaultColorResourceId, it, true)

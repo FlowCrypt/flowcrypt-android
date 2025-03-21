@@ -1,7 +1,6 @@
 /*
- * © 2021-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   Ivan Pizhenko
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.util

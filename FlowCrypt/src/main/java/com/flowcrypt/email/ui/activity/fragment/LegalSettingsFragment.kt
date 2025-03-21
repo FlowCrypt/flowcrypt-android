@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -14,6 +14,7 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.flowcrypt.email.BuildConfig
@@ -83,7 +84,7 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
       assetsPath = arguments?.getString(KEY_URL)
-      isRefreshEnabled = arguments?.getBoolean(KEY_IS_REFRESH_ENABLED, false) ?: false
+      isRefreshEnabled = arguments?.getBoolean(KEY_IS_REFRESH_ENABLED, false) == true
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -129,7 +130,7 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
 
           @Deprecated("Deprecated in Java", ReplaceWith("true"))
           override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-            showUrlUsingChromeCustomTabs(context = context, uri = Uri.parse(url))
+            showUrlUsingChromeCustomTabs(context = context, uri = url.toUri())
             return true
           }
 
@@ -198,17 +199,11 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
     override fun createFragment(position: Int): Fragment {
       when (position) {
         TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(
-          Uri.parse(
-            Constants
-              .FLOWCRYPT_PRIVACY_URL
-          ), true
+          Constants.FLOWCRYPT_PRIVACY_URL.toUri(), true
         )
 
         TAB_POSITION_TERMS -> return WebViewFragment.newInstance(
-          Uri.parse(
-            Constants
-              .FLOWCRYPT_TERMS_URL
-          ), true
+          Constants.FLOWCRYPT_TERMS_URL.toUri(), true
         )
 
         TAB_POSITION_LICENCE -> return WebViewFragment.newInstance("html/license.htm")

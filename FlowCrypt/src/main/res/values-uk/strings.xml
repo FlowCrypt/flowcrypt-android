@@ -644,6 +644,10 @@
     <string name="draft">Чорновик</string>
     <string name="delete_draft">Видалити чернетку?</string>
     <string name="thread_was_deleted_or_moved">Бесіду видалено або переміщено</string>
+    <string name="file_already_exists_in_download">\'%1$s\' уже існує в Download. Бажаєте завантажити його знову?</string>
+    <string name="general">Загальні</string>
+    <string name="disable_smart_mode_for_attachments_preview">Вимкнути розумний режим для попереднього перегляду вкладень</string>
+    <string name="message_not_found_please_reload_the_thread">Повідомлення не знайдено. Схоже, його перемістили або видалили. Оновіть бесіду, щоб отримати останні оновлення.</string>
     <plurals name="drafts_count">
         <item quantity="one" tools:ignore="ImpliedQuantity">Чорновик</item>
         <item quantity="few">Чорновики(%1$d)</item>

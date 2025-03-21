@@ -151,7 +151,7 @@ class StandardReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
               hasSignedParts = false,
               hasMixedSignatures = false,
               isPartialSigned = false,
-              keyIdOfSigningKeys = emptyList(),
+              keyIdOfSigningKeys = emptySet(),
               hasBadSignatures = false
             )
           )

@@ -413,7 +413,11 @@ class PgpMsgTest {
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", TEXT_SPECIAL_CHARS)))
+
+    checkRenderedBlock(
+      block,
+      listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS))
+    )
   }
 
   @Test
@@ -437,7 +441,11 @@ class PgpMsgTest {
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS)))
+
+    checkRenderedBlock(
+      block,
+      listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS))
+    )
   }
 
   @Test
@@ -460,7 +468,11 @@ class PgpMsgTest {
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "GREEN", HTML_SPECIAL_CHARS)))
+
+    checkRenderedBlock(
+      block,
+      listOf(RenderedBlock.normal(true, "PLAIN", HTML_SPECIAL_CHARS))
+    )
   }
 
   @Test
@@ -487,12 +499,13 @@ class PgpMsgTest {
       secretKeys = PGPSecretKeyRingCollection(keys.map { it.keyRing }),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
-    assertEquals("Below\n\n[image: image.png]\nAbove", result.text)
+    assertEquals("Below\n[image: image.png]\nAbove", result.text)
     assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(2, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
     val htmlContent = loadResourceAsString("other/plain-inline-image-html-content.txt")
+
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
 
@@ -521,7 +534,7 @@ class PgpMsgTest {
     val textContent = loadResourceAsString(
       "other/plain-google-security-alert-20210416-084836-UTC-text-content.txt"
     )
-    assertEquals(textContent, result.text)
+    assertEquals(textContent.replace("\n", "\r\n"), result.text)
     assertEquals(false, result.verificationResult.hasEncryptedParts)
     assertEquals(1, result.blocks.size)
     val block = result.blocks[0]
@@ -529,6 +542,7 @@ class PgpMsgTest {
     val htmlContent = loadResourceAsString(
       "other/plain-google-security-alert-20210416-084836-UTC-html-content.txt"
     )
+
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
 
@@ -613,6 +627,254 @@ class PgpMsgTest {
     assertEquals(1, document.select("details").size)
     assertNotNull(document.select("summary").first())
     assertEquals(1, document.select("summary").size)
+
+    //check that plain text was generated correctly and quotes for reply will be correct
+    val documentForPlainVersion = Jsoup.parse(
+      requireNotNull(PgpMsg.checkAndReturnQuotesFormatIfFound(processedMimeMessageResult.text)),
+      "",
+      Parser.xmlParser()
+    )
+
+    val quotesForPlainVersion = documentForPlainVersion.select("blockquote")
+    assertEquals(1, quotesForPlainVersion.size)
+    assertTrue(quotesForPlainVersion[0].text().startsWith("Today, Android 15"))
+  }
+
+  @Test
+  fun testQuotesParsingAndHtmlManipulationForPlainMode() {
+    val mimeMessageRaw = """
+    MIME-Version: 1.0
+    Date: Mon, 24 Feb 2025 17:02:47 +0200
+    Message-ID: <messageid@flowcrypt.test>
+    Subject: Re: Quotes for plain text
+    From: Den at FlowCrypt <den@flowcrypt.test>
+    To: DenBond7 <denbond7@flowcrypt.test>
+    Content-Type: text/plain; charset="UTF-8"
+    Content-Transfer-Encoding: quoted-printable
+    
+    reply 2
+    
+    The top-level build.gradle.kts file (for the Kotlin DSL) or
+    build.gradle file (for the Groovy DSL) is located in the root project
+    directory. It typically defines the common versions of plugins used by
+    modules in your project.
+    
+    The following code sample describes the default settings and DSL
+    elements in the top-level build script after creating a new project
+    
+    On Mon, Feb 24, 2025 at 5:02=E2=80=AFPM DenBond7 <denbond7@flowcrypt.tes=
+    t> wrote:
+    >
+    > 2
+    >
+    > Creating custom build configurations requires you to make changes to
+    > one or more build configuration files. These plain-text files use a
+    > domain-specific language (DSL) to describe and manipulate the build
+    > logic using Kotlin script, which is a flavor of the Kotlin language.
+    > You can also use Groovy, which is a dynamic language for the Java
+    > Virtual Machine (JVM), to configure your builds.
+    >
+    > You don't need to know Kotlin script or Groovy to start configuring
+    > your build because the Android Gradle plugin introduces most of the
+    > DSL elements you need. To learn more about the Android Gradle plugin
+    > DSL, read the DSL reference documentation. Kotlin script also relies
+    > on the underlying Gradle Kotlin DSL
+    >
+    > When starting a new project, Android Studio automatically creates some
+    > of these files for you and populates them based on sensible defaults.
+    > For an overview of the created files, see Android build structure.
+    >
+    > =D0=BF=D0=BD, 24 =D0=BB=D1=8E=D1=82. 2025=E2=80=AF=D1=80. =D0=BE 17:01 De=
+    n at FlowCrypt <den@flowcrypt.test> =D0=BF=D0=B8=D1=88=D0=B5:
+    > >
+    > > reply 1
+    > >
+    > > Build types define certain properties that Gradle uses when building
+    > > and packaging your app. Build types are typically configured for
+    > > different stages of your development lifecycle.
+    > >
+    > > For example, the debug build type enables debug options and signs the
+    > > app with the debug key, while the release build type may shrink,
+    > > obfuscate, and sign your app with a release key for distribution.
+    > >
+    > > You must define at least one build type to build your app. Android
+    > > Studio creates the debug and release build types by default. To start
+    > > customizing packaging settings for your app, learn how to configure
+    > > build types.
+    > >
+    > >
+    > > On Mon, Feb 24, 2025 at 5:00=E2=80=AFPM DenBond7 <denbond7@flowcrypt.tes=
+    t> wrote:
+    > > >
+    > > > 1
+    > > >
+    > > > The Android build system compiles app resources and source code and
+    > > > packages them into APKs or Android App Bundles that you can test,
+    > > > deploy, sign, and distribute.
+    > > >
+    > > > In Gradle build overview and Android build structure, we discussed
+    > > > build concepts and the structure of an Android app. Now it's time to
+    > > > configure the build.
+    > > >
+    > > >
+    > > > --
+    > > > Regards,
+    > > > Denys Bondarenko
+    > >
+    > >
+    > >
+    > > --
+    > > Regards,
+    > > Den at FlowCrypt
+    >
+    >
+    >
+    > --
+    > Regards,
+    > Denys Bondarenko
+    
+    
+    
+    --=20
+    Regards,
+    Den at FlowCrypt""".trimIndent()
+
+    val processedMimeMessageResult = runBlocking {
+      PgpMsg.processMimeMessage(
+        MimeMessage(Session.getInstance(Properties()), mimeMessageRaw.toInputStream()),
+        PGPPublicKeyRingCollection(listOf()),
+        PGPSecretKeyRingCollection(listOf()),
+        SecretKeyRingProtector.unprotectedKeys(),
+      )
+    }
+
+    assertEquals(1, processedMimeMessageResult.blocks.size)
+
+    val plainHtmlBlock = processedMimeMessageResult.blocks.first {
+      it.type == MsgBlock.Type.PLAIN_HTML
+    }
+
+    val document = Jsoup.parse(requireNotNull(plainHtmlBlock.content), "", Parser.xmlParser())
+    assertNotNull(document.select("details").first())
+    assertEquals(1, document.select("details").size)
+    assertNotNull(document.select("summary").first())
+    assertEquals(1, document.select("summary").size)
+
+    val quotes = document.select("blockquote")
+    assertEquals(3, quotes.size)
+    assertTrue(quotes[0].text().startsWith("2 Creating custom build configurations requires"))
+    assertTrue(quotes[1].text().startsWith("reply 1"))
+    assertTrue(quotes[2].text().startsWith("1 The Android build system"))
+
+    //check that plain text was generated correctly and quotes for reply will be correct
+    val documentForPlainVersion = Jsoup.parse(
+      requireNotNull(PgpMsg.checkAndReturnQuotesFormatIfFound(processedMimeMessageResult.text)),
+      "",
+      Parser.xmlParser()
+    )
+
+    val quotesForPlainVersion = documentForPlainVersion.select("blockquote")
+    assertEquals(3, quotesForPlainVersion.size)
+    assertTrue(quotes[0].text().startsWith("2 Creating custom build configurations requires"))
+    assertTrue(quotes[1].text().startsWith("reply 1"))
+    assertTrue(quotes[2].text().startsWith("1 The Android build system"))
+  }
+
+  @Test
+  fun testQuotesParsingAndHtmlManipulationForEncryptedMessages() {
+    val mimeMessageRaw = """
+    Date: Tue, 4 Mar 2025 15:14:00 +0200 (GMT+02:00)
+    From: default@flowcrypt.test
+    To: default@flowcrypt.test
+    Message-ID: <255254603.1.1741101240147@flowcrypt.test>
+    Subject: TEst
+    Mime-Version: 1.0
+    Content-Type: multipart/mixed; 
+      boundary="----=_Part_0_124883294.1741101240093"
+    
+    ------=_Part_0_124883294.1741101240093
+    Content-Type: text/plain; charset=us-ascii
+    Content-Transfer-Encoding: 7bit
+    
+    -----BEGIN PGP MESSAGE-----
+    Version: PGPainless
+    
+    wV4DTxRYvSK3u1MSAQdA0rQBDv6Qe3gj8IWoEkn0r6W7+Uz/zyz0YI6DCLA2h3Ew
+    bM+5OX93DKqTkaLWbV0VcuN4ACPOb+4nyWIhb/lQq468FO7y2rqMFah0LcTJfTWr
+    wV4DTxRYvSK3u1MSAQdA/iyqemW8rY+ka18ANSph7TD8u3INnwT6Wt5BhcHzOTQw
+    hPcE7cge7naa351khAsVRMgXZS4jzxR0WQw3E/truKHcprpCaQis0dgsiTxURTm+
+    0sCWAdMfNsQa1GUZVredhzYCVRg6iiieU1k42vhwxYe8GMO/s+aWQgwR2EhenqKz
+    0utgBCc1uP0o0fzIKdyirdCmlrSwk1yAhiU1/mR0p7Yl29vDdhRWjz7UEV1nfbwg
+    1CAh7028G0YTFItwnPCCYDYYP1R0pPSffnuVV/BLuEfk0JiXUaa1ar73v5Sepfkm
+    RKWX0PuM0IIY2+d78pCfr4puci2qwMGDX9hdTvp+qk+QolpFnVP7YUlDZTu5N8Q7
+    GYrz0YJBXCvrkCNbu5UcssTRNyYyHB7sDT+XD+kE3uKcMat1cl190Gm6WFYB5I8x
+    H3jhdxj8HyrazAyI3Lra/rtLIRg0zFbQ8Q7nb96gAzi3KU0gTdXPJzbMetlwF0cT
+    Q027sUsEQ4L3PBVFNy6SYRRsQiS3o3CVaRkRlOEqsl+ix2S8bASh9bIl7Ode8+jz
+    l8r4umM+zyWe
+    =HJxV
+    -----END PGP MESSAGE-----
+    
+    ------=_Part_0_124883294.1741101240093--
+    """.trimIndent()
+
+    val privateKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+        "Version: PGPainless\n" +
+        "\n" +
+        "lIYEYIq7phYJKwYBBAHaRw8BAQdAat45rrh+gvQwWwJw5eScq3Pdxt/8d+lWNVSm\n" +
+        "kImXcRP+CQMCvWfx3mzDdd5g6c59LcPqADK0p70/7ZmTkp3ZC1YViTprg4tQt/PF\n" +
+        "QJL+VPCG+BF9bWyFcfxKe+KAnXRTWml5O6xrv6ZkiNmAxoYyO1shzLQWZGVmYXVs\n" +
+        "dEBmbG93Y3J5cHQudGVzdIh4BBMWCgAgBQJgirumAhsDBRYCAwEABAsJCAcFFQoJ\n" +
+        "CAsCHgECGQEACgkQIl+AI8INCVcysgD/cu23M07rImuV5gIl98uOnSIR+QnHUD/M\n" +
+        "I34b7iY/iTQBALMIsqO1PwYl2qKwmXb5lSoMj5SmnzRRE2RwAFW3AiMCnIsEYIq7\n" +
+        "phIKKwYBBAGXVQEFAQEHQA8q7iPr+0OXqBGBSAL6WNDjzHuBsG7uiu5w8l/A6v8l\n" +
+        "AwEIB/4JAwK9Z/HebMN13mCOF6Wy/9oZK4d0DW9cNLuQDeRVZejxT8oFMm7G8iGw\n" +
+        "CGNjIWWcQSvctBZtHwgcMeplCW7tmzkD3Nq/ty50lCwQQd6gZSXMiHUEGBYKAB0F\n" +
+        "AmCKu6YCGwwFFgIDAQAECwkIBwUVCgkICwIeAQAKCRAiX4Ajwg0JV+sbAQCv4LVM\n" +
+        "0+AN54ivWa4vPRyYOfSQ1FqsipkYLJce+xwUeAD+LZpEVCypFtGWQVdeSJVxIHx3\n" +
+        "k40IfHsK0fGgR+NrRAw=\n" +
+        "=osuI\n" +
+        "-----END PGP PRIVATE KEY BLOCK-----"
+
+    val secretKeyRing = PgpKey.extractSecretKeyRing(privateKey)
+    val processedMimeMessageResult = runBlocking {
+      PgpMsg.processMimeMessage(
+        MimeMessage(Session.getInstance(Properties()), mimeMessageRaw.toInputStream()),
+        PGPPublicKeyRingCollection(listOf()),
+        PGPSecretKeyRingCollection(listOf(secretKeyRing)),
+        SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("android")),
+      )
+    }
+
+    assertEquals(1, processedMimeMessageResult.blocks.size)
+
+    val plainHtmlBlock = processedMimeMessageResult.blocks.first {
+      it.type == MsgBlock.Type.PLAIN_HTML
+    }
+
+    val document = Jsoup.parse(requireNotNull(plainHtmlBlock.content), "", Parser.xmlParser())
+    assertNotNull(document.select("details").first())
+    assertEquals(1, document.select("details").size)
+    assertNotNull(document.select("summary").first())
+    assertEquals(1, document.select("summary").size)
+
+    val quotes = document.select("blockquote")
+    assertEquals(3, quotes.size)
+    assertTrue(quotes[0].text().startsWith("Sender 2"))
+    assertTrue(quotes[1].text().startsWith("Reply 1"))
+    assertTrue(quotes[2].text().startsWith("Sender 1"))
+
+    //check that plain text was generated correctly and quotes for reply will be correct
+    val documentForPlainVersion = Jsoup.parse(
+      requireNotNull(PgpMsg.checkAndReturnQuotesFormatIfFound(processedMimeMessageResult.text)),
+      "",
+      Parser.xmlParser()
+    )
+
+    val quotesForPlainVersion = documentForPlainVersion.select("blockquote")
+    assertEquals(3, quotesForPlainVersion.size)
+    assertTrue(quotesForPlainVersion[0].text().startsWith("Sender 2"))
+    assertTrue(quotesForPlainVersion[1].text().startsWith("Reply 1"))
+    assertTrue(quotesForPlainVersion[2].text().startsWith("Sender 1"))
   }
 
   private data class RenderedBlock(

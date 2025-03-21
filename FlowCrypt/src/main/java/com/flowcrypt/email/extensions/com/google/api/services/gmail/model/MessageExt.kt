@@ -6,11 +6,14 @@
 package com.flowcrypt.email.extensions.com.google.api.services.gmail.model
 
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.google.api.services.gmail.model.Message
+import com.google.api.services.gmail.model.MessagePartHeader
 import jakarta.mail.internet.InternetAddress
 
 /**
@@ -37,7 +40,7 @@ fun Message.hasPgp(): Boolean {
       && "multipart/encrypted" == baseContentType?.baseType?.lowercase()
       && baseContentType.getParameter("protocol")?.lowercase() == "application/pgp-encrypted"
 
-  val hasEncryptedParts = payload?.parts?.any { it.hasPgp() } ?: false
+  val hasEncryptedParts = payload?.parts?.any { it.hasPgp() } == true
 
   return EmailUtil.hasEncryptedData(snippet)
       || EmailUtil.hasSignedData(snippet)
@@ -71,9 +74,33 @@ fun Message.getMessageId(): String? {
 }
 
 fun Message.isDraft(): Boolean {
-  return labelIds?.contains(GmailApiHelper.LABEL_DRAFT) ?: false
+  return labelIds?.contains(GmailApiHelper.LABEL_DRAFT) == true
 }
 
 fun Message.hasAttachments(): Boolean {
-  return payload?.hasAttachments() ?: false
+  return payload?.hasAttachments() == true
+}
+
+fun Message.filterHeadersWithName(name: String): List<MessagePartHeader> {
+  return payload?.headers?.filter { header -> header.name == name } ?: emptyList()
+}
+
+fun Message.containsLabel(localFolder: LocalFolder?): Boolean? {
+  return labelIds?.contains(localFolder?.fullName)
+}
+
+fun Message.isTrashed(): Boolean? {
+  return labelIds.contains(GmailApiHelper.LABEL_TRASH)
+}
+
+fun Message.isSent(): Boolean {
+  return labelIds.contains(GmailApiHelper.LABEL_SENT) == true
+}
+
+fun Message.canBeUsed(localFolder: LocalFolder?): Boolean {
+  return if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+    isTrashed() == true
+  } else {
+    isTrashed()?.not() != false
+  }
 }

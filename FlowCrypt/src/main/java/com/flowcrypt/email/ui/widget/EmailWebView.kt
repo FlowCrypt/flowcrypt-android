@@ -15,6 +15,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.net.toUri
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.extensions.android.webkit.showUrlUsingChromeCustomTabs
 import com.flowcrypt.email.model.MessageType
@@ -70,8 +71,8 @@ class EmailWebView : WebView {
    */
   fun configure() {
     isVerticalScrollBarEnabled = false
-    scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
-    overScrollMode = View.OVER_SCROLL_NEVER
+    scrollBarStyle = SCROLLBARS_INSIDE_OVERLAY
+    overScrollMode = OVER_SCROLL_NEVER
     webViewClient = CustomWebClient(context)
     webChromeClient = object : WebChromeClient() {
       override fun onProgressChanged(view: WebView, newProgress: Int) {
@@ -113,10 +114,10 @@ class EmailWebView : WebView {
     @Deprecated("Deprecated in Java")
     override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
       return if (url.startsWith(SCHEME_MAILTO)) {
-        handleEmailLinks(Uri.parse(url))
+        handleEmailLinks(url.toUri())
         false
       } else {
-        showUrlUsingChromeCustomTabs(context = context, uri = Uri.parse(url))
+        showUrlUsingChromeCustomTabs(context = context, uri = url.toUri())
         true
       }
     }

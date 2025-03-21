@@ -11,6 +11,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
@@ -1093,6 +1094,14 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         subject = "Re: $SUBJECT_MIXED_MESSAGES",
         isFullFormat = true
       ),
+      genStandardMessage(
+        threadId = THREAD_ID_MIXED_MESSAGES,
+        messageId = MESSAGE_ID_THREAD_MIXED_MESSAGES_3,
+        subject = "Re: $SUBJECT_MIXED_MESSAGES",
+        labels = listOf(GmailApiHelper.LABEL_TRASH),
+        includeAttachments = false,
+        isFullFormat = true
+      ),
     )
   }.toString()
 
@@ -1653,6 +1662,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val THREAD_ID_MIXED_MESSAGES = "200000e222d6c010"
     const val MESSAGE_ID_THREAD_MIXED_MESSAGES_1 = "5555555559910001"
     const val MESSAGE_ID_THREAD_MIXED_MESSAGES_2 = "5555555559910002"
+    const val MESSAGE_ID_THREAD_MIXED_MESSAGES_3 = "5555555559910003"
 
     const val SUBJECT_NO_ATTACHMENTS = "No attachments"
     const val SUBJECT_SINGLE_STANDARD = "Single standard message"

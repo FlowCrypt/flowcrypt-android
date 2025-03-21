@@ -72,6 +72,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import kotlinx.coroutines.runBlocking
+import org.apache.commons.io.FilenameUtils
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anything
@@ -1084,7 +1085,12 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
-    val attachmentName = "thumb_up.png"
+    val attachmentName = requireNotNull((msgInfo?.msgBlocks?.first {
+      it.type == MsgBlock.Type.DECRYPTED_ATT
+    } as DecryptedAttMsgBlock).attMeta.name)
+
+    val baseAttachmentName = FilenameUtils.getBaseName(attachmentName)
+
     val downloadCompleteLabel = getResString(R.string.download_complete)
     val uiAutomatorTimeout = 5000L
 
@@ -1100,19 +1106,22 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-
     //Unfortunately, due to the Scoped Storage,
-    //we don't have direct access to the file system and we can't check that a new file was created.
+    //we don't have direct access to the file system and we can't check that a new file was created
+    //(Also we can't use the full original name because there can be
+    //an existing file with the same name).
+    //So we will use just a base name.
     //That's why we will use UIAutomator to check that we have a notification
     //with text == "Download complete"
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     device.openNotification()
     //wait until we have a notification in the notification bar
-    device.wait(Until.hasObject(By.text(attachmentName)), uiAutomatorTimeout)
+    device.wait(Until.hasObject(By.textContains(baseAttachmentName)), uiAutomatorTimeout)
     //check that we have a notification with text == "Download complete"
-    val attachmentNameUiObject2 = device.findObject(By.text(attachmentName))
+    val attachmentNameUiObject2 = device.findObject(By.textContains(baseAttachmentName))
+    assertNotNull(attachmentNameUiObject2)
     val downloadCompleteLabelUiObject2 = device.findObject(By.text(downloadCompleteLabel))
-    assertEquals(attachmentName, attachmentNameUiObject2.text)
+    assertNotNull(downloadCompleteLabelUiObject2)
     assertEquals(downloadCompleteLabel, downloadCompleteLabelUiObject2.text)
     device.pressHome()
   }
@@ -1180,11 +1189,11 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
     val attachmentMessageBlock = msgInfo?.msgBlocks?.get(2) as DecryptedAttMsgBlock
 
-    assertEquals(4, msgInfo.msgBlocks?.size)
-    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo.msgBlocks?.get(0)?.type)
-    assertEquals(MsgBlock.Type.ENCRYPTED_SUBJECT, msgInfo.msgBlocks?.get(1)?.type)
+    assertEquals(4, msgInfo.msgBlocks.size)
+    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo.msgBlocks[0].type)
+    assertEquals(MsgBlock.Type.ENCRYPTED_SUBJECT, msgInfo.msgBlocks[1].type)
     assertEquals(MsgBlock.Type.DECRYPTED_ATT, attachmentMessageBlock.type)
-    assertEquals(MsgBlock.Type.PUBLIC_KEY, msgInfo.msgBlocks?.get(3)?.type)
+    assertEquals(MsgBlock.Type.PUBLIC_KEY, msgInfo.msgBlocks[3].type)
 
     baseCheck(msgInfo)
 

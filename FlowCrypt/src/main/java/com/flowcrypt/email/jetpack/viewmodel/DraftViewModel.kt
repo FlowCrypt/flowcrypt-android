@@ -205,11 +205,10 @@ class DraftViewModel(
             accountEntity = activeAccount,
             outgoingMsgInfo = outgoingMessageInfo,
             signingRequired = false,
-            hideArmorMeta = activeAccount.clientConfiguration?.shouldHideArmorMeta() ?: false
+            hideArmorMeta = activeAccount.clientConfiguration?.shouldHideArmorMeta() == true
           )
-          val existingSnapshot = MsgsCacheManager.getMsgSnapshot(draftMessageEntity.id.toString())
-          if (existingSnapshot != null) {
-            existingSnapshot.getUri(0)?.let { fileUri ->
+          MsgsCacheManager.getMsgSnapshot(draftMessageEntity.id.toString())?.getUri(0)
+            ?.let { fileUri ->
               (getApplication() as Context).contentResolver?.openInputStream(fileUri)
                 ?.let { inputStream ->
                   val keys = PGPainless.readKeyRing()
@@ -239,7 +238,6 @@ class DraftViewModel(
                       mimeMessage.setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, inReplyTo)
                     }
                 }
-            }
           }
           val draftsDir = CacheManager.getDraftDirectory(getApplication())
 
@@ -344,6 +342,6 @@ class DraftViewModel(
   )
 
   companion object {
-    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)
+    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(30)
   }
 }

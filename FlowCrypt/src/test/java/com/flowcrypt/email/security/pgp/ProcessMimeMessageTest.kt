@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -37,8 +37,9 @@ class ProcessMimeMessageTest {
     )
 
     assertEquals(
-      "It's an encrypted message\n\n    \n                    " +
-          "\n                \n        Sent with ProtonMail secure email.",
+      "It's an encrypted message\n" +
+          "\n" +
+          "Sent with ProtonMail secure email.",
       processedMimeMessageResult.text
     )
 

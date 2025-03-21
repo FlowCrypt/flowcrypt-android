@@ -25,13 +25,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.WorkManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
@@ -93,7 +93,9 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.GmailApiLabelsListAdapter
 import com.flowcrypt.email.ui.adapter.MessagesInThreadListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.SkipFirstAndLastDividerItemDecoration
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ThreadNotFoundException
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import org.apache.commons.io.FilenameUtils
@@ -118,8 +120,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     get() = threadDetailsViewModel.messagesInThreadFlow.value.status == Result.Status.SUCCESS
   private val threadMessageEntity: MessageEntity?
     get() = threadDetailsViewModel.threadMessageEntityFlow.value
-  private val localFolder: LocalFolder?
-    get() = threadDetailsViewModel.localFolderFlow.value
 
   private val args by navArgs<ThreadDetailsFragmentArgs>()
   private var isActive: Boolean = false
@@ -337,7 +337,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           R.id.menuActionDeleteMessage -> {
             val messageEntity = threadMessageEntity ?: return true
             if (!messageEntity.isOutboxMsg) {
-              if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+              if (args.localFolder.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
                   requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
                   requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
@@ -511,12 +511,6 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     }
 
     launchAndRepeatWithViewLifecycle {
-      threadDetailsViewModel.localFolderFlow.collect {
-        //do nothing. Just subscribe for updates to have the latest value async
-      }
-    }
-
-    launchAndRepeatWithViewLifecycle {
       threadDetailsViewModel.allOutboxMessagesFlow.collect { messageEntities ->
         val threadId =
           threadDetailsViewModel.threadMessageEntityFlow.value?.threadId ?: return@collect
@@ -593,6 +587,21 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
               }
           }
 
+        REQUEST_CODE_DOWNLOAD_FILE_AGAIN -> {
+          if (result == TwoWayDialogFragment.RESULT_OK) {
+            bundle.getBundle(TwoWayDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)
+              ?.let {
+                processActionForMessageAndAttachmentBasedOnIncomingBundle(it) { attachmentInfo, message ->
+                  processDownloadAttachment(
+                    attachmentInfo = attachmentInfo,
+                    message = message,
+                    forcedDownload = true
+                  )
+                }
+              }
+          }
+        }
+
         REQUEST_CODE_SHOW_TWO_WAY_DIALOG_FOR_DELETING_DRAFT ->
           if (result == TwoWayDialogFragment.RESULT_OK) {
             bundle.getBundle(TwoWayDialogFragment.KEY_REQUEST_INCOMING_BUNDLE)?.let {
@@ -627,7 +636,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       val requestCode = bundle.getInt(ProcessMessageDialogFragment.KEY_REQUEST_CODE)
       if (message != null) {
         val hasUnverifiedSignatures =
-          message.incomingMessageInfo?.verificationResult?.hasUnverifiedSignatures ?: false
+          message.incomingMessageInfo?.verificationResult?.hasUnverifiedSignatures == true
         val hasActiveSignatureVerification = if (hasUnverifiedSignatures) {
           val messageFromAddresses = message.incomingMessageInfo?.getFrom()?.map {
             it.address.lowercase()
@@ -1268,6 +1277,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
           requestKey = REQUEST_KEY_PROCESS_MESSAGE + args.messageEntityId.toString(),
           requestCode = requestCode,
           message = message,
+          localFolder = args.localFolder,
           attachmentId = attachmentId
         ).toBundle()
       }
@@ -1276,7 +1286,15 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun previewAttachment(attachmentInfo: AttachmentInfo) {
     val intent = if (attachmentInfo.uri != null) {
-      GeneralUtil.genViewAttachmentIntent(requireNotNull(attachmentInfo.uri), attachmentInfo)
+      GeneralUtil.genViewAttachmentIntent(
+        uri = requireNotNull(attachmentInfo.uri),
+        attachmentInfo = attachmentInfo,
+        useCommonPattern = SharedPreferencesHelper.getBoolean(
+          sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext()),
+          key = Constants.PREFERENCES_KEY_ATTACHMENTS_DISABLE_SMART_MODE_FOR_PREVIEW,
+          defaultValue = false
+        )
+      )
     } else {
       toast(getString(R.string.preview_is_not_available))
       return
@@ -1303,7 +1321,8 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
 
   private fun processDownloadAttachment(
     attachmentInfo: AttachmentInfo,
-    message: MessagesInThreadListAdapter.Message
+    message: MessagesInThreadListAdapter.Message,
+    forcedDownload: Boolean = false
   ) {
     if (
       checkAndShowNeedPassphraseDialogIfNeeded(
@@ -1313,14 +1332,42 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
       )
     ) return
 
-    downloadAttachment(attachmentInfo, message)
+    downloadAttachment(
+      attachmentInfo = attachmentInfo,
+      message = message,
+      forcedDownload = forcedDownload
+    )
   }
 
   private fun downloadAttachment(
     attachmentInfo: AttachmentInfo,
-    message: MessagesInThreadListAdapter.Message
+    message: MessagesInThreadListAdapter.Message,
+    forcedDownload: Boolean = false
   ) {
     val documentId = EmbeddedAttachmentsProvider.Cache.getInstance().getDocumentId(attachmentInfo)
+
+    if (!forcedDownload && FileAndDirectoryUtils.Downloads.isFileAlreadyExist(
+        context = requireContext(),
+        fileName = attachmentInfo.getSafeName()
+      )
+    ) {
+      showTwoWayDialog(
+        requestKey = REQUEST_KEY_TWO_WAY_DIALOG_BASE + args.messageEntityId.toString(),
+        requestCode = REQUEST_CODE_DOWNLOAD_FILE_AGAIN,
+        dialogTitle = "",
+        dialogMsg = getString(
+          R.string.file_already_exists_in_download,
+          attachmentInfo.getSafeName()
+        ),
+        positiveButtonTitle = getString(R.string.download),
+        negativeButtonTitle = getString(android.R.string.cancel),
+        bundle = Bundle().apply {
+          putLong(KEY_EXTRA_MESSAGE_ID, message.id)
+          putString(KEY_EXTRA_ATTACHMENT_ID, attachmentInfo.uniqueStringId)
+        }
+      )
+      return
+    }
 
     when {
       attachmentInfo.uri != null && documentId != null -> {
@@ -1541,6 +1588,7 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
     private const val REQUEST_CODE_PROCESS_AND_REPLY = 1014
     private const val REQUEST_CODE_PROCESS_AND_REPLY_ALL = 1015
     private const val REQUEST_CODE_PROCESS_AND_FORWARD = 1016
+    private const val REQUEST_CODE_DOWNLOAD_FILE_AGAIN = 1017
 
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
