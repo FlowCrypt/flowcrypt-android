@@ -703,7 +703,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           )
         )
 
-        val nextPageToken: String
+        val nextPageToken: String?
         val gmailThreadInfoList: List<GmailThreadInfo>
         val messages = if (accountEntity.useConversationMode) {
           val threadsResponse = GmailApiHelper.loadThreads(
