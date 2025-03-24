@@ -42,4 +42,10 @@ updates:
       applies-to: version-updates
       patterns:
         - "com.squareup.okhttp3*"
+
+    kotlin:
+      applies-to: version-updates
+      patterns:
+        - "org.jetbrains.kotlin*"
+        - "com.google.devtools.ksp*"
   open-pull-requests-limit: 10
