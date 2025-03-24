@@ -318,11 +318,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
         messageType = args.messageType,
-        replyToMessageEntityId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
-          null
-        } else {
-          args.incomingMessageInfo?.msgEntity?.id
-        },
+        replyToMessageEntityId = args.incomingMessageInfo?.msgEntity?.id,
         quotedTextForReply = EmailUtil.genReplyContent(args.incomingMessageInfo).takeIf {
           args.messageType in arrayOf(
             MessageType.REPLY,
@@ -1076,19 +1072,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       CreateMessageFragmentDirections
         .actionCreateMessageFragmentToCreateOutgoingMessageDialogFragment(
           requestKey = REQUEST_KEY_CREATE_OUTGOING_MESSAGE,
-          outgoingMessageInfo = outgoingMessageInfo.copy(
-            msg = if (outgoingMessageInfo.quotedTextForReply?.isNotEmpty() == true &&
-              args.messageType in arrayOf(
-                MessageType.REPLY,
-                MessageType.REPLY_ALL
-              )
-            ) {
-              outgoingMessageInfo.msg + EmailUtil.genReplyContent(args.incomingMessageInfo)
-            } else {
-              outgoingMessageInfo.msg
-            },
-            password = usePasswordIfNeeded(),
-          )
+          outgoingMessageInfo = outgoingMessageInfo.copy(password = usePasswordIfNeeded())
         )
     )
   }

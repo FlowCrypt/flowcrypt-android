@@ -357,7 +357,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         MessageState.PENDING_MARK_UNREAD -> {
           msgEntity.copy(
             state = newMsgState.value,
-            flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+            flags = msgEntity.flagsStringAfterRemoveSome(MessageFlag.SEEN.value)
           )
         }
 
