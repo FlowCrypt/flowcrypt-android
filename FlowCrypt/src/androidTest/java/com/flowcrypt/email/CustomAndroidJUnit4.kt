@@ -22,8 +22,8 @@ import java.util.Locale
  *
  * @author Denys Bondarenko
  */
-class CustomAndroidJUnit4(klass: Class<*>) : Runner(), Filterable, Sortable {
-  private val delegate: Runner = loadRunner(klass)
+open class CustomAndroidJUnit4(klass: Class<*>) : Runner(), Filterable, Sortable {
+  val delegate: Runner = loadRunner(klass)
 
   override fun getDescription(): Description {
     return delegate.description
