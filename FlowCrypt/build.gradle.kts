@@ -406,7 +406,7 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.10")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.20")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.6.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
@@ -444,7 +444,7 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.8.9")
   implementation("androidx.webkit:webkit:1.13.0")
 
-  implementation("com.google.android.gms:play-services-base:18.5.0")
+  implementation("com.google.android.gms:play-services-base:18.6.0")
   implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
