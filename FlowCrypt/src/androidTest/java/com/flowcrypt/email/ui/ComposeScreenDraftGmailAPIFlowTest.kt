@@ -42,7 +42,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -182,7 +181,8 @@ class ComposeScreenDraftGmailAPIFlowTest : BaseComposeScreenTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("flaky 8")
+  //@Ignore("flaky 8")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testSavingDraftViaGmailAPI() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
