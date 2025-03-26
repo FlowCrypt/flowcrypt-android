@@ -32,7 +32,6 @@ import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -91,7 +90,8 @@ class ComposeScreenImportRecipientPubKeyFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("flaky 7")
+  //@Ignore("flaky 7")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testImportRecipientPubKeyFromClipboard() {
     fillDataAndMoveToImportPublicKeyScreen()
     addTextToClipboard("public key", publicKey)
