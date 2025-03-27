@@ -38,6 +38,13 @@ import java.time.Instant
 @Throws(IOException::class)
 @WorkerThread
 fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDetails {
+  if (containsHashAlgorithmWithSHA1()) {
+    val sigHashAlgoPolicy = PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy
+    if (!sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1)) {
+      throw PGPException("Unsupported signature(HashAlgorithm = SHA1)")
+    }
+  }
+
   val keyRingInfo = KeyRingInfo(this)
 
   val algo = Algo(
@@ -54,13 +61,6 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
 
   if (keyIdList.isEmpty()) {
     throw IllegalArgumentException("There are no fingerprints")
-  }
-
-  if (containsHashAlgorithmWithSHA1()) {
-    val sigHashAlgoPolicy = PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy
-    if (!sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1)) {
-      throw PGPException("Unsupported signature(HashAlgorithm = SHA1)")
-    }
   }
 
   val privateKey = if (keyRingInfo.isSecretKey) armor(hideArmorMeta = hideArmorMeta) else null
