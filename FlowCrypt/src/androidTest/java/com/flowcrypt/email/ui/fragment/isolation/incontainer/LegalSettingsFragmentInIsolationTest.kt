@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
@@ -14,11 +13,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -28,7 +25,6 @@ import com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment
 import com.flowcrypt.email.viewaction.ViewPager2Actions.scrollRight
 import org.hamcrest.Matchers.allOf
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -62,20 +58,6 @@ class LegalSettingsFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @FlakyTest
-  @NotReadyForCI
-  fun testClickToTitleViewPager() {
-    for (titleName in titleNames) {
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-        .check(matches(isDisplayed()))
-        .perform(click())
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-        .check(matches(isDisplayed())).check(matches(isSelected()))
-    }
-  }
-
-  @Test
-  @Ignore("flaky")
   fun testSwipeInViewPager() {
     onView(
       allOf(
