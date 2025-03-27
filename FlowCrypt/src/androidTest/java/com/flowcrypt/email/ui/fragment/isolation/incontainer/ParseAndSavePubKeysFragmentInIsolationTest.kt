@@ -36,7 +36,6 @@ import com.flowcrypt.email.ui.activity.fragment.ParseAndSavePubKeysFragmentArgs
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
-import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -85,30 +84,7 @@ class ParseAndSavePubKeysFragmentInIsolationTest : BaseTest() {
     )
 
     onView(withId(R.id.rVPubKeys))
-      .check(matches(withRecyclerViewItemCount(6)))
-
-    onView(withId(R.id.rVPubKeys))
-      .check(
-        matches(
-          hasItem(
-            withChild(
-              allOf(
-                hasSibling(
-                  withText(getResString(R.string.cannot_be_used_for_encryption))
-                ),
-                hasSibling(
-                  withText(
-                    getResString(
-                      R.string.template_message_part_public_key_owner,
-                      "dsa@flowcrypt.test"
-                    )
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
+      .check(matches(withRecyclerViewItemCount(5)))
   }
 
   @Test

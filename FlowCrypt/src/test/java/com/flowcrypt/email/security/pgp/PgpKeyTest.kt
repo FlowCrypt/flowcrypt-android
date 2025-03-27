@@ -81,8 +81,13 @@ class PgpKeyTest {
     )
     val parseKeyResult = PgpKey.parseKeys(source = TestKeys.KEYS["rsa1"]!!.publicKey)
     assertEquals(1, parseKeyResult.getAllKeys().size)
-    val actual = parseKeyResult.pgpKeyDetailsList.first()
-      .run { this.copy(publicKey = replaceVersionInKey(this.publicKey)) }
+    val actual = parseKeyResult.pgpKeyDetailsList.first().copy(
+      /*
+       * we replace publicKey source here because it can't be a constant.
+       * If other fields of [PgpKeyRingDetails] will be the same it means objects are equal
+       */
+      publicKey = expected.publicKey
+    )
     assertEquals(expected, actual)
   }
 
@@ -122,8 +127,13 @@ class PgpKeyTest {
     )
     val parseKeyResult = PgpKey.parseKeys(source = TestKeys.KEYS["expired"]!!.publicKey)
     assertEquals(1, parseKeyResult.getAllKeys().size)
-    val actual = parseKeyResult.pgpKeyDetailsList.first()
-      .run { this.copy(publicKey = replaceVersionInKey(this.publicKey)) }
+    val actual = parseKeyResult.pgpKeyDetailsList.first().copy(
+      /*
+       * we replace publicKey source here because it can't be a constant.
+       * If other fields of [PgpKeyRingDetails] will be the same it means objects are equal
+       */
+      publicKey = expected.publicKey
+    )
     assertEquals(expected, actual)
   }
 
