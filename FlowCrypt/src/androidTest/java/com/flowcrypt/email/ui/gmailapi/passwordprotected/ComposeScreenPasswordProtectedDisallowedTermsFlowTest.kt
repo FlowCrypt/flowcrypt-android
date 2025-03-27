@@ -70,6 +70,8 @@ class ComposeScreenPasswordProtectedDisallowedTermsFlowTest :
       .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("flaky")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testDialogWithErrorText() {
     intentsRelease()
 

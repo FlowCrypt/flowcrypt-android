@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -59,6 +59,8 @@ class AddOtherAccountFlowTest : AddOtherAccountBaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("flaky 8")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()
     val credentials = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -90,6 +90,8 @@ class ComposeScreenImportRecipientPubKeyFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  //@Ignore("flaky 7")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testImportRecipientPubKeyFromClipboard() {
     fillDataAndMoveToImportPublicKeyScreen()
     addTextToClipboard("public key", publicKey)
