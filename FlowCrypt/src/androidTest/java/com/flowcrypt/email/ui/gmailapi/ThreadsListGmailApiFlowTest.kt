@@ -31,7 +31,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -85,10 +84,11 @@ class ThreadsListGmailApiFlowTest : BaseGmailApiTest(
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("flaky")
+  //@Ignore("flaky")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testShowCorrectThreadsDetailsInList() {
     //need to wait while the app loads the thread list
-    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(20))
 
     //test thread with 2 standard messages with attachments
     checkThreadRowDetails(
