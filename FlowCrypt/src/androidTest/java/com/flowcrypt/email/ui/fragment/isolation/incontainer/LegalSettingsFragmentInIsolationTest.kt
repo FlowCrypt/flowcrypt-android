@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
@@ -26,6 +25,7 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.LegalSettingsFragment
+import com.flowcrypt.email.viewaction.ViewPager2Actions.scrollRight
 import org.hamcrest.Matchers.allOf
 import org.junit.Before
 import org.junit.Ignore
@@ -85,7 +85,7 @@ class LegalSettingsFragmentInIsolationTest : BaseTest() {
     )
       .check(matches(isDisplayed())).check(matches(isSelected()))
     for (i in 1 until titleNames.size) {
-      onView(withId(R.id.viewPager2)).perform(swipeLeft())
+      onView(withId(R.id.viewPager2)).perform(scrollRight())
       onView(
         allOf(
           withParent(withParent(withParent(withId(R.id.tabLayout)))),
