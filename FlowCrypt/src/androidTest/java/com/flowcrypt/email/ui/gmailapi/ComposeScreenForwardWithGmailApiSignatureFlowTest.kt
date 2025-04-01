@@ -73,7 +73,7 @@ class ComposeScreenForwardWithGmailApiSignatureFlowTest :
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("flaky")
+  @Ignore("flaky. It looks like adding signature after start has unexpected result for forwarding case")
   fun testAddingSignatureAfterStart() {
     //need to wait while the app loads the messages list
     Thread.sleep(2000)
