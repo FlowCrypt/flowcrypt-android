@@ -49,7 +49,6 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -175,7 +174,7 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
     //type key
     onView(withId(R.id.editTextNewPrivateKey))
       .check(matches(isDisplayed()))
-      .perform(replaceText(updatedKeyDetails.privateKey?:""), closeSoftKeyboard())
+      .perform(replaceText(updatedKeyDetails.privateKey ?: ""), closeSoftKeyboard())
 
     onView(withId(R.id.buttonCheck))
       .check(matches(isDisplayed()))
@@ -216,7 +215,8 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
   }
 
   @Test
-  @Ignore("flaky 2 2")
+  //@Ignore("flaky 2 2")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testPrivateKeyPassphraseAntiBruteforceProtection() {
     onView(withText(R.string.pass_phrase_not_provided))
       .check(matches(isDisplayed()))
@@ -226,50 +226,40 @@ class UpdatePrivateKeyWithPassPhraseInRamFlowTest : BaseTest() {
       .perform(click())
 
     val wrongPassphrase = "wrong pass phrase"
+    //show typed passphrase for debug
+    onView(withId(com.google.android.material.R.id.text_input_end_icon))
+      .perform(click())
 
-    for (i in 0 until AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE) {
+    val attemptsMaxValue = AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE
+
+    for (i in 0 until attemptsMaxValue) {
+      val attemptsLeft = attemptsMaxValue - i - 1
       onView(withId(R.id.eTKeyPassword))
         .perform(
           clearText(),
-          replaceText(wrongPassphrase),
+          replaceText("$wrongPassphrase: left $attemptsLeft attempts"),
           closeSoftKeyboard()
         )
       onView(withId(R.id.btnUpdatePassphrase))
         .perform(click())
-      Thread.sleep(2000)
-      if (i == AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE - 1) {
-        onView(withId(R.id.tILKeyPassword))
-          .check(
-            matches(
-              withTextInputLayoutError(
-                getResString(
-                  R.string.private_key_passphrase_anti_bruteforce_protection_hint
-                )
-              )
-            )
-          )
-      } else {
-        val attemptsLeft =
-          AccountSettingsEntity.ANTI_BRUTE_FORCE_PROTECTION_ATTEMPTS_MAX_VALUE - i - 1
 
-        onView(withId(R.id.tILKeyPassword))
-          .check(
-            matches(
-              withTextInputLayoutError(
-                getResString(R.string.password_is_incorrect) +
-                    "\n\n" +
-                    getQuantityString(
-                      R.plurals.next_attempt_warning_about_wrong_pass_phrase,
-                      attemptsLeft,
-                      attemptsLeft
-                    )
-              )
+      val text = if (i == attemptsMaxValue - 1) {
+        getResString(R.string.private_key_passphrase_anti_bruteforce_protection_hint)
+      } else {
+        getResString(R.string.password_is_incorrect) +
+            "\n\n" +
+            getQuantityString(
+              R.plurals.next_attempt_warning_about_wrong_pass_phrase,
+              attemptsLeft,
+              attemptsLeft
             )
-          )
       }
 
+      waitForObjectWithText(text, TimeUnit.SECONDS.toMillis(20))
+
+      onView(withTextInputLayoutError(text))
+        .check(matches(isDisplayed()))
       checkPassPhraseAttemptsCount(i + 1)
-      Thread.sleep(1000)
     }
   }
 
