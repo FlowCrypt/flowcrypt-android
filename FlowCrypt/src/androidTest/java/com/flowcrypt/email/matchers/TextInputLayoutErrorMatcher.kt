@@ -22,11 +22,10 @@ class TextInputLayoutErrorMatcher(private val expectedHint: String) :
 
   override fun matchesSafely(item: View?, mismatchDescription: Description?): Boolean {
     val actualHint = (item as? TextInputLayout)?.error?.toString()
-    val matches: Boolean = expectedHint == actualHint
-    if (!matches && mismatchDescription !is Description.NullDescription) {
-      mismatchDescription
-        ?.appendText("Actual was: $actualHint")
+    return (expectedHint == actualHint).apply {
+      if (!this && mismatchDescription !is Description.NullDescription) {
+        mismatchDescription?.appendText("Actual was: $actualHint")
+      }
     }
-    return matches
   }
 }
