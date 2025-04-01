@@ -34,7 +34,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import okio.GzipSource
 import okio.buffer
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -99,7 +98,8 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("flaky 1")
+  //@Ignore("flaky 1")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testLabelsManagement() {
     val allLabels = initLabelIds()
     lastLabelIds = (allLabels.take(4) + allLabels.takeLast(1)).toMutableList()
