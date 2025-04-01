@@ -36,7 +36,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.CoreMatchers.containsString
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -135,7 +134,8 @@ class ImportRecipientsFromSourceFragmentFlowTest : BaseTest() {
   }
 
   @Test
-  @Ignore("flaky 4")
+  //@Ignore("flaky 4")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testFetchKeyFromAttesterForExistedUserImeAction() {
     onView(withId(R.id.eTKeyIdOrEmail))
       .perform(
