@@ -28,7 +28,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeScreenNoKeyAvailableTest
 import com.flowcrypt.email.util.PrivateKeysManager
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -86,7 +85,8 @@ class ComposeScreenNoKeyAvailableSingleKeyWithPassphraseInDatabaseFlowTest : Bas
   }
 
   @Test
-  @Ignore("flaky")
+  //@Ignore("flaky")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testAddEmailToExistingSingleKeyPassphraseInDatabase() {
     doTestAddEmailToExistingKey {
       //no more additional actions
