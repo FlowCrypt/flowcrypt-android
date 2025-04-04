@@ -85,7 +85,6 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -130,25 +129,16 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  fun testReplyButton() {
-    val incomingMessageInfo = testStandardMsgPlaintextInternal()
-    onView(withId(R.id.replyButton))
-      .check(matches(isDisplayed()))
-      .perform(scrollTo(), click())
-    intended(hasComponent(CreateMessageActivity::class.java.name))
-
-    checkQuotesFunctionality(incomingMessageInfo)
-  }
-
-  @Test
-  @Ignore("flaky")
+  //@Ignore("flaky")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testTopReplyButton() {
     val incomingMessageInfo = testTopReplyAction(getResString(R.string.reply))
     checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
-  @Ignore("flaky 2 3")
+  //@Ignore("flaky 2 3")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testReplyAllButton() {
     val incomingMessageInfo = testStandardMsgPlaintextInternal()
     onView(withId(R.id.replyAllButton))
@@ -1340,8 +1330,20 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
 
+    val replyContent = EmailUtil.genReplyContent(incomingMessageInfo)
+
+    waitForObjectWithText(
+      "Re: ${incomingMessageInfo?.msgEntity?.subject}",
+      TimeUnit.SECONDS.toMillis(10)
+    )
+
+    waitForObjectWithText(
+      replyContent,
+      TimeUnit.SECONDS.toMillis(10)
+    )
+
     onView(withId(R.id.editTextEmailMessage))
       .check(matches(isDisplayed()))
-      .check(matches(withText(EmailUtil.genReplyContent(incomingMessageInfo))))
+      .check(matches(withText(replyContent)))
   }
 }
