@@ -98,6 +98,8 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("flaky 1")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testLabelsManagement() {
     val allLabels = initLabelIds()
     lastLabelIds = (allLabels.take(4) + allLabels.takeLast(1)).toMutableList()

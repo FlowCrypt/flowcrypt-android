@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -31,6 +31,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -62,15 +63,17 @@ class ComposeScreenNoKeyAvailableMultipleKeysWithPassphraseInRamFlowTest :
     .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("flaky")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testAddEmailToExistingKey() {
     doTestAddEmailToExistingKey {
-      waitForObjectWithText(getResString(android.R.string.ok), 2000)
+      waitForObjectWithText(getResString(android.R.string.ok), TimeUnit.SECONDS.toMillis(2))
 
       onView(withId(R.id.buttonOk))
         .check(matches(isDisplayed()))
         .perform(click())
 
-      waitForObjectWithText(getResString(R.string.provide_passphrase), 2000)
+      waitForObjectWithText(getResString(R.string.provide_passphrase), TimeUnit.SECONDS.toMillis(2))
 
       onView(withId(R.id.eTKeyPassword))
         .inRoot(RootMatchers.isDialog())

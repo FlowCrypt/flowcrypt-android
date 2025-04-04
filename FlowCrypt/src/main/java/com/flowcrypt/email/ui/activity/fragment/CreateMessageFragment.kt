@@ -505,7 +505,24 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
           val adapter = parent.adapter as ArrayAdapter<*>
           val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
-          binding?.editTextFrom?.setTextColor(if (adapter.isEnabled(position)) originalColor else colorGray)
+
+          if (
+            adapter is FromAddressesAdapter
+            && !adapter.hasAnyKeysAvailabilityRecords()
+            && KeysStorageImpl.getInstance(requireContext())
+              .secretKeyRingsLiveData.value?.isNotEmpty() == true
+          ) {
+            updateFromAddressAdapter(
+              KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings()
+            )
+          }
+          binding?.editTextFrom?.setTextColor(
+            if (adapter.isEnabled(position)) {
+              originalColor
+            } else {
+              colorGray
+            }
+          )
         } else {
           binding?.editTextFrom?.setTextColor(originalColor)
         }
@@ -2163,11 +2180,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       return
     }
 
-    val messageHasOldSignature = oldSignature != null && binding?.editTextEmailMessage?.text?.contains(
-      ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
-    ) == true
+    val messageHasOldSignature =
+      oldSignature != null && binding?.editTextEmailMessage?.text?.contains(
+        ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
+      ) == true
 
-    if (messageHasOldSignature && oldSignature != null) {
+    if (messageHasOldSignature) {
       useNewSignature = true
       binding?.editTextEmailMessage?.setText(
         binding?.editTextEmailMessage?.text?.replaceFirst(

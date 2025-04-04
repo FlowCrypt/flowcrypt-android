@@ -17,6 +17,7 @@ import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
@@ -97,7 +98,6 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class ComposeScreenFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-  private val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -106,7 +106,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(temporaryFolderRule)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
@@ -163,24 +162,32 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  //@Ignore("flaky 5")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testEmptyEmailMsg() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
     onView(withId(R.id.editTextEmailSubject))
       .check(matches(isDisplayed()))
-      .perform(scrollTo(), click(), typeText(EMAIL_SUBJECT))
+      .perform(scrollTo(), click(), replaceText(EMAIL_SUBJECT))
     onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo())
+      .perform(scrollTo(), click(), replaceText(""))
       .check(matches(withText(`is`(emptyString()))))
+    Espresso.closeSoftKeyboard()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    waitForObjectWithText(
+      getResString(R.string.your_message_must_be_non_empty),
+      TimeUnit.SECONDS.toMillis(10)
+    )
+
     onView(withText(getResString(R.string.your_message_must_be_non_empty)))
       .check(matches(isDisplayed()))
   }
@@ -327,6 +334,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  //@Ignore("flaky 4")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testDeletingAtts() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -544,7 +553,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       TimeUnit.SECONDS.toMillis(10)
     )
 
-    onView(withText(att?.name))
+    onView(withText(att.name))
       .check(matches(isDisplayed()))
   }
 
@@ -610,7 +619,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       TimeUnit.SECONDS.toMillis(10)
     )
 
-    onView(withText(att?.name))
+    onView(withText(att.name))
       .check(matches(isDisplayed()))
   }
 
@@ -907,7 +916,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     @get:ClassRule
     @JvmStatic
-    val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
+    val temporaryFolderRule: TemporaryFolder =
+      TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
     @get:ClassRule
     @JvmStatic
