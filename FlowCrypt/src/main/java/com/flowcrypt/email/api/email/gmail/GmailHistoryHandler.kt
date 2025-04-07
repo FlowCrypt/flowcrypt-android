@@ -154,7 +154,9 @@ object GmailHistoryHandler {
         localFolder = localFolder,
         threads = uniqueThreadIdList.map { Thread().apply { id = it } },
         format = GmailApiHelper.RESPONSE_FORMAT_FULL
-      )
+      ).run {
+        takeIf { accountEntity.showOnlyEncrypted != true } ?: filter { it.hasPgpThings }
+      }
 
       val threadsToBeAdded = gmailThreadInfoList
         .filter { it.id !in existingThreadIds }
@@ -274,9 +276,7 @@ object GmailHistoryHandler {
         context, accountEntity,
         newCandidates.toList(), localFolder
       ).run {
-        if (accountEntity.showOnlyEncrypted == true) {
-          filter { it.hasPgp() }
-        } else this
+        takeIf { accountEntity.showOnlyEncrypted != true } ?: filter { it.hasPgp() }
       }
 
       val draftIdsMap = if (localFolder.isDrafts) {

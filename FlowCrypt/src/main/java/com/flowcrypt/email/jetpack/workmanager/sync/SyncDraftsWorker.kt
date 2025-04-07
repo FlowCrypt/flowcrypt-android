@@ -72,7 +72,7 @@ class SyncDraftsWorker(context: Context, params: WorkerParameters) :
         label = folderDrafts.fullName,
         msgsList = msgs,
         isNew = false,
-        onlyPgpModeEnabled = accountEntity.showOnlyEncrypted ?: false,
+        onlyPgpModeEnabled = accountEntity.showOnlyEncrypted == true,
         draftIdsMap = newDrafts.associateBy({ it.message.id }, { it.id })
       )
 

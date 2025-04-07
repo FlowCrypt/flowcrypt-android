@@ -105,7 +105,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           SharedPreferencesHelper.getString(
             PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
-          )
+          ) || account.showOnlyEncrypted == true
 
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     prepareAndShowMsgGroup(context, account, localFolder, manager, msgs)
@@ -170,7 +170,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           SharedPreferencesHelper.getString(
             PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, ""
-          )
+          ) || account.showOnlyEncrypted == true
 
     if (isEncryptedModeEnabled) {
       var isEncryptedMsgFound = false
