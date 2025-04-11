@@ -361,34 +361,40 @@ object GmailHistoryHandler {
     val updateCandidates = mutableMapOf<Long, Pair<String, Flags>>()
     val labelsToBeUpdatedMap = mutableMapOf<Long, Pair<String, String>>()
 
-    if (localFolder.isAll) {
-      for (history in historyList) {
-        history.messagesDeleted?.let { messagesDeleted ->
-          for (historyMsgDeleted in messagesDeleted) {
-            newCandidatesMap.remove(historyMsgDeleted.message.uid)
-            updateCandidates.remove(historyMsgDeleted.message.uid)
-            deleteCandidates[historyMsgDeleted.message.uid] = historyMsgDeleted.message.threadId
-          }
+    for (history in historyList) {
+      history.messagesDeleted?.let { messagesDeleted ->
+        for (historyMsgDeleted in messagesDeleted) {
+          newCandidatesMap.remove(historyMsgDeleted.message.uid)
+          updateCandidates.remove(historyMsgDeleted.message.uid)
+          deleteCandidates[historyMsgDeleted.message.uid] = historyMsgDeleted.message.threadId
         }
+      }
 
-        history.messagesAdded?.let { messagesAdded ->
-          for (historyMsgAdded in messagesAdded) {
-            if (!accountEntity.useConversationMode) {
-              if (LABEL_DRAFT in (historyMsgAdded.message.labelIds
-                  ?: emptyList()) && !localFolder.isDrafts
-              ) {
-                //skip adding drafts to non-Drafts folder
-                continue
-              }
+      history.messagesAdded?.let { messagesAdded ->
+        for (historyMsgAdded in messagesAdded) {
+          if (!accountEntity.useConversationMode) {
+            if (LABEL_DRAFT in (historyMsgAdded.message.labelIds
+                ?: emptyList()) && !localFolder.isDrafts
+            ) {
+              //skip adding drafts to non-Drafts folder
+              continue
             }
-            deleteCandidates.remove(historyMsgAdded.message.uid)
-            updateCandidates.remove(historyMsgAdded.message.uid)
-            newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
           }
+          deleteCandidates.remove(historyMsgAdded.message.uid)
+          updateCandidates.remove(historyMsgAdded.message.uid)
+          newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
         }
+      }
 
-        history.labelsRemoved?.let { labelsRemoved ->
-          for (historyLabelRemoved in labelsRemoved) {
+      history.labelsRemoved?.let { labelsRemoved ->
+        for (historyLabelRemoved in labelsRemoved) {
+          val historyMessageLabelIds = historyLabelRemoved?.message?.labelIds ?: emptyList()
+          labelsToBeUpdatedMap[historyLabelRemoved.message.uid] = Pair(
+            historyLabelRemoved.message.threadId,
+            historyMessageLabelIds.joinToString(LABEL_IDS_SEPARATOR)
+          )
+
+          if (localFolder.isAll) {
             if (
               historyLabelRemoved.labelIds?.contains(LABEL_TRASH) == true ||
               historyLabelRemoved.labelIds?.contains(LABEL_SPAM) == true
@@ -398,76 +404,7 @@ object GmailHistoryHandler {
               newCandidatesMap[historyLabelRemoved.message.uid] = historyLabelRemoved.message
               continue
             }
-
-            val historyMessageLabelIds = historyLabelRemoved?.message?.labelIds ?: emptyList()
-            labelsToBeUpdatedMap[historyLabelRemoved.message.uid] = Pair(
-              historyLabelRemoved.message.threadId,
-              historyMessageLabelIds.joinToString(LABEL_IDS_SEPARATOR)
-            )
-
-            val existedFlags = labelsToImapFlags(historyMessageLabelIds)
-            updateCandidates[historyLabelRemoved.message.uid] =
-              Pair(historyLabelRemoved.message.threadId, existedFlags)
-          }
-        }
-
-        history.labelsAdded?.let { labelsAdded ->
-          for (historyLabelAdded in labelsAdded) {
-            if (
-              historyLabelAdded.labelIds?.contains(LABEL_TRASH) == true ||
-              historyLabelAdded.labelIds?.contains(LABEL_SPAM) == true
-            ) {
-              newCandidatesMap.remove(historyLabelAdded.message.uid)
-              updateCandidates.remove(historyLabelAdded.message.uid)
-              deleteCandidates[historyLabelAdded.message.uid] = historyLabelAdded.message.threadId
-              continue
-            }
-
-            labelsToBeUpdatedMap[historyLabelAdded.message.uid] = Pair(
-              historyLabelAdded.message.threadId,
-              historyLabelAdded.message.labelIds.joinToString(LABEL_IDS_SEPARATOR)
-            )
-
-            val existedFlags = labelsToImapFlags(historyLabelAdded.message.labelIds ?: emptyList())
-            updateCandidates[historyLabelAdded.message.uid] =
-              Pair(historyLabelAdded.message.threadId, existedFlags)
-          }
-        }
-      }
-    } else {
-      for (history in historyList) {
-        history.messagesDeleted?.let { messagesDeleted ->
-          for (historyMsgDeleted in messagesDeleted) {
-            newCandidatesMap.remove(historyMsgDeleted.message.uid)
-            updateCandidates.remove(historyMsgDeleted.message.uid)
-            deleteCandidates[historyMsgDeleted.message.uid] = historyMsgDeleted.message.threadId
-          }
-        }
-
-        history.messagesAdded?.let { messagesAdded ->
-          for (historyMsgAdded in messagesAdded) {
-            if (!accountEntity.useConversationMode) {
-              if (LABEL_DRAFT in (historyMsgAdded.message.labelIds
-                  ?: emptyList()) && !localFolder.isDrafts
-              ) {
-                //skip adding drafts to non-Drafts folder
-                continue
-              }
-            }
-            deleteCandidates.remove(historyMsgAdded.message.uid)
-            updateCandidates.remove(historyMsgAdded.message.uid)
-            newCandidatesMap[historyMsgAdded.message.uid] = historyMsgAdded.message
-          }
-        }
-
-        history.labelsRemoved?.let { labelsRemoved ->
-          for (historyLabelRemoved in labelsRemoved) {
-            val historyMessageLabelIds = historyLabelRemoved?.message?.labelIds ?: emptyList()
-            labelsToBeUpdatedMap[historyLabelRemoved.message.uid] = Pair(
-              historyLabelRemoved.message.threadId,
-              historyMessageLabelIds.joinToString(LABEL_IDS_SEPARATOR)
-            )
-
+          } else {
             if (localFolder.fullName in (historyLabelRemoved.labelIds ?: emptyList())) {
               newCandidatesMap.remove(historyLabelRemoved.message.uid)
               updateCandidates.remove(historyLabelRemoved.message.uid)
@@ -485,19 +422,32 @@ object GmailHistoryHandler {
                 continue
               }
             }
-
-            val existedFlags = labelsToImapFlags(historyMessageLabelIds)
-            updateCandidates[historyLabelRemoved.message.uid] =
-              Pair(historyLabelRemoved.message.threadId, existedFlags)
           }
-        }
 
-        history.labelsAdded?.let { labelsAdded ->
-          for (historyLabelAdded in labelsAdded) {
-            labelsToBeUpdatedMap[historyLabelAdded.message.uid] = Pair(
-              historyLabelAdded.message.threadId,
-              historyLabelAdded.message.labelIds.joinToString(LABEL_IDS_SEPARATOR)
-            )
+          val existedFlags = labelsToImapFlags(historyMessageLabelIds)
+          updateCandidates[historyLabelRemoved.message.uid] =
+            Pair(historyLabelRemoved.message.threadId, existedFlags)
+        }
+      }
+
+      history.labelsAdded?.let { labelsAdded ->
+        for (historyLabelAdded in labelsAdded) {
+          labelsToBeUpdatedMap[historyLabelAdded.message.uid] = Pair(
+            historyLabelAdded.message.threadId,
+            historyLabelAdded.message.labelIds.joinToString(LABEL_IDS_SEPARATOR)
+          )
+
+          if (localFolder.isAll) {
+            if (
+              historyLabelAdded.labelIds?.contains(LABEL_TRASH) == true ||
+              historyLabelAdded.labelIds?.contains(LABEL_SPAM) == true
+            ) {
+              newCandidatesMap.remove(historyLabelAdded.message.uid)
+              updateCandidates.remove(historyLabelAdded.message.uid)
+              deleteCandidates[historyLabelAdded.message.uid] = historyLabelAdded.message.threadId
+              continue
+            }
+          } else {
             if (localFolder.fullName in (historyLabelAdded.labelIds ?: emptyList())) {
               deleteCandidates.remove(historyLabelAdded.message.uid)
               updateCandidates.remove(historyLabelAdded.message.uid)
@@ -511,11 +461,11 @@ object GmailHistoryHandler {
               deleteCandidates[historyLabelAdded.message.uid] = historyLabelAdded.message.threadId
               continue
             }
-
-            val existedFlags = labelsToImapFlags(historyLabelAdded.message.labelIds ?: emptyList())
-            updateCandidates[historyLabelAdded.message.uid] =
-              Pair(historyLabelAdded.message.threadId, existedFlags)
           }
+
+          val existedFlags = labelsToImapFlags(historyLabelAdded.message.labelIds ?: emptyList())
+          updateCandidates[historyLabelAdded.message.uid] =
+            Pair(historyLabelAdded.message.threadId, existedFlags)
         }
       }
     }
