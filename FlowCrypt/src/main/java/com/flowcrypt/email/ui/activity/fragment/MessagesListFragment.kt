@@ -568,10 +568,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       isDraftsFolder
     }
 
-    return localFolder?.fullName.equals(
-      JavaEmailConstants.FOLDER_INBOX,
-      ignoreCase = true
-    ) || isOutboxFolder || checkDrafts
+    return localFolder?.isInbox?.takeIf {
+      account?.useConversationMode != true
+    } == true || isOutboxFolder || checkDrafts
   }
 
   /**

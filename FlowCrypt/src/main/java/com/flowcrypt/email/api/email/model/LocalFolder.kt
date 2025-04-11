@@ -55,6 +55,9 @@ data class LocalFolder(
   @IgnoredOnParcel
   val isTrash: Boolean = FoldersManager.FolderType.TRASH == getFolderType()
 
+  @IgnoredOnParcel
+  val isInbox: Boolean = FoldersManager.FolderType.INBOX == getFolderType()
+
   fun getFolderType(): FoldersManager.FolderType? {
     return FoldersManager.getFolderType(this)
   }

@@ -390,7 +390,7 @@ class ThreadDetailsViewModel(
 
         val threadInfo = thread.toThreadInfo(getApplication(), activeAccount, localFolder)
 
-        if (!threadInfo.labels.contains(localFolder.fullName)) {
+        if (!threadInfo.labels.contains(localFolder.fullName) && !localFolder.isAll) {
           val context: Context = getApplication()
           throw ThreadNotFoundException(context.getString(R.string.thread_was_deleted_or_moved))
         }
