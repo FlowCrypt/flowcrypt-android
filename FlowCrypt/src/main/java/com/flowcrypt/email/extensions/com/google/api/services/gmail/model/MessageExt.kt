@@ -21,7 +21,7 @@ import jakarta.mail.internet.InternetAddress
  */
 fun Message.hasPgp(): Boolean {
   val baseContentType = payload?.headers?.firstOrNull {
-    it.name == "Content-Type"
+    it?.name == "Content-Type"
   }?.value?.asContentTypeOrNull()
 
   /**
@@ -51,25 +51,25 @@ fun Message.hasPgp(): Boolean {
 
 fun Message.getRecipients(vararg recipientType: String): List<InternetAddress> {
   return payload?.headers?.firstOrNull { header ->
-    header.name in recipientType
+    header?.name in recipientType
   }?.value?.asInternetAddresses()?.toList() ?: emptyList()
 }
 
 fun Message.getSubject(): String? {
   return payload?.headers?.firstOrNull { header ->
-    header.name == "Subject"
+    header?.name == "Subject"
   }?.value
 }
 
 fun Message.getInReplyTo(): String? {
   return payload?.headers?.firstOrNull { header ->
-    header.name == JavaEmailConstants.HEADER_IN_REPLY_TO
+    header?.name == JavaEmailConstants.HEADER_IN_REPLY_TO
   }?.value
 }
 
 fun Message.getMessageId(): String? {
   return payload?.headers?.firstOrNull { header ->
-    header.name == JavaEmailConstants.HEADER_MESSAGE_ID
+    header?.name == JavaEmailConstants.HEADER_MESSAGE_ID
   }?.value
 }
 
@@ -82,25 +82,25 @@ fun Message.hasAttachments(): Boolean {
 }
 
 fun Message.filterHeadersWithName(name: String): List<MessagePartHeader> {
-  return payload?.headers?.filter { header -> header.name == name } ?: emptyList()
+  return payload?.headers?.filter { header -> header?.name == name } ?: emptyList()
 }
 
 fun Message.containsLabel(localFolder: LocalFolder?): Boolean? {
   return labelIds?.contains(localFolder?.fullName)
 }
 
-fun Message.isTrashed(): Boolean? {
-  return labelIds.contains(GmailApiHelper.LABEL_TRASH)
+fun Message.isTrashed(): Boolean {
+  return labelIds?.contains(GmailApiHelper.LABEL_TRASH) == true
 }
 
 fun Message.isSent(): Boolean {
-  return labelIds.contains(GmailApiHelper.LABEL_SENT) == true
+  return labelIds?.contains(GmailApiHelper.LABEL_SENT) == true
 }
 
 fun Message.canBeUsed(localFolder: LocalFolder?): Boolean {
   return if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
     isTrashed() == true
   } else {
-    isTrashed()?.not() != false
+    isTrashed().not() != false
   }
 }
