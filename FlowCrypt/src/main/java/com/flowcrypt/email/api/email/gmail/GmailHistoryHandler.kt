@@ -388,6 +388,7 @@ object GmailHistoryHandler {
 
       history.labelsRemoved?.let { labelsRemoved ->
         for (historyLabelRemoved in labelsRemoved) {
+          val labelIds = historyLabelRemoved?.labelIds ?: emptyList()
           val historyMessageLabelIds = historyLabelRemoved?.message?.labelIds ?: emptyList()
           labelsToBeUpdatedMap[historyLabelRemoved.message.uid] = Pair(
             historyLabelRemoved.message.threadId,
@@ -395,17 +396,14 @@ object GmailHistoryHandler {
           )
 
           if (localFolder.isAll) {
-            if (
-              historyLabelRemoved.labelIds?.contains(LABEL_TRASH) == true ||
-              historyLabelRemoved.labelIds?.contains(LABEL_SPAM) == true
-            ) {
+            if (labelIds.contains(LABEL_TRASH) || labelIds.contains(LABEL_SPAM)) {
               deleteCandidates.remove(historyLabelRemoved.message.uid)
               updateCandidates.remove(historyLabelRemoved.message.uid)
               newCandidatesMap[historyLabelRemoved.message.uid] = historyLabelRemoved.message
               continue
             }
           } else {
-            if (localFolder.fullName in (historyLabelRemoved.labelIds ?: emptyList())) {
+            if (localFolder.fullName in labelIds) {
               newCandidatesMap.remove(historyLabelRemoved.message.uid)
               updateCandidates.remove(historyLabelRemoved.message.uid)
               deleteCandidates[historyLabelRemoved.message.uid] =
@@ -413,7 +411,7 @@ object GmailHistoryHandler {
               continue
             }
 
-            if (LABEL_TRASH in (historyLabelRemoved.labelIds ?: emptyList())) {
+            if (LABEL_TRASH in labelIds) {
               val message = historyLabelRemoved.message
               if (localFolder.fullName in historyMessageLabelIds) {
                 deleteCandidates.remove(message.uid)
@@ -432,30 +430,29 @@ object GmailHistoryHandler {
 
       history.labelsAdded?.let { labelsAdded ->
         for (historyLabelAdded in labelsAdded) {
+          val labelIds = historyLabelAdded?.labelIds ?: emptyList()
+
           labelsToBeUpdatedMap[historyLabelAdded.message.uid] = Pair(
             historyLabelAdded.message.threadId,
             historyLabelAdded.message.labelIds.joinToString(LABEL_IDS_SEPARATOR)
           )
 
           if (localFolder.isAll) {
-            if (
-              historyLabelAdded.labelIds?.contains(LABEL_TRASH) == true ||
-              historyLabelAdded.labelIds?.contains(LABEL_SPAM) == true
-            ) {
+            if (labelIds.contains(LABEL_TRASH) || labelIds.contains(LABEL_SPAM)) {
               newCandidatesMap.remove(historyLabelAdded.message.uid)
               updateCandidates.remove(historyLabelAdded.message.uid)
               deleteCandidates[historyLabelAdded.message.uid] = historyLabelAdded.message.threadId
               continue
             }
           } else {
-            if (localFolder.fullName in (historyLabelAdded.labelIds ?: emptyList())) {
+            if (localFolder.fullName in labelIds) {
               deleteCandidates.remove(historyLabelAdded.message.uid)
               updateCandidates.remove(historyLabelAdded.message.uid)
               newCandidatesMap[historyLabelAdded.message.uid] = historyLabelAdded.message
               continue
             }
 
-            if ((historyLabelAdded.labelIds ?: emptyList()).contains(LABEL_TRASH)) {
+            if (labelIds.contains(LABEL_TRASH)) {
               newCandidatesMap.remove(historyLabelAdded.message.uid)
               updateCandidates.remove(historyLabelAdded.message.uid)
               deleteCandidates[historyLabelAdded.message.uid] = historyLabelAdded.message.threadId
