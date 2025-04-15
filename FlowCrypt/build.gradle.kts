@@ -177,7 +177,6 @@ android {
       initWith(getByName("consumer"))
       dimension = "standard"
       versionNameSuffix = "_dev"
-      resourceConfigurations += setOf("en", "xxhdpi")
       buildConfigField("boolean", "IS_MAIL_DEBUG_ENABLED", "true")
       resValue("string", "gradle_is_mail_debug_enabled", "true")
     }
@@ -334,6 +333,26 @@ tasks.register("checkCorrectBranch") {
   }
 }
 
+tasks.register("checkReleaseBuildsSize") {
+  doLast {
+    android.applicationVariants.forEach { applicationVariant ->
+      if (applicationVariant.buildType.name == "release") {
+        applicationVariant.outputs.forEach { variantOutput ->
+          val apkFile = variantOutput.outputFile
+          //for now apk up to 50Mb is normal
+          val maxExpectedSizeInBytes = 50 * 1024 * 1024
+          if (apkFile.length() > maxExpectedSizeInBytes) {
+            throw GradleException(
+              "The generated release build is bigger then expected: " +
+                  "expected = not big then $maxExpectedSizeInBytes, actual = ${apkFile.length()}"
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks.register("renameReleaseBuilds") {
   doLast {
     android.applicationVariants.forEach { applicationVariant ->
@@ -353,7 +372,7 @@ tasks.register("renameReleaseBuilds") {
 }
 
 tasks.register<Copy>("copyReleaseApks") {
-  from("$buildDir") {
+  from("${layout.buildDirectory}") {
     include("**/*release*.apk")
   }
 
