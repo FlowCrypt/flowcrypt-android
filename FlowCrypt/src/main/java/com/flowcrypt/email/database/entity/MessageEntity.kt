@@ -794,7 +794,15 @@ data class MessageEntity(
             ?: entity.alias.orEmpty()
           GmailApiLabelsListAdapter.Label(name, entity.labelColor, entity.textColor)
         }
-      }.sortedBy { it.name.lowercase() }
+      }.sortedWith { labelOne, labelTwo ->
+        val one = labelOne.name.lowercase()
+        val two = labelTwo.name.lowercase()
+        if (two.equals(JavaEmailConstants.FOLDER_INBOX, true)) {
+          1
+        } else {
+          one.compareTo(two)
+        }
+      }
     }
   }
 }
