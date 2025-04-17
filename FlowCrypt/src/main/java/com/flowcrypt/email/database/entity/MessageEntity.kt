@@ -794,15 +794,11 @@ data class MessageEntity(
             ?: entity.alias.orEmpty()
           GmailApiLabelsListAdapter.Label(name, entity.labelColor, entity.textColor)
         }
-      }.sortedWith { labelOne, labelTwo ->
-        val one = labelOne.name.lowercase()
-        val two = labelTwo.name.lowercase()
-        if (two.equals(JavaEmailConstants.FOLDER_INBOX, true)) {
-          1
-        } else {
-          one.compareTo(two)
-        }
-      }
+      }.sortedWith(compareByDescending<GmailApiLabelsListAdapter.Label> {
+        it.name.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true)
+      }.thenBy {
+        it.name.lowercase()
+      })
     }
   }
 }
