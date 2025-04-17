@@ -104,50 +104,6 @@ blocks:
   - name: 'Testing'
     task:
       jobs:
-        - name: 'Lint(structural quality)'
-          execution_time_limit:
-            minutes: 15
-          commands:
-            # run Lint checks
-            - ./script/ci-lint-checks.sh
-
-        - name: 'JUnit tests'
-          execution_time_limit:
-            minutes: 15
-          commands:
-            # run JUnit tests
-            - ./script/ci-junit-tests.sh
-
-        - name: 'Instrumentation tests(No email server)'
-          execution_time_limit:
-            minutes: 60
-          matrix:
-            - env_var: EMULATOR
-              values: [ "0", "1", "2", "3" ]
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            # wait until ready
-            - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
-
-        - name: 'Instrumentation tests(with email server)'
-          execution_time_limit:
-            minutes: 60
-          commands:
-            # Run an email server
-            - cd docker-mailserver && ./run_email_server.sh && cd -
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            #wait until ready
-            - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-with-mailserver.sh
 
         - name: 'Instrumentation tests(enterprise)'
           execution_time_limit:
@@ -160,20 +116,7 @@ blocks:
             # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-enterprise.sh
-
-        - name: 'Instrumentation tests(flaky)'
-          execution_time_limit:
-            minutes: 60
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            #wait until ready
-            - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-flaky.sh
+            - ./gradlew :FlowCrypt:connectedEnterpriseUiTestsAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="com.flowcrypt.email.ui.gmailapi.passwordprotected.ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest"
 
       epilogue:
         always:

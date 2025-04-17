@@ -40,7 +40,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -114,7 +113,7 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("temp")
+  //@Ignore("temp")
   fun testDialogWithErrorText() {
     intentsRelease()
 
