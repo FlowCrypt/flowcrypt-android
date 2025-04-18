@@ -113,7 +113,10 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
       .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("temp")
   fun testDialogWithErrorText() {
+    Thread.sleep(60000)
+
     intentsRelease()
 
     //do checking before updating client configuration
