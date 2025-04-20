@@ -487,7 +487,7 @@ dependencies {
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
   implementation("org.jsoup:jsoup:1.19.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-  implementation("org.pgpainless:pgpainless-core:1.7.5")
+  implementation("org.pgpainless:pgpainless-core:1.7.6")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
   implementation("org.eclipse.angus:gimap:2.0.3")
   implementation("commons-io:commons-io:2.19.0")
