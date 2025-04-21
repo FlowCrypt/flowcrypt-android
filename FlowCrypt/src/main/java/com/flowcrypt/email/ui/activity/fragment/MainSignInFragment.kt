@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -609,8 +609,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
                   )
                 )
               } else {
+                println("DDDDDDDDD")
+                it.exception.printStackTrace(System.out)
                 showDialogWithRetryButton(
-                  getString(R.string.no_connection_or_server_is_not_reachable),
+                  getString(R.string.no_connection_or_server_is_not_reachable) + it.exceptionMsg,
                   REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
                 )
               }

@@ -115,7 +115,7 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
   @Test
   //@Ignore("temp")
   fun testDialogWithErrorText() {
-    Thread.sleep(60000)
+    //Thread.sleep(60000)
 
     intentsRelease()
 

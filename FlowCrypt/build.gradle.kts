@@ -124,10 +124,10 @@ android {
         "SHARED_TENANT_FES_URL",
         "\"https://flowcrypt.test/shared-tenant-fes/\""
       )
-      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "false")
-      buildConfigField("String", "HTTP_LOG_LEVEL", "\"NONE\"")
-      resValue("string", "gradle_is_http_log_enabled", "false")
-      resValue("string", "gradle_http_log_level", "NONE")
+      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "true")
+      buildConfigField("String", "HTTP_LOG_LEVEL", "\"BODY\"")
+      resValue("string", "gradle_is_http_log_enabled", "true")
+      resValue("string", "gradle_http_log_level", "BODY")
     }
   }
 

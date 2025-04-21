@@ -35,7 +35,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -130,7 +129,7 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
   }
 
   @Test
-  @Ignore("temp")
+  //@Ignore("temp")
   fun testFesAvailableRequestTimeOutHasConnection() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
     isDialogWithTextDisplayed(
