@@ -183,6 +183,7 @@ android {
   }
 
   compileOptions {
+    isCoreLibraryDesugaringEnabled = true
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
@@ -397,6 +398,8 @@ dependencies {
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
   ksp("com.google.auto.service:auto-service:1.1.1")
 
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
@@ -463,7 +466,7 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.8.9")
   implementation("androidx.webkit:webkit:1.13.0")
 
-  implementation("com.google.android.gms:play-services-base:18.6.0")
+  implementation("com.google.android.gms:play-services-base:18.7.0")
   implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")

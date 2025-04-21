@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
@@ -35,7 +35,7 @@ abstract class BaseSignTest : BaseTest() {
 
   protected fun setupAndClickSignInButton(signInAccountJson: String) {
     val intent = Intent()
-    intent.putExtra("googleSignInAccount", GoogleSignInAccount.zab(signInAccountJson))
+    intent.putExtra("googleSignInAccount", GoogleSignInAccount.zaa(signInAccountJson))
 
     val signInIntent = GoogleSignIn.getClient(
       getTargetContext(),
