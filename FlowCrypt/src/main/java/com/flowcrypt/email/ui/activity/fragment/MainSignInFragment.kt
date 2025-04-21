@@ -609,10 +609,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
                   )
                 )
               } else {
-                println("DDDDDDDDD")
-                it.exception.printStackTrace(System.out)
                 showDialogWithRetryButton(
-                  getString(R.string.no_connection_or_server_is_not_reachable) + it.exceptionMsg,
+                  getString(R.string.no_connection_or_server_is_not_reachable),
                   REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY
                 )
               }
