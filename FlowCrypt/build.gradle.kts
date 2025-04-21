@@ -183,6 +183,7 @@ android {
   }
 
   compileOptions {
+    isCoreLibraryDesugaringEnabled = true
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
@@ -396,6 +397,8 @@ dependencies {
 
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
   ksp("com.google.auto.service:auto-service:1.1.1")
+
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
