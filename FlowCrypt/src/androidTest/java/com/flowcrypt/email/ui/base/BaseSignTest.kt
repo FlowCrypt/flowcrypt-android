@@ -94,7 +94,7 @@ abstract class BaseSignTest : BaseTest() {
     // The payload of the JWS is JSON content of the JWT Claims
     jws.payload = claims.toJson()
 
-    jws.algorithmConstraints = AlgorithmConstraints.NO_CONSTRAINTS
+    jws.setAlgorithmConstraints(AlgorithmConstraints.NO_CONSTRAINTS)
 
     // Set the signature algorithm on the JWT/JWS that will integrity protect the claims
     jws.algorithmHeaderValue = AlgorithmIdentifiers.NONE
