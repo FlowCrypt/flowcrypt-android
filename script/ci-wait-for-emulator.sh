@@ -28,5 +28,8 @@ adb shell "iptables -t nat -A OUTPUT -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT
 # It can be helpful for debugging a mock web server
 adb forward tcp:1212 tcp:1212
 
+#check the emulator has internet connection
+adb shell "ping -c 1 www.google.com"
+
 echo "Emulator is ready"
 set +o xtrace
