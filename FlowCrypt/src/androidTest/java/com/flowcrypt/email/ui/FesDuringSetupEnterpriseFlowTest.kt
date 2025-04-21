@@ -129,7 +129,6 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
   }
 
   @Test
-  //@Ignore("temp")
   fun testFesAvailableRequestTimeOutHasConnection() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_REQUEST_TIME_OUT))
     isDialogWithTextDisplayed(
