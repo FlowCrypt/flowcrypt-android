@@ -116,7 +116,7 @@ blocks:
             # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./gradlew :FlowCrypt:connectedEnterpriseUiTestsAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="com.flowcrypt.email.ui.gmailapi.passwordprotected.ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest"
+            - ./gradlew :FlowCrypt:connectedEnterpriseUiTestsAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="com.flowcrypt.email.ui.FesDuringSetupEnterpriseFlowTest"
 
       epilogue:
         always:
