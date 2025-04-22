@@ -420,7 +420,7 @@ class GmailApiHelper {
               t: Thread?,
               responseHeaders: HttpHeaders?
             ) {
-              thread.toThreadInfo(context, accountEntity, localFolder)?.let { threadInfo ->
+              t.toThreadInfo(context, accountEntity, localFolder)?.let { threadInfo ->
                 listResult.add(threadInfo)
               }
             }
