@@ -388,7 +388,9 @@ class ThreadDetailsViewModel(
           format = GmailApiHelper.RESPONSE_FORMAT_FULL
         ) ?: error("Thread not found")
 
-        val threadInfo = thread.toThreadInfo(getApplication(), activeAccount, localFolder)
+        val threadInfo = requireNotNull(
+          thread.toThreadInfo(getApplication(), activeAccount, localFolder)
+        )
 
         if (!threadInfo.labels.contains(localFolder.fullName) && !localFolder.isAll) {
           val context: Context = getApplication()

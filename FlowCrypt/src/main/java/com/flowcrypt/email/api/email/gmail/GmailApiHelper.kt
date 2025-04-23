@@ -420,8 +420,8 @@ class GmailApiHelper {
               t: Thread?,
               responseHeaders: HttpHeaders?
             ) {
-              t?.let { thread ->
-                listResult.add(thread.toThreadInfo(context, accountEntity, localFolder))
+              t.toThreadInfo(context, accountEntity, localFolder)?.let { threadInfo ->
+                listResult.add(threadInfo)
               }
             }
 
@@ -453,7 +453,7 @@ class GmailApiHelper {
         format = format,
         metadataHeaders = metadataHeaders,
         fields = fields
-      )?.toThreadInfo(context, accountEntity, localFolder)
+      ).toThreadInfo(context, accountEntity, localFolder)
     }
 
     suspend fun getThread(

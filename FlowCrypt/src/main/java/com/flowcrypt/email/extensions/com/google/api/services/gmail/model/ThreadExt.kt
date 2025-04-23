@@ -20,11 +20,12 @@ import jakarta.mail.internet.InternetAddress
 /**
  * @author Denys Bondarenko
  */
-fun Thread.getUniqueRecipients(account: String, localFolder: LocalFolder?): List<InternetAddress> {
+fun Thread?.getUniqueRecipients(account: String, localFolder: LocalFolder?): List<InternetAddress> {
+  val threadMessages = this?.messages
   return mutableListOf<InternetAddress>().apply {
-    val filteredMessages = messages?.filter {
+    val filteredMessages = threadMessages?.filter {
       it.canBeUsed(localFolder)
-    }?.takeIf {
+    }?.filterNotNull()?.takeIf {
       it.isNotEmpty()
     } ?: return@apply
     val fromHeaderName = "From"
@@ -69,42 +70,43 @@ fun Thread.getUniqueRecipients(account: String, localFolder: LocalFolder?): List
   }
 }
 
-fun Thread.getUniqueLabelsSet(localFolder: LocalFolder?): Set<String> {
-  return messages?.filter {
-    it.canBeUsed(localFolder)
+fun Thread?.getUniqueLabelsSet(localFolder: LocalFolder?): Set<String> {
+  return this?.messages?.filter {
+    it?.canBeUsed(localFolder) == true
   }?.flatMap {
-    it.labelIds ?: emptyList()
+    it?.labelIds ?: emptyList()
   }?.toSortedSet() ?: emptySet()
 }
 
-fun Thread.getDraftsCount(localFolder: LocalFolder?): Int {
-  return messages?.filter {
-    it.canBeUsed(localFolder) && it.labelIds.contains(LABEL_DRAFT)
+fun Thread?.getDraftsCount(localFolder: LocalFolder?): Int {
+  return this?.messages?.filter {
+    it?.canBeUsed(localFolder) == true && it.labelIds?.contains(LABEL_DRAFT) == true
   }?.size ?: 0
 }
 
-fun Thread.hasUnreadMessages(localFolder: LocalFolder?): Boolean {
-  return messages?.filter {
-    it.canBeUsed(localFolder)
+fun Thread?.hasUnreadMessages(localFolder: LocalFolder?): Boolean {
+  return this?.messages?.filter {
+    it?.canBeUsed(localFolder) == true
   }?.any {
-    it.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) == true
+    it?.labelIds?.contains(GmailApiHelper.LABEL_UNREAD) == true
   } == true
 }
 
-fun Thread.hasAttachments(localFolder: LocalFolder?): Boolean {
-  return messages?.filter { it.canBeUsed(localFolder) }?.any { it.hasAttachments() } == true
+fun Thread?.hasAttachments(localFolder: LocalFolder?): Boolean {
+  return this?.messages?.filter { it?.canBeUsed(localFolder) == true }
+    ?.any { it.hasAttachments() } == true
 }
 
-fun Thread.hasPgp(localFolder: LocalFolder?): Boolean {
-  return messages?.filter { it.canBeUsed(localFolder) }?.any { it.hasPgp() } == true
+fun Thread?.hasPgp(localFolder: LocalFolder?): Boolean {
+  return this?.messages?.filter { it.canBeUsed(localFolder) }?.any { it.hasPgp() } == true
 }
 
-fun Thread.extractSubject(
+fun Thread?.extractSubject(
   context: Context,
   receiverEmail: String,
   localFolder: LocalFolder?
 ): String {
-  val filteredMessages = messages?.filter { it.canBeUsed(localFolder) }
+  val filteredMessages = this?.messages?.filter { it.canBeUsed(localFolder) }
 
   return filteredMessages?.getOrNull(0)?.takeIf { message ->
     (message.getRecipients("From").any { internetAddress ->
@@ -120,22 +122,25 @@ fun Thread.extractSubject(
     ?: context.getString(R.string.no_subject)
 }
 
-fun Thread.filteredMessages(localFolder: LocalFolder?): List<Message> {
-  return messages?.filter { it.canBeUsed(localFolder) } ?: emptyList()
+fun Thread?.filteredMessages(localFolder: LocalFolder?): List<Message> {
+  return this?.messages?.filter { it.canBeUsed(localFolder) } ?: emptyList()
 }
 
-fun Thread.toThreadInfo(
+fun Thread?.toThreadInfo(
   context: Context,
   accountEntity: AccountEntity,
   localFolder: LocalFolder? = null
-): GmailThreadInfo {
+): GmailThreadInfo? {
+  val threadId = this?.id ?: return null
   val receiverEmail = accountEntity.email
   val lastMessage = messages?.lastOrNull {
-    !it.labelIds.contains(LABEL_DRAFT) && it.canBeUsed(localFolder)
-  } ?: messages?.first()
+    it?.labelIds?.contains(LABEL_DRAFT) == false && it.canBeUsed(localFolder)
+  }
+    ?: messages?.firstOrNull()
+    ?: return null
   val gmailThreadInfo = GmailThreadInfo(
-    id = id,
-    lastMessage = requireNotNull(lastMessage),
+    id = threadId,
+    lastMessage = lastMessage,
     messagesCount = messages?.filter { it.canBeUsed(localFolder) }?.size ?: 0,
     draftsCount = getDraftsCount(localFolder),
     recipients = getUniqueRecipients(receiverEmail, localFolder),
