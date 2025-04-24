@@ -983,8 +983,8 @@ class EmailUtil {
                 //match signature
                 item.isMimeType("application/pgp-signature") ||
                 //match PGP/MIME version identification
+                //https://datatracker.ietf.org/doc/html/rfc3156#section-4
                 item.isMimeType("application/pgp-encrypted")
-                && item.description.equals("PGP/MIME version identification", false)
             ) -> true
 
         isAttachment -> false
