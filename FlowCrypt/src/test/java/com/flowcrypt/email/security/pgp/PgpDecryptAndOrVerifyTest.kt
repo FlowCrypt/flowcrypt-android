@@ -20,7 +20,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -187,12 +186,6 @@ class PgpDecryptAndOrVerifyTest {
         charset = charset
       )
     }
-  }
-
-  @Test
-  @Ignore("need to add realization")
-  fun testDecryptJustSignedFile() {
-
   }
 
   @Test
