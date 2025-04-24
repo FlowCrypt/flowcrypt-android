@@ -25,24 +25,19 @@ import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import org.pgpainless.util.Passphrase
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 
 class PgpKeyTest {
   companion object {
-    private fun loadResourceAsString(
-      path: String,
-      charset: Charset = StandardCharsets.UTF_8
-    ): String = TestUtil.readResourceAsString("${PgpKeyTest::class.simpleName}/$path", charset)
-
     @Suppress("SameParameterValue")
     private fun loadSecretKey(keyFile: String): PGPSecretKeyRing? {
-      return PGPainless.readKeyRing().secretKeyRing(loadResourceAsString("keys/$keyFile"))
+      return PGPainless.readKeyRing()
+        .secretKeyRing(TestUtil.readResourceAsString("pgp/keys/$keyFile"))
     }
 
     @Suppress("SameParameterValue")
     private fun loadPublicKey(keyFile: String): PGPPublicKeyRing? {
-      return PGPainless.readKeyRing().publicKeyRing(loadResourceAsString("keys/$keyFile"))
+      return PGPainless.readKeyRing()
+        .publicKeyRing(TestUtil.readResourceAsString("pgp/keys/$keyFile"))
     }
   }
 
@@ -55,8 +50,8 @@ class PgpKeyTest {
       usableForSigning = true,
       isRevoked = false,
       privateKey = null,
-      publicKey = loadResourceAsString(
-        "keys/E76853E128A0D376CAE47C143A30F4CC0A9A8F10.public.gpg-key"
+      publicKey = TestUtil.readResourceAsString(
+        "pgp/keys/E76853E128A0D376CAE47C143A30F4CC0A9A8F10.public.gpg-key"
       ).replace("@@VERSION_NAME@@", BuildConfig.VERSION_NAME),
       users = listOf("Test <t@est.com>"),
       primaryUserId = "Test <t@est.com>",
@@ -100,8 +95,8 @@ class PgpKeyTest {
       usableForEncryption = false,
       usableForSigning = false,
       privateKey = null,
-      publicKey = loadResourceAsString(
-        "keys/6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9.public.gpg-key"
+      publicKey = TestUtil.readResourceAsString(
+        "pgp/keys/6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9.public.gpg-key"
       ).replace("@@VERSION_NAME@@", BuildConfig.VERSION_NAME),
       users = listOf("<auto.refresh.expired.key@recipient.com>"),
       primaryUserId = "<auto.refresh.expired.key@recipient.com>",
@@ -153,7 +148,7 @@ class PgpKeyTest {
 
   @Test
   fun testPublicKey_Issue1358() {
-    val keyText = loadResourceAsString("keys/issue-1358.public.gpg-key")
+    val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
     val actual = PgpKey.parseKeys(source = keyText)
     assertEquals(1, actual.getAllKeys().size)
   }
@@ -162,7 +157,8 @@ class PgpKeyTest {
   fun testReadCorruptedPrivateKey() {
     try {
       PGPainless.getPolicy().enableKeyParameterValidation = true
-      val encryptedKeyText = loadResourceAsString("keys/issue-1669-corrupted.private.gpg-key")
+      val encryptedKeyText =
+        TestUtil.readResourceAsString("pgp/keys/issue-1669-corrupted.private.gpg-key")
       val passphrase = Passphrase.fromPassword("123")
       assertThrows(KeyIntegrityException::class.java) {
         PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
@@ -177,7 +173,7 @@ class PgpKeyTest {
     val policy = PGPainless.getPolicy()
     val originalSignatureHashAlgorithmPolicy = policy.certificationSignatureHashAlgorithmPolicy
     try {
-      val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+      val keyWithSHA1Algo = TestUtil.readResourceAsString("pgp/keys/sha1@flowcrypt.test_pub.asc")
       PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
         HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
       assertFalse(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
@@ -196,7 +192,7 @@ class PgpKeyTest {
     val originalSignatureHashAlgorithmPolicy = policy.certificationSignatureHashAlgorithmPolicy
     try {
       assertFalse(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
-      val keyWithSHA1Algo = loadResourceAsString("keys/sha1@flowcrypt.test_pub.asc")
+      val keyWithSHA1Algo = TestUtil.readResourceAsString("pgp/keys/sha1@flowcrypt.test_pub.asc")
       PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
         HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
       assertTrue(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))

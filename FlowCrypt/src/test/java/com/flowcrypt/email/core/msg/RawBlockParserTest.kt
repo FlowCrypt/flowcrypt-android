@@ -1,15 +1,31 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.core.msg
 
 import com.flowcrypt.email.extensions.kotlin.normalize
+import com.flowcrypt.email.security.pgp.PgpSignature
+import com.flowcrypt.email.util.TestUtil
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class RawBlockParserTest {
+
+  @Test
+  fun testExtractClearTextFromMsgSignedMessagePreserveNewlines() {
+    val text = TestUtil.readResourceAsString("pgp/messages/signed-message-preserve-newlines.txt")
+    val blocks = RawBlockParser.detectBlocks(text).toList()
+    val clearText = PgpSignature.extractClearText(text)
+    assertEquals(
+      "Standard message\n\nsigned inline\n\nshould easily verify\nThis is email footer",
+      clearText
+    )
+    assertEquals(1, blocks.size)
+    assertEquals(RawBlockParser.RawBlockType.PGP_CLEARSIGN_MSG, blocks[0].type)
+  }
+
   @Test
   fun testNoStringIndexOutOfBoundsExceptionInParser() {
     checkForSinglePlaintextBlock("-----BEGIN FOO-----\n")
