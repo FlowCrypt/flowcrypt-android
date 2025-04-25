@@ -22,9 +22,9 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -35,10 +35,6 @@ import java.net.HttpURLConnection
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-@Ignore(
-  "Need to think about this test. " +
-      "It uses real API calls and sometimes it fails due to a server not available issue."
-)
 class WkdClientTest {
   private val context: Context = ApplicationProvider.getApplicationContext()
 
@@ -48,22 +44,21 @@ class WkdClientTest {
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
 
   @Test
-  fun existingEmailTest() = runBlocking {
+  fun existingEmailFlowCryptDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(context, EXISTING_EMAIL)
-    assertTrue("Key not found", keys != null)
-    assertTrue("There are no keys in the key collection", keys!!.keyRings.hasNext())
+    assertTrue("There are no keys in the key collection", requireNotNull(keys).keyRings.hasNext())
   }
 
   @Test
-  fun nonExistingEmailTest1() = runBlocking {
+  fun nonExistingEmailFlowCryptDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(context, NOT_EXISTING_EMAIL)
-    assertTrue("Key found for non-existing email", keys == null)
+    assertNull("Key found for non-existing email", keys)
   }
 
   @Test
-  fun nonExistingEmailTest2() = runBlocking {
-    val keys = WkdClient.lookupEmail(context, "doesnotexist@google.com")
-    assertTrue("Key found for non-existing email", keys == null)
+  fun nonExistingEmailForKnownDomainTest() = runBlocking {
+    val keys = WkdClient.lookupEmail(context, "doesnotexist@localhost")
+    assertNull("Key found for non-existing email", keys)
   }
 
   @Test
@@ -72,7 +67,7 @@ class WkdClientTest {
       context,
       "doesnotexist@thisdomaindoesnotexist.example"
     )
-    assertTrue("Key found for non-existing email", keys == null)
+    assertNull("Key found for non-existing domain", keys)
   }
 
   companion object {
