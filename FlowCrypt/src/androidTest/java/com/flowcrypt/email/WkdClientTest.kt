@@ -65,7 +65,7 @@ class WkdClientTest {
   fun nonExistingDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(
       context,
-      "doesnotexist@thisdomaindoesnotexist.test"
+      "doesnotexist@thisdomaindoesnotexist.example"
     )
     assertNull("Key found for non-existing domain", keys)
   }
