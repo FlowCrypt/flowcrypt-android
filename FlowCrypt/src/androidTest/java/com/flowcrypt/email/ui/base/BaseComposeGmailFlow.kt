@@ -19,8 +19,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withParent
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
@@ -34,22 +32,16 @@ import com.flowcrypt.email.matchers.ToolBarTitleMatcher.Companion.withText
 import com.flowcrypt.email.rules.OutgoingMessageConfigurationRule
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
-import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.gmail.model.MessagePartHeader
-import jakarta.activation.DataHandler
-import jakarta.activation.DataSource
 import jakarta.mail.BodyPart
 import jakarta.mail.Message
 import jakarta.mail.Part
 import jakarta.mail.Session
 import jakarta.mail.internet.InternetAddress
-import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
-import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -66,10 +58,7 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.io.OutputStream
 import java.net.HttpURLConnection
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 
@@ -396,99 +385,6 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
       .perform(scrollTo(), click())
     Thread.sleep(TimeUnit.SECONDS.toMillis(1))
   }
-
-  private fun preparePgpMessageWithMimeContent(): String {
-    val mimeMessage = FlowCryptMimeMessage(Session.getInstance(Properties()))
-    mimeMessage.subject = SUBJECT_EXISTING_PGP_MIME
-    mimeMessage.setFrom(addAccountToDatabaseRule.account.email)
-    mimeMessage.setRecipients(Message.RecipientType.TO, addAccountToDatabaseRule.account.email)
-    mimeMessage.setContent(MimeMultipart().apply {
-      addBodyPart(
-        MimeBodyPart().apply {
-          setText(MESSAGE_EXISTING_PGP_MIME)
-        }
-      )
-
-      for ((index, attachment) in attachments.withIndex()) {
-        addBodyPart(
-          MimeBodyPart().apply {
-            dataHandler = DataHandler(object : DataSource {
-              override fun getInputStream(): InputStream = attachmentsDataCache[index].inputStream()
-
-              override fun getOutputStream(): OutputStream? = null
-
-              override fun getContentType(): String {
-                return if (index == 2) {
-                  Constants.MIME_TYPE_BINARY_DATA
-                } else {
-                  JavaEmailConstants.MIME_TYPE_TEXT_PLAIN
-                }
-              }
-
-              override fun getName(): String = attachment.name
-            })
-
-            fileName = attachment.name
-            contentID = EmailUtil.generateContentId()
-          })
-      }
-    })
-
-    val byteArrayOutputStream = ByteArrayOutputStream()
-    mimeMessage.writeTo(byteArrayOutputStream)
-
-    return PgpEncryptAndOrSign.encryptAndOrSignMsg(
-      msg = byteArrayOutputStream.toString(),
-      pubKeys = listOf(
-        addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey,
-        defaultFromPgpKeyDetails.publicKey,
-        existingCcPgpKeyDetails.publicKey,
-      ),
-      prvKeys = listOf(
-        requireNotNull(defaultFromPgpKeyDetails.privateKey)
-      ),
-      secretKeyRingProtector = secretKeyRingProtector
-    )
-  }
-
-  private fun prepareMessageHeaders(
-    subject: String,
-    dateInMilliseconds: Long,
-    boundary: String
-  ) = listOf(
-    MessagePartHeader().apply {
-      name = "MIME-Version"
-      value = "1.0"
-    },
-    MessagePartHeader().apply {
-      name = "Date"
-      value = SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z").format(Date(dateInMilliseconds))
-    },
-    MessagePartHeader().apply {
-      name = "Message-ID"
-      value = EmailUtil.generateContentId()
-    },
-    MessagePartHeader().apply {
-      name = "Subject"
-      value = subject
-    },
-    MessagePartHeader().apply {
-      name = "From"
-      value = DEFAULT_FROM_RECIPIENT
-    },
-    MessagePartHeader().apply {
-      name = "To"
-      value = EXISTING_MESSAGE_TO_RECIPIENT
-    },
-    MessagePartHeader().apply {
-      name = "Cc"
-      value = EXISTING_MESSAGE_CC_RECIPIENT
-    },
-    MessagePartHeader().apply {
-      name = "Content-Type"
-      value = "multipart/mixed; boundary=\\\"$boundary\\\""
-    },
-  )
 
   private fun openComposeScreenAndFillDataIfNeeded() {
     val outgoingMessageConfiguration =

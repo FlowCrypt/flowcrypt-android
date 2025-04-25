@@ -35,11 +35,11 @@ import java.util.Properties
  */
 class ProcessMimeMessageTest {
   @Test
-  fun testProcessProtonmailPgpMime() {
+  fun testProcessProtonmailPgpMimeEncrypted() {
     val processedMimeMessageResult = PgpMsg.processMimeMessage(
       MimeMessage(
         Session.getInstance(Properties()),
-        TestUtil.readResourceAsByteArray("mime/protonmail_pgp_mime.eml").inputStream()
+        TestUtil.readResourceAsByteArray("mime/protonmail_pgp_mime_encrypted.eml").inputStream()
       ),
       VERIFICATION_PUBLIC_KEYS,
       SECRET_KEYS,

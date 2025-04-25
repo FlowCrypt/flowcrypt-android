@@ -121,7 +121,7 @@ data class AttachmentInfo(
 
   fun isHidden() = when {
     //https://github.com/FlowCrypt/flowcrypt-android/issues/1475
-    name.isNullOrEmpty() && type.lowercase() == "application/pgp-encrypted; name=\"\"" -> true
+    name.isNullOrEmpty() && "application/pgp-encrypted" == type.asContentTypeOrNull()?.baseType -> true
 
     //https://github.com/FlowCrypt/flowcrypt-android/issues/2540
     "application/pgp-signature" == type.asContentTypeOrNull()?.baseType -> true

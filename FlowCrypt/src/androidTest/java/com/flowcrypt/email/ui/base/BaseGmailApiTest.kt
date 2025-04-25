@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FlowCryptMimeMessage
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.gmail.api.GmaiAPIMimeMessage
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
@@ -359,12 +360,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_EXISTING_PGP_MIME}?fields=raw&format=raw" -> {
-        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setBody(
-            Base64.getEncoder()
-              .encodeToString(preparePgpMimeMessage(preparePgpMessageWithMimeContent()).toByteArray())
-          )
+      request.method == "GET" && request.path?.matches(REGEX_USER_MESSAGES_GET_PGP_MIME_FORMAT_RAW) == true -> {
+        genPgpMimeRawResponse(request.path ?: "")
       }
 
       request.method == "POST" && request.path == "/gmail/v1/users/me/messages/batchModify" -> {
@@ -391,6 +388,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1,
           MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2,
           MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+          MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1,
         )
 
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
@@ -518,6 +516,43 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
+
+  private fun genPgpMimeRawResponse(path: String): MockResponse {
+    val messageId =
+      REGEX_USER_MESSAGES_GET_PGP_MIME_FORMAT_RAW.find(path)?.groups?.get(1)?.value?.trim()
+    val gmailMessage = when (messageId) {
+      MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1 -> genPGPMimeMessage(
+        threadId = THREAD_ID_PGP_MIME,
+        messageId = MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1,
+        isFullFormat = true
+      )
+
+      MESSAGE_ID_EXISTING_PGP_MIME -> genPGPMimeMessage(
+        threadId = THREAD_ID_EXISTING_PGP_MIME,
+        messageId = MESSAGE_ID_EXISTING_PGP_MIME,
+        isFullFormat = true
+      )
+
+      else -> null
+    }
+
+    return if (gmailMessage != null) {
+      MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+        .setBody(
+          Base64.getEncoder().encodeToString(
+            ByteArrayOutputStream().apply {
+              GmaiAPIMimeMessage(
+                Session.getInstance(Properties()),
+                gmailMessage
+              ).writeTo(this)
+            }.toByteArray()
+          )
+        )
+    } else {
+      MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+  }
+
 
   private fun genUserMessagesGetWithFieldsFormatFullResponse(path: String): MockResponse {
     val messageId =
@@ -691,7 +726,19 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         ).toString()
       )
 
-      MESSAGE_ID_EXISTING_PGP_MIME -> baseResponse.setBody(genPGPMimeMessage())
+      MESSAGE_ID_EXISTING_PGP_MIME -> baseResponse.setBody(
+        genPGPMimeMessage(
+          threadId = THREAD_ID_EXISTING_PGP_MIME,
+          messageId = MESSAGE_ID_EXISTING_PGP_MIME
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1 -> baseResponse.setBody(
+        genPGPMimeMessage(
+          threadId = THREAD_ID_PGP_MIME,
+          messageId = MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1
+        ).toString()
+      )
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
@@ -720,7 +767,19 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
       )
 
       MESSAGE_ID_EXISTING_PGP_MIME -> baseResponse.setBody(
-        genPGPMimeMessage(isFullFormat = true)
+        genPGPMimeMessage(
+          threadId = THREAD_ID_EXISTING_PGP_MIME,
+          messageId = MESSAGE_ID_EXISTING_PGP_MIME,
+          isFullFormat = true
+        ).toString()
+      )
+
+      MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1 -> baseResponse.setBody(
+        genPGPMimeMessage(
+          threadId = THREAD_ID_PGP_MIME,
+          messageId = MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1,
+          isFullFormat = true
+        ).toString()
       )
 
       MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE -> baseResponse.setBody(
@@ -866,26 +925,13 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         genThreadWithMixedMessages()
       )
 
+      THREAD_ID_PGP_MIME -> baseResponse.setBody(
+        genThreadWithPGPMimeMessages()
+      )
+
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
-
-  private fun genPathForMessageWithSomeFields(messageId: String) =
-    "/gmail/v1/users/me/messages/$messageId?fields=" +
-        "id," +
-        "threadId," +
-        "labelIds," +
-        "snippet," +
-        "sizeEstimate," +
-        "historyId," +
-        "internalDate," +
-        "payload/partId," +
-        "payload/mimeType," +
-        "payload/filename," +
-        "payload/headers," +
-        "payload/body," +
-        "payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
-        "&format=full"
 
   private fun genPathToGetAttachment(messageId: String, attachmentId: String) =
     "/gmail/v1/users/me/messages/${messageId}/attachments/${attachmentId}" +
@@ -1102,6 +1148,17 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         includeAttachments = false,
         isFullFormat = true
       ),
+    )
+  }.toString()
+
+  private fun genThreadWithPGPMimeMessages() = Thread().apply {
+    factory = GsonFactory.getDefaultInstance()
+    id = THREAD_ID_PGP_MIME
+    messages = listOf(
+      genPGPMimeMessage(
+        threadId = THREAD_ID_PGP_MIME,
+        messageId = MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1
+      )
     )
   }.toString()
 
@@ -1390,9 +1447,9 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     return byteArrayOutputStream
   }
 
-  private fun preparePgpMessageWithMimeContent(): String {
+  private fun preparePgpMessageWithMimeContent(subject: String): String {
     val mimeMessage = FlowCryptMimeMessage(Session.getInstance(Properties()))
-    mimeMessage.subject = SUBJECT_EXISTING_PGP_MIME
+    mimeMessage.subject = subject
     mimeMessage.setFrom(addAccountToDatabaseRule.account.email)
     mimeMessage.setRecipients(Message.RecipientType.TO, addAccountToDatabaseRule.account.email)
     mimeMessage.setContent(MimeMultipart().apply {
@@ -1487,13 +1544,19 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     },
   )
 
-  private fun genPGPMimeMessage(isFullFormat: Boolean = false) =
+  private fun genPGPMimeMessage(
+    threadId: String,
+    messageId: String,
+    labels: List<String> = listOf(JavaEmailConstants.FOLDER_INBOX),
+    subject: String = SUBJECT_EXISTING_PGP_MIME,
+    isFullFormat: Boolean = false
+  ) =
     com.google.api.services.gmail.model.Message().apply {
       factory = GsonFactory.getDefaultInstance()
-      id = MESSAGE_ID_EXISTING_PGP_MIME
-      threadId = THREAD_ID_EXISTING_PGP_MIME
-      labelIds = listOf(JavaEmailConstants.FOLDER_INBOX)
-      snippet = SUBJECT_EXISTING_PGP_MIME
+      id = messageId
+      this.threadId = threadId
+      labelIds = labels
+      snippet = subject
       historyId = HISTORY_ID_PGP_MIME
       val boundary = "000000000000fbd8c4060ea7c69b"
       payload = MessagePart().apply {
@@ -1501,10 +1564,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         mimeType = "multipart/encrypted"
         filename = ""
         headers = prepareMessageHeaders(
-          subject = SUBJECT_EXISTING_PGP_MIME,
+          subject = subject,
           dateInMilliseconds = DATE_EXISTING_PGP_MIME,
           boundary = boundary,
-          messageId = MESSAGE_ID_EXISTING_PGP_MIME
+          messageId = messageId
         ).filterNot {
           it.name == "Content-Type"
         }.toMutableList().apply {
@@ -1561,7 +1624,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
               },
             )
             body = MessagePartBody().apply {
-              val pgpMessageWithMimeContent = preparePgpMessageWithMimeContent()
+              val pgpMessageWithMimeContent = preparePgpMessageWithMimeContent(subject = subject)
+              if (isFullFormat) {
+                data = Base64.getEncoder().encodeToString(pgpMessageWithMimeContent.toByteArray())
+              }
               setSize(pgpMessageWithMimeContent.length)
             }
           }
@@ -1569,39 +1635,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
       }
       internalDate = DATE_EXISTING_PGP_MIME
       sizeEstimate = 0 // we don't care about this parameter
-    }.toString()
-
-  private fun preparePgpMimeMessage(pgpMessage: String): String {
-    return "Return-Path: <default@flowcrypt.test>\n" +
-        "Delivered-To: default@flowcrypt.test\n" +
-        "Message-ID: <0af3b089-d018-42ba-b897-c1553caae9d5@flowcrypt.test>\n" +
-        "Date: Thu, 7 Mar 2024 18:00:18 +0200\n" +
-        "Mime-Version: 1.0\n" +
-        "Content-Language: en-US\n" +
-        "To: default@flowcrypt.test\n" +
-        "From: Default User <default@flowcrypt.test>\n" +
-        "Subject: ...\n" +
-        "Content-Type: multipart/encrypted;\n" +
-        " protocol=\"application/pgp-encrypted\";\n" +
-        " boundary=\"------------vjUmb0D80S09zqu10qP9Vv0s\"\n" +
-        "\n" +
-        "This is an OpenPGP/MIME encrypted message (RFC 4880 and 3156)\n" +
-        "--------------vjUmb0D80S09zqu10qP9Vv0s\n" +
-        "Content-Type: application/pgp-encrypted\n" +
-        "Content-Description: PGP/MIME version identification\n" +
-        "\n" +
-        "Version: 1\n" +
-        "\n" +
-        "--------------vjUmb0D80S09zqu10qP9Vv0s\n" +
-        "Content-Type: application/octet-stream; name=\"encrypted.asc\"\n" +
-        "Content-Description: OpenPGP encrypted message\n" +
-        "Content-Disposition: inline; filename=\"encrypted.asc\"\n" +
-        "\n" +
-        pgpMessage +
-        "\n" +
-        "\n" +
-        "--------------vjUmb0D80S09zqu10qP9Vv0s--\n"
-  }
+    }
 
   private fun createFilesForCommonAttachments() {
     attachments.clear()
@@ -1637,7 +1671,6 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val THREAD_ID_ONLY_ENCRYPTED = "200000e222d6c002"
     const val MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1 = "5555555559992001"
     const val MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2 = "5555555559992002"
-    const val THREAD_ID_STANDARD_AND_ENCRYPTED = "200000e222d6c003"
     const val THREAD_ID_NO_ATTACHMENTS = "200000e222d6c004"
     const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_1 = "5555555559993001"
     const val MESSAGE_ID_THREAD_NO_ATTACHMENTS_2 = "5555555559993002"
@@ -1663,6 +1696,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val MESSAGE_ID_THREAD_MIXED_MESSAGES_1 = "5555555559910001"
     const val MESSAGE_ID_THREAD_MIXED_MESSAGES_2 = "5555555559910002"
     const val MESSAGE_ID_THREAD_MIXED_MESSAGES_3 = "5555555559910003"
+    const val THREAD_ID_PGP_MIME = "200000e222d6c011"
+    const val MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1 = "5555555559911001"
 
     const val SUBJECT_NO_ATTACHMENTS = "No attachments"
     const val SUBJECT_SINGLE_STANDARD = "Single standard message"
@@ -1691,8 +1726,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val MESSAGE_ID_EXISTING_PGP_MIME = "5555555555555553"
     const val THREAD_ID_EXISTING_PGP_MIME = "1111111111111113"
     const val DATE_EXISTING_PGP_MIME = 1704963581000
-    const val SUBJECT_EXISTING_PGP_MIME = "PGP/MIME Encrypted"
-    const val MESSAGE_EXISTING_PGP_MIME = "PGP/MIME"
+    const val SUBJECT_EXISTING_PGP_MIME = "PGP/MIME"
+    const val MESSAGE_EXISTING_PGP_MIME = "PGP/MIME message"
 
     val HISTORY_ID_STANDARD = BigInteger("53163127")
     val HISTORY_ID_ENCRYPTED = BigInteger("53163327")
@@ -1706,6 +1741,8 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           "body/size,body/attachmentId\\)&format=full").toRegex()
     val REGEX_USER_MESSAGES_GET_FORMAT_FULL =
       ("/gmail/v1/users/me/messages/(.{16})\\?format=full").toRegex()
+    val REGEX_USER_MESSAGES_GET_PGP_MIME_FORMAT_RAW =
+      ("/gmail/v1/users/me/messages/(.{16})\\?fields=raw&format=raw").toRegex()
     val REGEX_USER_THREADS_GET_FORMAT_FULL =
       ("/gmail/v1/users/me/threads/(.{16})\\?format=full").toRegex()
 
@@ -1771,6 +1808,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
         Thread().apply { id = THREAD_ID_FEW_MESSAGES_WITH_FEW_DRAFTS },
         Thread().apply { id = THREAD_ID_ONE_MESSAGE_WITH_FEW_DRAFTS },
         Thread().apply { id = THREAD_ID_MIXED_MESSAGES },
+        Thread().apply { id = THREAD_ID_PGP_MIME },
       )
     }
 

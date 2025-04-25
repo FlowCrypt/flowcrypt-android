@@ -26,6 +26,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.com.flowcrypt.email.util.processing
 import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isTrashed
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
+import com.flowcrypt.email.extensions.kotlin.asContentTypeOrNull
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.pgp.PgpKey
@@ -187,13 +188,33 @@ class ProcessMessageViewModel(
               )
 
               val activeAccount = getActiveAccountSuspend() ?: error("No active account")
-
-              val attachments = roomDatabase.attachmentDao().getAttachments(
+              val attachmentsAsMimePart = roomDatabase.attachmentDao().getAttachments(
                 account = activeAccount.email,
                 accountType = activeAccount.accountType,
                 label = messageEntity.folder,
                 uid = messageEntity.uid
-              ).map { it.toAttInfo() }
+              )
+
+              val filteredAttachments = attachmentsAsMimePart.mapNotNull {
+                when {
+                  processedMimeMessageResult.verificationResult.hasEncryptedParts -> {
+                    when {
+                      //PGP MIME Encrypted. Attachments can be dropped
+                      //https://datatracker.ietf.org/doc/html/rfc3156#section-4
+                      attachmentsAsMimePart.size == 2
+                          && "application/pgp-encrypted" ==
+                          attachmentsAsMimePart[0].type.asContentTypeOrNull()?.baseType
+                          && "application/octet-stream" ==
+                          attachmentsAsMimePart[1].type.asContentTypeOrNull()?.baseType
+                        -> null
+
+                      else -> it.toAttInfo()
+                    }
+                  }
+
+                  else -> it.toAttInfo()
+                }
+              }
 
               val inlinedAttachmentInfoList = mutableListOf<AttachmentInfo>()
 
@@ -217,7 +238,7 @@ class ProcessMessageViewModel(
                 data = message.copy(
                   messageEntity = messageEntity,
                   incomingMessageInfo = incomingMessageInfo,
-                  attachments = attachments + inlinedAttachmentInfoList
+                  attachments = filteredAttachments + inlinedAttachmentInfoList
                 )
               )
             } catch (e: Exception) {
