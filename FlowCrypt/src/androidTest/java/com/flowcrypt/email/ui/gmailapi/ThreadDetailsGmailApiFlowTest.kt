@@ -410,4 +410,37 @@ class ThreadDetailsGmailApiFlowTest : BaseThreadDetailsGmailApiFlowTest() {
       )
     )
   }
+
+  @Test
+  fun testThreadDetailsWithPgpMimeMessages() {
+    openThreadBasedOnPosition(9)
+    checkCorrectThreadDetails(
+      messagesCount = 1,
+      threadSubject = SUBJECT_EXISTING_PGP_MIME,
+      labels = listOf(
+        GmailApiLabelsListAdapter.Label("Inbox")
+      )
+    )
+    checkBaseMessageDetailsInTread(
+      fromAddress = "From",
+      datetimeInMilliseconds = DATE_EXISTING_ENCRYPTED
+    )
+    checkPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+    checkWebViewText(MESSAGE_EXISTING_PGP_MIME)
+    checkAttachments(
+      listOf(
+        Pair(ATTACHMENT_NAME_1, attachmentsDataCache[0].size.toLong()),
+        Pair(ATTACHMENT_NAME_2, attachmentsDataCache[1].size.toLong()),
+        Pair(ATTACHMENT_NAME_3, attachmentsDataCache[2].size.toLong())
+      )
+    )
+    checkReplyButtons(isEncryptedMode = true)
+    //hasAttachments = false because the app doesn't update UI when found attachments
+    //in decrypted PGPMime message
+    checkCollapsedState(1, hasPgp = true, hasAttachments = false)
+  }
 }
