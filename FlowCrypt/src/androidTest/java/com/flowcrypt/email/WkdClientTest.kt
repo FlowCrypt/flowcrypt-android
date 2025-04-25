@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- * Ivan Pizhenko
- * DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -72,7 +70,7 @@ class WkdClientTest {
   fun nonExistingDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(
       context,
-      "doesnotexist@thisdomaindoesnotexist.test"
+      "doesnotexist@thisdomaindoesnotexist.example"
     )
     assertTrue("Key found for non-existing email", keys == null)
   }
