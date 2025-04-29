@@ -19,20 +19,10 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import com.flowcrypt.email.R
-import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
-import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
-import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
-import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.viewaction.CustomViewActions.clickOnFolderWithName
@@ -43,14 +33,14 @@ import com.google.api.client.json.JsonObjectParser
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.model.Draft
 import com.google.api.services.gmail.model.Label
-import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.ListLabelsResponse
-import com.google.api.services.gmail.model.ListMessagesResponse
 import com.google.api.services.gmail.model.ListSendAsResponse
+import com.google.api.services.gmail.model.ListThreadsResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import com.google.api.services.gmail.model.MessagePartBody
 import com.google.api.services.gmail.model.MessagePartHeader
+import com.google.api.services.gmail.model.Thread
 import jakarta.activation.DataSource
 import jakarta.mail.Session
 import jakarta.mail.internet.ContentType
@@ -64,7 +54,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Before
-import org.pgpainless.util.Passphrase
 import rawhttp.core.RawHttp
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -79,51 +68,11 @@ import kotlin.random.Random
 /**
  * @author Denys Bondarenko
  */
-abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
-  abstract val mockWebServerRule: FlowCryptMockWebServerRule
+abstract class BaseDraftsGmailAPIFlowTest : BaseGmailApiTest(
+  accountEntity = BASE_ACCOUNT_ENTITY.copy(useConversationMode = true)
+) {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
-  protected val draftsCache = mutableListOf<Draft>()
-
-  private val accountEntity = AccountDaoManager.getDefaultAccountDao().copy(
-    accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
-      flags = listOf(
-        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
-        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
-        ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
-        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
-        ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
-        ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
-      ),
-      keyManagerUrl = "https://flowcrypt.test/",
-    ), useAPI = true, useCustomerFesUrl = true
-  )
-
-  final override val addAccountToDatabaseRule: AddAccountToDatabaseRule =
-    AddAccountToDatabaseRule(accountEntity)
-
-  protected val addPrivateKeyToDatabaseRule =
-    AddPrivateKeyToDatabaseRule(addAccountToDatabaseRule.account)
-
-  protected val addLabelsToDatabaseRule = AddLabelsToDatabaseRule(
-    account = addAccountToDatabaseRule.account, folders = listOf(
-      LocalFolder(
-        account = addAccountToDatabaseRule.account.email,
-        fullName = JavaEmailConstants.FOLDER_DRAFT,
-        folderAlias = JavaEmailConstants.FOLDER_DRAFT,
-        attributes = listOf("\\HasNoChildren", "\\Draft")
-      ), LocalFolder(
-        account = addAccountToDatabaseRule.account.email,
-        fullName = JavaEmailConstants.FOLDER_INBOX,
-        folderAlias = JavaEmailConstants.FOLDER_INBOX,
-        attributes = listOf("\\HasNoChildren")
-      )
-    )
-  )
-
-  protected val decryptedPrivateKey = PgpKey.decryptKey(
-    requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey),
-    Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-  )
+  protected val draftsCache = mutableMapOf<String, Draft>()
 
   @Before
   fun clearCache() {
@@ -144,10 +93,18 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     return Pair(draft, mimeMessage)
   }
 
-  protected fun genMsgDetailsMockResponse(
-    messageId: String,
-    messageThreadId: String,
-  ) =
+  protected fun getMimeMessageFromDraft(draft: Draft?): MimeMessage? {
+    if (draft?.message?.raw == null) {
+      return null
+    }
+
+    val rawMimeMessageAsByteArray = Base64.decode(
+      draft.message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+    )
+    return MimeMessage(Session.getInstance(Properties()), rawMimeMessageAsByteArray.inputStream())
+  }
+
+  protected fun genMsgDetailsMockResponse(messageId: String, messageThreadId: String) =
     MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       .setBody(Message().apply {
         factory = GsonFactory.getDefaultInstance()
@@ -175,7 +132,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     }
   }
 
-  protected fun openComposeScreenAndTypeSubject(subject: String) {
+  protected fun openComposeScreenAndTypeData(text: String) {
     //open the compose screen
     onView(withId(R.id.floatActionButtonCompose))
       .check(matches(isDisplayed()))
@@ -187,7 +144,17 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
       .perform(
         scrollTo(),
         click(),
-        typeText(subject),
+        typeText(text),
+        closeSoftKeyboard()
+      )
+
+    //type some text in the message
+    onView(withId(R.id.editTextEmailMessage))
+      .check(matches(isDisplayed()))
+      .perform(
+        scrollTo(),
+        click(),
+        typeText(text),
         closeSoftKeyboard()
       )
   }
@@ -200,10 +167,10 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.navigationView))
       .perform(clickOnFolderWithName(JavaEmailConstants.FOLDER_DRAFT))
 
-    Thread.sleep(1000)
+    java.lang.Thread.sleep(1000)
   }
 
-  protected fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
+  override fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
     when {
       request.path == "/v1/keys/private" -> {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
@@ -235,43 +202,31 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
         )
       }
 
-      request.path == "/gmail/v1/users/me/messages?labelIds=${JavaEmailConstants.FOLDER_INBOX}&maxResults=45" -> {
+      request.method == "GET" && request.path == "/gmail/v1/users/me/threads?labelIds=${JavaEmailConstants.FOLDER_INBOX}&maxResults=45" -> {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListMessagesResponse().apply {
+          ListThreadsResponse().apply {
             factory = GsonFactory.getDefaultInstance()
-            messages = emptyList()
+            threads = emptyList()
           }.toString()
         )
       }
 
-      request.method == "GET" && request.path?.matches("/gmail/v1/users/me/drafts\\S*".toRegex()) == true -> {
+      request.method == "GET" && request.path == "/gmail/v1/users/me/threads?labelIds=${JavaEmailConstants.FOLDER_DRAFT}&maxResults=45" -> {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListDraftsResponse().apply {
+          ListThreadsResponse().apply {
             factory = GsonFactory.getDefaultInstance()
-            val requestUrl = requireNotNull(request.requestUrl)
-            val queryParameterField = requestUrl.queryParameter("fields")
-            val isThreadIdAllowed = queryParameterField == null ||
-                queryParameterField.contains("drafts/message/threadId")
-            drafts = draftsCache.map { draft ->
-              Draft().apply {
-                id = draft.id
-                message = Message().apply {
-                  id = draft.message.id
-                  if (isThreadIdAllowed) {
-                    threadId = draft.message.threadId
-                  }
-                }
-              }
-            }
+            threads =
+              draftsCache.values.map { it.message.threadId }.toSet()
+                .map { Thread().apply { id = it } }
           }.toString()
         )
       }
 
       request.method == "DELETE" && request.path?.matches("/gmail/v1/users/me/drafts/\\S*".toRegex()) == true -> {
         val draftId = request.requestUrl?.encodedPathSegments?.last()
-        val cachedDraft = draftsCache.firstOrNull { it.id == draftId }
+        val cachedDraft = draftsCache[draftId]
         if (cachedDraft != null) {
-          draftsCache.remove(cachedDraft)
+          draftsCache.remove(draftId)
           return MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
         } else {
           return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -371,7 +326,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
       }
 
       else -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+        return super.handleCommonAPICalls(request)
       }
     }
   }
@@ -387,9 +342,11 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     }.toByteArray()
   )
 
-  protected fun getMimeMessageFromCache(msgPosition: Int): MimeMessage {
+  protected fun getMimeMessageFromCache(draftId: String): MimeMessage {
+    val raw = draftsCache[draftId]?.message?.raw ?: error("Draft not found")
+
     val rawMimeMessageAsByteArrayOfSecondMsg = Base64.decode(
-      draftsCache[msgPosition].message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+      raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
     )
     return MimeMessage(
       Session.getInstance(Properties()), rawMimeMessageAsByteArrayOfSecondMsg.inputStream()
@@ -413,7 +370,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
         partId = ""
         mimeType = "multipart/alternative"
         filename = ""
-        headers = prepareMessageHeaders(subject)
+        headers = prepareMessageHeaders(messageId, subject)
         body = MessagePartBody().apply {
           setSize(0)
         }
@@ -426,11 +383,15 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
               name = "Content-Type"
               value = "text/plain"
             })
-            body = MessagePartBody().apply { setSize(130) }
+            body = MessagePartBody().apply {
+              setSize(subject.length)
+              data = java.util.Base64.getEncoder()
+                .encodeToString(subject.toByteArray())
+            }
           }
         )
       }
-    }.toString()
+    }
 
   protected fun genPathForGmailMessages(subPath: String) = "/gmail/v1/users/me/messages/$subPath?" +
       "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
@@ -438,7 +399,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
       "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
       "&format=full"
 
-  private fun prepareMessageHeaders(subject: String) = listOf(
+  private fun prepareMessageHeaders(messageId: String, subject: String) = listOf(
     MessagePartHeader().apply {
       name = "MIME-Version"
       value = "1.0"
@@ -449,7 +410,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     },
     MessagePartHeader().apply {
       name = "Message-ID"
-      value = EmailUtil.generateContentId()
+      value = messageId
     },
     MessagePartHeader().apply {
       name = "Subject"
@@ -466,14 +427,16 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
   )
 
   companion object {
-    const val DRAFT_ID_FIRST = "r5555555555555555551"
-    const val MESSAGE_ID_FIRST = "5555555555555551"
-    const val THREAD_ID_FIRST = "1111111111111111"
+    const val DRAFT_ID_FIRST = "r5555555555555500001"
+    const val MESSAGE_ID_FIRST = "5555555555500001"
+    const val THREAD_ID_FIRST = "1111111111100001"
     const val MESSAGE_SUBJECT_FIRST = "first"
+    val HISTORY_ID_FIRST = BigInteger("1111111")
 
-    const val DRAFT_ID_SECOND = "r5555555555555555552"
-    const val MESSAGE_ID_SECOND = "5555555555555552"
-    const val THREAD_ID_SECOND = "1111111111111112"
+    const val DRAFT_ID_SECOND = "r5555555555555500002"
+    const val MESSAGE_ID_SECOND = "5555555555500002"
+    const val THREAD_ID_SECOND = "1111111111100002"
     const val MESSAGE_SUBJECT_SECOND = "second"
+    val HISTORY_ID_SECOND = BigInteger("2222222")
   }
 }

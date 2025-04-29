@@ -88,7 +88,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
                   messageThreadId = THREAD_ID_FIRST,
                   subject = MESSAGE_SUBJECT_FIRST,
                   historyIdValue = HISTORY_ID_FIRST
-                )
+                ).toString()
               )
           }
 
@@ -102,7 +102,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
                   messageThreadId = THREAD_ID_SECOND,
                   subject = MESSAGE_SUBJECT_SECOND,
                   historyIdValue = HISTORY_ID_SECOND
-                )
+                ).toString()
               )
           }
 
@@ -155,7 +155,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
       messageThreadId = THREAD_ID_FIRST,
       rawMsg = genRawMimeWithSubject(MESSAGE_SUBJECT_FIRST)
     )
-    draftsCache.add(firstDraft)
+    draftsCache.put(DRAFT_ID_FIRST, firstDraft)
 
     val secondDraft = prepareDraft(
       draftId = DRAFT_ID_SECOND,
@@ -163,7 +163,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
       messageThreadId = THREAD_ID_SECOND,
       rawMsg = genRawMimeWithSubject(MESSAGE_SUBJECT_SECOND)
     )
-    draftsCache.add(secondDraft)
+    draftsCache.put(DRAFT_ID_SECOND, secondDraft)
   }
 
   @Test
@@ -260,7 +260,7 @@ class DraftsGmailAPITestCorrectDeletingFlowTest : BaseDraftsGmailAPIFlowTest() {
   }
 
   companion object {
-    val HISTORY_ID_FIRST = BigInteger("4444444")
-    val HISTORY_ID_SECOND = BigInteger("5555555")
+    private val HISTORY_ID_FIRST = BigInteger("4444444")
+    private val HISTORY_ID_SECOND = BigInteger("5555555")
   }
 }

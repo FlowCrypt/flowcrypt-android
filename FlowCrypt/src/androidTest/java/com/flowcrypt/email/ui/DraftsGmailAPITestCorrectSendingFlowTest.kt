@@ -98,7 +98,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
 
           request.method == "PUT" && request.path == "/gmail/v1/users/me/drafts/$DRAFT_ID_FIRST" -> {
             val (draft, _) = getDraftAndMimeMessageFromRequest(request)
-            val existingDraftInCache = draftsCache.firstOrNull { it.id == DRAFT_ID_FIRST }
+            val existingDraftInCache = draftsCache[DRAFT_ID_FIRST]
 
             return if (existingDraftInCache != null) {
               val existingMessage = existingDraftInCache.message
@@ -125,7 +125,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
                 messageThreadId = THREAD_ID_FIRST,
                 rawMsg = draft.message.raw
               )
-              draftsCache.add(newDraft)
+              draftsCache.put(DRAFT_ID_FIRST, newDraft)
               MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(newDraft.toString())
             } else {
@@ -172,7 +172,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     moveToDraftFolder()
 
     //create a new draft
-    openComposeScreenAndTypeSubject(MESSAGE_SUBJECT_FIRST)
+    openComposeScreenAndTypeData(MESSAGE_SUBJECT_FIRST)
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.switch_to_standard_email))
@@ -195,7 +195,7 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
 
     //check that draft was created
     assertEquals(1, draftsCache.size)
-    val mimeMessage = getMimeMessageFromCache(0)
+    val mimeMessage = getMimeMessageFromCache(DRAFT_ID_FIRST)
     assertEquals(MESSAGE_SUBJECT_FIRST, mimeMessage.subject)
     assertEquals(
       TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
