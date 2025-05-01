@@ -360,7 +360,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           )
       }
 
-      request.method == "GET" && request.path?.matches(REGEX_USER_MESSAGES_GET_PGP_MIME_FORMAT_RAW) == true -> {
+      request.method == "GET" && request.path?.matches(REGEX_USER_MESSAGES_GET_RAW) == true -> {
         genPgpMimeRawResponse(request.path ?: "")
       }
 
@@ -405,11 +405,10 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           BatchDeleteMessagesRequest::class.java
         )
 
-        val handledIds = arrayOf(
-          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
-        )
+        val handledIds = getAllowedIdsForMessagesBatchDelete()
 
         if (handledIds.any { batchDeleteMessagesRequest.ids.contains(it) }) {
+          handleBatchDeleteMessagesRequest(batchDeleteMessagesRequest)
           MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         } else {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
@@ -517,44 +516,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     }
   }
 
-  private fun genPgpMimeRawResponse(path: String): MockResponse {
-    val messageId =
-      REGEX_USER_MESSAGES_GET_PGP_MIME_FORMAT_RAW.find(path)?.groups?.get(1)?.value?.trim()
-    val gmailMessage = when (messageId) {
-      MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1 -> genPGPMimeMessage(
-        threadId = THREAD_ID_PGP_MIME,
-        messageId = MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1,
-        isFullFormat = true
-      )
-
-      MESSAGE_ID_EXISTING_PGP_MIME -> genPGPMimeMessage(
-        threadId = THREAD_ID_EXISTING_PGP_MIME,
-        messageId = MESSAGE_ID_EXISTING_PGP_MIME,
-        isFullFormat = true
-      )
-
-      else -> null
-    }
-
-    return if (gmailMessage != null) {
-      MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(
-          Base64.getEncoder().encodeToString(
-            ByteArrayOutputStream().apply {
-              GmaiAPIMimeMessage(
-                Session.getInstance(Properties()),
-                gmailMessage
-              ).writeTo(this)
-            }.toByteArray()
-          )
-        )
-    } else {
-      MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-    }
-  }
-
-
-  private fun genUserMessagesGetWithFieldsFormatFullResponse(path: String): MockResponse {
+  protected open fun genUserMessagesGetWithFieldsFormatFullResponse(path: String): MockResponse {
     val messageId =
       REGEX_USER_MESSAGES_GET_WITH_FIELDS_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
     val baseResponse = MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
@@ -741,6 +703,49 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
       )
 
       else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+  }
+
+  protected open fun getAllowedIdsForMessagesBatchDelete(): Collection<String> {
+    return listOf(
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+    )
+  }
+
+  protected open fun handleBatchDeleteMessagesRequest(batchDeleteMessagesRequest: BatchDeleteMessagesRequest) {}
+
+  private fun genPgpMimeRawResponse(path: String): MockResponse {
+    val messageId = REGEX_USER_MESSAGES_GET_RAW.find(path)?.groups?.get(1)?.value?.trim()
+    val gmailMessage = when (messageId) {
+      MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1 -> genPGPMimeMessage(
+        threadId = THREAD_ID_PGP_MIME,
+        messageId = MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1,
+        isFullFormat = true
+      )
+
+      MESSAGE_ID_EXISTING_PGP_MIME -> genPGPMimeMessage(
+        threadId = THREAD_ID_EXISTING_PGP_MIME,
+        messageId = MESSAGE_ID_EXISTING_PGP_MIME,
+        isFullFormat = true
+      )
+
+      else -> null
+    }
+
+    return if (gmailMessage != null) {
+      MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+        .setBody(
+          Base64.getEncoder().encodeToString(
+            ByteArrayOutputStream().apply {
+              GmaiAPIMimeMessage(
+                Session.getInstance(Properties()),
+                gmailMessage
+              ).writeTo(this)
+            }.toByteArray()
+          )
+        )
+    } else {
+      MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
   }
 
@@ -1741,12 +1746,12 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           "body/size,body/attachmentId\\)&format=full").toRegex()
     val REGEX_USER_MESSAGES_GET_FORMAT_FULL =
       ("/gmail/v1/users/me/messages/(.{16})\\?format=full").toRegex()
-    val REGEX_USER_MESSAGES_GET_PGP_MIME_FORMAT_RAW =
-      ("/gmail/v1/users/me/messages/(.{16})\\?fields=raw&format=raw").toRegex()
     val REGEX_USER_THREADS_GET_FORMAT_FULL =
       ("/gmail/v1/users/me/threads/(.{16})\\?format=full").toRegex()
     val REGEX_DRAFT_BY_RFC822MSGID =
       ("/gmail/v1/users/me/drafts\\?fields=drafts/id,drafts/message/id\\&q=rfc822msgid:(.{16})").toRegex()
+    val REGEX_USER_MESSAGES_GET_RAW =
+      ("/gmail/v1/users/me/messages/(.{16})\\?fields=raw&format=raw").toRegex()
 
     const val ATTACHMENT_NAME_1 = "text.txt"
     const val ATTACHMENT_NAME_2 = "text1.txt"

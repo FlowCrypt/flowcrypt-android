@@ -34,17 +34,10 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
-import com.google.api.client.json.Json
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.gmail.model.BatchModifyMessagesRequest
-import com.google.api.services.gmail.model.Draft
-import com.google.api.services.gmail.model.ListDraftsResponse
 import com.google.api.services.gmail.model.Message
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import okio.GzipSource
-import okio.buffer
 import org.hamcrest.Matchers
 import org.hamcrest.core.AllOf.allOf
 import org.junit.Assert.assertEquals
@@ -116,88 +109,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
             genMsgDetailsMockResponse(MESSAGE_ID_FIRST, THREAD_ID_FIRST)
           }
 
-          request.method == "GET" && request.path?.matches(REGEX_USER_THREADS_GET_FORMAT_FULL) == true -> {
-            val path = request.path ?: ""
-            val threadId =
-              REGEX_USER_THREADS_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
-            when (threadId) {
-              THREAD_ID_FIRST -> {
-                MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-                  .setHeader("Content-Type", Json.MEDIA_TYPE)
-                  .setBody(
-                    com.google.api.services.gmail.model.Thread().apply {
-                      factory = GsonFactory.getDefaultInstance()
-                      id = THREAD_ID_FIRST
-                      messages = listOf(
-                        genMessage(
-                          messageId = MESSAGE_ID_FIRST,
-                          messageThreadId = THREAD_ID_FIRST,
-                          subject = getMimeMessageFromDraft(draftsCache[DRAFT_ID_FIRST])?.subject
-                            ?: "",
-                          historyIdValue = HISTORY_ID_FIRST
-                        )
-                      )
-                    }.toString()
-                  )
-              }
-
-              else -> {
-                MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-              }
-            }
-          }
-
-          request.method == "GET" && request.path == genPathForGmailMessages(MESSAGE_ID_FIRST) -> {
-
-            MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setHeader("Content-Type", Json.MEDIA_TYPE)
-              .setBody(
-                genMessage(
-                  messageId = MESSAGE_ID_FIRST,
-                  messageThreadId = THREAD_ID_FIRST,
-                  subject = getMimeMessageFromDraft(draftsCache[DRAFT_ID_FIRST])?.subject ?: "",
-                  historyIdValue = HISTORY_ID_FIRST
-                ).toString()
-              )
-          }
-
-          request.method == "GET" && request.path?.matches(REGEX_DRAFT_BY_RFC822MSGID) == true -> {
-            genListDraftsResponseForRfc822msgidSearch(request.path ?: "")
-          }
-
-          request.method == "GET" && request.path?.matches(REGEX_USER_MESSAGES_GET_FORMAT_FULL) == true -> {
-            val path = request.path ?: ""
-            val messageId =
-              REGEX_USER_MESSAGES_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
-            if (messageId in listOf(MESSAGE_ID_FIRST)) {
-              genUserMessagesGetFormatFullResponseInternal(path)
-            } else {
-              handleCommonAPICalls(request)
-            }
-          }
-
-          request.path == "/gmail/v1/users/me/messages/5555555555500001?fields=raw&format=raw" -> {
-            MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setHeader("Content-Type", Json.MEDIA_TYPE)
-              .setBody(draftsCache[DRAFT_ID_FIRST]?.message?.raw ?: error("Draft not found"))
-          }
-
-          request.method == "POST" && request.path == "/gmail/v1/users/me/messages/batchModify" -> {
-            val source = GzipSource(request.body)
-            val batchModifyMessagesRequest = GsonFactory.getDefaultInstance().fromInputStream(
-              source.buffer().inputStream(),
-              BatchModifyMessagesRequest::class.java
-            )
-
-            val handledIds = arrayOf(MESSAGE_ID_FIRST)
-
-            if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
-              MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-            } else {
-              MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-            }
-          }
-
           else -> handleCommonAPICalls(request)
         }
       }
@@ -259,7 +170,7 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
       )
 
     //click to edit a draft
-    onView(Matchers.allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
       .perform(
         actionOnItemAtPosition<ViewHolder>(
           1,
@@ -304,57 +215,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
     assertEquals(MESSAGE_SUBJECT_FIRST_EDITED, mimeMessageFirstEdited.subject)
     onView(withText(MESSAGE_SUBJECT_FIRST_EDITED))
       .check(matches(isDisplayed()))
-  }
-
-  private fun genListDraftsResponseForRfc822msgidSearch(path: String): MockResponse {
-    val messageId =
-      REGEX_DRAFT_BY_RFC822MSGID.find(path)?.groups?.get(1)?.value?.trim()
-
-    val draft = when (messageId) {
-      MESSAGE_ID_FIRST ->
-        Draft().apply {
-          id = DRAFT_ID_FIRST
-          message = Message().apply {
-            id = MESSAGE_ID_FIRST
-          }
-        }
-
-      else -> null
-    }
-
-    return if (draft != null) {
-      MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setHeader("Content-Type", Json.MEDIA_TYPE)
-        .setBody(
-          ListDraftsResponse().apply {
-            factory = GsonFactory.getDefaultInstance()
-            drafts = listOf(draft)
-          }.toString()
-        )
-    } else {
-      MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-    }
-  }
-
-  private fun genUserMessagesGetFormatFullResponseInternal(path: String): MockResponse {
-    val messageId = REGEX_USER_MESSAGES_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
-    val baseResponse = MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-      .setHeader("Content-Type", Json.MEDIA_TYPE)
-
-    return when (messageId) {
-      MESSAGE_ID_FIRST -> {
-        baseResponse.setBody(
-          genMessage(
-            messageId = MESSAGE_ID_FIRST,
-            messageThreadId = THREAD_ID_FIRST,
-            subject = getMimeMessageFromDraft(draftsCache[DRAFT_ID_FIRST])?.subject ?: "",
-            historyIdValue = HISTORY_ID_FIRST
-          ).toString()
-        )
-      }
-
-      else -> MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-    }
   }
 
   companion object {
