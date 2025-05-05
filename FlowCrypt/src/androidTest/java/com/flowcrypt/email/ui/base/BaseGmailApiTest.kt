@@ -371,26 +371,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
           BatchModifyMessagesRequest::class.java
         )
 
-        val handledIds = arrayOf(
-          MESSAGE_ID_EXISTING_STANDARD,
-          MESSAGE_ID_EXISTING_ENCRYPTED,
-          MESSAGE_ID_EXISTING_PGP_MIME,
-          MESSAGE_ID_THREAD_ONLY_STANDARD_1,
-          MESSAGE_ID_THREAD_ONLY_STANDARD_2,
-          MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
-          MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
-          MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
-          MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
-          MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
-          MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
-          MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
-          MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
-          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1,
-          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2,
-          MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
-          MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1,
-        )
-
+        val handledIds = getAllowedIdsForMessagesBatchModify()
         if (handledIds.any { batchModifyMessagesRequest.ids.contains(it) }) {
           MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
         } else {
@@ -709,6 +690,28 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
   protected open fun getAllowedIdsForMessagesBatchDelete(): Collection<String> {
     return listOf(
       MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+    )
+  }
+
+  protected open fun getAllowedIdsForMessagesBatchModify(): Collection<String> {
+    return listOf(
+      MESSAGE_ID_EXISTING_STANDARD,
+      MESSAGE_ID_EXISTING_ENCRYPTED,
+      MESSAGE_ID_EXISTING_PGP_MIME,
+      MESSAGE_ID_THREAD_ONLY_STANDARD_1,
+      MESSAGE_ID_THREAD_ONLY_STANDARD_2,
+      MESSAGE_ID_THREAD_SINGLE_STANDARD_MESSAGE,
+      MESSAGE_ID_THREAD_SINGLE_ENCRYPTED_MESSAGE,
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_1,
+      MESSAGE_ID_THREAD_ONLY_ENCRYPTED_2,
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_1,
+      MESSAGE_ID_THREAD_MIXED_MESSAGES_2,
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_1,
+      MESSAGE_ID_THREAD_NO_ATTACHMENTS_2,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_1,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_2,
+      MESSAGE_ID_THREAD_FEW_MESSAGES_WITH_SINGLE_DRAFT_3,
+      MESSAGE_ID_THREAD_PGP_MIME_MESSAGES_1,
     )
   }
 
