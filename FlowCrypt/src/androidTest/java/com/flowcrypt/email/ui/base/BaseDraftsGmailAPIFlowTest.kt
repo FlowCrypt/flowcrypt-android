@@ -244,6 +244,10 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseGmailApiTest(
           .setBody(newDraft.toString())
       }
 
+      request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_FIRST}?fields=id,threadId,historyId&format=full" -> {
+        genMsgDetailsMockResponse(MESSAGE_ID_FIRST, THREAD_ID_FIRST)
+      }
+
       request.method == "POST" && request.path == "/batch" -> {
         val mimeMultipart = MimeMultipart(object : DataSource {
           override fun getInputStream(): InputStream = request.body.inputStream()

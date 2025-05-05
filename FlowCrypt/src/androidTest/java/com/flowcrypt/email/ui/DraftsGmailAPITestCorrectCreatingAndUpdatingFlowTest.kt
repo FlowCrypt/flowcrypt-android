@@ -82,10 +82,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
             }
           }
 
-          request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_FIRST}?fields=id,threadId,historyId&format=full" -> {
-            genMsgDetailsMockResponse(MESSAGE_ID_FIRST, THREAD_ID_FIRST)
-          }
-
           else -> handleCommonAPICalls(request)
         }
       }
@@ -117,7 +113,9 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
     onView(withText(R.string.switch_to_standard_email))
       .check(matches(isDisplayed()))
       .perform(click())
-    waitUntil(DraftViewModel.DELAY_TIMEOUT * 2) { draftsCache.isNotEmpty() }
+    waitUntil(DraftViewModel.DELAY_TIMEOUT * 2) {
+      draftsCache.isNotEmpty()
+    }
     pressBack()
     waitForObjectWithText(MESSAGE_SUBJECT_FIRST, TimeUnit.SECONDS.toMillis(10))
 
