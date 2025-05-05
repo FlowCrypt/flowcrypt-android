@@ -5,16 +5,13 @@
 
 package com.flowcrypt.email.ui
 
-import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.Espresso
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
-import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -35,23 +32,26 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
+import com.google.api.client.json.JsonObjectParser
 import com.google.api.client.json.gson.GsonFactory
-import jakarta.mail.Message
-import jakarta.mail.internet.InternetAddress
+import com.google.api.services.gmail.model.Draft
 import jakarta.mail.internet.MimeMultipart
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.core.AllOf.allOf
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
+import java.util.zip.GZIPInputStream
 
 /**
  * https://github.com/FlowCrypt/flowcrypt-android/issues/2050
@@ -60,7 +60,6 @@ import java.util.concurrent.TimeUnit
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
-@Ignore("Should be re-looked after threads will be completed")
 class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
   private val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
 
@@ -96,56 +95,24 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
               .setBody(message.toString())
           }
 
-          request.method == "PUT" && request.path == "/gmail/v1/users/me/drafts/$DRAFT_ID_FIRST" -> {
-            val (draft, _) = getDraftAndMimeMessageFromRequest(request)
-            val existingDraftInCache = draftsCache.firstOrNull { it.id == DRAFT_ID_FIRST }
+          request.method == "POST" && request.path == "/upload/gmail/v1/users/me/drafts/send?uploadType=resumable" -> {
+            val gzipInputStream = GZIPInputStream(request.body.inputStream())
+            val draft = JsonObjectParser(GsonFactory.getDefaultInstance()).parseAndClose(
+              InputStreamReader(gzipInputStream), Draft::class.java
+            )
 
-            return if (existingDraftInCache != null) {
-              val existingMessage = existingDraftInCache.message
-              existingDraftInCache.message = com.google.api.services.gmail.model.Message().apply {
-                id = existingMessage.id
-                threadId = existingMessage.threadId
-                labelIds = existingMessage.labelIds
-                raw = draft.message.raw
-              }
-
+            if (draft.id == DRAFT_ID_FIRST) {
               MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-                .setBody(existingDraftInCache.toString())
-            } else {
-              MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-            }
-          }
-
-          request.method == "POST" && request.path == "/gmail/v1/users/me/drafts" -> {
-            val (draft, mimeMessage) = getDraftAndMimeMessageFromRequest(request)
-            if (mimeMessage.subject == MESSAGE_SUBJECT_FIRST) {
-              val newDraft = prepareDraft(
-                draftId = DRAFT_ID_FIRST,
-                messageId = MESSAGE_ID_FIRST,
-                messageThreadId = THREAD_ID_FIRST,
-                rawMsg = draft.message.raw
-              )
-              draftsCache.add(newDraft)
-              MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-                .setBody(newDraft.toString())
+                .setHeader("Location", LOCATION_URL)
+                .setBody(com.google.api.services.gmail.model.Message().apply {
+                  factory = GsonFactory.getDefaultInstance()
+                  id = MESSAGE_ID_SENT
+                  threadId = THREAD_ID_SENT
+                  labelIds = listOf(JavaEmailConstants.FOLDER_SENT)
+                }.toString())
             } else {
               MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
             }
-          }
-
-          request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_FIRST}?fields=id,threadId,historyId&format=full" -> {
-            return genMsgDetailsMockResponse(MESSAGE_ID_FIRST, THREAD_ID_FIRST)
-          }
-
-          request.method == "POST" && request.path == "/upload/gmail/v1/users/me/messages/send?uploadType=resumable" -> {
-            MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setHeader("Location", LOCATION_URL)
-              .setBody(com.google.api.services.gmail.model.Message().apply {
-                factory = GsonFactory.getDefaultInstance()
-                id = MESSAGE_ID_SENT
-                threadId = THREAD_ID_SENT
-                labelIds = listOf(JavaEmailConstants.FOLDER_SENT)
-              }.toString())
           }
 
           else -> handleCommonAPICalls(request)
@@ -172,77 +139,68 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
     moveToDraftFolder()
 
     //create a new draft
-    openComposeScreenAndTypeSubject(MESSAGE_SUBJECT_FIRST)
+    openComposeScreenAndTypeData(MESSAGE_SUBJECT_FIRST)
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.switch_to_standard_email))
       .check(matches(isDisplayed()))
       .perform(click())
+    waitUntil(DraftViewModel.DELAY_TIMEOUT * 2) {
+      draftsCache.isNotEmpty()
+    }
 
-    onView(withId(R.id.editTextEmailMessage))
+    //check that draft was created
+    assertEquals(1, draftsCache.size)
+    val mimeMessage = getMimeMessageFromCache(DRAFT_ID_FIRST)
+    assertEquals(MESSAGE_SUBJECT_FIRST, mimeMessage.subject)
+    assertEquals(
+      MESSAGE_SUBJECT_FIRST,
+      (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
+    )
+
+    //move to the drafts list
+    pressBack()
+    waitForObjectWithText(MESSAGE_SUBJECT_FIRST, TimeUnit.SECONDS.toMillis(10))
+
+    //open created draft and send
+    onView(allOf(withId(R.id.recyclerViewMsgs), isDisplayed())).perform(
+      actionOnItemAtPosition<ViewHolder>(0, click())
+    )
+    waitForObjectWithText(MESSAGE_SUBJECT_FIRST, TimeUnit.SECONDS.toMillis(10))
+
+    //click to edit a draft
+    onView(allOf(withId(R.id.recyclerViewMessages), isDisplayed()))
       .perform(
-        scrollTo(),
-        click(),
-        typeText(MESSAGE),
-        closeSoftKeyboard()
+        actionOnItemAtPosition<ViewHolder>(
+          1,
+          ClickOnViewInRecyclerViewItem(R.id.imageButtonEditDraft)
+        )
       )
+
+    //wait rendering a draft on the compose message screen
+    waitForObjectWithText(MESSAGE_SUBJECT_FIRST, TimeUnit.SECONDS.toMillis(10))
+
     onView(withId(R.id.editTextEmailAddress))
       .perform(
         replaceText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
-    Thread.sleep(DraftViewModel.DELAY_TIMEOUT * 2)
 
-    //check that draft was created
-    assertEquals(1, draftsCache.size)
-    val mimeMessage = getMimeMessageFromCache(0)
-    assertEquals(MESSAGE_SUBJECT_FIRST, mimeMessage.subject)
-    assertEquals(
-      TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
-      (mimeMessage.getRecipients(Message.RecipientType.TO).first() as InternetAddress).address
-    )
-    assertEquals(
-      MESSAGE,
-      (mimeMessage.content as MimeMultipart).getBodyPart(0).content as String
-    )
-
-    //move to the drafts list
-    Espresso.pressBack()
-
-    //open created draft and send
-    onView(withId(R.id.recyclerViewMsgs))
-      .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
-    waitForObjectWithText(MESSAGE_SUBJECT_FIRST, TimeUnit.SECONDS.toMillis(2))
-    onView(withId(R.id.imageButtonEditDraft))
-      .check(matches(isDisplayed()))
-      .perform(click())
-    //need to wait while the message details will be rendered
-    Thread.sleep(1000)
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
 
     //need to wait while a message will be sent
-    var timeToWaitForSending = TimeUnit.SECONDS.toMillis(10)
-    while (timeToWaitForSending > 0) {
+    waitUntil {
       val countOfOutgoingMessages = runBlocking {
         roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
       }
-      if (countOfOutgoingMessages == 0) {
-        Thread.sleep(TimeUnit.SECONDS.toMillis(1))
-        break
-      } else {
-        val step = TimeUnit.SECONDS.toMillis(1)
-        timeToWaitForSending -= step
-        Thread.sleep(step)
-      }
+      countOfOutgoingMessages == 0
     }
 
-    val finalCountOfOutgoingMessages = runBlocking {
+    assertEquals(0, runBlocking {
       roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
-    }
-
-    assertEquals(0, finalCountOfOutgoingMessages)
+    })
 
     //check that we have a new sent message in the cache
     assertEquals(1, sentCache.size)

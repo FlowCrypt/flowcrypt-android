@@ -470,7 +470,7 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.12.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.code.gson:gson:2.13.0")
+  implementation("com.google.code.gson:gson:2.13.1")
   implementation("com.google.api-client:google-api-client-android:2.7.2")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
@@ -488,7 +488,7 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.19.1")
+  implementation("org.jsoup:jsoup:1.20.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   implementation("org.pgpainless:pgpainless-core:1.7.6")
   implementation("org.eclipse.angus:angus-mail:2.0.3")
