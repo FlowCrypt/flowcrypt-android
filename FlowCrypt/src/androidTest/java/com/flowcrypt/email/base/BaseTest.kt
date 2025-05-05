@@ -12,6 +12,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import android.text.Html
 import android.view.View
 import android.widget.Toast
@@ -71,6 +72,7 @@ import org.junit.Before
 import org.junit.Rule
 import java.io.InputStream
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 
 /**
  * The base test implementation.
@@ -86,7 +88,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
   val flowCryptTestSettingsRule = FlowCryptTestSettingsRule()
 
   private val useIntents
-    get() = flowCryptTestSettingsRule.flowCryptTestSettings?.useIntents ?: false
+    get() = flowCryptTestSettingsRule.flowCryptTestSettings?.useIntents == true
 
   protected val decorView: View?
     get() {
@@ -382,6 +384,24 @@ abstract class BaseTest : BaseActivityTestImplementation {
         MimeMessage(Session.getInstance(Properties()), inputStream),
         accountEntity
       )
+    }
+  }
+
+  protected fun waitUntil(
+    timeoutInMilliseconds: Long = TimeUnit.SECONDS.toMillis(10),
+    predicate: () -> Boolean
+  ) {
+    val startTime = SystemClock.uptimeMillis()
+    val interval = 100L
+
+    var elapsedTime: Long = 0
+    while (!predicate()) {
+      if (elapsedTime >= timeoutInMilliseconds) {
+        break
+      }
+
+      SystemClock.sleep(interval)
+      elapsedTime = SystemClock.uptimeMillis() - startTime
     }
   }
 
