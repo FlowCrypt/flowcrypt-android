@@ -67,6 +67,7 @@ import java.io.OutputStream
 import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 import kotlin.random.Random
 
@@ -82,97 +83,6 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseGmailApiTest(
   @Before
   fun clearCache() {
     draftsCache.clear()
-  }
-
-  protected fun getDraftAndMimeMessageFromRequest(request: RecordedRequest): Pair<Draft, MimeMessage> {
-    val gzipInputStream = GZIPInputStream(request.body.inputStream())
-    val draft = JsonObjectParser(GsonFactory.getDefaultInstance()).parseAndClose(
-      InputStreamReader(gzipInputStream), Draft::class.java
-    )
-    val rawMimeMessageAsByteArray = Base64.decode(
-      draft.message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
-    )
-    val mimeMessage = MimeMessage(
-      Session.getInstance(Properties()), rawMimeMessageAsByteArray.inputStream()
-    )
-    return Pair(draft, mimeMessage)
-  }
-
-  protected fun getMimeMessageFromDraft(draft: Draft?): MimeMessage? {
-    if (draft?.message?.raw == null) {
-      return null
-    }
-
-    val rawMimeMessageAsByteArray = Base64.decode(
-      draft.message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
-    )
-    return MimeMessage(Session.getInstance(Properties()), rawMimeMessageAsByteArray.inputStream())
-  }
-
-  protected fun genMsgDetailsMockResponse(messageId: String, messageThreadId: String) =
-    MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-      .setBody(Message().apply {
-        factory = GsonFactory.getDefaultInstance()
-        id = messageId
-        threadId = messageThreadId
-        labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
-        historyId = BigInteger.valueOf(Random.nextLong())
-      }.toString())
-
-  protected fun prepareDraft(
-    draftId: String,
-    messageId: String,
-    messageThreadId: String,
-    rawMsg: String
-  ): Draft {
-    return Draft().apply {
-      factory = GsonFactory.getDefaultInstance()
-      id = draftId
-      message = Message().apply {
-        id = messageId
-        threadId = messageThreadId
-        labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
-        raw = rawMsg
-      }
-    }
-  }
-
-  protected fun openComposeScreenAndTypeData(text: String) {
-    //open the compose screen
-    onView(withId(R.id.floatActionButtonCompose))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    //type some text in the subject
-    onView(withId(R.id.editTextEmailSubject))
-      .check(matches(isDisplayed()))
-      .perform(
-        scrollTo(),
-        click(),
-        typeText(text),
-        closeSoftKeyboard()
-      )
-
-    //type some text in the message
-    onView(withId(R.id.editTextEmailMessage))
-      .check(matches(isDisplayed()))
-      .perform(
-        scrollTo(),
-        click(),
-        typeText(text),
-        closeSoftKeyboard()
-      )
-  }
-
-  protected fun moveToDraftFolder() {
-    onView(withId(R.id.drawer_layout))
-      .check(matches(isClosed(Gravity.LEFT)))
-      .perform(open())
-
-    onView(withId(R.id.navigationView))
-      .perform(clickOnFolderWithName(JavaEmailConstants.FOLDER_DRAFT))
-
-    java.lang.Thread.sleep(1000)
   }
 
   override fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
@@ -306,6 +216,32 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseGmailApiTest(
               }
             }.toString()
           )
+      }
+
+      request.method == "POST" && request.path == "/gmail/v1/users/me/drafts" -> {
+        val (draft, mimeMessage) = getDraftAndMimeMessageFromRequest(request)
+
+        val newDraft = when (mimeMessage.subject) {
+          MESSAGE_SUBJECT_FIRST -> prepareDraft(
+            draftId = DRAFT_ID_FIRST,
+            messageId = MESSAGE_ID_FIRST,
+            messageThreadId = THREAD_ID_FIRST,
+            rawMsg = draft.message.raw
+          )
+
+          MESSAGE_SUBJECT_SECOND -> prepareDraft(
+            draftId = DRAFT_ID_SECOND,
+            messageId = MESSAGE_ID_SECOND,
+            messageThreadId = THREAD_ID_SECOND,
+            rawMsg = draft.message.raw
+          )
+
+          else -> return super.handleCommonAPICalls(request)
+        }
+
+        draftsCache.put(newDraft.id, newDraft)
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(newDraft.toString())
       }
 
       request.method == "POST" && request.path == "/batch" -> {
@@ -443,13 +379,108 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseGmailApiTest(
     }
   }
 
+  protected fun getDraftAndMimeMessageFromRequest(request: RecordedRequest): Pair<Draft, MimeMessage> {
+    val gzipInputStream = GZIPInputStream(request.body.inputStream())
+    val draft = JsonObjectParser(GsonFactory.getDefaultInstance()).parseAndClose(
+      InputStreamReader(gzipInputStream), Draft::class.java
+    )
+    val rawMimeMessageAsByteArray = Base64.decode(
+      draft.message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+    )
+    val mimeMessage = MimeMessage(
+      Session.getInstance(Properties()), rawMimeMessageAsByteArray.inputStream()
+    )
+    return Pair(draft, mimeMessage)
+  }
+
+  protected fun getMimeMessageFromDraft(draft: Draft?): MimeMessage? {
+    if (draft?.message?.raw == null) {
+      return null
+    }
+
+    val rawMimeMessageAsByteArray = Base64.decode(
+      draft.message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+    )
+    return MimeMessage(Session.getInstance(Properties()), rawMimeMessageAsByteArray.inputStream())
+  }
+
+  protected fun genMsgDetailsMockResponse(messageId: String, messageThreadId: String) =
+    MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setBody(Message().apply {
+        factory = GsonFactory.getDefaultInstance()
+        id = messageId
+        threadId = messageThreadId
+        labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
+        historyId = BigInteger.valueOf(Random.nextLong())
+      }.toString())
+
+  protected fun prepareDraft(
+    draftId: String,
+    messageId: String,
+    messageThreadId: String,
+    rawMsg: String
+  ): Draft {
+    return Draft().apply {
+      factory = GsonFactory.getDefaultInstance()
+      id = draftId
+      message = Message().apply {
+        id = messageId
+        threadId = messageThreadId
+        labelIds = listOf(JavaEmailConstants.FOLDER_DRAFT)
+        raw = rawMsg
+      }
+    }
+  }
+
+  protected fun openComposeScreenAndTypeData(text: String) {
+    //open the compose screen
+    onView(withId(R.id.floatActionButtonCompose))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    //type some text in the subject
+    onView(withId(R.id.editTextEmailSubject))
+      .check(matches(isDisplayed()))
+      .perform(
+        scrollTo(),
+        click(),
+        typeText(text),
+        closeSoftKeyboard()
+      )
+
+    //type some text in the message
+    onView(withId(R.id.editTextEmailMessage))
+      .check(matches(isDisplayed()))
+      .perform(
+        scrollTo(),
+        click(),
+        typeText(text),
+        closeSoftKeyboard()
+      )
+  }
+
+  protected fun moveToDraftFolder() {
+    onView(withId(R.id.drawer_layout))
+      .check(matches(isClosed(Gravity.LEFT)))
+      .perform(open())
+
+    onView(withId(R.id.navigationView))
+      .perform(clickOnFolderWithName(JavaEmailConstants.FOLDER_DRAFT))
+
+    waitForObjectWithText(JavaEmailConstants.FOLDER_DRAFT, TimeUnit.SECONDS.toMillis(2))
+  }
+
   protected fun genRawMimeBase64Encoded(msgSubject: String): String {
     val raw = ByteArrayOutputStream().apply {
       this.use {
         MimeMessage(Session.getInstance(Properties())).apply {
           setFrom(accountEntity.email)
           subject = msgSubject
-          setContent(MimeMultipart().apply { addBodyPart(MimeBodyPart().apply { setText(msgSubject) }) })
+          setContent(MimeMultipart().apply {
+            addBodyPart(MimeBodyPart().apply {
+              setText(msgSubject)
+            })
+          })
         }.writeTo(it)
       }
     }.toByteArray()

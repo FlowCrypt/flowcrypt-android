@@ -82,29 +82,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
             }
           }
 
-          request.method == "POST" && request.path == "/gmail/v1/users/me/drafts" -> {
-            val (draft, mimeMessage) = getDraftAndMimeMessageFromRequest(request)
-
-            when (mimeMessage.subject) {
-              MESSAGE_SUBJECT_FIRST -> {
-                val newDraft = prepareDraft(
-                  draftId = DRAFT_ID_FIRST,
-                  messageId = MESSAGE_ID_FIRST,
-                  messageThreadId = THREAD_ID_FIRST,
-                  rawMsg = draft.message.raw
-                )
-                draftsCache.put(DRAFT_ID_FIRST, newDraft)
-
-                MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-                  .setBody(newDraft.toString())
-              }
-
-              else -> {
-                MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST)
-              }
-            }
-          }
-
           request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_FIRST}?fields=id,threadId,historyId&format=full" -> {
             genMsgDetailsMockResponse(MESSAGE_ID_FIRST, THREAD_ID_FIRST)
           }
