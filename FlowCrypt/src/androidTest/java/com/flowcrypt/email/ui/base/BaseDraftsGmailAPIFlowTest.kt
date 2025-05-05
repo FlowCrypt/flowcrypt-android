@@ -19,20 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import com.flowcrypt.email.R
-import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.response.api.EkmPrivateKeysResponse
-import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
-import com.flowcrypt.email.api.retrofit.response.model.Key
-import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
-import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
-import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.viewaction.CustomViewActions.clickOnFolderWithName
@@ -41,93 +28,216 @@ import com.google.api.client.googleapis.json.GoogleJsonErrorContainer
 import com.google.api.client.json.Json
 import com.google.api.client.json.JsonObjectParser
 import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.gmail.model.BatchDeleteMessagesRequest
 import com.google.api.services.gmail.model.Draft
-import com.google.api.services.gmail.model.Label
 import com.google.api.services.gmail.model.ListDraftsResponse
-import com.google.api.services.gmail.model.ListLabelsResponse
-import com.google.api.services.gmail.model.ListMessagesResponse
-import com.google.api.services.gmail.model.ListSendAsResponse
+import com.google.api.services.gmail.model.ListThreadsResponse
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import com.google.api.services.gmail.model.MessagePartBody
 import com.google.api.services.gmail.model.MessagePartHeader
-import jakarta.activation.DataSource
+import com.google.api.services.gmail.model.Thread
 import jakarta.mail.Session
-import jakarta.mail.internet.ContentType
-import jakarta.mail.internet.InternetHeaders
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import jakarta.mail.internet.MimeMultipart
-import okhttp3.Headers
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Before
-import org.pgpainless.util.Passphrase
-import rawhttp.core.RawHttp
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
 import java.io.InputStreamReader
-import java.io.OutputStream
 import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 import kotlin.random.Random
 
 /**
  * @author Denys Bondarenko
  */
-abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
-  abstract val mockWebServerRule: FlowCryptMockWebServerRule
+abstract class BaseDraftsGmailAPIFlowTest : BaseGmailApiTest(
+  accountEntity = BASE_ACCOUNT_ENTITY.copy(useConversationMode = true)
+) {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
-  protected val draftsCache = mutableListOf<Draft>()
-
-  private val accountEntity = AccountDaoManager.getDefaultAccountDao().copy(
-    accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE, clientConfiguration = ClientConfiguration(
-      flags = listOf(
-        ClientConfiguration.ConfigurationProperty.NO_PRV_CREATE,
-        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP,
-        ClientConfiguration.ConfigurationProperty.NO_ATTESTER_SUBMIT,
-        ClientConfiguration.ConfigurationProperty.PRV_AUTOIMPORT_OR_AUTOGEN,
-        ClientConfiguration.ConfigurationProperty.FORBID_STORING_PASS_PHRASE,
-        ClientConfiguration.ConfigurationProperty.RESTRICT_ANDROID_ATTACHMENT_HANDLING,
-      ),
-      keyManagerUrl = "https://flowcrypt.test/",
-    ), useAPI = true, useCustomerFesUrl = true
-  )
-
-  final override val addAccountToDatabaseRule: AddAccountToDatabaseRule =
-    AddAccountToDatabaseRule(accountEntity)
-
-  protected val addPrivateKeyToDatabaseRule =
-    AddPrivateKeyToDatabaseRule(addAccountToDatabaseRule.account)
-
-  protected val addLabelsToDatabaseRule = AddLabelsToDatabaseRule(
-    account = addAccountToDatabaseRule.account, folders = listOf(
-      LocalFolder(
-        account = addAccountToDatabaseRule.account.email,
-        fullName = JavaEmailConstants.FOLDER_DRAFT,
-        folderAlias = JavaEmailConstants.FOLDER_DRAFT,
-        attributes = listOf("\\HasNoChildren", "\\Draft")
-      ), LocalFolder(
-        account = addAccountToDatabaseRule.account.email,
-        fullName = JavaEmailConstants.FOLDER_INBOX,
-        folderAlias = JavaEmailConstants.FOLDER_INBOX,
-        attributes = listOf("\\HasNoChildren")
-      )
-    )
-  )
-
-  protected val decryptedPrivateKey = PgpKey.decryptKey(
-    requireNotNull(addPrivateKeyToDatabaseRule.pgpKeyRingDetails.privateKey),
-    Passphrase.fromPassword(TestConstants.DEFAULT_STRONG_PASSWORD)
-  )
+  protected val draftsCache = mutableMapOf<String, Draft>()
 
   @Before
   fun clearCache() {
     draftsCache.clear()
+  }
+
+  override fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
+    return when {
+      request.method == "GET" && request.path == "/gmail/v1/users/me/threads?labelIds=${JavaEmailConstants.FOLDER_INBOX}&maxResults=45" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
+          ListThreadsResponse().apply {
+            factory = GsonFactory.getDefaultInstance()
+            threads = emptyList()
+          }.toString()
+        )
+      }
+
+      request.method == "GET" && request.path == "/gmail/v1/users/me/threads?labelIds=${JavaEmailConstants.FOLDER_DRAFT}&maxResults=45" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
+          ListThreadsResponse().apply {
+            factory = GsonFactory.getDefaultInstance()
+            threads = draftsCache.values.map {
+              it.message.threadId
+            }.toSet()
+              .map {
+                Thread().apply { id = it }
+              }
+          }.toString()
+        )
+      }
+
+      request.method == "DELETE" && request.path?.matches("/gmail/v1/users/me/drafts/\\S*".toRegex()) == true -> {
+        val draftId = request.requestUrl?.encodedPathSegments?.last()
+        val cachedDraft = draftsCache[draftId]
+        if (cachedDraft != null) {
+          draftsCache.remove(draftId)
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
+        } else {
+          MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+            .setHeader("Content-Type", Json.MEDIA_TYPE)
+            .setBody(GoogleJsonErrorContainer().apply {
+              factory = GsonFactory.getDefaultInstance()
+              error = GoogleJsonError().apply {
+                code = HttpURLConnection.HTTP_NOT_FOUND
+                message = "Requested entity was not found."
+                errors = listOf(GoogleJsonError.ErrorInfo().apply {
+                  message = "Requested entity was not found."
+                  domain = "local"
+                  reason = "notFound"
+                })
+              }
+            }.toString())
+        }
+      }
+
+      request.method == "GET" && request.path?.matches(REGEX_USER_THREADS_GET_FORMAT_FULL) == true -> {
+        genThreadDetailsMockResponse(request)
+      }
+
+      request.method == "GET" && request.path?.matches(REGEX_DRAFT_BY_RFC822MSGID) == true -> {
+        genListDraftsResponseForRfc822msgidSearch(request.path ?: "")
+      }
+
+      request.method == "GET" && request.path?.matches(REGEX_USER_MESSAGES_GET_FORMAT_FULL) == true -> {
+        val path = request.path ?: ""
+        val messageId =
+          REGEX_USER_MESSAGES_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
+        if (messageId in listOf(MESSAGE_ID_FIRST, MESSAGE_ID_SECOND)) {
+          genUserMessagesGetFormatFullResponseInternal(path)
+        } else {
+          super.handleCommonAPICalls(request)
+        }
+      }
+
+      request.method == "GET" && request.path?.matches(REGEX_USER_MESSAGES_GET_RAW) == true -> {
+        genUserMessagesRawResponse(request.path ?: "")
+      }
+
+      request.method == "GET" && request.path == "/gmail/v1/users/me/drafts?fields=drafts/id,drafts/message/id&maxResults=500" -> {
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setHeader("Content-Type", Json.MEDIA_TYPE)
+          .setBody(
+            ListDraftsResponse().apply {
+              factory = GsonFactory.getDefaultInstance()
+              drafts = draftsCache.values.map { draft ->
+                Draft().apply {
+                  id = draft.id
+                  message = Message().apply {
+                    id = draft.message.id
+                  }
+                }
+              }
+            }.toString()
+          )
+      }
+
+      request.method == "POST" && request.path == "/gmail/v1/users/me/drafts" -> {
+        val (draft, mimeMessage) = getDraftAndMimeMessageFromRequest(request)
+
+        val newDraft = when (mimeMessage.subject) {
+          MESSAGE_SUBJECT_FIRST -> prepareDraft(
+            draftId = DRAFT_ID_FIRST,
+            messageId = MESSAGE_ID_FIRST,
+            messageThreadId = THREAD_ID_FIRST,
+            rawMsg = draft.message.raw
+          )
+
+          MESSAGE_SUBJECT_SECOND -> prepareDraft(
+            draftId = DRAFT_ID_SECOND,
+            messageId = MESSAGE_ID_SECOND,
+            messageThreadId = THREAD_ID_SECOND,
+            rawMsg = draft.message.raw
+          )
+
+          else -> return super.handleCommonAPICalls(request)
+        }
+
+        draftsCache.put(newDraft.id, newDraft)
+        MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          .setBody(newDraft.toString())
+      }
+
+      request.path == "/gmail/v1/users/me/messages/${MESSAGE_ID_FIRST}?fields=id,threadId,historyId&format=full" -> {
+        genMsgDetailsMockResponse(MESSAGE_ID_FIRST, THREAD_ID_FIRST)
+      }
+
+      else -> {
+        super.handleCommonAPICalls(request)
+      }
+    }
+  }
+
+  override fun genUserMessagesGetWithFieldsFormatFullResponse(path: String): MockResponse {
+    val messageId =
+      REGEX_USER_MESSAGES_GET_WITH_FIELDS_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
+
+    val message = when (messageId) {
+      MESSAGE_ID_FIRST -> {
+        genFirstMessage()
+      }
+
+      MESSAGE_ID_SECOND -> {
+        genSecondMessage()
+      }
+
+      else -> return super.genUserMessagesGetWithFieldsFormatFullResponse(path)
+    }
+
+    return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+      .setBody(message.toString())
+  }
+
+  override fun getAllowedIdsForMessagesBatchDelete(): Collection<String> {
+    return super.getAllowedIdsForMessagesBatchDelete() + listOf(
+      MESSAGE_ID_FIRST,
+      MESSAGE_ID_SECOND
+    )
+  }
+
+  override fun getAllowedIdsForMessagesBatchModify(): Collection<String> {
+    return super.getAllowedIdsForMessagesBatchModify() + listOf(
+      MESSAGE_ID_FIRST,
+      MESSAGE_ID_SECOND
+    )
+  }
+
+  override fun handleBatchDeleteMessagesRequest(batchDeleteMessagesRequest: BatchDeleteMessagesRequest) {
+    super.handleBatchDeleteMessagesRequest(batchDeleteMessagesRequest)
+
+    for (id in batchDeleteMessagesRequest.ids) {
+      draftsCache.filter {
+        it.value.message.id == id
+      }.forEach {
+        draftsCache.remove(it.key)
+      }
+    }
   }
 
   protected fun getDraftAndMimeMessageFromRequest(request: RecordedRequest): Pair<Draft, MimeMessage> {
@@ -144,10 +254,18 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     return Pair(draft, mimeMessage)
   }
 
-  protected fun genMsgDetailsMockResponse(
-    messageId: String,
-    messageThreadId: String,
-  ) =
+  protected fun getMimeMessageFromDraft(draft: Draft?): MimeMessage? {
+    if (draft?.message?.raw == null) {
+      return null
+    }
+
+    val rawMimeMessageAsByteArray = Base64.decode(
+      draft.message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+    )
+    return MimeMessage(Session.getInstance(Properties()), rawMimeMessageAsByteArray.inputStream())
+  }
+
+  protected fun genMsgDetailsMockResponse(messageId: String, messageThreadId: String) =
     MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       .setBody(Message().apply {
         factory = GsonFactory.getDefaultInstance()
@@ -175,7 +293,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     }
   }
 
-  protected fun openComposeScreenAndTypeSubject(subject: String) {
+  protected fun openComposeScreenAndTypeData(text: String) {
     //open the compose screen
     onView(withId(R.id.floatActionButtonCompose))
       .check(matches(isDisplayed()))
@@ -187,7 +305,17 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
       .perform(
         scrollTo(),
         click(),
-        typeText(subject),
+        typeText(text),
+        closeSoftKeyboard()
+      )
+
+    //type some text in the message
+    onView(withId(R.id.editTextEmailMessage))
+      .check(matches(isDisplayed()))
+      .perform(
+        scrollTo(),
+        click(),
+        typeText(text),
         closeSoftKeyboard()
       )
   }
@@ -200,196 +328,34 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.navigationView))
       .perform(clickOnFolderWithName(JavaEmailConstants.FOLDER_DRAFT))
 
-    Thread.sleep(1000)
+    waitForObjectWithText(JavaEmailConstants.FOLDER_DRAFT, TimeUnit.SECONDS.toMillis(2))
   }
 
-  protected fun handleCommonAPICalls(request: RecordedRequest): MockResponse {
-    when {
-      request.path == "/v1/keys/private" -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ApiHelper.getInstance(getTargetContext()).gson
-            .toJson(EkmPrivateKeysResponse(privateKeys = listOf(Key(decryptedPrivateKey))))
-        )
-      }
-
-      request.path == "/gmail/v1/users/me/settings/sendAs" -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListSendAsResponse().apply {
-            factory = GsonFactory.getDefaultInstance()
-            sendAs = emptyList()
-          }.toString()
-        )
-      }
-
-      request.path == "/gmail/v1/users/me/labels" -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListLabelsResponse().apply {
-            factory = GsonFactory.getDefaultInstance()
-            labels = addLabelsToDatabaseRule.folders.map {
-              Label().apply {
-                id = it.fullName
-                name = it.folderAlias
-              }
-            }
-          }.toString()
-        )
-      }
-
-      request.path == "/gmail/v1/users/me/messages?labelIds=${JavaEmailConstants.FOLDER_INBOX}&maxResults=45" -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListMessagesResponse().apply {
-            factory = GsonFactory.getDefaultInstance()
-            messages = emptyList()
-          }.toString()
-        )
-      }
-
-      request.method == "GET" && request.path?.matches("/gmail/v1/users/me/drafts\\S*".toRegex()) == true -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-          ListDraftsResponse().apply {
-            factory = GsonFactory.getDefaultInstance()
-            val requestUrl = requireNotNull(request.requestUrl)
-            val queryParameterField = requestUrl.queryParameter("fields")
-            val isThreadIdAllowed = queryParameterField == null ||
-                queryParameterField.contains("drafts/message/threadId")
-            drafts = draftsCache.map { draft ->
-              Draft().apply {
-                id = draft.id
-                message = Message().apply {
-                  id = draft.message.id
-                  if (isThreadIdAllowed) {
-                    threadId = draft.message.threadId
-                  }
-                }
-              }
-            }
-          }.toString()
-        )
-      }
-
-      request.method == "DELETE" && request.path?.matches("/gmail/v1/users/me/drafts/\\S*".toRegex()) == true -> {
-        val draftId = request.requestUrl?.encodedPathSegments?.last()
-        val cachedDraft = draftsCache.firstOrNull { it.id == draftId }
-        if (cachedDraft != null) {
-          draftsCache.remove(cachedDraft)
-          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NO_CONTENT)
-        } else {
-          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-            .setHeader("Content-Type", Json.MEDIA_TYPE)
-            .setBody(GoogleJsonErrorContainer().apply {
-              factory = GsonFactory.getDefaultInstance()
-              error = GoogleJsonError().apply {
-                code = HttpURLConnection.HTTP_NOT_FOUND
-                message = "Requested entity was not found."
-                errors = listOf(GoogleJsonError.ErrorInfo().apply {
-                  message = "Requested entity was not found."
-                  domain = "local"
-                  reason = "notFound"
-                })
-              }
-            }.toString())
-        }
-      }
-
-      request.method == "POST" && request.path == "/batch" -> {
-        val mimeMultipart = MimeMultipart(object : DataSource {
-          override fun getInputStream(): InputStream = request.body.inputStream()
-
-          override fun getOutputStream(): OutputStream {
-            throw java.lang.UnsupportedOperationException()
-          }
-
-          override fun getContentType(): String {
-            return request.getHeader("Content-Type") ?: throw IllegalArgumentException()
-          }
-
-          override fun getName(): String = ""
-        })
-
-        val count = mimeMultipart.count
-        val rawHttp = RawHttp()
-        val responseMimeMultipart = MimeMultipart()
-        for (i in 0 until count) {
-          try {
-            val bodyPart = mimeMultipart.getBodyPart(i)
-            val rawHttpRequest = rawHttp.parseRequest(bodyPart.inputStream)
-            val requestBody = if (rawHttpRequest.body.isPresent) {
-              rawHttpRequest.body.get().asRawBytes().toRequestBody(
-                contentType = bodyPart.contentType.toMediaTypeOrNull()
-              )
-            } else null
-
-            val okhttp3Request = okhttp3.Request.Builder()
-              .method(
-                method = rawHttpRequest.method,
-                body = requestBody
-              )
-              .url(rawHttpRequest.uri.toURL())
-              .headers(Headers.Builder().build())
-              .build()
-
-            val response = ApiHelper.getInstance(getTargetContext())
-              .retrofit.callFactory().newCall(okhttp3Request).execute()
-
-            val stringBuilder = StringBuilder().apply {
-              append(response.protocol.toString().uppercase())
-              append(" ")
-              append(response.code)
-              append(" ")
-              append(response.message)
-              append("\n")
-
-              response.headers.forEach {
-                append(it.first + ": " + it.second + "\n")
-              }
-              append("\n")
-              append(response.body?.string())
-            }
-
-            responseMimeMultipart.addBodyPart(
-              MimeBodyPart(
-                InternetHeaders(byteArrayOf().inputStream()).apply {
-                  setHeader("Content-Type", "application/http")
-                  setHeader("Content-ID", "response-${i + 1}")
-                },
-                stringBuilder.toString().toByteArray()
-              )
-            )
-          } catch (e: Exception) {
-            e.printStackTrace()
-          }
-        }
-
-        val outputStream = ByteArrayOutputStream()
-        responseMimeMultipart.writeTo(outputStream)
-        val content = String(outputStream.toByteArray())
-        val boundary = (ContentType(responseMimeMultipart.contentType)).getParameter("boundary")
-
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-          .setHeader("Content-Type", "multipart/mixed; boundary=$boundary")
-          .setBody(content)
-      }
-
-      else -> {
-        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-      }
-    }
-  }
-
-  protected fun genRawMimeWithSubject(msgSubject: String) = String(
-    ByteArrayOutputStream().apply {
+  protected fun genRawMimeBase64Encoded(msgSubject: String): String {
+    val raw = ByteArrayOutputStream().apply {
       this.use {
         MimeMessage(Session.getInstance(Properties())).apply {
+          setFrom(accountEntity.email)
           subject = msgSubject
-          setContent(MimeMultipart().apply { addBodyPart(MimeBodyPart().apply { setText("") }) })
+          setContent(MimeMultipart().apply {
+            addBodyPart(MimeBodyPart().apply {
+              setText(msgSubject)
+            })
+          })
         }.writeTo(it)
       }
     }.toByteArray()
-  )
 
-  protected fun getMimeMessageFromCache(msgPosition: Int): MimeMessage {
+    return Base64.encodeToString(
+      raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+    )
+  }
+
+  protected fun getMimeMessageFromCache(draftId: String): MimeMessage {
+    val raw = draftsCache[draftId]?.message?.raw ?: error("Draft not found")
+
     val rawMimeMessageAsByteArrayOfSecondMsg = Base64.decode(
-      draftsCache[msgPosition].message.raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+      raw, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
     )
     return MimeMessage(
       Session.getInstance(Properties()), rawMimeMessageAsByteArrayOfSecondMsg.inputStream()
@@ -413,7 +379,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
         partId = ""
         mimeType = "multipart/alternative"
         filename = ""
-        headers = prepareMessageHeaders(subject)
+        headers = prepareMessageHeaders(messageId, subject)
         body = MessagePartBody().apply {
           setSize(0)
         }
@@ -426,19 +392,17 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
               name = "Content-Type"
               value = "text/plain"
             })
-            body = MessagePartBody().apply { setSize(130) }
+            body = MessagePartBody().apply {
+              setSize(subject.length)
+              data = java.util.Base64.getEncoder()
+                .encodeToString(subject.toByteArray())
+            }
           }
         )
       }
-    }.toString()
+    }
 
-  protected fun genPathForGmailMessages(subPath: String) = "/gmail/v1/users/me/messages/$subPath?" +
-      "fields=id,threadId,labelIds,snippet,sizeEstimate,historyId,internalDate," +
-      "payload/partId,payload/mimeType,payload/filename,payload/headers," +
-      "payload/body,payload/parts(partId,mimeType,filename,headers,body/size,body/attachmentId)" +
-      "&format=full"
-
-  private fun prepareMessageHeaders(subject: String) = listOf(
+  private fun prepareMessageHeaders(messageId: String, subject: String) = listOf(
     MessagePartHeader().apply {
       name = "MIME-Version"
       value = "1.0"
@@ -449,7 +413,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     },
     MessagePartHeader().apply {
       name = "Message-ID"
-      value = EmailUtil.generateContentId()
+      value = messageId
     },
     MessagePartHeader().apply {
       name = "Subject"
@@ -465,15 +429,130 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseComposeScreenTest() {
     },
   )
 
-  companion object {
-    const val DRAFT_ID_FIRST = "r5555555555555555551"
-    const val MESSAGE_ID_FIRST = "5555555555555551"
-    const val THREAD_ID_FIRST = "1111111111111111"
-    const val MESSAGE_SUBJECT_FIRST = "first"
+  private fun genThreadDetailsMockResponse(request: RecordedRequest): MockResponse {
+    val path = request.path ?: ""
+    val threadId =
+      REGEX_USER_THREADS_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
 
-    const val DRAFT_ID_SECOND = "r5555555555555555552"
-    const val MESSAGE_ID_SECOND = "5555555555555552"
-    const val THREAD_ID_SECOND = "1111111111111112"
+    val message = when (threadId) {
+      THREAD_ID_FIRST -> {
+        genFirstMessage()
+      }
+
+      THREAD_ID_SECOND -> {
+        genSecondMessage()
+      }
+
+      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+
+    return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+      .setBody(
+        Thread().apply {
+          factory = GsonFactory.getDefaultInstance()
+          id = threadId
+          messages = listOf(message)
+        }.toString()
+      )
+  }
+
+  private fun genListDraftsResponseForRfc822msgidSearch(path: String): MockResponse {
+    val messageId =
+      REGEX_DRAFT_BY_RFC822MSGID.find(path)?.groups?.get(1)?.value?.trim()
+
+    val draft = when (messageId) {
+      MESSAGE_ID_FIRST -> Draft().apply {
+        id = DRAFT_ID_FIRST
+        message = Message().apply {
+          id = MESSAGE_ID_FIRST
+        }
+      }
+
+      MESSAGE_ID_SECOND -> Draft().apply {
+        id = DRAFT_ID_SECOND
+        message = Message().apply {
+          id = MESSAGE_ID_SECOND
+        }
+      }
+
+      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+
+    return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+      .setBody(
+        ListDraftsResponse().apply {
+          factory = GsonFactory.getDefaultInstance()
+          drafts = listOf(draft)
+        }.toString()
+      )
+  }
+
+  private fun genUserMessagesGetFormatFullResponseInternal(path: String): MockResponse {
+    val messageId = REGEX_USER_MESSAGES_GET_FORMAT_FULL.find(path)?.groups?.get(1)?.value?.trim()
+    val baseResponse = MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+
+    val message = when (messageId) {
+      MESSAGE_ID_FIRST -> {
+        genFirstMessage()
+      }
+
+      MESSAGE_ID_SECOND -> {
+        genSecondMessage()
+      }
+
+      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+
+    return baseResponse.setBody(message.toString())
+  }
+
+  private fun genUserMessagesRawResponse(path: String): MockResponse {
+    val messageId =
+      REGEX_USER_MESSAGES_GET_RAW.find(path)?.groups?.get(1)?.value?.trim()
+
+    val key = when (messageId) {
+      MESSAGE_ID_FIRST -> DRAFT_ID_FIRST
+      MESSAGE_ID_SECOND -> DRAFT_ID_SECOND
+      else -> return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+    }
+
+    val raw = draftsCache[key]?.message?.raw ?: error("Draft not found")
+    return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+      .setHeader("Content-Type", Json.MEDIA_TYPE)
+      //ref com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
+      .setBody(
+        "{\n  \"raw\": \"$raw\"\n}\n"
+      )
+  }
+
+  private fun genFirstMessage(): Message = genMessage(
+    messageId = MESSAGE_ID_FIRST,
+    messageThreadId = THREAD_ID_FIRST,
+    subject = getMimeMessageFromDraft(draftsCache[DRAFT_ID_FIRST])?.subject ?: "",
+    historyIdValue = HISTORY_ID_FIRST
+  )
+
+  private fun genSecondMessage(): Message = genMessage(
+    messageId = MESSAGE_ID_SECOND,
+    messageThreadId = THREAD_ID_SECOND,
+    subject = getMimeMessageFromDraft(draftsCache[DRAFT_ID_SECOND])?.subject ?: "",
+    historyIdValue = HISTORY_ID_SECOND
+  )
+
+  companion object {
+    const val DRAFT_ID_FIRST = "r5555555555555500001"
+    const val MESSAGE_ID_FIRST = "5555555555500001"
+    const val THREAD_ID_FIRST = "1111111111100001"
+    const val MESSAGE_SUBJECT_FIRST = "first"
+    val HISTORY_ID_FIRST = BigInteger("1111111")
+
+    const val DRAFT_ID_SECOND = "r5555555555555500002"
+    const val MESSAGE_ID_SECOND = "5555555555500002"
+    const val THREAD_ID_SECOND = "1111111111100002"
     const val MESSAGE_SUBJECT_SECOND = "second"
+    val HISTORY_ID_SECOND = BigInteger("2222222")
   }
 }
