@@ -392,7 +392,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 dependencies {
   ksp("com.github.bumptech.glide:ksp:4.16.0")
   ksp("androidx.annotation:annotation:1.9.1")
-  ksp("androidx.room:room-compiler:2.7.0")
+  ksp("androidx.room:room-compiler:2.7.1")
   //ACRA needs the following dependency to use a custom report sender
 
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
@@ -415,7 +415,7 @@ dependencies {
   androidTestImplementation("androidx.test:rules:1.6.1")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.2.1")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-  androidTestImplementation("androidx.room:room-testing:2.7.0")
+  androidTestImplementation("androidx.room:room-testing:2.7.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.10.0")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
@@ -430,7 +430,7 @@ dependencies {
   //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.20")
   testImplementation("junit:junit:4.13.2")
-  testImplementation("androidx.room:room-testing:2.7.0")
+  testImplementation("androidx.room:room-testing:2.7.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -450,8 +450,8 @@ dependencies {
   implementation("androidx.lifecycle:lifecycle-process:2.8.7")
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
   implementation("androidx.lifecycle:lifecycle-service:2.8.7")
-  implementation("androidx.room:room-runtime:2.7.0")
-  implementation("androidx.room:room-ktx:2.7.0")
+  implementation("androidx.room:room-runtime:2.7.1")
+  implementation("androidx.room:room-ktx:2.7.1")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
@@ -472,7 +472,7 @@ dependencies {
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.13.1")
   implementation("com.google.api-client:google-api-client-android:2.7.2")
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20250331-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
