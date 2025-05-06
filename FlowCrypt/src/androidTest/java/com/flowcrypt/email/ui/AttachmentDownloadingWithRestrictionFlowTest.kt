@@ -46,7 +46,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Ignore
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
@@ -165,7 +164,6 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("will be fixed in https://github.com/FlowCrypt/flowcrypt-android/issues/2914")
   fun testDownloadingAttachment() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -215,7 +213,7 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
       //open notification and check we have "End Pass Phrase Session" button
       device.openNotification()
       device.wait(
-        Until.hasObject(By.text(requireNotNull(simpleAttInfo?.name))),
+        Until.hasObject(By.text(requireNotNull(simpleAttInfo.name))),
         TimeUnit.SECONDS.toMillis(1)
       )
       device.pressBack()
