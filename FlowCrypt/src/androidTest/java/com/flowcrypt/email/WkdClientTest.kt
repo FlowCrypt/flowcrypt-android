@@ -24,7 +24,6 @@ import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -38,10 +37,46 @@ import java.net.HttpURLConnection
 class WkdClientTest {
   private val context: Context = ApplicationProvider.getApplicationContext()
 
+  private val mockWebServerRule = FlowCryptMockWebServerRule(
+    TestConstants.MOCK_WEB_SERVER_PORT,
+    object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        val gson = ApiHelper.getInstance(ApplicationProvider.getApplicationContext()).gson
+
+        when (request.path) {
+          "/.well-known/openpgpkey/policy" -> {
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          }
+
+          genLookupUrlPath(EXISTING_EMAIL) -> {
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(
+                PGPainless.generateKeyRing().simpleEcKeyRing(EXISTING_EMAIL).publicKey.armor()
+              )
+          }
+
+          genLookupUrlPath(NOT_EXISTING_EMAIL) -> {
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+              .setBody(
+                gson.toJson(
+                  ApiError(
+                    code = HttpURLConnection.HTTP_NOT_FOUND,
+                    message = "Public key not found"
+                  )
+                )
+              )
+          }
+        }
+
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+    })
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(mockWebServerRule)
 
   @Test
   fun existingEmailFlowCryptDomainTest() = runBlocking {
@@ -74,42 +109,6 @@ class WkdClientTest {
 
     const val EXISTING_EMAIL = "existing@flowcrypt.test"
     const val NOT_EXISTING_EMAIL = "not_existing@flowcrypt.test"
-
-    @get:ClassRule
-    @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
-      object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-          val gson = ApiHelper.getInstance(ApplicationProvider.getApplicationContext()).gson
-
-          when (request.path) {
-            "/.well-known/openpgpkey/policy" -> {
-              return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-            }
-
-            genLookupUrlPath(EXISTING_EMAIL) -> {
-              return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-                .setBody(
-                  PGPainless.generateKeyRing().simpleEcKeyRing(EXISTING_EMAIL).publicKey.armor()
-                )
-            }
-
-            genLookupUrlPath(NOT_EXISTING_EMAIL) -> {
-              return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-                .setBody(
-                  gson.toJson(
-                    ApiError(
-                      code = HttpURLConnection.HTTP_NOT_FOUND,
-                      message = "Public key not found"
-                    )
-                  )
-                )
-            }
-          }
-
-          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        }
-      })
 
     private fun genLookupUrlPath(email: String): String {
       val user = email.substringBefore("@")
