@@ -373,12 +373,20 @@ tasks.register("renameReleaseBuilds") {
 }
 
 tasks.register<Copy>("copyReleaseApks") {
-  from("${layout.buildDirectory}") {
-    include("**/*release*.apk")
-  }
-
   includeEmptyDirs = false
-  into("${rootProject.rootDir}/release")
+
+  into(
+    File(rootProject.rootDir, "release").apply {
+      exists().takeIf { true } ?: mkdir().takeIf { true } ?: error("Can't create $name")
+    }
+  )
+
+  with(
+    copySpec {
+      from(layout.buildDirectory)
+      include("**/*release*.apk")
+    }
+  )
 
   eachFile {
     //replace path to copy only apk file to the destination folder(without subdirectories)
