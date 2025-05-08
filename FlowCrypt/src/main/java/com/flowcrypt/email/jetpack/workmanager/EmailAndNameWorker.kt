@@ -41,7 +41,7 @@ class EmailAndNameWorker(context: Context, params: WorkerParameters) : BaseWorke
 
     for (i in emails.indices) {
       val email = emails[i].lowercase()
-      val name = names[i]
+      val name = names[i].takeIf { it.isNotEmpty() }
       val recipientEntity = recipientDao.getRecipientByEmailSuspend(email)
       if (recipientEntity != null) {
         if (recipientEntity.name.isNullOrEmpty()) {
@@ -60,7 +60,7 @@ class EmailAndNameWorker(context: Context, params: WorkerParameters) : BaseWorke
     const val EXTRA_KEY_NAMES = BuildConfig.APPLICATION_ID + ".EXTRA_KEY_NAMES"
     const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPDATE_EMAIL_AND_NAME"
 
-    fun enqueue(context: Context, emailAndNamePairs: List<Pair<String, String?>>) {
+    fun enqueue(context: Context, emailAndNamePairs: List<Pair<String, String>>) {
       var i = 0
       val stepValue = 50
       while (i < emailAndNamePairs.size) {

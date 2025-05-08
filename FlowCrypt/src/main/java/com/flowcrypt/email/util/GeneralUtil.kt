@@ -597,7 +597,7 @@ class GeneralUtil {
         val isSentFolder = imapFolder?.attributes?.contains("\\Sent") != false
 
         if (isSentFolder) {
-          val emailAndNamePairs = mutableListOf<Pair<String, String?>>()
+          val emailAndNamePairs = mutableListOf<Pair<String, String>>()
           for (message in messages) {
             emailAndNamePairs.addAll(getEmailAndNamePairs(message))
           }
@@ -615,9 +615,7 @@ class GeneralUtil {
      * This information will be retrieved from "to" and "cc" headers.
      *
      * @param msg The input [jakarta.mail.Message].
-     * @return <tt>[List]</tt> of [Pair] objects, which contains information
-     * about
-     * emails and names.
+     * @return <tt>[List]</tt> of [Pair] objects, which contains information about emails and names.
      * @throws MessagingException when retrieve information about recipients.
      */
     private fun getEmailAndNamePairs(msg: Message): List<Pair<String, String>> {
@@ -627,7 +625,7 @@ class GeneralUtil {
       if (addressesTo != null) {
         for (address in addressesTo) {
           val internetAddress = address as InternetAddress
-          pairs.add(Pair(internetAddress.address, internetAddress.personal))
+          pairs.add(Pair(internetAddress.address, internetAddress.personal ?: ""))
         }
       }
 
@@ -635,7 +633,7 @@ class GeneralUtil {
       if (addressesCC != null) {
         for (address in addressesCC) {
           val internetAddress = address as InternetAddress
-          pairs.add(Pair(internetAddress.address, internetAddress.personal))
+          pairs.add(Pair(internetAddress.address, internetAddress.personal ?: ""))
         }
       }
 
