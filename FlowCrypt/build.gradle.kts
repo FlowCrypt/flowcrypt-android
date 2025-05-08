@@ -377,7 +377,9 @@ tasks.register<Copy>("copyReleaseApks") {
 
   into(
     File(rootProject.rootDir, "release").apply {
-      exists().takeIf { true } ?: mkdir().takeIf { true } ?: error("Can't create $name")
+      if (!exists() && !mkdirs()) {
+        error("Can't create $name")
+      }
     }
   )
 
