@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity
@@ -21,6 +21,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuProvider
 import androidx.core.view.allViews
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
@@ -206,7 +207,9 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
       val hasTemporaryPassPhrases =
         keysStorage.getRawKeys().any { it.passphraseType == KeyEntity.PassphraseType.RAM }
       if (hasTemporaryPassPhrases) {
-        PassPhrasesInRAMService.start(this)
+        if (lifecycle.currentState in listOf(Lifecycle.State.STARTED, Lifecycle.State.RESUMED)) {
+          PassPhrasesInRAMService.start(this@BaseActivity)
+        }
       } else {
         PassPhrasesInRAMService.stop(this)
       }
