@@ -486,9 +486,9 @@ dependencies {
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
-  implementation("com.squareup.retrofit2:retrofit:2.11.0")
-  implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-  implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
+  implementation("com.squareup.retrofit2:retrofit:3.0.0")
+  implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+  implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
   implementation("com.squareup.okio:okio:3.11.0")
   implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
