@@ -438,7 +438,7 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.20")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.21")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.7.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
