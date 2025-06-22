@@ -451,7 +451,7 @@ dependencies {
   implementation("androidx.cardview:cardview:1.0.0")
   implementation("androidx.browser:browser:1.8.0")
   implementation("androidx.recyclerview:recyclerview:1.4.0")
-  implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
+  implementation("androidx.recyclerview:recyclerview-selection:1.2.0")
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
   implementation("androidx.test.espresso:espresso-idling-resource:3.6.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
