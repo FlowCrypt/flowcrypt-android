@@ -427,7 +427,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.7.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.10.1")
+  androidTestImplementation("androidx.work:work-testing:2.10.2")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -438,7 +438,7 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.20")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.7.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
@@ -446,7 +446,7 @@ dependencies {
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
   implementation("androidx.legacy:legacy-support-v4:1.0.0")
-  implementation("androidx.appcompat:appcompat:1.7.0")
+  implementation("androidx.appcompat:appcompat:1.7.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
   implementation("androidx.browser:browser:1.8.0")
@@ -469,8 +469,8 @@ dependencies {
   implementation("androidx.core:core-ktx:1.16.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.10.1")
-  implementation("androidx.fragment:fragment-ktx:1.8.7")
-  implementation("androidx.work:work-runtime-ktx:2.10.1")
+  implementation("androidx.fragment:fragment-ktx:1.8.8")
+  implementation("androidx.work:work-runtime-ktx:2.10.2")
   implementation("androidx.navigation:navigation-fragment-ktx:2.9.0")
   implementation("androidx.navigation:navigation-ui-ktx:2.9.0")
   implementation("androidx.navigation:navigation-runtime-ktx:2.9.0")
@@ -486,10 +486,10 @@ dependencies {
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
-  implementation("com.squareup.retrofit2:retrofit:2.11.0")
-  implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-  implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
-  implementation("com.squareup.okio:okio:3.11.0")
+  implementation("com.squareup.retrofit2:retrofit:3.0.0")
+  implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+  implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
+  implementation("com.squareup.okio:okio:3.13.0")
   implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
