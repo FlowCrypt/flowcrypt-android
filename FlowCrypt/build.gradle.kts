@@ -438,7 +438,7 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.1.21")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.0")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.7.1")
   testImplementation("io.github.classgraph:classgraph:4.8.179")
@@ -446,7 +446,7 @@ dependencies {
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
   implementation("androidx.legacy:legacy-support-v4:1.0.0")
-  implementation("androidx.appcompat:appcompat:1.7.0")
+  implementation("androidx.appcompat:appcompat:1.7.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
   implementation("androidx.browser:browser:1.8.0")
