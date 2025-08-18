@@ -427,7 +427,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.7.2")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.10.2")
+  androidTestImplementation("androidx.work:work-testing:2.10.3")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -438,10 +438,10 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.10")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.7.2")
-  testImplementation("io.github.classgraph:classgraph:4.8.179")
+  testImplementation("io.github.classgraph:classgraph:4.8.181")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -470,10 +470,10 @@ dependencies {
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.10.1")
   implementation("androidx.fragment:fragment-ktx:1.8.8")
-  implementation("androidx.work:work-runtime-ktx:2.10.2")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.0")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.0")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.0")
+  implementation("androidx.work:work-runtime-ktx:2.10.3")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.9.3")
+  implementation("androidx.navigation:navigation-ui-ktx:2.9.3")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.9.3")
   implementation("androidx.webkit:webkit:1.13.0")
 
   implementation("com.google.android.gms:play-services-base:18.7.0")
@@ -482,7 +482,7 @@ dependencies {
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.13.1")
   implementation("com.google.api-client:google-api-client-android:2.8.0")
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20250331-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20250630-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
