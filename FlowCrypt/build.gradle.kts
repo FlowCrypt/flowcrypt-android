@@ -438,10 +438,10 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.10")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.7.2")
-  testImplementation("io.github.classgraph:classgraph:4.8.179")
+  testImplementation("io.github.classgraph:classgraph:4.8.181")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -455,25 +455,25 @@ dependencies {
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
   implementation("androidx.test.espresso:espresso-idling-resource:3.6.1")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.1")
-  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.1")
-  implementation("androidx.lifecycle:lifecycle-process:2.9.1")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.1")
-  implementation("androidx.lifecycle:lifecycle-service:2.9.1")
+  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2")
+  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.2")
+  implementation("androidx.lifecycle:lifecycle-process:2.9.2")
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
+  implementation("androidx.lifecycle:lifecycle-service:2.9.2")
   implementation("androidx.room:room-runtime:2.7.2")
   implementation("androidx.room:room-ktx:2.7.2")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.16.0")
+  implementation("androidx.core:core-ktx:1.17.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.10.1")
-  implementation("androidx.fragment:fragment-ktx:1.8.8")
+  implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.10.3")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.0")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.0")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.0")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.9.3")
+  implementation("androidx.navigation:navigation-ui-ktx:2.9.3")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.9.3")
   implementation("androidx.webkit:webkit:1.13.0")
 
   implementation("com.google.android.gms:play-services-base:18.7.0")
@@ -482,7 +482,7 @@ dependencies {
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.13.1")
   implementation("com.google.api-client:google-api-client-android:2.8.0")
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20250331-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20250630-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
