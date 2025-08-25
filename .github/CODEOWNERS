@@ -1,7 +1,7 @@
 # These owners will be the default owners for everything in the repo.
 # Unless a later match takes precedence,
 # these owners will be requested for review when someone opens a pull request.
-* @DenBond7 @ioanmo226
+* @DenBond7 @ioanatflowcrypt
 
 # The following files will no have codeowners to allow dependabot auto-merge
 # based on https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features
