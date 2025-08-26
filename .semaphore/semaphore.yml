@@ -5,7 +5,7 @@ agent:
     type: e2-standard-2
     os_image: ubuntu2404
 execution_time_limit:
-  minutes: 60
+  minutes: 75
 
 fail_fast:
   stop:
