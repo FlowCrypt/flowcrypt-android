@@ -416,14 +416,14 @@ dependencies {
   uiTestsImplementation("androidx.fragment:fragment-testing:1.8.7")
   uiTestsImplementation("androidx.test:core-ktx:1.6.1")
 
-  androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-  androidTestImplementation("androidx.test.espresso:espresso-contrib:3.6.1")
-  androidTestImplementation("androidx.test.espresso:espresso-intents:3.6.1")
-  androidTestImplementation("androidx.test.espresso:espresso-web:3.6.1")
-  androidTestImplementation("androidx.test.ext:junit:1.2.1")
-  androidTestImplementation("androidx.test:runner:1.6.2")
+  androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+  androidTestImplementation("androidx.test.espresso:espresso-contrib:3.7.0")
+  androidTestImplementation("androidx.test.espresso:espresso-intents:3.7.0")
+  androidTestImplementation("androidx.test.espresso:espresso-web:3.7.0")
+  androidTestImplementation("androidx.test.ext:junit:1.3.0")
+  androidTestImplementation("androidx.test:runner:1.7.0")
   androidTestImplementation("androidx.test:rules:1.6.1")
-  androidTestImplementation("androidx.test.ext:junit-ktx:1.2.1")
+  androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.7.2")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
@@ -431,7 +431,7 @@ dependencies {
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.1.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
-  androidTestUtil("androidx.test:orchestrator:1.5.1")
+  androidTestUtil("androidx.test:orchestrator:1.6.1")
 
   testImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
@@ -453,7 +453,7 @@ dependencies {
   implementation("androidx.recyclerview:recyclerview:1.4.0")
   implementation("androidx.recyclerview:recyclerview-selection:1.2.0")
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-  implementation("androidx.test.espresso:espresso-idling-resource:3.6.1")
+  implementation("androidx.test.espresso:espresso-idling-resource:3.7.0")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
   implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2")
   implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.2")
@@ -489,7 +489,7 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:3.0.0")
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
-  implementation("com.squareup.okio:okio:3.13.0")
+  implementation("com.squareup.okio:okio:3.16.0")
   implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")
 
   implementation("com.github.bumptech.glide:glide:4.16.0")
@@ -498,11 +498,11 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.20.1")
+  implementation("org.jsoup:jsoup:1.21.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   implementation("org.pgpainless:pgpainless-core:1.7.6")
-  implementation("org.eclipse.angus:angus-mail:2.0.3")
-  implementation("org.eclipse.angus:gimap:2.0.3")
+  implementation("org.eclipse.angus:angus-mail:2.0.4")
+  implementation("org.eclipse.angus:gimap:2.0.4")
   implementation("commons-io:commons-io:2.19.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.12.0")
@@ -510,7 +510,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.18.0") {
+    implementation("commons-codec:commons-codec:1.19.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }

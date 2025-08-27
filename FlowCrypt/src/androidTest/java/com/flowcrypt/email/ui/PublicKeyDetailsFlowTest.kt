@@ -16,6 +16,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -42,8 +43,6 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.junit.AfterClass
 import org.junit.Rule
@@ -157,7 +156,7 @@ class PublicKeyDetailsFlowTest : BaseTest() {
     intending(
       allOf(
         IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        IntentMatchers.hasCategories(CoreMatchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)
       )
     )
