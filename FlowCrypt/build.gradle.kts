@@ -431,7 +431,7 @@ dependencies {
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
-  androidTestUtil("androidx.test:orchestrator:1.5.1")
+  androidTestUtil("androidx.test:orchestrator:1.6.1")
 
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
@@ -510,7 +510,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.18.0") {
+    implementation("commons-codec:commons-codec:1.19.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }
