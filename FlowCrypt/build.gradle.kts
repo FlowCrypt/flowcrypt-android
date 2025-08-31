@@ -414,7 +414,7 @@ dependencies {
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
   uiTestsImplementation("androidx.fragment:fragment-testing:1.8.7")
-  uiTestsImplementation("androidx.test:core-ktx:1.6.1")
+  uiTestsImplementation("androidx.test:core-ktx:1.7.0")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
   androidTestImplementation("androidx.test.espresso:espresso-contrib:3.7.0")
@@ -422,7 +422,7 @@ dependencies {
   androidTestImplementation("androidx.test.espresso:espresso-web:3.7.0")
   androidTestImplementation("androidx.test.ext:junit:1.3.0")
   androidTestImplementation("androidx.test:runner:1.7.0")
-  androidTestImplementation("androidx.test:rules:1.6.1")
+  androidTestImplementation("androidx.test:rules:1.7.0")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.7.2")
@@ -431,7 +431,7 @@ dependencies {
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
-  androidTestUtil("androidx.test:orchestrator:1.6.1")
+  androidTestUtil("androidx.test:orchestrator:1.7.0")
 
   testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
