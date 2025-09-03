@@ -1,4 +1,9 @@
 /*
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: denbond7
+ */
+
+/*
  * Copyright (C) 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,27 +18,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.flowcrypt.email.util.cache
 
 import android.net.Uri
-import com.flowcrypt.email.util.cache.DiskLruCache.Editor
 import okhttp3.OkHttpClient
 import okhttp3.internal.closeQuietly
+import okhttp3.internal.concurrent.Lockable
 import okhttp3.internal.concurrent.Task
 import okhttp3.internal.concurrent.TaskRunner
-import okhttp3.internal.io.FileSystem
 import okhttp3.internal.platform.Platform
 import okhttp3.internal.platform.Platform.Companion.WARN
+import okio.Buffer
 import okio.BufferedSink
+import okio.FileNotFoundException
+import okio.FileSystem
+import okio.ForwardingFileSystem
+import okio.ForwardingSink
+import okio.ForwardingSource
+import okio.Path
 import okio.Sink
 import okio.Source
 import okio.blackholeSink
 import okio.buffer
+import okio.use
 import java.io.Closeable
 import java.io.EOFException
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.Flushable
 import java.io.IOException
 
@@ -77,23 +87,34 @@ import java.io.IOException
  * @constructor Create a cache which will reside in [directory]. This cache is lazily initialized on
  *     first access and will be created if it does not exist.
  * @param directory a writable directory.
+ * @param valueCount the number of values per cache entry. Must be positive.
  * @param maxSize the maximum number of bytes this cache should use to store.
  */
-class DiskLruCache internal constructor(
-  internal val fileSystem: FileSystem,
-
+class DiskLruCache(
+  fileSystem: FileSystem,
   /** Returns the directory where this cache stores its data. */
-  val directory: File,
-
+  val directory: Path,
   private val appVersion: Int,
-
+  internal val valueCount: Int = 1,
   /** Returns the maximum number of bytes that this cache should use to store its data. */
   maxSize: Long,
-
   /** Used for asynchronous journal rebuilds. */
-  taskRunner: TaskRunner = TaskRunner.INSTANCE
-) : Closeable, Flushable {
-  internal val valueCount: Int = 1
+  taskRunner: TaskRunner = TaskRunner.INSTANCE,
+) : Closeable,
+  Flushable,
+  Lockable {
+  internal val fileSystem: FileSystem =
+    object : ForwardingFileSystem(fileSystem) {
+      override fun sink(
+        file: Path,
+        mustCreate: Boolean,
+      ): Sink {
+        file.parent?.let {
+          createDirectories(it)
+        }
+        return super.sink(file, mustCreate)
+      }
+    }
 
   /** The maximum number of bytes that this cache should use to store its data. */
   @get:Synchronized
@@ -146,14 +167,15 @@ class DiskLruCache internal constructor(
    * compaction; that file should be deleted if it exists when the cache is opened.
    */
 
-  private val journalFile: File
-  private val journalFileTmp: File
-  private val journalFileBackup: File
+  private val journalFile: Path
+  private val journalFileTmp: Path
+  private val journalFileBackup: Path
   private var size: Long = 0L
   private var journalWriter: BufferedSink? = null
   internal val lruEntries = LinkedHashMap<String, Entry>(0, 0.75f, true)
   private var redundantOpCount: Int = 0
   private var hasJournalErrors: Boolean = false
+  private var civilizedFileSystem: Boolean = false
 
   // Must be read and written when synchronized on 'this'.
   private var initialized: Boolean = false
@@ -168,48 +190,57 @@ class DiskLruCache internal constructor(
    */
   private var nextSequenceNumber: Long = 0
 
+  private val okHttpName: String =
+    OkHttpClient::class.java.name
+      .removePrefix("okhttp3.")
+      .removeSuffix("Client")
+
+  internal val assertionsEnabled: Boolean = OkHttpClient::class.java.desiredAssertionStatus()
+
   private val cleanupQueue = taskRunner.newQueue()
-  private val cleanupTask = object : Task("OkHttp Cache") {
-    override fun runOnce(): Long {
-      synchronized(this@DiskLruCache) {
-        if (!initialized || closed) {
-          return -1L // Nothing to do.
-        }
-
-        try {
-          trimToSize()
-        } catch (_: IOException) {
-          mostRecentTrimFailed = true
-        }
-
-        try {
-          if (journalRebuildRequired()) {
-            rebuildJournal()
-            redundantOpCount = 0
+  private val cleanupTask =
+    object : Task("$okHttpName Cache") {
+      override fun runOnce(): Long {
+        synchronized(this@DiskLruCache) {
+          if (!initialized || closed) {
+            return -1L // Nothing to do.
           }
-        } catch (_: IOException) {
-          mostRecentRebuildFailed = true
-          journalWriter = blackholeSink().buffer()
-        }
 
-        return -1L
+          try {
+            trimToSize()
+          } catch (_: IOException) {
+            mostRecentTrimFailed = true
+          }
+
+          try {
+            if (journalRebuildRequired()) {
+              rebuildJournal()
+              redundantOpCount = 0
+            }
+          } catch (_: IOException) {
+            mostRecentRebuildFailed = true
+            journalWriter?.closeQuietly()
+            journalWriter = blackholeSink().buffer()
+          }
+
+          return -1L
+        }
       }
     }
-  }
 
   init {
     require(maxSize > 0L) { "maxSize <= 0" }
     require(valueCount > 0) { "valueCount <= 0" }
 
-    this.journalFile = File(directory, JOURNAL_FILE)
-    this.journalFileTmp = File(directory, JOURNAL_FILE_TEMP)
-    this.journalFileBackup = File(directory, JOURNAL_FILE_BACKUP)
+    this.journalFile = directory / JOURNAL_FILE
+    this.journalFileTmp = directory / JOURNAL_FILE_TEMP
+    this.journalFileBackup = directory / JOURNAL_FILE_BACKUP
   }
 
   @Synchronized
   @Throws(IOException::class)
   fun initialize() {
-    this.assertThreadHoldsLock()
+    assertLockHeld()
 
     if (initialized) {
       return // Already initialized.
@@ -221,9 +252,11 @@ class DiskLruCache internal constructor(
       if (fileSystem.exists(journalFile)) {
         fileSystem.delete(journalFileBackup)
       } else {
-        fileSystem.rename(journalFileBackup, journalFile)
+        fileSystem.atomicMove(journalFileBackup, journalFile)
       }
     }
+
+    civilizedFileSystem = fileSystem.isCivilized(journalFileBackup)
 
     // Prefer to pick up where we left off.
     if (fileSystem.exists(journalFile)) {
@@ -236,7 +269,7 @@ class DiskLruCache internal constructor(
         Platform.get().log(
           "DiskLruCache $directory is corrupt: ${journalIsCorrupt.message}, removing",
           WARN,
-          journalIsCorrupt
+          journalIsCorrupt,
         )
       }
 
@@ -256,12 +289,12 @@ class DiskLruCache internal constructor(
 
   @Throws(IOException::class)
   private fun readJournal() {
-    fileSystem.source(journalFile).buffer().use { source ->
-      val magic = source.readUtf8LineStrict()
-      val version = source.readUtf8LineStrict()
-      val appVersionString = source.readUtf8LineStrict()
-      val valueCountString = source.readUtf8LineStrict()
-      val blank = source.readUtf8LineStrict()
+    fileSystem.read(journalFile) {
+      val magic = readUtf8LineStrict()
+      val version = readUtf8LineStrict()
+      val appVersionString = readUtf8LineStrict()
+      val valueCountString = readUtf8LineStrict()
+      val blank = readUtf8LineStrict()
 
       if (MAGIC != magic ||
         VERSION_1 != version ||
@@ -270,14 +303,14 @@ class DiskLruCache internal constructor(
         blank.isNotEmpty()
       ) {
         throw IOException(
-          "unexpected journal header: [$magic, $version, $valueCountString, $blank]"
+          "unexpected journal header: [$magic, $version, $valueCountString, $blank]",
         )
       }
 
       var lineCount = 0
       while (true) {
         try {
-          readJournalLine(source.readUtf8LineStrict())
+          readJournalLine(readUtf8LineStrict())
           lineCount++
         } catch (_: EOFException) {
           break // End of journal.
@@ -287,9 +320,10 @@ class DiskLruCache internal constructor(
       redundantOpCount = lineCount - lruEntries.size
 
       // If we ended on a truncated line, rebuild the journal before appending to it.
-      if (!source.exhausted()) {
+      if (!exhausted()) {
         rebuildJournal()
       } else {
+        journalWriter?.closeQuietly()
         journalWriter = newJournalWriter()
       }
     }
@@ -298,10 +332,11 @@ class DiskLruCache internal constructor(
   @Throws(FileNotFoundException::class)
   private fun newJournalWriter(): BufferedSink {
     val fileSink = fileSystem.appendingSink(journalFile)
-    val faultHidingSink = FaultHidingSink(fileSink) {
-      this@DiskLruCache.assertThreadHoldsLock()
-      hasJournalErrors = true
-    }
+    val faultHidingSink =
+      FaultHidingSink(fileSink) {
+        assertLockHeld()
+        hasJournalErrors = true
+      }
     return faultHidingSink.buffer()
   }
 
@@ -331,13 +366,13 @@ class DiskLruCache internal constructor(
 
     when {
       secondSpace != -1 && firstSpace == CLEAN.length && line.startsWith(CLEAN) -> {
-        val parts = line.substring(secondSpace + 1)
-          .split(' ')
+        val parts =
+          line
+            .substring(secondSpace + 1)
+            .split(' ')
         entry.readable = true
         entry.currentEditor = null
-        entry.setLengths(parts.filterIndexed { index, _ -> index == 0 })
-        entry.setCreatingDate(parts.filterIndexed { index, _ -> index == 1 }
-          .firstOrNull()?.toLongOrNull() ?: 0L)
+        entry.setLengths(parts)
       }
 
       secondSpace == -1 && firstSpace == DIRTY.length && line.startsWith(DIRTY) -> {
@@ -358,7 +393,7 @@ class DiskLruCache internal constructor(
    */
   @Throws(IOException::class)
   private fun processJournal() {
-    fileSystem.delete(journalFileTmp)
+    fileSystem.deleteIfExists(journalFileTmp)
     val i = lruEntries.values.iterator()
     while (i.hasNext()) {
       val entry = i.next()
@@ -369,8 +404,8 @@ class DiskLruCache internal constructor(
       } else {
         entry.currentEditor = null
         for (t in 0 until valueCount) {
-          fileSystem.delete(entry.cleanFiles[t])
-          fileSystem.delete(entry.dirtyFiles[t])
+          fileSystem.deleteIfExists(entry.cleanFiles[t])
+          fileSystem.deleteIfExists(entry.dirtyFiles[t])
         }
         i.remove()
       }
@@ -386,33 +421,36 @@ class DiskLruCache internal constructor(
   internal fun rebuildJournal() {
     journalWriter?.close()
 
-    fileSystem.sink(journalFileTmp).buffer().use { sink ->
-      sink.writeUtf8(MAGIC).writeByte('\n'.code)
-      sink.writeUtf8(VERSION_1).writeByte('\n'.code)
-      sink.writeDecimalLong(appVersion.toLong()).writeByte('\n'.code)
-      sink.writeDecimalLong(valueCount.toLong()).writeByte('\n'.code)
-      sink.writeByte('\n'.code)
+    fileSystem.write(journalFileTmp) {
+      writeUtf8(MAGIC).writeByte('\n'.code)
+      writeUtf8(VERSION_1).writeByte('\n'.code)
+      writeDecimalLong(appVersion.toLong()).writeByte('\n'.code)
+      writeDecimalLong(valueCount.toLong()).writeByte('\n'.code)
+      writeByte('\n'.code)
 
       for (entry in lruEntries.values) {
         if (entry.currentEditor != null) {
-          sink.writeUtf8(DIRTY).writeByte(' '.code)
-          sink.writeUtf8(entry.key)
-          sink.writeByte('\n'.code)
+          writeUtf8(DIRTY).writeByte(' '.code)
+          writeUtf8(entry.key)
+          writeByte('\n'.code)
         } else {
-          sink.writeUtf8(CLEAN).writeByte(' '.code)
-          sink.writeUtf8(entry.key)
-          entry.writeLengths(sink)
-          sink.writeByte('\n'.code)
+          writeUtf8(CLEAN).writeByte(' '.code)
+          writeUtf8(entry.key)
+          entry.writeLengths(this)
+          writeByte('\n'.code)
         }
       }
     }
 
     if (fileSystem.exists(journalFile)) {
-      fileSystem.rename(journalFile, journalFileBackup)
+      fileSystem.atomicMove(journalFile, journalFileBackup)
+      fileSystem.atomicMove(journalFileTmp, journalFile)
+      fileSystem.deleteIfExists(journalFileBackup)
+    } else {
+      fileSystem.atomicMove(journalFileTmp, journalFile)
     }
-    fileSystem.rename(journalFileTmp, journalFile)
-    fileSystem.delete(journalFileBackup)
 
+    journalWriter?.closeQuietly()
     journalWriter = newJournalWriter()
     hasJournalErrors = false
     mostRecentRebuildFailed = false
@@ -430,11 +468,11 @@ class DiskLruCache internal constructor(
     checkNotClosed()
     validateKey(key)
     val entry = lruEntries[key] ?: return null
-    if (!entry.readable) return null
     val snapshot = entry.snapshot() ?: return null
 
     redundantOpCount++
-    journalWriter!!.writeUtf8(READ)
+    journalWriter!!
+      .writeUtf8(READ)
       .writeByte(' '.code)
       .writeUtf8(key)
       .writeByte('\n'.code)
@@ -449,7 +487,10 @@ class DiskLruCache internal constructor(
   @Synchronized
   @Throws(IOException::class)
   @JvmOverloads
-  fun edit(key: String, expectedSequenceNumber: Long = ANY_SEQUENCE_NUMBER): Editor? {
+  fun edit(
+    key: String,
+    expectedSequenceNumber: Long = ANY_SEQUENCE_NUMBER,
+  ): Editor? {
     initialize()
 
     checkNotClosed()
@@ -465,6 +506,10 @@ class DiskLruCache internal constructor(
       return null // Another edit is in progress.
     }
 
+    if (entry != null && entry.lockingSourceCount != 0) {
+      return null // We can't write this file because a reader is still reading it.
+    }
+
     if (mostRecentTrimFailed || mostRecentRebuildFailed) {
       // The OS has become our enemy! If the trim job failed, it means we are storing more data than
       // requested by the user. Do not allow edits so we do not go over that limit any further. If
@@ -477,7 +522,8 @@ class DiskLruCache internal constructor(
 
     // Flush the journal before creating files to prevent file leaks.
     val journalWriter = this.journalWriter!!
-    journalWriter.writeUtf8(DIRTY)
+    journalWriter
+      .writeUtf8(DIRTY)
       .writeByte(' '.code)
       .writeUtf8(key)
       .writeByte('\n'.code)
@@ -509,7 +555,10 @@ class DiskLruCache internal constructor(
 
   @Synchronized
   @Throws(IOException::class)
-  internal fun completeEdit(editor: Editor, success: Boolean) {
+  internal fun completeEdit(
+    editor: Editor,
+    success: Boolean,
+  ) {
     val entry = editor.entry
     check(entry.currentEditor == editor)
 
@@ -529,29 +578,34 @@ class DiskLruCache internal constructor(
 
     for (i in 0 until valueCount) {
       val dirty = entry.dirtyFiles[i]
-      if (success) {
+      if (success && !entry.zombie) {
         if (fileSystem.exists(dirty)) {
           val clean = entry.cleanFiles[i]
-          fileSystem.rename(dirty, clean)
+          fileSystem.atomicMove(dirty, clean)
           val oldLength = entry.lengths[i]
-          val newLength = fileSystem.size(clean)
+          // TODO check null behaviour
+          val newLength = fileSystem.metadata(clean).size ?: 0
           entry.lengths[i] = newLength
           size = size - oldLength + newLength
         }
       } else {
-        fileSystem.delete(dirty)
+        fileSystem.deleteIfExists(dirty)
       }
     }
 
-    redundantOpCount++
     entry.currentEditor = null
-    journalWriter?.apply {
+    if (entry.zombie) {
+      removeEntry(entry)
+      return
+    }
+
+    redundantOpCount++
+    journalWriter!!.apply {
       if (entry.readable || success) {
         entry.readable = true
         writeUtf8(CLEAN).writeByte(' '.code)
         writeUtf8(entry.key)
         entry.writeLengths(this)
-        entry.writeCreationDate(this)
         writeByte('\n'.code)
         if (success) {
           entry.sequenceNumber = nextSequenceNumber++
@@ -601,19 +655,40 @@ class DiskLruCache internal constructor(
 
   @Throws(IOException::class)
   internal fun removeEntry(entry: Entry): Boolean {
+    // If we can't delete files that are still open, mark this entry as a zombie so its files will
+    // be deleted when those files are closed.
+    if (!civilizedFileSystem) {
+      if (entry.lockingSourceCount > 0) {
+        // Mark this entry as 'DIRTY' so that if the process crashes this entry won't be used.
+        journalWriter?.let {
+          it.writeUtf8(DIRTY)
+          it.writeByte(' '.code)
+          it.writeUtf8(entry.key)
+          it.writeByte('\n'.code)
+          it.flush()
+        }
+      }
+      if (entry.lockingSourceCount > 0 || entry.currentEditor != null) {
+        entry.zombie = true
+        return true
+      }
+    }
+
     entry.currentEditor?.detach() // Prevent the edit from completing normally.
 
     for (i in 0 until valueCount) {
-      fileSystem.delete(entry.cleanFiles[i])
+      fileSystem.deleteIfExists(entry.cleanFiles[i])
       size -= entry.lengths[i]
       entry.lengths[i] = 0
     }
 
     redundantOpCount++
-    journalWriter!!.writeUtf8(REMOVE)
-      .writeByte(' '.code)
-      .writeUtf8(entry.key)
-      .writeByte('\n'.code)
+    journalWriter?.let {
+      it.writeUtf8(REMOVE)
+      it.writeByte(' '.code)
+      it.writeUtf8(entry.key)
+      it.writeByte('\n'.code)
+    }
     lruEntries.remove(entry.key)
 
     if (journalRebuildRequired()) {
@@ -654,12 +729,12 @@ class DiskLruCache internal constructor(
     // Copying for concurrent iteration.
     for (entry in lruEntries.values.toTypedArray()) {
       if (entry.currentEditor != null) {
-        entry.currentEditor!!.abort()
+        entry.currentEditor?.detach() // Prevent the edit from completing normally.
       }
     }
 
     trimToSize()
-    journalWriter!!.close()
+    journalWriter?.closeQuietly()
     journalWriter = null
     closed = true
   }
@@ -667,10 +742,20 @@ class DiskLruCache internal constructor(
   @Throws(IOException::class)
   fun trimToSize() {
     while (size > maxSize) {
-      val toEvict = lruEntries.values.iterator().next()
-      removeEntry(toEvict)
+      if (!removeOldestEntry()) return
     }
     mostRecentTrimFailed = false
+  }
+
+  /** Returns true if an entry was removed. This will return false if all entries are zombies. */
+  private fun removeOldestEntry(): Boolean {
+    for (toEvict in lruEntries.values) {
+      if (!toEvict.zombie) {
+        removeEntry(toEvict)
+        return true
+      }
+    }
+    return false
   }
 
   /**
@@ -703,6 +788,65 @@ class DiskLruCache internal constructor(
   }
 
   /**
+   * Returns true if file streams can be manipulated independently of their paths. This is typically
+   * true for systems like Mac, Unix, and Linux that use inodes in their file system interface. It is
+   * typically false on Windows.
+   *
+   * If this returns false we won't permit simultaneous reads and writes. When writes commit we need
+   * to delete the previous snapshots, and that won't succeed if the file is open. (We do permit
+   * multiple simultaneous reads.)
+   *
+   * @param file a file in the directory to check. This file shouldn't already exist!
+   */
+  fun FileSystem.isCivilized(file: Path): Boolean {
+    sink(file).use {
+      try {
+        delete(file)
+        return true
+      } catch (_: okio.IOException) {
+      }
+    }
+    delete(file)
+    return false
+  }
+
+  /** Delete file we expect but don't require to exist. */
+  internal fun FileSystem.deleteIfExists(path: Path) {
+    try {
+      delete(path)
+    } catch (fnfe: FileNotFoundException) {
+      return
+    }
+  }
+
+  /** Tolerant delete, try to clear as many files as possible even after a failure. */
+  internal fun FileSystem.deleteContents(directory: Path) {
+    var exception: okio.IOException? = null
+    val files =
+      try {
+        list(directory)
+      } catch (fnfe: FileNotFoundException) {
+        return
+      }
+    for (file in files) {
+      try {
+        if (metadata(file).isDirectory) {
+          deleteContents(file)
+        }
+
+        delete(file)
+      } catch (ioe: okio.IOException) {
+        if (exception == null) {
+          exception = ioe
+        }
+      }
+    }
+    if (exception != null) {
+      throw exception
+    }
+  }
+
+  /**
    * Returns an iterator over the cache's current entries. This iterator doesn't throw
    * `ConcurrentModificationException`, but if new entries are added while iterating, those new
    * entries will not be returned by the iterator. If existing entries are removed during iteration,
@@ -721,13 +865,13 @@ class DiskLruCache internal constructor(
     initialize()
     return object : MutableIterator<Snapshot> {
       /** Iterate a copy of the entries to defend against concurrent modification errors. */
-      val delegate = ArrayList(lruEntries.values).iterator()
+      private val delegate = ArrayList(lruEntries.values).iterator()
 
       /** The snapshot to return from [next]. Null if we haven't computed that yet. */
-      var nextSnapshot: Snapshot? = null
+      private var nextSnapshot: Snapshot? = null
 
       /** The snapshot to remove with [remove]. Null if removal is illegal. */
-      var removeSnapshot: Snapshot? = null
+      private var removeSnapshot: Snapshot? = null
 
       override fun hasNext(): Boolean {
         if (nextSnapshot != null) return true
@@ -737,12 +881,7 @@ class DiskLruCache internal constructor(
           if (closed) return false
 
           while (delegate.hasNext()) {
-            val entry = delegate.next()
-            if (entry == null || !entry.readable) continue // Entry during edit
-
-            val snapshot = entry.snapshot() ?: continue
-            // Evicted since we copied the entries.
-            nextSnapshot = snapshot
+            nextSnapshot = delegate.next()?.snapshot() ?: continue
             return true
           }
         }
@@ -805,7 +944,7 @@ class DiskLruCache internal constructor(
 
     /** Returns the [Uri] of the value for [index]. */
     fun getUri(index: Int): Uri? {
-      val file = File(directory, "$key.$index")
+      val file = File(directory.toString(), "$key.$index")
       return if (file.exists()) {
         Uri.fromFile(file)
       } else null
@@ -827,7 +966,9 @@ class DiskLruCache internal constructor(
   }
 
   /** Edits the values for an entry. */
-  inner class Editor internal constructor(internal val entry: Entry) {
+  inner class Editor internal constructor(
+    internal val entry: Entry,
+  ) {
     internal val written: BooleanArray? = if (entry.readable) null else BooleanArray(valueCount)
     private var done: Boolean = false
 
@@ -839,14 +980,11 @@ class DiskLruCache internal constructor(
      */
     internal fun detach() {
       if (entry.currentEditor == this) {
-        for (i in 0 until valueCount) {
-          try {
-            fileSystem.delete(entry.dirtyFiles[i])
-          } catch (_: IOException) {
-            // This file is potentially leaked. Not much we can do about that.
-          }
+        if (civilizedFileSystem) {
+          completeEdit(this, false) // Delete it now.
+        } else {
+          entry.zombie = true // We can't delete it until the current edit completes.
         }
-        entry.currentEditor = null
       }
     }
 
@@ -854,10 +992,10 @@ class DiskLruCache internal constructor(
      * Returns an unbuffered input stream to read the last committed value, or null if no value has
      * been committed.
      */
-    fun newSource(index: Int = 0): Source? {
+    fun newSource(index: Int): Source? {
       synchronized(this@DiskLruCache) {
         check(!done)
-        if (!entry.readable || entry.currentEditor != this) {
+        if (!entry.readable || entry.currentEditor != this || entry.zombie) {
           return null
         }
         return try {
@@ -929,21 +1067,31 @@ class DiskLruCache internal constructor(
   }
 
   internal inner class Entry internal constructor(
-    internal val key: String
+    internal val key: String,
   ) {
-
     /** Lengths of this entry's files. */
     internal val lengths: LongArray = LongArray(valueCount)
-    internal val cleanFiles = mutableListOf<File>()
-    internal val dirtyFiles = mutableListOf<File>()
-
+    internal val cleanFiles = mutableListOf<Path>()
+    internal val dirtyFiles = mutableListOf<Path>()
     internal var creatingDateInMilliseconds = System.currentTimeMillis()
 
     /** True if this entry has ever been published. */
     internal var readable: Boolean = false
 
-    /** The ongoing edit or null if this entry is not being edited. */
+    /** True if this entry must be deleted when the current edit or read completes. */
+    internal var zombie: Boolean = false
+
+    /**
+     * The ongoing edit or null if this entry is not being edited. When setting this to null the
+     * entry must be removed if it is a zombie.
+     */
     internal var currentEditor: Editor? = null
+
+    /**
+     * Sources currently reading this entry before a write or delete can proceed. When decrementing
+     * this to zero, the entry must be removed if it is a zombie.
+     */
+    internal var lockingSourceCount = 0
 
     /** The sequence number of the most recently committed edit to this entry. */
     internal var sequenceNumber: Long = 0
@@ -954,9 +1102,9 @@ class DiskLruCache internal constructor(
       val truncateTo = fileBuilder.length
       for (i in 0 until valueCount) {
         fileBuilder.append(i)
-        cleanFiles += File(directory, fileBuilder.toString())
+        cleanFiles += directory / fileBuilder.toString()
         fileBuilder.append(".tmp")
-        dirtyFiles += File(directory, fileBuilder.toString())
+        dirtyFiles += directory / fileBuilder.toString()
         fileBuilder.setLength(truncateTo)
       }
     }
@@ -965,7 +1113,7 @@ class DiskLruCache internal constructor(
     @Throws(IOException::class)
     internal fun setLengths(strings: List<String>) {
       if (strings.size != valueCount) {
-        throw invalidLengths(strings)
+        invalidLengths(strings)
       }
 
       try {
@@ -973,12 +1121,8 @@ class DiskLruCache internal constructor(
           lengths[i] = strings[i].toLong()
         }
       } catch (_: NumberFormatException) {
-        throw invalidLengths(strings)
+        invalidLengths(strings)
       }
-    }
-
-    fun setCreatingDate(creatingDateInMilliseconds: Long) {
-      this.creatingDateInMilliseconds = creatingDateInMilliseconds
     }
 
     /** Append space-prefixed lengths to [writer]. */
@@ -989,16 +1133,9 @@ class DiskLruCache internal constructor(
       }
     }
 
-    /** Append space-prefixed creation date in milliseconds to [writer]. */
     @Throws(IOException::class)
-    internal fun writeCreationDate(writer: BufferedSink) {
-      writer.writeByte(' '.code).writeDecimalLong(creatingDateInMilliseconds)
-    }
-
-    @Throws(IOException::class)
-    private fun invalidLengths(strings: List<String>): IOException {
+    private fun invalidLengths(strings: List<String>): Nothing =
       throw IOException("unexpected journal line: $strings")
-    }
 
     /**
      * Returns a snapshot of this entry. This opens all streams eagerly to guarantee that we see a
@@ -1006,13 +1143,16 @@ class DiskLruCache internal constructor(
      * different edits.
      */
     internal fun snapshot(): Snapshot? {
-      this@DiskLruCache.assertThreadHoldsLock()
+      assertLockHeld()
+
+      if (!readable) return null
+      if (!civilizedFileSystem && (currentEditor != null || zombie)) return null
 
       val sources = mutableListOf<Source>()
       val lengths = this.lengths.clone() // Defensive copy since these can be zeroed out.
       try {
         for (i in 0 until valueCount) {
-          sources += fileSystem.source(cleanFiles[i])
+          sources += newSource(i)
         }
         return Snapshot(key, sequenceNumber, sources, lengths, creatingDateInMilliseconds)
       } catch (_: FileNotFoundException) {
@@ -1029,31 +1169,113 @@ class DiskLruCache internal constructor(
         return null
       }
     }
+
+    private fun newSource(index: Int): Source {
+      val fileSource = fileSystem.source(cleanFiles[index])
+      if (civilizedFileSystem) return fileSource
+
+      lockingSourceCount++
+      return object : ForwardingSource(fileSource) {
+        private var closed = false
+
+        override fun close() {
+          super.close()
+          if (!closed) {
+            closed = true
+            synchronized(this@DiskLruCache) {
+              lockingSourceCount--
+              if (lockingSourceCount == 0 && zombie) {
+                removeEntry(this@Entry)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  internal open class FaultHidingSink(
+    delegate: Sink,
+    val onException: (IOException) -> Unit,
+  ) : ForwardingSink(delegate) {
+    private var hasErrors = false
+
+    override fun write(
+      source: Buffer,
+      byteCount: Long,
+    ) {
+      if (hasErrors) {
+        source.skip(byteCount)
+        return
+      }
+      try {
+        super.write(source, byteCount)
+      } catch (e: IOException) {
+        hasErrors = true
+        onException(e)
+      }
+    }
+
+    override fun flush() {
+      if (hasErrors) {
+        return
+      }
+      try {
+        super.flush()
+      } catch (e: IOException) {
+        hasErrors = true
+        onException(e)
+      }
+    }
+
+    override fun close() {
+      try {
+        super.close()
+      } catch (e: IOException) {
+        hasErrors = true
+        onException(e)
+      }
+    }
+  }
+
+  internal fun Lockable.assertLockHeld() {
+    if (assertionsEnabled && !Thread.holdsLock(this)) {
+      throw AssertionError("Thread ${Thread.currentThread().name} MUST hold lock on $this")
+    }
   }
 
   companion object {
-    const val JOURNAL_FILE = "journal"
-    const val JOURNAL_FILE_TEMP = "journal.tmp"
-    const val JOURNAL_FILE_BACKUP = "journal.bkp"
-    const val MAGIC = "libcore.io.DiskLruCache"
-    const val VERSION_1 = "1"
-    const val ANY_SEQUENCE_NUMBER: Long = -1
+    @JvmField
+    val JOURNAL_FILE = "journal"
+
+    @JvmField
+    val JOURNAL_FILE_TEMP = "journal.tmp"
+
+    @JvmField
+    val JOURNAL_FILE_BACKUP = "journal.bkp"
+
+    @JvmField
+    val MAGIC = "libcore.io.DiskLruCache"
+
+    @JvmField
+    val VERSION_1 = "1"
+
+    @JvmField
+    val ANY_SEQUENCE_NUMBER: Long = -1
 
     @JvmField
     val LEGAL_KEY_PATTERN = "[a-z0-9_-]{1,120}".toRegex()
-    const val CLEAN = "CLEAN"
-    const val DIRTY = "DIRTY"
-    const val REMOVE = "REMOVE"
-    const val READ = "READ"
-  }
-}
 
-@JvmField
-internal val assertionsEnabled = OkHttpClient::class.java.desiredAssertionStatus()
+    @JvmField
+    val CLEAN = "CLEAN"
 
-@Suppress("NOTHING_TO_INLINE")
-internal inline fun Any.assertThreadHoldsLock() {
-  if (assertionsEnabled && !Thread.holdsLock(this)) {
-    throw AssertionError("Thread ${Thread.currentThread().name} MUST hold lock on $this")
+    @JvmField
+    val DIRTY = "DIRTY"
+
+    @JvmField
+    val REMOVE = "REMOVE"
+
+    @JvmField
+    val READ = "READ"
   }
 }
