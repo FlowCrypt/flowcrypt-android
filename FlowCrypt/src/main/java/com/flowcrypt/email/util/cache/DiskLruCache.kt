@@ -373,6 +373,8 @@ class DiskLruCache(
         entry.readable = true
         entry.currentEditor = null
         entry.setLengths(parts)
+        entry.setCreatingDate(parts.filterIndexed { index, _ -> index == 1 }
+          .firstOrNull()?.toLongOrNull() ?: 0L)
       }
 
       secondSpace == -1 && firstSpace == DIRTY.length && line.startsWith(DIRTY) -> {
@@ -606,6 +608,7 @@ class DiskLruCache(
         writeUtf8(CLEAN).writeByte(' '.code)
         writeUtf8(entry.key)
         entry.writeLengths(this)
+        entry.writeCreationDate(this)
         writeByte('\n'.code)
         if (success) {
           entry.sequenceNumber = nextSequenceNumber++
@@ -1125,12 +1128,22 @@ class DiskLruCache(
       }
     }
 
+    fun setCreatingDate(creatingDateInMilliseconds: Long) {
+      this.creatingDateInMilliseconds = creatingDateInMilliseconds
+    }
+
     /** Append space-prefixed lengths to [writer]. */
     @Throws(IOException::class)
     internal fun writeLengths(writer: BufferedSink) {
       for (length in lengths) {
         writer.writeByte(' '.code).writeDecimalLong(length)
       }
+    }
+
+    /** Append space-prefixed creation date in milliseconds to [writer]. */
+    @Throws(IOException::class)
+    internal fun writeCreationDate(writer: BufferedSink) {
+      writer.writeByte(' '.code).writeDecimalLong(creatingDateInMilliseconds)
     }
 
     @Throws(IOException::class)
