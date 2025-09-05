@@ -400,7 +400,7 @@ val devDebugImplementation: Configuration by configurations.creating
 val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
-  ksp("com.github.bumptech.glide:ksp:4.16.0")
+  ksp("com.github.bumptech.glide:ksp:5.0.4")
   ksp("androidx.annotation:annotation:1.9.1")
   ksp("androidx.room:room-compiler:2.7.2")
   //ACRA needs the following dependency to use a custom report sender
@@ -428,12 +428,12 @@ dependencies {
   androidTestImplementation("androidx.room:room-testing:2.7.2")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.10.3")
-  androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
+  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
+  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.1.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
   androidTestUtil("androidx.test:orchestrator:1.6.1")
 
-  testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+  testImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.14.1")
@@ -490,9 +490,9 @@ dependencies {
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
   implementation("com.squareup.okio:okio:3.16.0")
-  implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+  implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")
 
-  implementation("com.github.bumptech.glide:glide:4.16.0")
+  implementation("com.github.bumptech.glide:glide:5.0.4")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
