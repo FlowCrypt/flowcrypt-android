@@ -449,7 +449,7 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.7.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.8.0")
+  implementation("androidx.browser:browser:1.9.0")
   implementation("androidx.recyclerview:recyclerview:1.4.0")
   implementation("androidx.recyclerview:recyclerview-selection:1.2.0")
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
