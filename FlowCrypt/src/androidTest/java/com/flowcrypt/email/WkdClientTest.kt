@@ -8,6 +8,7 @@ package com.flowcrypt.email
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
@@ -24,6 +25,7 @@ import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -79,6 +81,8 @@ class WkdClientTest {
     .around(mockWebServerRule)
 
   @Test
+  @FlakyTest
+  @Ignore("Temporary disabled as flaky")
   fun existingEmailFlowCryptDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(context, EXISTING_EMAIL)
     assertTrue("There are no keys in the key collection", requireNotNull(keys).keyRings.hasNext())

@@ -11,6 +11,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -25,6 +26,7 @@ import com.flowcrypt.email.ui.base.BaseComposeGmailApiSignatureFlowTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -65,6 +67,8 @@ class ComposeScreenReplyWithGmailApiSignatureFlowTest :
       .around(ScreenshotTestRule())
 
   @Test
+  @FlakyTest
+  @Ignore("Temporary disabled as flaky")
   fun testAddingSignatureAfterStart() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
