@@ -413,7 +413,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.7")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.9")
   uiTestsImplementation("androidx.test:core-ktx:1.7.0")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
@@ -476,12 +476,12 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.9.3")
   implementation("androidx.webkit:webkit:1.14.0")
 
-  implementation("com.google.android.gms:play-services-base:18.7.0")
+  implementation("com.google.android.gms:play-services-base:18.7.2")
   implementation("com.google.android.gms:play-services-auth:21.3.0")
   implementation("com.google.android.material:material:1.13.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.13.1")
-  implementation("com.google.api-client:google-api-client-android:2.8.0")
+  implementation("com.google.api-client:google-api-client-android:2.8.1")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20250630-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
