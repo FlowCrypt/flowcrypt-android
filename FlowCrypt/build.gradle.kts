@@ -477,7 +477,7 @@ dependencies {
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.17.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
-  implementation("androidx.activity:activity-ktx:1.10.1")
+  implementation("androidx.activity:activity-ktx:1.11.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.10.3")
   implementation("androidx.navigation:navigation-fragment-ktx:2.9.3")
