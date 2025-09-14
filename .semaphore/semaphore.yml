@@ -39,7 +39,7 @@ global_job_config:
       # print some debug info
       - ping fel.localhost -c 1
       - ping fel.flowcrypt.test -c 1
-      # use JAVA 17 by default
+      # use JAVA 21 by default
       - sem-version java 21
       # general settings
       - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}
