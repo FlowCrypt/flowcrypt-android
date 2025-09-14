@@ -97,7 +97,7 @@ class SearchMessagesGmailApiFlowTest : BaseGmailApiTest() {
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(com.google.android.material.R.id.search_src_text))
+    onView(withId(getIdentifierByName("search_src_text")))
       .perform(click(), clearText(), replaceText(SUBJECT_EXISTING_STANDARD))
       .perform(pressKey(KeyEvent.KEYCODE_ENTER))
 
