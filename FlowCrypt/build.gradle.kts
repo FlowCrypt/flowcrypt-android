@@ -184,18 +184,13 @@ android {
 
   compileOptions {
     isCoreLibraryDesugaringEnabled = true
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
   }
 
   buildFeatures {
     buildConfig = true
     viewBinding = true
-  }
-
-  kotlinOptions {
-    jvmTarget = JavaVersion.VERSION_17.toString()
-    freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
   }
 
   packaging {
@@ -328,6 +323,20 @@ easylauncher {
   }
 }
 
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(21))
+  }
+}
+
+
+kotlin {
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+  }
+}
+
 tasks.register("checkCorrectBranch") {
   if (!grgit.branch.current().name.equals("master")) {
     throw GradleException("Please use 'master' branch to generate a release build")
@@ -436,7 +445,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  testImplementation("org.robolectric:robolectric:4.14.1")
+  testImplementation("org.robolectric:robolectric:4.16")
   //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.10")
   testImplementation("junit:junit:4.13.2")
