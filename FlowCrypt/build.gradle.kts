@@ -193,11 +193,6 @@ android {
     viewBinding = true
   }
 
-  kotlinOptions {
-    jvmTarget = JavaVersion.VERSION_17.toString()
-    freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
-  }
-
   packaging {
     resources.excludes += setOf(
       "META-INF/DEPENDENCIES",
@@ -325,6 +320,13 @@ easylauncher {
         )
       )
     }
+  }
+}
+
+kotlin {
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
   }
 }
 
