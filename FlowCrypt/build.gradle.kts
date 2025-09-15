@@ -409,7 +409,7 @@ val devDebugImplementation: Configuration by configurations.creating
 val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
-  ksp("com.github.bumptech.glide:ksp:5.0.4")
+  ksp("com.github.bumptech.glide:ksp:5.0.5")
   ksp("androidx.annotation:annotation:1.9.1")
   ksp("androidx.room:room-compiler:2.7.2")
   //ACRA needs the following dependency to use a custom report sender
@@ -489,7 +489,7 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:21.4.0")
   implementation("com.google.android.material:material:1.13.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.code.gson:gson:2.13.1")
+  implementation("com.google.code.gson:gson:2.13.2")
   implementation("com.google.api-client:google-api-client-android:2.8.1")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20250630-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
@@ -501,7 +501,7 @@ dependencies {
   implementation("com.squareup.okio:okio:3.16.0")
   implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")
 
-  implementation("com.github.bumptech.glide:glide:5.0.4")
+  implementation("com.github.bumptech.glide:glide:5.0.5")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
