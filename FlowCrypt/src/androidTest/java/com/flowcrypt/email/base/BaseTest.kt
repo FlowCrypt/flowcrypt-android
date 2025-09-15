@@ -403,6 +403,12 @@ abstract class BaseTest : BaseActivityTestImplementation {
     }
   }
 
+  protected fun getIdentifierByName(name: String): Int {
+    return getTargetContext()
+      .resources
+      .getIdentifier(name, "id", getTargetContext().packageName)
+  }
+
   companion object{
     const val NOTIFICATION_RESOURCES_NAME =
       "com.android.systemui:id/expandableNotificationRow"
