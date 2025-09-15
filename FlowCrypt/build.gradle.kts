@@ -489,7 +489,7 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:21.4.0")
   implementation("com.google.android.material:material:1.13.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.code.gson:gson:2.13.1")
+  implementation("com.google.code.gson:gson:2.13.2")
   implementation("com.google.api-client:google-api-client-android:2.8.1")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20250630-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
