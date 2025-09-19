@@ -509,6 +509,9 @@ dependencies {
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
   implementation("org.jsoup:jsoup:1.21.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+  //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
+  //Maybe it will be removed in future.
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
   implementation("org.pgpainless:pgpainless-core:1.7.6")
   implementation("org.eclipse.angus:angus-mail:2.0.4")
   implementation("org.eclipse.angus:gimap:2.0.4")
