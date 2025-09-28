@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
@@ -17,8 +17,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.hasItem
 import java.io.File
 
 /**
@@ -32,7 +30,7 @@ abstract class BaseBackupKeysFragmentTest : BaseTest(), AddAccountToDatabaseRule
     intending(
       allOf(
         hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         hasType(Constants.MIME_TYPE_PGP_KEY)
       )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))

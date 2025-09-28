@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -115,7 +115,7 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(com.google.android.material.R.id.search_src_text))
+    onView(withId(getIdentifierByName("search_src_text")))
       .perform(clearText(), typeText("some email"))
     closeSoftKeyboard()
     onView(withId(R.id.tVEmpty))
@@ -123,7 +123,7 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
   }
 
   private fun checkIsTypedUserFound(viewId: Int, viewText: String) {
-    onView(withId(com.google.android.material.R.id.search_src_text))
+    onView(withId(getIdentifierByName("search_src_text")))
       .perform(clearText(), typeText(viewText))
     closeSoftKeyboard()
     onView(withId(viewId))

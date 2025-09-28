@@ -129,7 +129,7 @@ class RecipientsListFlowTest : BaseRecipientsListTest() {
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(withId(com.google.android.material.R.id.search_src_text))
+    onView(withId(getIdentifierByName("search_src_text")))
       .perform(clearText(), replaceText("00"))
       .perform(pressKey(KeyEvent.KEYCODE_ENTER))
     closeSoftKeyboard()

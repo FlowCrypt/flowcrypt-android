@@ -49,9 +49,7 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.bcpg.ArmoredInputStream
-import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertArrayEquals
 import org.junit.Rule
 import org.junit.Test
@@ -134,7 +132,7 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
     intending(
       allOf(
         hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         hasType(Constants.MIME_TYPE_PGP_KEY)
       )
     )

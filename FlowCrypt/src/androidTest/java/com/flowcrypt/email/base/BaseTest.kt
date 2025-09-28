@@ -61,9 +61,7 @@ import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasToString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
@@ -356,7 +354,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
     intending(
       allOf(
         hasAction(Intent.ACTION_GET_CONTENT),
-        hasCategories(hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         hasType(type)
       )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
@@ -403,6 +401,12 @@ abstract class BaseTest : BaseActivityTestImplementation {
       SystemClock.sleep(interval)
       elapsedTime = SystemClock.uptimeMillis() - startTime
     }
+  }
+
+  protected fun getIdentifierByName(name: String): Int {
+    return getTargetContext()
+      .resources
+      .getIdentifier(name, "id", getTargetContext().packageName)
   }
 
   companion object{

@@ -184,18 +184,13 @@ android {
 
   compileOptions {
     isCoreLibraryDesugaringEnabled = true
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
   }
 
   buildFeatures {
     buildConfig = true
     viewBinding = true
-  }
-
-  kotlinOptions {
-    jvmTarget = JavaVersion.VERSION_17.toString()
-    freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
   }
 
   packaging {
@@ -328,6 +323,20 @@ easylauncher {
   }
 }
 
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(21))
+  }
+}
+
+
+kotlin {
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+  }
+}
+
 tasks.register("checkCorrectBranch") {
   if (!grgit.branch.current().name.equals("master")) {
     throw GradleException("Please use 'master' branch to generate a release build")
@@ -400,9 +409,9 @@ val devDebugImplementation: Configuration by configurations.creating
 val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
-  ksp("com.github.bumptech.glide:ksp:4.16.0")
+  ksp("com.github.bumptech.glide:ksp:5.0.5")
   ksp("androidx.annotation:annotation:1.9.1")
-  ksp("androidx.room:room-compiler:2.7.2")
+  ksp("androidx.room:room-compiler:2.8.0")
   //ACRA needs the following dependency to use a custom report sender
 
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
@@ -413,34 +422,34 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.7")
-  uiTestsImplementation("androidx.test:core-ktx:1.6.1")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.9")
+  uiTestsImplementation("androidx.test:core-ktx:1.7.0")
 
-  androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-  androidTestImplementation("androidx.test.espresso:espresso-contrib:3.6.1")
-  androidTestImplementation("androidx.test.espresso:espresso-intents:3.6.1")
-  androidTestImplementation("androidx.test.espresso:espresso-web:3.6.1")
+  androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+  androidTestImplementation("androidx.test.espresso:espresso-contrib:3.7.0")
+  androidTestImplementation("androidx.test.espresso:espresso-intents:3.7.0")
+  androidTestImplementation("androidx.test.espresso:espresso-web:3.7.0")
   androidTestImplementation("androidx.test.ext:junit:1.3.0")
   androidTestImplementation("androidx.test:runner:1.7.0")
-  androidTestImplementation("androidx.test:rules:1.6.1")
+  androidTestImplementation("androidx.test:rules:1.7.0")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-  androidTestImplementation("androidx.room:room-testing:2.7.2")
+  androidTestImplementation("androidx.room:room-testing:2.8.0")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.10.3")
-  androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:4.12.0")
+  androidTestImplementation("androidx.work:work-testing:2.10.4")
+  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
+  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.1.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
   androidTestUtil("androidx.test:orchestrator:1.6.1")
 
-  testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+  testImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  testImplementation("org.robolectric:robolectric:4.14.1")
+  testImplementation("org.robolectric:robolectric:4.16")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.10")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.20")
   testImplementation("junit:junit:4.13.2")
-  testImplementation("androidx.room:room-testing:2.7.2")
+  testImplementation("androidx.room:room-testing:2.8.0")
   testImplementation("io.github.classgraph:classgraph:4.8.181")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -449,39 +458,39 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.7.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.8.0")
+  implementation("androidx.browser:browser:1.9.0")
   implementation("androidx.recyclerview:recyclerview:1.4.0")
   implementation("androidx.recyclerview:recyclerview-selection:1.2.0")
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-  implementation("androidx.test.espresso:espresso-idling-resource:3.6.1")
+  implementation("androidx.test.espresso:espresso-idling-resource:3.7.0")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2")
-  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.2")
-  implementation("androidx.lifecycle:lifecycle-process:2.9.2")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
-  implementation("androidx.lifecycle:lifecycle-service:2.9.2")
-  implementation("androidx.room:room-runtime:2.7.2")
-  implementation("androidx.room:room-ktx:2.7.2")
+  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
+  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.4")
+  implementation("androidx.lifecycle:lifecycle-process:2.9.4")
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
+  implementation("androidx.lifecycle:lifecycle-service:2.9.4")
+  implementation("androidx.room:room-runtime:2.8.0")
+  implementation("androidx.room:room-ktx:2.8.0")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.17.0")
   implementation("androidx.core:core-splashscreen:1.0.1")
-  implementation("androidx.activity:activity-ktx:1.10.1")
+  implementation("androidx.activity:activity-ktx:1.11.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
-  implementation("androidx.work:work-runtime-ktx:2.10.3")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.3")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.3")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.3")
-  implementation("androidx.webkit:webkit:1.13.0")
+  implementation("androidx.work:work-runtime-ktx:2.10.4")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.9.4")
+  implementation("androidx.navigation:navigation-ui-ktx:2.9.4")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.9.4")
+  implementation("androidx.webkit:webkit:1.14.0")
 
-  implementation("com.google.android.gms:play-services-base:18.7.0")
-  implementation("com.google.android.gms:play-services-auth:21.3.0")
-  implementation("com.google.android.material:material:1.12.0")
+  implementation("com.google.android.gms:play-services-base:18.8.0")
+  implementation("com.google.android.gms:play-services-auth:21.4.0")
+  implementation("com.google.android.material:material:1.13.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.code.gson:gson:2.13.1")
-  implementation("com.google.api-client:google-api-client-android:2.8.0")
+  implementation("com.google.code.gson:gson:2.13.2")
+  implementation("com.google.api-client:google-api-client-android:2.8.1")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20250630-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
@@ -490,20 +499,23 @@ dependencies {
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
   implementation("com.squareup.okio:okio:3.16.0")
-  implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+  implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")
 
-  implementation("com.github.bumptech.glide:glide:4.16.0")
+  implementation("com.github.bumptech.glide:glide:5.0.5")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.21.1")
+  implementation("org.jsoup:jsoup:1.21.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+  //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
+  //Maybe it will be removed in future.
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
   implementation("org.pgpainless:pgpainless-core:1.7.6")
   implementation("org.eclipse.angus:angus-mail:2.0.4")
   implementation("org.eclipse.angus:gimap:2.0.4")
-  implementation("commons-io:commons-io:2.19.0")
+  implementation("commons-io:commons-io:2.20.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.12.0")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
