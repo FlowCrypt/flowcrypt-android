@@ -517,7 +517,7 @@ dependencies {
   implementation("org.eclipse.angus:gimap:2.0.4")
   implementation("commons-io:commons-io:2.20.0")
   implementation("net.openid:appauth:0.11.1")
-  implementation("ch.acra:acra-http:5.12.0")
+  implementation("ch.acra:acra-http:5.13.1")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
 
   constraints {
