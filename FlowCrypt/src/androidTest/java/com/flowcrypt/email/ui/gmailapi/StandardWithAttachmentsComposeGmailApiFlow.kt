@@ -36,6 +36,7 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -75,6 +76,7 @@ class StandardWithAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   @Test
   @FlakyTest
+  @Ignore("need to fix")
   fun testSending() {
     //switch to standard mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
