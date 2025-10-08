@@ -205,6 +205,8 @@ android {
       "META-INF/javamail.providers",
       "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
     )
+
+    resources.pickFirsts += "META-INF/jakarta.providers"
   }
 
   lint {
@@ -513,8 +515,8 @@ dependencies {
   //Maybe it will be removed in future.
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
   implementation("org.pgpainless:pgpainless-core:1.7.6")
-  implementation("org.eclipse.angus:angus-mail:2.0.4")
-  implementation("org.eclipse.angus:gimap:2.0.4")
+  implementation("org.eclipse.angus:angus-mail:2.0.5")
+  implementation("org.eclipse.angus:gimap:2.0.5")
   implementation("commons-io:commons-io:2.20.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.13.1")
