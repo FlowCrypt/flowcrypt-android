@@ -411,7 +411,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.5")
   ksp("androidx.annotation:annotation:1.9.1")
-  ksp("androidx.room:room-compiler:2.8.0")
+  ksp("androidx.room:room-compiler:2.8.1")
   //ACRA needs the following dependency to use a custom report sender
 
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
@@ -434,9 +434,9 @@ dependencies {
   androidTestImplementation("androidx.test:rules:1.7.0")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-  androidTestImplementation("androidx.room:room-testing:2.8.0")
+  androidTestImplementation("androidx.room:room-testing:2.8.1")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.10.4")
+  androidTestImplementation("androidx.work:work-testing:2.10.5")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.1.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.1.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -449,7 +449,7 @@ dependencies {
   //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.20")
   testImplementation("junit:junit:4.13.2")
-  testImplementation("androidx.room:room-testing:2.8.0")
+  testImplementation("androidx.room:room-testing:2.8.1")
   testImplementation("io.github.classgraph:classgraph:4.8.181")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -469,8 +469,8 @@ dependencies {
   implementation("androidx.lifecycle:lifecycle-process:2.9.4")
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
   implementation("androidx.lifecycle:lifecycle-service:2.9.4")
-  implementation("androidx.room:room-runtime:2.8.0")
-  implementation("androidx.room:room-ktx:2.8.0")
+  implementation("androidx.room:room-runtime:2.8.1")
+  implementation("androidx.room:room-ktx:2.8.1")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
@@ -479,7 +479,7 @@ dependencies {
   implementation("androidx.core:core-splashscreen:1.0.1")
   implementation("androidx.activity:activity-ktx:1.11.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
-  implementation("androidx.work:work-runtime-ktx:2.10.4")
+  implementation("androidx.work:work-runtime-ktx:2.10.5")
   implementation("androidx.navigation:navigation-fragment-ktx:2.9.5")
   implementation("androidx.navigation:navigation-ui-ktx:2.9.5")
   implementation("androidx.navigation:navigation-runtime-ktx:2.9.5")
