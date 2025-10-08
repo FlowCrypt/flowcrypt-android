@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#
+# © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+# Contributors: denbond7
+#
+
 set -euxo pipefail
 
 if [[ -d ~/.android ]]
@@ -30,10 +35,10 @@ else
 
     # Install Android SDK
     (echo "yes" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null | grep -v = || true)
-    ( sleep 5; echo "y" ) | (${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" > /dev/null | grep -v = || true)
+    ( sleep 5; echo "y" ) | (${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" > /dev/null | grep -v = || true)
     (${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "platform-tools" | grep -v = || true)
     (${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "emulator" | grep -v = || true)
-    (echo "y" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;x86_64" > /dev/null | grep -v = || true)
+    (echo "y" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "system-images;android-36;google_apis;x86_64" > /dev/null | grep -v = || true)
 fi
 
 #Uncomment this for debug

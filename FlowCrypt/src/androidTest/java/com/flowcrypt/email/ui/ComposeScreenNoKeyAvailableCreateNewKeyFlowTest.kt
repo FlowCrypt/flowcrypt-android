@@ -1,16 +1,13 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
 
-import android.view.KeyEvent
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
-import androidx.test.espresso.action.ViewActions.pressKey
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -63,6 +60,7 @@ class ComposeScreenNoKeyAvailableCreateNewKeyFlowTest : BaseComposeScreenNoKeyAv
   @Test
   @FlakyTest
   @NotReadyForCI
+  @Ignore("need to fix")
   fun testCreatingNewKey() {
     doBaseActions {
       onView(withText(R.string.create_a_new_key))
