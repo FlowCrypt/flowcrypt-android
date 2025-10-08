@@ -11,7 +11,7 @@ plugins {
   id("androidx.navigation.safeargs.kotlin") version "2.9.5" apply false
   id("com.starter.easylauncher") version "6.4.1" apply false
   id("org.jetbrains.kotlin.plugin.parcelize") version "2.2.20" apply false
-  id("com.google.devtools.ksp") version "2.2.20-2.0.3" apply false
+  id("com.google.devtools.ksp") version "2.2.20-2.0.4" apply false
   id("org.ajoberstar.grgit") version "5.3.3" apply false
 }
 
