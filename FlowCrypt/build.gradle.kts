@@ -205,6 +205,8 @@ android {
       "META-INF/javamail.providers",
       "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
     )
+
+    resources.pickFirsts += "META-INF/jakarta.providers"
   }
 
   lint {
