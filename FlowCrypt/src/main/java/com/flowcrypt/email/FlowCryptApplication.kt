@@ -42,6 +42,7 @@ import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 import org.acra.sender.HttpSender
 import org.pgpainless.PGPainless
+import org.pgpainless.policy.Policy
 import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -84,10 +85,12 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   }
 
   private fun setupPGPainless() {
-    enableDeprecatedSHA1ForPGPainlessPolicy()
-
-    //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
-    PGPainless.getPolicy().enableKeyParameterValidation = true
+    PGPainless.setInstance(
+      PGPainless(algorithmPolicy = generatePGPainlessPolicy().apply {
+        //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
+        PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = true
+      })
+    )
   }
 
   private fun setupGlobalSettingsForJavaMail() {
@@ -106,21 +109,25 @@ class FlowCryptApplication : Application(), Configuration.Provider {
    * More details here https://github.com/FlowCrypt/flowcrypt-android/issues/1478 and here
    * https://github.com/pgpainless/pgpainless/issues/158
    */
-  private fun enableDeprecatedSHA1ForPGPainlessPolicy() {
-    @Suppress("KotlinConstantConditions")
-    if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-      PGPainless.getPolicy().dataSignatureHashAlgorithmPolicy =
-        HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
-
-      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
-        HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
-    } else {
-      PGPainless.getPolicy().dataSignatureHashAlgorithmPolicy =
-        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
-
-      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
-        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
-    }
+  @Suppress("KotlinConstantConditions")
+  private fun generatePGPainlessPolicy(): Policy {
+    val isEnterpriseBuild = BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE
+    return Policy.Builder(PGPainless.getInstance().algorithmPolicy)
+      .withDataSignatureHashAlgorithmPolicy(
+        if (isEnterpriseBuild) {
+          HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+        } else {
+          HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+        }
+      )
+      .withCertificationSignatureHashAlgorithmPolicy(
+        if (isEnterpriseBuild) {
+          HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+        } else {
+          HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+        }
+      )
+      .build()
   }
 
   private fun setupKeysStorage() {
@@ -134,6 +141,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     }
   }
 
+  @Suppress("KotlinConstantConditions")
   private fun initACRA() {
     if (GeneralUtil.isDebugBuild()) {
       val isAcraEnabled = SharedPreferencesHelper.getBoolean(

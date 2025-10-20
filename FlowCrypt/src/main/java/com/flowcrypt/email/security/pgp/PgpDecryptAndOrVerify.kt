@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -107,14 +107,14 @@ object PgpDecryptAndOrVerify {
     return PGPainless.decryptAndOrVerify()
       .onInputStream(srcInputStream)
       .withOptions(
-        ConsumerOptions()
+        ConsumerOptions.get()
           .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
           .setIgnoreMDCErrors(ignoreMdcErrors)
           .apply {
             if (secretKeys != null && protector != null) {
               addDecryptionKeys(secretKeys, protector)
             }
-            passphrase?.let { addDecryptionPassphrase(it) }
+            passphrase?.let { addMessagePassphrase(it) }
             publicKeys?.let { addVerificationCerts(it) }
           }
       )
