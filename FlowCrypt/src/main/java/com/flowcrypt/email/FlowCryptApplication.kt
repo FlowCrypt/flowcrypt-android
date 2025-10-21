@@ -112,20 +112,15 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   @Suppress("KotlinConstantConditions")
   private fun generatePGPainlessPolicy(): Policy {
     val isEnterpriseBuild = BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE
+    val strongPolicySince2022 = HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+    val policyBefore2022Standard =
+      HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
     return Policy.Builder(PGPainless.getInstance().algorithmPolicy)
       .withDataSignatureHashAlgorithmPolicy(
-        if (isEnterpriseBuild) {
-          HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
-        } else {
-          HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
-        }
+        if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
       )
       .withCertificationSignatureHashAlgorithmPolicy(
-        if (isEnterpriseBuild) {
-          HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
-        } else {
-          HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
-        }
+        if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
       )
       .build()
   }
