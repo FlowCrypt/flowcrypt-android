@@ -28,19 +28,19 @@ import org.pgpainless.policy.Policy
 import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import org.pgpainless.util.Passphrase
 
-@Ignore("fix me")
 class PgpKeyTest {
   companion object {
     @Suppress("SameParameterValue")
     private fun loadSecretKey(keyFile: String): PGPSecretKeyRing? {
-      return PGPainless.getInstance().generateKey()
-        .simpleEcKeyRing(TestUtil.readResourceAsString("pgp/keys/$keyFile")).pgpSecretKeyRing
+      return PGPainless.getInstance().readKey().parseKey(
+        (TestUtil.readResourceAsString("pgp/keys/$keyFile"))
+      ).pgpSecretKeyRing
     }
 
     @Suppress("SameParameterValue")
     private fun loadPublicKey(keyFile: String): PGPPublicKeyRing? {
-      return PGPainless.getInstance().generateKey()
-        .simpleEcKeyRing(TestUtil.readResourceAsString("pgp/keys/$keyFile")).pgpPublicKeyRing
+      return PGPainless.getInstance().readKey()
+        .parseCertificate((TestUtil.readResourceAsString("pgp/keys/$keyFile"))).pgpPublicKeyRing
     }
   }
 
@@ -150,6 +150,7 @@ class PgpKeyTest {
   }
 
   @Test
+  @Ignore("temporary disabled due to https://github.com/pgpainless/pgpainless/issues/488")
   fun testPublicKey_Issue1358() {
     val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
     val actual = PgpKey.parseKeys(source = keyText)
