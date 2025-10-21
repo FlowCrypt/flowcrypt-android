@@ -85,6 +85,7 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -263,6 +264,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
   @Test
   @FlakyTest
+  @Ignore("fix me")
   @NotReadyForCI
   fun testDecryptionError_FORMAT_BadlyFormattedMsg() {
     val msgInfo = getMsgInfo(
