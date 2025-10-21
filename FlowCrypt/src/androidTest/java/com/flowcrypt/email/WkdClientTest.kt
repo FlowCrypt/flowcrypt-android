@@ -53,7 +53,7 @@ class WkdClientTest {
           genLookupUrlPath(EXISTING_EMAIL) -> {
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
               .setBody(
-                PGPainless.generateKeyRing().simpleEcKeyRing(EXISTING_EMAIL).publicKey.armor()
+                PGPainless.getInstance().generateKey().simpleEcKeyRing(EXISTING_EMAIL).armor()
               )
           }
 
