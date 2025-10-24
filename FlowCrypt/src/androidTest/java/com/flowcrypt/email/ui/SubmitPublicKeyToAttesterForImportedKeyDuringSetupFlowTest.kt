@@ -78,10 +78,11 @@ class SubmitPublicKeyToAttesterForImportedKeyDuringSetupFlowTest : BaseSignTest(
 
   @Before
   fun prepareResources() {
-    val generatedKey = PGPainless.generateKeyRing().simpleEcKeyRing(
-      UserId.nameAndEmail(USER_ENFORCE_ATTESTER_SUBMIT, USER_ENFORCE_ATTESTER_SUBMIT),
+    val generatedKey = PGPainless.getInstance().generateKey()
+      .simpleEcKeyRing(
+        UserId.nameAndEmail(USER_ENFORCE_ATTESTER_SUBMIT, USER_ENFORCE_ATTESTER_SUBMIT),
       TestConstants.DEFAULT_STRONG_PASSWORD
-    ).toPgpKeyRingDetails()
+      ).pgpKeyRing.toPgpKeyRingDetails()
 
     privateKey = requireNotNull(generatedKey.privateKey)
     fileWithPrivateKey = TestGeneralUtil.createFileWithTextContent(

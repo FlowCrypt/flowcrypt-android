@@ -23,6 +23,7 @@ import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
 import kotlinx.coroutines.flow.Flow
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
@@ -161,12 +162,20 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   override fun getSecretKeyRingProtector(): SecretKeyRingProtector {
     val availablePGPSecretKeyRings = getPGPSecretKeyRings()
     val passphraseProvider = object : SecretKeyPassphraseProvider {
-      override fun getPassphraseFor(keyId: Long?): Passphrase? {
-        return keyId?.let { doGetPassphrase(keyId, true) }
+      override fun getPassphraseFor(keyId: Long): Passphrase? {
+        return doGetPassphrase(keyId, true)
       }
 
-      override fun hasPassphrase(keyId: Long?): Boolean {
-        return keyId != null && doGetPassphrase(keyId, false) != null
+      override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+        return getPassphraseFor(keyIdentifier.keyId)
+      }
+
+      override fun hasPassphrase(keyId: Long): Boolean {
+        return doGetPassphrase(keyId, false) != null
+      }
+
+      override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+        return hasPassphrase(keyIdentifier.keyId)
       }
 
       private fun doGetPassphrase(keyId: Long, throwException: Boolean): Passphrase? {

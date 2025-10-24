@@ -1,14 +1,14 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
 
 import org.bouncycastle.bcpg.ArmoredInputStream
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.junit.Assert.assertArrayEquals
 import org.junit.BeforeClass
 import org.junit.Test
@@ -123,11 +123,11 @@ class PgpEncryptAndOrSignTest {
 
     val protector = PasswordBasedSecretKeyRingProtector(
       KeyRingProtectionSettings.secureDefaultSettings(), object : SecretKeyPassphraseProvider {
-        override fun getPassphraseFor(keyId: Long?): Passphrase? {
+        override fun getPassphraseFor(keyId: Long): Passphrase? {
           return doGetPassphrase(keyId)
         }
 
-        override fun hasPassphrase(keyId: Long?): Boolean {
+        override fun hasPassphrase(keyId: Long): Boolean {
           return doGetPassphrase(keyId) != null
         }
 
@@ -139,15 +139,25 @@ class PgpEncryptAndOrSignTest {
           }
           return null
         }
+
+        override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+          return getPassphraseFor(keyIdentifier.keyId)
+        }
+
+        override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+          return hasPassphrase(keyIdentifier.keyId)
+        }
       }
     )
 
-    val decryptionStream = PGPainless.decryptAndOrVerify()
+    val api = PGPainless.getInstance()
+
+    val decryptionStream = api.processMessage()
       .onInputStream(inputStream)
       .withOptions(
-        ConsumerOptions()
-          .addDecryptionKeys(PGPSecretKeyRingCollection(listOf(pgpSecretKeyRing)), protector)
-          .addVerificationCerts(pgpPublicKeyRingCollection)
+        ConsumerOptions.get()
+          .addDecryptionKey(api.toKey(pgpSecretKeyRing), protector)
+          .addVerificationCerts(pgpPublicKeyRingCollection.map { api.toCertificate(it) })
       )
 
     val outputStreamWithDecryptedData = ByteArrayOutputStream()
@@ -172,10 +182,10 @@ class PgpEncryptAndOrSignTest {
     @BeforeClass
     @JvmStatic
     fun setUp() {
-      senderPGPSecretKeyRing = PGPainless.generateKeyRing()
-        .simpleEcKeyRing("sender@encrypted.key", SENDER_PASSWORD)
-      recipientPGPSecretKeyRing = PGPainless.generateKeyRing()
-        .simpleEcKeyRing("juliet@encrypted.key", RECEIVER_PASSWORD)
+      senderPGPSecretKeyRing = PGPainless.getInstance().generateKey()
+        .simpleEcKeyRing("sender@encrypted.key", SENDER_PASSWORD).pgpKeyRing
+      recipientPGPSecretKeyRing = PGPainless.getInstance().generateKey()
+        .simpleEcKeyRing("juliet@encrypted.key", RECEIVER_PASSWORD).pgpKeyRing
     }
   }
 }

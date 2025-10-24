@@ -1766,26 +1766,31 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     const val DEFAULT_CC_RECIPIENT = "Cc <default_cc@flowcrypt.test>"
     const val DEFAULT_BCC_RECIPIENT = "Bcc <default_bcc@flowcrypt.test>"
 
-    val existingCcPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+    val existingCcPgpKeyDetails = PGPainless.getInstance().generateKey()
+      .simpleEcKeyRing(
       EXISTING_MESSAGE_CC_RECIPIENT,
       TestConstants.DEFAULT_PASSWORD
-    ).toPgpKeyRingDetails()
-    val defaultFromPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      ).pgpKeyRing.toPgpKeyRingDetails()
+    val defaultFromPgpKeyDetails = PGPainless.getInstance().generateKey()
+      .simpleEcKeyRing(
       DEFAULT_FROM_RECIPIENT,
       TestConstants.DEFAULT_PASSWORD
-    ).toPgpKeyRingDetails()
-    val defaultToPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      ).pgpKeyRing.toPgpKeyRingDetails()
+    val defaultToPgpKeyDetails = PGPainless.getInstance().generateKey()
+      .simpleEcKeyRing(
       DEFAULT_TO_RECIPIENT,
       TestConstants.DEFAULT_PASSWORD
-    ).toPgpKeyRingDetails()
-    val defaultCcPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      ).pgpKeyRing.toPgpKeyRingDetails()
+    val defaultCcPgpKeyDetails = PGPainless.getInstance().generateKey()
+      .simpleEcKeyRing(
       DEFAULT_CC_RECIPIENT,
       TestConstants.DEFAULT_PASSWORD
-    ).toPgpKeyRingDetails()
-    val defaultBccPgpKeyDetails = PGPainless.generateKeyRing().simpleEcKeyRing(
+      ).pgpKeyRing.toPgpKeyRingDetails()
+    val defaultBccPgpKeyDetails = PGPainless.getInstance().generateKey()
+      .simpleEcKeyRing(
       DEFAULT_BCC_RECIPIENT,
       TestConstants.DEFAULT_PASSWORD
-    ).toPgpKeyRingDetails()
+      ).pgpKeyRing.toPgpKeyRingDetails()
 
     val secretKeyRingProtector = SecretKeyRingProtector.unlockAnyKeyWith(
       Passphrase.fromPassword(TestConstants.DEFAULT_PASSWORD)

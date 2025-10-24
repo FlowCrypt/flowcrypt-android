@@ -44,10 +44,10 @@ object PgpKey {
     passphrase: String
   ): PGPSecretKeyRing =
     withContext(Dispatchers.IO) {
-      return@withContext PGPainless.generateKeyRing().simpleEcKeyRing(
-        if (name != null) UserId.nameAndEmail(name, email) else UserId.onlyEmail(email),
+      return@withContext PGPainless.getInstance().generateKey().simpleEcKeyRing(
+        (if (name != null) UserId.nameAndEmail(name, email) else UserId.onlyEmail(email)).full,
         passphrase
-      )
+      ).pgpSecretKeyRing
     }
 
   /**
@@ -147,7 +147,7 @@ object PgpKey {
     source: InputStream,
     throwExceptionIfUnknownSource: Boolean = true
   ): PGPKeyRingCollection {
-    return PGPainless.readKeyRing().keyRingCollection(source, throwExceptionIfUnknownSource)
+    return PGPKeyRingCollection(source, throwExceptionIfUnknownSource)
   }
 
   fun decryptKey(key: PGPSecretKeyRing, passphrase: Passphrase): PGPSecretKeyRing {
@@ -155,12 +155,12 @@ object PgpKey {
       .changePassphraseFromOldPassphrase(passphrase)
       .withSecureDefaultSettings()
       .toNoPassphrase()
-      .done()
+      .done().pgpSecretKeyRing
   }
 
   @Throws(KeyIntegrityException::class)
   fun checkSecretKeyIntegrity(armored: String, passphrase: Passphrase) {
-    val collection = PGPainless.readKeyRing().keyRingCollection(armored, false)
+    val collection = parseKeysRaw(armored, false)
     val secretKeyRings = collection.pgpSecretKeyRingCollection
     if (secretKeyRings.size() == 0) throw KeyIntegrityException()
     checkSecretKeyIntegrity(secretKeyRings, passphrase)
@@ -190,7 +190,7 @@ object PgpKey {
       .changePassphraseFromOldPassphrase(Passphrase.emptyPassphrase())
       .withSecureDefaultSettings()
       .toNewPassphrase(passphrase)
-      .done()
+      .done().pgpSecretKeyRing
   }
 
   private fun changeKeyPassphrase(
@@ -202,7 +202,7 @@ object PgpKey {
       .changePassphraseFromOldPassphrase(oldPassphrase)
       .withSecureDefaultSettings()
       .toNewPassphrase(newPassphrase)
-      .done()
+      .done().pgpSecretKeyRing
   }
 
   fun extractSecretKeyRing(armored: String): PGPSecretKeyRing {

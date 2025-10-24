@@ -1,10 +1,11 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
 
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.protection.KeyRingProtectionSettings
@@ -15,12 +16,20 @@ import org.pgpainless.util.Passphrase
 object TestKeys {
   fun genRingProtector(keys: List<KeyWithPassPhrase>): PasswordBasedSecretKeyRingProtector {
     val passphraseProvider = object : SecretKeyPassphraseProvider {
-      override fun getPassphraseFor(keyId: Long?): Passphrase? {
+      override fun getPassphraseFor(keyId: Long): Passphrase? {
         return doGetPassphrase(keyId)
       }
 
-      override fun hasPassphrase(keyId: Long?): Boolean {
+      override fun hasPassphrase(keyId: Long): Boolean {
         return doGetPassphrase(keyId) != null
+      }
+
+      override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+        return getPassphraseFor(keyIdentifier.keyId)
+      }
+
+      override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+        return hasPassphrase(keyIdentifier.keyId)
       }
 
       private fun doGetPassphrase(keyId: Long?): Passphrase? {

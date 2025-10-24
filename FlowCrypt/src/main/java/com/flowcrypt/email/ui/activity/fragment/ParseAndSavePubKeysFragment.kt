@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -19,12 +19,12 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.databinding.FragmentParseAndSavePubKeysBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ImportPubKeysFromSourceSharedViewModel
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
@@ -112,7 +112,9 @@ class ParseAndSavePubKeysFragment : BaseFragment<FragmentParseAndSavePubKeysBind
           }
 
           Result.Status.SUCCESS -> {
-            val pgpKeyDetailsList = it.data
+            val pgpKeyDetailsList = it.data?.filter { pgpKeyDetails ->
+              pgpKeyDetails.usableForSigning || pgpKeyDetails.usableForEncryption
+            }
             if (pgpKeyDetailsList.isNullOrEmpty()) {
               showEmptyView(getString(R.string.error_no_keys))
             } else {

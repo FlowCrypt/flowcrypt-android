@@ -39,7 +39,8 @@ import java.time.Instant
 @WorkerThread
 fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDetails {
   if (containsHashAlgorithmWithSHA1()) {
-    val sigHashAlgoPolicy = PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy
+    val sigHashAlgoPolicy =
+      PGPainless.getInstance().algorithmPolicy.certificationSignatureHashAlgorithmPolicy
     if (!sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1)) {
       throw PGPException("Unsupported signature(HashAlgorithm = SHA1)")
     }
@@ -50,7 +51,11 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
   val algo = Algo(
     algorithm = keyRingInfo.algorithm.name,
     algorithmId = keyRingInfo.algorithm.algorithmId,
-    bits = if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else 0,
+    bits = if (keyRingInfo.primaryKey.pgpPublicKey.bitStrength != -1) {
+      keyRingInfo.primaryKey.pgpPublicKey.bitStrength
+    } else {
+      0
+    },
     curve = runCatching { publicKey.getCurveName() }.getOrNull()
   )
 
@@ -85,11 +90,13 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
     lastModified = keyRingInfo.lastModified.time,
     expiration = keyRingInfo.primaryKeyExpirationDate?.time,
     algo = algo,
-    primaryKeyId = keyRingInfo.keyId,
+    primaryKeyId = keyRingInfo.keyIdentifier.keyId,
     possibilities = mutableSetOf<Int>().apply {
       addAll(
-        keyRingInfo.publicKeys.flatMap { keyRingInfo.getKeyFlagsOf(it.keyID) }.toSet()
-          .map { it.flag })
+        keyRingInfo.publicKeys.flatMap { openPGPComponentKey ->
+          keyRingInfo.getKeyFlagsOf(openPGPComponentKey.keyIdentifier)
+        }.toSet().map { it.flag }
+      )
     }
   )
 }

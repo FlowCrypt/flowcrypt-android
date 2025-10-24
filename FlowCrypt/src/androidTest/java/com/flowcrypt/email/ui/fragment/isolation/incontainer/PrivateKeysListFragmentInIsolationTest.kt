@@ -1,13 +1,19 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withChild
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -219,9 +225,9 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
       ),
       statusLabelText = getResString(R.string.valid),
       statusLabelIconResId = R.drawable.ic_baseline_gpp_good_16,
-      statusLabelTintColorResId = R.color.colorAccent,
+      statusLabelTintColorResId = R.color.gray,
       usableForEncryption = false,
-      usableForSigning = true
+      usableForSigning = false
     )
   }
 
