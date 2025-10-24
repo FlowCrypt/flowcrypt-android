@@ -40,7 +40,6 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -192,7 +191,6 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testShowKeyWithManyUserIds() {
     val pgpKeyRingDetails = PrivateKeysManager.getPgpKeyDetailsFromAssets(
       "pgp/rich@flowcrypt.test_prv_default.asc"
@@ -227,9 +225,9 @@ class PrivateKeysListFragmentInIsolationTest : BaseTest() {
       ),
       statusLabelText = getResString(R.string.valid),
       statusLabelIconResId = R.drawable.ic_baseline_gpp_good_16,
-      statusLabelTintColorResId = R.color.colorAccent,
+      statusLabelTintColorResId = R.color.gray,
       usableForEncryption = false,
-      usableForSigning = true
+      usableForSigning = false
     )
   }
 
