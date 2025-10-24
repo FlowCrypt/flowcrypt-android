@@ -452,7 +452,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.20")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.1")
-  testImplementation("io.github.classgraph:classgraph:4.8.181")
+  testImplementation("io.github.classgraph:classgraph:4.8.184")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -500,7 +500,7 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:3.0.0")
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
-  implementation("com.squareup.okio:okio:3.16.1")
+  implementation("com.squareup.okio:okio:3.16.2")
   implementation("com.squareup.okhttp3:logging-interceptor:5.2.1")
 
   implementation("com.github.bumptech.glide:glide:5.0.5")
