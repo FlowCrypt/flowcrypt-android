@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -95,7 +95,6 @@ object PgpDecryptAndOrVerify {
     }
   }
 
-  @Suppress("DEPRECATION")
   fun genDecryptionStream(
     srcInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection? = null,
@@ -104,18 +103,28 @@ object PgpDecryptAndOrVerify {
     passphrase: Passphrase? = null,
     ignoreMdcErrors: Boolean = false
   ): DecryptionStream {
-    return PGPainless.decryptAndOrVerify()
+    val api = PGPainless.getInstance()
+    return api.processMessage()
       .onInputStream(srcInputStream)
       .withOptions(
-        ConsumerOptions()
+        ConsumerOptions.get()
           .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
-          .setIgnoreMDCErrors(ignoreMdcErrors)
           .apply {
+            //this one deprecated but we use it and show warning for a user if needed
+            @Suppress("DEPRECATION")
+            setIgnoreMDCErrors(ignoreMdcErrors)
+
             if (secretKeys != null && protector != null) {
-              addDecryptionKeys(secretKeys, protector)
+              for (key in secretKeys) {
+                addDecryptionKey(api.toKey(key), protector)
+              }
             }
-            passphrase?.let { addDecryptionPassphrase(it) }
-            publicKeys?.let { addVerificationCerts(it) }
+            passphrase?.let { addMessagePassphrase(it) }
+            publicKeys?.let {
+              addVerificationCerts(publicKeys.map {
+                api.toCertificate(it)
+              })
+            }
           }
       )
   }
