@@ -59,8 +59,8 @@ class ComposeScreenReloadPublicKeyFlowTest : BaseComposeScreenTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activityScenarioRule.scenario
 
-  private val pgpKeyRingDetails = PGPainless.generateKeyRing()
-    .simpleEcKeyRing(RECIPIENT, TestConstants.DEFAULT_PASSWORD).toPgpKeyRingDetails()
+  private val pgpKeyRingDetails = PGPainless.getInstance().generateKey()
+    .simpleEcKeyRing(RECIPIENT, TestConstants.DEFAULT_PASSWORD).pgpKeyRing.toPgpKeyRingDetails()
 
   private val addRecipientsToDatabaseRule = AddRecipientsToDatabaseRule(
     listOf(

@@ -50,11 +50,12 @@ object PgpSignature {
   ): ClearTextVerificationResult {
     ByteArrayOutputStream().use { outStream ->
       return try {
-        val verificationStream = PGPainless.decryptAndOrVerify()
+        val api = PGPainless.getInstance()
+        val verificationStream = api.processMessage()
           .onInputStream(srcInputStream)
           .withOptions(
-            ConsumerOptions()
-              .addVerificationCerts(publicKeys)
+            ConsumerOptions.get()
+              .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
               .setMultiPassStrategy(InMemoryMultiPassStrategy())
           )
 
@@ -76,12 +77,13 @@ object PgpSignature {
   ): DetachedSignatureVerificationResult {
     ByteArrayOutputStream().use { outStream ->
       return try {
-        val verificationStream = PGPainless.decryptAndOrVerify()
+        val api = PGPainless.getInstance()
+        val verificationStream = api.processMessage()
           .onInputStream(srcInputStream)
           .withOptions(
-            ConsumerOptions()
+            ConsumerOptions.get()
               .addVerificationOfDetachedSignatures(signatureInputStream)
-              .addVerificationCerts(publicKeys)
+              .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
               .setMultiPassStrategy(InMemoryMultiPassStrategy())
           )
 

@@ -11,6 +11,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.DocumentSignatureType
+import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
 import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.EncryptionResult
 import org.pgpainless.encryption_signing.EncryptionStream
@@ -75,7 +76,10 @@ object PgpEncryptAndOrSign {
       val prvKeysStream = ByteArrayInputStream(prvKeys.joinToString(separator = "\n").toByteArray())
       pgpSecretKeyRingCollection = prvKeysStream.use {
         ArmoredInputStream(it).use { armoredInputStream ->
-          PGPainless.readKeyRing().secretKeyRingCollection(armoredInputStream)
+          PGPSecretKeyRingCollection(
+            PGPainless.getInstance().readKey().parseKeys(armoredInputStream)
+              .map { openPGPKey -> openPGPKey.pgpSecretKeyRing }
+          )
         }
       }
     }
@@ -171,33 +175,34 @@ object PgpEncryptAndOrSign {
     fileName: String? = null,
     generateDetachedSignatures: Boolean = false,
   ): EncryptionStream {
-    val encOpt = EncryptionOptions().apply {
+    val api = PGPainless.getInstance()
+    val encOpt = EncryptionOptions.get().apply {
       passphrase?.let { addMessagePassphrase(passphrase) }
       pgpPublicKeyRingCollection?.forEach {
-        addRecipient(it)
+        addRecipient(it.toOpenPGPCertificate(api.implementation))
       }
 
       protectedPgpPublicKeyRingCollection?.forEach {
-        addHiddenRecipient(it)
+        addHiddenRecipient(it.toOpenPGPCertificate(api.implementation))
       }
     }
 
     val producerOptions: ProducerOptions =
       if (passphrase == null && pgpSecretKeyRingCollection?.any() == true) {
-        ProducerOptions.signAndEncrypt(encOpt, SigningOptions().apply {
+        ProducerOptions.signAndEncrypt(encOpt, SigningOptions.get().apply {
           pgpSecretKeyRingCollection.forEach { pgpSecretKeyRing ->
             secretKeyRingProtector?.let { protector ->
               if (generateDetachedSignatures) {
                 addDetachedSignature(
-                  protector,
-                  pgpSecretKeyRing,
-                  DocumentSignatureType.BINARY_DOCUMENT
+                  signingKeyProtector = protector,
+                  signingKey = api.toKey(pgpSecretKeyRing),
+                  signatureType = DocumentSignatureType.BINARY_DOCUMENT
                 )
               } else {
                 addInlineSignature(
-                  protector,
-                  pgpSecretKeyRing,
-                  DocumentSignatureType.BINARY_DOCUMENT
+                  signingKeyProtector = protector,
+                  signingKey = api.toKey(pgpSecretKeyRing),
+                  signatureType = DocumentSignatureType.BINARY_DOCUMENT
                 )
               }
             }
@@ -212,7 +217,7 @@ object PgpEncryptAndOrSign {
 
     fileName?.let { producerOptions.setFileName(it) }
 
-    return PGPainless.encryptAndOrSign()
+    return api.generateMessage()
       .onOutputStream(destOutputStream)
       .withOptions(producerOptions)
   }
