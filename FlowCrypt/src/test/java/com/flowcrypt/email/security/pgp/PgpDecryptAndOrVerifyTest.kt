@@ -11,6 +11,7 @@ import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.util.TestUtil
 import com.flowcrypt.email.util.exception.DecryptionException
 import org.apache.commons.io.FileUtils
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
@@ -217,8 +218,8 @@ class PgpDecryptAndOrVerifyTest {
 
     val encryptedBytes = outputStreamForEncryptedSource.toByteArray()
     val outputStreamWithDecryptedData = ByteArrayOutputStream()
-    val randomKey = PGPainless.generateKeyRing()
-      .simpleEcKeyRing("random@flowcrypt.test", "qwerty")
+    val randomKey = PGPainless.getInstance().generateKey()
+      .simpleEcKeyRing("random@flowcrypt.test", "qwerty").pgpKeyRing
 
     val exception = Assert.assertThrows(DecryptionException::class.java) {
       PgpDecryptAndOrVerify.decrypt(
@@ -394,8 +395,9 @@ class PgpDecryptAndOrVerifyTest {
       TestKeys.genRingProtector(FLOWCRYPT_COMPATIBILITY_PRIVATE_KEYS)
 
     private fun loadSecretKey(fileName: String): PGPSecretKeyRing? {
-      return PGPainless.readKeyRing()
-        .secretKeyRing(TestUtil.readResourceAsString("pgp/keys/$fileName"))
+      return PGPainless.getInstance().readKey().parseKey(
+        (TestUtil.readResourceAsString("pgp/keys/$fileName"))
+      ).pgpKeyRing
     }
 
     private val MESSAGES = listOf(
@@ -465,18 +467,26 @@ class PgpDecryptAndOrVerifyTest {
     @BeforeClass
     @JvmStatic
     fun setUp() {
-      senderPGPSecretKeyRing = PGPainless.generateKeyRing()
-        .simpleEcKeyRing("sender@flowcrypt.test", SENDER_PASSWORD)
-      receiverPGPSecretKeyRing = PGPainless.generateKeyRing()
-        .simpleEcKeyRing("receiver@flowcrypt.test", RECEIVER_PASSWORD)
+      senderPGPSecretKeyRing = PGPainless.getInstance().generateKey()
+        .simpleEcKeyRing("sender@flowcrypt.test", SENDER_PASSWORD).pgpKeyRing
+      receiverPGPSecretKeyRing = PGPainless.getInstance().generateKey()
+        .simpleEcKeyRing("receiver@flowcrypt.test", RECEIVER_PASSWORD).pgpKeyRing
 
       val passphraseProvider = object : SecretKeyPassphraseProvider {
-        override fun getPassphraseFor(keyId: Long?): Passphrase? {
+        override fun getPassphraseFor(keyId: Long): Passphrase? {
           return doGetPassphrase(keyId)
         }
 
-        override fun hasPassphrase(keyId: Long?): Boolean {
+        override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+          return getPassphraseFor(keyIdentifier.keyId)
+        }
+
+        override fun hasPassphrase(keyId: Long): Boolean {
           return doGetPassphrase(keyId) != null
+        }
+
+        override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+          return hasPassphrase(keyIdentifier.keyId)
         }
 
         private fun doGetPassphrase(keyId: Long?): Passphrase? {

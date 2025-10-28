@@ -17,12 +17,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.policy.Policy
 import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import org.pgpainless.util.Passphrase
 
@@ -30,14 +32,15 @@ class PgpKeyTest {
   companion object {
     @Suppress("SameParameterValue")
     private fun loadSecretKey(keyFile: String): PGPSecretKeyRing? {
-      return PGPainless.readKeyRing()
-        .secretKeyRing(TestUtil.readResourceAsString("pgp/keys/$keyFile"))
+      return PGPainless.getInstance().readKey().parseKey(
+        (TestUtil.readResourceAsString("pgp/keys/$keyFile"))
+      ).pgpSecretKeyRing
     }
 
     @Suppress("SameParameterValue")
     private fun loadPublicKey(keyFile: String): PGPPublicKeyRing? {
-      return PGPainless.readKeyRing()
-        .publicKeyRing(TestUtil.readResourceAsString("pgp/keys/$keyFile"))
+      return PGPainless.getInstance().readKey()
+        .parseCertificate((TestUtil.readResourceAsString("pgp/keys/$keyFile"))).pgpPublicKeyRing
     }
   }
 
@@ -147,6 +150,7 @@ class PgpKeyTest {
   }
 
   @Test
+  @Ignore("temporary disabled due to https://github.com/pgpainless/pgpainless/issues/488")
   fun testPublicKey_Issue1358() {
     val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
     val actual = PgpKey.parseKeys(source = keyText)
@@ -156,7 +160,7 @@ class PgpKeyTest {
   @Test
   fun testReadCorruptedPrivateKey() {
     try {
-      PGPainless.getPolicy().enableKeyParameterValidation = true
+      PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = true
       val encryptedKeyText =
         TestUtil.readResourceAsString("pgp/keys/issue-1669-corrupted.private.gpg-key")
       val passphrase = Passphrase.fromPassword("123")
@@ -164,55 +168,65 @@ class PgpKeyTest {
         PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
       }
     } finally {
-      PGPainless.getPolicy().enableKeyParameterValidation = false
+      PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = false
     }
   }
 
   @Test
   fun testRejectingSHA1KeysForModifiedPGPainlessPolicy() {
-    val policy = PGPainless.getPolicy()
-    val originalSignatureHashAlgorithmPolicy = policy.certificationSignatureHashAlgorithmPolicy
+    val originalPolicy = PGPainless.getInstance().algorithmPolicy
     try {
       val keyWithSHA1Algo = TestUtil.readResourceAsString("pgp/keys/sha1@flowcrypt.test_pub.asc")
-      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
+      val static2022SignatureHashAlgorithmPolicy =
         HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
-      assertFalse(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
+      PGPainless.setInstance(
+        PGPainless(
+          algorithmPolicy = Policy.Builder(originalPolicy)
+            .withDataSignatureHashAlgorithmPolicy(static2022SignatureHashAlgorithmPolicy)
+            .withCertificationSignatureHashAlgorithmPolicy(static2022SignatureHashAlgorithmPolicy)
+            .build()
+        )
+      )
+      val currentPolicy = PGPainless.getInstance().algorithmPolicy
+      assertFalse(currentPolicy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
       assertThrows(PGPException::class.java) {
         PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
       }
     } finally {
-      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
-        originalSignatureHashAlgorithmPolicy
+      PGPainless.setInstance(PGPainless(algorithmPolicy = originalPolicy))
     }
   }
 
   @Test
   fun testAcceptingSHA1KeysForModifiedPGPainlessPolicy() {
-    val policy = PGPainless.getPolicy()
-    val originalSignatureHashAlgorithmPolicy = policy.certificationSignatureHashAlgorithmPolicy
+    val originalPolicy = PGPainless.getInstance().algorithmPolicy
     try {
-      assertFalse(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
+      assertFalse(
+        originalPolicy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1)
+      )
       val keyWithSHA1Algo = TestUtil.readResourceAsString("pgp/keys/sha1@flowcrypt.test_pub.asc")
-      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
-        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
-      assertTrue(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(HashAlgorithm.SHA1))
+      val algorithmPolicy = HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+      PGPainless.setInstance(
+        PGPainless(
+          algorithmPolicy = Policy.Builder(originalPolicy)
+            .withDataSignatureHashAlgorithmPolicy(algorithmPolicy)
+            .withCertificationSignatureHashAlgorithmPolicy(
+              algorithmPolicy
+            )
+            .build()
+        )
+      )
+
+      assertTrue(
+        PGPainless.getInstance().algorithmPolicy.certificationSignatureHashAlgorithmPolicy.isAcceptable(
+          HashAlgorithm.SHA1
+        )
+      )
       val parseKeyResult = PgpKey.parseKeys(source = keyWithSHA1Algo).pgpKeyDetailsList
       assertEquals(1, parseKeyResult.size)
       assertEquals("5DE92AB364B3100D89FBF460241512660BDDC426", parseKeyResult.first().fingerprint)
     } finally {
-      PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy =
-        originalSignatureHashAlgorithmPolicy
+      PGPainless.setInstance(PGPainless(algorithmPolicy = originalPolicy))
     }
-  }
-
-  fun replaceVersionInKey(key: String?): String {
-    val regex =
-      "^Version: FlowCrypt Email Encryption \\d*.\\d*.\\d*(_.*)?\$".toRegex(RegexOption.MULTILINE)
-    val version = BuildConfig.VERSION_NAME
-    val replacement = "Version: FlowCrypt Email Encryption $version"
-    key?.let {
-      return key.replaceFirst(regex, replacement)
-    }
-    return ""
   }
 }

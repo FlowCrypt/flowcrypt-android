@@ -48,4 +48,9 @@ updates:
       patterns:
         - "org.jetbrains.kotlin*"
         - "com.google.devtools.ksp*"
+
+    angus:
+      applies-to: version-updates
+      patterns:
+        - "org.eclipse.angus*"
   open-pull-requests-limit: 10
