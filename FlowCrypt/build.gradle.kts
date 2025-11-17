@@ -439,12 +439,12 @@ dependencies {
   androidTestImplementation("androidx.room:room-testing:2.8.2")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.11.0")
-  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.2.1")
-  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.2.1")
+  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.3.1")
+  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.3.1")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
   androidTestUtil("androidx.test:orchestrator:1.6.1")
 
-  testImplementation("com.squareup.okhttp3:mockwebserver:5.2.1")
+  testImplementation("com.squareup.okhttp3:mockwebserver:5.3.1")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.16")
@@ -478,13 +478,13 @@ dependencies {
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.17.0")
-  implementation("androidx.core:core-splashscreen:1.0.1")
+  implementation("androidx.core:core-splashscreen:1.2.0")
   implementation("androidx.activity:activity-ktx:1.11.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.11.0")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.5")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.5")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.5")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.9.6")
+  implementation("androidx.navigation:navigation-ui-ktx:2.9.6")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.9.6")
   implementation("androidx.webkit:webkit:1.14.0")
 
   implementation("com.google.android.gms:play-services-base:18.9.0")
@@ -500,8 +500,8 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:3.0.0")
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
-  implementation("com.squareup.okio:okio:3.16.2")
-  implementation("com.squareup.okhttp3:logging-interceptor:5.2.1")
+  implementation("com.squareup.okio:okio:3.16.3")
+  implementation("com.squareup.okhttp3:logging-interceptor:5.3.1")
 
   implementation("com.github.bumptech.glide:glide:5.0.5")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
@@ -517,14 +517,14 @@ dependencies {
   implementation("org.pgpainless:pgpainless-core:2.0.2")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
-  implementation("commons-io:commons-io:2.20.0")
+  implementation("commons-io:commons-io:2.21.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.13.1")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.19.0") {
+    implementation("commons-codec:commons-codec:1.20.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }
