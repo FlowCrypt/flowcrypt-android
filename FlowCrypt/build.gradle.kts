@@ -482,9 +482,9 @@ dependencies {
   implementation("androidx.activity:activity-ktx:1.11.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.11.0")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.5")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.5")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.5")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.9.6")
+  implementation("androidx.navigation:navigation-ui-ktx:2.9.6")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.9.6")
   implementation("androidx.webkit:webkit:1.14.0")
 
   implementation("com.google.android.gms:play-services-base:18.9.0")
@@ -500,7 +500,7 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:3.0.0")
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
-  implementation("com.squareup.okio:okio:3.16.2")
+  implementation("com.squareup.okio:okio:3.16.3")
   implementation("com.squareup.okhttp3:logging-interceptor:5.2.1")
 
   implementation("com.github.bumptech.glide:glide:5.0.5")
@@ -524,7 +524,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.19.0") {
+    implementation("commons-codec:commons-codec:1.20.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }
