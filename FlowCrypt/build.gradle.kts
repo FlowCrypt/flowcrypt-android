@@ -479,7 +479,7 @@ dependencies {
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.17.0")
   implementation("androidx.core:core-splashscreen:1.2.0")
-  implementation("androidx.activity:activity-ktx:1.11.0")
+  implementation("androidx.activity:activity-ktx:1.12.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.11.0")
   implementation("androidx.navigation:navigation-fragment-ktx:2.9.6")
@@ -500,7 +500,7 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:3.0.0")
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
-  implementation("com.squareup.okio:okio:3.16.3")
+  implementation("com.squareup.okio:okio:3.16.4")
   implementation("com.squareup.okhttp3:logging-interceptor:5.3.1")
 
   implementation("com.github.bumptech.glide:glide:5.0.5")
