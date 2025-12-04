@@ -37,6 +37,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.ui.base.BaseGmailApiTest
+import com.flowcrypt.email.ui.base.BaseGmailApiTest.Companion.SUBJECT_EXISTING_PGP_MIME
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
@@ -61,7 +62,7 @@ import java.util.concurrent.TimeUnit
   cc = [],
   bcc = [],
   message = BaseComposeScreenTest.MESSAGE,
-  subject = "",
+  subject = "Fwd: $SUBJECT_EXISTING_PGP_MIME",
   isNew = false
 )
 class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
