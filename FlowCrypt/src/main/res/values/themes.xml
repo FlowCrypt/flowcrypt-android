@@ -3,14 +3,9 @@
   ~ Contributors: denbond7
   -->
 
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.Material3.DayNight">
-
-        <!-- A temporary solution to fix edge-to-edge issue, should be finally fixed by
-         https://github.com/FlowCrypt/flowcrypt-android/issues/2958
-         -->
-        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
 
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>

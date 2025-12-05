@@ -36,6 +36,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.ui.base.BaseGmailApiTest
+import com.flowcrypt.email.ui.base.BaseGmailApiTest.Companion.SUBJECT_EXISTING_ENCRYPTED
 import jakarta.mail.Message
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
@@ -60,7 +61,7 @@ import java.util.concurrent.TimeUnit
   cc = [],
   bcc = [BaseGmailApiTest.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
-  subject = "",
+  subject = "Re: $SUBJECT_EXISTING_ENCRYPTED",
   isNew = false
 )
 class EncryptedReplyAllComposeGmailApiFlow : BaseComposeGmailFlow() {
