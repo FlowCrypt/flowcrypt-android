@@ -1,4 +1,3 @@
-version: '2'
 services:
   mail:
     image: flowcrypt/flowcrypt-email-server:0.0.24
