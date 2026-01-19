@@ -4,6 +4,10 @@
  */
 
 
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.ResValue
+import org.gradle.api.GradleException
+import java.io.File
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
@@ -15,7 +19,6 @@ DdmPreferences.setTimeOut(10 * 60 * 1000)
 
 plugins {
   id("com.android.application")
-  id("kotlin-android")
   id("androidx.navigation.safeargs.kotlin")
   id("com.starter.easylauncher")
   id("kotlin-parcelize")
@@ -30,7 +33,7 @@ if (propertiesFile.exists()) {
 }
 
 android {
-  compileSdk = extra["compileSdkVersion"] as Int
+  compileSdk = rootProject.extra["compileSdkVersion"] as Int
   namespace = "com.flowcrypt.email"
 
   defaultConfig {
@@ -42,10 +45,10 @@ android {
     testInstrumentationRunnerArguments += mapOf("clearPackageData" to "true")
 
     applicationId = "com.flowcrypt.email"
-    minSdk = extra["minSdkVersion"] as Int
-    targetSdk = extra["targetSdkVersion"] as Int
-    versionCode = extra["appVersionCode"] as Int
-    versionName = extra["appVersionName"] as String
+    minSdk = rootProject.extra["minSdkVersion"] as Int
+    targetSdk = rootProject.extra["targetSdkVersion"] as Int
+    versionCode = rootProject.extra["appVersionCode"] as Int
+    versionName = rootProject.extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
     multiDexEnabled = true
@@ -191,6 +194,7 @@ android {
   buildFeatures {
     buildConfig = true
     viewBinding = true
+    resValues = true
   }
 
   packaging {
@@ -264,22 +268,88 @@ ksp {
 }
 
 androidComponents {
+
   beforeVariants { variantBuilder ->
-    if (variantBuilder.name in listOf("devRelease", "devUiTests")) {
-      // Gradle ignores any variants that satisfy the conditions above.
+    if (variantBuilder.name in setOf("devRelease", "devUiTests")) {
       println("INFO: Excluded \"${variantBuilder.name}\" from build variant list as unused")
       variantBuilder.enable = false
     }
   }
 
+  // --- Applies to ALL variants ---
   onVariants { variant ->
-    //we share applicationId as a res value
+    // Share applicationId as a res value
     variant.resValues.put(
       variant.makeResValueKey("string", "application_id"),
-      com.android.build.api.variant.ResValue(variant.applicationId.get())
+      ResValue(variant.applicationId.get())
     )
   }
+
+  val releaseSelector = selector().withBuildType("release")
+
+  // --- Release-only tasks ---
+  onVariants(releaseSelector) { variant ->
+    val cap = variant.name.replaceFirstChar { it.uppercase() }
+
+    // APK output directory provider
+    val apkDirProvider = variant.artifacts.get(SingleArtifact.APK)
+
+    fun listApks(): List<java.io.File> {
+      val dir = apkDirProvider.get().asFile
+      return dir.walkTopDown().filter { it.isFile && it.extension == "apk" }.toList()
+    }
+
+    val checkTask = tasks.register("check${cap}ApkSize") {
+      doLast {
+        val apks = listApks()
+        if (apks.isEmpty()) {
+          throw GradleException("No APK files found in: ${apkDirProvider.get().asFile.absolutePath}")
+        }
+
+        val maxExpected = 50L * 1024L * 1024L
+        apks.forEach { apk ->
+          val size = apk.length()
+          if (size > maxExpected) {
+            throw GradleException(
+              "Release APK is bigger than expected. max=$maxExpected, actual=$size, file=${apk.name}"
+            )
+          }
+        }
+      }
+    }
+
+    val renameTask = tasks.register("rename${cap}Builds") {
+      doLast {
+        val apks = listApks()
+        if (apks.isEmpty()) {
+          logger.lifecycle("No APK files found to rename in: ${apkDirProvider.get().asFile.absolutePath}")
+          return@doLast
+        }
+
+        val ts = SimpleDateFormat("yyyy_MM_dd_HH_mm").format(Date())
+
+        // If multiple outputs exist (splits), versionCode/versionName can differ;
+        // fallback to defaultConfig if not available.
+        val vCode =
+          variant.outputs.singleOrNull()?.versionCode?.orNull ?: android.defaultConfig.versionCode
+        val vName =
+          variant.outputs.singleOrNull()?.versionName?.orNull ?: android.defaultConfig.versionName
+
+        apks.forEach { apk ->
+          val newName = apk.name.removeSuffix(".apk") + "_${vCode}_${vName}_${ts}.apk"
+          val target = apk.parentFile.resolve(newName)
+
+          if (!apk.renameTo(target)) {
+            throw GradleException("Failed to rename ${apk.absolutePath} -> ${target.absolutePath}")
+          } else {
+            logger.lifecycle("Renamed: ${apk.name} -> ${target.name}")
+          }
+        }
+      }
+    }
+  }
 }
+
 
 easylauncher {
   buildTypes {
@@ -342,44 +412,6 @@ kotlin {
 tasks.register("checkCorrectBranch") {
   if (!grgit.branch.current().name.equals("master")) {
     throw GradleException("Please use 'master' branch to generate a release build")
-  }
-}
-
-tasks.register("checkReleaseBuildsSize") {
-  doLast {
-    android.applicationVariants.forEach { applicationVariant ->
-      if (applicationVariant.buildType.name == "release") {
-        applicationVariant.outputs.forEach { variantOutput ->
-          val apkFile = variantOutput.outputFile
-          //for now apk up to 50Mb is normal
-          val maxExpectedSizeInBytes = 50 * 1024 * 1024
-          if (apkFile.length() > maxExpectedSizeInBytes) {
-            throw GradleException(
-              "The generated release build is bigger then expected: " +
-                  "expected = not big then $maxExpectedSizeInBytes, actual = ${apkFile.length()}"
-            )
-          }
-        }
-      }
-    }
-  }
-}
-
-tasks.register("renameReleaseBuilds") {
-  doLast {
-    android.applicationVariants.forEach { applicationVariant ->
-      if (applicationVariant.buildType.name == "release") {
-        applicationVariant.outputs.forEach { variantOutput ->
-          val file = variantOutput.outputFile
-          val newName = file.name.replace(
-            ".apk", "_" + android.defaultConfig.versionCode +
-                "_" + android.defaultConfig.versionName + "_"
-                + SimpleDateFormat("yyyy_MM_dd_HH_mm").format(Date()) + ".apk"
-          )
-          variantOutput.outputFile.renameTo(File(file.parent, newName))
-        }
-      }
-    }
   }
 }
 
