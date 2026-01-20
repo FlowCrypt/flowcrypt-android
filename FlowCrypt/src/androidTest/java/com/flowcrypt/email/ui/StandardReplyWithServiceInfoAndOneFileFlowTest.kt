@@ -42,7 +42,6 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -161,8 +160,11 @@ class StandardReplyWithServiceInfoAndOneFileFlowTest : BaseTest() {
         matches(
           allOf(
             isDisplayed(),
-            if (TextUtils.isEmpty(serviceInfo.systemMsg)) withText(`is`(emptyString()))
-            else withText(serviceInfo.systemMsg),
+            if (TextUtils.isEmpty(serviceInfo.systemMsg)) {
+              withText("")
+            } else {
+              withText(serviceInfo.systemMsg)
+            },
             if (serviceInfo.isMsgEditable) isFocusable() else not(isFocusable())
           )
         )

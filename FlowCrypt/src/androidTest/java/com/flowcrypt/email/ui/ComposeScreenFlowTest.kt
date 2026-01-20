@@ -258,7 +258,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
       .perform(scrollTo())
-      .check(matches(withText(not(`is`(emptyString())))))
+      .check(matches(withText(not(""))))
     onView(withId(R.id.recyclerViewChipsTo))
       .check(matches(isDisplayed()))
       .check(matches(withRecyclerViewItemCount(1)))
@@ -920,7 +920,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+    val mockWebServerRule = FlowCryptMockWebServerRule(
+      TestConstants.MOCK_WEB_SERVER_PORT,
       object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
           if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
