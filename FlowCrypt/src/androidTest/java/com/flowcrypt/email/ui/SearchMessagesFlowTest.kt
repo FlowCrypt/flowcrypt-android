@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -34,9 +34,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.not
 import org.junit.Before
 import org.junit.Rule
@@ -144,7 +142,7 @@ class SearchMessagesFlowTest : BaseTest() {
     onView(withId(androidx.appcompat.R.id.search_close_btn))
       .perform(click())
     onView(isAssignableFrom(EditText::class.java))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
   }
 
   companion object {

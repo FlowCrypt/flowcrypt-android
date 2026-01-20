@@ -35,7 +35,6 @@ import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.ui.base.AddOtherAccountBaseTest
 import com.flowcrypt.email.util.AuthCredentialsManager
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
@@ -95,12 +94,12 @@ class AddOtherAccountFragmentInIsolationTest : AddOtherAccountBaseTest() {
   @Test
   fun testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
     enableAdvancedMode()
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
       .perform(scrollTo(), click())
     onView(withId(R.id.editTextSmtpPassword))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
   }
 
   @Test
@@ -190,7 +189,8 @@ class AddOtherAccountFragmentInIsolationTest : AddOtherAccountBaseTest() {
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextSmtpPassword))
       .perform(scrollTo())
-      .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
+      .check(matches(isDisplayed()))
+      .check(matches(withText("")))
 
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
       .perform(scrollTo(), click())
@@ -217,13 +217,13 @@ class AddOtherAccountFragmentInIsolationTest : AddOtherAccountBaseTest() {
         .perform(scrollTo(), clearText(), typeText(invalidEmailAddress), closeSoftKeyboard())
       onView(withId(R.id.editTextUserName))
         .perform(scrollTo())
-        .check(matches(withText(`is`(emptyString()))))
+        .check(matches(withText("")))
       onView(withId(R.id.editTextImapServer))
         .perform(scrollTo())
-        .check(matches(withText(`is`(emptyString()))))
+        .check(matches(withText("")))
       onView(withId(R.id.editTextSmtpServer))
         .perform(scrollTo())
-        .check(matches(withText(`is`(emptyString()))))
+        .check(matches(withText("")))
     }
 
     val text = userName + TestConstants.COMMERCIAL_AT_SYMBOL + host

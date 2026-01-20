@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -42,9 +42,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -463,7 +460,8 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         .check(matches(withText(getRidOfCharacterSubstitutes(body.toString()))))
     } else {
       onView(withId(R.id.editTextEmailMessage))
-        .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
+        .check(matches(isDisplayed()))
+        .check(matches(withText("")))
     }
   }
 
@@ -474,7 +472,8 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         .check(matches(withText(getRidOfCharacterSubstitutes(subject))))
     } else {
       onView(withId(R.id.editTextEmailSubject))
-        .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
+        .check(matches(isDisplayed()))
+        .check(matches(withText("")))
     }
   }
 

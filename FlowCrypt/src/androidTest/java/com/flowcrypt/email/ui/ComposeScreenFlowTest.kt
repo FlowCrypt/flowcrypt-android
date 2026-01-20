@@ -72,7 +72,6 @@ import org.apache.commons.io.FileUtils
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
@@ -152,7 +151,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       )
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click(), typeText("subject"), clearText())
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -177,7 +176,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .perform(scrollTo(), click(), replaceText(EMAIL_SUBJECT))
     onView(withId(R.id.editTextEmailMessage))
       .perform(scrollTo(), click(), replaceText(""))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -265,7 +264,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(withRecyclerViewItemCount(1)))
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo())
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
   }
 
   @Test
