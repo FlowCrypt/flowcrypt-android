@@ -16,8 +16,8 @@ import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.instanceOf
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 import org.junit.Assert.assertEquals
