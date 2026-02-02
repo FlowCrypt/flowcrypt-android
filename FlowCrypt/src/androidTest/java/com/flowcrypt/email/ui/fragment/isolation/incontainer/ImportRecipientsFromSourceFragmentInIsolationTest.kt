@@ -21,10 +21,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.ImportRecipientsFromSourceFragment
 import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
-import org.hamcrest.CoreMatchers
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.Matchers
-import org.hamcrest.Matchers.emptyString
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -60,6 +56,6 @@ class ImportRecipientsFromSourceFragmentInIsolationTest : BaseTest(),
     Thread.sleep(1000)
 
     onView(withId(R.id.eTKeyIdOrEmail))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
   }
 }

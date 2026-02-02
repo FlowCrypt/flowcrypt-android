@@ -1,13 +1,12 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -32,8 +31,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.SignatureSettingsFragment
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.UIUtil
-import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
@@ -113,7 +110,7 @@ class SignatureSettingsFragmentNonEmptyAliasSignatureRunInIsolationTest : BaseTe
     )
 
     onView(withId(R.id.editTextSignature))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
 
     onView(withId(R.id.switchUseGmailAliases))
       .check(matches(isChecked()))

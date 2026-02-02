@@ -29,8 +29,8 @@ import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.base.AddOtherAccountBaseTest
 import com.flowcrypt.email.util.AuthCredentialsManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers.anyOf
-import org.hamcrest.CoreMatchers.startsWith
+import org.hamcrest.Matchers.anyOf
+import org.hamcrest.Matchers.startsWith
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain

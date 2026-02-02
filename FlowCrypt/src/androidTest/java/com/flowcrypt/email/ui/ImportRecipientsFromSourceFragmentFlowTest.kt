@@ -33,7 +33,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.Matchers.containsString
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
