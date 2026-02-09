@@ -26,7 +26,7 @@ export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
 # -----------------------------
 # Pin cmdline-tools archive here
 # -----------------------------
-SDK_ARCHIVE="commandlinetools-linux-8512546_latest.zip"
+SDK_ARCHIVE="commandlinetools-linux-14742923_latest.zip"
 
 # ------------------------------------------------------------
 # Check that SDK_ARCHIVE is the latest Android cmdline-tools
