@@ -44,12 +44,18 @@ check_cmdline_tools_latest_or_fail() {
   if [[ ! "$SDK_ARCHIVE" =~ ^commandlinetools-linux-([0-9]+)_latest\.zip$ ]]; then
     return 0
   fi
-
   local CURRENT_VER="${BASH_REMATCH[1]}"
+
+  # Temporarily disable xtrace to avoid printing HTML content
+  local xtrace_was_on=0
+  case "$-" in
+    *x*) xtrace_was_on=1; set +x ;;
+  esac
 
   # Try to fetch page (fail = skip)
   local HTML
   if ! HTML="$(curl -fsSL --connect-timeout 3 --max-time 8 "$STUDIO_URL" 2>/dev/null)"; then
+    [[ "$xtrace_was_on" -eq 1 ]] && set -x
     return 0
   fi
 
@@ -62,6 +68,8 @@ check_cmdline_tools_latest_or_fail() {
       | sort -n \
       | tail -n 1
   )"
+
+  [[ "$xtrace_was_on" -eq 1 ]] && set -x
 
   if [[ -z "$LATEST_VER" ]]; then
     return 0
