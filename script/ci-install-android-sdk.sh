@@ -37,29 +37,27 @@ SDK_ARCHIVE="commandlinetools-linux-14742923_latest.zip"
 check_cmdline_tools_latest_or_fail() {
   local STUDIO_URL="https://developer.android.com/studio#command-tools"
 
-  # Validate SDK_ARCHIVE format
-  if [[ -z "${SDK_ARCHIVE:-}" ]]; then
-    return 0
-  fi
-  if [[ ! "$SDK_ARCHIVE" =~ ^commandlinetools-linux-([0-9]+)_latest\.zip$ ]]; then
-    return 0
-  fi
+  [[ -n "${SDK_ARCHIVE:-}" ]] || return 0
+  [[ "$SDK_ARCHIVE" =~ ^commandlinetools-linux-([0-9]+)_latest\.zip$ ]] || return 0
   local CURRENT_VER="${BASH_REMATCH[1]}"
 
-  # Temporarily disable xtrace to avoid printing HTML content
-  local xtrace_was_on=0
-  case "$-" in
-    *x*) xtrace_was_on=1; set +x ;;
-  esac
+  # If required tools are missing -> skip (do NOT fail CI)
+  command -v curl >/dev/null 2>&1 || return 0
+  command -v grep >/dev/null 2>&1 || return 0
+  command -v sed  >/dev/null 2>&1 || return 0
+  command -v sort >/dev/null 2>&1 || return 0
+  command -v tail >/dev/null 2>&1 || return 0
 
-  # Try to fetch page (fail = skip)
+  # Disable xtrace only for the fetch/parse section (avoid dumping HTML)
+  local xtrace_was_on=0
+  case "$-" in *x*) xtrace_was_on=1; set +x ;; esac
+
   local HTML
   if ! HTML="$(curl -fsSL --connect-timeout 3 --max-time 8 "$STUDIO_URL" 2>/dev/null)"; then
     [[ "$xtrace_was_on" -eq 1 ]] && set -x
     return 0
   fi
 
-  # Parse latest version (fail = skip)
   local LATEST_VER
   LATEST_VER="$(
     printf '%s' "$HTML" \
@@ -70,19 +68,14 @@ check_cmdline_tools_latest_or_fail() {
   )"
 
   [[ "$xtrace_was_on" -eq 1 ]] && set -x
+  [[ -n "$LATEST_VER" ]] || return 0
 
-  if [[ -z "$LATEST_VER" ]]; then
-    return 0
-  fi
-
-  # Compare versions
   if (( CURRENT_VER < LATEST_VER )); then
     echo "ERROR: Outdated Android SDK Command-line Tools detected."
     echo "ERROR: Current pinned version: $CURRENT_VER ($SDK_ARCHIVE)"
     echo "ERROR: Latest available version: $LATEST_VER (commandlinetools-linux-${LATEST_VER}_latest.zip)"
-    echo "ERROR: Reason: Google updated SDK repository metadata and older cmdline-tools"
-    echo "ERROR: may fail or produce warnings (eg. SDK XML v4 incompatibility)."
-    echo "ERROR: Fix: update SDK_ARCHIVE to the latest version and re-run the script."
+    echo "ERROR: Reason: The official Android SDK repository metadata was updated; older pinned cmdline-tools may break or warn."
+    echo "ERROR: Fix: Update SDK_ARCHIVE to the latest version and re-run CI."
     exit 1
   fi
 }
