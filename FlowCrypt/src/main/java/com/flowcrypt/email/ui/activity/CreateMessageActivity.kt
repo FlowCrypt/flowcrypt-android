@@ -11,6 +11,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.navigation.NavHostController
 import androidx.navigation.ui.AppBarConfiguration
 import com.flowcrypt.email.Constants
@@ -69,12 +73,14 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     (navController as? NavHostController)?.enableOnBackPressed(true)
     isNavigationArrowDisplayed = true
     val navGraph = navController.navInflater.inflate(R.navigation.create_msg_graph)
     navController.setGraph(navGraph, intent.extras)
     FileAndDirectoryUtils.cleanDir(File(cacheDir, Constants.DRAFT_CACHE_DIR))
+    applyInsetsToSupportEdgeToEdge()
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -92,6 +98,15 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
       FlavorSettings.getCountingIdlingResource().incrementSafely(this@CreateMessageActivity)
     } else {
       FlavorSettings.getCountingIdlingResource().decrementSafely(this@CreateMessageActivity)
+    }
+  }
+
+  fun applyInsetsToSupportEdgeToEdge() {
+    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+      val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+      binding.appBarLayout.updatePadding(top = bars.top)
+      binding.root.updatePadding(bottom = bars.bottom)
+      insets
     }
   }
 

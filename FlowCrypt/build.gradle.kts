@@ -4,6 +4,10 @@
  */
 
 
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.ResValue
+import org.gradle.api.GradleException
+import java.io.File
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
@@ -15,7 +19,6 @@ DdmPreferences.setTimeOut(10 * 60 * 1000)
 
 plugins {
   id("com.android.application")
-  id("kotlin-android")
   id("androidx.navigation.safeargs.kotlin")
   id("com.starter.easylauncher")
   id("kotlin-parcelize")
@@ -30,7 +33,7 @@ if (propertiesFile.exists()) {
 }
 
 android {
-  compileSdk = extra["compileSdkVersion"] as Int
+  compileSdk = rootProject.extra["compileSdkVersion"] as Int
   namespace = "com.flowcrypt.email"
 
   defaultConfig {
@@ -42,10 +45,10 @@ android {
     testInstrumentationRunnerArguments += mapOf("clearPackageData" to "true")
 
     applicationId = "com.flowcrypt.email"
-    minSdk = extra["minSdkVersion"] as Int
-    targetSdk = extra["targetSdkVersion"] as Int
-    versionCode = extra["appVersionCode"] as Int
-    versionName = extra["appVersionName"] as String
+    minSdk = rootProject.extra["minSdkVersion"] as Int
+    targetSdk = rootProject.extra["targetSdkVersion"] as Int
+    versionCode = rootProject.extra["appVersionCode"] as Int
+    versionName = rootProject.extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
     multiDexEnabled = true
@@ -191,6 +194,7 @@ android {
   buildFeatures {
     buildConfig = true
     viewBinding = true
+    resValues = true
   }
 
   packaging {
@@ -264,22 +268,88 @@ ksp {
 }
 
 androidComponents {
+
   beforeVariants { variantBuilder ->
-    if (variantBuilder.name in listOf("devRelease", "devUiTests")) {
-      // Gradle ignores any variants that satisfy the conditions above.
+    if (variantBuilder.name in setOf("devRelease", "devUiTests")) {
       println("INFO: Excluded \"${variantBuilder.name}\" from build variant list as unused")
       variantBuilder.enable = false
     }
   }
 
+  // --- Applies to ALL variants ---
   onVariants { variant ->
-    //we share applicationId as a res value
+    // Share applicationId as a res value
     variant.resValues.put(
       variant.makeResValueKey("string", "application_id"),
-      com.android.build.api.variant.ResValue(variant.applicationId.get())
+      ResValue(variant.applicationId.get())
     )
   }
+
+  val releaseSelector = selector().withBuildType("release")
+
+  // --- Release-only tasks ---
+  onVariants(releaseSelector) { variant ->
+    val cap = variant.name.replaceFirstChar { it.uppercase() }
+
+    // APK output directory provider
+    val apkDirProvider = variant.artifacts.get(SingleArtifact.APK)
+
+    fun listApks(): List<java.io.File> {
+      val dir = apkDirProvider.get().asFile
+      return dir.walkTopDown().filter { it.isFile && it.extension == "apk" }.toList()
+    }
+
+    val checkTask = tasks.register("check${cap}ApkSize") {
+      doLast {
+        val apks = listApks()
+        if (apks.isEmpty()) {
+          throw GradleException("No APK files found in: ${apkDirProvider.get().asFile.absolutePath}")
+        }
+
+        val maxExpected = 50L * 1024L * 1024L
+        apks.forEach { apk ->
+          val size = apk.length()
+          if (size > maxExpected) {
+            throw GradleException(
+              "Release APK is bigger than expected. max=$maxExpected, actual=$size, file=${apk.name}"
+            )
+          }
+        }
+      }
+    }
+
+    val renameTask = tasks.register("rename${cap}Builds") {
+      doLast {
+        val apks = listApks()
+        if (apks.isEmpty()) {
+          logger.lifecycle("No APK files found to rename in: ${apkDirProvider.get().asFile.absolutePath}")
+          return@doLast
+        }
+
+        val ts = SimpleDateFormat("yyyy_MM_dd_HH_mm").format(Date())
+
+        // If multiple outputs exist (splits), versionCode/versionName can differ;
+        // fallback to defaultConfig if not available.
+        val vCode =
+          variant.outputs.singleOrNull()?.versionCode?.orNull ?: android.defaultConfig.versionCode
+        val vName =
+          variant.outputs.singleOrNull()?.versionName?.orNull ?: android.defaultConfig.versionName
+
+        apks.forEach { apk ->
+          val newName = apk.name.removeSuffix(".apk") + "_${vCode}_${vName}_${ts}.apk"
+          val target = apk.parentFile.resolve(newName)
+
+          if (!apk.renameTo(target)) {
+            throw GradleException("Failed to rename ${apk.absolutePath} -> ${target.absolutePath}")
+          } else {
+            logger.lifecycle("Renamed: ${apk.name} -> ${target.name}")
+          }
+        }
+      }
+    }
+  }
 }
+
 
 easylauncher {
   buildTypes {
@@ -345,44 +415,6 @@ tasks.register("checkCorrectBranch") {
   }
 }
 
-tasks.register("checkReleaseBuildsSize") {
-  doLast {
-    android.applicationVariants.forEach { applicationVariant ->
-      if (applicationVariant.buildType.name == "release") {
-        applicationVariant.outputs.forEach { variantOutput ->
-          val apkFile = variantOutput.outputFile
-          //for now apk up to 50Mb is normal
-          val maxExpectedSizeInBytes = 50 * 1024 * 1024
-          if (apkFile.length() > maxExpectedSizeInBytes) {
-            throw GradleException(
-              "The generated release build is bigger then expected: " +
-                  "expected = not big then $maxExpectedSizeInBytes, actual = ${apkFile.length()}"
-            )
-          }
-        }
-      }
-    }
-  }
-}
-
-tasks.register("renameReleaseBuilds") {
-  doLast {
-    android.applicationVariants.forEach { applicationVariant ->
-      if (applicationVariant.buildType.name == "release") {
-        applicationVariant.outputs.forEach { variantOutput ->
-          val file = variantOutput.outputFile
-          val newName = file.name.replace(
-            ".apk", "_" + android.defaultConfig.versionCode +
-                "_" + android.defaultConfig.versionName + "_"
-                + SimpleDateFormat("yyyy_MM_dd_HH_mm").format(Date()) + ".apk"
-          )
-          variantOutput.outputFile.renameTo(File(file.parent, newName))
-        }
-      }
-    }
-  }
-}
-
 tasks.register<Copy>("copyReleaseApks") {
   includeEmptyDirs = false
 
@@ -413,7 +445,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.5")
   ksp("androidx.annotation:annotation:1.9.1")
-  ksp("androidx.room:room-compiler:2.8.2")
+  ksp("androidx.room:room-compiler:2.8.4")
   //ACRA needs the following dependency to use a custom report sender
 
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
@@ -436,22 +468,22 @@ dependencies {
   androidTestImplementation("androidx.test:rules:1.7.0")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-  androidTestImplementation("androidx.room:room-testing:2.8.2")
+  androidTestImplementation("androidx.room:room-testing:2.8.4")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.11.0")
-  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.2.1")
-  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.2.1")
+  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.3.2")
+  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.3.2")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
   androidTestUtil("androidx.test:orchestrator:1.6.1")
 
-  testImplementation("com.squareup.okhttp3:mockwebserver:5.2.1")
+  testImplementation("com.squareup.okhttp3:mockwebserver:5.3.2")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.16")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.3.0")
   testImplementation("junit:junit:4.13.2")
-  testImplementation("androidx.room:room-testing:2.8.2")
+  testImplementation("androidx.room:room-testing:2.8.4")
   testImplementation("io.github.classgraph:classgraph:4.8.184")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -466,65 +498,65 @@ dependencies {
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
   implementation("androidx.test.espresso:espresso-idling-resource:3.7.0")
   implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
-  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.4")
-  implementation("androidx.lifecycle:lifecycle-process:2.9.4")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
-  implementation("androidx.lifecycle:lifecycle-service:2.9.4")
-  implementation("androidx.room:room-runtime:2.8.2")
-  implementation("androidx.room:room-ktx:2.8.2")
+  implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0")
+  implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.10.0")
+  implementation("androidx.lifecycle:lifecycle-process:2.10.0")
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+  implementation("androidx.lifecycle:lifecycle-service:2.10.0")
+  implementation("androidx.room:room-runtime:2.8.4")
+  implementation("androidx.room:room-ktx:2.8.4")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.17.0")
-  implementation("androidx.core:core-splashscreen:1.0.1")
-  implementation("androidx.activity:activity-ktx:1.11.0")
+  implementation("androidx.core:core-splashscreen:1.2.0")
+  implementation("androidx.activity:activity-ktx:1.12.2")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.11.0")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.5")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.5")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.5")
-  implementation("androidx.webkit:webkit:1.14.0")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.9.6")
+  implementation("androidx.navigation:navigation-ui-ktx:2.9.6")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.9.6")
+  implementation("androidx.webkit:webkit:1.15.0")
 
-  implementation("com.google.android.gms:play-services-base:18.9.0")
-  implementation("com.google.android.gms:play-services-auth:21.4.0")
+  implementation("com.google.android.gms:play-services-base:18.10.0")
+  implementation("com.google.android.gms:play-services-auth:21.5.0")
   implementation("com.google.android.material:material:1.13.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.13.2")
   implementation("com.google.api-client:google-api-client-android:2.8.1")
-  implementation("com.google.apis:google-api-services-gmail:v1-rev20250630-2.0.0")
+  implementation("com.google.apis:google-api-services-gmail:v1-rev20251201-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
 
   implementation("com.squareup.retrofit2:retrofit:3.0.0")
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
-  implementation("com.squareup.okio:okio:3.16.2")
-  implementation("com.squareup.okhttp3:logging-interceptor:5.2.1")
+  implementation("com.squareup.okio:okio:3.16.4")
+  implementation("com.squareup.okhttp3:logging-interceptor:5.3.2")
 
   implementation("com.github.bumptech.glide:glide:5.0.5")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.0.2")
-  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
+  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260102.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.21.2")
+  implementation("org.jsoup:jsoup:1.22.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
-  implementation("org.pgpainless:pgpainless-core:2.0.1")
+  implementation("org.pgpainless:pgpainless-core:2.0.2")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
-  implementation("commons-io:commons-io:2.20.0")
+  implementation("commons-io:commons-io:2.21.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.13.1")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.19.0") {
+    implementation("commons-codec:commons-codec:1.20.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }

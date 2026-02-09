@@ -17,7 +17,6 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.PublicKeyEntity
-import com.flowcrypt.email.junit.annotations.DependsOnMailServer
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -27,10 +26,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.EditContactFragment
 import com.flowcrypt.email.ui.activity.fragment.EditContactFragmentArgs
 import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.startsWith
-import org.hamcrest.Matchers
-import org.hamcrest.Matchers.emptyString
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -75,7 +70,7 @@ class EditContactFragmentInIsolationTest : BaseTest(), AddAccountToDatabaseRuleI
     Thread.sleep(1000)
 
     onView(withId(R.id.editTextNewPubKey))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
     onView(withId(R.id.buttonCheck))
       .check(matches(isNotEnabled()))
 

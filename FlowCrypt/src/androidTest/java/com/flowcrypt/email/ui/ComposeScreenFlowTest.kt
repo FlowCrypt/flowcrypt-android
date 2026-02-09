@@ -72,7 +72,6 @@ import org.apache.commons.io.FileUtils
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
@@ -155,7 +154,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       )
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo(), click(), typeText("subject"), clearText())
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -181,7 +180,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .perform(scrollTo(), click(), replaceText(EMAIL_SUBJECT))
     onView(withId(R.id.editTextEmailMessage))
       .perform(scrollTo(), click(), replaceText(""))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -265,13 +264,13 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       .check(matches(isDisplayed()))
     onView(withId(R.id.editTextFrom))
       .perform(scrollTo())
-      .check(matches(withText(not(`is`(emptyString())))))
+      .check(matches(withText(not(""))))
     onView(withId(R.id.recyclerViewChipsTo))
       .check(matches(isDisplayed()))
       .check(matches(withRecyclerViewItemCount(1)))
     onView(withId(R.id.editTextEmailSubject))
       .perform(scrollTo())
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
   }
 
   @Test
@@ -938,7 +937,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+    val mockWebServerRule = FlowCryptMockWebServerRule(
+      TestConstants.MOCK_WEB_SERVER_PORT,
       object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
           if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {

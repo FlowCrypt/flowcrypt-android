@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.base
@@ -15,8 +15,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
-import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.`is`
 import org.junit.Test
 
 /**
@@ -102,6 +100,7 @@ abstract class BasePassphraseFlowTest : BaseCheckPassphraseOnFirstScreenFlowTest
 
     testShowRepeatingPassPhraseScreen()
     onView(withId(R.id.editTextKeyPasswordSecond))
-      .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
+      .check(matches(isDisplayed()))
+      .check(matches(withText("")))
   }
 }

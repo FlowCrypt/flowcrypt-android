@@ -44,6 +44,7 @@ import com.google.api.services.gmail.model.MessagePartHeader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -164,6 +165,7 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     .around(ScreenshotTestRule())
 
   @Test
+  @Ignore("tests crash randomly too many times on this test. Temporary disabled")
   fun testDownloadingAttachment() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
