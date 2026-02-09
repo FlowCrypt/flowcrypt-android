@@ -26,7 +26,7 @@ export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
 # -----------------------------
 # Pin cmdline-tools archive here
 # -----------------------------
-SDK_ARCHIVE="commandlinetools-linux-14742923_latest.zip"
+SDK_ARCHIVE="commandlinetools-linux-8512546_latest.zip"
 
 # ------------------------------------------------------------
 # Check that SDK_ARCHIVE is the latest Android cmdline-tools
@@ -70,7 +70,7 @@ check_cmdline_tools_latest_or_fail() {
   [[ "$xtrace_was_on" -eq 1 ]] && set -x
   [[ -n "$LATEST_VER" ]] || return 0
 
-  if (( CURRENT_VER < LATEST_VER )); then
+  if (( CURRENT_VER < LATEST_VER )); then  # download, unpack and remove sdk archive
     echo "ERROR: Outdated Android SDK Command-line Tools detected."
     echo "ERROR: Current pinned version: $CURRENT_VER ($SDK_ARCHIVE)"
     echo "ERROR: Latest available version: $LATEST_VER (commandlinetools-linux-${LATEST_VER}_latest.zip)"
