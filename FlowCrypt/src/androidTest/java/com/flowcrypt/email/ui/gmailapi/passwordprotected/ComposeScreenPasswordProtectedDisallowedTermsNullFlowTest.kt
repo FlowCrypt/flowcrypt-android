@@ -22,7 +22,6 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -62,7 +61,6 @@ class ComposeScreenPasswordProtectedDisallowedTermsNullFlowTest :
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("need to fix")
   fun testMissingOptionalPropertiesInClientConfiguration() {
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))

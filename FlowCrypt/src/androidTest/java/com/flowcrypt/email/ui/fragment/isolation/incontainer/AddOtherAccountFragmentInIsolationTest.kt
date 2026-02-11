@@ -10,6 +10,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -39,7 +40,6 @@ import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -68,7 +68,6 @@ class AddOtherAccountFragmentInIsolationTest : AddOtherAccountBaseTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testShowSnackBarIfFieldEmpty() {
     onView(withId(R.id.checkBoxAdvancedMode))
       .perform(scrollTo(), click())
@@ -281,9 +280,9 @@ class AddOtherAccountFragmentInIsolationTest : AddOtherAccountBaseTest() {
 
   private fun checkIsFieldEmptyWork(viewId: Int, stringIdForError: Int) {
     onView(withId(R.id.editTextEmail))
-      .perform(scrollTo(), clearText(), typeText(authCreds.email), closeSoftKeyboard())
+      .perform(scrollTo(), replaceText(authCreds.email), closeSoftKeyboard())
     onView(withId(R.id.editTextPassword))
-      .perform(clearText(), typeText(authCreds.password), closeSoftKeyboard())
+      .perform(replaceText(authCreds.password), closeSoftKeyboard())
 
     onView(withId(viewId))
       .perform(scrollTo(), clearText())
