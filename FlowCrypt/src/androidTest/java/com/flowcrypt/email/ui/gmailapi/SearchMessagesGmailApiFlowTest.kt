@@ -5,12 +5,10 @@
 
 package com.flowcrypt.email.ui.gmailapi
 
-import android.view.KeyEvent
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.pressKey
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -37,7 +35,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -89,7 +86,6 @@ class SearchMessagesGmailApiFlowTest : BaseGmailApiTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("fix me")
   fun testSearchMessages() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
@@ -99,9 +95,12 @@ class SearchMessagesGmailApiFlowTest : BaseGmailApiTest() {
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
       .perform(click())
+
     onView(withId(getIdentifierByName("search_src_text")))
-      .perform(click(), clearText(), replaceText(SUBJECT_EXISTING_STANDARD))
-      .perform(pressKey(KeyEvent.KEYCODE_ENTER))
+      .perform(replaceText(SUBJECT_EXISTING_STANDARD))
+
+    onView(withId(getIdentifierByName("search_src_text")))
+      .perform(pressImeActionButton())
 
     //need to wait while the app loads the search result
     waitForObjectWithText("From", TimeUnit.SECONDS.toMillis(10))
