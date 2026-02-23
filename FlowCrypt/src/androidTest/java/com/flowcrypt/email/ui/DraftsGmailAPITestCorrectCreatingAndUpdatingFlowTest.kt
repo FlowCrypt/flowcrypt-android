@@ -41,7 +41,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -101,7 +100,6 @@ class DraftsGmailAPITestCorrectCreatingAndUpdatingFlowTest : BaseDraftsGmailAPIF
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("need to fix")
   fun testCorrectCreatingAndUpdating() {
     moveToDraftFolder()
 

@@ -26,7 +26,6 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeScreenNoKeyAvailableTest
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -66,7 +65,6 @@ class ComposeScreenNoKeyAvailableMultipleKeysWithPassphraseInRamFlowTest :
   @Test
   //@Ignore("flaky")
   //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
-  @Ignore("need to fix")
   fun testAddEmailToExistingKey() {
     doTestAddEmailToExistingKey {
       waitForObjectWithText(getResString(android.R.string.ok), TimeUnit.SECONDS.toMillis(2))

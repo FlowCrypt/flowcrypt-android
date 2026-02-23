@@ -72,13 +72,11 @@ import org.apache.commons.io.FileUtils
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -116,7 +114,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   )
 
   @Test
-  @Ignore("need to fix")
   fun testEmptyRecipient() {
     activeActivityRule?.launch(intent)
 
@@ -139,7 +136,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testEmptyEmailSubject() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -166,7 +162,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   //@Ignore("flaky 5")
   //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
-  @Ignore("need to fix")
   fun testEmptyEmailMsg() {
     activeActivityRule?.launch(intent)
 
@@ -196,7 +191,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testUsingStandardMsgEncryptionType() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -226,7 +220,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSwitchBetweenEncryptionTypes() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -296,7 +289,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testAddingAtts() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -316,7 +308,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testMaxTotalAttachmentSize() {
     activeActivityRule?.launch(intent)
     Espresso.closeSoftKeyboard()
@@ -343,7 +334,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   //@Ignore("flaky 4")
   //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
-  @Ignore("need to fix")
   fun testDeletingAtts() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -370,7 +360,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -422,7 +411,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -442,7 +430,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule?.launch(intent)
     registerAllIdlingResources()
@@ -481,7 +468,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   @FlowCryptTestSettings(useCommonIdling = false)
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule?.launch(intent)
@@ -543,7 +529,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSharePubKeySingle() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -571,7 +556,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
@@ -603,7 +587,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSharePubKeyNoOwnKeys() {
     PrivateKeysManager.deleteKey(
       addAccountToDatabaseRule.account,
@@ -639,7 +622,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testShowWarningIfFoundExpiredKey() {
     val keyDetails =
       PrivateKeysManager.getPgpKeyDetailsFromAssets("pgp/expired@flowcrypt.test_pub.asc")
