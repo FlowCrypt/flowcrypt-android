@@ -38,7 +38,6 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.CustomViewActions.doNothing
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -97,7 +96,6 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testSearchExistingContact() {
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
@@ -113,7 +111,6 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
       .check(matches(isDisplayed()))
