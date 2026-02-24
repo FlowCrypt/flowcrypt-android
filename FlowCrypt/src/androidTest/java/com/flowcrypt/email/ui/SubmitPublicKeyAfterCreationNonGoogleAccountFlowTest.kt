@@ -92,7 +92,6 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("need to fix")
   fun testCallSubmitPubKeyAfterKeyCreation() {
     try {
       onView(withId(R.id.buttonOtherEmailProvider))
