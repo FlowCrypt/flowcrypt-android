@@ -38,7 +38,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.eclipse.angus.mail.imap.IMAPFolder
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -63,7 +62,8 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
   private val userWithoutBackups = AccountDaoManager.getUserWithoutBackup()
   private var isSubmitPubKeyCalled = false
 
-  val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+  val mockWebServerRule = FlowCryptMockWebServerRule(
+    TestConstants.MOCK_WEB_SERVER_PORT,
     object : okhttp3.mockwebserver.Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
@@ -108,7 +108,10 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-      waitForObjectWithText(getResString(R.string.create_a_new_key).uppercase(), TimeUnit.SECONDS.toMillis(5))
+      waitForObjectWithText(
+        getResString(R.string.create_a_new_key).uppercase(),
+        TimeUnit.SECONDS.toMillis(5)
+      )
 
       onView(withId(R.id.buttonCreateNewKey))
         .check(matches(isDisplayed()))
@@ -117,14 +120,14 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
       val passphrase = UUID.randomUUID().toString() + UUID.randomUUID().toString()
       onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))
-        .perform(replaceText(passphrase), closeSoftKeyboard())
+        .perform(replaceText(passphrase))
       Thread.sleep(TimeUnit.SECONDS.toMillis(1))
       onView(withId(R.id.buttonSetPassPhrase))
         .check(matches(isDisplayed()))
         .perform(click())
       onView(withId(R.id.editTextKeyPasswordSecond))
         .check(matches(isDisplayed()))
-        .perform(replaceText(passphrase), closeSoftKeyboard())
+        .perform(replaceText(passphrase))
       onView(withId(R.id.buttonConfirmPassPhrases))
         .check(matches(isDisplayed()))
         .perform(click())

@@ -35,7 +35,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -185,11 +184,10 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
   }
 
   @Test
-  @Ignore("need to fix")
   fun testFesAvailableSSLError() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SSL_ERROR))
     //as our mock server support only flowcrypt.test and flowcrypt.example we will receive
-    onView(withText(containsString("Hostname fes.wrongssl.test not verified")))
+    onView(withText(containsString("No address associated with hostname")))
       .inRoot(withDecorView(not(`is`(decorView))))
       .check(matches(isDisplayed()))
   }

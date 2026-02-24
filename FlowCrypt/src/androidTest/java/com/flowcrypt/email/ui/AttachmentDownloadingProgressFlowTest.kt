@@ -157,7 +157,6 @@ class AttachmentDownloadingProgressFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   @FlakyTest
   @NotReadyForCI
-  @Ignore("need to fix")
   fun testVisibilityOfDownloadingProgressIcon() {
     baseCheckWithAtt(
       incomingMsgInfo = getMsgInfo(
