@@ -32,6 +32,7 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.gson.Gson
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
@@ -187,7 +188,14 @@ class FesDuringSetupEnterpriseFlowTest : BaseFesDuringSetupFlowTest() {
   fun testFesAvailableSSLError() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_FES_SSL_ERROR))
     //as our mock server support only flowcrypt.test and flowcrypt.example we will receive
-    onView(withText(containsString("No address associated with hostname")))
+    onView(
+      withText(
+        anyOf(
+          containsString("No address associated with hostname"),
+          containsString("Hostname fes.wrongssl.test not verified")
+        )
+      )
+    )
       .inRoot(withDecorView(not(`is`(decorView))))
       .check(matches(isDisplayed()))
   }
