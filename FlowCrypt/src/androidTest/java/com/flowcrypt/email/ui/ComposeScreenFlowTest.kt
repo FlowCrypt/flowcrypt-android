@@ -7,7 +7,9 @@ package com.flowcrypt.email.ui
 
 import android.app.Activity
 import android.app.Instrumentation
+import android.content.ClipboardManager
 import android.content.ComponentName
+import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onData
@@ -94,6 +96,7 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 class ComposeScreenFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
@@ -193,7 +196,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testUsingStandardMsgEncryptionType() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.STANDARD) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -208,7 +210,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testUsingSecureMsgEncryptionType() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.ENCRYPTED) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -249,7 +250,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testIsScreenOfComposeNewMsg() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     Thread.sleep(1000)
 
@@ -269,7 +269,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testWrongFormatOfRecipientEmailAddress() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     val invalidEmailAddresses = arrayOf("test", "test@", "test@@flowcrypt.test", "@flowcrypt.test")
 
@@ -362,7 +361,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
       .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     val primaryInternetAddress = requireNotNull(pgpKeyRingDetails.getPrimaryInternetAddress())
@@ -389,8 +387,31 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     onView(withText(R.string.import_their_public_key))
       .check(matches(isDisplayed()))
       .perform(click())
+    var clipboardOk = false
 
-    addTextToClipboard("public key", pgpKeyRingDetails.publicKey)
+    val clipboard =
+      getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    repeat(5) { _ ->
+
+      addTextToClipboard("public key", pgpKeyRingDetails.publicKey)
+      Thread.sleep(1000)
+
+      val clip = clipboard.primaryClip
+      val actualText = clip
+        ?.takeIf { it.itemCount > 0 }
+        ?.getItemAt(0)
+        ?.coerceToText(getTargetContext())
+        ?.toString()
+
+      if (actualText == pgpKeyRingDetails.publicKey) {
+        clipboardOk = true
+        return@repeat
+      }
+    }
+
+    if (!clipboardOk) {
+      throw AssertionError("Clipboard did not contain expected public key after 5 attempts")
+    }
 
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))
@@ -413,7 +434,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     fillInAllFields(
       to = setOf(
@@ -432,7 +452,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
@@ -567,7 +586,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       EmailUtil.genAttInfoFromPubKey(secondKeyDetails, addAccountToDatabaseRule.account.email)
 
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
@@ -632,7 +650,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     roomDatabase.pubKeyDao().insert(keyDetails.toPublicKeyEntity(email))
 
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     fillInAllFields(to = setOf(primaryInternetAddress))
 
@@ -672,7 +689,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     )
 
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     fillInAllFields(to = setOf(requireNotNull(email.asInternetAddress())))
 
@@ -712,7 +728,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     assertTrue(existingKeyExpiration.isBefore(Instant.now()))
 
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     fillInAllFields(to = setOf(internetAddress))
 
@@ -763,7 +778,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     assertEquals(2, keyRingInfoBeforeUpdate.userIds.size)
 
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     fillInAllFields(to = setOf(internetAddress))
 
@@ -795,7 +809,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testKeepPublicKeysFreshFewKeysFromServer() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     fillInAllFields(to = setOf(requireNotNull(USER_WITH_FEW_KEYS_FROM_WKD.asInternetAddress())))
 
@@ -822,7 +835,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   @Test
   fun testWebPortalPasswordButtonIsVisibleForUserWithoutCustomerFesUrl() {
     activeActivityRule?.launch(intent)
-    registerAllIdlingResources()
 
     onView(withId(R.id.editTextEmailAddress))
       .perform(
