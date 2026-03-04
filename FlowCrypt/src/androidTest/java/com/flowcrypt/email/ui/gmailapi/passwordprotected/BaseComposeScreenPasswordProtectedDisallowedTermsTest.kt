@@ -66,10 +66,7 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
       ).perform(click())
 
     onView(withId(R.id.eTPassphrase))
-      .perform(
-        replaceText(PASSWORD),
-        closeSoftKeyboard()
-      )
+      .perform(replaceText(PASSWORD))
 
     onView(withId(R.id.btSetPassword))
       .perform(click())

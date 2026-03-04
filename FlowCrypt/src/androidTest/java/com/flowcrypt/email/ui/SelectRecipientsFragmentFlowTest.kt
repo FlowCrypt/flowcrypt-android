@@ -26,6 +26,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -44,12 +45,14 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 
 /**
  * @author Denys Bondarenko
  */
 @MediumTest
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 @RunWith(AndroidJUnit4::class)
 class SelectRecipientsFragmentFlowTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<CreateMessageActivity>(
@@ -118,6 +121,7 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
     onView(withId(getIdentifierByName("search_src_text")))
       .perform(clearText(), typeText("some email"))
     closeSoftKeyboard()
+    waitForObjectWithText(getResString(R.string.no_results), TimeUnit.SECONDS.toMillis(10))
     onView(withId(R.id.tVEmpty))
       .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
@@ -126,6 +130,7 @@ class SelectRecipientsFragmentFlowTest : BaseTest() {
     onView(withId(getIdentifierByName("search_src_text")))
       .perform(clearText(), typeText(viewText))
     closeSoftKeyboard()
+    waitForObjectWithText(viewText, TimeUnit.SECONDS.toMillis(10))
     onView(withId(viewId))
       .check(matches(isDisplayed())).check(matches(withText(viewText)))
   }
