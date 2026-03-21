@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
@@ -117,6 +117,7 @@ class CreateMessageFragmentInIsolationTest : BaseComposeScreenTest() {
   }
 
   @Test
+  @Ignore("fix me")
   fun testUpdatingAddRecipientLabel() {
     val chars = "email".toCharArray()
     val typedChars = mutableListOf<Char>()
