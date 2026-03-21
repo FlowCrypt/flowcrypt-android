@@ -36,6 +36,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
 import org.junit.Before
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
