@@ -64,6 +64,7 @@ import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest.Companion.MESSAGE_SUBJECT_FIRST
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -360,7 +361,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("temporary disabled")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
@@ -418,6 +418,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    waitForObjectWithText(email, TimeUnit.SECONDS.toMillis(10))
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(
