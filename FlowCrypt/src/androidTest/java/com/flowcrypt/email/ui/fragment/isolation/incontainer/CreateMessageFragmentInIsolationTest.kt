@@ -36,13 +36,13 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
 import org.junit.Before
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -118,7 +118,6 @@ class CreateMessageFragmentInIsolationTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testUpdatingAddRecipientLabel() {
     val chars = "email".toCharArray()
     val typedChars = mutableListOf<Char>()
@@ -126,6 +125,8 @@ class CreateMessageFragmentInIsolationTest : BaseComposeScreenTest() {
       onView(withId(R.id.editTextEmailAddress))
         .perform(typeText(char.toString()))
       typedChars.add(char)
+
+      waitForObjectWithText(String(typedChars.toCharArray()), TimeUnit.SECONDS.toMillis(10))
 
       onView(withId(R.id.recyclerViewAutocompleteTo))
         .perform(
@@ -142,7 +143,8 @@ class CreateMessageFragmentInIsolationTest : BaseComposeScreenTest() {
   companion object {
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+    val mockWebServerRule = FlowCryptMockWebServerRule(
+      TestConstants.MOCK_WEB_SERVER_PORT,
       object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
           if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
