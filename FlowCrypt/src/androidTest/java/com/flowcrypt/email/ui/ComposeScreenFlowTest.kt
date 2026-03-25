@@ -360,7 +360,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("temporary disabled")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
@@ -418,6 +417,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    waitForObjectWithText(email, TimeUnit.SECONDS.toMillis(10))
 
     onView(withId(R.id.recyclerViewChipsTo))
       .perform(

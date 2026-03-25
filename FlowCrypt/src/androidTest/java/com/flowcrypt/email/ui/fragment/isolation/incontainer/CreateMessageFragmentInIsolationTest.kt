@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
@@ -42,6 +42,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -125,6 +126,8 @@ class CreateMessageFragmentInIsolationTest : BaseComposeScreenTest() {
         .perform(typeText(char.toString()))
       typedChars.add(char)
 
+      waitForObjectWithText(String(typedChars.toCharArray()), TimeUnit.SECONDS.toMillis(10))
+
       onView(withId(R.id.recyclerViewAutocompleteTo))
         .perform(
           scrollTo<RecyclerView.ViewHolder>(
@@ -140,7 +143,8 @@ class CreateMessageFragmentInIsolationTest : BaseComposeScreenTest() {
   companion object {
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
+    val mockWebServerRule = FlowCryptMockWebServerRule(
+      TestConstants.MOCK_WEB_SERVER_PORT,
       object : Dispatcher() {
         override fun dispatch(request: RecordedRequest): MockResponse {
           if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
