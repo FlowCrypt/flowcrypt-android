@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.gmailapi
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -58,7 +57,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -161,7 +159,6 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
 
   @Test
   @FlakyTest
-  @Ignore("need to fix")
   fun testSendPasswordProtectedMessageWithFewAttachments() {
     isRequestToMessageAPITested = false
 
@@ -181,10 +178,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
       .check(matches(isDisplayed()))
       .perform(click())
     onView(withId(R.id.eTPassphrase))
-      .perform(
-        replaceText(WEB_PORTAL_PASSWORD),
-        closeSoftKeyboard()
-      )
+      .perform(replaceText(WEB_PORTAL_PASSWORD))
     onView(withId(R.id.btSetPassword))
       .perform(click())
 
