@@ -2,7 +2,6 @@ version: 2
 updates:
 - package-ecosystem: gradle
   directory: "/"
-  target-branch: "issue_3186_Fix-Dependabot-functionality"
   schedule:
     interval: weekly
     day: "sunday"
@@ -54,4 +53,4 @@ updates:
       applies-to: version-updates
       patterns:
         - "org.eclipse.angus*"
-  open-pull-requests-limit: 1
+  open-pull-requests-limit: 10
