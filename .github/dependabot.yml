@@ -2,6 +2,7 @@ version: 2
 updates:
 - package-ecosystem: gradle
   directory: "/"
+  target-branch: "issue_3186_Fix-Dependabot-functionality"
   schedule:
     interval: weekly
     day: "sunday"
