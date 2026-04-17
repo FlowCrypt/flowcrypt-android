@@ -54,4 +54,4 @@ updates:
       applies-to: version-updates
       patterns:
         - "org.eclipse.angus*"
-  open-pull-requests-limit: 10
+  open-pull-requests-limit: 1
