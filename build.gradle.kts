@@ -7,7 +7,7 @@
 apply(from = "$rootDir/ext.gradle.kts")
 
 plugins {
-  id("com.android.application") version "9.0.0" apply false
+  id("com.android.application") version "9.1.1" apply false
   id("androidx.navigation.safeargs.kotlin") version "2.9.6" apply false
   id("com.starter.easylauncher") version "6.4.1" apply false
   id("org.jetbrains.kotlin.plugin.parcelize") version "2.3.0" apply false
