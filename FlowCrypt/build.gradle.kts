@@ -479,9 +479,9 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:5.3.2")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  testImplementation("org.robolectric:robolectric:4.16")
+  testImplementation("org.robolectric:robolectric:4.16.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.3.0")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.3.21")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.4")
   testImplementation("io.github.classgraph:classgraph:4.8.184")
@@ -545,7 +545,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
   implementation("org.pgpainless:pgpainless-core:2.0.2")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
