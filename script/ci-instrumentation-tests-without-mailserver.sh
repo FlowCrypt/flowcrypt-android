@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#
+# © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+# Contributors: denbond7
+#
+
 if [[ -z "$1" ]];
  then
   echo "numShards is unset or set to the empty string"
@@ -28,7 +33,7 @@ if [[ ${varShardIndex} -ge ${varNumShards} ]]
    # -e log true \
    # com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
 
-  ./gradlew --console=plain :FlowCrypt:connectedConsumerUiTestsAndroidTest \
+  ./gradlew --console=plain --no-daemon --build-cache --max-workers=2 :FlowCrypt:connectedConsumerUiTestsAndroidTest \
     -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
     -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" \
     -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}"
