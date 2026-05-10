@@ -38,7 +38,7 @@ echo -ne '\n' | avdmanager -v create avd \
 # This file belongs to the fresh AVD created above.
 echo "hw.ramSize=2048" >> "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"
 
-cat "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"
+#cat "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"# debug
 
 #"$ANDROID_HOME/emulator/emulator" -list-avds # debug
 
