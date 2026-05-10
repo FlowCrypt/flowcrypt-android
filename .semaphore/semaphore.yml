@@ -50,19 +50,12 @@ global_job_config:
       - export SDK_SUM=$(checksum ./script/ci-install-android-sdk.sh)
       - export APP_GRADLE_CACHE=project-gradle-cache-$GRADLE_SUM # project .gradle cache, per Gradle config hash
       - export ANDROID_SDK_CACHE=android-sdk-$SDK_SUM # Android SDK cache, per SDK installer hash
-      - export BUILD_CXX_CACHE=build-cxx-cache-$SEMAPHORE_GIT_BRANCH-$GRADLE_SUM  # per branch and Gradle config hash
-      - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$GRADLE_SUM  # per branch and Gradle config hash
       # restore app caches
       - cache restore $APP_GRADLE_CACHE
-      - cache restore $BUILD_CXX_CACHE
-      - cache restore $BUILD_NATIVE_CACHE
       # restore global caches
       - cache restore $ANDROID_SDK_CACHE
       - cache restore gradle-wrapper
       - cache restore gradle-cache-$GRADLE_SUM
-      - cache restore gradle-cache
-      - cache restore android-build-cache-$GRADLE_SUM
-      - cache restore android-build-cache
       # Install Android dependencies if needed
       - ./script/ci-install-android-sdk.sh
       # Install ninja
@@ -87,8 +80,6 @@ blocks:
             # store app cache
             - echo "Store the app cache"
             - cache has_key $APP_GRADLE_CACHE || cache store $APP_GRADLE_CACHE .gradle
-            - cache has_key $BUILD_CXX_CACHE || cache store $BUILD_CXX_CACHE FlowCrypt/.cxx
-            - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE FlowCrypt/.externalNativeBuild
 
             # clean and store global cache
             - echo "Store the global cache"
@@ -96,7 +87,6 @@ blocks:
             - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE $ANDROID_HOME
             - cache has_key gradle-wrapper || cache store gradle-wrapper ~/.gradle/wrapper
             - cache has_key gradle-cache-$GRADLE_SUM || cache store gradle-cache-$GRADLE_SUM ~/.gradle/caches
-            - cache has_key android-build-cache-$GRADLE_SUM || cache store android-build-cache-$GRADLE_SUM ~/.android/build-cache
 
   - name: 'Testing'
     task:
