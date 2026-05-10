@@ -7,5 +7,5 @@
 
 set -euo pipefail
 
-./gradlew --console=plain --no-daemon --build-cache --max-workers=2 :FlowCrypt:connectedEnterpriseUiTestsAndroidTest \
+./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:connectedEnterpriseUiTestsAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.ReadyForCIAndFlakyFilter

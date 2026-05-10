@@ -33,7 +33,7 @@ fi
 # -e log true \
 # com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
 
-./gradlew --console=plain --no-daemon --build-cache --max-workers=2 :FlowCrypt:connectedConsumerUiTestsAndroidTest \
+./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:connectedConsumerUiTestsAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
   -Pandroid.testInstrumentationRunnerArguments.numShards="${numShards}" \
   -Pandroid.testInstrumentationRunnerArguments.shardIndex="${shardIndex}"

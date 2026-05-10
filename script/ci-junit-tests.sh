@@ -7,4 +7,4 @@
 
 set -euo pipefail
 
-./gradlew --console=plain --no-daemon --build-cache --max-workers=2 :FlowCrypt:testConsumerUiTestsUnitTest
+./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:testConsumerUiTestsUnitTest

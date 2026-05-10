@@ -80,7 +80,7 @@ blocks:
             # print Java version
             - java -version
             # compile project
-            - ./gradlew --console=plain --no-daemon --build-cache --max-workers=2 assembleConsumerUiTests
+            - ./gradlew --console=plain --no-daemon --build-cache assembleConsumerUiTests
       epilogue:
         on_pass:
           commands:
