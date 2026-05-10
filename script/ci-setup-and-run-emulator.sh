@@ -42,4 +42,5 @@ cat "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"
   -wipe-data \
   -gpu swiftshader_indirect \
   -read-only \
-  -no-metrics &
+  -no-metrics \
+  -dns-server 10.0.2.2 &

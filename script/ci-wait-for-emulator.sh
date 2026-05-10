@@ -32,6 +32,10 @@ adb shell "iptables -t nat -A OUTPUT -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT
 # Forwards requests on a specific host port to a different port on a device.
 adb forward tcp:1212 tcp:1212
 
+# Print DNS configuration for easier CI debugging.
+adb shell getprop net.dns1 || true
+adb shell getprop net.dns2 || true
+
 # Check that the emulator has internet connection.
 for attempt in {1..5}; do
   if adb shell "ping -c 1 www.google.com"; then
@@ -40,6 +44,22 @@ for attempt in {1..5}; do
 
   if [[ "$attempt" -eq 5 ]]; then
     echo "Emulator has no internet connection"
+    exit 1
+  fi
+
+  sleep 2
+done
+
+# Check that Android emulator can resolve FlowCrypt test domains.
+# Host-side dnsmasq resolving is not enough: the emulator has its own DNS configuration.
+for attempt in {1..5}; do
+  if adb shell "ping -c 1 fes.flowcrypt.test"; then
+    break
+  fi
+
+  if [[ "$attempt" -eq 5 ]]; then
+    echo "Emulator can't resolve fes.flowcrypt.test"
+    echo "Make sure ci-setup-and-run-emulator.sh starts emulator with: -dns-server 10.0.2.2"
     exit 1
   fi
 
