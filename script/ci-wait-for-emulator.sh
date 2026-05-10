@@ -9,6 +9,7 @@ set -euo pipefail
 set -o xtrace
 
 adb wait-for-device
+# shellcheck disable=SC2016
 adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
 adb shell wm dismiss-keyguard || true
 
@@ -21,14 +22,8 @@ adb shell settings put global animator_duration_scale 0
 # as we can't use 443 directly for a mock web server.
 ###################################################################################################
 adb root
-
-adb remount
-
-adb shell 'echo "10.0.2.2 fes.flowcrypt.test" >> /system/etc/hosts'
-adb shell 'echo "10.0.2.2 fel.flowcrypt.test" >> /system/etc/hosts'
-adb shell 'echo "10.0.2.2 fel.localhost" >> /system/etc/hosts'
-
 adb wait-for-device
+# shellcheck disable=SC2016
 adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
 
 adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
