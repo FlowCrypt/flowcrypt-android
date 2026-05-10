@@ -21,7 +21,21 @@ adb shell settings put global animator_duration_scale 0
 # To test WKD we need to route all traffic for localhost:443 to localhost:1212
 # as we can't use 443 directly for a mock web server.
 ###################################################################################################
-adb root
+
+adb root || {
+  echo "adb root failed, restarting adb and waiting for emulator..."
+
+  adb kill-server || true
+  adb start-server
+
+  adb wait-for-device
+
+  # shellcheck disable=SC2016
+  adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
+}
+
+sleep 2
+
 adb wait-for-device
 # shellcheck disable=SC2016
 adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
