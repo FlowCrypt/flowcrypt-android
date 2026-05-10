@@ -40,26 +40,6 @@ adb wait-for-device
 # shellcheck disable=SC2016
 adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
 
-# Give Android connectivity service time to restore DNS after adb root/adbd restart.
-for attempt in {1..30}; do
-  DNS1="$(adb shell getprop net.dns1 | tr -d '\r' || true)"
-  DNS2="$(adb shell getprop net.dns2 | tr -d '\r' || true)"
-
-  echo "DNS attempt ${attempt}: net.dns1=${DNS1}, net.dns2=${DNS2}"
-
-  if [[ -n "$DNS1" || -n "$DNS2" ]]; then
-    break
-  fi
-
-  if [[ "$attempt" -eq 30 ]]; then
-    echo "Emulator DNS was not initialized after adb root"
-    adb shell dumpsys connectivity || true
-    exit 1
-  fi
-
-  sleep 2
-done
-
 adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
 adb shell "iptables -t nat -A PREROUTING -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"
 adb shell "iptables -t nat -A OUTPUT -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"
@@ -73,12 +53,12 @@ adb shell getprop net.dns1 || true
 adb shell getprop net.dns2 || true
 
 # Check that the emulator has internet connection.
-for attempt in {1..5}; do
+for attempt in {1..30}; do
   if adb shell "ping -c 1 www.google.com"; then
     break
   fi
 
-  if [[ "$attempt" -eq 5 ]]; then
+  if [[ "$attempt" -eq 30 ]]; then
     echo "Emulator has no internet connection"
     exit 1
   fi
@@ -88,12 +68,12 @@ done
 
 # Check that Android emulator can resolve FlowCrypt test domains.
 # Host-side dnsmasq resolving is not enough: the emulator has its own DNS configuration.
-for attempt in {1..5}; do
+for attempt in {1..30}; do
   if adb shell "ping -c 1 fes.flowcrypt.test"; then
     break
   fi
 
-  if [[ "$attempt" -eq 5 ]]; then
+  if [[ "$attempt" -eq 30 ]]; then
     echo "Emulator can't resolve fes.flowcrypt.test"
     exit 1
   fi
