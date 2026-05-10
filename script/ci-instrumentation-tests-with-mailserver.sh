@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #
 # © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
 # Contributors: denbond7
 #
+
+set -euo pipefail
 
 #print test names
 #adb shell am instrument -r -w \
