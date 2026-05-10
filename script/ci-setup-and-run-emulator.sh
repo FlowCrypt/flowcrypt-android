@@ -14,10 +14,19 @@ ABI="google_apis/x86_64"
 
 "$ANDROID_HOME/emulator/emulator" -accel-check
 
-# Keep the emulator fresh for every CI job. Do not reuse AVD state.
-rm -rf "$HOME/.android/avd/${AVD_NAME}.avd" "$HOME/.android/avd/${AVD_NAME}.ini"
+# Keep the emulator fresh for every CI job.
+# Remove existing AVD completely before creating a new one.
+if avdmanager list avd | grep -q "Name: ${AVD_NAME}"; then
+  echo "Removing existing AVD: ${AVD_NAME}"
 
-avdmanager list devices #debug
+  avdmanager delete avd --name "$AVD_NAME" || true
+fi
+
+rm -rf \
+  "$HOME/.android/avd/${AVD_NAME}.avd" \
+  "$HOME/.android/avd/${AVD_NAME}.ini"
+
+#avdmanager list devices # debug
 
 echo -ne '\n' | avdmanager -v create avd \
   --name "$AVD_NAME" \
@@ -25,11 +34,13 @@ echo -ne '\n' | avdmanager -v create avd \
   --device "$DEVICE_NAME" \
   --abi "$ABI"
 
-# Keep RAM modest for e2-standard-2. This file belongs to the fresh AVD created above.
+# Keep RAM modest for e2-standard-2.
+# This file belongs to the fresh AVD created above.
 echo "hw.ramSize=2048" >> "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"
+
 cat "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"
 
-"$ANDROID_HOME/emulator/emulator" -list-avds #debug
+#"$ANDROID_HOME/emulator/emulator" -list-avds # debug
 
 "$ANDROID_HOME/emulator/emulator" \
   -avd "$AVD_NAME" \
