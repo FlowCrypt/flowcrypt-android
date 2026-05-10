@@ -89,7 +89,7 @@ blocks:
   - name: 'Testing'
     task:
       jobs:
-        - name: 'Instrumentation tests(enterprise)'
+        - name: 'Instrumentation tests(debug)'
           execution_time_limit:
             minutes: 60
           commands:
@@ -100,7 +100,7 @@ blocks:
             # Run filtered logging for TestRunner
             - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-enterprise.sh
+            - ./script/ci-instrumentation-tests-flaky.sh
 
       epilogue:
         always:

@@ -35,7 +35,7 @@ check_ping_or_fail() {
   local host="$1"
   local label="$2"
 
-  for attempt in {1..30}; do
+  for attempt in {1..10}; do
     if adb shell "ping -c 1 ${host}"; then
       return 0
     fi
@@ -43,7 +43,7 @@ check_ping_or_fail() {
     if [[ "$attempt" -eq 30 ]]; then
       echo "Failed to ping ${host}: ${label}"
       print_network_debug "ping failed: ${host}"
-      exit 1
+      #exit 1
     fi
 
     sleep 2

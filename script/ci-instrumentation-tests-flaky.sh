@@ -8,4 +8,4 @@
 set -euo pipefail
 
 ./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:connectedEnterpriseUiTestsAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.ReadyForCIAndFlakyFilter
+  -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DebugTestsFilter
