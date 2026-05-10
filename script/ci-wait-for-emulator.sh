@@ -21,6 +21,13 @@ adb shell settings put global animator_duration_scale 0
 # as we can't use 443 directly for a mock web server.
 ###################################################################################################
 adb root
+
+adb remount
+
+adb shell 'echo "10.0.2.2 fes.flowcrypt.test" >> /system/etc/hosts'
+adb shell 'echo "10.0.2.2 fel.flowcrypt.test" >> /system/etc/hosts'
+adb shell 'echo "10.0.2.2 fel.localhost" >> /system/etc/hosts'
+
 adb wait-for-device
 adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
 
@@ -59,7 +66,6 @@ for attempt in {1..5}; do
 
   if [[ "$attempt" -eq 5 ]]; then
     echo "Emulator can't resolve fes.flowcrypt.test"
-    echo "Make sure ci-setup-and-run-emulator.sh starts emulator with: -dns-server 10.0.2.2"
     exit 1
   fi
 
