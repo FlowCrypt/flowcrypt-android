@@ -96,7 +96,6 @@ fi
 
 ###################################################################################################
 check_ping_or_fail "www.google.com" "internet connection"
-check_ping_or_fail "fes.flowcrypt.test" "flowcrypt.test after iptables and adb forward"
 
 echo "Emulator is ready"
 set +o xtrace
