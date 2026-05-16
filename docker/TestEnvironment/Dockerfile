@@ -53,6 +53,7 @@ RUN chmod +x /tmp/ci-install-android-sdk.sh \
     && ANDROID_PLATFORM="${ANDROID_PLATFORM}" \
       ANDROID_SYSTEM_IMAGE="${ANDROID_SYSTEM_IMAGE}" \
       ANDROID_BUILD_TOOLS="${ANDROID_BUILD_TOOLS}" \
+      INSTALL_KVM_DEPS=0 \
       RUN_KVM_CHECK=0 \
       /tmp/ci-install-android-sdk.sh \
     && sdkmanager --list_installed \

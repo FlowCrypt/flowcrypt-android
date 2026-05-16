@@ -22,6 +22,7 @@ fi
 # -----------------------------
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+INSTALL_KVM_DEPS="${INSTALL_KVM_DEPS:-1}"
 RUN_KVM_CHECK="${RUN_KVM_CHECK:-1}"
 ANDROID_PLATFORM="${ANDROID_PLATFORM:-android-36}"
 ANDROID_SYSTEM_IMAGE="${ANDROID_SYSTEM_IMAGE:-system-images;android-36;google_apis;x86_64}"
@@ -90,7 +91,9 @@ check_cmdline_tools_latest_or_fail
 # -----------------------------
 # KVM deps (as in your script)
 # -----------------------------
-sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+if [[ "$INSTALL_KVM_DEPS" == "1" ]]; then
+  sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+fi
 if [[ "$RUN_KVM_CHECK" == "1" ]]; then
   sudo kvm-ok
 fi
