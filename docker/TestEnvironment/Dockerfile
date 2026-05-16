@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-21-jdk \
     unzip \
     wget \
+    iputils-ping \
+    git \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 COPY script/ci-install-android-sdk.sh /tmp/ci-install-android-sdk.sh
