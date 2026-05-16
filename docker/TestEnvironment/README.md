@@ -15,6 +15,14 @@ The image installs:
 
 ## Build
 
+Use the helper script:
+
+```bash
+./docker/TestEnvironment/rebuild.sh
+```
+
+Equivalent manual command:
+
 ```bash
 docker build -t flowcrypt/android-test-env -f docker/TestEnvironment/Dockerfile .
 ```
@@ -37,11 +45,18 @@ The container includes the emulator binaries, but actual emulator launch usually
 - `/dev/kvm` passed through to the container
 - additional Docker flags such as `--device /dev/kvm`
 
-Example:
+Use the helper script:
+
+```bash
+./docker/TestEnvironment/run.sh
+```
+
+Equivalent manual command:
 
 ```bash
 docker run --rm -it \
   --device /dev/kvm \
+  --name flowcrypt-android-test-env \
   flowcrypt/android-test-env \
   bash
 ```

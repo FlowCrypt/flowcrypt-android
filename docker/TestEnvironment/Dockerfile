@@ -42,4 +42,8 @@ RUN chmod +x /opt/flowcrypt/scripts/create-avd.sh /opt/flowcrypt/scripts/run-emu
 
 WORKDIR /workspace
 
+#RUN apt-get update && apt-get install -y --no-install-recommends \
+#    iputils-ping \
+#    && rm -rf /var/lib/apt/lists/*
+
 CMD ["/bin/bash"]
