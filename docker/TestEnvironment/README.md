@@ -22,10 +22,15 @@ docker build -t flowcrypt-android-test-env -f docker/TestEnvironment/Dockerfile 
 ## Create an AVD inside the container
 
 ```bash
-docker run --rm -it flowcrypt-android-test-env create-avd.sh
+docker run --rm -it flowcrypt-android-test-env /opt/flowcrypt/scripts/create-avd.sh
 ```
 
 ## Run the emulator inside the container
+
+The container includes reusable helpers:
+
+- `/opt/flowcrypt/scripts/create-avd.sh`
+- `/opt/flowcrypt/scripts/run-emulator.sh`
 
 The container includes the emulator binaries, but actual emulator launch usually needs:
 
@@ -44,6 +49,6 @@ docker run --rm -it \
 Then inside the container:
 
 ```bash
-create-avd.sh
-emulator -avd ci-emulator -no-window -no-boot-anim -no-audio -gpu swiftshader_indirect
+/opt/flowcrypt/scripts/create-avd.sh
+/opt/flowcrypt/scripts/run-emulator.sh
 ```

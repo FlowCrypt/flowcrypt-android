@@ -58,8 +58,10 @@ RUN chmod +x /tmp/ci-install-android-sdk.sh \
     && sdkmanager --list_installed \
     && rm -f /tmp/ci-install-android-sdk.sh
 
-COPY docker/TestEnvironment/create-avd.sh /usr/local/bin/create-avd.sh
-RUN chmod +x /usr/local/bin/create-avd.sh
+RUN mkdir -p /opt/flowcrypt/scripts
+COPY script/create-avd.sh /opt/flowcrypt/scripts/create-avd.sh
+COPY script/run-emulator.sh /opt/flowcrypt/scripts/run-emulator.sh
+RUN chmod +x /opt/flowcrypt/scripts/create-avd.sh /opt/flowcrypt/scripts/run-emulator.sh
 
 WORKDIR /workspace
 

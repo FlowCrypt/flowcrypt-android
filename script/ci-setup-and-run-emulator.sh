@@ -7,50 +7,8 @@
 
 set -euo pipefail
 
-AVD_NAME="ci-emulator"
-SYSTEM_IMAGE="system-images;android-36;google_apis;x86_64"
-DEVICE_NAME="pixel_9"
-ABI="google_apis/x86_64"
-
-"$ANDROID_HOME/emulator/emulator" -accel-check
-
-# Keep the emulator fresh for every CI job.
-# Remove existing AVD completely before creating a new one.
-if avdmanager list avd | grep -q "Name: ${AVD_NAME}"; then
-  echo "Removing existing AVD: ${AVD_NAME}"
-
-  avdmanager delete avd --name "$AVD_NAME" || true
-fi
-
-rm -rf \
-  "$HOME/.android/avd/${AVD_NAME}.avd" \
-  "$HOME/.android/avd/${AVD_NAME}.ini"
-
-#avdmanager list devices # debug
-
-echo -ne '\n' | avdmanager -v create avd \
-  --name "$AVD_NAME" \
-  --package "$SYSTEM_IMAGE" \
-  --device "$DEVICE_NAME" \
-  --abi "$ABI"
-
-# Keep RAM modest for e2-standard-2.
-# This file belongs to the fresh AVD created above.
-echo "hw.ramSize=2048" >> "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"
-
-#cat "$HOME/.android/avd/${AVD_NAME}.avd/config.ini"# debug
-
-#"$ANDROID_HOME/emulator/emulator" -list-avds # debug
-
-"$ANDROID_HOME/emulator/emulator" \
-  -avd "$AVD_NAME" \
-  -no-window \
-  -no-boot-anim \
-  -no-audio \
-  -no-snapshot \
-  -no-snapshot-load \
-  -no-snapshot-save \
-  -wipe-data \
-  -gpu swiftshader_indirect \
-  -read-only \
-  -no-metrics &
+AVD_RAM_SIZE=2048 ./script/create-avd.sh
+EMULATOR_GPU_MODE=swiftshader_indirect \
+EMULATOR_READ_ONLY=1 \
+EMULATOR_WIPE_DATA=1 \
+./script/run-emulator.sh
