@@ -16,13 +16,13 @@ The image installs:
 ## Build
 
 ```bash
-docker build -t flowcrypt-android-test-env -f docker/TestEnvironment/Dockerfile .
+docker build -t flowcrypt/android-test-env -f docker/TestEnvironment/Dockerfile .
 ```
 
 ## Create an AVD inside the container
 
 ```bash
-docker run --rm -it flowcrypt-android-test-env /opt/flowcrypt/scripts/create-avd.sh
+docker run --rm -it flowcrypt/android-test-env /opt/flowcrypt/scripts/create-avd.sh
 ```
 
 ## Run the emulator inside the container
@@ -42,7 +42,7 @@ Example:
 ```bash
 docker run --rm -it \
   --device /dev/kvm \
-  flowcrypt-android-test-env \
+  flowcrypt/android-test-env \
   bash
 ```
 
