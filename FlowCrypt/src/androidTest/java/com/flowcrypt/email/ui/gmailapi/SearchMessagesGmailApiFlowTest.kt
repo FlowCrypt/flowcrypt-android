@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.junit.annotations.DebugTest
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -49,6 +50,7 @@ import java.util.concurrent.TimeUnit
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
+@DebugTest
 class SearchMessagesGmailApiFlowTest : BaseGmailApiTest() {
 
   override val mockWebServerRule =

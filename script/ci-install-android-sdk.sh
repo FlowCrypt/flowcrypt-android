@@ -22,11 +22,16 @@ fi
 # -----------------------------
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+INSTALL_KVM_DEPS="${INSTALL_KVM_DEPS:-1}"
+RUN_KVM_CHECK="${RUN_KVM_CHECK:-1}"
+ANDROID_PLATFORM="${ANDROID_PLATFORM:-android-36}"
+ANDROID_SYSTEM_IMAGE="${ANDROID_SYSTEM_IMAGE:-system-images;android-36;google_apis;x86_64}"
+ANDROID_BUILD_TOOLS="${ANDROID_BUILD_TOOLS:-}"
 
 # -----------------------------
 # Pin cmdline-tools archive here
 # -----------------------------
-SDK_ARCHIVE="commandlinetools-linux-14742923_latest.zip"
+SDK_ARCHIVE="${SDK_ARCHIVE:-commandlinetools-linux-14742923_latest.zip}"
 
 # ------------------------------------------------------------
 # Check that SDK_ARCHIVE is the latest Android cmdline-tools
@@ -86,16 +91,20 @@ check_cmdline_tools_latest_or_fail
 # -----------------------------
 # KVM deps (as in your script)
 # -----------------------------
-sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
-sudo kvm-ok
+if [[ "$INSTALL_KVM_DEPS" == "1" ]]; then
+  sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+fi
+if [[ "$RUN_KVM_CHECK" == "1" ]]; then
+  sudo kvm-ok
+fi
 
 # -----------------------------
 # Install SDK if ~/Android doesn't exist (as in your script)
 # -----------------------------
-if [[ -d "$HOME/Android" ]]; then
-  echo "$HOME/Android already exists, skipping installation"
+if [[ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]]; then
+  echo "$ANDROID_HOME already exists, skipping installation"
 else
-  echo "$HOME/Android does not exist, installing"
+  echo "$ANDROID_HOME does not exist, installing"
   mkdir -p "$ANDROID_HOME"
 
   # download, unpack and remove sdk archive
@@ -122,10 +131,13 @@ else
 
   # Install Android SDK
   (echo "yes" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null | grep -v = || true)
-  ( sleep 5; echo "y" ) | ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" > /dev/null | grep -v = || true)
+  ( sleep 5; echo "y" ) | ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platforms;${ANDROID_PLATFORM}" > /dev/null | grep -v = || true)
   ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platform-tools" | grep -v = || true)
   ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "emulator" | grep -v = || true)
-  (echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "system-images;android-36;google_apis;x86_64" > /dev/null | grep -v = || true)
+  if [[ -n "$ANDROID_BUILD_TOOLS" ]]; then
+    ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "build-tools;${ANDROID_BUILD_TOOLS}" | grep -v = || true)
+  fi
+  (echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SYSTEM_IMAGE}" > /dev/null | grep -v = || true)
 fi
 
 # Uncomment this for debug
