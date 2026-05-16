@@ -15,34 +15,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
     curl \
-    dnsutils \
-    git \
-    libasound2t64 \
-    libc6 \
-    libc6-dev \
     libdbus-1-3 \
     libfontconfig1 \
-    libgcc-s1 \
     libgl1 \
-    libglu1-mesa \
     libnspr4 \
     libnss3 \
-    libpulse0 \
-    libstdc++6 \
     libu2f-udev \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxi6 \
     libxkbcommon0 \
-    libxrandr2 \
-    libxrender1 \
-    libxtst6 \
-    openjdk-21-jdk \
-    sudo \
+    openjdk-21-jre-headless \
     unzip \
     wget \
     && rm -rf /var/lib/apt/lists/*
