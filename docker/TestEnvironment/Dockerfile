@@ -15,14 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
     curl \
-    libdbus-1-3 \
-    libfontconfig1 \
-    libgl1 \
-    libnspr4 \
-    libnss3 \
-    libu2f-udev \
-    libxkbcommon0 \
-    openjdk-21-jre-headless \
+    openjdk-21-jdk \
     unzip \
     wget \
     && rm -rf /var/lib/apt/lists/*
