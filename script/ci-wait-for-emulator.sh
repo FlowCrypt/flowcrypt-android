@@ -12,6 +12,7 @@ FLOWCRYPT_TEST_DOMAINS=(
   "flowcrypt.test"
   "api.flowcrypt.test"
   "attester.flowcrypt.test"
+  "fes.flowcrypt.test"
 )
 
 wait_for_boot_completed() {
