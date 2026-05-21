@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     wget \
     iputils-ping \
+    dnsutils \
     git \
     sudo \
     && rm -rf /var/lib/apt/lists/*
@@ -42,10 +43,5 @@ COPY script/ci-wait-for-emulator.sh /opt/flowcrypt/scripts/ci-wait-for-emulator.
 RUN chmod +x /opt/flowcrypt/scripts/create-avd.sh /opt/flowcrypt/scripts/run-emulator.sh /opt/flowcrypt/scripts/ci-wait-for-emulator.sh
 
 WORKDIR /workspace
-
-#RUN apt-get update && apt-get install -y --no-install-recommends \
-#    iputils-ping \
-#    dnsutils \
-#    && rm -rf /var/lib/apt/lists/*
 
 CMD ["/bin/bash"]
