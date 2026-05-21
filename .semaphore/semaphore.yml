@@ -36,9 +36,6 @@ global_job_config:
       # redirect the systemd-resolved to use the localhost as the primary nameserver
       - sudo sed -i '1inameserver 127.0.0.1\' /etc/resolv.conf
       - sudo systemctl restart dnsmasq
-      # redirect emulator HTTPS traffic (:443 -> :1212)
-      - sudo iptables -t nat -D OUTPUT -p tcp --dport 443 -m addrtype --dst-type LOCAL -j REDIRECT --to-ports 1212 2>/dev/null || true
-      - sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -m addrtype --dst-type LOCAL -j REDIRECT --to-ports 1212
       # print some debug info
       - ping fel.localhost -c 1
       - ping fel.flowcrypt.test -c 1

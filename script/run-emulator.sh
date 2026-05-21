@@ -9,7 +9,6 @@ set -euo pipefail
 
 AVD_NAME="${AVD_NAME:-ci-emulator}"
 EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-swiftshader_indirect}"
-EMULATOR_WRITABLE_SYSTEM="${EMULATOR_WRITABLE_SYSTEM:-1}"
 EMULATOR_WIPE_DATA="${EMULATOR_WIPE_DATA:-1}"
 
 "$ANDROID_HOME/emulator/emulator" -accel-check
@@ -23,15 +22,12 @@ emulator_args=(
   -no-snapshot-load
   -no-snapshot-save
   -gpu "$EMULATOR_GPU_MODE"
+  -read-only
   -no-metrics
 )
 
 if [[ "$EMULATOR_WIPE_DATA" == "1" ]]; then
   emulator_args+=(-wipe-data)
-fi
-
-if [[ "$EMULATOR_WRITABLE_SYSTEM" == "1" ]]; then
-  emulator_args+=(-writable-system)
 fi
 
 "$ANDROID_HOME/emulator/emulator" "${emulator_args[@]}" &
