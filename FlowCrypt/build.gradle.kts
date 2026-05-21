@@ -6,8 +6,6 @@
 
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ResValue
-import org.gradle.api.GradleException
-import java.io.File
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
