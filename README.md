@@ -26,16 +26,18 @@ Please follow these steps to setup your virtual or physical device:
   `127.0.0.1:1212`. For that purpose, you can use
   the [script/ci-wait-for-emulator.sh](https://github.com/FlowCrypt/flowcrypt-android/blob/master/script/ci-wait-for-emulator.sh#L13)
   script.
-- Additionally, the test environment should handle all requests to `*.flowcrypt.test`. All traffic to `*.flowcrypt.test` should be routed to `localhost (127.0.0.1)`. You can use a DNS server to do this. For example, using these commands:
+- Additionally, the test environment should handle all requests to `*.flowcrypt.test`. All traffic to `*.flowcrypt.test` should be routed to `localhost (127.0.0.1)`. Use the `./script/ci-setup-DNS.sh` helper script:
 
 ```bash
-1. sudo apt install -y dnsmasq resolvconf
-2. echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
-3. echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-4. echo "address=/flowcrypt.test/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-5. echo "address=/localhost/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-6. sudo systemctl restart dnsmasq
+./script/ci-setup-DNS.sh
 ```
+
+The script:
+- Installs `dnsmasq` and `dnsutils`.
+- Creates `/etc/dnsmasq.d/flowcrypt.conf` with local rules for `*.test` and `*.localhost`.
+- Sets `no-resolv` with upstream DNS servers (`8.8.8.8` and `1.1.1.1`).
+- Sets `/etc/resolv.conf` to `nameserver 127.0.0.1`.
+- Restarts `dnsmasq` and verifies resolution with `dig` and `ping`.
 
 ### ✔️ Test types
 
