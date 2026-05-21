@@ -26,14 +26,14 @@ global_job_config:
   prologue:
     commands:
       - sudo apt-get update
-      # fix DNS to ping *.localhost and *.flowcrypt.test
-      - ./script/ci-setup-DNS.sh
       # use JAVA 21 by default
       - sem-version java 21
       # general settings
       - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
+      # fix DNS to ping *.localhost and *.flowcrypt.test
+      - ./script/ci-setup-DNS.sh
       # init environment variables
       - export GRADLE_SUM=$(checksum build.gradle.kts)-$(checksum FlowCrypt/build.gradle.kts)
       - export SDK_SUM=$(checksum ./script/ci-install-android-sdk.sh)
