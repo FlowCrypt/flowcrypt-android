@@ -45,16 +45,33 @@ The container includes the emulator binaries, but actual emulator launch usually
 - `/dev/kvm` passed through to the container
 - additional Docker flags such as `--device /dev/kvm`
 
+If you need emulator DNS resolution for `*.localhost` / `*.flowcrypt.test` from
+`docker/HttpsTestWebServer`, run that container first so host `dnsmasq` is available on
+`127.0.0.1:53`. `run.sh` starts this container with `--network host --dns 127.0.0.1`.
+
+Because `--network host` is used, `adb` inside container can see host-side emulator devices
+through host `adb` server. To avoid mixing devices, stop host emulator(s) before testing or run
+container `adb` on another port (for example `export ADB_SERVER_PORT=5038`).
+
 Use the helper script:
 
 ```bash
 ./docker/TestEnvironment/run.sh
 ```
 
+You can override DNS forwarded to emulator:
+
+```bash
+EMULATOR_DNS_SERVER=127.0.0.1 ./docker/TestEnvironment/run.sh
+```
+
 Equivalent manual command:
 
 ```bash
 docker run --rm -it \
+  --network host \
+  --dns 127.0.0.1 \
+  -e EMULATOR_DNS_SERVER=127.0.0.1 \
   --device /dev/kvm \
   --name flowcrypt-android-test-env \
   flowcrypt/android-test-env \
@@ -66,4 +83,12 @@ Then inside the container:
 ```bash
 /opt/flowcrypt/scripts/create-avd.sh
 /opt/flowcrypt/scripts/run-emulator.sh
+```
+
+DNS checks:
+
+```bash
+dig @127.0.0.1 fel.flowcrypt.test +short
+adb shell getprop net.dns1
+adb shell ping -c 1 fel.flowcrypt.test
 ```
