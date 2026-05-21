@@ -1,6 +1,6 @@
 FROM nginx:1.27-alpine
 
-RUN apk add --no-cache dnsmasq
+RUN apk add --no-cache dnsmasq bind-tools iputils
 
 COPY docker/HttpsTestWebServer/nginx.conf /etc/nginx/conf.d/default.conf
 
