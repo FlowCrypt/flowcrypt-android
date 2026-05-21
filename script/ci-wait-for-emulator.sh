@@ -19,8 +19,9 @@ adb root
 # Need wait for the root environment
 sleep 20
 adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
-adb shell "iptables -t nat -A PREROUTING -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"
-adb shell "iptables -t nat -A OUTPUT -s 127.0.0.1 -p tcp --dport 443 -j REDIRECT --to 1212"
+adb shell "iptables -t nat -D OUTPUT -p tcp -d 127.0.0.1 --dport 443 -j REDIRECT --to-ports 1212" || true
+adb shell "iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 443 -j REDIRECT --to-ports 1212"
+adb shell "iptables -t nat -S OUTPUT"
 ###################################################################################################
 
 # https://developer.android.com/tools/adb#forwardports

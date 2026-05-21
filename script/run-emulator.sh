@@ -22,6 +22,7 @@ emulator_args=(
   -no-snapshot-load
   -no-snapshot-save
   -gpu "$EMULATOR_GPU_MODE"
+  -dns-server 10.0.2.2
   -read-only
   -no-metrics
 )
