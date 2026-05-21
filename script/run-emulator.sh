@@ -22,7 +22,11 @@ emulator_args=(
   -no-snapshot-load
   -no-snapshot-save
   -gpu "$EMULATOR_GPU_MODE"
-  -dns-server 10.0.2.2
+
+  # This value is used by the emulator process on the host.
+  # Android guest will still see 10.0.2.3 as DNS, but that proxy will forward to host 127.0.0.1.
+  -dns-server 127.0.0.1
+
   -read-only
   -no-metrics
 )

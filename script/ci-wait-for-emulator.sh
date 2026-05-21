@@ -5,7 +5,6 @@
 #
 
 set -euo pipefail
-set -o xtrace
 
 wait_for_boot_completed() {
   adb wait-for-device
@@ -114,13 +113,17 @@ adb shell settings put global animator_duration_scale 0
 # To test WKD we need to route all traffic for localhost:443 to localhost:1212
 # as we can't use 443 directly for a mock web server.
 
+echo "[debug] DNS before adb root"
+adb shell dumpsys connectivity | grep -iE 'DnsAddresses|ServerAddress|Active default network' || true
+adb shell ping -c 1 www.google.com || true
+
 adb root
-
-# adb root restarts adbd, so wait until the device is available again.
 wait_for_boot_completed
-
-# adb root can temporarily reset Android networking.
 wait_for_network_after_adb_root
+
+echo "[debug] DNS after adb root"
+adb shell dumpsys connectivity | grep -iE 'DnsAddresses|ServerAddress|Active default network' || true
+adb shell ping -c 1 www.google.com || true
 
 adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
 
@@ -143,5 +146,3 @@ check_ping_or_fail "www.google.com" "internet DNS"
 check_ping_or_fail "fes.flowcrypt.test" "flowcrypt.test DNS/reachability"
 
 echo "Emulator is ready"
-
-set +o xtrace
