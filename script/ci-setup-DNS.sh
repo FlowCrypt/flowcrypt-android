@@ -28,11 +28,15 @@ address=/test/127.0.0.1
 address=/localhost/127.0.0.1
 EOF
 
+echo "Configuring host resolver to use dnsmasq..."
+echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf >/dev/null
+
 echo "Restarting dnsmasq..."
 sudo systemctl restart dnsmasq
 
 echo "DNS debug info:"
 sudo ss -lunp | grep ':53' || true
+cat /etc/resolv.conf
 
 echo "Checking dnsmasq directly..."
 dig @127.0.0.1 fel.localhost
