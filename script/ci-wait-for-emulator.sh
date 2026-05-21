@@ -15,7 +15,9 @@ wait_for_boot_completed() {
 
 wait_for_network_after_adb_root() {
   for attempt in {1..30}; do
-    if adb shell "ping -c 1 10.0.2.2" && adb shell "ping -c 1 8.8.8.8"; then
+    if adb shell "ping -c 1 10.0.2.2" >/dev/null 2>&1 \
+      && adb shell "ping -c 1 8.8.8.8" >/dev/null 2>&1; then
+      echo "Emulator network is ready after adb root"
       return 0
     fi
 
@@ -24,7 +26,9 @@ wait_for_network_after_adb_root() {
   done
 
   echo "Emulator network did not become ready after adb root"
+
   print_network_debug "network after adb root"
+
   exit 1
 }
 
@@ -32,17 +36,21 @@ check_ping_or_fail() {
   local host="$1"
   local label="$2"
 
-  for attempt in {1..10}; do
-    if adb shell "ping -c 1 ${host}"; then
+  for attempt in {1..15}; do
+    if adb shell "ping -c 1 ${host}" >/dev/null 2>&1; then
+      echo "PASS: ${label}"
       return 0
     fi
 
-    echo "Waiting for ${label}... attempt ${attempt}/10"
+    echo "Waiting for ${label}... attempt ${attempt}/15"
+
     sleep 2
   done
 
-  echo "Failed to ping ${host}: ${label}"
+  echo "FAIL: ${label}"
+
   print_network_debug "${label}"
+
   exit 1
 }
 
@@ -103,6 +111,7 @@ print_network_debug() {
 wait_for_boot_completed
 
 adb shell wm dismiss-keyguard
+
 sleep 1
 
 adb shell settings put global window_animation_scale 0
@@ -112,22 +121,32 @@ adb shell settings put global animator_duration_scale 0
 ###################################################################################################
 # To test WKD we need to route all traffic for localhost:443 to localhost:1212
 # as we can't use 443 directly for a mock web server.
+###################################################################################################
 
 echo "[debug] DNS before adb root"
+
 adb shell dumpsys connectivity | grep -iE 'DnsAddresses|ServerAddress|Active default network' || true
 adb shell ping -c 1 www.google.com || true
+adb shell ping -c 1 fes.flowcrypt.test || true
 
 adb root
+
+# adb root restarts adbd, so wait until the device is available again.
 wait_for_boot_completed
+
+# Android networking may take some time to recover after adb root.
 wait_for_network_after_adb_root
 
 echo "[debug] DNS after adb root"
+
 adb shell dumpsys connectivity | grep -iE 'DnsAddresses|ServerAddress|Active default network' || true
 adb shell ping -c 1 www.google.com || true
+adb shell ping -c 1 fes.flowcrypt.test || true
 
 adb shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
 
 adb shell "iptables -t nat -D OUTPUT -p tcp -d 127.0.0.1 --dport 443 -j REDIRECT --to-ports 1212" || true
+
 adb shell "iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 443 -j REDIRECT --to-ports 1212"
 
 adb shell "iptables -t nat -S OUTPUT"
@@ -139,7 +158,10 @@ adb shell "iptables -t nat -S OUTPUT"
 # It can be helpful for debugging a mock web server.
 adb forward tcp:1212 tcp:1212
 
-# Check emulator network before running tests.
+###################################################################################################
+# Final network validation before running tests.
+###################################################################################################
+
 check_ping_or_fail "10.0.2.2" "emulator host gateway"
 check_ping_or_fail "8.8.8.8" "internet raw IP connectivity"
 check_ping_or_fail "www.google.com" "internet DNS"
