@@ -13,6 +13,21 @@ wait_for_boot_completed() {
   adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
 }
 
+run_adb_root_or_fail() {
+  for attempt in {1..10}; do
+    if adb root; then
+      adb wait-for-device
+      return 0
+    fi
+
+    echo "adb root failed... attempt ${attempt}/10"
+    sleep 2
+  done
+
+  echo "adb root failed after 10 attempts"
+  exit 1
+}
+
 wait_for_network_after_adb_root() {
   for attempt in {1..30}; do
     if adb shell "ping -c 1 10.0.2.2" >/dev/null 2>&1 \
@@ -129,7 +144,7 @@ adb shell dumpsys connectivity | grep -iE 'DnsAddresses|ServerAddress|Active def
 adb shell ping -c 1 www.google.com || true
 adb shell ping -c 1 fes.flowcrypt.test || true
 
-adb root
+run_adb_root_or_fail
 
 # adb root restarts adbd, so wait until the device is available again.
 wait_for_boot_completed
