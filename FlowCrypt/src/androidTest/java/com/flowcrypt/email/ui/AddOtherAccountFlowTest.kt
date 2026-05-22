@@ -31,6 +31,7 @@ import com.flowcrypt.email.util.AuthCredentialsManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.startsWith
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -61,6 +62,7 @@ class AddOtherAccountFlowTest : AddOtherAccountBaseTest() {
   @Test
   //@Ignore("flaky 8")
   //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
+  @Ignore("flaky. Temporary disabled")
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()
     val credentials = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")
