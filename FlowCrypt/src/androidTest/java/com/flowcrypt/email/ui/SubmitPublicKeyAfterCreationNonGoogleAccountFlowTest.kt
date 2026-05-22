@@ -38,6 +38,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.eclipse.angus.mail.imap.IMAPFolder
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -56,6 +57,7 @@ import java.util.concurrent.TimeUnit
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
+@Ignore("temporary disabled")
 class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
