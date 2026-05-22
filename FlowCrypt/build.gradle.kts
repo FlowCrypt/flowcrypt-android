@@ -6,8 +6,6 @@
 
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ResValue
-import org.gradle.api.GradleException
-import java.io.File
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
@@ -30,6 +28,15 @@ val keystoreProperties = Properties()
 val propertiesFile = project.file("keystore.properties")
 if (propertiesFile.exists()) {
   keystoreProperties.load(FileInputStream(propertiesFile))
+}
+
+kotlin {
+  jvmToolchain(21)
+
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+  }
 }
 
 android {
@@ -395,20 +402,6 @@ easylauncher {
   }
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(21))
-  }
-}
-
-
-kotlin {
-  compilerOptions {
-    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
-  }
-}
-
 tasks.register("checkCorrectBranch") {
   if (!grgit.branch.current().name.equals("master")) {
     throw GradleException("Please use 'master' branch to generate a release build")
@@ -549,7 +542,7 @@ dependencies {
   implementation("org.pgpainless:pgpainless-core:2.0.2")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
-  implementation("commons-io:commons-io:2.21.0")
+  implementation("commons-io:commons-io:2.22.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.13.1")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
