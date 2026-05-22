@@ -534,7 +534,7 @@ dependencies {
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
   implementation("org.jsoup:jsoup:1.22.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
