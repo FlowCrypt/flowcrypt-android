@@ -513,7 +513,7 @@ dependencies {
 
   implementation("com.google.android.gms:play-services-base:18.10.0")
   implementation("com.google.android.gms:play-services-auth:21.5.1")
-  implementation("com.google.android.material:material:1.13.0")
+  implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.api-client:google-api-client-android:2.9.0")
