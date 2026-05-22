@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -83,6 +84,8 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
 
       if (!args.isExtraImportOpt) {
         if (args.skipImportedKeys) {
+          //todo-denbond7 temporary changes to fix lint warning. Should be improved in future
+          @SuppressLint("ThreadConstraint")
           removeAlreadyImportedKeys()
         }
         uniqueKeysCount = getCountOfUniqueKeys(keyDetailsAndFingerprintsMap)
