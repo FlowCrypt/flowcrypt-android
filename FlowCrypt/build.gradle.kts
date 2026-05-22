@@ -6,8 +6,6 @@
 
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ResValue
-import org.gradle.api.GradleException
-import java.io.File
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
@@ -30,6 +28,15 @@ val keystoreProperties = Properties()
 val propertiesFile = project.file("keystore.properties")
 if (propertiesFile.exists()) {
   keystoreProperties.load(FileInputStream(propertiesFile))
+}
+
+kotlin {
+  jvmToolchain(21)
+
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+  }
 }
 
 android {
@@ -392,20 +399,6 @@ easylauncher {
         )
       )
     }
-  }
-}
-
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(21))
-  }
-}
-
-
-kotlin {
-  compilerOptions {
-    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
   }
 }
 
