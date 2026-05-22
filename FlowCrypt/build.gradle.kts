@@ -30,6 +30,15 @@ if (propertiesFile.exists()) {
   keystoreProperties.load(FileInputStream(propertiesFile))
 }
 
+kotlin {
+  jvmToolchain(21)
+
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+  }
+}
+
 android {
   compileSdk = rootProject.extra["compileSdkVersion"] as Int
   namespace = "com.flowcrypt.email"
@@ -392,20 +401,6 @@ easylauncher {
   }
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(21))
-  }
-}
-
-
-kotlin {
-  compilerOptions {
-    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
-  }
-}
-
 tasks.register("checkCorrectBranch") {
   if (!grgit.branch.current().name.equals("master")) {
     throw GradleException("Please use 'master' branch to generate a release build")
@@ -467,7 +462,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
   androidTestImplementation("androidx.room:room-testing:2.8.4")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.11.0")
+  androidTestImplementation("androidx.work:work-testing:2.11.2")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.3.2")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.3.2")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -489,7 +484,7 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.7.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.9.0")
+  implementation("androidx.browser:browser:1.10.0")
   implementation("androidx.recyclerview:recyclerview:1.4.0")
   implementation("androidx.recyclerview:recyclerview-selection:1.2.0")
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
@@ -506,14 +501,14 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.17.0")
+  implementation("androidx.core:core-ktx:1.18.0")
   implementation("androidx.core:core-splashscreen:1.2.0")
   implementation("androidx.activity:activity-ktx:1.12.2")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
-  implementation("androidx.work:work-runtime-ktx:2.11.0")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.6")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.6")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.6")
+  implementation("androidx.work:work-runtime-ktx:2.11.2")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.9.8")
+  implementation("androidx.navigation:navigation-ui-ktx:2.9.8")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.9.8")
   implementation("androidx.webkit:webkit:1.15.0")
 
   implementation("com.google.android.gms:play-services-base:18.10.0")
@@ -521,7 +516,7 @@ dependencies {
   implementation("com.google.android.material:material:1.13.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.13.2")
-  implementation("com.google.api-client:google-api-client-android:2.8.1")
+  implementation("com.google.api-client:google-api-client-android:2.9.0")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20251201-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
@@ -529,7 +524,7 @@ dependencies {
   implementation("com.squareup.retrofit2:retrofit:3.0.0")
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
-  implementation("com.squareup.okio:okio:3.16.4")
+  implementation("com.squareup.okio:okio:3.17.0")
   implementation("com.squareup.okhttp3:logging-interceptor:5.3.2")
 
   implementation("com.github.bumptech.glide:glide:5.0.7")
@@ -546,7 +541,7 @@ dependencies {
   implementation("org.pgpainless:pgpainless-core:2.0.2")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
-  implementation("commons-io:commons-io:2.21.0")
+  implementation("commons-io:commons-io:2.22.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.13.1")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")

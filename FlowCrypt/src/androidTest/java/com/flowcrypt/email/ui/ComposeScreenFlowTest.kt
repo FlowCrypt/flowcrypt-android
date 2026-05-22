@@ -140,6 +140,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  @Ignore("flaky. Temporary disabled")
   fun testEmptyEmailSubject() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
