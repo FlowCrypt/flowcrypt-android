@@ -30,6 +30,15 @@ if (propertiesFile.exists()) {
   keystoreProperties.load(FileInputStream(propertiesFile))
 }
 
+kotlin {
+  jvmToolchain(21)
+
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+  }
+}
+
 android {
   compileSdk = rootProject.extra["compileSdkVersion"] as Int
   namespace = "com.flowcrypt.email"
@@ -390,20 +399,6 @@ easylauncher {
         )
       )
     }
-  }
-}
-
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(21))
-  }
-}
-
-
-kotlin {
-  compilerOptions {
-    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
   }
 }
 
