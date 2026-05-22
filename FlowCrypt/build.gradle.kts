@@ -6,8 +6,6 @@
 
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ResValue
-import org.gradle.api.GradleException
-import java.io.File
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
@@ -30,6 +28,15 @@ val keystoreProperties = Properties()
 val propertiesFile = project.file("keystore.properties")
 if (propertiesFile.exists()) {
   keystoreProperties.load(FileInputStream(propertiesFile))
+}
+
+kotlin {
+  jvmToolchain(21)
+
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+  }
 }
 
 android {
@@ -395,20 +402,6 @@ easylauncher {
   }
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(21))
-  }
-}
-
-
-kotlin {
-  compilerOptions {
-    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-    freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
-  }
-}
-
 tasks.register("checkCorrectBranch") {
   if (!grgit.branch.current().name.equals("master")) {
     throw GradleException("Please use 'master' branch to generate a release build")
@@ -443,7 +436,7 @@ val devDebugImplementation: Configuration by configurations.creating
 val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
-  ksp("com.github.bumptech.glide:ksp:5.0.5")
+  ksp("com.github.bumptech.glide:ksp:5.0.7")
   ksp("androidx.annotation:annotation:1.9.1")
   ksp("androidx.room:room-compiler:2.8.4")
   //ACRA needs the following dependency to use a custom report sender
@@ -492,7 +485,7 @@ dependencies {
   implementation("androidx.appcompat:appcompat:1.7.1")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
-  implementation("androidx.browser:browser:1.9.0")
+  implementation("androidx.browser:browser:1.10.0")
   implementation("androidx.recyclerview:recyclerview:1.4.0")
   implementation("androidx.recyclerview:recyclerview-selection:1.2.0")
   implementation("androidx.constraintlayout:constraintlayout:2.2.1")
@@ -509,7 +502,7 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.17.0")
+  implementation("androidx.core:core-ktx:1.18.0")
   implementation("androidx.core:core-splashscreen:1.2.0")
   implementation("androidx.activity:activity-ktx:1.12.2")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
@@ -535,13 +528,13 @@ dependencies {
   implementation("com.squareup.okio:okio:3.16.4")
   implementation("com.squareup.okhttp3:logging-interceptor:5.3.2")
 
-  implementation("com.github.bumptech.glide:glide:5.0.5")
+  implementation("com.github.bumptech.glide:glide:5.0.7")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
-  implementation("com.burhanrashid52:photoeditor:3.0.2")
+  implementation("com.burhanrashid52:photoeditor:3.1.0")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260102.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.22.1")
+  implementation("org.jsoup:jsoup:1.22.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
@@ -549,7 +542,7 @@ dependencies {
   implementation("org.pgpainless:pgpainless-core:2.0.2")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
-  implementation("commons-io:commons-io:2.21.0")
+  implementation("commons-io:commons-io:2.22.0")
   implementation("net.openid:appauth:0.11.1")
   implementation("ch.acra:acra-http:5.13.1")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
