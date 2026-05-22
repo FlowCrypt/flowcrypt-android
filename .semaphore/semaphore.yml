@@ -25,47 +25,28 @@ global_job_config:
       value: /home/semaphore/Android/Sdk
   prologue:
     commands:
-      # fix DNS to ping *.localhost and *.flowcrypt.test
       - sudo apt-get update
-      - sudo apt install -y dnsmasq resolvconf
-      - echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
-      - echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-      - echo "address=/test/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-      - echo "address=/localhost/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-      - echo "server=8.8.8.8" | sudo tee -a /etc/dnsmasq.conf
-      # redirect the systemd-resolved to use the localhost as the primary nameserver
-      - sudo sed -i '1inameserver 127.0.0.1\' /etc/resolv.conf
-      - sudo systemctl restart dnsmasq
-      # print some debug info
-      - ping fel.localhost -c 1
-      - ping fel.flowcrypt.test -c 1
       # use JAVA 21 by default
       - sem-version java 21
       # general settings
       - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
+      # fix DNS to ping *.localhost and *.flowcrypt.test
+      - ./script/ci-setup-DNS.sh
       # init environment variables
-      - export SUM=$(checksum build.gradle.kts)-$(checksum FlowCrypt/build.gradle.kts)-$(checksum ./script/ci-install-android-sdk.sh)
-      - export APP_GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
-      - export ANDROID_SDK_CACHE=android-sdk-$SUM # per conf files hash
-      - export BUILD_CXX_CACHE=build-cxx-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
-      - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
-      - export BUILD_CACHE=build-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
+      - export GRADLE_SUM=$(checksum build.gradle.kts)-$(checksum FlowCrypt/build.gradle.kts)
+      - export SDK_SUM=$(checksum ./script/ci-install-android-sdk.sh)
+      - export APP_GRADLE_CACHE=project-gradle-cache-$GRADLE_SUM # project .gradle cache, per Gradle config hash
+      - export ANDROID_SDK_CACHE=android-sdk-$SDK_SUM # Android SDK cache, per SDK installer hash
       # restore app caches
       - cache restore $APP_GRADLE_CACHE
-      - cache restore $BUILD_CXX_CACHE
-      - cache restore $BUILD_NATIVE_CACHE
-      - cache restore $BUILD_CACHE
       # restore global caches
       - cache restore $ANDROID_SDK_CACHE
       - cache restore gradle-wrapper
-      - cache restore gradle-cache
-      - cache restore android-build-cache
+      - cache restore gradle-cache-$GRADLE_SUM
       # Install Android dependencies if needed
       - ./script/ci-install-android-sdk.sh
-      # Install ninja
-      - sudo apt install -y ninja-build
 blocks:
   - name: 'Build'
     execution_time_limit:
@@ -79,27 +60,20 @@ blocks:
             # print Java version
             - java -version
             # compile project
-            - ./gradlew --console=plain assembleConsumerUiTests
+            - ./gradlew --console=plain --no-daemon --build-cache assembleConsumerUiTests
       epilogue:
         on_pass:
           commands:
             # store app cache
             - echo "Store the app cache"
             - cache has_key $APP_GRADLE_CACHE || cache store $APP_GRADLE_CACHE .gradle
-            - cache has_key $BUILD_CXX_CACHE || cache store $BUILD_CXX_CACHE FlowCrypt/.cxx
-            - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE FlowCrypt/.externalNativeBuild
-            - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE FlowCrypt/build
 
             # clean and store global cache
             - echo "Store the global cache"
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
             - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE $ANDROID_HOME
-            - cache delete gradle-wrapper
-            - cache delete gradle-cache
-            - cache delete android-build-cache
-            - cache store gradle-wrapper ~/.gradle/wrapper
-            - cache store gradle-cache ~/.gradle/caches
-            - cache store android-build-cache ~/.android/build-cache
+            - cache has_key gradle-wrapper || cache store gradle-wrapper ~/.gradle/wrapper
+            - cache has_key gradle-cache-$GRADLE_SUM || cache store gradle-cache-$GRADLE_SUM ~/.gradle/caches
 
   - name: 'Testing'
     task:
@@ -188,6 +162,8 @@ blocks:
           commands:
             # collect and store debug info as artifacts
             - ./script/ci-get-and-publish-debug-info-as-artifact.sh
+            # print debug info
+            - ./script/ci-after-fail-debug.sh
 
 after_pipeline:
   task:
