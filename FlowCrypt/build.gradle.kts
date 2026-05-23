@@ -436,7 +436,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.7")
-  ksp("androidx.annotation:annotation:1.9.1")
+  ksp("androidx.annotation:annotation:1.10.0")
   ksp("androidx.room:room-compiler:2.8.4")
   //ACRA needs the following dependency to use a custom report sender
 
@@ -503,19 +503,19 @@ dependencies {
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.18.0")
   implementation("androidx.core:core-splashscreen:1.2.0")
-  implementation("androidx.activity:activity-ktx:1.12.2")
+  implementation("androidx.activity:activity-ktx:1.13.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.11.2")
   implementation("androidx.navigation:navigation-fragment-ktx:2.9.8")
   implementation("androidx.navigation:navigation-ui-ktx:2.9.8")
   implementation("androidx.navigation:navigation-runtime-ktx:2.9.8")
-  implementation("androidx.webkit:webkit:1.15.0")
+  implementation("androidx.webkit:webkit:1.16.0")
 
   implementation("com.google.android.gms:play-services-base:18.10.0")
   implementation("com.google.android.gms:play-services-auth:21.5.1")
   implementation("com.google.android.material:material:1.13.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.code.gson:gson:2.13.2")
+  implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.api-client:google-api-client-android:2.9.0")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20251201-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
@@ -534,7 +534,7 @@ dependencies {
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
   implementation("org.jsoup:jsoup:1.22.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
