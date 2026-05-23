@@ -436,7 +436,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.7")
-  ksp("androidx.annotation:annotation:1.9.1")
+  ksp("androidx.annotation:annotation:1.10.0")
   ksp("androidx.room:room-compiler:2.8.4")
   //ACRA needs the following dependency to use a custom report sender
 
@@ -503,7 +503,7 @@ dependencies {
   implementation("androidx.preference:preference-ktx:1.2.1")
   implementation("androidx.core:core-ktx:1.18.0")
   implementation("androidx.core:core-splashscreen:1.2.0")
-  implementation("androidx.activity:activity-ktx:1.12.2")
+  implementation("androidx.activity:activity-ktx:1.13.0")
   implementation("androidx.fragment:fragment-ktx:1.8.9")
   implementation("androidx.work:work-runtime-ktx:2.11.2")
   implementation("androidx.navigation:navigation-fragment-ktx:2.9.8")
@@ -548,7 +548,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.20.0") {
+    implementation("commons-codec:commons-codec:1.22.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }
