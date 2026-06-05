@@ -21,7 +21,7 @@ Content-Transfer-Encoding: 7bit
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA512
 
-It's a cleartext signed message
+It's a tampered signed message
 -----BEGIN PGP SIGNATURE-----
 Version: PGPainless
 
