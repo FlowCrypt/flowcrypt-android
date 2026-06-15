@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.javamail
@@ -10,6 +10,7 @@ import android.net.Uri
 import android.text.TextUtils
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.util.OutgoingAttachmentUriValidator
 import jakarta.activation.DataSource
 import java.io.BufferedInputStream
 import java.io.InputStream
@@ -25,6 +26,7 @@ open class AttachmentInfoDataSource(private val context: Context, val att: Attac
 
   override fun getInputStream(): InputStream? {
     return att.uri?.let { uri ->
+      OutgoingAttachmentUriValidator.requireAllowedUri(context, uri)
       context.contentResolver.openInputStream(uri)?.let { stream -> BufferedInputStream(stream) }
     } ?: att.rawData?.inputStream()
   }
