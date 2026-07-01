@@ -96,6 +96,12 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
 
   private fun sanitizeIntentForNavigation(intent: Intent) {
     val originalExtras = intent.extras ?: return
+    val shouldRemoveAllNavigationDeepLinkExtras = intent.action in PUBLIC_INTENT_ACTIONS
+    val deepLinkIds = originalExtras.getIntArray(EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS)
+    val containsBlockedInternalDestination = deepLinkIds?.any { it in BLOCKED_DEEP_LINK_DESTINATION_IDS } == true
+    if (!shouldRemoveAllNavigationDeepLinkExtras && !containsBlockedInternalDestination) {
+      return
+    }
     val sanitizedExtras = Bundle(originalExtras).apply {
       NAVIGATION_DEEP_LINK_EXTRA_KEYS.forEach(::remove)
     }
@@ -143,12 +149,17 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
     private const val EXTRA_KEY_MESSAGE_TYPE = "messageType"
     private const val EXTRA_KEY_ENCRYPTED_BY_DEFAULT = "encryptedByDefault"
     private const val EXTRA_KEY_SERVICE_INFO = "serviceInfo"
+    private const val EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS =
+      "android-support-nav:controller:deepLinkIds"
     private val NAVIGATION_DEEP_LINK_EXTRA_KEYS = setOf(
-      "android-support-nav:controller:deepLinkIds",
+      EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS,
       "android-support-nav:controller:deepLinkArgs",
       "android-support-nav:controller:deepLinkExtras",
       "android-support-nav:controller:deepLinkHandled",
       "android-support-nav:controller:deepLinkIntent",
+    )
+    private val BLOCKED_DEEP_LINK_DESTINATION_IDS = setOf(
+      R.id.createOutgoingMessageDialogFragment
     )
     private val PUBLIC_INTENT_ACTIONS = setOf(
       Intent.ACTION_VIEW,
