@@ -370,6 +370,28 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, body = Intent.EXTRA_TEXT)
   }
 
+  @Test
+  fun testIgnoreInternalNavigationDeepLinkExtrasForExternalSendIntent() {
+    val externalSubject = "safe external subject"
+    val externalBody = "safe external body"
+    val intent = requireNotNull(
+      TestGeneralUtil.genIntentForNavigationComponent(
+        navGraphId = R.navigation.create_msg_graph,
+        activityClass = CreateMessageActivity::class.java,
+        destinationId = R.id.createOutgoingMessageDialogFragment,
+      )
+    ).apply {
+      action = Intent.ACTION_SEND
+      type = "text/plain"
+      putExtra(Intent.EXTRA_SUBJECT, externalSubject)
+      putExtra(Intent.EXTRA_TEXT, externalBody)
+    }
+
+    activeActivityRule.launch(intent)
+
+    checkViewsOnScreen(subject = externalSubject, body = externalBody)
+  }
+
   private fun genIntentForUri(action: String?, stringUri: String?): Intent {
     return Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
       this.action = action
