@@ -89,6 +89,9 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
     sanitizeIntentForNavigation(intent)
     setIntent(intent)
     super.onNewIntent(intent)
+    if (intent.action in PUBLIC_INTENT_ACTIONS) {
+      recreate()
+    }
   }
 
   private fun sanitizeIntentForNavigation(intent: Intent) {
