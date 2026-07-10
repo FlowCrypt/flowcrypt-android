@@ -23,6 +23,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.OutgoingAttachmentUriValidator
 import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -119,6 +120,7 @@ object ProcessingOutgoingMessageInfoHelper {
       val origFileUri = attachmentInfo.uri
       var originalFileInputStream: InputStream? = null
       if (origFileUri != null) {
+        OutgoingAttachmentUriValidator.requireAllowedUri(context, origFileUri)
         originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
       } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
         originalFileInputStream = ByteArrayInputStream(attachmentInfo.rawData)
@@ -173,6 +175,7 @@ object ProcessingOutgoingMessageInfoHelper {
     }
 
     for (candidate in outgoingMsgInfo.forwardedAtts ?: emptyList()) {
+      candidate.uri?.let { OutgoingAttachmentUriValidator.requireAllowedUri(context, it) }
       if (candidate.isEncryptionAllowed
         && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
       ) {
