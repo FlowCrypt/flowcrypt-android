@@ -374,6 +374,7 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
   fun testIgnoreInternalNavigationDeepLinkExtrasForExternalSendIntent() {
     val externalSubject = "safe external subject"
     val externalBody = "safe external body"
+    val externalAttachmentName = atts.first().name
     val intent = requireNotNull(
       TestGeneralUtil.genIntentForNavigationComponent(
         navGraphId = R.navigation.create_msg_graph,
@@ -385,11 +386,13 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
       type = "text/plain"
       putExtra(Intent.EXTRA_SUBJECT, externalSubject)
       putExtra(Intent.EXTRA_TEXT, externalBody)
+      putExtra(Intent.EXTRA_STREAM, genUriFromFile(atts.first()))
     }
 
     activeActivityRule.launch(intent)
 
-    checkViewsOnScreen(subject = externalSubject, body = externalBody)
+    checkViewsOnScreen(subject = externalSubject, body = externalBody, attachmentsCount = 1)
+    onView(withText(externalAttachmentName)).check(matches(isDisplayed()))
   }
 
   private fun genIntentForUri(action: String?, stringUri: String?): Intent {

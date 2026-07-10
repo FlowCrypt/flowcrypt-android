@@ -9,7 +9,6 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.providers.EmbeddedAttachmentsProvider
 import java.io.File
 import java.io.IOException
 import java.util.Locale
@@ -17,30 +16,17 @@ import java.util.Locale
 /**
  * Validates attachment URIs used by outgoing messages.
  *
- * Outgoing flows may only use content provided by FlowCrypt itself or files staged inside
- * FlowCrypt-controlled cache directories for the current compose/send session.
+ * Outgoing flows may only use file:// URIs staged inside FlowCrypt-controlled cache directories
+ * for the current compose/send session. Regular content:// URIs stay allowed so the system
+ * picker and external providers such as Google Drive continue to work.
  */
 object OutgoingAttachmentUriValidator {
-  private val allowedContentAuthorities = setOf(
-    Constants.FILE_PROVIDER_AUTHORITY.lowercase(Locale.ROOT),
-    EmbeddedAttachmentsProvider.Cache.AUTHORITY.lowercase(Locale.ROOT)
-  )
-
   @Throws(IllegalArgumentException::class, IOException::class)
   fun requireAllowedUri(context: Context, uri: Uri) {
     when (uri.scheme?.lowercase(Locale.ROOT)) {
-      ContentResolver.SCHEME_CONTENT -> requireAllowedContentUri(uri)
+      ContentResolver.SCHEME_CONTENT -> return
       ContentResolver.SCHEME_FILE -> requireAllowedFileUri(context, uri)
       else -> throw IllegalArgumentException("Unsupported attachment URI scheme: ${uri.scheme}")
-    }
-  }
-
-  private fun requireAllowedContentUri(uri: Uri) {
-    val authority = uri.authority?.lowercase(Locale.ROOT)
-      ?: throw IllegalArgumentException("Attachment content URI has no authority")
-
-    if (authority !in allowedContentAuthorities) {
-      throw IllegalArgumentException("Attachment content URI authority is not allowed: $authority")
     }
   }
 

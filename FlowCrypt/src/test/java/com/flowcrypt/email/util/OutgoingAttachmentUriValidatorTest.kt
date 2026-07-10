@@ -56,4 +56,10 @@ class OutgoingAttachmentUriValidatorTest {
 
     OutgoingAttachmentUriValidator.requireAllowedUri(context, Uri.fromFile(stagedAttachment))
   }
+
+  @Test
+  fun allowContentUriFromExternalProvider() {
+    val contentUri = Uri.parse("content://com.google.android.apps.docs.storage/document/allowed")
+    OutgoingAttachmentUriValidator.requireAllowedUri(context, contentUri)
+  }
 }
