@@ -34,6 +34,7 @@ import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -80,6 +81,7 @@ class CreateMessageFragmentDisallowAttesterSearchForDomainInIsolationTest : Base
     .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("Need to fix. Flaky")
   fun testCanLookupThisRecipientOnAttester() {
     launchFragmentInContainer<CreateMessageFragment>(
       fragmentArgs = CreateMessageFragmentArgs().toBundle()
