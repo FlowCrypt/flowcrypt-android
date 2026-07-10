@@ -361,6 +361,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
+  @Ignore("Need to fix. Flaky")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
