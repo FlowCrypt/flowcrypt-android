@@ -538,7 +538,7 @@ dependencies {
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-  implementation("org.pgpainless:pgpainless-core:2.0.3")
+  implementation("org.pgpainless:pgpainless-core:2.0.4")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
   implementation("commons-io:commons-io:2.22.0")
