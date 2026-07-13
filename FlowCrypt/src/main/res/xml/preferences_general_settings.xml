@@ -7,7 +7,23 @@
 
     <PreferenceCategory
         app:iconSpaceReserved="false"
-        app:key="attachments_category"
+        app:key="conversation"
+        app:title="@string/conversation">
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="@string/preferences_key_conversation_view"
+            app:summaryOff="@string/pref_summary_disabled"
+            app:summaryOn="@string/pref_summary_enabled"
+            app:title="@string/conversation_view" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false"
+        app:key="@string/preferences_key_attachments_category"
         app:title="@string/attachments">
 
         <SwitchPreference

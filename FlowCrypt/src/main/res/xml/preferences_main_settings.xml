@@ -54,8 +54,7 @@
     <Preference
         android:key="@string/pref_key_general"
         android:title="@string/general"
-        app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false" />
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="@string/pref_key_experimental"
