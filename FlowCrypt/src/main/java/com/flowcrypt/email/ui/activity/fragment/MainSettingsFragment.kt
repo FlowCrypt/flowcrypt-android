@@ -115,13 +115,11 @@ class MainSettingsFragment : BasePreferenceFragment() {
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     findPreference<Preference>(Constants.PREF_KEY_BACKUPS)?.isVisible =
-      !(accountEntity?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)
-        ?: false)
+      accountEntity?.hasClientConfigurationProperty(
+        ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
+      ) != true
 
     findPreference<Preference>(Constants.PREF_KEY_SERVER_SETTINGS)?.isVisible =
       accountEntity?.useAPI == false
-
-    findPreference<Preference>(Constants.PREF_KEY_GENERAL)?.isVisible =
-      accountEntity?.isHandlingAttachmentRestricted() == false
   }
 }
