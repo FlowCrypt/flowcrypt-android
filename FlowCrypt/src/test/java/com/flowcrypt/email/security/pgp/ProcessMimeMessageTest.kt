@@ -10,6 +10,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.util.TestUtil
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
@@ -35,7 +36,7 @@ import java.util.Properties
  */
 class ProcessMimeMessageTest {
   @Test
-  fun testSignedPlainTextDoesNotMarkDisplayedUnsignedHtmlAsSigned() {
+  fun testPrioritizesSignedPlainTextOverUnsignedHtmlAlternative() {
     val processedMimeMessageResult = PgpMsg.processMimeMessage(
       MimeMessage(
         Session.getInstance(Properties()),
@@ -56,13 +57,49 @@ class ProcessMimeMessageTest {
     assertFalse(verificationResult.hasBadSignatures)
     assertFalse(verificationResult.hasUnverifiedSignatures)
 
-    assertTrue(processedMimeMessageResult.text.contains("It's a cleartext signed message"))
+    assertTrue(
+      processedMimeMessageResult.text.unescapeHtml().contains("It's a cleartext signed message")
+    )
     assertFalse(processedMimeMessageResult.text.contains("ATTACKER-ACCOUNT"))
 
     val displayedBlock = processedMimeMessageResult.blocks.first()
     assertEquals(MsgBlock.Type.PLAIN_HTML, displayedBlock.type)
     assertTrue(requireNotNull(displayedBlock.content).contains("It's a cleartext signed message"))
     assertFalse(requireNotNull(displayedBlock.content).contains("ATTACKER-ACCOUNT"))
+  }
+
+  @Test
+  fun testPrioritizesSignedPlainTextWhenLaterAlternativeIsSigned() {
+    val source = TestUtil.readResourceAsString(
+      "mime/signed-plaintext-unsigned-html-alternative.eml"
+    )
+    val boundary = "fc-alt-signed-plain-unsigned-html"
+    val clearSignedContent = source
+      .substringAfter("Content-Transfer-Encoding: 7bit\n\n")
+      .substringBefore("\n\n--$boundary")
+    val sourceWithSignedThirdAlternative = source.replace(
+      "\n--$boundary--",
+      "\n--$boundary\n" +
+          "Content-Type: application/octet-stream\n" +
+          "Content-Transfer-Encoding: 7bit\n\n" +
+          clearSignedContent +
+          "\n\n--$boundary--"
+    )
+
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        sourceWithSignedThirdAlternative.toInputStream()
+      ),
+      verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    assertTrue(processedMimeMessageResult.verificationResult.hasSignedParts)
+    val displayedContent = requireNotNull(processedMimeMessageResult.blocks.first().content)
+    assertTrue(displayedContent.contains("It's a cleartext signed message"))
+    assertFalse(displayedContent.contains("ATTACKER-ACCOUNT"))
   }
 
   @Test

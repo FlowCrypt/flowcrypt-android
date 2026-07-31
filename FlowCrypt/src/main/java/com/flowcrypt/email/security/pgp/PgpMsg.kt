@@ -1426,14 +1426,14 @@ object PgpMsg {
       }.isNotEmpty()
     }
 
-    val hasSignedOtherBlocks = block.otherBlocks.any { otherBlock ->
+    val hasSignedDisplayedOtherBlock = block.otherBlocks.firstOrNull()?.let { otherBlock ->
       filterBlocksViaTree(listOf(otherBlock)) {
         it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
       }.isNotEmpty()
-    }
+    } == true
 
     return when {
-      hasSignedPlainBlocks && !hasSignedOtherBlocks -> AlternativeContentSelection(
+      hasSignedPlainBlocks && !hasSignedDisplayedOtherBlock -> AlternativeContentSelection(
         displayedBlocks = block.plainBlocks,
         usePlainVersionForRendering = true
       )

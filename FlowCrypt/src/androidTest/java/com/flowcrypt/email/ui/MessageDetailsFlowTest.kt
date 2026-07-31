@@ -998,7 +998,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  fun testSignedPlainTextDoesNotMarkDisplayedUnsignedHtmlAsSigned() {
+  fun testPrioritizesSignedPlainTextOverUnsignedHtmlAlternative() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
     val msgInfo = getMsgInfo(
