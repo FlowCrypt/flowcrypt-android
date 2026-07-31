@@ -31,7 +31,7 @@ ANDROID_BUILD_TOOLS="${ANDROID_BUILD_TOOLS:-}"
 # -----------------------------
 # Pin cmdline-tools archive here
 # -----------------------------
-SDK_ARCHIVE="${SDK_ARCHIVE:-commandlinetools-linux-14742923_latest.zip}"
+SDK_ARCHIVE="${SDK_ARCHIVE:-commandlinetools-linux-15859902_latest.zip}"
 
 # ------------------------------------------------------------
 # Check that SDK_ARCHIVE is the latest Android cmdline-tools
