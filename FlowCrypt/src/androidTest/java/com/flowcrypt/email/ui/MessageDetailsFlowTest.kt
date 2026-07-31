@@ -998,6 +998,40 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+  fun testSignedPlainTextDoesNotMarkDisplayedUnsignedHtmlAsSigned() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      path = "messages/info/standard_msg_info_plaintext.json",
+      mimeMsgPath = "messages/mime/signed-plaintext-unsigned-html-alternative.eml",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    )
+    baseCheck(msgInfo, checkWebContent = false)
+
+    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.emailWebView))
+      .check(
+        webContent(
+          elementByXPath(
+            "/html/body",
+            withTextContent(
+              allOf(
+                containsString("ATTACKER-ACCOUNT"),
+                not(containsString("It's a cleartext signed message"))
+              )
+            )
+          )
+        )
+      )
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED
+    )
+  }
+
+  @Test
   fun testSignatureVerificationCleartextOnlySignedPartially() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 

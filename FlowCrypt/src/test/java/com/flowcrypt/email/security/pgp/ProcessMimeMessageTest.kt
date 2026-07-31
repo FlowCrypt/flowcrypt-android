@@ -35,6 +35,33 @@ import java.util.Properties
  */
 class ProcessMimeMessageTest {
   @Test
+  fun testSignedPlainTextDoesNotMarkDisplayedUnsignedHtmlAsSigned() {
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        TestUtil.readResourceAsByteArray(
+          "mime/signed-plaintext-unsigned-html-alternative.eml"
+        ).inputStream()
+      ),
+      verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    val verificationResult = processedMimeMessageResult.verificationResult
+    assertFalse(verificationResult.hasEncryptedParts)
+    assertFalse(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.hasMixedSignatures)
+    assertFalse(verificationResult.isPartialSigned)
+    assertFalse(verificationResult.hasBadSignatures)
+    assertFalse(verificationResult.hasUnverifiedSignatures)
+
+    val displayedBlock = processedMimeMessageResult.blocks.first()
+    assertEquals(MsgBlock.Type.PLAIN_HTML, displayedBlock.type)
+    assertTrue(requireNotNull(displayedBlock.content).contains("ATTACKER-ACCOUNT"))
+  }
+
+  @Test
   fun testProcessProtonmailPgpMimeEncrypted() {
     val processedMimeMessageResult = PgpMsg.processMimeMessage(
       MimeMessage(
@@ -600,6 +627,12 @@ class ProcessMimeMessageTest {
 
     private val VERIFICATION_PUBLIC_KEYS = PgpKey.parseKeys(
       source = TestUtil.readResourceAsByteArray("pgp/keys/default@flowcrypt.test_fisrtKey_pub.asc")
+    ).pgpKeyRingCollection.pgpPublicKeyRingCollection
+
+    private val DENBOND_VERIFICATION_PUBLIC_KEYS = PgpKey.parseKeys(
+      source = TestUtil.readResourceAsByteArray(
+        "pgp/keys/denbond7@flowcrypt.test_pub_primary.asc"
+      )
     ).pgpKeyRingCollection.pgpPublicKeyRingCollection
 
     private val SECRET_KEYS = PgpKey.parseKeys(
