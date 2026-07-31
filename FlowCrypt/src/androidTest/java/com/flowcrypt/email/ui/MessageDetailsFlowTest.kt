@@ -1016,8 +1016,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
             "/html/body",
             withTextContent(
               allOf(
-                containsString("ATTACKER-ACCOUNT"),
-                not(containsString("It's a cleartext signed message"))
+                containsString("It's a cleartext signed message"),
+                not(containsString("ATTACKER-ACCOUNT"))
               )
             )
           )
@@ -1027,7 +1027,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     testPgpBadges(
       2,
       PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
-      PgpBadgeListAdapter.PgpBadge.Type.NOT_SIGNED
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
     )
   }
 

@@ -1420,7 +1420,24 @@ object PgpMsg {
   private fun selectAlternativeContent(
     block: AlternativeContentMsgBlock
   ): AlternativeContentSelection {
+    val hasSignedPlainBlocks = block.plainBlocks.any { plainBlock ->
+      filterBlocksViaTree(listOf(plainBlock)) {
+        it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
+      }.isNotEmpty()
+    }
+
+    val hasSignedOtherBlocks = block.otherBlocks.any { otherBlock ->
+      filterBlocksViaTree(listOf(otherBlock)) {
+        it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
+      }.isNotEmpty()
+    }
+
     return when {
+      hasSignedPlainBlocks && !hasSignedOtherBlocks -> AlternativeContentSelection(
+        displayedBlocks = block.plainBlocks,
+        usePlainVersionForRendering = true
+      )
+
       block.plainBlocks.size > 1 -> AlternativeContentSelection(
         displayedBlocks = block.plainBlocks,
         usePlainVersionForRendering = true

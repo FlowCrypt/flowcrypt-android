@@ -50,15 +50,19 @@ class ProcessMimeMessageTest {
 
     val verificationResult = processedMimeMessageResult.verificationResult
     assertFalse(verificationResult.hasEncryptedParts)
-    assertFalse(verificationResult.hasSignedParts)
+    assertTrue(verificationResult.hasSignedParts)
     assertFalse(verificationResult.hasMixedSignatures)
     assertFalse(verificationResult.isPartialSigned)
     assertFalse(verificationResult.hasBadSignatures)
     assertFalse(verificationResult.hasUnverifiedSignatures)
 
+    assertTrue(processedMimeMessageResult.text.contains("It's a cleartext signed message"))
+    assertFalse(processedMimeMessageResult.text.contains("ATTACKER-ACCOUNT"))
+
     val displayedBlock = processedMimeMessageResult.blocks.first()
     assertEquals(MsgBlock.Type.PLAIN_HTML, displayedBlock.type)
-    assertTrue(requireNotNull(displayedBlock.content).contains("ATTACKER-ACCOUNT"))
+    assertTrue(requireNotNull(displayedBlock.content).contains("It's a cleartext signed message"))
+    assertFalse(requireNotNull(displayedBlock.content).contains("ATTACKER-ACCOUNT"))
   }
 
   @Test
