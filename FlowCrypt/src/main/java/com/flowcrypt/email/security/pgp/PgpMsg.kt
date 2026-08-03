@@ -1417,20 +1417,16 @@ object PgpMsg {
       }
     }
 
+  private fun hasSignedDisplayedContent(blocks: List<MsgBlock>): Boolean =
+    getDisplayedBlocks(blocks).any {
+      it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
+    }
+
   private fun selectAlternativeContent(
     block: AlternativeContentMsgBlock
   ): AlternativeContentSelection {
-    val hasSignedPlainBlocks = block.plainBlocks.any { plainBlock ->
-      filterBlocksViaTree(listOf(plainBlock)) {
-        it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
-      }.isNotEmpty()
-    }
-
-    val hasSignedDisplayedOtherBlock = block.otherBlocks.firstOrNull()?.let { otherBlock ->
-      filterBlocksViaTree(listOf(otherBlock)) {
-        it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
-      }.isNotEmpty()
-    } == true
+    val hasSignedPlainBlocks = hasSignedDisplayedContent(block.plainBlocks)
+    val hasSignedDisplayedOtherBlock = hasSignedDisplayedContent(block.otherBlocks.take(1))
 
     return when {
       hasSignedPlainBlocks && !hasSignedDisplayedOtherBlock -> AlternativeContentSelection(

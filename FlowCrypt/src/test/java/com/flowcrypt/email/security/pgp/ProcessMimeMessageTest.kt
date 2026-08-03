@@ -96,9 +96,73 @@ class ProcessMimeMessageTest {
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
 
-    assertTrue(processedMimeMessageResult.verificationResult.hasSignedParts)
+    val verificationResult = processedMimeMessageResult.verificationResult
+    assertTrue(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.isPartialSigned)
     val displayedContent = requireNotNull(processedMimeMessageResult.blocks.first().content)
     assertTrue(displayedContent.contains("It's a cleartext signed message"))
+    assertFalse(displayedContent.contains("ATTACKER-ACCOUNT"))
+  }
+
+  @Test
+  fun testPrioritizesSignedPlainTextOverUnsignedNestedAlternative() {
+    val source = TestUtil.readResourceAsString(
+      "mime/signed-plaintext-unsigned-html-alternative.eml"
+    )
+    val boundary = "fc-alt-signed-plain-unsigned-html"
+    val nestedBoundary = "fc-nested-alt"
+    val clearSignedContent = source
+      .substringAfter("Content-Transfer-Encoding: 7bit\n\n")
+      .substringBefore("\n\n--$boundary")
+    val alternativeBoundaryMarker = "\n--$boundary\n"
+    val firstAlternativeBoundaryIndex = source.indexOf(alternativeBoundaryMarker)
+    val secondAlternativeBoundaryIndex = source.indexOf(
+      alternativeBoundaryMarker,
+      firstAlternativeBoundaryIndex + alternativeBoundaryMarker.length
+    )
+    val closingBoundaryIndex = source.lastIndexOf("\n--$boundary--")
+    val nestedAlternative = listOf(
+      "Content-Type: multipart/alternative; boundary=\"$nestedBoundary\"",
+      "",
+      "--$nestedBoundary",
+      "Content-Type: text/plain; charset=UTF-8",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      "Unsigned nested plaintext",
+      "--$nestedBoundary",
+      "Content-Type: text/html; charset=UTF-8",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      "<html><body>Nested unsigned HTML ATTACKER-ACCOUNT</body></html>",
+      "--$nestedBoundary",
+      "Content-Type: application/octet-stream",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      clearSignedContent,
+      "--$nestedBoundary--"
+    ).joinToString("\n")
+    val sourceWithNestedAlternative = source.replaceRange(
+      secondAlternativeBoundaryIndex + alternativeBoundaryMarker.length,
+      closingBoundaryIndex,
+      nestedAlternative
+    )
+
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        sourceWithNestedAlternative.toInputStream()
+      ),
+      verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    val verificationResult = processedMimeMessageResult.verificationResult
+    assertTrue(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.isPartialSigned)
+    val displayedContent = requireNotNull(processedMimeMessageResult.blocks.first().content)
+    assertTrue(displayedContent.contains("It's a cleartext signed message"))
+    assertFalse(displayedContent.contains("Unsigned nested plaintext"))
     assertFalse(displayedContent.contains("ATTACKER-ACCOUNT"))
   }
 
