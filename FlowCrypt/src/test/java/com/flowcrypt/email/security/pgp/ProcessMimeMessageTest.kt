@@ -166,6 +166,51 @@ class ProcessMimeMessageTest {
     assertFalse(displayedContent.contains("ATTACKER-ACCOUNT"))
   }
 
+  @Test(timeout = 5_000)
+  fun testProcessesDeeplyNestedAlternativesWithoutRepeatedSelection() {
+    val nestedContent = (0 until 25).fold(
+      listOf(
+        "Content-Type: text/html; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        "<html><body>Deeply nested unsigned HTML</body></html>"
+      ).joinToString("\n")
+    ) { innerContent, depth ->
+      val boundary = "fc-deep-alt-$depth"
+      listOf(
+        "Content-Type: multipart/alternative; boundary=\"$boundary\"",
+        "",
+        "--$boundary",
+        "Content-Type: text/plain; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        "Unsigned plaintext at depth $depth",
+        "--$boundary",
+        innerContent,
+        "--$boundary--"
+      ).joinToString("\n")
+    }
+    val source = listOf(
+      "From: sender@flowcrypt.test",
+      "To: default@flowcrypt.test",
+      "Subject: Deeply nested alternatives",
+      "MIME-Version: 1.0",
+      nestedContent
+    ).joinToString("\n")
+
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        source.toInputStream()
+      ),
+      verificationPublicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    assertFalse(processedMimeMessageResult.verificationResult.hasSignedParts)
+  }
+
   @Test
   fun testProcessProtonmailPgpMimeEncrypted() {
     val processedMimeMessageResult = PgpMsg.processMimeMessage(

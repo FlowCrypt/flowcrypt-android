@@ -70,6 +70,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.util.IdentityHashMap
 import java.util.Properties
 import kotlin.random.Random
 
@@ -835,6 +836,7 @@ object PgpMsg {
     var isPartialSigned = false
     val verifiedSignatures = mutableListOf<SignatureVerification>()
     val keyIdOfSigningKeys = mutableSetOf<Long>()
+    val alternativeContentResolver = AlternativeContentResolver()
 
     filterBlocksViaTree(msgBlocks.toList()) { innerBlock ->
       innerBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES
@@ -846,7 +848,7 @@ object PgpMsg {
       }
     }
 
-    val displayedBlocks = getDisplayedBlocks(msgBlocks.toList())
+    val displayedBlocks = alternativeContentResolver.getDisplayedBlocks(msgBlocks.toList())
     displayedBlocks.filter { innerBlock ->
       innerBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES
     }.forEach { pgpBlock ->
@@ -910,7 +912,10 @@ object PgpMsg {
       }
     }
 
-    val fmtRes = prepareFormattedContentBlock(contentBlocks)
+    val fmtRes = prepareFormattedContentBlock(
+      allContentBlocks = contentBlocks,
+      alternativeContentResolver = alternativeContentResolver
+    )
     resultBlocks.add(0, fmtRes.contentBlock)
 
     if (signedBlockCount > 0 &&
@@ -1250,6 +1255,7 @@ object PgpMsg {
 
   private fun prepareFormattedContentBlock(
     allContentBlocks: List<MsgBlock>,
+    alternativeContentResolver: AlternativeContentResolver,
     stripHtmlRootTags: Boolean = false
   ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
@@ -1289,10 +1295,11 @@ object PgpMsg {
     for (block in allContentBlocks.filterNot { MimeUtils.isPlainImgAtt(it) }) {
       when (block) {
         is AlternativeContentMsgBlock -> {
-          val alternativeContentSelection = selectAlternativeContent(block)
+          val alternativeContentSelection = alternativeContentResolver.select(block)
           if (alternativeContentSelection.usePlainVersionForRendering) {
             prepareFormattedContentBlock(
               allContentBlocks = alternativeContentSelection.displayedBlocks,
+              alternativeContentResolver = alternativeContentResolver,
               stripHtmlRootTags = true
             ).apply {
               msgContentAsHtml.append(contentBlock.content)
@@ -1324,6 +1331,7 @@ object PgpMsg {
         is DecryptedAndOrSignedContentMsgBlock -> {
           prepareFormattedContentBlock(
             allContentBlocks = block.blocks,
+            alternativeContentResolver = alternativeContentResolver,
             stripHtmlRootTags = true
           ).apply {
             msgContentAsHtml.append(contentBlock.content)
@@ -1408,52 +1416,62 @@ object PgpMsg {
     }
   }
 
-  private fun getDisplayedBlocks(blocks: List<MsgBlock>): List<MsgBlock> =
-    blocks.flatMap { block ->
-      if (block is AlternativeContentMsgBlock) {
-        getDisplayedBlocks(selectAlternativeContent(block).displayedBlocks)
-      } else {
-        listOf(block)
+  private class AlternativeContentResolver {
+    private val selectionCache =
+      IdentityHashMap<AlternativeContentMsgBlock, AlternativeContentSelection>()
+
+    fun getDisplayedBlocks(blocks: List<MsgBlock>): List<MsgBlock> =
+      blocks.flatMap { block ->
+        if (block is AlternativeContentMsgBlock) {
+          getDisplayedBlocks(select(block).displayedBlocks)
+        } else {
+          listOf(block)
+        }
       }
-    }
 
-  private fun hasSignedDisplayedContent(blocks: List<MsgBlock>): Boolean =
-    getDisplayedBlocks(blocks).any {
-      it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
-    }
+    fun select(block: AlternativeContentMsgBlock): AlternativeContentSelection =
+      selectionCache.getOrPut(block) {
+        selectNotCached(block)
+      }
 
-  private fun selectAlternativeContent(
-    block: AlternativeContentMsgBlock
-  ): AlternativeContentSelection {
-    val hasSignedPlainBlocks = hasSignedDisplayedContent(block.plainBlocks)
-    val hasSignedDisplayedOtherBlock = hasSignedDisplayedContent(block.otherBlocks.take(1))
+    private fun hasSignedDisplayedContent(blocks: List<MsgBlock>): Boolean =
+      getDisplayedBlocks(blocks).any {
+        it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
+      }
 
-    return when {
-      hasSignedPlainBlocks && !hasSignedDisplayedOtherBlock -> AlternativeContentSelection(
-        displayedBlocks = block.plainBlocks,
-        usePlainVersionForRendering = true
-      )
+    private fun selectNotCached(
+      block: AlternativeContentMsgBlock
+    ): AlternativeContentSelection {
+      val hasSignedPlainBlocks = hasSignedDisplayedContent(block.plainBlocks)
+      val hasSignedDisplayedOtherBlock = hasSignedDisplayedContent(block.otherBlocks.take(1))
 
-      block.plainBlocks.size > 1 -> AlternativeContentSelection(
-        displayedBlocks = block.plainBlocks,
-        usePlainVersionForRendering = true
-      )
-
-      block.plainBlocks.singleOrNull() is DecryptedAndOrSignedContentMsgBlock ->
-        AlternativeContentSelection(
+      return when {
+        hasSignedPlainBlocks && !hasSignedDisplayedOtherBlock -> AlternativeContentSelection(
           displayedBlocks = block.plainBlocks,
           usePlainVersionForRendering = true
         )
 
-      block.otherBlocks.isNotEmpty() -> AlternativeContentSelection(
-        displayedBlocks = listOf(block.otherBlocks.first()),
-        usePlainVersionForRendering = false
-      )
+        block.plainBlocks.size > 1 -> AlternativeContentSelection(
+          displayedBlocks = block.plainBlocks,
+          usePlainVersionForRendering = true
+        )
 
-      else -> AlternativeContentSelection(
-        displayedBlocks = block.plainBlocks,
-        usePlainVersionForRendering = true
-      )
+        block.plainBlocks.singleOrNull() is DecryptedAndOrSignedContentMsgBlock ->
+          AlternativeContentSelection(
+            displayedBlocks = block.plainBlocks,
+            usePlainVersionForRendering = true
+          )
+
+        block.otherBlocks.isNotEmpty() -> AlternativeContentSelection(
+          displayedBlocks = listOf(block.otherBlocks.first()),
+          usePlainVersionForRendering = false
+        )
+
+        else -> AlternativeContentSelection(
+          displayedBlocks = block.plainBlocks,
+          usePlainVersionForRendering = true
+        )
+      }
     }
   }
 
