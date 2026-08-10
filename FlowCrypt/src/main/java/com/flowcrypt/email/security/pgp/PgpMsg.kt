@@ -1260,9 +1260,8 @@ object PgpMsg {
   ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
-    val plainImageBlocks = filterBlocksViaTree(allContentBlocks) {
-      MimeUtils.isPlainImgAtt(it)
-    }
+    val plainImageBlocks =
+      alternativeContentResolver.getInlineImageBlocksForRendering(allContentBlocks)
     for (plainImageBlock in plainImageBlocks) {
       var contentId = (plainImageBlock as AttMsgBlock).attMeta.contentId ?: ""
       if (contentId.isNotEmpty()) {
@@ -1432,6 +1431,30 @@ object PgpMsg {
     fun select(block: AlternativeContentMsgBlock): AlternativeContentSelection =
       selectionCache.getOrPut(block) {
         selectNotCached(block)
+      }
+
+    fun getInlineImageBlocksForRendering(blocks: List<MsgBlock>): List<MsgBlock> =
+      blocks.flatMap { block ->
+        when {
+          block is AlternativeContentMsgBlock -> {
+            val selection = select(block)
+            val blocksToInspect = when {
+              hasSignedDisplayedContent(selection.displayedBlocks) -> {
+                // Do not mix unsigned images from a rejected alternative into signed content.
+                selection.displayedBlocks + block.otherBlocks.drop(1).filter {
+                  MimeUtils.isPlainImgAtt(it) && it.isOpenPGPMimeSigned
+                }
+              }
+
+              selection.usePlainVersionForRendering -> block.allBlocks
+              else -> block.otherBlocks
+            }
+            getInlineImageBlocksForRendering(blocksToInspect)
+          }
+
+          MimeUtils.isPlainImgAtt(block) -> listOf(block)
+          else -> emptyList()
+        }
       }
 
     private fun hasSignedDisplayedContent(blocks: List<MsgBlock>): Boolean =
