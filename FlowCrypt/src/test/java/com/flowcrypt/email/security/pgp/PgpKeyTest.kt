@@ -6,6 +6,7 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.FlowCryptApplication
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
@@ -150,9 +151,17 @@ class PgpKeyTest {
 
   @Test
   fun testPublicKey_Issue1358() {
-    val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
-    val actual = PgpKey.parseKeys(source = keyText)
-    assertEquals(1, actual.getAllKeys().size)
+    val originalPgpainless = PGPainless.getInstance()
+    try {
+      PGPainless.setInstance(FlowCryptApplication.createPGPainlessInstance())
+      assertTrue(PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation)
+
+      val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
+      val actual = PgpKey.parseKeys(source = keyText)
+      assertEquals(1, actual.getAllKeys().size)
+    } finally {
+      PGPainless.setInstance(originalPgpainless)
+    }
   }
 
   @Test
