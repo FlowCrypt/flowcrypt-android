@@ -17,7 +17,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
@@ -150,7 +149,6 @@ class PgpKeyTest {
   }
 
   @Test
-  @Ignore("temporary disabled due to https://github.com/pgpainless/pgpainless/issues/488")
   fun testPublicKey_Issue1358() {
     val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
     val actual = PgpKey.parseKeys(source = keyText)
