@@ -109,6 +109,7 @@ import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
+import com.flowcrypt.email.util.EmailSignatureUtil
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -2164,9 +2165,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
     if (oldSignature == null && args.messageType == MessageType.DRAFT) {
       val extractedSignature = aliases.firstOrNull { alias ->
-        alias.plainTextSignature != null && binding?.editTextEmailMessage?.text?.contains(
-          ("^${alias.plainTextSignature}$").toRegex(RegexOption.MULTILINE)
-        ) == true
+        val aliasSignature = alias.plainTextSignature
+        aliasSignature != null && EmailSignatureUtil.containsSignature(
+          message = binding?.editTextEmailMessage?.text,
+          signature = aliasSignature
+        )
       }?.plainTextSignature
 
       if (!extractedSignature.isNullOrEmpty()) {
@@ -2180,19 +2183,18 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       return
     }
 
-    val messageHasOldSignature =
-      oldSignature != null && binding?.editTextEmailMessage?.text?.contains(
-        ("^$oldSignature$").toRegex(RegexOption.MULTILINE)
-      ) == true
-
-    if (messageHasOldSignature) {
-      useNewSignature = true
-      binding?.editTextEmailMessage?.setText(
-        binding?.editTextEmailMessage?.text?.replaceFirst(
-          regex = oldSignature.toRegex(RegexOption.MULTILINE),
-          replacement = newSignature
-        )
+    val messageText = binding?.editTextEmailMessage?.text?.toString() ?: ""
+    val messageWithUpdatedSignature = oldSignature?.let {
+      EmailSignatureUtil.replaceSignature(
+        message = messageText,
+        oldSignature = it,
+        newSignature = newSignature
       )
+    }
+
+    if (messageWithUpdatedSignature != null) {
+      useNewSignature = true
+      binding?.editTextEmailMessage?.setText(messageWithUpdatedSignature)
     } else if (oldSignature == null) {
       useNewSignature = true
       if (binding?.editTextEmailMessage?.text?.isEmpty() == true) {
