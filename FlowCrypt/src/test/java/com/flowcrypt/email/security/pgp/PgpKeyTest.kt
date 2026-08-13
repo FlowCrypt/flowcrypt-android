@@ -166,8 +166,11 @@ class PgpKeyTest {
 
   @Test
   fun testReadCorruptedPrivateKey() {
+    val originalPgpainless = PGPainless.getInstance()
     try {
-      PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = true
+      PGPainless.setInstance(FlowCryptApplication.createPGPainlessInstance())
+      assertTrue(PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation)
+
       val encryptedKeyText =
         TestUtil.readResourceAsString("pgp/keys/issue-1669-corrupted.private.gpg-key")
       val passphrase = Passphrase.fromPassword("123")
@@ -175,7 +178,7 @@ class PgpKeyTest {
         PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
       }
     } finally {
-      PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = false
+      PGPainless.setInstance(originalPgpainless)
     }
   }
 
