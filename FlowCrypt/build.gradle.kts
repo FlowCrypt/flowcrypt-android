@@ -511,7 +511,7 @@ dependencies {
   implementation("androidx.navigation:navigation-runtime-ktx:2.9.8")
   implementation("androidx.webkit:webkit:1.16.0")
 
-  implementation("com.google.android.gms:play-services-base:18.10.0")
+  implementation("com.google.android.gms:play-services-base:18.10.1")
   implementation("com.google.android.gms:play-services-auth:21.6.0")
   implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
