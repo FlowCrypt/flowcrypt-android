@@ -8,6 +8,7 @@ package com.flowcrypt.email
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -85,12 +86,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   }
 
   private fun setupPGPainless() {
-    PGPainless.setInstance(
-      PGPainless(algorithmPolicy = generatePGPainlessPolicy().apply {
-        //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
-        PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = true
-      })
-    )
+    PGPainless.setInstance(createPGPainlessInstance())
   }
 
   private fun setupGlobalSettingsForJavaMail() {
@@ -102,27 +98,6 @@ class FlowCryptApplication : Application(), Configuration.Provider {
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
     initACRA()
-  }
-
-  /**
-   * Allow sha1 for all builds except enterprise. It's a temporary solution.
-   * More details here https://github.com/FlowCrypt/flowcrypt-android/issues/1478 and here
-   * https://github.com/pgpainless/pgpainless/issues/158
-   */
-  @Suppress("KotlinConstantConditions")
-  private fun generatePGPainlessPolicy(): Policy {
-    val isEnterpriseBuild = BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE
-    val strongPolicySince2022 = HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
-    val policyBefore2022Standard =
-      HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
-    return Policy.Builder(PGPainless.getInstance().algorithmPolicy)
-      .withDataSignatureHashAlgorithmPolicy(
-        if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
-      )
-      .withCertificationSignatureHashAlgorithmPolicy(
-        if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
-      )
-      .build()
   }
 
   private fun setupKeysStorage() {
@@ -284,6 +259,37 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
     override fun onStop(owner: LifecycleOwner) {
       isAppForegroundedInternal = false
+    }
+  }
+
+  companion object {
+    @VisibleForTesting
+    internal fun createPGPainlessInstance(): PGPainless {
+      return PGPainless(algorithmPolicy = generatePGPainlessPolicy().apply {
+        //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
+        enableKeyParameterValidation = true
+      })
+    }
+
+    /**
+     * Allow sha1 for all builds except enterprise. It's a temporary solution.
+     * More details here https://github.com/FlowCrypt/flowcrypt-android/issues/1478 and here
+     * https://github.com/pgpainless/pgpainless/issues/158
+     */
+    @Suppress("KotlinConstantConditions")
+    private fun generatePGPainlessPolicy(): Policy {
+      val isEnterpriseBuild = BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE
+      val strongPolicySince2022 = HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+      val policyBefore2022Standard =
+        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+      return Policy.Builder(PGPainless.getInstance().algorithmPolicy)
+        .withDataSignatureHashAlgorithmPolicy(
+          if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
+        )
+        .withCertificationSignatureHashAlgorithmPolicy(
+          if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
+        )
+        .build()
     }
   }
 }
