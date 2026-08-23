@@ -156,14 +156,14 @@ class DraftViewModel(
 
     val isTextTheSame =
       if (outgoingMessageInfo.signature != null && !draftFingerprint.skipCheckingSignature) {
-      val textWithoutSignature = outgoingMessageInfo.msg?.replaceFirst(
-        regex = ("\n\n" + outgoingMessageInfo.signature).toRegex(RegexOption.MULTILINE),
-        replacement = ""
-      ) ?: ""
-      textWithoutSignature == draftFingerprint.msgText
-    } else {
-      (outgoingMessageInfo.msg ?: "") == draftFingerprint.msgText
-    }
+        val textWithoutSignature = removeSignature(
+          message = outgoingMessageInfo.msg,
+          signature = outgoingMessageInfo.signature
+        )
+        textWithoutSignature == draftFingerprint.msgText
+      } else {
+        (outgoingMessageInfo.msg ?: "") == draftFingerprint.msgText
+      }
 
     if (!isTextTheSame
       || outgoingMessageInfo.subject != draftFingerprint.msgSubject
@@ -343,5 +343,12 @@ class DraftViewModel(
 
   companion object {
     val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(30)
+
+    internal fun removeSignature(message: String?, signature: String): String {
+      return message?.replaceFirst(
+        oldValue = "\n\n$signature",
+        newValue = ""
+      ) ?: ""
+    }
   }
 }

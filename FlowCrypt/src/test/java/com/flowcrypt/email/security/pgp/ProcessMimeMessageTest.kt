@@ -10,6 +10,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.extensions.kotlin.toEscapedHtml
 import com.flowcrypt.email.extensions.kotlin.toInputStream
+import com.flowcrypt.email.extensions.kotlin.unescapeHtml
 import com.flowcrypt.email.util.TestUtil
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
@@ -34,6 +35,182 @@ import java.util.Properties
  * @author Denys Bondarenko
  */
 class ProcessMimeMessageTest {
+  @Test
+  fun testPrioritizesSignedPlainTextOverUnsignedHtmlAlternative() {
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        TestUtil.readResourceAsByteArray(
+          "mime/signed-plaintext-unsigned-html-alternative.eml"
+        ).inputStream()
+      ),
+      verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    val verificationResult = processedMimeMessageResult.verificationResult
+    assertFalse(verificationResult.hasEncryptedParts)
+    assertTrue(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.hasMixedSignatures)
+    assertFalse(verificationResult.isPartialSigned)
+    assertFalse(verificationResult.hasBadSignatures)
+    assertFalse(verificationResult.hasUnverifiedSignatures)
+
+    assertTrue(
+      processedMimeMessageResult.text.unescapeHtml().contains("It's a cleartext signed message")
+    )
+    assertFalse(processedMimeMessageResult.text.contains("ATTACKER-ACCOUNT"))
+
+    val displayedBlock = processedMimeMessageResult.blocks.first()
+    assertEquals(MsgBlock.Type.PLAIN_HTML, displayedBlock.type)
+    assertTrue(requireNotNull(displayedBlock.content).contains("It's a cleartext signed message"))
+    assertFalse(requireNotNull(displayedBlock.content).contains("ATTACKER-ACCOUNT"))
+  }
+
+  @Test
+  fun testPrioritizesSignedPlainTextWhenLaterAlternativeIsSigned() {
+    val source = TestUtil.readResourceAsString(
+      "mime/signed-plaintext-unsigned-html-alternative.eml"
+    )
+    val boundary = "fc-alt-signed-plain-unsigned-html"
+    val clearSignedContent = source
+      .substringAfter("Content-Transfer-Encoding: 7bit\n\n")
+      .substringBefore("\n\n--$boundary")
+    val sourceWithSignedThirdAlternative = source.replace(
+      "\n--$boundary--",
+      "\n--$boundary\n" +
+          "Content-Type: application/octet-stream\n" +
+          "Content-Transfer-Encoding: 7bit\n\n" +
+          clearSignedContent +
+          "\n\n--$boundary--"
+    )
+
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        sourceWithSignedThirdAlternative.toInputStream()
+      ),
+      verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    val verificationResult = processedMimeMessageResult.verificationResult
+    assertTrue(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.isPartialSigned)
+    val displayedContent = requireNotNull(processedMimeMessageResult.blocks.first().content)
+    assertTrue(displayedContent.contains("It's a cleartext signed message"))
+    assertFalse(displayedContent.contains("ATTACKER-ACCOUNT"))
+  }
+
+  @Test
+  fun testPrioritizesSignedPlainTextOverUnsignedNestedAlternative() {
+    val source = TestUtil.readResourceAsString(
+      "mime/signed-plaintext-unsigned-html-alternative.eml"
+    )
+    val boundary = "fc-alt-signed-plain-unsigned-html"
+    val nestedBoundary = "fc-nested-alt"
+    val clearSignedContent = source
+      .substringAfter("Content-Transfer-Encoding: 7bit\n\n")
+      .substringBefore("\n\n--$boundary")
+    val alternativeBoundaryMarker = "\n--$boundary\n"
+    val firstAlternativeBoundaryIndex = source.indexOf(alternativeBoundaryMarker)
+    val secondAlternativeBoundaryIndex = source.indexOf(
+      alternativeBoundaryMarker,
+      firstAlternativeBoundaryIndex + alternativeBoundaryMarker.length
+    )
+    val closingBoundaryIndex = source.lastIndexOf("\n--$boundary--")
+    val nestedAlternative = listOf(
+      "Content-Type: multipart/alternative; boundary=\"$nestedBoundary\"",
+      "",
+      "--$nestedBoundary",
+      "Content-Type: text/plain; charset=UTF-8",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      "Unsigned nested plaintext",
+      "--$nestedBoundary",
+      "Content-Type: text/html; charset=UTF-8",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      "<html><body>Nested unsigned HTML ATTACKER-ACCOUNT</body></html>",
+      "--$nestedBoundary",
+      "Content-Type: application/octet-stream",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      clearSignedContent,
+      "--$nestedBoundary--"
+    ).joinToString("\n")
+    val sourceWithNestedAlternative = source.replaceRange(
+      secondAlternativeBoundaryIndex + alternativeBoundaryMarker.length,
+      closingBoundaryIndex,
+      nestedAlternative
+    )
+
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        sourceWithNestedAlternative.toInputStream()
+      ),
+      verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    val verificationResult = processedMimeMessageResult.verificationResult
+    assertTrue(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.isPartialSigned)
+    val displayedContent = requireNotNull(processedMimeMessageResult.blocks.first().content)
+    assertTrue(displayedContent.contains("It's a cleartext signed message"))
+    assertFalse(displayedContent.contains("Unsigned nested plaintext"))
+    assertFalse(displayedContent.contains("ATTACKER-ACCOUNT"))
+  }
+
+  @Test(timeout = 5_000)
+  fun testProcessesDeeplyNestedAlternativesWithoutRepeatedSelection() {
+    val nestedContent = (0 until 25).fold(
+      listOf(
+        "Content-Type: text/html; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        "<html><body>Deeply nested unsigned HTML</body></html>"
+      ).joinToString("\n")
+    ) { innerContent, depth ->
+      val boundary = "fc-deep-alt-$depth"
+      listOf(
+        "Content-Type: multipart/alternative; boundary=\"$boundary\"",
+        "",
+        "--$boundary",
+        "Content-Type: text/plain; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        "Unsigned plaintext at depth $depth",
+        "--$boundary",
+        innerContent,
+        "--$boundary--"
+      ).joinToString("\n")
+    }
+    val source = listOf(
+      "From: sender@flowcrypt.test",
+      "To: default@flowcrypt.test",
+      "Subject: Deeply nested alternatives",
+      "MIME-Version: 1.0",
+      nestedContent
+    ).joinToString("\n")
+
+    val processedMimeMessageResult = PgpMsg.processMimeMessage(
+      MimeMessage(
+        Session.getInstance(Properties()),
+        source.toInputStream()
+      ),
+      verificationPublicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+
+    assertFalse(processedMimeMessageResult.verificationResult.hasSignedParts)
+  }
+
   @Test
   fun testProcessProtonmailPgpMimeEncrypted() {
     val processedMimeMessageResult = PgpMsg.processMimeMessage(
@@ -600,6 +777,12 @@ class ProcessMimeMessageTest {
 
     private val VERIFICATION_PUBLIC_KEYS = PgpKey.parseKeys(
       source = TestUtil.readResourceAsByteArray("pgp/keys/default@flowcrypt.test_fisrtKey_pub.asc")
+    ).pgpKeyRingCollection.pgpPublicKeyRingCollection
+
+    private val DENBOND_VERIFICATION_PUBLIC_KEYS = PgpKey.parseKeys(
+      source = TestUtil.readResourceAsByteArray(
+        "pgp/keys/denbond7@flowcrypt.test_pub_primary.asc"
+      )
     ).pgpKeyRingCollection.pgpPublicKeyRingCollection
 
     private val SECRET_KEYS = PgpKey.parseKeys(

@@ -448,7 +448,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.8.9")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.9.0")
   uiTestsImplementation("androidx.test:core-ktx:1.7.0")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
@@ -476,12 +476,12 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.10")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.4")
-  testImplementation("io.github.classgraph:classgraph:4.8.184")
+  testImplementation("io.github.classgraph:classgraph:4.8.191")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
   implementation("androidx.legacy:legacy-support-v4:1.0.0")
-  implementation("androidx.appcompat:appcompat:1.7.1")
+  implementation("androidx.appcompat:appcompat:1.8.0")
   implementation("androidx.legacy:legacy-preference-v14:1.0.0")
   implementation("androidx.cardview:cardview:1.0.0")
   implementation("androidx.browser:browser:1.10.0")
@@ -504,7 +504,7 @@ dependencies {
   implementation("androidx.core:core-ktx:1.19.0")
   implementation("androidx.core:core-splashscreen:1.2.0")
   implementation("androidx.activity:activity-ktx:1.13.0")
-  implementation("androidx.fragment:fragment-ktx:1.8.9")
+  implementation("androidx.fragment:fragment-ktx:1.9.0")
   implementation("androidx.work:work-runtime-ktx:2.11.2")
   implementation("androidx.navigation:navigation-fragment-ktx:2.9.8")
   implementation("androidx.navigation:navigation-ui-ktx:2.9.8")
@@ -548,7 +548,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.22.0") {
+    implementation("commons-codec:commons-codec:1.22.1") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }
