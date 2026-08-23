@@ -70,6 +70,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
+import java.util.IdentityHashMap
 import java.util.Properties
 import kotlin.random.Random
 
@@ -835,6 +836,51 @@ object PgpMsg {
     var isPartialSigned = false
     val verifiedSignatures = mutableListOf<SignatureVerification>()
     val keyIdOfSigningKeys = mutableSetOf<Long>()
+    val alternativeContentResolver = AlternativeContentResolver()
+
+    filterBlocksViaTree(msgBlocks.toList()) { innerBlock ->
+      innerBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES
+    }.forEach { pgpBlock ->
+      analyzeBlockForPgp(pgpBlock) { hasEncryptedContent, _, _, _, _ ->
+        if (!isEncrypted) {
+          isEncrypted = hasEncryptedContent
+        }
+      }
+    }
+
+    val displayedBlocks = alternativeContentResolver.getDisplayedBlocks(msgBlocks.toList())
+    displayedBlocks.filter { innerBlock ->
+      innerBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES
+    }.forEach { pgpBlock ->
+      analyzeBlockForPgp(pgpBlock) { _,
+                                     hasSignedContent,
+                                     hasInvalidSignatures,
+                                     keyIdsOfSigningKeys,
+                                     verifiedSignaturesList ->
+        if (hasSignedContent) {
+          signedBlockCount++
+        }
+
+        if (!hasBadSignatures) {
+          hasBadSignatures = hasInvalidSignatures
+        }
+
+        keyIdOfSigningKeys.addAll(keyIdsOfSigningKeys)
+
+        if (verifiedSignatures.isEmpty()) {
+          verifiedSignatures.addAll(verifiedSignaturesList)
+        } else {
+          val keyIdsOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey.keyId }
+          val keyIdsOfCurrentVerifiedSignatures = verifiedSignaturesList.map {
+            it.signingKey.keyId
+          }
+          if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
+            hasMixedSignatures = true
+            verifiedSignatures.addAll(verifiedSignaturesList)
+          }
+        }
+      }
+    }
 
     for (block in msgBlocks) {
       // We don't need Base64 correction here, fromAttachment() does this for us
@@ -843,43 +889,6 @@ object PgpMsg {
       // So, at least meanwhile, not porting this:
       // block.content = isContentBlock(block.type)
       //     ? block.content.toUtfStr() : block.content.toRawBytesStr();
-
-      filterBlocksViaTree(listOf(block)) { innerBlock ->
-        innerBlock.type in MsgBlock.Type.SIGNED_BLOCK_TYPES
-      }.forEach { pgpBlock ->
-        analyzeBlockForPgp(pgpBlock) { hasEncryptedContent,
-                                       hasSignedContent,
-                                       hasInvalidSignatures,
-                                       keyIdsOfSigningKeys,
-                                       verifiedSignaturesList ->
-          if (!isEncrypted) {
-            isEncrypted = hasEncryptedContent
-          }
-
-          if (hasSignedContent) {
-            signedBlockCount++
-          }
-
-          if (!hasBadSignatures) {
-            hasBadSignatures = hasInvalidSignatures
-          }
-
-          keyIdOfSigningKeys.addAll(keyIdsOfSigningKeys)
-
-          if (verifiedSignatures.isEmpty()) {
-            verifiedSignatures.addAll(verifiedSignaturesList)
-          } else {
-            val keyIdsOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey.keyId }
-            val keyIdsOfCurrentVerifiedSignatures = verifiedSignaturesList.map {
-              it.signingKey.keyId
-            }
-            if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
-              hasMixedSignatures = true
-              verifiedSignatures.addAll(verifiedSignaturesList)
-            }
-          }
-        }
-      }
 
       when {
         block is DecryptedAndOrSignedContentMsgBlock -> {
@@ -903,11 +912,14 @@ object PgpMsg {
       }
     }
 
-    val fmtRes = prepareFormattedContentBlock(contentBlocks)
+    val fmtRes = prepareFormattedContentBlock(
+      allContentBlocks = contentBlocks,
+      alternativeContentResolver = alternativeContentResolver
+    )
     resultBlocks.add(0, fmtRes.contentBlock)
 
     if (signedBlockCount > 0 &&
-      signedBlockCount != msgBlocks.filter { it.type != MsgBlock.Type.ENCRYPTED_SUBJECT }.size
+      signedBlockCount != displayedBlocks.count { it.type != MsgBlock.Type.ENCRYPTED_SUBJECT }
     ) {
       isPartialSigned = true
     }
@@ -1243,13 +1255,13 @@ object PgpMsg {
 
   private fun prepareFormattedContentBlock(
     allContentBlocks: List<MsgBlock>,
+    alternativeContentResolver: AlternativeContentResolver,
     stripHtmlRootTags: Boolean = false
   ): FormattedContentBlockResult {
     val inlineImagesByCid = mutableMapOf<String, MsgBlock>()
     val imagesAtTheBottom = mutableListOf<MsgBlock>()
-    val plainImageBlocks = filterBlocksViaTree(allContentBlocks) {
-      MimeUtils.isPlainImgAtt(it)
-    }
+    val plainImageBlocks =
+      alternativeContentResolver.getInlineImageBlocksForRendering(allContentBlocks)
     for (plainImageBlock in plainImageBlocks) {
       var contentId = (plainImageBlock as AttMsgBlock).attMeta.contentId ?: ""
       if (contentId.isNotEmpty()) {
@@ -1282,32 +1294,21 @@ object PgpMsg {
     for (block in allContentBlocks.filterNot { MimeUtils.isPlainImgAtt(it) }) {
       when (block) {
         is AlternativeContentMsgBlock -> {
-          if (block.plainBlocks.size > 1) {
+          val alternativeContentSelection = alternativeContentResolver.select(block)
+          if (alternativeContentSelection.usePlainVersionForRendering) {
             prepareFormattedContentBlock(
-              allContentBlocks = block.plainBlocks,
+              allContentBlocks = alternativeContentSelection.displayedBlocks,
+              alternativeContentResolver = alternativeContentResolver,
               stripHtmlRootTags = true
             ).apply {
               msgContentAsHtml.append(contentBlock.content)
               msgContentAsText.append(text).append('\n')
             }
 
-            //we skip otherBlocks if we have more than one plain block
+            //we skip otherBlocks if the plain version was selected for rendering
             continue
           } else {
-            val singlePlainBlock = block.plainBlocks.first()
-            val singlePlainVersionHasDecryptedContent =
-              singlePlainBlock is DecryptedAndOrSignedContentMsgBlock
-            if (singlePlainVersionHasDecryptedContent) {
-              prepareFormattedContentBlock(
-                allContentBlocks = singlePlainBlock.blocks,
-                stripHtmlRootTags = true
-              ).apply {
-                msgContentAsHtml.append(contentBlock.content)
-                msgContentAsText.append(text).append('\n')
-              }
-              //we skip otherBlocks if plain version has decrypted content
-              continue
-            } else {
+            block.plainBlocks.firstOrNull()?.let { singlePlainBlock ->
               collectDataFromMsgBlock(
                 block = singlePlainBlock,
                 useHtml = false,
@@ -1316,7 +1317,7 @@ object PgpMsg {
             }
           }
 
-          val htmlVersionBlock = block.otherBlocks.firstOrNull()
+          val htmlVersionBlock = alternativeContentSelection.displayedBlocks.firstOrNull()
           htmlVersionBlock?.let { htmlBlock ->
             collectDataFromMsgBlock(
               block = htmlBlock,
@@ -1329,6 +1330,7 @@ object PgpMsg {
         is DecryptedAndOrSignedContentMsgBlock -> {
           prepareFormattedContentBlock(
             allContentBlocks = block.blocks,
+            alternativeContentResolver = alternativeContentResolver,
             stripHtmlRootTags = true
           ).apply {
             msgContentAsHtml.append(contentBlock.content)
@@ -1409,6 +1411,89 @@ object PgpMsg {
             add(block)
           }
         }
+      }
+    }
+  }
+
+  private class AlternativeContentResolver {
+    private val selectionCache =
+      IdentityHashMap<AlternativeContentMsgBlock, AlternativeContentSelection>()
+
+    fun getDisplayedBlocks(blocks: List<MsgBlock>): List<MsgBlock> =
+      blocks.flatMap { block ->
+        if (block is AlternativeContentMsgBlock) {
+          getDisplayedBlocks(select(block).displayedBlocks)
+        } else {
+          listOf(block)
+        }
+      }
+
+    fun select(block: AlternativeContentMsgBlock): AlternativeContentSelection =
+      selectionCache.getOrPut(block) {
+        selectNotCached(block)
+      }
+
+    fun getInlineImageBlocksForRendering(blocks: List<MsgBlock>): List<MsgBlock> =
+      blocks.flatMap { block ->
+        when {
+          block is AlternativeContentMsgBlock -> {
+            val selection = select(block)
+            val blocksToInspect = when {
+              hasSignedDisplayedContent(selection.displayedBlocks) -> {
+                // Do not mix unsigned images from a rejected alternative into signed content.
+                selection.displayedBlocks + block.otherBlocks.drop(1).filter {
+                  MimeUtils.isPlainImgAtt(it) && it.isOpenPGPMimeSigned
+                }
+              }
+
+              selection.usePlainVersionForRendering -> block.allBlocks
+              else -> block.otherBlocks
+            }
+            getInlineImageBlocksForRendering(blocksToInspect)
+          }
+
+          MimeUtils.isPlainImgAtt(block) -> listOf(block)
+          else -> emptyList()
+        }
+      }
+
+    private fun hasSignedDisplayedContent(blocks: List<MsgBlock>): Boolean =
+      getDisplayedBlocks(blocks).any {
+        it.type in MsgBlock.Type.SIGNED_BLOCK_TYPES || it.isOpenPGPMimeSigned
+      }
+
+    private fun selectNotCached(
+      block: AlternativeContentMsgBlock
+    ): AlternativeContentSelection {
+      val hasSignedPlainBlocks = hasSignedDisplayedContent(block.plainBlocks)
+      val hasSignedDisplayedOtherBlock = hasSignedDisplayedContent(block.otherBlocks.take(1))
+
+      return when {
+        hasSignedPlainBlocks && !hasSignedDisplayedOtherBlock -> AlternativeContentSelection(
+          displayedBlocks = block.plainBlocks,
+          usePlainVersionForRendering = true
+        )
+
+        block.plainBlocks.size > 1 -> AlternativeContentSelection(
+          displayedBlocks = block.plainBlocks,
+          usePlainVersionForRendering = true
+        )
+
+        block.plainBlocks.singleOrNull() is DecryptedAndOrSignedContentMsgBlock ->
+          AlternativeContentSelection(
+            displayedBlocks = block.plainBlocks,
+            usePlainVersionForRendering = true
+          )
+
+        block.otherBlocks.isNotEmpty() -> AlternativeContentSelection(
+          displayedBlocks = listOf(block.otherBlocks.first()),
+          usePlainVersionForRendering = false
+        )
+
+        else -> AlternativeContentSelection(
+          displayedBlocks = block.plainBlocks,
+          usePlainVersionForRendering = true
+        )
       }
     }
   }
@@ -1749,6 +1834,11 @@ object PgpMsg {
   private data class FormattedContentBlockResult(
     val text: String,
     val contentBlock: MsgBlock
+  )
+
+  private data class AlternativeContentSelection(
+    val displayedBlocks: List<MsgBlock>,
+    val usePlainVersionForRendering: Boolean
   )
 
   private enum class FrameColor {
