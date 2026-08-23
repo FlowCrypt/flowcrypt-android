@@ -6,6 +6,7 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.FlowCryptApplication
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
@@ -17,7 +18,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
@@ -150,17 +150,27 @@ class PgpKeyTest {
   }
 
   @Test
-  @Ignore("temporary disabled due to https://github.com/pgpainless/pgpainless/issues/488")
   fun testPublicKey_Issue1358() {
-    val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
-    val actual = PgpKey.parseKeys(source = keyText)
-    assertEquals(1, actual.getAllKeys().size)
+    val originalPgpainless = PGPainless.getInstance()
+    try {
+      PGPainless.setInstance(FlowCryptApplication.createPGPainlessInstance())
+      assertTrue(PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation)
+
+      val keyText = TestUtil.readResourceAsString("pgp/keys/issue-1358.public.gpg-key")
+      val actual = PgpKey.parseKeys(source = keyText)
+      assertEquals(1, actual.getAllKeys().size)
+    } finally {
+      PGPainless.setInstance(originalPgpainless)
+    }
   }
 
   @Test
   fun testReadCorruptedPrivateKey() {
+    val originalPgpainless = PGPainless.getInstance()
     try {
-      PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = true
+      PGPainless.setInstance(FlowCryptApplication.createPGPainlessInstance())
+      assertTrue(PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation)
+
       val encryptedKeyText =
         TestUtil.readResourceAsString("pgp/keys/issue-1669-corrupted.private.gpg-key")
       val passphrase = Passphrase.fromPassword("123")
@@ -168,7 +178,7 @@ class PgpKeyTest {
         PgpKey.checkSecretKeyIntegrity(encryptedKeyText, passphrase)
       }
     } finally {
-      PGPainless.getInstance().algorithmPolicy.enableKeyParameterValidation = false
+      PGPainless.setInstance(originalPgpainless)
     }
   }
 
