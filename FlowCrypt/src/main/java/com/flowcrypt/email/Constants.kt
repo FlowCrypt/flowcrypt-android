@@ -63,6 +63,7 @@ class Constants {
     const val PREF_KEY_INSTALL_VERSION = "pref_key_install_version"
     const val PREF_KEY_SERVER_SETTINGS = "pref_key_server_settings"
     const val PREF_KEY_GENERAL = "pref_key_general"
+    const val PREF_KEY_ATTACHMENTS_CATEGORY = "pref_key_attachments_category"
 
     /**
      * The max total size off all attachment which can be send via the app.

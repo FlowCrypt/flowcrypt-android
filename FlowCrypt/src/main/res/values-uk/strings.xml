@@ -648,6 +648,8 @@
     <string name="general">Загальні</string>
     <string name="disable_smart_mode_for_attachments_preview">Вимкнути розумний режим для попереднього перегляду вкладень</string>
     <string name="message_not_found_please_reload_the_thread">Повідомлення не знайдено. Схоже, його перемістили або видалили. Оновіть бесіду, щоб отримати останні оновлення.</string>
+    <string name="conversation">Conversation</string>
+    <string name="conversation_view">Conversation view</string>
     <plurals name="drafts_count">
         <item quantity="one" tools:ignore="ImpliedQuantity">Чорновик</item>
         <item quantity="few">Чорновики(%1$d)</item>
