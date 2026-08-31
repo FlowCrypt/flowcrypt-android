@@ -476,7 +476,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.10")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.4")
-  testImplementation("io.github.classgraph:classgraph:4.8.191")
+  testImplementation("io.github.classgraph:classgraph:4.8.194")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -506,9 +506,9 @@ dependencies {
   implementation("androidx.activity:activity-ktx:1.13.0")
   implementation("androidx.fragment:fragment-ktx:1.9.0")
   implementation("androidx.work:work-runtime-ktx:2.11.2")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.9.8")
-  implementation("androidx.navigation:navigation-ui-ktx:2.9.8")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.9.8")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.10.0")
+  implementation("androidx.navigation:navigation-ui-ktx:2.10.0")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.10.0")
   implementation("androidx.webkit:webkit:1.16.0")
 
   implementation("com.google.android.gms:play-services-base:18.10.1")
@@ -533,7 +533,7 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.6")
-  implementation("org.jsoup:jsoup:1.23.1")
+  implementation("org.jsoup:jsoup:1.23.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
