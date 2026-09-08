@@ -9,6 +9,7 @@ import android.accounts.Account
 import android.accounts.AccountManager
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -114,13 +115,32 @@ class UserRecoverableAuthExceptionFragment :
     )
   }
 
+  private fun isValidGoogleRecoverableAuthIntent(intent: Intent?): Boolean {
+    if (intent == null) return false
+    val grantFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+        Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+        Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+    if (intent.flags and grantFlags != 0) {
+      return false
+    }
+    val componentPackage = intent.component?.packageName
+    val targetPackage = componentPackage
+      ?: intent.resolveActivity(requireContext().packageManager)?.packageName
+    return targetPackage == GOOGLE_PLAY_SERVICES_PACKAGE
+  }
+
   private fun initViews() {
     binding?.buttonReconnect?.setOnClickListener {
       account?.let { accountEntity ->
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            val recoverableIntent = args.recoverableIntent ?: return@setOnClickListener
-            forActivityResultSignInError.launch(recoverableIntent)
+            val recoverableIntent = args.recoverableIntent
+            if (isValidGoogleRecoverableAuthIntent(recoverableIntent)) {
+              forActivityResultSignInError.launch(recoverableIntent)
+            } else {
+              toast(R.string.access_was_not_granted)
+            }
           }
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
@@ -233,5 +253,9 @@ class UserRecoverableAuthExceptionFragment :
         }
       }
     }
+  }
+
+  companion object {
+    private const val GOOGLE_PLAY_SERVICES_PACKAGE = "com.google.android.gms"
   }
 }
