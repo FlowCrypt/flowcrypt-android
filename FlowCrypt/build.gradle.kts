@@ -516,7 +516,7 @@ dependencies {
   implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.code.gson:gson:2.14.0")
-  implementation("com.google.api-client:google-api-client-android:2.9.0")
+  implementation("com.google.api-client:google-api-client-android:2.9.1")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20251201-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
