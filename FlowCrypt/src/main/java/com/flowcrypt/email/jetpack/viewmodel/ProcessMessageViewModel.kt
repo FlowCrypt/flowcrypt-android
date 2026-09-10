@@ -266,7 +266,7 @@ class ProcessMessageViewModel(
           )
         }
 
-        else -> {
+        Result.Status.NONE -> {
           Result.none()
         }
       }

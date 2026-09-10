@@ -24,17 +24,12 @@ data class Result<out T>(
   val progress: Double? = null
 ) : Serializable {
 
-  fun toCached(): Result<T> {
-    return copy(status = Status.SUCCESS_CACHED)
-  }
-
   enum class Status {
     SUCCESS,
     ERROR,
     EXCEPTION,
     LOADING,
-    NONE,
-    SUCCESS_CACHED
+    NONE
   }
 
   companion object {

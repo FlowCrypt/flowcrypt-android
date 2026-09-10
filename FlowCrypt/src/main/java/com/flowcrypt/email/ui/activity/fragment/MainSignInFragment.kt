@@ -258,7 +258,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           authorizeGoogleAccount()
         } else {
           showContent()
-          showInfoSnackbar(msgText = getString(R.string.unknown_error))
+          showInfoSnackbar(msgText = getString(R.string.unsupported_credentials))
         }
       } catch (_: GetCredentialCancellationException) {
         showContent()
