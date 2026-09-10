@@ -22,12 +22,18 @@ import org.jose4j.jws.JsonWebSignature
 import org.jose4j.jwt.JwtClaims
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.json.JSONObject
+import org.junit.After
 
 
 /**
  * @author Denys Bondarenko
  */
 abstract class BaseSignTest : BaseTest() {
+
+  @After
+  fun resetGoogleIdTokenCredential() {
+    FlavorSettings.setGoogleIdTokenCredential(null)
+  }
 
   protected fun setupAndClickSignInButton(signInAccountJson: String) {
     val jsonObject = JSONObject(signInAccountJson)
