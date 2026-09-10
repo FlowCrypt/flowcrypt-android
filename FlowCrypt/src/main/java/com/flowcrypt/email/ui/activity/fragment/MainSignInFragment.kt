@@ -22,6 +22,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -262,6 +263,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
       } catch (_: GetCredentialCancellationException) {
         showContent()
+      } catch (e: NoCredentialException) {
+        showContent()
+        showInfoSnackbar(msgText = e.errorMessage?.toString() ?: e.type)
       } catch (e: GoogleIdTokenParsingException) {
         showContent()
         showInfoSnackbar(msgText = e.message ?: getString(R.string.unknown_error))
