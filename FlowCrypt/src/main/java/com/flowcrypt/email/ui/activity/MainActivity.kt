@@ -33,6 +33,8 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.core.view.get
 import androidx.core.view.size
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -65,6 +67,7 @@ import com.flowcrypt.email.extensions.android.content.getParcelableExtraViaExt
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.kotlin.parseAsColorBasedOnDefaultSettings
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -87,16 +90,12 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.launch
 
 /**
  * @author Denys Bondarenko
  */
 class MainActivity : BaseActivity<ActivityMainBinding>() {
-  private lateinit var client: GoogleSignInClient
   private var navigationViewManager: NavigationViewManager? = null
 
   private val launcherViewModel: LauncherViewModel by viewModels()
@@ -160,8 +159,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
     super.onCreate(savedInstanceState)
     observeMovingToBackground()
-
-    client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
     IdleService.start(this)
     IdleService.bind(this, idleServiceConnection)
@@ -434,7 +431,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   private fun logout() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
-        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
+        if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+          runCatching {
+            CredentialManager.create(this@MainActivity)
+              .clearCredentialState(ClearCredentialStateRequest())
+          }
+        }
 
         FlavorSettings.getCountingIdlingResource().incrementSafely(this@MainActivity)
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(BaseSyncWorker.TAG_SYNC)

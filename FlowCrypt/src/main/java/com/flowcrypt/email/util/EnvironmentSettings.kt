@@ -7,6 +7,7 @@ package com.flowcrypt.email.util
 
 import android.content.Context
 import androidx.test.espresso.idling.CountingIdlingResource
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.util.Properties
 
 /**
@@ -18,6 +19,7 @@ interface EnvironmentSettings {
   fun configure(context: Context)
   fun getCountingIdlingResource(): CountingIdlingResource? = null
   fun getGoogleIdToken(): String? = null
+  fun getGoogleIdTokenCredential(): GoogleIdTokenCredential? = null
   fun getGmailAPIRootUrl(): String? = null
   fun isGMailAPIHttpRequestInitializerEnabled(): Boolean = true
 }

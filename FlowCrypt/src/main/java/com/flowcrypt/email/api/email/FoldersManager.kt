@@ -231,6 +231,9 @@ class FoldersManager constructor(val accountEntity: AccountEntity) {
    */
   fun getSortedServerFolders(): Collection<LocalFolder> {
     val localFolders = serverFolders.toMutableList()
+    if (localFolders.size <= 1) {
+      return localFolders
+    }
     val sortedList = arrayOfNulls<LocalFolder>(localFolders.size)
 
     val inbox = folderInbox?.let {
