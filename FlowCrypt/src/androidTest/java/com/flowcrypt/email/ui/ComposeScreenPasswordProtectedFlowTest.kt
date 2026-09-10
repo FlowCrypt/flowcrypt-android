@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -48,7 +48,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ComposeScreenPasswordProtectedFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-  private val temporaryFolderRule = TemporaryFolder()
+  private val temporaryFolderRule = TemporaryFolder.builder().parentFolder(SHARED_FOLDER).build()
 
   override val addAccountToDatabaseRule: AddAccountToDatabaseRule
     get() = AddAccountToDatabaseRule(

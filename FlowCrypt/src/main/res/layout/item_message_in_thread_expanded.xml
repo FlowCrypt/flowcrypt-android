@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutHeader"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/default_margin_medium"
+        android:paddingTop="@dimen/default_margin_content"
+        android:paddingEnd="@dimen/default_margin_medium"
+        android:paddingBottom="@dimen/default_margin_content"
+        android:animateLayoutChanges="true">
+
+        <ImageView
+            android:id="@+id/imageViewAvatar"
+            android:layout_width="@dimen/avatar_size"
+            android:layout_height="@dimen/avatar_size"
+            android:contentDescription="@string/avatar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_account_default_photo" />
+
+        <TextView
+            android:id="@+id/textViewSenderAddress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin_content_small"
+            android:layout_marginEnd="@dimen/default_margin_small"
+            android:ellipsize="middle"
+            android:maxLines="1"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/default_text_size_big"
+            app:layout_constraintEnd_toStartOf="@+id/imageButtonReplyAll"
+            app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginLeft="@dimen/default_margin_medium"
+            tools:text="sender@flowcrypt.com" />
+
+        <ImageButton
+            android:id="@+id/imageButtonReplyAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/default_margin_content_small"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/reply_all"
+            app:layout_constraintEnd_toStartOf="@+id/imageButtonMoreOptions"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginRight="@dimen/default_margin_medium"
+            app:srcCompat="@drawable/ic_reply_all"
+            tools:tint="@color/gray" />
+
+        <ImageButton
+            android:id="@+id/imageButtonMoreOptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/reply_all"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginRight="@dimen/default_margin_medium"
+            app:srcCompat="@drawable/ic_more_vert_gray_32dp" />
+
+        <ImageButton
+            android:id="@+id/imageButtonDeleteDraft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/default_margin_content_small"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/delete_draft"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@+id/imageButtonEditDraft"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginEnd="0dp"
+            app:srcCompat="@drawable/ic_delete_white_24dp"
+            app:tint="@color/gray" />
+
+        <ImageButton
+            android:id="@+id/imageButtonEditDraft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/edit_draft"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginRight="@dimen/default_margin_medium"
+            app:srcCompat="@drawable/ic_baseline_edit_draft_24" />
+
+        <ProgressBar
+            android:id="@+id/progressBarSavingDraft"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_goneMarginRight="@dimen/default_margin_medium" />
+
+        <TextView
+            android:id="@+id/textViewDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAlignment="viewEnd"
+            android:textColor="@color/gray"
+            android:textSize="@dimen/default_text_size_medium"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toBottomOf="@+id/tVTo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/textViewSenderAddress"
+            app:layout_constraintTop_toTopOf="@+id/tVTo"
+            tools:text="1:05 PM" />
+
+        <ImageButton
+            android:id="@+id/iBShowDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/default_margin_small"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/details"
+            app:layout_constraintBottom_toBottomOf="@+id/tVTo"
+            app:layout_constraintEnd_toEndOf="@+id/textViewSenderAddress"
+            app:layout_constraintEnd_toStartOf="@+id/textViewDate"
+            app:layout_constraintStart_toEndOf="@+id/tVTo"
+            app:layout_constraintTop_toTopOf="@+id/tVTo"
+            app:srcCompat="@drawable/ic_arrow_drop_down"
+            app:tint="@color/gray" />
+
+        <TextView
+            android:id="@+id/tVTo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_margin_content_small"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAlignment="textStart"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toStartOf="@+id/iBShowDetails"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
+            app:layout_constraintStart_toStartOf="@+id/textViewSenderAddress"
+            app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
+            tools:text="To me" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rVMsgDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_medium"
+        android:layout_marginEnd="@dimen/default_margin_medium"
+        android:background="@drawable/bg_mime_headers"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:padding="@dimen/default_margin_content_small"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:visibility="gone"
+        tools:itemCount="4"
+        tools:listitem="@layout/item_mime_header"
+        tools:visibility="visible" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rVPgpBadges"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_medium"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:layout_marginEnd="@dimen/default_margin_medium"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:itemCount="4"
+        tools:listitem="@layout/item_pgp_badge"
+        tools:orientation="horizontal" />
+
+    <LinearLayout
+        android:id="@+id/layoutSecurityWarnings"
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/default_margin_medium"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <com.flowcrypt.email.ui.widget.EmailWebView
+        android:id="@+id/emailWebView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false">
+
+    </com.flowcrypt.email.ui.widget.EmailWebView>
+
+    <LinearLayout
+        android:id="@+id/layoutMessageParts"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/default_margin_small"
+        android:paddingBottom="@dimen/default_margin_small">
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rVAttachments"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        tools:itemCount="3"
+        tools:listitem="@layout/attachment_item" />
+
+</LinearLayout>

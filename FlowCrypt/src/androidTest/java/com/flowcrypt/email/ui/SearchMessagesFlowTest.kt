@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -24,6 +24,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.junit.annotations.DependsOnMailServer
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -33,9 +34,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.AccountDaoManager
-import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.not
 import org.junit.Before
 import org.junit.Rule
@@ -43,6 +42,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -50,6 +50,7 @@ import org.junit.runner.RunWith
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @DependsOnMailServer
+@FlowCryptTestSettings(useCommonIdling = false)
 class SearchMessagesFlowTest : BaseTest() {
 
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule(
@@ -69,8 +70,13 @@ class SearchMessagesFlowTest : BaseTest() {
 
   @Before
   fun waitData() {
-    //todo-denbond7 Need to improve this code after espresso updates
-    Thread.sleep(2000)
+    val msgInfo = getMsgInfo(
+      path = "messages/info/open_pgp_inline_with_inline_image.json",
+      mimeMsgPath = "messages/mime/open_pgp_inline_with_inline_image.txt",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    )
+
+    waitForObjectWithText(requireNotNull(msgInfo?.getSubject()), TimeUnit.SECONDS.toMillis(10))
   }
 
   @Before
@@ -86,7 +92,7 @@ class SearchMessagesFlowTest : BaseTest() {
       .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
       .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
-    Thread.sleep(2000)
+    waitForObjectWithText("Message", TimeUnit.SECONDS.toMillis(10))
     onView(withId(R.id.recyclerViewMsgs))
       .check(matches(withRecyclerViewItemCount(2))).check(matches(isDisplayed()))
   }
@@ -97,7 +103,7 @@ class SearchMessagesFlowTest : BaseTest() {
       .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
       .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
-    Thread.sleep(2000)
+    waitForObjectWithText("With android in subject", TimeUnit.SECONDS.toMillis(10))
     onView(withId(R.id.recyclerViewMsgs))
       .check(matches(withRecyclerViewItemCount(3))).check(matches(isDisplayed()))
   }
@@ -121,7 +127,7 @@ class SearchMessagesFlowTest : BaseTest() {
         typeText("The string with no results"),
         pressImeActionButton()
       )
-    Thread.sleep(2000)
+    waitForObjectWithText(getResString(R.string.no_results), TimeUnit.SECONDS.toMillis(10))
     onView(withId(R.id.tVEmpty))
       .check(matches(isDisplayed()))
   }
@@ -136,7 +142,7 @@ class SearchMessagesFlowTest : BaseTest() {
     onView(withId(androidx.appcompat.R.id.search_close_btn))
       .perform(click())
     onView(isAssignableFrom(EditText::class.java))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
   }
 
   companion object {

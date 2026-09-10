@@ -1,30 +1,12 @@
-# intentionally not using * to allow for dependabot automerge-see comment below
-# (github does not allow negative !FlowCrypt/build.gradle 
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence,
+# these owners will be requested for review when someone opens a pull request.
+* @DenBond7 @sosnovsky
 
-.github @DenBond7 @sosnovsky
-.idea @DenBond7 @sosnovsky
-.semaphore @DenBond7 @sosnovsky
-
-FlowCrypt/libs @DenBond7 @sosnovsky
-FlowCrypt/schemas @DenBond7 @sosnovsky
-FlowCrypt/src @DenBond7 @sosnovsky
-FlowCrypt/.gitignore @DenBond7 @sosnovsky
-FlowCrypt/CMakeLists.txt @DenBond7 @sosnovsky
-FlowCrypt/lint.xml @DenBond7 @sosnovsky
-FlowCrypt/proguard-rules.pro @DenBond7 @sosnovsky
-# intentionally leaving out FlowCrypt/build.gradle 
-#   so that dependabot does not need codeowner approvals to auto-merge
-
-design @DenBond7 @sosnovsky
-docker-mailserver @DenBond7 @sosnovsky
-gradle/wrapper @DenBond7 @sosnovsky
-script @DenBond7 @sosnovsky
-.gitignore @DenBond7 @sosnovsky
-README.md @DenBond7 @sosnovsky
-detekt-config.yml @DenBond7 @sosnovsky
-detekt.gradle @DenBond7 @sosnovsky
-ext.gradle @DenBond7 @sosnovsky
-gradle.properties @DenBond7 @sosnovsky
-gradlew @DenBond7 @sosnovsky
-gradlew.bat @DenBond7 @sosnovsky
-settings.gradle @DenBond7 @sosnovsky
+# The following files will no have codeowners to allow dependabot auto-merge
+# based on https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features
+# /customizing-your-repository/about-code-owners#codeowners-syntax
+# If you specify a user or team that doesn't exist or has insufficient access, a code owner will not be assigned.
+# But these files will be skipped and not assigned to anyone.
+FlowCrypt/build.gradle.kts not_existed_user@flowcrypt.com
+build.gradle.kts not_existed_user@flowcrypt.com

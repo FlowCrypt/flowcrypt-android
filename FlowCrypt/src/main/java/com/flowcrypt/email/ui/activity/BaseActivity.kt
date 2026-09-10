@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity
@@ -21,6 +21,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuProvider
 import androidx.core.view.allViews
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
@@ -29,8 +30,11 @@ import androidx.navigation.ui.NavigationUI
 import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.extensions.showFeedbackFragment
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.service.PassPhrasesInRAMService
 import com.flowcrypt.email.util.LogsUtil
 
 /**
@@ -91,6 +95,7 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     initViews()
     setupNavigation()
     initAccountViewModel()
+    setupPassPhrasesInRAMService()
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -193,6 +198,21 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
         navController,
         appBarConfiguration
       )
+    }
+  }
+
+  private fun setupPassPhrasesInRAMService() {
+    val keysStorage = KeysStorageImpl.getInstance(this)
+    keysStorage.secretKeyRingsLiveData.observe(this) {
+      val hasTemporaryPassPhrases =
+        keysStorage.getRawKeys().any { it.passphraseType == KeyEntity.PassphraseType.RAM }
+      if (hasTemporaryPassPhrases) {
+        if (lifecycle.currentState in listOf(Lifecycle.State.STARTED, Lifecycle.State.RESUMED)) {
+          PassPhrasesInRAMService.start(this@BaseActivity)
+        }
+      } else {
+        PassPhrasesInRAMService.stop(this)
+      }
     }
   }
 }

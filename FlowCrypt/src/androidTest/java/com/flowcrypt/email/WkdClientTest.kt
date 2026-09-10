@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- * Ivan Pizhenko
- * DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -10,6 +8,7 @@ package com.flowcrypt.email
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
@@ -24,8 +23,8 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.ClassRule
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -37,86 +36,83 @@ import java.net.HttpURLConnection
 
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-@Ignore(
-  "Need to think about this test. " +
-      "It uses real API calls and sometimes it fails due to a server not available issue."
-)
 class WkdClientTest {
   private val context: Context = ApplicationProvider.getApplicationContext()
+
+  private val mockWebServerRule = FlowCryptMockWebServerRule(
+    TestConstants.MOCK_WEB_SERVER_PORT,
+    object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        val gson = ApiHelper.getInstance(ApplicationProvider.getApplicationContext()).gson
+
+        when (request.path) {
+          "/.well-known/openpgpkey/policy" -> {
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+          }
+
+          genLookupUrlPath(EXISTING_EMAIL) -> {
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(
+                PGPainless.getInstance().generateKey().simpleEcKeyRing(EXISTING_EMAIL).armor()
+              )
+          }
+
+          genLookupUrlPath(NOT_EXISTING_EMAIL) -> {
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+              .setBody(
+                gson.toJson(
+                  ApiError(
+                    code = HttpURLConnection.HTTP_NOT_FOUND,
+                    message = "Public key not found"
+                  )
+                )
+              )
+          }
+        }
+
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+    })
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
+    .around(mockWebServerRule)
 
   @Test
-  fun existingEmailTest() = runBlocking {
+  @FlakyTest
+  @Ignore("Temporary disabled as flaky")
+  fun existingEmailFlowCryptDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(context, EXISTING_EMAIL)
-    assertTrue("Key not found", keys != null)
-    assertTrue("There are no keys in the key collection", keys!!.keyRings.hasNext())
+    assertTrue("There are no keys in the key collection", requireNotNull(keys).keyRings.hasNext())
   }
 
   @Test
-  fun nonExistingEmailTest1() = runBlocking {
+  fun nonExistingEmailFlowCryptDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(context, NOT_EXISTING_EMAIL)
-    assertTrue("Key found for non-existing email", keys == null)
+    assertNull("Key found for non-existing email", keys)
   }
 
   @Test
-  fun nonExistingEmailTest2() = runBlocking {
-    val keys = WkdClient.lookupEmail(context, "doesnotexist@google.com")
-    assertTrue("Key found for non-existing email", keys == null)
+  fun nonExistingEmailForKnownDomainTest() = runBlocking {
+    val keys = WkdClient.lookupEmail(context, "doesnotexist@localhost")
+    assertNull("Key found for non-existing email", keys)
   }
 
   @Test
   fun nonExistingDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(
       context,
-      "doesnotexist@thisdomaindoesnotexist.test"
+      "doesnotexist@thisdomaindoesnotexist.example"
     )
-    assertTrue("Key found for non-existing email", keys == null)
+    assertNull("Key found for non-existing domain", keys)
   }
 
   companion object {
 
     const val EXISTING_EMAIL = "existing@flowcrypt.test"
     const val NOT_EXISTING_EMAIL = "not_existing@flowcrypt.test"
-
-    @get:ClassRule
-    @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT,
-      object : Dispatcher() {
-        override fun dispatch(request: RecordedRequest): MockResponse {
-          val gson = ApiHelper.getInstance(ApplicationProvider.getApplicationContext()).gson
-
-          when (request.path) {
-            "/.well-known/openpgpkey/policy" -> {
-              return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-            }
-
-            genLookupUrlPath(EXISTING_EMAIL) -> {
-              return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-                .setBody(
-                  PGPainless.generateKeyRing().simpleEcKeyRing(EXISTING_EMAIL).publicKey.armor()
-                )
-            }
-
-            genLookupUrlPath(NOT_EXISTING_EMAIL) -> {
-              return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-                .setBody(
-                  gson.toJson(
-                    ApiError(
-                      code = HttpURLConnection.HTTP_NOT_FOUND,
-                      message = "Public key not found"
-                    )
-                  )
-                )
-            }
-          }
-
-          return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
-        }
-      })
 
     private fun genLookupUrlPath(email: String): String {
       val user = email.substringBefore("@")

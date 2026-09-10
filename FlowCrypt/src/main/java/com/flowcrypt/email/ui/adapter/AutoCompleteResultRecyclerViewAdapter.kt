@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.adapter
@@ -53,7 +53,6 @@ class AutoCompleteResultRecyclerViewAdapter(
           .inflate(R.layout.recipient_auto_complete_item, parent, false)
       )
     }
-
   }
 
   override fun getItemId(position: Int): Long {

@@ -20,7 +20,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers
+import org.hamcrest.Matchers.not
 import org.junit.ClassRule
 import java.net.HttpURLConnection
 
@@ -69,7 +69,7 @@ abstract class BaseComposeScreenNoKeyAvailableTest : BaseComposeScreenTest() {
     //check that editTextFrom doesn't have gray text color. It means a sender has a private key.
     onView(withId(R.id.editTextFrom))
       .check(matches(isDisplayed()))
-      .check(matches(CoreMatchers.not(hasTextColor(R.color.gray))))
+      .check(matches(not(hasTextColor(R.color.gray))))
   }
 
   companion object {

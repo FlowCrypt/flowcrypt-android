@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -55,6 +55,7 @@ import com.flowcrypt.email.api.retrofit.response.model.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.PublicKeyMsgBlock
 import com.flowcrypt.email.junit.annotations.NotReadyForCI
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withMessageHeaderInfo
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -64,13 +65,14 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
-import com.flowcrypt.email.ui.adapter.MsgDetailsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.flowcrypt.email.ui.base.BaseMessageDetailsFlowTest
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import kotlinx.coroutines.runBlocking
+import org.apache.commons.io.FilenameUtils
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anything
@@ -83,7 +85,6 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -128,26 +129,19 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
-  fun testReplyButton() {
-    val incomingMessageInfo = testStandardMsgPlaintextInternal()
-    onView(withId(R.id.layoutReplyButton))
-      .check(matches(isDisplayed()))
-      .perform(scrollTo(), click())
-    intended(hasComponent(CreateMessageActivity::class.java.name))
-
-    checkQuotesFunctionality(incomingMessageInfo)
-  }
-
-  @Test
+  //@Ignore("flaky")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testTopReplyButton() {
     val incomingMessageInfo = testTopReplyAction(getResString(R.string.reply))
     checkQuotesFunctionality(incomingMessageInfo)
   }
 
   @Test
+  //@Ignore("flaky 2 3")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testReplyAllButton() {
     val incomingMessageInfo = testStandardMsgPlaintextInternal()
-    onView(withId(R.id.layoutReplyAllButton))
+    onView(withId(R.id.replyAllButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
@@ -158,7 +152,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   @Test
   fun testFwdButton() {
     testStandardMsgPlaintextInternal()
-    onView(withId(R.id.layoutFwdButton))
+    onView(withId(R.id.forwardButton))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
@@ -557,8 +551,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+          withMessageHeaderInfo(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.from),
               value = "Denis Bondarenko <denbond7@flowcrypt.test>"
             )
@@ -568,8 +562,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+          withMessageHeaderInfo(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.reply_to),
               value = "Denis Bondarenko <denbond7@flowcrypt.test>"
             )
@@ -579,8 +573,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+          withMessageHeaderInfo(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.to),
               value = "default@flowcrypt.test"
             )
@@ -590,8 +584,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+          withMessageHeaderInfo(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.cc),
               value = "ccuser@test"
             )
@@ -609,8 +603,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     onView(withId(R.id.rVMsgDetails))
       .perform(
         scrollToHolder(
-          withHeaderInfo(
-            MsgDetailsRecyclerViewAdapter.Header(
+          withMessageHeaderInfo(
+            MessageHeadersListAdapter.Header(
               name = getResString(R.string.date),
               value = datetime
             )
@@ -1004,6 +998,40 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
   }
 
   @Test
+  fun testPrioritizesSignedPlainTextOverUnsignedHtmlAlternative() {
+    PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
+
+    val msgInfo = getMsgInfo(
+      path = "messages/info/standard_msg_info_plaintext.json",
+      mimeMsgPath = "messages/mime/signed-plaintext-unsigned-html-alternative.eml",
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    )
+    baseCheck(msgInfo, checkWebContent = false)
+
+    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.emailWebView))
+      .check(
+        webContent(
+          elementByXPath(
+            "/html/body",
+            withTextContent(
+              allOf(
+                containsString("It's a cleartext signed message"),
+                not(containsString("ATTACKER-ACCOUNT"))
+              )
+            )
+          )
+        )
+      )
+
+    testPgpBadges(
+      2,
+      PgpBadgeListAdapter.PgpBadge.Type.NOT_ENCRYPTED,
+      PgpBadgeListAdapter.PgpBadge.Type.SIGNED
+    )
+  }
+
+  @Test
   fun testSignatureVerificationCleartextOnlySignedPartially() {
     PrivateKeysManager.savePubKeyToDatabase("pgp/denbond7@flowcrypt.test_pub_primary.asc")
 
@@ -1081,7 +1109,12 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
     )
 
-    val attachmentName = "thumb_up.png"
+    val attachmentName = requireNotNull((msgInfo?.msgBlocks?.first {
+      it.type == MsgBlock.Type.DECRYPTED_ATT
+    } as DecryptedAttMsgBlock).attMeta.name)
+
+    val baseAttachmentName = FilenameUtils.getBaseName(attachmentName)
+
     val downloadCompleteLabel = getResString(R.string.download_complete)
     val uiAutomatorTimeout = 5000L
 
@@ -1097,19 +1130,22 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
-
     //Unfortunately, due to the Scoped Storage,
-    //we don't have direct access to the file system and we can't check that a new file was created.
+    //we don't have direct access to the file system and we can't check that a new file was created
+    //(Also we can't use the full original name because there can be
+    //an existing file with the same name).
+    //So we will use just a base name.
     //That's why we will use UIAutomator to check that we have a notification
     //with text == "Download complete"
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     device.openNotification()
     //wait until we have a notification in the notification bar
-    device.wait(Until.hasObject(By.text(attachmentName)), uiAutomatorTimeout)
+    device.wait(Until.hasObject(By.textContains(baseAttachmentName)), uiAutomatorTimeout)
     //check that we have a notification with text == "Download complete"
-    val attachmentNameUiObject2 = device.findObject(By.text(attachmentName))
+    val attachmentNameUiObject2 = device.findObject(By.textContains(baseAttachmentName))
+    assertNotNull(attachmentNameUiObject2)
     val downloadCompleteLabelUiObject2 = device.findObject(By.text(downloadCompleteLabel))
-    assertEquals(attachmentName, attachmentNameUiObject2.text)
+    assertNotNull(downloadCompleteLabelUiObject2)
     assertEquals(downloadCompleteLabel, downloadCompleteLabelUiObject2.text)
     device.pressHome()
   }
@@ -1177,11 +1213,11 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
     val attachmentMessageBlock = msgInfo?.msgBlocks?.get(2) as DecryptedAttMsgBlock
 
-    assertEquals(4, msgInfo.msgBlocks?.size)
-    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo.msgBlocks?.get(0)?.type)
-    assertEquals(MsgBlock.Type.ENCRYPTED_SUBJECT, msgInfo.msgBlocks?.get(1)?.type)
+    assertEquals(4, msgInfo.msgBlocks.size)
+    assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo.msgBlocks[0].type)
+    assertEquals(MsgBlock.Type.ENCRYPTED_SUBJECT, msgInfo.msgBlocks[1].type)
     assertEquals(MsgBlock.Type.DECRYPTED_ATT, attachmentMessageBlock.type)
-    assertEquals(MsgBlock.Type.PUBLIC_KEY, msgInfo.msgBlocks?.get(3)?.type)
+    assertEquals(MsgBlock.Type.PUBLIC_KEY, msgInfo.msgBlocks[3].type)
 
     baseCheck(msgInfo)
 
@@ -1228,7 +1264,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     )
 
     val inlineAttachmentMessageBlock =
-      msgInfo?.msgBlocks?.filterIsInstance(InlineAttMsgBlock::class.java)?.first()
+      msgInfo?.msgBlocks?.filterIsInstance<InlineAttMsgBlock>()?.first()
 
     assertEquals(2, msgInfo?.msgBlocks?.size)
     assertEquals(MsgBlock.Type.PLAIN_HTML, msgInfo?.msgBlocks?.get(0)?.type)
@@ -1328,8 +1364,20 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click())
 
+    val replyContent = EmailUtil.genReplyContent(incomingMessageInfo)
+
+    waitForObjectWithText(
+      "Re: ${incomingMessageInfo?.msgEntity?.subject}",
+      TimeUnit.SECONDS.toMillis(10)
+    )
+
+    waitForObjectWithText(
+      replyContent,
+      TimeUnit.SECONDS.toMillis(10)
+    )
+
     onView(withId(R.id.editTextEmailMessage))
       .check(matches(isDisplayed()))
-      .check(matches(withText(EmailUtil.genReplyContent(incomingMessageInfo))))
+      .check(matches(withText(replyContent)))
   }
 }

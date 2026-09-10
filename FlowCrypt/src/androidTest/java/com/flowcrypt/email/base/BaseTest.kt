@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.base
@@ -12,6 +12,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import android.text.Html
 import android.view.View
 import android.widget.Toast
@@ -41,6 +42,8 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -58,9 +61,7 @@ import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasToString
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
@@ -69,6 +70,7 @@ import org.junit.Before
 import org.junit.Rule
 import java.io.InputStream
 import java.util.Properties
+import java.util.concurrent.TimeUnit
 
 /**
  * The base test implementation.
@@ -84,7 +86,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
   val flowCryptTestSettingsRule = FlowCryptTestSettingsRule()
 
   private val useIntents
-    get() = flowCryptTestSettingsRule.flowCryptTestSettings?.useIntents ?: false
+    get() = flowCryptTestSettingsRule.flowCryptTestSettings?.useIntents == true
 
   protected val decorView: View?
     get() {
@@ -105,6 +107,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
     val waitButton = device.findObject(UiSelector().textContains("wait"))
     if (waitButton.exists()) {
       waitButton.click()
+    }
+
+    //close the notification bar if needed
+    if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
+      device.pressBack()
     }
   }
 
@@ -282,6 +289,17 @@ abstract class BaseTest : BaseActivityTestImplementation {
     device.wait(Until.hasObject(By.text(text)), timeoutInMilliseconds)
   }
 
+  protected fun waitForObjectWithResourceName(
+    resourceName: String,
+    timeoutInMilliseconds: Long = 0
+  ) {
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    device.wait(
+      Until.hasObject(By.res("${BuildConfig.APPLICATION_ID}:id/$resourceName")),
+      timeoutInMilliseconds
+    )
+  }
+
   fun getTargetContext(): Context {
     return InstrumentationRegistry.getInstrumentation().targetContext
   }
@@ -303,13 +321,13 @@ abstract class BaseTest : BaseActivityTestImplementation {
     )
     val incomingMsgInfo = action?.invoke(defaultIncomingMsgInfo) ?: defaultIncomingMsgInfo
     incomingMsgInfo?.msgEntity?.let {
+      roomDatabase.msgDao().deleteByUIDs(it.account, it.folder, listOf(it.uid))
       val uri = roomDatabase.msgDao().insert(it)
-      val attEntities = mutableListOf<AttachmentEntity>()
-
-      for (attInfo in atts) {
-        attInfo?.let { info ->
-          AttachmentEntity.fromAttInfo(info)?.let { candidate -> attEntities.add(candidate) }
-        }
+      val attEntities = atts.mapNotNull { attachmentInfo ->
+        if (attachmentInfo != null) AttachmentEntity.fromAttInfo(
+          attachmentInfo,
+          accountEntity.accountType
+        ) else null
       }
 
       roomDatabase.attachmentDao().insert(attEntities)
@@ -336,7 +354,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
     intending(
       allOf(
         hasAction(Intent.ACTION_GET_CONTENT),
-        hasCategories(hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         hasType(type)
       )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
@@ -365,5 +383,37 @@ abstract class BaseTest : BaseActivityTestImplementation {
         accountEntity
       )
     }
+  }
+
+  protected fun waitUntil(
+    timeoutInMilliseconds: Long = TimeUnit.SECONDS.toMillis(10),
+    predicate: () -> Boolean
+  ) {
+    val startTime = SystemClock.uptimeMillis()
+    val interval = 100L
+
+    var elapsedTime: Long = 0
+    while (!predicate()) {
+      if (elapsedTime >= timeoutInMilliseconds) {
+        break
+      }
+
+      SystemClock.sleep(interval)
+      elapsedTime = SystemClock.uptimeMillis() - startTime
+    }
+  }
+
+  protected fun getIdentifierByName(name: String): Int {
+    return getTargetContext()
+      .resources
+      .getIdentifier(name, "id", getTargetContext().packageName)
+  }
+
+  companion object{
+    const val NOTIFICATION_RESOURCES_NAME =
+      "com.android.systemui:id/expandableNotificationRow"
+
+    val SHARED_FOLDER = InstrumentationRegistry.getInstrumentation().targetContext
+      .getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED)
   }
 }

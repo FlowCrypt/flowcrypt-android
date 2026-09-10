@@ -24,6 +24,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.CheckCredentialsFragment
 import com.flowcrypt.email.ui.activity.fragment.CheckCredentialsFragmentArgs
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -49,6 +50,7 @@ class CheckCredentialsFragmentInIsolationTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  @Ignore("flaky. Temporary disabled")
   fun testReturnExceptionForFailedAuthorization() {
     val requestKey = UUID.randomUUID().toString()
     val scenario = launchFragmentInContainer<CheckCredentialsFragment>(

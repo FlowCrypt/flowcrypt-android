@@ -6,6 +6,7 @@
 package com.flowcrypt.email.util.google.gson
 
 import android.net.Uri
+import androidx.core.net.toUri
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -24,7 +25,7 @@ class UriJsonSerializerDeserializer : JsonDeserializer<Uri?>, JsonSerializer<Uri
     typeOfT: Type?,
     context: JsonDeserializationContext?
   ): Uri? {
-    return (json as? JsonPrimitive)?.let { Uri.parse(it.asString) }
+    return (json as? JsonPrimitive)?.asString?.toUri()
   }
 
   override fun serialize(

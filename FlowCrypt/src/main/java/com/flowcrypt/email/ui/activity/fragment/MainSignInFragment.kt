@@ -72,7 +72,7 @@ import com.google.android.gms.common.api.Scope
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.sun.mail.util.MailConnectException
+import org.eclipse.angus.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
@@ -861,10 +861,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           importCandidates.clear()
-          importCandidates.addAll(it.data ?: emptyList())
-          importCandidates.forEach { pgpKeyRingDetails ->
-            pgpKeyRingDetails.passphraseType = KeyEntity.PassphraseType.RAM
+          it.data?.let { pgpKeyRingDetailsList ->
+            importCandidates.addAll(
+              pgpKeyRingDetailsList.map { pgpKeyRingDetails ->
+                pgpKeyRingDetails.copy(passphraseType = KeyEntity.PassphraseType.RAM)
+              }
+            )
           }
+
           getTempAccount()?.let { account ->
             accountViewModel.addNewAccount(account)
           }

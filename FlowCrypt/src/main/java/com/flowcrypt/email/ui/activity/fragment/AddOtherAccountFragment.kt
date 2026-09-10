@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -35,7 +35,6 @@ import com.flowcrypt.email.databinding.FragmentAddOtherAccountBinding
 import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
-import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
@@ -43,6 +42,7 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialogWithExceptionDetails
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
@@ -55,8 +55,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
-import com.sun.mail.util.MailConnectException
 import jakarta.mail.AuthenticationFailedException
+import org.eclipse.angus.mail.util.MailConnectException
 import java.net.SocketTimeoutException
 
 /**
@@ -114,7 +114,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       R.id.spinnerImapSecurityType -> {
         val (_, _, defImapPort) = parent.adapter.getItem(position) as SecurityType
         if (isImapSpinnerRestored) {
-          binding?.editTextImapPort?.setText(defImapPort.toString())
+          binding?.editTextImapPort?.setText("$defImapPort")
         } else {
           isImapSpinnerRestored = true
         }
@@ -123,7 +123,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       R.id.spinnerSmtpSecyrityType -> {
         val (_, _, _, defSmtpPort) = parent.adapter.getItem(position) as SecurityType
         if (isSmtpSpinnerRestored) {
-          binding?.editTextSmtpPort?.setText(defSmtpPort.toString())
+          binding?.editTextSmtpPort?.setText("$defSmtpPort")
         } else {
           isSmtpSpinnerRestored = true
         }
@@ -155,7 +155,7 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
 
   override fun onAccountAdded(accountEntity: AccountEntity) {
     //we should be sure we save keys with the same source type
-    if (importCandidates.mapNotNull { it.importSourceType }.toSet().size == 1) {
+    if (importCandidates.mapNotNull { it.importInfo?.importSourceType }.toSet().size == 1) {
       privateKeysViewModel.encryptAndSaveKeysToDatabase(
         accountEntity = accountEntity,
         keys = importCandidates
@@ -295,9 +295,9 @@ class AddOtherAccountFragment : BaseSingInFragment<FragmentAddOtherAccountBindin
       }
       binding?.editTextUserName?.setText(nonNullAuthCreds.username)
       binding?.editTextImapServer?.setText(nonNullAuthCreds.imapServer)
-      binding?.editTextImapPort?.setText(nonNullAuthCreds.imapPort.toString())
+      binding?.editTextImapPort?.setText("${nonNullAuthCreds.imapPort}")
       binding?.editTextSmtpServer?.setText(nonNullAuthCreds.smtpServer)
-      binding?.editTextSmtpPort?.setText(nonNullAuthCreds.smtpPort.toString())
+      binding?.editTextSmtpPort?.setText("${nonNullAuthCreds.smtpPort}")
       binding?.checkBoxRequireSignInForSmtp?.isChecked = nonNullAuthCreds.hasCustomSignInForSmtp
       binding?.editTextSmtpUsername?.setText(nonNullAuthCreds.smtpSigInUsername)
       binding?.editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)

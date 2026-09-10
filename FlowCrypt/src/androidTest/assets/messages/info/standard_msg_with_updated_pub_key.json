@@ -790,7 +790,8 @@
   ],
   "msgEntity": {
     "cc": [],
-    "email": "default@flowcrypt.test",
+    "account": "default@flowcrypt.test",
+    "accountType": "flowcrypt.test",
     "flags": "\\SEEN",
     "folder": "INBOX",
     "from": [
@@ -798,7 +799,7 @@
         "address": "denbond7@flowcrypt.test"
       }
     ],
-    "fromAddress": "denbond7@flowcrypt.test",
+    "fromAddresses": "denbond7@flowcrypt.test",
     "hasAttachments": true,
     "id": 103,
     "isDraft": false,
@@ -809,7 +810,7 @@
     "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1668620798000,
-    "replyTo": "denbond7@flowcrypt.test",
+    "replyToAddresses": "denbond7@flowcrypt.test",
     "replyToAddress": [
       {
         "address": "denbond7@flowcrypt.test"
@@ -822,7 +823,7 @@
         "address": "default@flowcrypt.test"
       }
     ],
-    "toAddress": "default@flowcrypt.test",
+    "toAddresses": "default@flowcrypt.test",
     "uid": 50,
     "uidAsHEX": "32"
   },

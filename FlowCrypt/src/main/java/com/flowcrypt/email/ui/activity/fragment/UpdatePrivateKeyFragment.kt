@@ -22,9 +22,6 @@ import com.flowcrypt.email.databinding.FragmentUpdatePrivateKeyBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.exceptionMsg
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
@@ -32,6 +29,9 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.showParsePgpKeysFrom
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
@@ -185,7 +185,13 @@ class UpdatePrivateKeyFragment : BaseImportKeyFragment<FragmentUpdatePrivateKeyB
   private fun handleCheckedNewPrivateKey(newPgpKeyRingDetails: PgpKeyRingDetails) {
     privateKeysViewModel.encryptAndSaveKeysToDatabase(
       accountEntity = args.accountEntity,
-      keys = listOf(newPgpKeyRingDetails.copy(importSourceType = importSourceType))
+      keys = listOf(
+        newPgpKeyRingDetails.copy(
+          importInfo = (newPgpKeyRingDetails.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+            importSourceType = importSourceType
+          )
+        )
+      )
     )
   }
 

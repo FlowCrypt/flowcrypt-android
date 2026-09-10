@@ -1,12 +1,13 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.widget
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Point
 import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
@@ -14,11 +15,9 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.browser.customtabs.CustomTabColorSchemeParams
-import androidx.browser.customtabs.CustomTabsIntent
-import androidx.core.content.ContextCompat
-import com.flowcrypt.email.R
+import androidx.core.net.toUri
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
+import com.flowcrypt.email.extensions.android.webkit.showUrlUsingChromeCustomTabs
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 
@@ -40,17 +39,45 @@ class EmailWebView : WebView {
     defStyleAttr
   )
 
+  val isContentExpandedAfterInitialLoading: Boolean
+    get() = currentSize.y > sizeOfContentAfterLoading.y
+
+  private var sizeOfContentAfterLoading = Point()
+  private var currentSize = Point()
+
+  private var isContentLoaded = false
+
+  override fun loadDataWithBaseURL(
+    baseUrl: String?,
+    data: String,
+    mimeType: String?,
+    encoding: String?,
+    historyUrl: String?
+  ) {
+    isContentLoaded = false
+    super.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl)
+  }
+
+  override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
+    super.onSizeChanged(w, h, ow, oh)
+    currentSize = Point(w, h)
+    if (isContentLoaded && sizeOfContentAfterLoading.x == 0) {
+      sizeOfContentAfterLoading = Point(w, h)
+    }
+  }
+
   /**
    * This method does job of configure the current [WebView]
    */
   fun configure() {
     isVerticalScrollBarEnabled = false
-    scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
-    overScrollMode = View.OVER_SCROLL_NEVER
+    scrollBarStyle = SCROLLBARS_INSIDE_OVERLAY
+    overScrollMode = OVER_SCROLL_NEVER
     webViewClient = CustomWebClient(context)
     webChromeClient = object : WebChromeClient() {
       override fun onProgressChanged(view: WebView, newProgress: Int) {
         super.onProgressChanged(view, newProgress)
+        isContentLoaded = newProgress >= 100
         onPageLoadingListener?.onPageLoading(newProgress)
       }
     }
@@ -84,12 +111,13 @@ class EmailWebView : WebView {
   private class CustomWebClient(private val context: Context) :
     WebViewClient() {
 
+    @Deprecated("Deprecated in Java")
     override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
       return if (url.startsWith(SCHEME_MAILTO)) {
-        handleEmailLinks(Uri.parse(url))
+        handleEmailLinks(url.toUri())
         false
       } else {
-        showUrlUsingChromeCustomTabs(Uri.parse(url))
+        showUrlUsingChromeCustomTabs(context = context, uri = url.toUri())
         true
       }
     }
@@ -98,7 +126,7 @@ class EmailWebView : WebView {
       if ("mailto".equals(request.url.scheme, ignoreCase = true)) {
         handleEmailLinks(request.url)
       } else {
-        showUrlUsingChromeCustomTabs(request.url)
+        showUrlUsingChromeCustomTabs(context = context, uri = request.url)
       }
 
       return true
@@ -114,28 +142,6 @@ class EmailWebView : WebView {
       intent.action = Intent.ACTION_SENDTO
       intent.data = uri
       context.startActivity(intent)
-    }
-
-
-    /**
-     * Use [CustomTabsIntent] to show some url.
-     *
-     * @param uri The [Uri] which contains a url.
-     */
-    private fun showUrlUsingChromeCustomTabs(uri: Uri) {
-      val builder = CustomTabsIntent.Builder()
-      val customTabsIntent = builder.build()
-      builder.setDefaultColorSchemeParams(
-        CustomTabColorSchemeParams.Builder()
-          .setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary))
-          .build()
-      )
-
-      val intent = Intent(Intent.ACTION_VIEW)
-      intent.data = uri
-      if (intent.resolveActivity(context.packageManager) != null) {
-        customTabsIntent.launchUrl(context, uri)
-      }
     }
   }
 }

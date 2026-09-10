@@ -15,17 +15,19 @@ This guide follows Google's recommendations for [testing apps on Android](https:
 Please follow these steps to setup your virtual or physical device:
 
 - [Set up your test environment](https://developer.android.com/training/testing/espresso/setup#set-up-environment).
-- Some of the tests use [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver). We run a local mock web server via [FlowCryptMockWebServerRule](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/rules/FlowCryptMockWebServerRule.kt). It uses [TestConstants.MOCK_WEB_SERVER_PORT](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/TestConstants.kt#L19) as a port. Unfortunately, the Android system doesn't allow us to use the `HTTPS 433` port by default to run a web server on the `localhost (127.0.0.1)`. That's why we have to run a mock web server on another port (for example, `1212`) and route all traffic from `127.0.0.1:433` to `127.0.0.1:1212`. For that purpose, you can use the [script/ci-wait-for-emulator.sh](https://github.com/FlowCrypt/flowcrypt-android/blob/master/script/ci-wait-for-emulator.sh#L13) script.
+- Some of the tests use [MockWebServer](https://github.com/square/okhttp/tree/master/mockwebserver). We run a local mock web server via [FlowCryptMockWebServerRule](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/rules/FlowCryptMockWebServerRule.kt). It uses [TestConstants.MOCK_WEB_SERVER_PORT](https://github.com/FlowCrypt/flowcrypt-android/blob/master/FlowCrypt/src/androidTest/java/com/flowcrypt/email/TestConstants.kt#L19) as a port. Unfortunately, the Android system doesn't allow us to use the `HTTPS 443` port by default to run a web server on the `localhost (127.0.0.1)`. That's why we have to run a mock web server on another port (for example, `1212`) and route all traffic from `127.0.0.1:443` to `127.0.0.1:1212`. For that purpose, you can use the [script/ci-wait-for-emulator.sh](https://github.com/FlowCrypt/flowcrypt-android/blob/master/script/ci-wait-for-emulator.sh#L13) script.
 - Additionally, the test environment should handle all requests to `*.flowcrypt.test`. All traffic to `*.flowcrypt.test` should be routed to `localhost (127.0.0.1)`. You can use a DNS server to do this. For example, using these commands:
 
 ```bash
-1. sudo apt install -y dnsmasq resolvconf
-2. echo "#added by flowcrypt" | sudo tee -a /etc/dnsmasq.conf
-3. echo "listen-address=127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-4. echo "address=/flowcrypt.test/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-5. echo "address=/localhost/127.0.0.1" | sudo tee -a /etc/dnsmasq.conf
-6. sudo systemctl restart dnsmasq
+./script/ci-setup-DNS.sh
 ```
+
+The script:
+- Installs `dnsmasq` and `dnsutils`.
+- Creates `/etc/dnsmasq.d/flowcrypt.conf` with local rules for `*.test` and `*.localhost`.
+- Sets `no-resolv` with upstream DNS servers (`8.8.8.8` and `1.1.1.1`).
+- Sets `/etc/resolv.conf` to `nameserver 127.0.0.1`.
+- Restarts `dnsmasq` and verifies resolution with `dig` and `ping`.
 
 ### ✔️ Test types
 

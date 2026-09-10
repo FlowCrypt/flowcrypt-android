@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
@@ -24,8 +24,6 @@ import com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeySecondFragment
 import com.flowcrypt.email.ui.activity.fragment.CreatePrivateKeySecondFragmentArgs
 import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
 import com.flowcrypt.email.util.AccountDaoManager
-import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.`is`
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -64,7 +62,7 @@ class CreatePrivateKeySecondFragmentInIsolationTest : BaseTest(),
     onView(withId(R.id.textViewSecondPasswordCheckTitle))
       .check(matches(withText(getResString(R.string.set_up_flow_crypt, getResString(R.string.app_name)))))
     onView(withId(R.id.editTextKeyPasswordSecond))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
 
     onView(withId(R.id.buttonConfirmPassPhrases))
       .perform(click())

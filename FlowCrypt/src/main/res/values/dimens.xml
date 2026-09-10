@@ -1,6 +1,6 @@
 <!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
@@ -61,7 +61,6 @@
     <dimen name="width_pgp_message_type_line">8dp</dimen>
     <dimen name="layout_height_message_item">72dp</dimen>
     <dimen name="gone_margin_right_attachment_icon">34dp</dimen>
-    <dimen name="layout_height_action_button">72dp</dimen>
     <dimen name="drop_down_vertical_offset_spinner_from">56dp</dimen>
     <dimen name="drop_down_size">32dp</dimen>
     <dimen name="height_screenshot">150dp</dimen>

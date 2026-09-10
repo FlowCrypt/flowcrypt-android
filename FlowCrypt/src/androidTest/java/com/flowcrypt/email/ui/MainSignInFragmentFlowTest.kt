@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -211,6 +211,8 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
   }
 
   @Test
+  //@Ignore("flaky 8")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testClientConfigurationCombinationNotSupportedForForbidCreatingPrivateKeyMissing() {
     setupAndClickSignInButton(
       genMockGoogleSignInAccountJson(
@@ -228,6 +230,8 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
   }
 
   @Test
+  //@Ignore("flaky 8")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testErrorGetPrvKeysViaEkm() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GET_KEYS_VIA_EKM_ERROR))
     isDialogWithTextDisplayed(decorView, EKM_ERROR)

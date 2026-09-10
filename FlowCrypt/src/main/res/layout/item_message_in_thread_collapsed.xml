@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:paddingStart="10dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="16dp">
+
+    <ImageView
+        android:id="@+id/imageViewAvatar"
+        android:layout_width="@dimen/avatar_size"
+        android:layout_height="@dimen/avatar_size"
+        android:contentDescription="@string/avatar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_account_default_photo" />
+
+    <TextView
+        android:id="@+id/textViewSender"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_content_small"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="middle"
+        android:maxLines="1"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="@dimen/default_text_size_big"
+        app:layout_constraintEnd_toStartOf="@+id/textViewDate"
+        app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginLeft="@dimen/default_margin_medium"
+        tools:text="sender@flowcrypt.com" />
+
+    <ImageView
+        android:id="@+id/viewHasAttachments"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/security"
+        android:src="@drawable/ic_attach_file_16"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/tVTo"
+        app:layout_constraintEnd_toStartOf="@+id/viewHasPgp"
+        app:layout_constraintTop_toTopOf="@+id/tVTo"
+        app:tint="@color/gray"
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/viewHasPgp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/security"
+        android:src="@drawable/ic_security"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/tVTo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tVTo"
+        app:tint="@color/colorPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/textViewDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAlignment="viewEnd"
+        android:textColor="@color/gray"
+        android:textSize="@dimen/default_text_size_medium"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="1:05 PM" />
+
+    <TextView
+        android:id="@+id/tVTo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAlignment="textStart"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toStartOf="@+id/textViewDate"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@+id/imageViewAvatar"
+        app:layout_constraintStart_toStartOf="@+id/textViewSender"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSender"
+        tools:text="To me" />
+
+    <TextView
+        android:id="@+id/textViewSnippet"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/default_margin_content_small"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/tVTo"
+        app:layout_constraintTop_toBottomOf="@+id/tVTo"
+        tools:text="Some very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long text from message ..." />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

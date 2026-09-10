@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
-  ~ Contributors: DenBond7
+  ~ Contributors: denbond7
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -13,11 +13,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- android.permission.ACCESS_NETWORK_STATE is used to check is internet connection available-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- android.permission.WRITE_EXTERNAL_STORAGE is used to save attachments for Build.VERSION.SDK_INT <= Build.VERSION_CODES.P -->
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"
-        tools:ignore="ScopedStorage" />
     <!-- android.permission.WAKE_LOCK will be used by classes which extend JobIntentService -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Request the foreground service permission. Details here

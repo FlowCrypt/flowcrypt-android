@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.matchers
@@ -19,6 +19,7 @@ import androidx.test.espresso.Root
 import androidx.test.espresso.matcher.BoundedMatcher
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.extensions.kotlin.parseAsColorBasedOnDefaultSettings
+import com.flowcrypt.email.ui.adapter.MessageHeadersListAdapter
 import com.flowcrypt.email.ui.adapter.PgpBadgeListAdapter
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.chip.Chip
@@ -143,6 +144,15 @@ class CustomMatchers {
 
     fun withTextContentMatcher(matcher: Matcher<String>): CustomWithTextContentMatcher {
       return CustomWithTextContentMatcher(matcher)
+    }
+
+    fun withMessageHeaderInfo(header: MessageHeadersListAdapter.Header):
+        MessageHeadersListAdapterViewHolderMatcher {
+      return MessageHeadersListAdapterViewHolderMatcher(header)
+    }
+
+    fun hasItemAtPosition(position: Int, matcher: Matcher<View>): RecyclerViewHasViewAtPosition {
+      return RecyclerViewHasViewAtPosition(position, matcher)
     }
   }
 }

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
+<!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: denbond7
+  -->
+
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="prompt_subject">Тема</string>
     <string name="send">Відправити</string>
@@ -135,7 +140,6 @@
     <string name="source_has_wrong_pgp_structure">Наданий Вами вміст не схожий на дійсний %1$s ключ PGP.</string>
     <string name="file_has_wrong_pgp_structure">Вміст Вашого файлу не схожий на дійсний %1$s ключ PGP.</string>
     <string name="attachment_not_found">Вкладення не знайдене</string>
-    <string name="cannot_save_attachment_without_permission">Вкладення неможливо зберегти без дозволу на запис до зовнішнього сховища</string>
     <string name="sync">Синхронізація</string>
     <string name="switch_to_secure_email">Переключитись на безпечне повідомлення</string>
     <string name="supported_public_key_not_found">Підтримуваний відкритий ключ не знайдено</string>
@@ -151,7 +155,7 @@
     <string name="show_public_key">Показати відкритий ключ</string>
     <string name="show_original_message">Показати оригінальне повідомлення</string>
     <string name="show_more">Показати більше</string>
-    <string name="showing_only_encrypted_messages">Відображення тільки зашифрованих повідомлень</string>
+    <string name="load_only_pgp_messages">Завантажувати тільки PGP повідомлення</string>
     <string name="server_settings_updated">Налаштування сервера оновлені</string>
     <string name="server_settings">Налаштування сервера</string>
     <string name="sent">Відправлено</string>
@@ -194,7 +198,7 @@
     <string name="only_partially_signed">підписане тільки частково</string>
     <string name="warning_one_of_recipients_has_revoked_pub_key">Один або декілька Ваших отримувачів відкликали відкриті ключі (відмічені червоним).\n\nПопрохайте їх прислати Вам новий відкритий ключ. Якщо це корпоративне встановлення, зверніться до системного адміністратора.</string>
     <string name="warning_one_of_recipients_has_expired_pub_key">В одного або декількох Ваших отримувачів минув строк дії відкритих ключів (відмічені помаранчовим).\n\nПопрохайте їх прислати Вам оновлений відкритий ключ. Якщо це корпоративне встановлення, зверніться до системного адміністратора.</string>
-    <string name="partially_encrypted_private_key_error_msg">Один з наданих закритих ключів - це частково зашифрований закритий ключ (деякі пакети зашифровані, деякі ні). Такі ключі не підтримуються. Будь ласка, імпортуйте тільки повністю зашифровані ключі з однією й тією самою ключовою фразою для усіх секретних пакетів.</string>
+    <string name="partially_encrypted_private_key_error_msg">Деякі з наданих закритих ключів - це частково зашифровані закриті ключі (деякі пакети зашифровані, деякі ні). Такі ключі не підтримуються і будуть пропущені. Будь ласка, імпортуйте тільки повністю зашифровані ключі з однією й тією самою ключовою фразою для усіх секретних пакетів.</string>
     <string name="not_signed">не підписане</string>
     <string name="oauth_error">Помилка OAuth</string>
     <string name="not_saved_file_already_exists">Не збережено, тому що файл вже існує</string>
@@ -484,7 +488,7 @@
     <string name="add_recipient_to_send_message">Щоб надіслати це повідомлення, додайте принаймні одного одержувача в поле \"Кому\"</string>
     <string name="send_feedback_failed_hint">Під час відправки повідомлення виникла помилка. Будь ласка, напишіть нам безпосередньо на %1$s.\n\nДеталі помилки:\n%2$s</string>
     <string name="edit_draft">Редагувати чорновик</string>
-    <string name="draft_saved">Чорновик збережено</string>
+    <string name="saving_draft">Збереження чорновика</string>
     <string name="fetching_drafts_info_failed">Не вдалося отримати інформацію про чорновики. Будь ласка, спробуйте ще раз.</string>
     <string name="no_recipients">(без отримувачів)</string>
     <string name="could_not_save_draft">Не вдалося зберегти чорновик\n\nДеталі помилки:\n%1$s</string>
@@ -551,6 +555,11 @@
         <item quantity="one">Видалити це %1$d повідомлення назавжди?</item>
         <item quantity="few">Видалити ці %1$d повідомлення назавжди?</item>
         <item quantity="many">Видалити ці %1$d повідомлень назавжди?</item>
+    </plurals>
+    <plurals name="delete_thread_question">
+        <item quantity="one">Видалити цю %1$d бесіду назавжди?</item>
+        <item quantity="few">Видалити ці %1$d бесіди назавжди?</item>
+        <item quantity="many">Видалити ці %1$d бесід назавжди?</item>
     </plurals>
     <plurals name="found_folder">
         <item quantity="other">Теки відсутні</item>
@@ -620,9 +629,29 @@
     <string name="sending_message">Вихідні: надсилання&#8230;</string>
     <string name="message_not_found_or_labels_changed">Повідомлення не знайдено або мітки змінено</string>
     <string name="unsupported_credentials">Непідтримувані облікові дані</string>
+    <string name="signature">Підпис</string>
+    <string name="email_signature_explanation">Що таке підпис електронної пошти?\n\nПідпис електронної пошти - це текст, де можуть бути вказані ваші професійні контактні дані та бренд компанії чи улюблена цитата. Його буде автоматично додано в кінці ваших вихідних повідомлень як нижній колонтитул на екрані створення повідомлення.</string>
+    <string name="please_tap_to_edit">Будь ласка, натисніть, щоб редагувати</string>
+    <string name="use_gmail_alias_signatures">Використовуйте підписи псевдонімів Gmail</string>
+    <string name="update">Оновити</string>
     <plurals name="next_attempt_warning_about_wrong_pass_phrase">
         <item quantity="one">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроба, а потім 5-хвилинний період відновлення.</item>
         <item quantity="few">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроби, а потім 5-хвилинний період відновлення.</item>
         <item quantity="many">Для Вашого захисту та безпеки даних наразі залишилася лише %1$d спроб, а потім 5-хвилинний період відновлення.</item>
+    </plurals>
+    <string name="please_specify_your_signature_here">Будь ласка, вкажіть свій підпис тут</string>
+    <string name="make_backup_in_the_email_box">Зробіть резервну копію в електронній скриньці</string>
+    <string name="make_backup_explanation_text">Зберегти надані секретні ключі PGP, захищені парольною фразою, як резервну копію в папці «Вхідні». Це допоможе отримати Вам доступ до Ваших зашифрованих повідомлень з інших пристроїв (за умови надання Вашої парольної фрази). Ви можете спокійно залишити його у папці "Вхідні" або заархівувати.\n\nЯкщо Вам не потрібна така резервна копія, вимкніть цю опцію.</string>
+    <string name="draft">Чорновик</string>
+    <string name="delete_draft">Видалити чернетку?</string>
+    <string name="thread_was_deleted_or_moved">Бесіду видалено або переміщено</string>
+    <string name="file_already_exists_in_download">\'%1$s\' уже існує в Download. Бажаєте завантажити його знову?</string>
+    <string name="general">Загальні</string>
+    <string name="disable_smart_mode_for_attachments_preview">Вимкнути розумний режим для попереднього перегляду вкладень</string>
+    <string name="message_not_found_please_reload_the_thread">Повідомлення не знайдено. Схоже, його перемістили або видалили. Оновіть бесіду, щоб отримати останні оновлення.</string>
+    <plurals name="drafts_count">
+        <item quantity="one" tools:ignore="ImpliedQuantity">Чорновик</item>
+        <item quantity="few">Чорновики(%1$d)</item>
+        <item quantity="many">Чорновики(%1$d)</item>
     </plurals>
 </resources>

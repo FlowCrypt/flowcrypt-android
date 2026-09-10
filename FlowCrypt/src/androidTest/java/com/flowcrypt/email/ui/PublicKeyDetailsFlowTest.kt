@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -17,6 +16,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -43,8 +43,6 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.junit.AfterClass
 import org.junit.Rule
@@ -145,7 +143,7 @@ class PublicKeyDetailsFlowTest : BaseTest() {
     val fileName = "0x" + keyDetails.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     val file =
-      File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
+      File(getTargetContext().getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED), fileName)
 
     if (file.exists()) {
       file.delete()
@@ -158,7 +156,7 @@ class PublicKeyDetailsFlowTest : BaseTest() {
     intending(
       allOf(
         IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        IntentMatchers.hasCategories(CoreMatchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)
       )
     )

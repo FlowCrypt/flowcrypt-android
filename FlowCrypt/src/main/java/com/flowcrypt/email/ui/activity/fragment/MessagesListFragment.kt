@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -30,6 +30,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.activityViewModels
@@ -98,7 +99,6 @@ import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.sun.mail.imap.protocol.SearchSequence
 import jakarta.mail.AuthenticationFailedException
 import kotlinx.coroutines.launch
 import me.everything.android.ui.overscroll.IOverScrollDecor
@@ -106,6 +106,7 @@ import me.everything.android.ui.overscroll.IOverScrollState
 import me.everything.android.ui.overscroll.IOverScrollStateListener
 import me.everything.android.ui.overscroll.VerticalOverScrollBounceEffectDecorator
 import me.everything.android.ui.overscroll.adapters.RecyclerViewOverScrollDecorAdapter
+import org.eclipse.angus.mail.imap.protocol.SearchSequence
 import java.util.UUID
 
 /**
@@ -149,12 +150,12 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private val isOutboxFolder: Boolean
     get() {
-      return currentFolder?.isOutbox ?: false
+      return currentFolder?.isOutbox == true
     }
 
   private val isDraftsFolder: Boolean
     get() {
-      return currentFolder?.isDrafts ?: false
+      return currentFolder?.isDrafts == true
     }
 
   private val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
@@ -242,7 +243,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
             binding?.swipeRefreshLayout?.isEnabled = true
             currentFolder?.searchQuery = null
-            onFolderChanged(true)
+            onFolderChanged(forceClearCache = true)
             return true
           }
         })
@@ -259,7 +260,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             }
 
             currentFolder?.searchQuery = query
-            onFolderChanged(true)
+            onFolderChanged(forceClearCache = true)
             return false
           }
 
@@ -288,9 +289,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         itemForceSending?.isEnabled = isForceSendingEnabled
 
         when {
-          JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
+          currentFolder?.isOutbox == true -> {
             itemSearch?.isVisible = false
             itemForceSending?.isVisible = true
+          }
+
+          currentFolder?.isDrafts == true -> {
+            itemSearch?.isVisible = true
+            itemForceSending?.isVisible = false
           }
 
           else -> {
@@ -387,7 +393,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       return
     }
 
-    val isOutbox = currentFolder?.isOutbox ?: false
+    val isOutbox = currentFolder?.isOutbox == true
     val isDraft = msgEntity.isDraft
     val isRawMsgAvailable =
       OutgoingMessagesManager.isMessageExist(requireContext(), msgEntity.id ?: -1)
@@ -416,14 +422,29 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             )
           } else {
             currentFolder?.let { localFolder ->
-              navController?.navigateSafe(
-                currentDestinationId = R.id.messagesListFragment,
-                directions = MessagesListFragmentDirections
-                  .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
-                    messageEntityId = msgEntity.id ?: -1,
-                    localFolder = localFolder
-                  )
-              )
+              if (account?.isGoogleSignInAccount == true
+                && account?.useAPI == true
+                && account?.useConversationMode == true
+                && !isOutbox
+              ) {
+                navController?.navigateSafe(
+                  currentDestinationId = R.id.messagesListFragment,
+                  directions = MessagesListFragmentDirections
+                    .actionMessagesListFragmentToViewPagerThreadDetailsFragment(
+                      messageEntityId = msgEntity.id ?: -1,
+                      localFolder = localFolder
+                    )
+                )
+              } else {
+                navController?.navigateSafe(
+                  currentDestinationId = R.id.messagesListFragment,
+                  directions = MessagesListFragmentDirections
+                    .actionMessagesListFragmentToViewPagerMessageDetailsFragment(
+                      messageEntityId = msgEntity.id ?: -1,
+                      localFolder = localFolder
+                    )
+                )
+              }
             }
           }
         }
@@ -502,14 +523,14 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         val errorMsg = messageEntity.errorMsg
-        message = if (errorMsg?.equals(messageEntity.email, ignoreCase = true) == true) {
+        message = if (errorMsg?.equals(messageEntity.account, ignoreCase = true) == true) {
           getString(
             R.string.no_key_available_for_your_email_account,
             getString(R.string.support_email)
           )
         } else {
           getString(
-            R.string.no_key_available_for_your_emails, errorMsg, messageEntity.email,
+            R.string.no_key_available_for_your_emails, errorMsg, messageEntity.account,
             getString(R.string.support_email)
           )
         }
@@ -541,23 +562,32 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
   }
 
   private fun isItSyncOrCachedFolder(localFolder: LocalFolder?): Boolean {
-    return localFolder?.fullName.equals(
-      JavaEmailConstants.FOLDER_INBOX,
-      ignoreCase = true
-    ) || isOutboxFolder || isDraftsFolder
+    val checkDrafts = if (account?.useConversationMode == true) {
+      false
+    } else {
+      isDraftsFolder
+    }
+
+    return localFolder?.isInbox?.takeIf {
+      account?.useConversationMode != true
+    } == true || isOutboxFolder || checkDrafts
   }
 
   /**
-   * Try to load a new messages from an IMAP server.
+   * Try to load new messages from a server.
    */
   private fun refreshMsgs() {
     currentFolder?.let {
-      msgsViewModel.refreshMsgs(it)
+      if (adapter.currentList?.isEmpty() == true) {
+        msgsViewModel.loadMsgsFromRemoteServer()
+      } else {
+        msgsViewModel.refreshMsgs(it)
+      }
     }
   }
 
   /**
-   * Try to load a next messages from an IMAP server.
+   * Try to load next messages
    */
   private fun loadNextMsgs() {
     if (isOutboxFolder) {
@@ -653,7 +683,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       private val icon: Drawable?
         get() = context?.let { ContextCompat.getDrawable(it, R.drawable.ic_archive_white_24dp) }
       private val background: ColorDrawable?
-        get() = context?.let { ColorDrawable(ContextCompat.getColor(it, R.color.colorPrimaryDark)) }
+        get() = context?.let { ContextCompat.getColor(it, R.color.colorPrimaryDark).toDrawable() }
 
       override fun onMove(
         recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
@@ -715,8 +745,10 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
       }
 
       override fun isItemViewSwipeEnabled(): Boolean {
-        return actionMode == null && AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
+        return actionMode == null
+            && AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType
             && currentFolder?.getFolderType() == FoldersManager.FolderType.INBOX
+            && currentFolder?.searchQuery == null
       }
 
       override fun isLongPressDragEnabled(): Boolean = false
@@ -881,7 +913,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
                 msgsViewModel.changeMsgsState(
                   ids = ids,
                   localFolder = it,
-                  newMsgState = if (it.isDrafts) {
+                  newMsgState = if (account?.useConversationMode == false && it.isDrafts) {
                     MessageState.PENDING_DELETING_DRAFT
                   } else {
                     MessageState.PENDING_DELETING
@@ -954,6 +986,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
         menu?.findItem(R.id.menuActionMarkAsNotSpam)?.isVisible = isMarkNotSpamActionEnabled()
         menu?.findItem(R.id.menuActionChangeLabels)?.isVisible =
           account?.isGoogleSignInAccount == true
+        menu?.findItem(R.id.menuActionDeleteMessage)?.isVisible = !isDraftsFolder
 
         val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
         menuActionMarkRead?.isVisible = isChangeSeenStateActionEnabled()
@@ -1031,16 +1064,6 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             )
 
             R.id.progress_id_connecting_to_email_server -> setActionProgress(progress, "Connecting")
-
-            R.id.progress_id_running_smtp_action -> setActionProgress(
-              progress,
-              "Running SMTP action"
-            )
-
-            R.id.progress_id_running_imap_action -> setActionProgress(
-              progress,
-              "Running IMAP action"
-            )
 
             R.id.progress_id_opening_store -> setActionProgress(progress, "Opening store")
 
@@ -1333,7 +1356,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
 
   private fun isMoveToInboxActionEnabled(): Boolean {
     return when (FoldersManager.getFolderType(currentFolder)) {
-      FoldersManager.FolderType.OUTBOX, FoldersManager.FolderType.SPAM -> false
+      FoldersManager.FolderType.OUTBOX,
+      FoldersManager.FolderType.SPAM,
+      FoldersManager.FolderType.INBOX -> false
 
       else -> if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
         val selection = tracker?.selection?.map { it }
@@ -1343,7 +1368,7 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
           it.labelIds?.split(MessageEntity.LABEL_IDS_SEPARATOR)
             ?.contains(JavaEmailConstants.FOLDER_INBOX) == false
         }
-      } else false
+      } else true
     }
   }
 

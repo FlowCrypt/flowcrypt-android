@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service
@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -59,18 +60,22 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
       }
 
       else -> {
-        val notification = prepareNotification(
-          useActionButton = keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM)
-        )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-          startForeground(
-            R.id.notification_id_passphrase_service, notification,
-            //https://developer.android.com/about/versions/14/changes/fgs-types-required#permission-for-fgs-type
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-          )
+          if (intent != null) {
+            //checking intent != null will prevent recreating the service after the system killed it
+            startForeground(
+              R.id.notification_id_passphrase_service,
+              prepareNotification(keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM)),
+              //https://developer.android.com/about/versions/14/changes/fgs-types-required#permission-for-fgs-type
+              ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+          } else {
+            stopSelf()
+          }
         } else {
           startForeground(
-            R.id.notification_id_passphrase_service, notification
+            R.id.notification_id_passphrase_service,
+            prepareNotification(keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM))
           )
         }
       }
@@ -81,6 +86,16 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
   private fun subscribeToPassphrasesUpdates() {
     lifecycleScope.launch {
       keysStorage.getPassPhrasesUpdatesFlow().collect {
+        if (
+          Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+          foregroundServiceType != ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        ) {
+          NotificationManagerCompat.from(applicationContext).cancel(
+            R.id.notification_id_passphrase_service
+          )
+          return@collect
+        }
+
         updateNotification(keysStorage.hasNonEmptyPassphrase(KeyEntity.PassphraseType.RAM))
       }
     }
@@ -176,15 +191,15 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
      * @param context Interface to global information about an application environment.
      */
     fun start(context: Context) {
-      val startEmailServiceIntent = Intent(context, PassPhrasesInRAMService::class.java)
+      val startServiceIntent = Intent(context, PassPhrasesInRAMService::class.java)
       try {
-        context.startForegroundService(startEmailServiceIntent)
+        context.startForegroundService(startServiceIntent)
       } catch (e: Exception) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
           if (e is ForegroundServiceStartNotAllowedException) {
             /*Because this service should be restarted by the system we can skip this exception.
              It seems this service was started manually after the app crash via the trigger.*/
-            e.printStackTrace()
+            e.printStackTraceIfDebugOnly()
           }
         } else throw e
       }
@@ -196,7 +211,8 @@ class PassPhrasesInRAMService : BaseLifecycleService() {
      * @param context Interface to global information about an application environment.
      */
     fun stop(context: Context) {
-      context.stopService(Intent(context, PassPhrasesInRAMService::class.java))
+      val intent = Intent(context, PassPhrasesInRAMService::class.java)
+      context.stopService(intent)
     }
   }
 }

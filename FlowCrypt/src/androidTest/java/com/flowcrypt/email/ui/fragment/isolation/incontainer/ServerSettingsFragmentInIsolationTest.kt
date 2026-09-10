@@ -23,8 +23,6 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.ServerSettingsFragment
 import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
-import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.`is`
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -66,7 +64,7 @@ class ServerSettingsFragmentInIsolationTest : BaseTest(), AddAccountToDatabaseRu
       .check(matches(isNotEnabled()))
       .check(matches(withText(account.username)))
     onView(withId(R.id.editTextPassword))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
     onView(withId(R.id.editTextImapServer))
       .check(matches(withText(account.imapServer)))
     onView(withId(R.id.editTextImapPort))
@@ -81,6 +79,6 @@ class ServerSettingsFragmentInIsolationTest : BaseTest(), AddAccountToDatabaseRu
     onView(withId(R.id.editTextSmtpUsername))
       .check(matches(withText(account.smtpUsername)))
     onView(withId(R.id.editTextSmtpPassword))
-      .check(matches(withText(`is`(emptyString()))))
+      .check(matches(withText("")))
   }
 }

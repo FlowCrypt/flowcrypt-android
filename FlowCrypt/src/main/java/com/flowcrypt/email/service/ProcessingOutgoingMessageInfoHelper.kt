@@ -1,19 +1,19 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.service
 
 import android.content.Context
 import android.net.Uri
-import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.BaseDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
@@ -23,6 +23,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.OutgoingAttachmentUriValidator
 import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -73,7 +74,12 @@ object ProcessingOutgoingMessageInfoHelper {
         }
       }
 
-      addAttsToCache(context, outgoingMsgInfo, msgAttsCacheDir)
+      addAttsToCache(
+        context = context,
+        accountEntity = accountEntity,
+        outgoingMsgInfo = outgoingMsgInfo,
+        attsCacheDir = msgAttsCacheDir
+      )
     }
 
     afterMimeMessageCreatingAction.invoke(mimeMessage)
@@ -91,6 +97,7 @@ object ProcessingOutgoingMessageInfoHelper {
 
   private fun addAttsToCache(
     context: Context,
+    accountEntity: AccountEntity,
     outgoingMsgInfo: OutgoingMessageInfo,
     attsCacheDir: File
   ) {
@@ -113,6 +120,7 @@ object ProcessingOutgoingMessageInfoHelper {
       val origFileUri = attachmentInfo.uri
       var originalFileInputStream: InputStream? = null
       if (origFileUri != null) {
+        OutgoingAttachmentUriValidator.requireAllowedUri(context, origFileUri)
         originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
       } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
         originalFileInputStream = ByteArrayInputStream(attachmentInfo.rawData)
@@ -138,9 +146,7 @@ object ProcessingOutgoingMessageInfoHelper {
           pubKeys = requireNotNull(pubKeys),
           fileName = originalAttName,
         )
-        uri = FileProvider.getUriForFile(
-          context, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile
-        )
+        uri = Uri.fromFile(encryptedTempFile)
         name = encryptedTempFile.name
       } else {
         var cachedAtt = File(attsCacheDir, originalAttName)
@@ -150,7 +156,7 @@ object ProcessingOutgoingMessageInfoHelper {
         }
 
         FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
-        uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
+        uri = Uri.fromFile(cachedAtt)
       }
 
       cachedAtts.add(
@@ -169,6 +175,7 @@ object ProcessingOutgoingMessageInfoHelper {
     }
 
     for (candidate in outgoingMsgInfo.forwardedAtts ?: emptyList()) {
+      candidate.uri?.let { OutgoingAttachmentUriValidator.requireAllowedUri(context, it) }
       if (candidate.isEncryptionAllowed
         && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
       ) {
@@ -178,7 +185,9 @@ object ProcessingOutgoingMessageInfoHelper {
       }
     }
 
-    roomDatabase.attachmentDao().insert(cachedAtts.mapNotNull { AttachmentEntity.fromAttInfo(it) })
+    roomDatabase.attachmentDao().insert(cachedAtts.mapNotNull {
+      AttachmentEntity.fromAttInfo(attachmentInfo = it, accountType = accountEntity.accountType)
+    })
   }
 
   /**

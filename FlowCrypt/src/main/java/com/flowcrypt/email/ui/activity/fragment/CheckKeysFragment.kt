@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,10 +21,11 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.databinding.FragmentCheckKeysBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
-import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.visible
 import com.flowcrypt.email.extensions.visibleOrGone
 import com.flowcrypt.email.jetpack.lifecycle.CustomAndroidViewModelFactory
@@ -37,6 +39,7 @@ import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.NO_NEW_KEYS
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.SKIP_REMAINING_KEYS
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import org.apache.commons.io.IOUtils
@@ -81,6 +84,8 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
 
       if (!args.isExtraImportOpt) {
         if (args.skipImportedKeys) {
+          //todo-denbond7 temporary changes to fix lint warning. Should be improved in future
+          @SuppressLint("ThreadConstraint")
           removeAlreadyImportedKeys()
         }
         uniqueKeysCount = getCountOfUniqueKeys(keyDetailsAndFingerprintsMap)
@@ -92,8 +97,22 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
         }
       }
 
-      remainingKeys.addAll(originalKeys)
-      checkExistingOfPartiallyEncryptedPrivateKeys()
+      val partiallyEncryptedPrivateKeys = originalKeys.filter { it.isPartiallyEncrypted }
+      val finalList = originalKeys - partiallyEncryptedPrivateKeys.toSet()
+
+      remainingKeys.addAll(finalList)
+      if (partiallyEncryptedPrivateKeys.isNotEmpty()) {
+        showInfoDialog(
+          dialogTitle = "",
+          requestCode = if (finalList.isEmpty()) {
+            REQUEST_CODE_SINGLE_PARTIALLY_ENCRYPTED_KEY
+          } else {
+            Int.MIN_VALUE
+          },
+          dialogMsg = getString(R.string.partially_encrypted_private_key_error_msg),
+          isCancelable = false
+        )
+      }
 
       if (uniqueKeysCount == 0) {
         returnResult(NO_NEW_KEYS)
@@ -108,6 +127,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     initViews()
     updateView()
     setupCheckPrivateKeysViewModel()
+    subscribeToInfoDialog()
   }
 
   private fun initViews() {
@@ -162,6 +182,14 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
         useWebViewToRender = true
       )
     }
+    binding?.groupAddToBackupOption?.visibleOrGone(args.showAddToBackupOption)
+    binding?.imageButtonMakeBackupHint?.setOnClickListener {
+      showInfoDialog(
+        dialogTitle = "",
+        dialogMsg = getString(R.string.make_backup_explanation_text),
+        useWebViewToRender = false
+      )
+    }
     binding?.textViewSubTitle?.text = args.subTitle
 
     if (args.isExtraImportOpt) {
@@ -183,19 +211,33 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     checkPrivateKeysViewModel.checkPrvKeysLiveData.observe(viewLifecycleOwner) {
       when (it.status) {
         Result.Status.LOADING -> {
+          binding?.checkBoxShouldBeAddedToBackup?.isEnabled = false
           countingIdlingResource?.incrementSafely(this@CheckKeysFragment)
           binding?.progressBar?.visibility = View.VISIBLE
         }
 
         else -> {
+          binding?.checkBoxShouldBeAddedToBackup?.isEnabled = true
           binding?.progressBar?.visibility = View.GONE
           when (it.status) {
             Result.Status.SUCCESS -> {
               val resultKeys = it.data ?: emptyList()
               val sessionUnlockedKeys = resultKeys
                 .filter { checkResult ->
-                  checkResult.pgpKeyRingDetails.tempPassphrase?.isNotEmpty() == true
-                }.map { checkResult -> checkResult.pgpKeyRingDetails }
+                  checkResult.passphrase.isNotEmpty() && checkResult.e == null
+                }.map { checkResult ->
+                  checkResult.pgpKeyRingDetails.copy(
+                    tempPassphrase = checkResult.passphrase,
+                    importInfo = if (args.showAddToBackupOption) {
+                      (checkResult.pgpKeyRingDetails.importInfo
+                        ?: PgpKeyRingDetails.ImportInfo()).copy(
+                        shouldBeAddedToBackup = binding?.checkBoxShouldBeAddedToBackup?.isChecked ?: false
+                      )
+                    } else {
+                      checkResult.pgpKeyRingDetails.importInfo
+                    }
+                  )
+                }
               if (sessionUnlockedKeys.isNotEmpty()) {
                 unlockedKeys.addAll(sessionUnlockedKeys)
 
@@ -251,17 +293,6 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     }
   }
 
-  private fun checkExistingOfPartiallyEncryptedPrivateKeys() {
-    val partiallyEncryptedPrivateKes = originalKeys.filter { it.isPartiallyEncrypted }
-
-    if (partiallyEncryptedPrivateKes.isNotEmpty()) {
-      showInfoDialog(
-        dialogTitle = "",
-        dialogMsg = getString(R.string.partially_encrypted_private_key_error_msg)
-      )
-    }
-  }
-
   private fun returnResult(@CheckingState checkingState: Int) {
     navController?.navigateUp()
     setFragmentResult(
@@ -271,7 +302,7 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   /**
-   * Remove the already imported keys from the list of found backups.
+   * Remove the already imported keys from the the given list.
    */
   private fun removeAlreadyImportedKeys() {
     val fingerprints = getUniqueFingerprints(keyDetailsAndFingerprintsMap)
@@ -345,6 +376,16 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     }
   }
 
+  private fun subscribeToInfoDialog() {
+    setFragmentResultListenerForInfoDialog { _, bundle ->
+      when (bundle.getInt(InfoDialogFragment.KEY_REQUEST_CODE)) {
+        REQUEST_CODE_SINGLE_PARTIALLY_ENCRYPTED_KEY -> {
+          returnResult(CANCELED)
+        }
+      }
+    }
+  }
+
   @Retention(AnnotationRetention.SOURCE)
   @IntDef(CANCELED, SKIP_REMAINING_KEYS, NO_NEW_KEYS, CHECKED_KEYS, NEGATIVE)
   annotation class CheckingState {
@@ -358,6 +399,8 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
   }
 
   companion object {
+    private const val REQUEST_CODE_SINGLE_PARTIALLY_ENCRYPTED_KEY = 1
+
     val KEY_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_UNLOCKED_PRIVATE_KEYS", CheckKeysFragment::class.java
     )

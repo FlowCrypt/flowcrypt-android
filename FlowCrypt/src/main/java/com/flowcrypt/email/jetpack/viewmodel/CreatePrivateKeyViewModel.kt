@@ -49,13 +49,18 @@ class CreatePrivateKeyViewModel(application: Application) : RoomBasicViewModel(a
                 passphrase = passphrase
               ).toPgpKeyRingDetails(
                 accountEntity.clientConfiguration?.shouldHideArmorMeta() ?: false
-              ).copy(
-                passphraseType = passphraseType,
-                tempPassphrase = passphrase.toCharArray(),
-                importSourceType = KeyImportDetails.SourceType.NEW
               )
 
-              Result.success(pgpKeyRingDetails)
+              Result.success(
+                pgpKeyRingDetails.copy(
+                  passphraseType = passphraseType,
+                  tempPassphrase = passphrase.toCharArray(),
+                  importInfo =
+                  (pgpKeyRingDetails.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                    importSourceType = KeyImportDetails.SourceType.NEW
+                  )
+                )
+              )
             } catch (e: Exception) {
               Result.exception(e)
             }

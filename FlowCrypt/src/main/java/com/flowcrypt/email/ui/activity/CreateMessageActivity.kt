@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity
@@ -11,8 +11,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.navigation.NavHostController
 import androidx.navigation.ui.AppBarConfiguration
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -25,8 +30,11 @@ import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.FlavorSettings
+import java.io.File
 
 /**
  * This activity describes a logic of send encrypted or standard message.
@@ -66,11 +74,46 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    sanitizeIntentForNavigation(intent)
+    enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     (navController as? NavHostController)?.enableOnBackPressed(true)
     isNavigationArrowDisplayed = true
     val navGraph = navController.navInflater.inflate(R.navigation.create_msg_graph)
-    navController.setGraph(navGraph, intent.extras)
+    navController.setGraph(navGraph, createStartDestinationArgs(intent))
+    FileAndDirectoryUtils.cleanDir(File(cacheDir, Constants.DRAFT_CACHE_DIR))
+    applyInsetsToSupportEdgeToEdge()
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    sanitizeIntentForNavigation(intent)
+    setIntent(intent)
+    super.onNewIntent(intent)
+    if (intent.action in PUBLIC_INTENT_ACTIONS) {
+      recreate()
+    }
+  }
+
+  private fun sanitizeIntentForNavigation(intent: Intent) {
+    val originalExtras = intent.extras ?: return
+    val shouldRemoveAllNavigationDeepLinkExtras = intent.action in PUBLIC_INTENT_ACTIONS
+    val deepLinkIds = originalExtras.getIntArray(EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS)
+    val containsBlockedInternalDestination = deepLinkIds?.any { it in BLOCKED_DEEP_LINK_DESTINATION_IDS } == true
+    if (!shouldRemoveAllNavigationDeepLinkExtras && !containsBlockedInternalDestination) {
+      return
+    }
+    val sanitizedExtras = Bundle(originalExtras).apply {
+      NAVIGATION_DEEP_LINK_EXTRA_KEYS.forEach(::remove)
+    }
+    intent.replaceExtras(sanitizedExtras)
+  }
+
+  private fun createStartDestinationArgs(intent: Intent): Bundle? {
+    return if (intent.action in PUBLIC_INTENT_ACTIONS) {
+      Bundle.EMPTY
+    } else {
+      intent.extras?.let { CreateMessageFragmentArgs.fromBundle(it).toBundle() }
+    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -91,7 +134,40 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
     }
   }
 
+  fun applyInsetsToSupportEdgeToEdge() {
+    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+      val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+      binding.appBarLayout.updatePadding(top = bars.top)
+      binding.root.updatePadding(bottom = bars.bottom)
+      insets
+    }
+  }
+
   companion object {
+    private const val EXTRA_KEY_INCOMING_MESSAGE_INFO = "incomingMessageInfo"
+    private const val EXTRA_KEY_ATTACHMENTS = "attachments"
+    private const val EXTRA_KEY_MESSAGE_TYPE = "messageType"
+    private const val EXTRA_KEY_ENCRYPTED_BY_DEFAULT = "encryptedByDefault"
+    private const val EXTRA_KEY_SERVICE_INFO = "serviceInfo"
+    private const val EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS =
+      "android-support-nav:controller:deepLinkIds"
+    private val NAVIGATION_DEEP_LINK_EXTRA_KEYS = setOf(
+      EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS,
+      "android-support-nav:controller:deepLinkArgs",
+      "android-support-nav:controller:deepLinkExtras",
+      "android-support-nav:controller:deepLinkHandled",
+      "android-support-nav:controller:deepLinkIntent",
+    )
+    private val BLOCKED_DEEP_LINK_DESTINATION_IDS = setOf(
+      R.id.createOutgoingMessageDialogFragment
+    )
+    private val PUBLIC_INTENT_ACTIONS = setOf(
+      Intent.ACTION_VIEW,
+      Intent.ACTION_SENDTO,
+      Intent.ACTION_SEND,
+      Intent.ACTION_SEND_MULTIPLE
+    )
+
     fun generateIntent(
       context: Context?,
       @MessageType messageType: Int,
@@ -102,11 +178,14 @@ class CreateMessageActivity : BaseActivity<ActivityCreateMessageBinding>(),
     ): Intent {
       val intent = Intent(context, CreateMessageActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-      intent.putExtra("incomingMessageInfo", msgInfo)
-      intent.putExtra("attachments", attachments)
-      intent.putExtra("messageType", messageType)
-      intent.putExtra("encryptedByDefault", msgEncryptionType == MessageEncryptionType.ENCRYPTED)
-      intent.putExtra("serviceInfo", serviceInfo)
+      intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, msgInfo)
+      intent.putExtra(EXTRA_KEY_ATTACHMENTS, attachments)
+      intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType)
+      intent.putExtra(
+        EXTRA_KEY_ENCRYPTED_BY_DEFAULT,
+        msgEncryptionType == MessageEncryptionType.ENCRYPTED
+      )
+      intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo)
       return intent
     }
   }

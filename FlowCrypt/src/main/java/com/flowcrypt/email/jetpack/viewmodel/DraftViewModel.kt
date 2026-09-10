@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit
  */
 class DraftViewModel(
   existingDraftMessageEntity: MessageEntity? = null,
-  private val gmailThreadId: String? = null,
+  private val gmailThreadId: Long? = null,
   application: Application
 ) : AccountViewModel(application) {
   private var sessionDraftMessageEntity: MessageEntity? = existingDraftMessageEntity
@@ -76,6 +76,10 @@ class DraftViewModel(
     MutableStateFlow(Result.none())
   val savingDraftStateFlow: StateFlow<Result<Boolean>> =
     savingDraftMutableStateFlow.asStateFlow()
+
+  fun getSessionDraftMessageEntity(): MessageEntity? {
+    return sessionDraftMessageEntity?.copy()
+  }
 
   fun processDraft(
     coroutineScope: CoroutineScope = viewModelScope,
@@ -97,7 +101,7 @@ class DraftViewModel(
       if (isSavingDraftNeeded) {
         if (showNotification) {
           withContext(Dispatchers.Main) {
-            context.toast(context.getString(R.string.draft_saved))
+            context.toast(context.getString(R.string.saving_draft))
           }
         }
         withContext(Dispatchers.IO) {
@@ -115,7 +119,7 @@ class DraftViewModel(
         }
       } else if (showNotification && timeToCompare < draftFingerprint.timeInMilliseconds) {
         withContext(Dispatchers.Main) {
-          context.toast(context.getString(R.string.draft_saved))
+          context.toast(context.getString(R.string.saving_draft))
         }
       }
     }
@@ -123,15 +127,17 @@ class DraftViewModel(
 
   fun setupWithInitializationData(
     initializationData: InitializationData,
-    timeInMilliseconds: Long
+    timeInMilliseconds: Long,
+    skipCheckingSignature: Boolean
   ) {
     draftFingerprint = DraftFingerprint(
-      msgText = initializationData.body,
+      msgText = initializationData.body ?: "",
       msgSubject = initializationData.subject,
       toRecipients = initializationData.toAddresses.map { it.lowercase() }.toSet(),
       ccRecipients = initializationData.ccAddresses.map { it.lowercase() }.toSet(),
       bccRecipients = initializationData.bccAddresses.map { it.lowercase() }.toSet(),
-      timeInMilliseconds = timeInMilliseconds
+      timeInMilliseconds = timeInMilliseconds,
+      skipCheckingSignature = skipCheckingSignature
     )
   }
 
@@ -148,7 +154,18 @@ class DraftViewModel(
         internetAddress.address.lowercase()
       }?.toSet() ?: emptySet()
 
-    if (outgoingMessageInfo.msg != draftFingerprint.msgText
+    val isTextTheSame =
+      if (outgoingMessageInfo.signature != null && !draftFingerprint.skipCheckingSignature) {
+        val textWithoutSignature = removeSignature(
+          message = outgoingMessageInfo.msg,
+          signature = outgoingMessageInfo.signature
+        )
+        textWithoutSignature == draftFingerprint.msgText
+      } else {
+        (outgoingMessageInfo.msg ?: "") == draftFingerprint.msgText
+      }
+
+    if (!isTextTheSame
       || outgoingMessageInfo.subject != draftFingerprint.msgSubject
       || currentToRecipients != draftFingerprint.toRecipients
       || currentCcRecipients != draftFingerprint.ccRecipients
@@ -156,7 +173,7 @@ class DraftViewModel(
     ) {
       isSavingDraftNeeded = true
       draftFingerprint = DraftFingerprint(
-        msgText = outgoingMessageInfo.msg,
+        msgText = outgoingMessageInfo.msg ?: "",
         msgSubject = outgoingMessageInfo.subject,
         toRecipients = currentToRecipients,
         ccRecipients = currentCcRecipients,
@@ -188,11 +205,10 @@ class DraftViewModel(
             accountEntity = activeAccount,
             outgoingMsgInfo = outgoingMessageInfo,
             signingRequired = false,
-            hideArmorMeta = activeAccount.clientConfiguration?.shouldHideArmorMeta() ?: false
+            hideArmorMeta = activeAccount.clientConfiguration?.shouldHideArmorMeta() == true
           )
-          val existingSnapshot = MsgsCacheManager.getMsgSnapshot(draftMessageEntity.id.toString())
-          if (existingSnapshot != null) {
-            existingSnapshot.getUri(0)?.let { fileUri ->
+          MsgsCacheManager.getMsgSnapshot(draftMessageEntity.id.toString())?.getUri(0)
+            ?.let { fileUri ->
               (getApplication() as Context).contentResolver?.openInputStream(fileUri)
                 ?.let { inputStream ->
                   val keys = PGPainless.readKeyRing()
@@ -222,7 +238,6 @@ class DraftViewModel(
                       mimeMessage.setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, inReplyTo)
                     }
                 }
-            }
           }
           val draftsDir = CacheManager.getDraftDirectory(getApplication())
 
@@ -244,10 +259,10 @@ class DraftViewModel(
           )
           val messageEntityWithoutStateChange = draftMessageEntity.copy(
             subject = outgoingMessageInfo.subject,
-            fromAddress = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
-            replyTo = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
-            toAddress = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
-            ccAddress = InternetAddress.toString(outgoingMessageInfo.ccRecipients?.toTypedArray()),
+            fromAddresses = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
+            replyToAddresses = InternetAddress.toString(arrayOf(outgoingMessageInfo.from)),
+            toAddresses = InternetAddress.toString(outgoingMessageInfo.toRecipients?.toTypedArray()),
+            ccAddresses = InternetAddress.toString(outgoingMessageInfo.ccRecipients?.toTypedArray()),
             sentDate = mimeMessage.sentDate?.time,
             receivedDate = mimeMessage.sentDate?.time
           )
@@ -276,15 +291,17 @@ class DraftViewModel(
       val folderDrafts =
         foldersManager.folderDrafts ?: throw IllegalStateException("Drafts folder is undefined")
       val newDraftMessageEntity = MessageEntity.genMsgEntity(
-        email = accountEntity.email,
+        account = accountEntity.email,
+        accountType = accountEntity.accountType,
         label = folderDrafts.fullName,
-        uid = System.currentTimeMillis(),
+        uid = outgoingMessageInfo.uid,
         info = outgoingMessageInfo,
         flags = listOf(MessageFlag.DRAFT, MessageFlag.SEEN)
       ).copy(
         state = MessageState.PENDING_UPLOADING_DRAFT.value,
         threadId = gmailThreadId,
-        labelIds = GmailApiHelper.LABEL_DRAFT
+        labelIds = GmailApiHelper.LABEL_DRAFT,
+        isVisible = false
       )
       val id = roomDatabase.msgDao().insertSuspend(newDraftMessageEntity)
       return@withContext newDraftMessageEntity.copy(
@@ -301,21 +318,37 @@ class DraftViewModel(
           draftEntity.copy(state = MessageState.PENDING_DELETING_DRAFT.value)
         )
 
+        val draftsDir = CacheManager.getDraftDirectory(getApplication())
+
+        draftsDir.walkTopDown().firstOrNull {
+          it.name == draftEntity.id.toString()
+        }?.let { currentMsgDraftDir ->
+          FileAndDirectoryUtils.deleteDir(currentMsgDraftDir)
+        }
+
         DeleteDraftsWorker.enqueue(getApplication())
       }
     }
   }
 
   private data class DraftFingerprint(
-    var msgText: String? = null,
+    var msgText: String = "",
     var msgSubject: String? = null,
     val toRecipients: Set<String> = setOf(),
     val ccRecipients: Set<String> = setOf(),
     val bccRecipients: Set<String> = setOf(),
-    val timeInMilliseconds: Long = System.currentTimeMillis()
+    val timeInMilliseconds: Long = System.currentTimeMillis(),
+    val skipCheckingSignature: Boolean = false,
   )
 
   companion object {
-    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(5)
+    val DELAY_TIMEOUT = TimeUnit.SECONDS.toMillis(30)
+
+    internal fun removeSignature(message: String?, signature: String): String {
+      return message?.replaceFirst(
+        oldValue = "\n\n$signature",
+        newValue = ""
+      ) ?: ""
+    }
   }
 }

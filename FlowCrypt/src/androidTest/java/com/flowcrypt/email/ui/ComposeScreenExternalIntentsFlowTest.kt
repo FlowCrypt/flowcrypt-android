@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -42,9 +42,8 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.emptyString
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.Matchers.not
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -94,6 +93,8 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
       }
     })
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -101,8 +102,8 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     .around(ClearAppSettingsRule())
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(mockWebServerRule)
-    .around(AddAccountToDatabaseRule())
-    .around(AddPrivateKeyToDatabaseRule())
+    .around(addAccountToDatabaseRule)
+    .around(addPrivateKeyToDatabaseRule)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
@@ -373,6 +374,37 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
     checkViewsOnScreen(subject = Intent.EXTRA_SUBJECT, body = Intent.EXTRA_TEXT)
   }
 
+  @Test
+  fun testIgnoreInternalNavigationDeepLinkExtrasForExternalSendIntent() {
+    val externalSubject = "safe external subject"
+    val externalBody = "safe external body"
+    val externalAttachmentName = atts.first().name
+    assertEquals(0, roomDatabase.msgDao().getOutboxMsgs(addAccountToDatabaseRule.account.email).size)
+    val intent = requireNotNull(
+      TestGeneralUtil.genIntentForNavigationComponent(
+        navGraphId = R.navigation.create_msg_graph,
+        activityClass = CreateMessageActivity::class.java,
+        destinationId = R.id.createOutgoingMessageDialogFragment,
+      )
+    ).apply {
+      action = Intent.ACTION_SEND
+      type = "text/plain"
+      putExtra(Intent.EXTRA_SUBJECT, externalSubject)
+      putExtra(Intent.EXTRA_TEXT, externalBody)
+      putExtra(Intent.EXTRA_STREAM, genUriFromFile(atts.first()))
+    }
+
+    activeActivityRule.launch(intent)
+
+    checkViewsOnScreen(subject = externalSubject, body = externalBody, attachmentsCount = 1)
+    onView(withText(externalAttachmentName)).check(matches(isDisplayed()))
+    activeActivityRule.getNonNullScenario().onActivity { activity ->
+      assertFalse(activity.isFinishing)
+      assertFalse(activity.isDestroyed)
+    }
+    assertEquals(0, roomDatabase.msgDao().getOutboxMsgs(addAccountToDatabaseRule.account.email).size)
+  }
+
   private fun genIntentForUri(action: String?, stringUri: String?): Intent {
     return Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
       this.action = action
@@ -463,7 +495,8 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         .check(matches(withText(getRidOfCharacterSubstitutes(body.toString()))))
     } else {
       onView(withId(R.id.editTextEmailMessage))
-        .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
+        .check(matches(isDisplayed()))
+        .check(matches(withText("")))
     }
   }
 
@@ -474,7 +507,8 @@ class ComposeScreenExternalIntentsFlowTest : BaseTest() {
         .check(matches(withText(getRidOfCharacterSubstitutes(subject))))
     } else {
       onView(withId(R.id.editTextEmailSubject))
-        .check(matches(isDisplayed())).check(matches(withText(`is`(emptyString()))))
+        .check(matches(isDisplayed()))
+        .check(matches(withText("")))
     }
   }
 

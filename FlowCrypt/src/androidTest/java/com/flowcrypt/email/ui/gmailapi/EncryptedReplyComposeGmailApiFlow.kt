@@ -37,6 +37,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import com.flowcrypt.email.ui.base.BaseGmailApiTest.Companion.SUBJECT_EXISTING_STANDARD
 import jakarta.mail.Message
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
@@ -48,6 +49,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -60,7 +62,7 @@ import org.junit.runner.RunWith
   cc = [],
   bcc = [],
   message = BaseComposeScreenTest.MESSAGE,
-  subject = "",
+  subject = "Re: $SUBJECT_EXISTING_STANDARD",
   isNew = false
 )
 class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
@@ -88,7 +90,7 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
   @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
@@ -99,10 +101,10 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
       )
 
     //wait the message details rendering
-    Thread.sleep(1000)
+    waitForObjectWithText(MESSAGE_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on reply
-    openReplyScreen(R.id.layoutReplyButton, SUBJECT_EXISTING_STANDARD)
+    openReplyScreen(R.id.replyButton, SUBJECT_EXISTING_STANDARD)
 
     //switch to encrypted mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -148,10 +150,11 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
       val expectedText = MESSAGE + EmailUtil.genReplyContent(
         IncomingMessageInfo(
           msgEntity = MessageEntity(
-            email = "",
+            account = "",
+            accountType = "",
             folder = "",
             uid = 0,
-            fromAddress = DEFAULT_FROM_RECIPIENT,
+            fromAddresses = DEFAULT_FROM_RECIPIENT,
             receivedDate = DATE_EXISTING_STANDARD
 
           ),
@@ -168,7 +171,7 @@ class EncryptedReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
             hasSignedParts = false,
             hasMixedSignatures = false,
             isPartialSigned = false,
-            keyIdOfSigningKeys = emptyList(),
+            keyIdOfSigningKeys = emptySet(),
             hasBadSignatures = false
           )
         )

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.adapter
@@ -10,6 +10,7 @@ import android.graphics.Camera
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.AbsoluteSizeSpan
@@ -51,7 +52,6 @@ import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.color.MaterialColors
-import jakarta.mail.internet.InternetAddress
 import java.util.regex.Pattern
 
 /**
@@ -230,8 +230,35 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
         )
 
-        val senderAddress = prepareSenderAddress(folderType, messageEntity, context)
-        binding.textViewSenderAddress.text = senderAddress
+        val senderAddress = when (folderType) {
+          FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
+
+          else -> messageEntity.generateSenderAddresses(
+            context,
+            folderType,
+            context.getString(R.string.me)
+          )
+        }
+        binding.textViewSenderAddress.text = if (messageEntity.isGmailThread) {
+          messageEntity.getThreadSpannableString(context).let { spannableString ->
+            SpannableStringBuilder(senderAddress).apply {
+              if (spannableString.isNotEmpty()) {
+                when {
+                  spannableString.startsWith("(") -> {
+                    append(" ")
+                  }
+
+                  senderAddress.isNotEmpty() -> {
+                    append(", ")
+                  }
+                }
+              }
+              append(spannableString)
+            }
+          }
+        } else {
+          senderAddress
+        }
 
         updateAvatar(senderAddress, folderType, lastDataId == messageEntity.id)
         binding.imageViewAvatar.setOnClickListener {
@@ -297,22 +324,6 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       }
 
       lastDataId = messageEntity?.id
-    }
-
-    private fun prepareSenderAddress(
-      folderType: FoldersManager.FolderType?,
-      messageEntity: MessageEntity,
-      context: Context
-    ) = when (folderType) {
-      FoldersManager.FolderType.SENT -> generateAddresses(messageEntity.to)
-
-      FoldersManager.FolderType.DRAFTS -> generateAddresses(messageEntity.to).ifEmpty {
-        context.getString(R.string.no_recipients)
-      }
-
-      FoldersManager.FolderType.OUTBOX -> generateOutboxStatus(context, messageEntity.msgState)
-
-      else -> generateAddresses(messageEntity.from)
     }
 
     private fun changeStatusView(messageEntity: MessageEntity) {
@@ -522,44 +533,6 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       binding.imageViewStatus.gone()
 
       changeViewsTypeface(Typeface.NORMAL)
-    }
-
-    /**
-     * Prepare the sender name.
-     *
-     *  * Remove common mail domains: gmail.com, yahoo.com, live.com, outlook.com
-     *
-     *
-     * @param name An incoming name
-     * @return A generated sender name.
-     */
-    private fun prepareSenderName(name: String): String {
-      return SENDER_NAME_PATTERN.matcher(name).replaceFirst("")
-    }
-
-    private fun generateAddresses(internetAddresses: List<InternetAddress>?): String {
-      if (internetAddresses == null) {
-        return "null"
-      }
-
-      val iMax = internetAddresses.size - 1
-      if (iMax == -1) {
-        return ""
-      }
-
-      val stringBuilder = StringBuilder()
-      var i = 0
-      while (true) {
-        val address = internetAddresses[i]
-        val displayName =
-          if (TextUtils.isEmpty(address.personal)) address.address else address.personal
-        stringBuilder.append(displayName)
-        if (i == iMax) {
-          return prepareSenderName(stringBuilder.toString())
-        }
-        stringBuilder.append(", ")
-        i++
-      }
     }
 
     companion object {

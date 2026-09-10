@@ -9,8 +9,8 @@ import android.content.Context
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.toAccountAliasesEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.IgnoredOnParcel
@@ -37,30 +37,16 @@ data class LoadGmailAliasesAction(
     try {
       email ?: return
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val account = roomDatabase.accountDao().getAccount(email) ?: return
+      val accountEntity = roomDatabase.accountDao().getAccount(email) ?: return
 
-      if (account.accountType != AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+      if (accountEntity.accountType != AccountEntity.ACCOUNT_TYPE_GOOGLE) {
         return
       }
 
-      val gmailService = GmailApiHelper.generateGmailApiService(context, account)
+      val gmailService = GmailApiHelper.generateGmailApiService(context, accountEntity)
       val response =
         gmailService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-      val aliases = ArrayList<AccountAliasesEntity>()
-      for (alias in response.sendAs) {
-        if (alias.verificationStatus != null) {
-          val accountAliasesDao = AccountAliasesEntity(
-            email = account.email.lowercase(),
-            accountType = account.accountType,
-            sendAsEmail = alias.sendAsEmail.lowercase(),
-            displayName = alias.displayName,
-            isDefault = alias.isDefault,
-            verificationStatus = alias.verificationStatus
-          )
-          aliases.add(accountAliasesDao)
-        }
-      }
-
+      val aliases = response.sendAs.map { it.toAccountAliasesEntity(accountEntity.account) }
       roomDatabase.accountAliasesDao().insertWithReplace(aliases)
     } catch (e: Exception) {
       e.printStackTrace()

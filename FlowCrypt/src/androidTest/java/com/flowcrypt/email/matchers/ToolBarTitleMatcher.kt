@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.matchers
@@ -9,9 +9,9 @@ import android.view.View
 import androidx.appcompat.widget.Toolbar
 import androidx.test.espresso.matcher.BoundedMatcher
 import com.google.android.gms.common.internal.Preconditions.checkNotNull
-import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.Matchers.`is`
 
 /**
  * @author Denys Bondarenko

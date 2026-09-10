@@ -1,12 +1,13 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.accounts.Account
 import android.accounts.AccountManager
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -142,6 +143,7 @@ class UserRecoverableAuthExceptionFragment :
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
     binding?.buttonSecurity?.setOnClickListener {
+      @SuppressLint("CheckResult")
       NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
         title = getString(R.string.security),
         resourceIdAsString = "html/security.htm"

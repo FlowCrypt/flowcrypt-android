@@ -59,7 +59,7 @@ abstract class BasePublicKeyDetailsTest : BaseTest(), AddAccountToDatabaseRuleIn
       )
 
     val bitStrength =
-      if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else null
+      if (keyRingInfo.primaryKey.pgpPublicKey.bitStrength != -1) keyRingInfo.primaryKey.pgpPublicKey.bitStrength else null
     val algoWithBits = keyRingInfo.algorithm.name + (bitStrength?.let { "/$it" } ?: "")
 
     onView(withId(R.id.textViewPrimaryKeyAlgorithm))

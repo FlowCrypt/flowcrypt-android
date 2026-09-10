@@ -64,7 +64,13 @@ abstract class BaseImportKeyFragment<T : ViewBinding> : BaseFragment<T>() {
       val keys =
         bundle.getParcelableArrayListViaExt<PgpKeyRingDetails>(ParsePgpKeysFromSourceDialogFragment.KEY_PARSED_KEYS)
       handleParsedKeys(
-        keys?.map { it.copy(importSourceType = importSourceType) }?.toList() ?: emptyList()
+        keys?.map {
+          it.copy(
+            importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+              importSourceType = importSourceType
+            )
+          )
+        }?.toList() ?: emptyList()
       )
     }
   }

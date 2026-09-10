@@ -1,13 +1,12 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.android.webkit
 
 import android.content.res.Configuration
 import android.graphics.Color
-import android.os.Build
 import android.webkit.WebView
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
@@ -18,9 +17,7 @@ import androidx.webkit.WebViewFeature
 fun WebView.setupDayNight() {
   setBackgroundColor(Color.TRANSPARENT)
   if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true)
-    }
+    WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true)
   } else {
     if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
       when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {

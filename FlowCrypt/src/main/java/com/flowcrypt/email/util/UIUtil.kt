@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.util
@@ -15,6 +15,7 @@ import android.text.TextUtils
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
+import androidx.core.graphics.createBitmap
 import java.io.ByteArrayOutputStream
 
 /**
@@ -94,9 +95,10 @@ class UIUtil {
       val view = activity.window.decorView
       val width = view.width
       val height = view.height
-      val bitmap = Bitmap.createBitmap(
+      val bitmap = createBitmap(
         if (width > 0) width else 640,
-        if (height > 0) height else 480, Bitmap.Config.RGB_565
+        if (height > 0) height else 480,
+        Bitmap.Config.RGB_565
       )
       val canvas = Canvas(bitmap)
       view.draw(canvas)

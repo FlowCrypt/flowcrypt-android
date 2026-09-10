@@ -8,17 +8,17 @@ package com.flowcrypt.email.security.model
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Parcelable
-import android.util.Patterns
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.PublicKeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddress
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.model.KeyImportDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
 import kotlinx.parcelize.Parcelize
 import org.pgpainless.algorithm.KeyFlag
@@ -30,7 +30,7 @@ import org.pgpainless.algorithm.KeyFlag
  * @author Denys Bondarenko
  */
 @Parcelize
-data class PgpKeyRingDetails constructor(
+data class PgpKeyRingDetails(
   @Expose val isFullyDecrypted: Boolean,
   @Expose val isFullyEncrypted: Boolean,
   @Expose val isRevoked: Boolean,
@@ -47,9 +47,9 @@ data class PgpKeyRingDetails constructor(
   @Expose val algo: Algo,
   @Expose val primaryKeyId: Long,
   @Expose val possibilities: Set<Int>,
-  var tempPassphrase: CharArray? = null,
-  var passphraseType: KeyEntity.PassphraseType? = null,
-  var importSourceType: KeyImportDetails.SourceType? = null
+  val tempPassphrase: CharArray? = null,
+  val passphraseType: KeyEntity.PassphraseType? = null,
+  val importInfo: ImportInfo? = null
 ) : Parcelable {
   val fingerprint: String
     get() = ids.first().fingerprint
@@ -63,13 +63,7 @@ data class PgpKeyRingDetails constructor(
     get() = parseMimeAddresses()
 
   val primaryMimeAddress: InternetAddress?
-    get() = primaryUserId?.let {
-      try {
-        InternetAddress.parse(it).firstOrNull()
-      } catch (e: Exception) {
-        null
-      }
-    }
+    get() = primaryUserId?.asInternetAddress()
 
   val isPartiallyEncrypted: Boolean
     get() {
@@ -91,22 +85,7 @@ data class PgpKeyRingDetails constructor(
   }
 
   private fun parseMimeAddresses(): List<InternetAddress> {
-    val results = mutableListOf<InternetAddress>()
-
-    for (user in users) {
-      try {
-        results.addAll(listOf(*InternetAddress.parse(user)))
-      } catch (e: AddressException) {
-        e.printStackTrace()
-        val pattern = Patterns.EMAIL_ADDRESS
-        val matcher = pattern.matcher(user)
-        if (matcher.find()) {
-          results.add(InternetAddress(matcher.group()))
-        }
-      }
-    }
-
-    return results
+    return users.flatMap { it.asInternetAddresses().asList() }
   }
 
   fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
@@ -201,7 +180,7 @@ data class PgpKeyRingDetails constructor(
       if (!tempPassphrase.contentEquals(other.tempPassphrase)) return false
     } else if (other.tempPassphrase != null) return false
     if (passphraseType != other.passphraseType) return false
-    if (importSourceType != other.importSourceType) return false
+    if (importInfo != other.importInfo) return false
 
     return true
   }
@@ -223,9 +202,14 @@ data class PgpKeyRingDetails constructor(
     result = 31 * result + algo.hashCode()
     result = 31 * result + primaryKeyId.hashCode()
     result = 31 * result + possibilities.hashCode()
-    result = 31 * result + (tempPassphrase?.contentHashCode() ?: 0)
     result = 31 * result + (passphraseType?.hashCode() ?: 0)
-    result = 31 * result + (importSourceType?.hashCode() ?: 0)
+    result = 31 * result + (importInfo?.hashCode() ?: 0)
     return result
   }
+
+  @Parcelize
+  data class ImportInfo(
+    val importSourceType: KeyImportDetails.SourceType? = null,
+    val shouldBeAddedToBackup: Boolean? = null
+  ) : Parcelable
 }

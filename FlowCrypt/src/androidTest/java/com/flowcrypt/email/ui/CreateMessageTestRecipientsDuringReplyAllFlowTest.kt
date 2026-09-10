@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -22,7 +22,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.hasItem
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
-import com.flowcrypt.email.rules.AddGmailAliasToDatabaseRule
+import com.flowcrypt.email.rules.AddAccountAliasToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
@@ -45,14 +45,16 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest() {
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
-  private val addGmailAliasToDatabaseRule = AddGmailAliasToDatabaseRule(
-    AccountAliasesEntity(
+  private val addAccountAliasToDatabaseRule = AddAccountAliasToDatabaseRule(
+    listOf(
+      AccountAliasesEntity(
       email = addAccountToDatabaseRule.account.email,
       accountType = requireNotNull(addAccountToDatabaseRule.account.accountType),
       sendAsEmail = ALIAS.lowercase(),
       displayName = ALIAS,
       isDefault = false,
       verificationStatus = "accepted"
+      )
     )
   )
   private val INBOX = LocalFolder(
@@ -70,7 +72,7 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
-    .around(addGmailAliasToDatabaseRule)
+    .around(addAccountAliasToDatabaseRule)
     .around(activeActivityRule)
     .around(ScreenshotTestRule())
 
@@ -90,11 +92,12 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
     val incomingMessageInfo = IncomingMessageInfo(
       localFolder = localFolder,
       msgEntity = MessageEntity(
-        email = addAccountToDatabaseRule.account.email,
+        account = addAccountToDatabaseRule.account.email,
+        accountType = addAccountToDatabaseRule.account.accountType,
         folder = localFolder.fullName,
         uid = 123,
-        toAddress = toRecipient,
-        ccAddress = ccRecipient
+        toAddresses = toRecipient,
+        ccAddresses = ccRecipient
       ),
       encryptionType = MessageEncryptionType.STANDARD,
       verificationResult = VERIFICATION_RESULT
@@ -124,11 +127,12 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
     val incomingMessageInfo = IncomingMessageInfo(
       localFolder = INBOX,
       msgEntity = MessageEntity(
-        email = addAccountToDatabaseRule.account.email,
+        account = addAccountToDatabaseRule.account.email,
+        accountType = addAccountToDatabaseRule.account.accountType,
         folder = INBOX.fullName,
         uid = 123,
-        replyTo = replyToRecipient,
-        toAddress = listOf(to1Recipient, to2Recipient).joinToString()
+        replyToAddresses = replyToRecipient,
+        toAddresses = listOf(to1Recipient, to2Recipient).joinToString()
       ),
       encryptionType = MessageEncryptionType.STANDARD,
       verificationResult = VERIFICATION_RESULT
@@ -162,11 +166,12 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
     val incomingMessageInfo = IncomingMessageInfo(
       localFolder = INBOX,
       msgEntity = MessageEntity(
-        email = addAccountToDatabaseRule.account.email,
+        account = addAccountToDatabaseRule.account.email,
+        accountType = addAccountToDatabaseRule.account.accountType,
         folder = INBOX.fullName,
         uid = 123,
-        replyTo = replyToRecipient,
-        toAddress = listOf(to1Recipient, to2Recipient, ALIAS).joinToString()
+        replyToAddresses = replyToRecipient,
+        toAddresses = listOf(to1Recipient, to2Recipient, ALIAS).joinToString()
       ),
       encryptionType = MessageEncryptionType.STANDARD,
       verificationResult = VERIFICATION_RESULT
@@ -204,12 +209,13 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
     val incomingMessageInfo = IncomingMessageInfo(
       localFolder = INBOX,
       msgEntity = MessageEntity(
-        email = addAccountToDatabaseRule.account.email,
+        account = addAccountToDatabaseRule.account.email,
+        accountType = addAccountToDatabaseRule.account.accountType,
         folder = INBOX.fullName,
         uid = 123,
-        replyTo = replyToRecipient,
-        toAddress = listOf(to1Recipient, to2Recipient).joinToString(),
-        ccAddress = listOf(ALIAS).joinToString()
+        replyToAddresses = replyToRecipient,
+        toAddresses = listOf(to1Recipient, to2Recipient).joinToString(),
+        ccAddresses = listOf(ALIAS).joinToString()
       ),
       encryptionType = MessageEncryptionType.STANDARD,
       verificationResult = VERIFICATION_RESULT
@@ -254,7 +260,7 @@ class CreateMessageTestRecipientsDuringReplyAllFlowTest : BaseComposeScreenTest(
       hasSignedParts = false,
       hasMixedSignatures = false,
       isPartialSigned = false,
-      keyIdOfSigningKeys = emptyList(),
+      keyIdOfSigningKeys = emptySet(),
       hasBadSignatures = false
     )
 

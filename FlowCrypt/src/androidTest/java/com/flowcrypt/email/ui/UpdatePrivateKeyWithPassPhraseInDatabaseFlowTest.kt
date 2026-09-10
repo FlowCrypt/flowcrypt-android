@@ -148,16 +148,15 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
     onView(withId(R.id.buttonPositiveAction))
       .perform(scrollTo(), click())
 
-    waitForObjectWithText(getResString(R.string.key_details), TimeUnit.SECONDS.toMillis(60))
+    val dateAfterUpdating = getResString(
+      R.string.template_modified,
+      dateFormat.format(Date(requireNotNull(updatedKeyDetails.lastModified)))
+    )
+    waitForObjectWithText(dateAfterUpdating, TimeUnit.SECONDS.toMillis(60))
 
-    //do checks after update
+    //do checks after updating
     onView(
-      withText(
-        getResString(
-          R.string.template_modified,
-          dateFormat.format(Date(requireNotNull(updatedKeyDetails.lastModified)))
-        )
-      )
+      withText(dateAfterUpdating)
     ).check(matches(isDisplayed()))
 
     val existingRecipientWithPubKeysAfterUpdate = runBlocking {
@@ -255,7 +254,7 @@ class UpdatePrivateKeyWithPassPhraseInDatabaseFlowTest : BaseTest() {
     //type key
     onView(withId(R.id.editTextNewPrivateKey))
       .check(matches(isDisplayed()))
-      .perform(replaceText(key), closeSoftKeyboard())
+      .perform(replaceText(key ?: ""), closeSoftKeyboard())
 
     onView(withId(R.id.buttonCheck))
       .check(matches(isDisplayed()))

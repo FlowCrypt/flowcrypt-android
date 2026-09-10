@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -33,7 +33,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.Matchers.containsString
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -134,6 +134,8 @@ class ImportRecipientsFromSourceFragmentFlowTest : BaseTest() {
   }
 
   @Test
+  //@Ignore("flaky 4")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testFetchKeyFromAttesterForExistedUserImeAction() {
     onView(withId(R.id.eTKeyIdOrEmail))
       .perform(

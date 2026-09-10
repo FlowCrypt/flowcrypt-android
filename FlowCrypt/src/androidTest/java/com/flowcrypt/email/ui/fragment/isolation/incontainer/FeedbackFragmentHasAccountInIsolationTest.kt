@@ -12,6 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.model.Screenshot
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -28,12 +29,14 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class FeedbackFragmentHasAccountInIsolationTest : BaseFeedbackFragmentTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -54,7 +57,13 @@ class FeedbackFragmentHasAccountInIsolationTest : BaseFeedbackFragmentTest() {
 
   @Test
   fun testUserEmailVisibility() {
-    onView(withId(R.id.editTextUserEmail))
+    waitForObjectWithText(
+      getResString(
+        R.string.feedback_thank_you_for_trying_message,
+        TimeUnit.SECONDS.toMillis(5)
+      )
+    )
+    onView(withId(R.id.textInputLayoutUserEmail))
       .check(matches(not(isDisplayed())))
   }
 }

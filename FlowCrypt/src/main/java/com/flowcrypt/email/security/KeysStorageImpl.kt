@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security
@@ -14,6 +14,7 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.usableForEncryption
 import com.flowcrypt.email.model.KeysStorage
@@ -21,8 +22,8 @@ import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.util.exception.DecryptionException
-import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.flow.Flow
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
@@ -111,7 +112,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return rings.map {
       val pgpKeyRingDetails = it.toPgpKeyRingDetails()
       val passphrase = getPassphraseByFingerprint(pgpKeyRingDetails.fingerprint)
-      pgpKeyRingDetails.copy(tempPassphrase = passphrase?.chars)
+      pgpKeyRingDetails.copy(tempPassphrase = passphrase?.getChars())
     }
   }
 
@@ -135,7 +136,7 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     for (secretKey in getPGPSecretKeyRings()) {
       for (userId in secretKey.publicKey.userIDs) {
         try {
-          val internetAddresses = InternetAddress.parse(userId)
+          val internetAddresses = userId.asInternetAddresses()
           for (internetAddress in internetAddresses) {
             if (user.equals(internetAddress.address, true)) {
               list.add(secretKey)
@@ -165,8 +166,16 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
         return doGetPassphrase(keyId, true)
       }
 
+      override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+        return getPassphraseFor(keyIdentifier.keyId)
+      }
+
       override fun hasPassphrase(keyId: Long): Boolean {
         return doGetPassphrase(keyId, false) != null
+      }
+
+      override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+        return hasPassphrase(keyIdentifier.keyId)
       }
 
       private fun doGetPassphrase(keyId: Long, throwException: Boolean): Passphrase? {

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.gmail.api
@@ -12,8 +12,8 @@ import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.javamail.CustomMimeBodyPart
 import com.flowcrypt.email.api.email.javamail.CustomMimeMultipart
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.isMimeType
-import com.flowcrypt.email.extensions.rawMimeType
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.isMimeType
+import com.flowcrypt.email.extensions.com.google.api.services.gmail.model.rawMimeType
 import com.google.api.services.gmail.model.Message
 import com.google.api.services.gmail.model.MessagePart
 import jakarta.mail.Flags

@@ -1,35 +1,39 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-if [[ -z "$1" ]];
- then
+#
+# © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+# Contributors: denbond7
+#
+
+set -euo pipefail
+
+if [[ -z "${1:-}" ]]; then
   echo "numShards is unset or set to the empty string"
   exit 1
- else
-  varNumShards=$1
 fi
 
-if [[ -z "$2" ]];
- then
+if [[ -z "${2:-}" ]]; then
   echo "shardIndex is unset or set to the empty string"
   exit 1
- else
-  varShardIndex=$2
 fi
 
-if [[ ${varShardIndex} -ge ${varNumShards} ]]
- then
+numShards="$1"
+shardIndex="$2"
+
+if (( shardIndex >= numShards )); then
   echo "shardIndex should be lower than numShards"
- else
-   #print test names
-   #adb shell am instrument -w \
-   # -e filter com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
-   # -e numShards 3 \
-   # -e shardIndex 1 \
-   # -e log true \
-   # com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
-
-  ./gradlew --console=plain :FlowCrypt:connectedConsumerUiTestsAndroidTest \
-    -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
-    -Pandroid.testInstrumentationRunnerArguments.numShards="${varNumShards}" \
-    -Pandroid.testInstrumentationRunnerArguments.shardIndex="${varShardIndex}"
+  exit 1
 fi
+
+#print test names
+#adb shell am instrument -w \
+# -e filter com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
+# -e numShards 3 \
+# -e shardIndex 1 \
+# -e log true \
+# com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
+
+./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:connectedConsumerUiTestsAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
+  -Pandroid.testInstrumentationRunnerArguments.numShards="${numShards}" \
+  -Pandroid.testInstrumentationRunnerArguments.shardIndex="${shardIndex}"

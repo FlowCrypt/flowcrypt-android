@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -21,11 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportAdditionalPrivateKeysBinding
 import com.flowcrypt.email.extensions.android.os.getParcelableArrayListViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.androidx.fragment.app.getNavigationResult
-import com.flowcrypt.email.extensions.gone
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFindKeysInClipboardDialogFragment
@@ -33,6 +29,10 @@ import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showParsePgpKeysFromSourceDialogFragment
 import com.flowcrypt.email.extensions.androidx.fragment.app.showTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.exceptionMsg
+import com.flowcrypt.email.extensions.gone
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyImportDetails
@@ -221,7 +221,10 @@ class ImportAdditionalPrivateKeysFragment :
             it.data?.let { pair ->
               setFragmentResult(
                 args.requestKey,
-                bundleOf(KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second))
+                bundleOf(
+                  KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second),
+                  KEY_INCOMING_BUNDLE to args.bundle
+                )
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
@@ -268,7 +271,10 @@ class ImportAdditionalPrivateKeysFragment :
               accountEntity = args.accountEntity,
               keys = it.map { pgpKeyRingDetails ->
                 pgpKeyRingDetails.copy(
-                  importSourceType = importSourceType
+                  importInfo = (pgpKeyRingDetails.importInfo
+                    ?: PgpKeyRingDetails.ImportInfo()).copy(
+                    importSourceType = importSourceType
+                  )
                 )
               })
           }
@@ -415,6 +421,10 @@ class ImportAdditionalPrivateKeysFragment :
 
     val KEY_IMPORTED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_IMPORTED_PRIVATE_KEYS", ImportAdditionalPrivateKeysFragment::class.java
+    )
+
+    val KEY_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_INCOMING_BUNDLE", ImportAdditionalPrivateKeysFragment::class.java
     )
   }
 }

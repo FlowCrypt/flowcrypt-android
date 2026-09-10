@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -97,6 +98,8 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("flaky 1")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
   fun testLabelsManagement() {
     val allLabels = initLabelIds()
     lastLabelIds = (allLabels.take(4) + allLabels.takeLast(1)).toMutableList()
@@ -109,9 +112,8 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
     onView(withId(R.id.recyclerViewLabels))
       .perform(RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(0, click()))
 
-    onView(withText(R.string.cancel))
-      .inRoot(isDialog())
-      .perform(click())
+    //close dialog
+    pressBack()
 
     //open dialog from the Action Bar menu
     openActionBarOverflowOrOptionsMenu(getTargetContext())

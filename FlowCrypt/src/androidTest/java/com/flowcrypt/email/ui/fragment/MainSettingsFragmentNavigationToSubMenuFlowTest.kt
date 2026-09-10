@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment
@@ -87,6 +87,24 @@ class MainSettingsFragmentNavigationToSubMenuFlowTest : BaseTest() {
       getResString(R.string.experimental),
       getResString(R.string.experimental_settings)
     )
+  }
+
+  @Test
+  fun testHiddenOrVisibleItems() {
+    onView(withText(getResString(R.string.backups)))
+      .check(matches(isDisplayed()))
+    onView(withText(getResString(R.string.security_and_privacy)))
+      .check(matches(isDisplayed()))
+    onView(withText(getResString(R.string.contacts)))
+      .check(matches(isDisplayed()))
+    onView(withText(getResString(R.string.keys)))
+      .check(matches(isDisplayed()))
+    onView(withText(getResString(R.string.attester)))
+      .check(matches(isDisplayed()))
+    onView(withText(getResString(R.string.general)))
+      .check(matches(isDisplayed()))
+    onView(withText(getResString(R.string.experimental)))
+      .check(matches(isDisplayed()))
   }
 
   private fun checkIsScreenDisplaying(screenName: String) {

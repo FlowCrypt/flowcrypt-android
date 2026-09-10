@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -71,6 +71,14 @@ class MainSettingsFragment : BasePreferenceFragment() {
         true
       }
 
+    findPreference<Preference>(getString(R.string.pref_key_signature))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToSignatureSettingsFragment()
+        )
+        true
+      }
+
     findPreference<Preference>(getString(R.string.pref_key_server_settings))
       ?.setOnPreferenceClickListener {
         navController?.navigate(
@@ -83,6 +91,14 @@ class MainSettingsFragment : BasePreferenceFragment() {
       ?.setOnPreferenceClickListener {
         navController?.navigate(
           MainSettingsFragmentDirections.actionMainSettingsFragmentToLegalSettingsFragment()
+        )
+        true
+      }
+
+    findPreference<Preference>(getString(R.string.pref_key_general))
+      ?.setOnPreferenceClickListener {
+        navController?.navigate(
+          MainSettingsFragmentDirections.actionMainSettingsFragmentToGeneralSettingsFragment()
         )
         true
       }
@@ -102,8 +118,10 @@ class MainSettingsFragment : BasePreferenceFragment() {
       !(accountEntity?.hasClientConfigurationProperty(ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP)
         ?: false)
 
-    if (accountEntity?.useAPI == false) {
-      findPreference<Preference>(Constants.PREF_KEY_SERVER_SETTINGS)?.isVisible = true
-    }
+    findPreference<Preference>(Constants.PREF_KEY_SERVER_SETTINGS)?.isVisible =
+      accountEntity?.useAPI == false
+
+    findPreference<Preference>(Constants.PREF_KEY_GENERAL)?.isVisible =
+      accountEntity?.isHandlingAttachmentRestricted() == false
   }
 }

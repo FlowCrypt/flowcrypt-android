@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 package com.flowcrypt.email.ui.activity
 
@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.CompoundButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -30,6 +31,8 @@ import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
+import androidx.core.view.get
+import androidx.core.view.size
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.exceptions.ClearCredentialException
@@ -46,6 +49,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import androidx.preference.PreferenceManager
 import androidx.work.WorkManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -80,9 +84,11 @@ import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
 import com.flowcrypt.email.service.IdleService
 import com.flowcrypt.email.ui.activity.fragment.MessagesListFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.FixNeedPassphraseIssueDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.model.NavigationViewManager
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import kotlinx.coroutines.launch
@@ -228,7 +234,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       activity = this,
       navHeaderActionsListener = object : NavigationViewManager.NavHeaderActionsListener {
         override fun onAccountsMenuExpanded(isExpanded: Boolean) {
-          binding.navigationView.menu.setGroupVisible(0, isExpanded)
+          if (activeAccount?.isGoogleSignInAccount == true) {
+            binding.navigationView.menu.setGroupVisible(R.id.groupPgp, isExpanded)
+          }
+          binding.navigationView.menu.setGroupVisible(R.id.groupLabels, isExpanded)
+          binding.navigationView.menu.setGroupVisible(R.id.groupOther, isExpanded)
         }
 
         override fun onAddAccountClick() {
@@ -251,6 +261,27 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     binding.navigationView.setNavigationItemSelectedListener { menuItem ->
       when (menuItem.itemId) {
+        R.id.menuSwitchShowOnlyPgp -> {
+          accountViewModel.switchLoadingOnlyPgpMessagesMode()
+
+          val switchView: CompoundButton? = menuItem.actionView?.findViewById(R.id.switchView)
+          if (switchView?.isChecked == true) {
+            val currentNotificationLevel = SharedPreferencesHelper.getString(
+              PreferenceManager.getDefaultSharedPreferences(this),
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+              ""
+            )
+
+            if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
+              SharedPreferencesHelper.setString(
+                PreferenceManager.getDefaultSharedPreferences(this),
+                Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
+                NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+              )
+            }
+          }
+        }
+
         R.id.navMenuActionSettings -> {
           navController.navigate(NavGraphDirections.actionGlobalMainSettingsFragment())
         }
@@ -311,6 +342,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.navigationView.getHeaderView(0)?.let { headerView ->
           navigationViewManager?.initUserProfileView(headerView, accountEntity)
         }
+
+        binding.navigationView.menu.findItem(R.id.menuSwitchShowOnlyPgp)?.let {
+          val switchView: CompoundButton? =
+            it.actionView?.findViewById(R.id.switchView)
+          switchView?.apply {
+            isClickable = false
+            isFocusable = false
+            isFocusableInTouchMode = false
+            isChecked = accountEntity.showOnlyEncrypted == true
+          }
+
+          if (!accountEntity.isGoogleSignInAccount) {
+            it.isVisible = false
+          }
+        }
       }
     }
 
@@ -321,13 +367,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
   private fun setupLabelsViewModel() {
     labelsViewModel.foldersManagerLiveData.observe(this) { foldersManager ->
-      val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels)
-      mailLabels?.subMenu?.clear()
+      val mailLabels = binding.navigationView.menu.findItem(R.id.mailLabels) ?: return@observe
+      mailLabels.subMenu?.clear()
 
       foldersManager?.run {
         val folders =
           getSortedServerFolders() + customLabels.sortedBy { it.folderAlias?.lowercase() }
-        val isGoogleAccount = activeAccount?.isGoogleSignInAccount ?: false
+        val isGoogleAccount = activeAccount?.isGoogleSignInAccount == true
 
         folders.forEach { localFolder ->
           val isGmailApiCategories = foldersManager.accountEntity.isGoogleSignInAccount
@@ -340,7 +386,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
           val folderIconResourceId =
             FoldersManager.getFolderIconResourceId(localFolder, isGoogleAccount)
-          val addedItem = mailLabels?.subMenu?.add(localFolder.folderAlias)
+          val addedItem = mailLabels.subMenu?.add(localFolder.folderAlias)
           if (localFolder.isCustom && localFolder.labelColor != null) {
             val drawable = ContextCompat.getDrawable(this@MainActivity, folderIconResourceId)
             val color = localFolder.labelColor.parseAsColorBasedOnDefaultSettings(this@MainActivity)
@@ -362,21 +408,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   private fun addOutboxLabel(foldersManager: FoldersManager, mailLabels: MenuItem?, label: String) {
-    val itemPosition = mailLabels?.subMenu?.size() ?: return
+    val itemPosition = mailLabels?.subMenu?.size ?: return
     if (itemPosition == 0) return
-    val menuItem = mailLabels.subMenu?.getItem(itemPosition - 1) ?: return
-
-    if ((foldersManager.getFolderByAlias(label)?.msgCount ?: 0) > 0) {
-      val folder = foldersManager.getFolderByAlias(label) ?: return
-      val view = layoutInflater.inflate(
-        R.layout.navigation_view_item_with_amount, binding.navigationView, false
-      )
-      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-      textViewMsgsCount.text = folder.msgCount.toString()
-      menuItem.actionView = view
-    } else {
-      menuItem.actionView = null
-    }
+    val menuItem = mailLabels.subMenu?.get(itemPosition - 1) ?: return
+    val folder = foldersManager.getFolderByAlias(label) ?: return
+    val view = layoutInflater.inflate(
+      R.layout.navigation_view_item_with_amount, binding.navigationView, false
+    )
+    val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
+    textViewMsgsCount.text = folder.msgCount.takeIf { it > 0 }?.let { "$it" }
+    menuItem.actionView = view
   }
 
   private fun handleLogoutFromSystemSettings(intent: Intent?): Boolean {
@@ -414,11 +455,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
         roomDatabase.accountDao().logout(accountEntity)
         removeAccountFromAccountManager(accountEntity)
-
-        //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
-        //remove all info about the given account from the local db
-        roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
-        roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
 
         val newActiveAccount = roomDatabase.accountDao().getActiveAccountSuspend()
         if (newActiveAccount == null) {
@@ -565,13 +601,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
       super.onDrawerOpened(drawerView)
       UpdateLabelsWorker.enqueue(context = this@MainActivity)
       labelsViewModel.updateOutboxMsgsCount()
-    }
-
-    override fun onDrawerClosed(drawerView: View) {
-      super.onDrawerClosed(drawerView)
-      if (binding.navigationView.menu.getItem(0)?.isVisible == false) {
-        navigationViewManager?.navHeaderBinding?.layoutUserDetails?.performClick()
-      }
     }
 
     override fun onDrawerStateChanged(newState: Int) {

@@ -22,8 +22,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.SearchBackupsInEmailFragment
 import com.flowcrypt.email.ui.base.AddAccountToDatabaseRuleInterface
-import org.hamcrest.CoreMatchers.startsWith
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.startsWith
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

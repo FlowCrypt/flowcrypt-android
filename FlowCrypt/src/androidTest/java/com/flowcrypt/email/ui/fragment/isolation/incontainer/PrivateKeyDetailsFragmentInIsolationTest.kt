@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.fragment.isolation.incontainer
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
@@ -43,8 +42,6 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.hasItem
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -164,7 +161,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
     val details = addPrivateKeyToDatabaseRule.pgpKeyRingDetails
 
     val file = File(
-      getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+      getTargetContext().getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED),
       "0x" + details.fingerprint + ".asc"
     )
 
@@ -179,7 +176,7 @@ class PrivateKeyDetailsFragmentInIsolationTest : BaseTest() {
     intending(
       allOf(
         hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         hasType(Constants.MIME_TYPE_PGP_KEY)
       )
     ).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))

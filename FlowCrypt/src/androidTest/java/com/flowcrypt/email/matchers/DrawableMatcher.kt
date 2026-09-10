@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.matchers
@@ -13,6 +13,7 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
+import com.google.android.material.button.MaterialButton
 import org.hamcrest.Description
 import org.hamcrest.TypeSafeMatcher
 
@@ -39,15 +40,20 @@ class DrawableMatcher(
   }
 
   override fun matchesSafely(target: View): Boolean {
-    if (target !is ImageView) {
+    if (!(target is ImageView || target is MaterialButton)) {
       return false
     }
 
-    val context = target.getContext()
+    val context = target.context
+    val drawable = when (target) {
+      is ImageView -> target.drawable
+      is MaterialButton -> target.icon
+      else -> null
+    }
 
     when (expectedId) {
-      EMPTY -> return target.drawable == null
-      ANY -> return target.drawable != null
+      EMPTY -> return drawable == null
+      ANY -> return drawable != null
       else -> {
         val resources = context.resources
         resourceName = resources.getResourceEntryName(expectedId)
@@ -59,10 +65,10 @@ class DrawableMatcher(
           }
         } ?: return false
 
-        val actualBitmap = target.drawable.toBitmap()
+        val actualBitmap = drawable?.toBitmap()
         val expectedBitmap = expectedDrawable.toBitmap()
 
-        return actualBitmap.sameAs(expectedBitmap)
+        return actualBitmap?.sameAs(expectedBitmap) == true
       }
     }
   }

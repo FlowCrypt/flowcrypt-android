@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: ivan
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.org.bouncycastle.openpgp
@@ -12,12 +12,16 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.Algo
 import com.flowcrypt.email.security.model.KeyId
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
+import org.bouncycastle.bcpg.HashAlgorithmTags
+import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.bouncycastle.extensions.getCurveName
+import org.pgpainless.bouncycastle.extensions.issuerKeyId
 import org.pgpainless.key.OpenPgpV4Fingerprint
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve
-import org.pgpainless.key.info.KeyInfo
 import org.pgpainless.key.info.KeyRingInfo
 import java.io.IOException
 import java.time.Instant
@@ -34,17 +38,25 @@ import java.time.Instant
 @Throws(IOException::class)
 @WorkerThread
 fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDetails {
+  if (containsHashAlgorithmWithSHA1()) {
+    val sigHashAlgoPolicy =
+      PGPainless.getInstance().algorithmPolicy.certificationSignatureHashAlgorithmPolicy
+    if (!sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1)) {
+      throw PGPException("Unsupported signature(HashAlgorithm = SHA1)")
+    }
+  }
+
   val keyRingInfo = KeyRingInfo(this)
 
   val algo = Algo(
     algorithm = keyRingInfo.algorithm.name,
     algorithmId = keyRingInfo.algorithm.algorithmId,
-    bits = if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else 0,
-    curve = when (keyRingInfo.algorithm) {
-      PublicKeyAlgorithm.ECDSA, PublicKeyAlgorithm.ECDH -> KeyInfo.getCurveName(publicKey)
-      PublicKeyAlgorithm.EDDSA -> EdDSACurve._Ed25519.getName() // for EDDSA KeyInfo.getCurveName(publicKey) return null
-      else -> null
-    }
+    bits = if (keyRingInfo.primaryKey.pgpPublicKey.bitStrength != -1) {
+      keyRingInfo.primaryKey.pgpPublicKey.bitStrength
+    } else {
+      0
+    },
+    curve = runCatching { publicKey.getCurveName() }.getOrNull()
   )
 
   val keyIdList = publicKeys.iterator().asSequence().toList()
@@ -78,11 +90,13 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
     lastModified = keyRingInfo.lastModified.time,
     expiration = keyRingInfo.primaryKeyExpirationDate?.time,
     algo = algo,
-    primaryKeyId = keyRingInfo.keyId,
+    primaryKeyId = keyRingInfo.keyIdentifier.keyId,
     possibilities = mutableSetOf<Int>().apply {
       addAll(
-        keyRingInfo.publicKeys.flatMap { keyRingInfo.getKeyFlagsOf(it.keyID) }.toSet()
-          .map { it.flag })
+        keyRingInfo.publicKeys.flatMap { openPGPComponentKey ->
+          keyRingInfo.getKeyFlagsOf(openPGPComponentKey.keyIdentifier)
+        }.toSet().map { it.flag }
+      )
     }
   )
 }
@@ -100,3 +114,25 @@ val PGPKeyRing.expiration: Instant?
       Instant.ofEpochMilli(publicKey.creationTime.time + publicKey.validSeconds * 1000)
     }
   }
+
+/**
+ * https://github.com/pgpainless/pgpainless/issues/461
+ */
+fun PGPKeyRing.containsHashAlgorithmWithSHA1(): Boolean {
+  val hasSha1DirectKeySelfSignatures = publicKey.getSignaturesOfType(PGPSignature.DIRECT_KEY)
+    .asSequence()
+    .any { signature ->
+      signature.issuerKeyId == publicKey.keyID
+          && signature.hashAlgorithm == HashAlgorithmTags.SHA1
+    }
+
+  return hasSha1DirectKeySelfSignatures || publicKey.userIDs.asSequence().any { uid ->
+    publicKey.getSignaturesForID(uid)
+      .asSequence()
+      .any { signature ->
+        signature.isCertification
+            && signature.issuerKeyId == publicKey.keyID
+            && signature.hashAlgorithm == HashAlgorithmTags.SHA1
+      }
+  }
+}

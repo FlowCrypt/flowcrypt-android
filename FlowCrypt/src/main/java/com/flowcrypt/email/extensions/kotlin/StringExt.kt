@@ -1,20 +1,23 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.kotlin
 
 import android.content.Context
-import android.graphics.Color
+import android.util.Patterns
 import android.util.TypedValue
+import android.webkit.MimeTypeMap
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
 import com.flowcrypt.email.util.UIUtil
+import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.InternetAddress
+import org.apache.commons.io.FilenameUtils
 import org.json.JSONObject
 import java.io.InputStream
 import java.net.URLDecoder
@@ -64,7 +67,7 @@ fun String.toEscapedHtml(): String {
     .replace("<", "&lt;")
     .replace(">", "&gt;")
     .replace("/", "&#x2F;")
-    .replace("\n", "<br/>")
+    .replace("\n", "<br>")
 }
 
 fun String.unescapeHtml(): String {
@@ -137,7 +140,7 @@ fun String?.parseAsColorBasedOnDefaultSettings(
   secondDefaultColorResourceId: Int = R.color.gray
 ): Int {
   return runCatching {
-    Color.parseColor(this)
+    requireNotNull(this).toColorInt()
   }.getOrElse {
     TypedValue().also {
       context.theme.resolveAttribute(defaultColorResourceId, it, true)
@@ -156,11 +159,23 @@ fun String.capitalize(): String {
 }
 
 fun String?.asInternetAddress(): InternetAddress? {
+  return asInternetAddresses().firstOrNull()
+}
+
+fun String?.asInternetAddresses(): Array<InternetAddress> {
   return try {
     InternetAddress.parse(this)
   } catch (e: Exception) {
-    emptyArray<InternetAddress>()
-  }.firstOrNull()
+    if (e is AddressException) {
+      val pattern = Patterns.EMAIL_ADDRESS
+      val matcher = this?.let { pattern.matcher(it) }
+      if (matcher?.find() == true) {
+        arrayOf(InternetAddress(matcher.group().lowercase()))
+      } else emptyArray<InternetAddress>()
+    } else {
+      emptyArray<InternetAddress>()
+    }
+  }
 }
 
 fun String?.asContentTypeOrNull(): ContentType? {
@@ -169,4 +184,18 @@ fun String?.asContentTypeOrNull(): ContentType? {
   } catch (e: Exception) {
     null
   }
+}
+
+fun String?.getPossibleAndroidMimeType(): String? {
+  return MimeTypeMap.getSingleton()
+    .getMimeTypeFromExtension(FilenameUtils.getExtension(this).lowercase())
+}
+
+val String.toLongRadix16: Long
+  get() = toLong(radix = 16)
+
+fun String.clip(context: Context, maxSize: Int): String {
+  return if (length > maxSize) {
+    take(maxSize) + "\n\n" + context.getString(R.string.clipped_message_too_large)
+  } else this
 }

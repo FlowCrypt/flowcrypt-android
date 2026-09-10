@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.adapter
@@ -94,4 +94,6 @@ class FromAddressesAdapter(
     val result = keysAvailability[emailAddress.lowercase()]
     return keysAvailability.containsKey(emailAddress.lowercase()) && result != null && result
   }
+
+  fun hasAnyKeysAvailabilityRecords(): Boolean = keysAvailability.isNotEmpty()
 }

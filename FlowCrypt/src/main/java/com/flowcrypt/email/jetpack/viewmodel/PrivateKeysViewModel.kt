@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   DenBond7
- *   Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.jetpack.viewmodel
@@ -29,6 +27,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.RecipientEntity
+import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.toPgpKeyRingDetails
 import com.flowcrypt.email.extensions.org.pgpainless.util.asString
 import com.flowcrypt.email.model.KeyImportDetails
@@ -259,7 +258,9 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
             KeyStoreCryptoManager.encryptSuspend(pgpKeyRingDetails.privateKey).toByteArray()
 
           val keyEntity = (existingKeyEntity ?: pgpKeyRingDetails.toKeyEntity(accountEntity)).copy(
-            source = requireNotNull(pgpKeyRingDetails.importSourceType?.toPrivateKeySourceTypeString()),
+            source = requireNotNull(
+              pgpKeyRingDetails.importInfo?.importSourceType?.toPrivateKeySourceTypeString()
+            ),
             privateKey = encryptedPrvKey,
             storedPassphrase = encryptedPassphrase
           )
@@ -485,7 +486,8 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   fun protectPrivateKeys(privateKeys: List<PgpKeyRingDetails>, passphrase: Passphrase) {
     viewModelScope.launch {
       protectPrivateKeysLiveData.value = Result.loading()
-      val sourceTypeInfo = privateKeys.associateBy({ it.fingerprint }, { it.importSourceType })
+      val sourceTypeInfo =
+        privateKeys.associateBy({ it.fingerprint }, { it.importInfo?.importSourceType })
       try {
         val encryptedKeysSource = privateKeys.map { pgpKeyRingDetails ->
           PgpKey.encryptKeySuspend(requireNotNull(pgpKeyRingDetails.privateKey), passphrase)
@@ -494,8 +496,10 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
         protectPrivateKeysLiveData.value =
           Result.success(PgpKey.parsePrivateKeys(encryptedKeysSource).map { key ->
             key.copy(
-              tempPassphrase = passphrase.chars,
-              importSourceType = sourceTypeInfo[key.fingerprint]
+              tempPassphrase = passphrase.getChars(),
+              importInfo = (key.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                importSourceType = sourceTypeInfo[key.fingerprint]
+              )
             )
           })
       } catch (e: Exception) {
@@ -591,17 +595,27 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
   ): Boolean =
     withContext(Dispatchers.IO) {
       try {
-        val context: Context = getApplication()
-        val session = OpenStoreHelper.getAccountSess(context, accountEntity)
-        val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, accountEntity)
-        val msg = EmailUtil.genMsgWithPrivateKeys(
-          context, accountEntity, session,
-          EmailUtil.genBodyPartWithPrivateKey(accountEntity, keyDetails.privateKey!!)
-        )
-        transport.sendMessage(msg, msg.allRecipients)
+        if (accountEntity.hasClientConfigurationProperty(
+            ClientConfiguration.ConfigurationProperty.NO_PRV_BACKUP
+          )
+        ) {
+          throw IllegalStateException("making backups is not allowed")
+        }
+
+        if (keyDetails.importInfo?.shouldBeAddedToBackup != false){
+          val context: Context = getApplication()
+          val session = OpenStoreHelper.getAccountSess(context, accountEntity)
+          val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, accountEntity)
+          val msg = EmailUtil.genMsgWithPrivateKeys(
+            context, accountEntity, session,
+            EmailUtil.genBodyPartWithPrivateKey(accountEntity, keyDetails.privateKey!!)
+          )
+          transport.sendMessage(msg, msg.allRecipients)
+        }
+
         return@withContext true
       } catch (e: Exception) {
-        e.printStackTrace()
+        e.printStackTraceIfDebugOnly()
         return@withContext false
       }
     }

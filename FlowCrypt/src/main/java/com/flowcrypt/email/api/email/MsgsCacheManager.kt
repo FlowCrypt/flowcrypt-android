@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email
@@ -15,7 +15,8 @@ import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import okhttp3.internal.io.FileSystem
+import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import okio.buffer
 import org.pgpainless.PGPainless
 import java.io.File
@@ -36,10 +37,10 @@ object MsgsCacheManager {
 
   fun init(context: Context) {
     diskLruCache = DiskLruCache(
-      FileSystem.SYSTEM,
-      File(context.filesDir, CACHE_DIR_NAME),
-      CACHE_VERSION,
-      CACHE_SIZE
+      fileSystem = FileSystem.SYSTEM,
+      directory = File(context.filesDir, CACHE_DIR_NAME).toOkioPath(),
+      appVersion = CACHE_VERSION,
+      maxSize = CACHE_SIZE
     )
   }
 
@@ -56,6 +57,10 @@ object MsgsCacheManager {
         inputStream.copyTo(it)
       }
     }
+
+  fun removeMessage(key: String): Boolean {
+    return diskLruCache.remove(key)
+  }
 
   fun getMsgAsByteArray(key: String): ByteArray {
     return diskLruCache[key]?.getByteArray(0) ?: return byteArrayOf()

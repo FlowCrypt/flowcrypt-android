@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email
@@ -30,6 +30,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
+import com.flowcrypt.email.extensions.kotlin.asInternetAddresses
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -47,15 +48,6 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.google.api.services.gmail.GmailScopes
-import com.sun.mail.gimap.GmailRawSearchTerm
-import com.sun.mail.iap.Argument
-import com.sun.mail.imap.IMAPBodyPart
-import com.sun.mail.imap.IMAPFolder
-import com.sun.mail.imap.protocol.BODY
-import com.sun.mail.imap.protocol.FetchResponse
-import com.sun.mail.imap.protocol.UID
-import com.sun.mail.imap.protocol.UIDSet
-import com.sun.mail.util.ASCIIUtility
 import jakarta.activation.DataHandler
 import jakarta.mail.BodyPart
 import jakarta.mail.FetchProfile
@@ -66,11 +58,11 @@ import jakarta.mail.Multipart
 import jakarta.mail.Part
 import jakarta.mail.Session
 import jakarta.mail.UIDFolder
-import jakarta.mail.internet.AddressException
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
 import jakarta.mail.internet.MimeMultipart
+import jakarta.mail.internet.MimeUtility
 import jakarta.mail.search.AndTerm
 import jakarta.mail.search.BodyTerm
 import jakarta.mail.search.FromStringTerm
@@ -86,6 +78,15 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.eclipse.angus.mail.gimap.GmailRawSearchTerm
+import org.eclipse.angus.mail.iap.Argument
+import org.eclipse.angus.mail.imap.IMAPBodyPart
+import org.eclipse.angus.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.protocol.BODY
+import org.eclipse.angus.mail.imap.protocol.FetchResponse
+import org.eclipse.angus.mail.imap.protocol.UID
+import org.eclipse.angus.mail.imap.protocol.UIDSet
+import org.eclipse.angus.mail.util.ASCIIUtility
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -451,7 +452,10 @@ class EmailUtil {
       try {
         for (msg in msgs) {
           val flags = map[folder.getUID(msg)] ?: ""
-          if (!flags.equals(msg.flags.toString(), ignoreCase = true)) {
+          val existingFlags = flags.split(" ").map { it.uppercase() }.toSet()
+          val receivedFlags = msg.flags.toString().split(" ").map { it.uppercase() }.toSet()
+
+          if (existingFlags != receivedFlags) {
             updateCandidates.add(msg)
           }
         }
@@ -615,11 +619,15 @@ class EmailUtil {
       } as HashMap<Long, Boolean>
     }
 
-    fun hasEncryptedData(rawMsg: String?) =
-      rawMsg?.contains("-----BEGIN PGP MESSAGE-----") == true
+    fun hasEncryptedData(rawMsg: String?): Boolean {
+      return "^-----BEGIN PGP MESSAGE-----".toRegex(RegexOption.MULTILINE)
+        .containsMatchIn(rawMsg ?: "")
+    }
 
-    fun hasSignedData(rawMsg: String?) =
-      rawMsg?.contains("-----BEGIN PGP SIGNED MESSAGE-----") == true
+    fun hasSignedData(rawMsg: String?): Boolean {
+      return "^-----BEGIN PGP SIGNED MESSAGE-----".toRegex(RegexOption.MULTILINE)
+        .containsMatchIn(rawMsg ?: "")
+    }
 
     fun genPgpThingsSearchTerm(account: AccountEntity): SearchTerm {
       return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
@@ -689,7 +697,21 @@ class EmailUtil {
       }
 
       return@withContext when (outgoingMsgInfo.messageType) {
-        MessageType.NEW, MessageType.FORWARD, MessageType.DRAFT -> {
+        MessageType.DRAFT -> {
+          prepareReplyFromDraft(
+            context = context,
+            accountEntity = accountEntity,
+            session = session,
+            outgoingMsgInfo = outgoingMsgInfo,
+            pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
+            prvKeys = prvKeys,
+            protector = ringProtector,
+            hideArmorMeta = hideArmorMeta
+          )
+        }
+
+        MessageType.NEW -> {
           prepareNewMsg(
             session = session,
             info = outgoingMsgInfo,
@@ -703,6 +725,20 @@ class EmailUtil {
 
         MessageType.REPLY, MessageType.REPLY_ALL -> {
           prepareReplyMsg(
+            context = context,
+            accountEntity = accountEntity,
+            session = session,
+            info = outgoingMsgInfo,
+            pubKeys = pubKeys,
+            protectedPubKeys = protectedPubKeys,
+            prvKeys = prvKeys,
+            protector = ringProtector,
+            hideArmorMeta = hideArmorMeta
+          )
+        }
+
+        MessageType.FORWARD -> {
+          prepareForwardedMsg(
             context = context,
             accountEntity = accountEntity,
             session = session,
@@ -889,9 +925,9 @@ class EmailUtil {
      * @return A generated [SearchTerm].
      */
     fun generateSearchTerm(account: AccountEntity, localFolder: LocalFolder): SearchTerm {
-      val isEncryptedModeEnabled = account.showOnlyEncrypted
+      val isOnlyPgpModeEnabled = account.showOnlyEncrypted
 
-      if (isEncryptedModeEnabled == true) {
+      if (isOnlyPgpModeEnabled == true) {
         val searchTerm = genPgpThingsSearchTerm(account)
 
         return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(
@@ -947,8 +983,8 @@ class EmailUtil {
                 //match signature
                 item.isMimeType("application/pgp-signature") ||
                 //match PGP/MIME version identification
+                //https://datatracker.ietf.org/doc/html/rfc3156#section-4
                 item.isMimeType("application/pgp-encrypted")
-                && item.description.equals("PGP/MIME version identification", false)
             ) -> true
 
         isAttachment -> false
@@ -984,14 +1020,6 @@ class EmailUtil {
       return parameters.joinToString(separator = " ")
     }
 
-    fun parseAddresses(fromAddress: String?): List<InternetAddress> {
-      return try {
-        InternetAddress.parse(fromAddress ?: "").toList()
-      } catch (e: AddressException) {
-        emptyList()
-      }
-    }
-
     suspend fun prepareNewMsg(
       session: Session,
       info: OutgoingMessageInfo,
@@ -1020,6 +1048,101 @@ class EmailUtil {
         )
       })
       return@withContext msg
+    }
+
+    suspend fun prepareReplyFromDraft(
+      context: Context,
+      accountEntity: AccountEntity,
+      session: Session,
+      outgoingMsgInfo: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
+      protectedPubKeys: List<String>? = null,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
+    ): MimeMessage = withContext(Dispatchers.IO) {
+      return@withContext prepareNewMsg(
+        session = session,
+        info = outgoingMsgInfo,
+        pubKeys = pubKeys,
+        protectedPubKeys = protectedPubKeys,
+        prvKeys = prvKeys,
+        protector = protector,
+        hideArmorMeta = hideArmorMeta
+      ).apply {
+        //we need to restore 'References' and 'In-Reply-To' headers to support correct conversation
+        val replyToMimeMessage =
+          getReplyToMimeMessage(context, accountEntity, session, outgoingMsgInfo)
+
+        replyToMimeMessage.getHeader(JavaEmailConstants.HEADER_REFERENCES)?.firstOrNull()
+          ?.let { references ->
+            setHeader(JavaEmailConstants.HEADER_REFERENCES, references)
+          }
+
+        replyToMimeMessage.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO)?.firstOrNull()
+          ?.let { inReplyTo ->
+            setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, inReplyTo)
+          }
+      }
+    }
+
+    private suspend fun prepareForwardedMsg(
+      context: Context,
+      accountEntity: AccountEntity,
+      session: Session,
+      info: OutgoingMessageInfo,
+      pubKeys: List<String>? = null,
+      protectedPubKeys: List<String>? = null,
+      prvKeys: List<String>? = null,
+      protector: SecretKeyRingProtector? = null,
+      hideArmorMeta: Boolean = false,
+    ): MimeMessage = withContext(Dispatchers.IO) {
+      val replyToMimeMessage = getReplyToMimeMessage(context, accountEntity, session, info)
+      return@withContext prepareNewMsg(
+        session = session,
+        info = info,
+        pubKeys = pubKeys,
+        protectedPubKeys = protectedPubKeys,
+        prvKeys = prvKeys,
+        protector = protector,
+        hideArmorMeta = hideArmorMeta
+      ).apply {
+        //based on [MimeMessage.reply()]
+        val msgId = replyToMimeMessage.messageID
+        if (msgId != null) {
+          setHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, msgId)
+        }
+
+        /*
+         * Set the References header as described in RFC 2822:
+         *
+         * The "References:" field will contain the contents of the parent's
+         * "References:" field (if any) followed by the contents of the parent's
+         * "Message-ID:" field (if any).  If the parent message does not contain
+         * a "References:" field but does have an "In-Reply-To:" field
+         * containing a single message identifier, then the "References:" field
+         * will contain the contents of the parent's "In-Reply-To:" field
+         * followed by the contents of the parent's "Message-ID:" field (if
+         * any).  If the parent has none of the "References:", "In-Reply-To:",
+         * or "Message-ID:" fields, then the new message will have no
+         * "References:" field.
+         */
+        var refs = getHeader(JavaEmailConstants.HEADER_REFERENCES, " ")
+        if (refs == null) {
+          // XXX - should only use if it contains a single message identifier
+          refs = getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, " ")
+        }
+        if (msgId != null) {
+          refs = if (refs != null) {
+            MimeUtility.unfold(refs) + " " + msgId
+          } else {
+            msgId
+          }
+        }
+        if (refs != null) {
+          setHeader(JavaEmailConstants.HEADER_REFERENCES, MimeUtility.fold(12, refs))
+        }
+      }
     }
 
     fun genReplyMessage(
@@ -1101,7 +1224,7 @@ class EmailUtil {
           val attBodyPart = genBodyPartWithAtt(
             context = context,
             att = att,
-            shouldBeEncrypted = msgEntity.isEncrypted ?: false,
+            shouldBeEncrypted = msgEntity.isEncrypted == true,
             publicKeys = publicKeys,
             secretKeys = secretKeys,
             ringProtector = ringProtector
@@ -1170,6 +1293,25 @@ class EmailUtil {
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
     ): Message = withContext(Dispatchers.IO) {
+      val replyToMimeMessage = getReplyToMimeMessage(context, accountEntity, session, info)
+
+      return@withContext genReplyMessage(
+        replyToMsg = replyToMimeMessage,
+        info = info,
+        pubKeys = pubKeys,
+        protectedPubKeys = protectedPubKeys,
+        prvKeys = prvKeys,
+        protector = protector,
+        hideArmorMeta = hideArmorMeta
+      )
+    }
+
+    private suspend fun getReplyToMimeMessage(
+      context: Context,
+      accountEntity: AccountEntity,
+      session: Session,
+      info: OutgoingMessageInfo,
+    ): MimeMessage {
       val replyToMessageEntityId = info.replyToMessageEntityId
         ?: throw IllegalArgumentException("replyToMessageEntityId is null")
 
@@ -1194,16 +1336,7 @@ class EmailUtil {
           Passphrase.fromPassword(accountEntity.servicePgpPassphrase)
         )
       )
-
-      return@withContext genReplyMessage(
-        replyToMsg = FlowCryptMimeMessage(session, decryptionStream),
-        info = info,
-        pubKeys = pubKeys,
-        protectedPubKeys = protectedPubKeys,
-        prvKeys = prvKeys,
-        protector = protector,
-        hideArmorMeta = hideArmorMeta
-      )
+      return FlowCryptMimeMessage(session, decryptionStream)
     }
 
     private fun prepareBodyPart(
@@ -1214,9 +1347,16 @@ class EmailUtil {
       protector: SecretKeyRingProtector? = null,
       hideArmorMeta: Boolean = false,
     ): BodyPart {
+      val finalText = (info.msg + info.quotedTextForReply).takeIf {
+        info.messageType in arrayOf(
+          MessageType.REPLY,
+          MessageType.REPLY_ALL
+        ) && !info.quotedTextForReply.isNullOrEmpty()
+      } ?: info.msg ?: ""
+
       return if (info.encryptionType == MessageEncryptionType.ENCRYPTED) {
         val encryptedContent = PgpEncryptAndOrSign.encryptAndOrSignMsg(
-          msg = info.msg ?: "",
+          msg = finalText,
           pubKeys = pubKeys ?: emptyList(),
           protectedPubKeys = protectedPubKeys,
           prvKeys = prvKeys,
@@ -1239,7 +1379,7 @@ class EmailUtil {
         }
       } else {
         MimeBodyPart().apply {
-          setText(info.msg ?: "")
+          setText(finalText)
         }
       }
     }
@@ -1265,7 +1405,7 @@ class EmailUtil {
       val msg = FlowCryptMimeMessage(session)
 
       msg.setFrom(InternetAddress(account.email))
-      msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
+      msg.setRecipients(Message.RecipientType.TO, account.email.asInternetAddresses())
       msg.subject =
         context.getString(R.string.your_key_backup, context.getString(R.string.app_name))
       return msg

@@ -1,8 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   DenBond7
- *   Ivan Pizhenko
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security
@@ -153,7 +151,12 @@ class SecurityUtils {
       if (matchingKeyRingInfoList.isEmpty()) {
         throw NoKeyAvailableException(context = context, email = senderEmail)
       }
-      return matchingKeyRingInfoList.map { PGPPublicKeyRing(it.publicKeys).armor() }
+
+      return matchingKeyRingInfoList.map { keyRingInfo ->
+        PGPPublicKeyRing(keyRingInfo.publicKeys.map { openPGPComponentKey ->
+          openPGPComponentKey.pgpPublicKey
+        }).armor()
+      }
     }
 
     /**

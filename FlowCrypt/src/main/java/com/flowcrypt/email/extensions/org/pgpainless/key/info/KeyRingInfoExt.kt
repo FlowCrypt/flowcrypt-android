@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.extensions.org.pgpainless.key.info
@@ -12,6 +12,7 @@ import android.graphics.drawable.LayerDrawable
 import android.view.Gravity
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.R
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.info.KeyRingInfo
@@ -21,7 +22,7 @@ import org.pgpainless.key.info.KeyRingInfo
  */
 val KeyRingInfo.usableForEncryption: Boolean
   get() {
-    return !publicKey.hasRevocation()
+    return !primaryKey.pgpPublicKey.hasRevocation()
         && !isExpired
         && isUsableForEncryption
         && primaryUserId?.isNotEmpty() == true
@@ -29,7 +30,7 @@ val KeyRingInfo.usableForEncryption: Boolean
 
 val KeyRingInfo.usableForSigning: Boolean
   get() {
-    return !publicKey.hasRevocation()
+    return !primaryKey.pgpPublicKey.hasRevocation()
         && !isExpired
         && isSigningCapable
         && primaryUserId?.isNotEmpty() == true
@@ -52,20 +53,20 @@ val KeyRingInfo.isPartiallyEncrypted: Boolean
 
 val KeyRingInfo.isRevoked: Boolean
   get() {
-    return publicKey.hasRevocation()
+    return primaryKey.pgpPublicKey.hasRevocation()
   }
 
 fun KeyRingInfo.getPrimaryKey(): PGPPublicKey? {
-  return publicKeys.firstOrNull { it.isMasterKey }
+  return primaryKey.pgpPublicKey
 }
 
 fun KeyRingInfo.getPubKeysWithoutPrimary(): Collection<PGPPublicKey> {
-  val primaryKey = getPrimaryKey() ?: return publicKeys
-  return publicKeys - setOf(primaryKey)
+  val primaryKey = getPrimaryKey() ?: return publicKeys.map { it.pgpPublicKey }
+  return publicKeys.map { it.pgpPublicKey } - setOf(primaryKey)
 }
 
 fun KeyRingInfo.generateKeyCapabilitiesDrawable(context: Context, keyId: Long): Drawable? {
-  val keyFlags = getKeyFlagsOf(keyId)
+  val keyFlags = getKeyFlagsOf(KeyIdentifier(keyId))
   val drawables = listOf(
     KeyFlag.CERTIFY_OTHER to R.drawable.ic_possibility_cert,
     KeyFlag.ENCRYPT_COMMS to R.drawable.ic_possibility_encryption,
@@ -117,7 +118,7 @@ fun KeyRingInfo.getStatusIcon(): Int {
 
 fun KeyRingInfo.getStatusText(context: Context): String {
   return when {
-    publicKey.hasRevocation() -> context.getString(R.string.revoked)
+    primaryKey.pgpPublicKey.hasRevocation() -> context.getString(R.string.revoked)
     isExpired -> context.getString(R.string.expired)
     isPartiallyEncrypted -> context.getString(R.string.not_valid)
     else -> context.getString(R.string.valid)

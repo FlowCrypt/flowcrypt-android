@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email
@@ -8,6 +8,11 @@ package com.flowcrypt.email
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.annotation.VisibleForTesting
+import androidx.core.content.edit
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -16,6 +21,7 @@ import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jetpack.workmanager.sync.SyncInboxWorker
@@ -37,7 +43,7 @@ import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
 import org.acra.sender.HttpSender
 import org.pgpainless.PGPainless
-import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.policy.Policy
 import org.pgpainless.policy.Policy.HashAlgorithmPolicy
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -48,6 +54,9 @@ import java.util.concurrent.TimeUnit
  * @author Denys Bondarenko
  */
 class FlowCryptApplication : Application(), Configuration.Provider {
+
+  val appForegroundedObserver = AppForegroundedObserver()
+
   override val workManagerConfiguration: Configuration
     get() = Configuration.Builder()
       .setMinimumLoggingLevel(
@@ -60,6 +69,8 @@ class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun onCreate() {
     super.onCreate()
+    ProcessLifecycleOwner.get().lifecycle.addObserver(appForegroundedObserver)
+
     setupGlobalSettingsForJavaMail()
     setupPGPainless()
     setupKeysStorage()
@@ -71,13 +82,11 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     enqueueMsgsCacheCleanerWorker()
     FlavorSettings.configure(this)
     clearGlideDiskCache()
+    cleanCacheForPgpOnlyMode()
   }
 
   private fun setupPGPainless() {
-    enableDeprecatedSHA1ForPGPainlessPolicy()
-
-    //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
-    PGPainless.getPolicy().isEnableKeyParameterValidation = true
+    PGPainless.setInstance(createPGPainlessInstance())
   }
 
   private fun setupGlobalSettingsForJavaMail() {
@@ -91,42 +100,18 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     initACRA()
   }
 
-  /**
-   * Allow sha1 for all builds except enterprise. It's a temporary solution.
-   * More details here https://github.com/FlowCrypt/flowcrypt-android/issues/1478 and here
-   * https://github.com/pgpainless/pgpainless/issues/158
-   */
-  private fun enableDeprecatedSHA1ForPGPainlessPolicy() {
-    @Suppress("KotlinConstantConditions")
-    if (BuildConfig.FLAVOR != Constants.FLAVOR_NAME_ENTERPRISE) {
-      PGPainless.getPolicy().signatureHashAlgorithmPolicy = HashAlgorithmPolicy(
-        HashAlgorithm.SHA512, listOf(
-          HashAlgorithm.SHA512,
-          HashAlgorithm.SHA384,
-          HashAlgorithm.SHA256,
-          HashAlgorithm.SHA224,
-          HashAlgorithm.SHA1
-        )
-      )
-    }
-  }
-
   private fun setupKeysStorage() {
     val keysStorage = KeysStorageImpl.getInstance(this)
     keysStorage.secretKeyRingsLiveData.observeForever {
       val hasTemporaryPassPhrases =
         keysStorage.getRawKeys().any { it.passphraseType == KeyEntity.PassphraseType.RAM }
-      if (hasTemporaryPassPhrases) {
-        if (GeneralUtil.isAppForegrounded()) {
-          //we can run a foreground service only if the app is visible for a user
-          PassPhrasesInRAMService.start(this)
-        }
-      } else {
+      if (!hasTemporaryPassPhrases) {
         PassPhrasesInRAMService.stop(this)
       }
     }
   }
 
+  @Suppress("KotlinConstantConditions")
   private fun initACRA() {
     if (GeneralUtil.isDebugBuild()) {
       val isAcraEnabled = SharedPreferencesHelper.getBoolean(
@@ -205,10 +190,9 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
     if (sharedPreferences.all.isEmpty()) {
       if (!sharedPreferences.contains(Constants.PREF_KEY_INSTALL_VERSION)) {
-        sharedPreferences
-          .edit()
-          .putString(Constants.PREF_KEY_INSTALL_VERSION, BuildConfig.VERSION_NAME)
-          .apply()
+        sharedPreferences.edit {
+          putString(Constants.PREF_KEY_INSTALL_VERSION, BuildConfig.VERSION_NAME)
+        }
       }
     }
   }
@@ -242,6 +226,70 @@ class FlowCryptApplication : Application(), Configuration.Provider {
       withContext(Dispatchers.IO) {
         Glide.get(this@FlowCryptApplication).clearDiskCache()
       }
+    }
+  }
+
+  @OptIn(DelicateCoroutinesApi::class)
+  private fun cleanCacheForPgpOnlyMode() {
+    GlobalScope.launch {
+      withContext(Dispatchers.IO) {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@FlowCryptApplication)
+        val activeAccountEntity =
+          roomDatabase.accountDao().getActiveAccountSuspend() ?: return@withContext
+
+        if (activeAccountEntity.showOnlyEncrypted == true) {
+          roomDatabase.msgDao().deleteAllExceptOutgoingAndDraft(
+            context = this@FlowCryptApplication,
+            accountEntity = activeAccountEntity
+          )
+        }
+      }
+    }
+  }
+
+  class AppForegroundedObserver : DefaultLifecycleObserver {
+    val isAppForegrounded: Boolean
+      get() {
+        return isAppForegroundedInternal
+      }
+    private var isAppForegroundedInternal = false
+    override fun onStart(owner: LifecycleOwner) {
+      isAppForegroundedInternal = true
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+      isAppForegroundedInternal = false
+    }
+  }
+
+  companion object {
+    @VisibleForTesting
+    internal fun createPGPainlessInstance(): PGPainless {
+      return PGPainless(algorithmPolicy = generatePGPainlessPolicy().apply {
+        //https://github.com/FlowCrypt/flowcrypt-android/issues/2111
+        enableKeyParameterValidation = true
+      })
+    }
+
+    /**
+     * Allow sha1 for all builds except enterprise. It's a temporary solution.
+     * More details here https://github.com/FlowCrypt/flowcrypt-android/issues/1478 and here
+     * https://github.com/pgpainless/pgpainless/issues/158
+     */
+    @Suppress("KotlinConstantConditions")
+    private fun generatePGPainlessPolicy(): Policy {
+      val isEnterpriseBuild = BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE
+      val strongPolicySince2022 = HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy()
+      val policyBefore2022Standard =
+        HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+      return Policy.Builder(PGPainless.getInstance().algorithmPolicy)
+        .withDataSignatureHashAlgorithmPolicy(
+          if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
+        )
+        .withCertificationSignatureHashAlgorithmPolicy(
+          if (isEnterpriseBuild) strongPolicySince2022 else policyBefore2022Standard
+        )
+        .build()
     }
   }
 }

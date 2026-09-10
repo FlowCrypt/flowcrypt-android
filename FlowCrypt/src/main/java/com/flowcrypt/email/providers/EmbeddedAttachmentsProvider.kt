@@ -5,25 +5,23 @@
 
 package com.flowcrypt.email.providers
 
-import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
-import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
-import android.util.Log
-import android.widget.Toast
+import androidx.collection.LruCache
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
+import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.max
 
 /**
  * @author Denys Bondarenko
@@ -39,33 +37,7 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
   }
 
   override fun queryDocument(documentId: String?, projection: Array<String>?): Cursor {
-    val finalProjection = projection ?: DEFAULT_DOCUMENT_PROJECTION
-    return MatrixCursor(finalProjection).apply {
-      documentId?.let { id ->
-        getAttachmentByDocumentId(id)?.let { attachmentInfo ->
-          newRow().apply {
-            if (DocumentsContract.Document.COLUMN_DOCUMENT_ID in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, id)
-            }
-            if (DocumentsContract.Document.COLUMN_DISPLAY_NAME in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, attachmentInfo.getSafeName())
-            }
-            if (DocumentsContract.Document.COLUMN_MIME_TYPE in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_MIME_TYPE, attachmentInfo.getAndroidMimeType())
-            }
-            if (DocumentsContract.Document.COLUMN_FLAGS in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_FLAGS, 0)
-            }
-            if (DocumentsContract.Document.COLUMN_SIZE in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_SIZE, attachmentInfo.rawData?.size ?: 0)
-            }
-            if (DocumentsContract.Document.COLUMN_LAST_MODIFIED in finalProjection) {
-              add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, null)
-            }
-          }
-        }
-      }
-    }
+    return MatrixCursor(emptyArray())
   }
 
   override fun queryChildDocuments(
@@ -80,7 +52,17 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     mode: String,
     signal: CancellationSignal?
   ): ParcelFileDescriptor? {
+    if (mode.contains("w")) {
+      throw IllegalStateException("Modification is not allowed")
+    }
+
     return getFileDescriptor(getBytesForDocumentId(documentId))
+  }
+
+  override fun getDocumentType(documentId: String?): String {
+    return documentId?.let {
+      Cache.getInstance().get(documentId)?.type ?: super.getDocumentType(documentId)
+    } ?: super.getDocumentType(documentId)
   }
 
   private fun getBytesForDocumentId(documentId: String): ByteArray {
@@ -123,21 +105,31 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
 
 
   class Cache private constructor() {
-    private val map: ConcurrentHashMap<String, AttachmentInfo> = ConcurrentHashMap()
+    private val lruCache: LruCache<String, AttachmentInfo>
+
+    init {
+      val maxMemory = Runtime.getRuntime().maxMemory()
+      val cacheSize = max(maxMemory / 4, FileUtils.ONE_MB * 25).toInt()
+      lruCache = object : LruCache<String, AttachmentInfo>(cacheSize) {
+        override fun sizeOf(key: String, attachmentInfo: AttachmentInfo): Int {
+          return attachmentInfo.rawData?.size ?: attachmentInfo.encodedSize.toInt()
+        }
+      }
+    }
 
     fun get(documentId: String): AttachmentInfo? {
-      return map[documentId]
+      return lruCache.get(documentId)
     }
 
     fun getUriVersion(documentId: String): AttachmentInfo? {
-      return map[documentId]?.copy(
+      return lruCache.get(documentId)?.copy(
         rawData = null,
         uri = getUriByDocumentId(documentId)
       )
     }
 
     fun getDocumentId(attachmentInfo: AttachmentInfo): String? {
-      return map.filter { entry ->
+      return lruCache.snapshot().filter { entry ->
         entry.value.uniqueStringId == attachmentInfo.uniqueStringId
             && entry.value.name == attachmentInfo.name
       }.map { it.key }.firstOrNull()
@@ -149,7 +141,7 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
     }
 
     fun clear() {
-      map.clear()
+      lruCache.evictAll()
     }
 
     private fun addOrReplace(attachmentInfo: AttachmentInfo): Uri? {
@@ -157,11 +149,11 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
 
       return if (attachmentInfo.rawData != null) {
         val documentId = existingAttachmentInfoKey ?: UUID.randomUUID().toString()
-        map[documentId] = attachmentInfo
+        lruCache.put(documentId, attachmentInfo)
         getUriByDocumentId(documentId)
       } else {
         if (existingAttachmentInfoKey != null) {
-          map.remove(existingAttachmentInfoKey)
+          lruCache.remove(existingAttachmentInfoKey)
         }
         null
       }
@@ -184,16 +176,5 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
         }
       }
     }
-  }
-
-  companion object {
-    private val DEFAULT_DOCUMENT_PROJECTION = arrayOf(
-      DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-      DocumentsContract.Document.COLUMN_MIME_TYPE,
-      DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-      DocumentsContract.Document.COLUMN_LAST_MODIFIED,
-      DocumentsContract.Document.COLUMN_FLAGS,
-      DocumentsContract.Document.COLUMN_SIZE
-    )
   }
 }

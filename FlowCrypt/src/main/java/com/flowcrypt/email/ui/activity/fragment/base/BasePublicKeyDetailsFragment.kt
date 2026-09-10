@@ -26,14 +26,14 @@ import androidx.viewbinding.ViewBinding
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentPublicKeyDetailsBinding
+import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.org.bouncycastle.openpgp.getLastModificationDate
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.generateKeyCapabilitiesDrawable
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getColorStateListDependsOnStatus
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getPrimaryKey
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusIcon
 import com.flowcrypt.email.extensions.org.pgpainless.key.info.getStatusText
-import com.flowcrypt.email.extensions.androidx.fragment.app.showInfoDialog
-import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.ui.adapter.SubKeysListAdapter
 import com.flowcrypt.email.ui.adapter.UserIdListAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
@@ -200,7 +200,7 @@ abstract class BasePublicKeyDetailsFragment<T : ViewBinding> : BaseFragment<T>()
 
     viewBinding?.textViewPrimaryKeyAlgorithm?.apply {
       val bitStrength =
-        if (keyRingInfo.publicKey.bitStrength != -1) keyRingInfo.publicKey.bitStrength else null
+        if (keyRingInfo.primaryKey.pgpPublicKey.bitStrength != -1) keyRingInfo.primaryKey.pgpPublicKey.bitStrength else null
       val algoWithBits = keyRingInfo.algorithm.name + (bitStrength?.let { "/$it" } ?: "")
       text = algoWithBits
     }

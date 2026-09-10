@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -16,6 +16,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
+import androidx.core.util.size
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -25,11 +26,11 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.relation.RecipientWithPubKeys
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.gone
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
-import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
@@ -174,7 +175,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     val selectedAtts = ArrayList<AttachmentInfo>()
     val checkedItemPositions = listViewKeys?.checkedItemPositions
     if (checkedItemPositions != null) {
-      for (i in 0 until checkedItemPositions.size()) {
+      for (i in 0 until checkedItemPositions.size) {
         val key = checkedItemPositions.keyAt(i)
         if (checkedItemPositions.get(key)) {
           selectedAtts.add(atts[key])
@@ -193,7 +194,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   private fun sendResult(atts: MutableList<AttachmentInfo>) {
     setFragmentResult(
       args.requestKey,
-      bundleOf(KEY_ATTACHMENT_INFO_LIST to atts)
+      bundleOf(
+        KEY_ATTACHMENT_INFO_LIST to atts,
+        KEY_INCOMING_BUNDLE to args.bundle
+      )
     )
   }
 
@@ -226,5 +230,9 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         "KEY_ATTACHMENT_INFO_LIST",
         ChoosePublicKeyDialogFragment::class.java
       )
+
+    val KEY_INCOMING_BUNDLE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_INCOMING_BUNDLE", ChoosePublicKeyDialogFragment::class.java
+    )
   }
 }

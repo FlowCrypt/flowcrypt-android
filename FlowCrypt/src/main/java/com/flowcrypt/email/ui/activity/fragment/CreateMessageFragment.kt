@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -28,7 +28,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.MenuHost
@@ -40,8 +39,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -86,6 +87,7 @@ import com.flowcrypt.email.jetpack.viewmodel.DraftViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsAutoCompleteViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
+import com.flowcrypt.email.jetpack.workmanager.RefreshClientConfigurationWorker
 import com.flowcrypt.email.model.DialogItem
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -107,8 +109,11 @@ import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
+import com.flowcrypt.email.util.EmailSignatureUtil
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DecryptionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -138,7 +143,7 @@ import java.io.InvalidObjectException
  * @author Denys Bondarenko
  */
 class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
-  AdapterView.OnItemSelectedListener, View.OnClickListener {
+  AdapterView.OnItemSelectedListener {
 
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentCreateMessageBinding.inflate(inflater, container, false)
@@ -192,9 +197,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
     override fun onChipDeleted(
       recipientType: Message.RecipientType,
-      recipientInfo: RecipientChipRecyclerViewAdapter.RecipientInfo
+      recipientItem: RecipientChipRecyclerViewAdapter.RecipientItem
     ) {
-      val email = recipientInfo.recipientWithPubKeys.recipient.email
+      val email = recipientItem.recipientWithPubKeys.recipient.email
       composeMsgViewModel.removeRecipient(recipientType, email)
     }
 
@@ -253,13 +258,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     attachmentActionListener = object : AttachmentsRecyclerViewAdapter.AttachmentActionListener {
       override fun onDownloadClick(attachmentInfo: AttachmentInfo) {}
 
-      override fun onAttachmentClick(attachmentInfo: AttachmentInfo) {
-        onPreviewClick(attachmentInfo)
-      }
-
       override fun onPreviewClick(attachmentInfo: AttachmentInfo) {
         if (attachmentInfo.uri != null) {
-          val intent = GeneralUtil.genViewAttachmentIntent(attachmentInfo.uri, attachmentInfo)
+          val intent = GeneralUtil.genViewAttachmentIntent(
+            uri = attachmentInfo.uri,
+            attachmentInfo = attachmentInfo,
+            useCommonPattern = SharedPreferencesHelper.getBoolean(
+              sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext()),
+              key = Constants.PREFERENCES_KEY_ATTACHMENTS_DISABLE_SMART_MODE_FOR_PREVIEW,
+              defaultValue = false
+            )
+          )
           try {
             startActivity(intent)
           } catch (e: ActivityNotFoundException) {
@@ -310,11 +319,16 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
         messageType = args.messageType,
-        replyToMessageEntityId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
-          null
-        } else {
-          args.incomingMessageInfo?.msgEntity?.id
+        replyToMessageEntityId = args.incomingMessageInfo?.msgEntity?.id,
+        quotedTextForReply = EmailUtil.genReplyContent(args.incomingMessageInfo).takeIf {
+          args.messageType in arrayOf(
+            MessageType.REPLY,
+            MessageType.REPLY_ALL
+          )
         },
+        draftThreadId = if (args.incomingMessageInfo?.msgEntity?.isDraft == true) {
+          args.incomingMessageInfo?.msgEntity?.threadId
+        } else null
       )
     )
   }
@@ -473,6 +487,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   override fun onContextItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuDeleteQuotedText -> {
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(quotedTextForReply = null)
+        )
         binding?.iBShowQuotedText?.gone()
         true
       }
@@ -484,13 +501,35 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
     when (parent?.id) {
       R.id.spinnerFrom -> {
-        binding?.editTextFrom?.setText(parent.adapter.getItem(position) as CharSequence)
+        val sendAs = parent.adapter.getItem(position) as CharSequence
+        binding?.editTextFrom?.setText(sendAs)
         if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
           val adapter = parent.adapter as ArrayAdapter<*>
           val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
-          binding?.editTextFrom?.setTextColor(if (adapter.isEnabled(position)) originalColor else colorGray)
+
+          if (
+            adapter is FromAddressesAdapter
+            && !adapter.hasAnyKeysAvailabilityRecords()
+            && KeysStorageImpl.getInstance(requireContext())
+              .secretKeyRingsLiveData.value?.isNotEmpty() == true
+          ) {
+            updateFromAddressAdapter(
+              KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings()
+            )
+          }
+          binding?.editTextFrom?.setTextColor(
+            if (adapter.isEnabled(position)) {
+              originalColor
+            } else {
+              colorGray
+            }
+          )
         } else {
           binding?.editTextFrom?.setTextColor(originalColor)
+        }
+
+        if (account?.useAliasSignatures == true) {
+          applyAliasSignature(sendAs)
         }
       }
     }
@@ -500,30 +539,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   }
 
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.imageButtonAliases -> if ((fromAddressesAdapter?.count ?: 0) > 1) {
-        binding?.spinnerFrom?.performClick()
-      }
-
-      R.id.iBShowQuotedText -> {
-        val currentCursorPosition = binding?.editTextEmailMessage?.selectionStart ?: 0
-        if (binding?.editTextEmailMessage?.text?.isNotEmpty() == true) {
-          binding?.editTextEmailMessage?.append("\n" + EmailUtil.genReplyContent(args.incomingMessageInfo))
-        } else {
-          binding?.editTextEmailMessage?.append(EmailUtil.genReplyContent(args.incomingMessageInfo))
-        }
-        binding?.editTextEmailMessage?.setSelection(currentCursorPosition)
-        v.visibility = View.GONE
-      }
-    }
-  }
-
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
     composeMsgViewModel.updateOutgoingMessageInfo(
       composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-        account = accountEntity?.email
+        account = accountEntity?.email,
+        accountType = accountEntity?.accountType
       )
     )
 
@@ -548,7 +569,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
           if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
             && (binding?.spinnerFrom?.adapter?.count ?: 0) > selectedItemPosition
           ) {
-            val isItemEnabled = fromAddressesAdapter?.isEnabled(selectedItemPosition) ?: true
+            val isItemEnabled = fromAddressesAdapter?.isEnabled(selectedItemPosition) != false
             binding?.editTextFrom?.setTextColor(if (isItemEnabled) originalColor else colorGray)
           }
         }
@@ -577,7 +598,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
       ) {
         this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(requireContext(), intent)
-        addAtts()
+        addAttachmentsFromExtras()
       } else {
         args.incomingMessageInfo?.localFolder?.let {
           this.folderType = FoldersManager.getFolderType(it)
@@ -600,22 +621,20 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun addAtts() {
+  private fun addAttachmentsFromExtras() {
     val sizeWarningMsg = getString(
       R.string.template_warning_max_total_attachments_size,
       FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)
     )
 
-    extraActionInfo?.atts?.forEach { attachmentInfo ->
-      if (ContentResolver.SCHEME_FILE.equals(attachmentInfo.uri?.scheme, ignoreCase = true)) {
-        // we skip attachments that have SCHEME_FILE as deprecated
-        return
-      }
-
+    extraActionInfo?.atts?.filter {
+      //we skip attachments that have SCHEME_FILE as prohibited(unsafe)
+      !ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
+    }?.forEach { attachmentInfo ->
+      val uri = attachmentInfo.uri ?: return@forEach
       if (hasAbilityToAddAtt(attachmentInfo)) {
-
         if (attachmentInfo.getSafeName().isEmpty()) {
-          val msg = "attachmentInfo.getName() is empty, uri = " + attachmentInfo.uri!!
+          val msg = "attachmentInfo.getName() is empty, uri = $uri"
           ExceptionUtil.handleError(NullPointerException(msg))
           return
         }
@@ -630,28 +649,22 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         }
 
         try {
-          val inputStream = requireContext().contentResolver.openInputStream(attachmentInfo.uri!!)
-
-          if (inputStream != null) {
+          requireContext().contentResolver.openInputStream(uri)?.use { inputStream ->
             FileUtils.copyInputStreamToFile(inputStream, draftAtt)
-            val uri = FileProvider.getUriForFile(
-              requireContext(),
-              Constants.FILE_PROVIDER_AUTHORITY,
-              draftAtt
+            composeMsgViewModel.addAttachments(
+              listOf(attachmentInfo.copy(uri = Uri.fromFile(draftAtt)))
             )
-            composeMsgViewModel.addAttachments(listOf(attachmentInfo.copy(uri = uri)))
           }
         } catch (e: IOException) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
-
           if (!draftAtt.delete()) {
-            Log.e(TAG, "Delete " + draftAtt.name + " failed!")
+            LogsUtil.d(TAG, "Deleting ${draftAtt.name} failed!")
           }
         }
 
       } else {
-        Toast.makeText(context, sizeWarningMsg, Toast.LENGTH_SHORT).show()
+        toast(sizeWarningMsg, Toast.LENGTH_SHORT)
         return@forEach
       }
     }
@@ -768,7 +781,11 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       )
     }
 
-    binding?.imageButtonAliases?.setOnClickListener(this)
+    binding?.imageButtonAliases?.setOnClickListener {
+      if ((fromAddressesAdapter?.count ?: 0) > 1) {
+        binding?.spinnerFrom?.performClick()
+      }
+    }
 
     binding?.imageButtonAdditionalRecipientsVisibility?.setOnClickListener {
       it.gone()
@@ -803,20 +820,34 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
     binding?.editTextEmailMessage?.onFocusChangeListener = onFocusChangeListener
     binding?.editTextEmailMessage?.doOnTextChanged { _, _, _, _ ->
-      var msg = binding?.editTextEmailMessage?.text.toString()
-      if (args.messageType == MessageType.REPLY || args.messageType == MessageType.REPLY_ALL) {
-        if (binding?.iBShowQuotedText?.visibility == View.VISIBLE) {
-          msg += EmailUtil.genReplyContent(args.incomingMessageInfo)
-        }
-      }
-
+      val msg = binding?.editTextEmailMessage?.text.toString()
       composeMsgViewModel.updateOutgoingMessageInfo(
         composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
           msg = msg
         )
       )
     }
-    binding?.iBShowQuotedText?.setOnClickListener(this)
+
+    binding?.iBShowQuotedText?.apply {
+      visibleOrGone(args.messageType in arrayOf(MessageType.REPLY, MessageType.REPLY_ALL))
+      registerForContextMenu(this)
+      setOnClickListener { v ->
+        val currentCursorPosition = binding?.editTextEmailMessage?.selectionStart ?: 0
+        if (binding?.editTextEmailMessage?.text?.isNotEmpty() == true) {
+          binding?.editTextEmailMessage?.append("\n" + EmailUtil.genReplyContent(args.incomingMessageInfo))
+        } else {
+          binding?.editTextEmailMessage?.append(EmailUtil.genReplyContent(args.incomingMessageInfo))
+        }
+        binding?.editTextEmailMessage?.setSelection(currentCursorPosition)
+
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(quotedTextForReply = null)
+        )
+
+        v.gone()
+      }
+    }
+
     binding?.btnSetWebPortalPassword?.setOnClickListener {
       navController?.navigate(
         CreateMessageFragmentDirections
@@ -892,9 +923,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       draftViewModel.setupWithInitializationData(
         initializationData = initializationData,
-        timeInMilliseconds = startOfSessionInMilliseconds
+        timeInMilliseconds = startOfSessionInMilliseconds,
+        skipCheckingSignature = args.messageType == MessageType.DRAFT
       )
     }
+
+    composeMsgViewModel.initSignature()
   }
 
   private fun parseInitializationData(): InitializationData {
@@ -905,11 +939,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       args.incomingMessageInfo != null -> {
         args.incomingMessageInfo?.toInitializationData(
-          requireContext(),
-          args.messageType,
-          account?.email ?: "",
-          accountAliasesViewModel.accountAliasesLiveData.value?.map { it.sendAsEmail.lowercase() }
-            ?: emptyList()
+          context = requireContext(),
+          messageType = args.messageType,
+          accountEmail = account?.email ?: "",
+          aliases = accountAliasesViewModel.accountAliasesLiveData.value?.mapNotNull {
+            it.sendAsEmail?.lowercase()
+          } ?: emptyList()
         ) ?: InitializationData()
       }
 
@@ -964,13 +999,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsFromServiceInfo() {
-    binding?.editTextEmailSubject?.isFocusable = args.serviceInfo?.isSubjectEditable ?: false
+    binding?.editTextEmailSubject?.isFocusable = args.serviceInfo?.isSubjectEditable == true
     binding?.editTextEmailSubject?.isFocusableInTouchMode =
-      args.serviceInfo?.isSubjectEditable ?: false
+      args.serviceInfo?.isSubjectEditable == true
 
-    binding?.editTextEmailMessage?.isFocusable = args.serviceInfo?.isMsgEditable ?: false
+    binding?.editTextEmailMessage?.isFocusable = args.serviceInfo?.isMsgEditable == true
     binding?.editTextEmailMessage?.isFocusableInTouchMode =
-      args.serviceInfo?.isMsgEditable ?: false
+      args.serviceInfo?.isMsgEditable == true
 
     if (args.serviceInfo?.systemMsg?.isNotEmpty() == true) {
       binding?.editTextEmailMessage?.setText(args.serviceInfo?.systemMsg)
@@ -978,8 +1013,6 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun updateViewsFromIncomingMsgInfo(initializationData: InitializationData) {
-    binding?.iBShowQuotedText?.visibleOrGone(args.messageType != MessageType.DRAFT)
-    binding?.iBShowQuotedText?.let { registerForContextMenu(it) }
     binding?.editTextEmailSubject?.setText(initializationData.subject)
     binding?.editTextEmailMessage?.requestFocus()
     binding?.editTextEmailMessage?.showKeyboard()
@@ -1049,13 +1082,15 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    */
   private fun sendMsg() {
     dismissCurrentSnackBar()
+    val outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+      draftId = draftViewModel.getSessionDraftMessageEntity()?.draftId
+    )
+
     navController?.navigate(
       CreateMessageFragmentDirections
         .actionCreateMessageFragmentToCreateOutgoingMessageDialogFragment(
           requestKey = REQUEST_KEY_CREATE_OUTGOING_MESSAGE,
-          outgoingMessageInfo = composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
-            password = usePasswordIfNeeded()
-          )
+          outgoingMessageInfo = outgoingMessageInfo.copy(password = usePasswordIfNeeded())
         )
     )
   }
@@ -1076,19 +1111,17 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
   }
 
   private fun setupAccountAliasesViewModel() {
-    accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
+    accountAliasesViewModel.fetchUpdates()
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
         aliases.add(accountEntity.email)
       }
 
-      for (accountAlias in it) {
-        aliases.add(accountAlias.sendAsEmail)
-      }
+      aliases.addAll(it.mapNotNull { accountAliasesEntity -> accountAliasesEntity.sendAsEmail })
 
       fromAddressesAdapter?.clear()
-      fromAddressesAdapter?.addAll(aliases.map { alias -> alias.lowercase() })
+      fromAddressesAdapter?.addAll(aliases.map { alias -> alias.lowercase() }.toSet())
 
       updateFromAddressAdapter(
         KeysStorageImpl.getInstance(requireContext()).getPGPSecretKeyRings()
@@ -1332,6 +1365,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
                 ContextCompat.getColor(context, R.color.colorPrimary), BlendModeCompat.MODULATE
               )
+
+            if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
+              RefreshClientConfigurationWorker.enqueue(requireContext())
+            }
           }
         }
       }
@@ -1353,6 +1390,47 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
         )
 
         attachmentsRecyclerViewAdapter.submitList(allAttachments)
+      }
+    }
+
+    launchAndRepeatWithViewLifecycle {
+      composeMsgViewModel.initSignatureStateFlow.collect {
+        when (it.status) {
+          Result.Status.SUCCESS -> {
+            val accountEntity = it.data ?: return@collect
+
+            if (args.messageType == MessageType.DRAFT) {
+              composeMsgViewModel.markSignatureUsed()
+              return@collect
+            }
+
+            if (accountEntity.useAliasSignatures) {
+              val position = binding?.spinnerFrom?.selectedItemPosition?.takeIf { position ->
+                position != Spinner.INVALID_POSITION
+              } ?: return@collect
+              val sendAs =
+                (fromAddressesAdapter?.getItem(position) as? CharSequence) ?: return@collect
+              applyAliasSignature(sendAs)
+            } else {
+              val signature = accountEntity.signature ?: return@collect
+              if (composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature == null
+                && signature.isNotEmpty()
+              ) {
+                composeMsgViewModel.updateOutgoingMessageInfo(
+                  composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+                    signature = signature
+                  )
+                )
+                binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + signature)
+                binding?.editTextEmailMessage?.setSelection(0)
+              }
+            }
+
+            composeMsgViewModel.markSignatureUsed()
+          }
+
+          else -> {}
+        }
       }
     }
   }
@@ -1413,7 +1491,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
-  private fun updateAutoCompleteAdapter(recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>) {
+  private fun updateAutoCompleteAdapter(recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientItem>) {
     val emails = recipients.keys
     toAutoCompleteResultRecyclerViewAdapter.submitList(
       toAutoCompleteResultRecyclerViewAdapter.currentList.map {
@@ -1423,12 +1501,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
   private fun updateChipAdapter(
     recipientType: Message.RecipientType,
-    recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientInfo>
+    recipients: Map<String, RecipientChipRecyclerViewAdapter.RecipientItem>
   ) {
     when (recipientType) {
       Message.RecipientType.TO -> toRecipientsChipRecyclerViewAdapter.submitList(
         recipients,
-        args.serviceInfo?.isToFieldEditable ?: true
+        args.serviceInfo?.isToFieldEditable != false
       )
 
       Message.RecipientType.CC -> ccRecipientsChipRecyclerViewAdapter.submitList(recipients)
@@ -1480,6 +1558,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       return false
     }
 
+    var isWebPortalPasswordEnabled = false
     if (composeMsgViewModel.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
       if (composeMsgViewModel.allRecipients.any { it.value.isUpdating }) {
         toast(R.string.please_wait_while_information_about_recipients_will_be_updated)
@@ -1492,6 +1571,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
       val password = composeMsgViewModel.webPortalPasswordStateFlow.value
       if (password.isNotEmpty()) {
+        isWebPortalPasswordEnabled = true
         val keysStorage = KeysStorageImpl.getInstance(requireContext())
         if (keysStorage.hasPassphrase(Passphrase(password.toString().toCharArray()))) {
           showInfoDialog(
@@ -1523,6 +1603,21 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       binding?.editTextEmailSubject?.requestFocus()
       return false
     }
+
+    if (isWebPortalPasswordEnabled &&
+      account?.clientConfiguration?.hasRestrictionForPasswordProtectedMessages() == true
+    ) {
+      val termsRegex = account?.clientConfiguration?.getDisallowPasswordMessagesForTermsRegex()
+      if (termsRegex?.find(binding?.editTextEmailSubject?.text ?: "") != null) {
+        showInfoDialog(
+          dialogTitle = "",
+          dialogMsg = account?.clientConfiguration?.disallowPasswordMessagesErrorText,
+          useLinkify = true
+        )
+        return false
+      }
+    }
+
     if (composeMsgViewModel.attachmentsStateFlow.value.isEmpty() && binding?.editTextEmailMessage?.text?.isEmpty() == true) {
       showInfoSnackbar(
         binding?.editTextEmailMessage,
@@ -1532,7 +1627,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       return false
     }
     return (composeMsgViewModel.attachmentsStateFlow.value.isEmpty()
-        || !composeMsgViewModel.hasAttachmentsWithExternalStorageUri)
+        || !composeMsgViewModel.hasAttachmentsWittForeignExternalStorageUri)
   }
 
   private fun usePasswordIfNeeded(): CharArray? {
@@ -1823,6 +1918,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 R.string.no_conn_msg_sent_later
               }
             )
+            FileAndDirectoryUtils.cleanDir(draftCacheDir)
             activity?.finish()
           }
 
@@ -2057,6 +2153,63 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       accountEntity = account,
       keys = keys
     )
+  }
+
+  private fun applyAliasSignature(sendAs: CharSequence) {
+    val aliases = accountAliasesViewModel.accountAliasesLiveData.value ?: emptyList()
+    val newSignature = aliases.firstOrNull {
+      it.sendAsEmail == sendAs
+    }?.plainTextSignature?.takeIf { it.isNotEmpty() } ?: return
+    var useNewSignature = false
+
+    val oldSignature = composeMsgViewModel.outgoingMessageInfoStateFlow.value.signature
+    if (oldSignature == null && args.messageType == MessageType.DRAFT) {
+      val extractedSignature = aliases.firstOrNull { alias ->
+        val aliasSignature = alias.plainTextSignature
+        aliasSignature != null && EmailSignatureUtil.containsSignature(
+          message = binding?.editTextEmailMessage?.text,
+          signature = aliasSignature
+        )
+      }?.plainTextSignature
+
+      if (!extractedSignature.isNullOrEmpty()) {
+        composeMsgViewModel.updateOutgoingMessageInfo(
+          composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(
+            signature = extractedSignature
+          )
+        )
+      }
+
+      return
+    }
+
+    val messageText = binding?.editTextEmailMessage?.text?.toString() ?: ""
+    val messageWithUpdatedSignature = oldSignature?.let {
+      EmailSignatureUtil.replaceSignature(
+        message = messageText,
+        oldSignature = it,
+        newSignature = newSignature
+      )
+    }
+
+    if (messageWithUpdatedSignature != null) {
+      useNewSignature = true
+      binding?.editTextEmailMessage?.setText(messageWithUpdatedSignature)
+    } else if (oldSignature == null) {
+      useNewSignature = true
+      if (binding?.editTextEmailMessage?.text?.isEmpty() == true) {
+        binding?.editTextEmailMessage?.text?.append("\n\n" + newSignature)
+      } else {
+        binding?.editTextEmailMessage?.text?.insert(0, "\n\n" + newSignature)
+      }
+      binding?.editTextEmailMessage?.setSelection(0)
+    }
+
+    if (useNewSignature) {
+      composeMsgViewModel.updateOutgoingMessageInfo(
+        composeMsgViewModel.outgoingMessageInfoStateFlow.value.copy(signature = newSignature)
+      )
+    }
   }
 
   companion object {

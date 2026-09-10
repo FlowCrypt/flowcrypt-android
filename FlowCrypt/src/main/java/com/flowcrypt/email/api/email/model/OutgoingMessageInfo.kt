@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.email.model
@@ -25,6 +25,7 @@ import java.util.UUID
 @Parcelize
 data class OutgoingMessageInfo(
   @Expose val account: String? = null,
+  @Expose val accountType: String? = null,
   @Expose val subject: String? = null,
   @Expose val msg: String? = null,
   @Expose val toRecipients: List<InternetAddress>? = null,
@@ -36,9 +37,13 @@ data class OutgoingMessageInfo(
   @Expose val encryptionType: MessageEncryptionType? = null,
   @Expose @MessageType val messageType: Int = MessageType.NEW,
   @Expose val replyToMessageEntityId: Long? = null,
-  @Expose val uid: Long = 0,
+  @Expose val uid: Long = System.currentTimeMillis(),
   @Expose val password: CharArray? = null,
   @Expose val timestamp: Long = System.currentTimeMillis(),
+  @Expose val signature: String? = null,
+  @Expose val quotedTextForReply: String? = null,
+  @Expose val draftId: String? = null,
+  @Expose val draftThreadId: Long? = null,
 ) : Parcelable {
 
   @IgnoredOnParcel
@@ -83,7 +88,12 @@ data class OutgoingMessageInfo(
       if (other.password == null) return false
       if (!password.contentEquals(other.password)) return false
     } else if (other.password != null) return false
-    return timestamp == other.timestamp
+    if (timestamp != other.timestamp) return false
+    if (signature != other.signature) return false
+    if (quotedTextForReply != other.quotedTextForReply) return false
+    if (draftId != other.draftId) return false
+    if (draftThreadId != other.draftThreadId) return false
+    return true
   }
 
   override fun hashCode(): Int {
@@ -102,8 +112,13 @@ data class OutgoingMessageInfo(
     result = 31 * result + uid.hashCode()
     result = 31 * result + (password?.contentHashCode() ?: 0)
     result = 31 * result + timestamp.hashCode()
+    result = 31 * result + (signature?.hashCode() ?: 0)
+    result = 31 * result + (quotedTextForReply?.hashCode() ?: 0)
+    result = 31 * result + (draftId?.hashCode() ?: 0)
+    result = 31 * result + (draftThreadId?.hashCode() ?: 0)
     return result
   }
+
   fun toMessageEntity(
     folder: String,
     flags: Flags,
@@ -112,15 +127,16 @@ data class OutgoingMessageInfo(
   ): MessageEntity {
     val timestamp = System.currentTimeMillis()
     return MessageEntity(
-      email = requireNotNull(account),
+      account = requireNotNull(account),
+      accountType = requireNotNull(accountType),
       folder = folder,
       uid = uid,
       receivedDate = timestamp,
       sentDate = timestamp,
-      fromAddress = from.toString(),
-      replyTo = replyTo,
-      toAddress = InternetAddress.toString(toRecipients?.toTypedArray()),
-      ccAddress = InternetAddress.toString(ccRecipients?.toTypedArray()),
+      fromAddresses = from.toString(),
+      replyToAddresses = replyTo,
+      toAddresses = InternetAddress.toString(toRecipients?.toTypedArray()),
+      ccAddresses = InternetAddress.toString(ccRecipients?.toTypedArray()),
       subject = subject,
       flags = flags.toString().uppercase(),
       hasAttachments = atts?.isNotEmpty() == true || forwardedAtts?.isNotEmpty() == true,
@@ -132,7 +148,9 @@ data class OutgoingMessageInfo(
         MessageState.NEW.value
       },
       password = password,
-      attachmentsDirectory = UUID.randomUUID().toString()
+      attachmentsDirectory = UUID.randomUUID().toString(),
+      draftId = draftId,
+      threadId = draftThreadId
     )
   }
 }

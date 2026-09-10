@@ -36,6 +36,7 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
 import com.flowcrypt.email.ui.base.BaseGmailApiTest
+import com.flowcrypt.email.ui.base.BaseGmailApiTest.Companion.SUBJECT_EXISTING_STANDARD
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
@@ -47,6 +48,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -59,7 +61,7 @@ import org.junit.runner.RunWith
   cc = [BaseGmailApiTest.DEFAULT_CC_RECIPIENT],
   bcc = [BaseGmailApiTest.DEFAULT_BCC_RECIPIENT],
   message = BaseComposeScreenTest.MESSAGE,
-  subject = "",
+  subject = "Fwd: $SUBJECT_EXISTING_STANDARD",
   isNew = false
 )
 class StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow : BaseComposeGmailFlow() {
@@ -87,7 +89,7 @@ class StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow
   @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(5))
 
     //click on the standard message
     onView(withId(R.id.recyclerViewMsgs))
@@ -98,10 +100,10 @@ class StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow
       )
 
     //wait the message details rendering
-    Thread.sleep(1000)
+    waitForObjectWithText(MESSAGE_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
 
     //click on forward
-    openReplyScreen(R.id.layoutFwdButton, SUBJECT_EXISTING_STANDARD)
+    openReplyScreen(R.id.forwardButton, SUBJECT_EXISTING_STANDARD)
 
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
@@ -130,20 +132,21 @@ class StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow
       assertEquals(
         outgoingMessageConfiguration.message + IncomingMessageInfo(
           msgEntity = MessageEntity(
-            email = "",
+            account = "",
+            accountType = "",
             folder = "",
             uid = 0,
-            fromAddress = DEFAULT_FROM_RECIPIENT,
+            fromAddresses = DEFAULT_FROM_RECIPIENT,
             subject = SUBJECT_EXISTING_STANDARD,
             receivedDate = DATE_EXISTING_STANDARD,
-            toAddress = InternetAddress.toString(
+            toAddresses = InternetAddress.toString(
               arrayOf(
                 InternetAddress(
                   EXISTING_MESSAGE_TO_RECIPIENT
                 )
               )
             ),
-            ccAddress = InternetAddress.toString(
+            ccAddresses = InternetAddress.toString(
               arrayOf(
                 InternetAddress(
                   EXISTING_MESSAGE_CC_RECIPIENT
@@ -164,7 +167,7 @@ class StandardForwardOfStandardMessageWithOriginalAttachmentsComposeGmailApiFlow
             hasSignedParts = false,
             hasMixedSignatures = false,
             isPartialSigned = false,
-            keyIdOfSigningKeys = emptyList(),
+            keyIdOfSigningKeys = emptySet(),
             hasBadSignatures = false
           )
         ).toInitializationData(

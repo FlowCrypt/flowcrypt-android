@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.security.pgp
@@ -34,7 +34,7 @@ object PgpSignature {
           srcStream,
           multiPassStrategy.messageOutputStream
         )
-        String(multiPassStrategy.bytes)
+        String(multiPassStrategy.getBytes())
       } catch (e: Exception) {
         if (isSilent) {
           e.printStackTrace()
@@ -50,11 +50,12 @@ object PgpSignature {
   ): ClearTextVerificationResult {
     ByteArrayOutputStream().use { outStream ->
       return try {
-        val verificationStream = PGPainless.decryptAndOrVerify()
+        val api = PGPainless.getInstance()
+        val verificationStream = api.processMessage()
           .onInputStream(srcInputStream)
           .withOptions(
-            ConsumerOptions()
-              .addVerificationCerts(publicKeys)
+            ConsumerOptions.get()
+              .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
               .setMultiPassStrategy(InMemoryMultiPassStrategy())
           )
 
@@ -76,12 +77,13 @@ object PgpSignature {
   ): DetachedSignatureVerificationResult {
     ByteArrayOutputStream().use { outStream ->
       return try {
-        val verificationStream = PGPainless.decryptAndOrVerify()
+        val api = PGPainless.getInstance()
+        val verificationStream = api.processMessage()
           .onInputStream(srcInputStream)
           .withOptions(
-            ConsumerOptions()
+            ConsumerOptions.get()
               .addVerificationOfDetachedSignatures(signatureInputStream)
-              .addVerificationCerts(publicKeys)
+              .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
               .setMultiPassStrategy(InMemoryMultiPassStrategy())
           )
 

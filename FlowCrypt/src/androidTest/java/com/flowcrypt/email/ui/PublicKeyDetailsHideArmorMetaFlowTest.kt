@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -50,9 +49,7 @@ import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.bcpg.ArmoredInputStream
-import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertArrayEquals
 import org.junit.Rule
 import org.junit.Test
@@ -122,7 +119,7 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
     val fileName = "0x" + keyDetails.fingerprint + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     val file =
-      File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
+      File(getTargetContext().getExternalFilesDir(Constants.EXTERNAL_FILES_PATH_SHARED), fileName)
 
     if (file.exists()) {
       file.delete()
@@ -135,7 +132,7 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
     intending(
       allOf(
         hasAction(Intent.ACTION_CREATE_DOCUMENT),
-        hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
+        hasCategories(setOf(Intent.CATEGORY_OPENABLE)),
         hasType(Constants.MIME_TYPE_PGP_KEY)
       )
     )
@@ -160,7 +157,8 @@ class PublicKeyDetailsHideArmorMetaFlowTest : BaseTest() {
         setRecipients(Message.RecipientType.TO, arrayOf(InternetAddress("user@flowcrypt.test")))
       }
       val messageEntity = MessageEntity.genMsgEntity(
-        email = addAccountToDatabaseRule.account.email,
+        account = addAccountToDatabaseRule.account.email,
+        accountType = addAccountToDatabaseRule.account.accountType,
         label = JavaEmailConstants.FOLDER_OUTBOX,
         msg = mimeMessage,
         uid = 1,

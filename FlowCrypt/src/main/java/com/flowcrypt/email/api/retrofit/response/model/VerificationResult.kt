@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.api.retrofit.response.model
@@ -19,7 +19,7 @@ data class VerificationResult(
   @Expose val hasSignedParts: Boolean,
   @Expose val hasMixedSignatures: Boolean,
   @Expose val isPartialSigned: Boolean,
-  @Expose val keyIdOfSigningKeys: List<Long>,
+  @Expose val keyIdOfSigningKeys: Set<Long>,
   @Expose val hasBadSignatures: Boolean,
 ) : Parcelable {
   @IgnoredOnParcel

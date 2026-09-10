@@ -35,6 +35,7 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import com.flowcrypt.email.ui.base.BaseComposeScreenTest
+import com.flowcrypt.email.ui.base.BaseGmailApiTest.Companion.SUBJECT_EXISTING_STANDARD
 import jakarta.mail.Message
 import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
@@ -59,7 +60,7 @@ import java.util.concurrent.TimeUnit
   cc = [],
   bcc = [],
   message = BaseComposeScreenTest.MESSAGE,
-  subject = "",
+  subject = "Re: $SUBJECT_EXISTING_STANDARD",
   isNew = false
 )
 class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
@@ -101,7 +102,7 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
     waitForObjectWithText(getResString(R.string.forward_encrypted), TimeUnit.SECONDS.toMillis(10))
 
     //click on reply
-    openReplyScreen(R.id.layoutReplyButton, SUBJECT_EXISTING_STANDARD)
+    openReplyScreen(R.id.replyButton, SUBJECT_EXISTING_STANDARD)
 
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
@@ -144,10 +145,11 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
         MESSAGE + EmailUtil.genReplyContent(
           IncomingMessageInfo(
             msgEntity = MessageEntity(
-              email = "",
+              account = "",
+              accountType = "",
               folder = "",
               uid = 0,
-              fromAddress = DEFAULT_FROM_RECIPIENT,
+              fromAddresses = DEFAULT_FROM_RECIPIENT,
               receivedDate = DATE_EXISTING_STANDARD
 
             ),
@@ -164,7 +166,7 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
               hasSignedParts = false,
               hasMixedSignatures = false,
               isPartialSigned = false,
-              keyIdOfSigningKeys = emptyList(),
+              keyIdOfSigningKeys = emptySet(),
               hasBadSignatures = false
             )
           )

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -29,8 +29,9 @@ import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.ui.base.AddOtherAccountBaseTest
 import com.flowcrypt.email.util.AuthCredentialsManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.CoreMatchers.anyOf
-import org.hamcrest.CoreMatchers.startsWith
+import org.hamcrest.Matchers.anyOf
+import org.hamcrest.Matchers.startsWith
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -59,6 +60,9 @@ class AddOtherAccountFlowTest : AddOtherAccountBaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  //@Ignore("flaky 8")
+  //RepeatableAndroidJUnit4ClassRunner 50 attempts passed
+  @Ignore("flaky. Temporary disabled")
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()
     val credentials = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")

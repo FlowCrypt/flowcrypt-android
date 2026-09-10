@@ -7,7 +7,7 @@ package com.flowcrypt.email.extensions.com.sun.mail.imap
 
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.sun.mail.imap.IMAPFolder
+import org.eclipse.angus.mail.imap.IMAPFolder
 
 /**
  * @author Denys Bondarenko

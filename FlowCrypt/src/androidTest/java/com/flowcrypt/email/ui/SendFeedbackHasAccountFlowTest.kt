@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui
@@ -15,6 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -70,7 +71,7 @@ class SendFeedbackHasAccountFlowTest : BaseFeedbackFragmentTest() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(getTargetContext()).gson
 
-        if (request.path?.startsWith("/backend/help/feedback") == true) {
+        if (request.path?.startsWith("/shared-tenant-fes/api/v1/account/feedback") == true) {
           return handlePostFeedbackRequest(gson)
         }
 
@@ -127,6 +128,7 @@ class SendFeedbackHasAccountFlowTest : BaseFeedbackFragmentTest() {
   }
 
   @Test
+  @FlakyTest
   fun testNavigateToImageEditor() {
     onView(withId(R.id.checkBoxScreenshot))
       .check(matches(isDisplayed()))

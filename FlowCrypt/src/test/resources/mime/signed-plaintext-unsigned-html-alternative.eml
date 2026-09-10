@@ -1,0 +1,40 @@
+Return-Path: <denbond7@flowcrypt.test>
+Delivered-To: default@flowcrypt.test
+Message-ID: <signed-plaintext-unsigned-html-alt@flowcrypt.test>
+Date: Sat, 20 Jun 2026 12:00:00 +0000
+MIME-Version: 1.0
+To: default@flowcrypt.test
+From: DenBond7 <denbond7@flowcrypt.test>
+Subject: Signed plaintext alternative, unsigned HTML alternative
+Content-Type: multipart/alternative; boundary="fc-alt-signed-plain-unsigned-html"
+
+--fc-alt-signed-plain-unsigned-html
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+It's a cleartext signed message
+-----BEGIN PGP SIGNATURE-----
+Version: PGPainless
+
+iHUEARYKACcFAmLs1kUJEMMgic1q+NbOFiEEwWQo1gHLOTeJz2HUwyCJzWr41s4A
+AG8wAP44Q3Zzr7sDM9V34A3CdDxMjUFSJcOsPZUuUi1kIZzv6wD/cxdthjQpC7uN
+Hwvo1OGuQBE7TENCj1cW4P9AdOFxSAQ=
+=McWq
+-----END PGP SIGNATURE-----
+
+--fc-alt-signed-plain-unsigned-html
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<html>
+  <body>
+    <h1>Unsigned HTML rendered by the message view</h1>
+    <p>This visible HTML is not covered by the PGP signature in the text/plain alternative.</p>
+    <p>Example impact text: please approve the new payment destination ATTACKER-ACCOUNT.</p>
+  </body>
+</html>
+
+--fc-alt-signed-plain-unsigned-html--

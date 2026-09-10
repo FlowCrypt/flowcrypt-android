@@ -60,13 +60,13 @@ class EditPrivateKeyViewModel(val fingerprint: String, application: Application)
           roomDatabase.keysDao().getKeyByAccountAndFingerprint(account.email, fingerprint)
             ?: throw IllegalStateException("Private key with fingerprint = $fingerprint not found")
 
-        val pgpKeyRingDetails = modifiedPgpSecretKeyRing.toPgpKeyRingDetails()
+        val pgpKeyRingDetails = modifiedPgpSecretKeyRing.pgpSecretKeyRing.toPgpKeyRingDetails()
         val encryptedPrvKey =
           KeyStoreCryptoManager.encryptSuspend(pgpKeyRingDetails.privateKey).toByteArray()
         roomDatabase.keysDao().updateSuspend(entity.copy(privateKey = encryptedPrvKey))
 
         //update contacts and pub keys
-        val email = userId.email.lowercase()
+        val email = userId.email?.lowercase() ?: ""
         var cachedRecipientWithPubKeys = roomDatabase.recipientDao()
           .getRecipientWithPubKeysByEmailSuspend(email)
 

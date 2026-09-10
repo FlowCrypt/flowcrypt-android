@@ -24,7 +24,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.sun.mail.gimap.GmailSSLStore
+import org.eclipse.angus.mail.gimap.GmailSSLStore
 import jakarta.mail.AuthenticationFailedException
 import jakarta.mail.Session
 import jakarta.mail.Store
