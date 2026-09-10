@@ -45,7 +45,7 @@ import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.GoogleAuthUtil
 import jakarta.mail.Message
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.InternetAddress
@@ -496,19 +496,19 @@ class GeneralUtil {
       accountEntity: AccountEntity
     ): String =
       withContext(Dispatchers.IO) {
-        //before fetch idToken from [GoogleSignInClient]
-        //we try to get IdToken from the flavor settings
+        // Before fetching an ID token, try the flavor settings used by UI tests.
         @Suppress("UNNECESSARY_SAFE_CALL", "KotlinRedundantDiagnosticSuppress")
         FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
 
-        val googleSignInClient = GoogleSignIn.getClient(
-          context,
-          GoogleApiClientHelper.generateGoogleSignInOptions(accountEntity.account)
-        )
-        val silentSignIn = googleSignInClient.silentSignIn()
-        if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
+        val idToken = try {
+          GoogleAuthUtil.getToken(
+            context,
+            accountEntity.account,
+            GoogleApiClientHelper.ID_TOKEN_SCOPE
+          )
+        } catch (e: Exception) {
           if (retryAttempt <= maxRetryAttemptCount) {
-            //do delay for 10 seconds and try again. Max attempts == maxRetryAttemptCount
+            // Delay for 10 seconds and try again. Max attempts == maxRetryAttemptCount.
             delay(TimeUnit.SECONDS.toMillis(10))
             return@withContext getGoogleIdTokenSilently(
               context,
@@ -516,7 +516,9 @@ class GeneralUtil {
               retryAttempt + 1,
               accountEntity
             )
-          } else throw IllegalStateException("Could not receive idToken")
+          } else {
+            throw IllegalStateException("Could not receive idToken", e)
+          }
         }
 
         val claims = JwtConsumerBuilder()
@@ -526,7 +528,7 @@ class GeneralUtil {
           .setRelaxVerificationKeyValidation()
           .setSkipSignatureVerification()
           .build()
-          .processToClaims(silentSignIn.result.idToken)
+          .processToClaims(idToken)
 
         val email = claims.getClaimValueAsString("email")
 
@@ -534,7 +536,7 @@ class GeneralUtil {
           throw IllegalStateException("Received tokenId for a wrong account($email)")
         }
 
-        return@withContext requireNotNull(silentSignIn.result.idToken)
+        return@withContext idToken
       }
 
     suspend fun preProcessException(

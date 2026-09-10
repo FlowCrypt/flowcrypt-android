@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -109,14 +110,14 @@ data class AccountEntity(
     useStartTlsForSmtp: Boolean = false,
   ) : this(
     email = googleIdTokenCredential.id.lowercase(),
-    accountType = ACCOUNT_TYPE_GOOGLE,
+    accountType = GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE,
     displayName = googleIdTokenCredential.displayName,
     givenName = googleIdTokenCredential.givenName,
     familyName = googleIdTokenCredential.familyName,
     photoUrl = googleIdTokenCredential.profilePictureUri?.toString(),
     isEnabled = true,
     isActive = false,
-    username = requireNotNull(googleIdTokenCredential.id),
+    username = googleIdTokenCredential.id,
     password = "",
     imapServer = GmailConstants.GMAIL_IMAP_SERVER,
     imapPort = GmailConstants.GMAIL_IMAP_PORT,

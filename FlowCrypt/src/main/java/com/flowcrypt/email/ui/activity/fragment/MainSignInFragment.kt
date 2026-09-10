@@ -5,8 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.accounts.Account
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.MutableContextWrapper
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,9 +18,13 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -36,7 +43,6 @@ import com.flowcrypt.email.extensions.android.os.getParcelableViaExt
 import com.flowcrypt.email.extensions.android.os.getSerializableViaExt
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
 import com.flowcrypt.email.extensions.androidx.fragment.app.getNavigationResult
-import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.setFragmentResultListenerForTwoWayDialog
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFeedbackFragment
@@ -47,12 +53,9 @@ import com.flowcrypt.email.extensions.androidx.navigation.navigateSafe
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.exceptionMsg
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.java.lang.printStackTraceIfDebugOnly
-import com.flowcrypt.email.extensions.java.lang.showDialogWithErrorDetails
 import com.flowcrypt.email.jetpack.viewmodel.CheckCustomerUrlFesServerViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ClientConfigurationViewModel
 import com.flowcrypt.email.jetpack.viewmodel.EkmViewModel
-import com.flowcrypt.email.jetpack.viewmodel.SignInWithGoogleViewModel
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
@@ -60,18 +63,23 @@ import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.
 import com.flowcrypt.email.ui.activity.fragment.CheckKeysFragment.CheckingState.Companion.SKIP_REMAINING_KEYS
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EkmNotSupportedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
-import com.google.android.gms.auth.api.identity.AuthorizationRequest
+import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.google.android.gms.auth.api.identity.AuthorizationClient
 import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.common.api.Scope
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import kotlinx.coroutines.launch
 import org.eclipse.angus.mail.util.MailConnectException
 import org.pgpainless.util.Passphrase
 import java.net.HttpURLConnection
@@ -85,22 +93,30 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentMainSignInBinding.inflate(inflater, container, false)
 
+  private lateinit var credentialManager: CredentialManager
+  private lateinit var authorizationClient: AuthorizationClient
+  private var cachedGoogleIdTokenCredential: GoogleIdTokenCredential? = null
   private var cachedClientConfiguration: ClientConfiguration? = null
   private var cachedBaseFesUrlPath: String? = null
 
   private val checkCustomerUrlFesServerViewModel: CheckCustomerUrlFesServerViewModel by viewModels()
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
-  private val signInWithGoogleViewModel: SignInWithGoogleViewModel by viewModels()
   private var useStartTlsForSmtp = false
 
-  private val forActivityResultSignIn = registerForActivityResult(
+  private val forActivityResultAuthorization = registerForActivityResult(
     ActivityResultContracts.StartIntentSenderForResult()
   ) { result: ActivityResult ->
-    if (result.resultCode == Activity.RESULT_OK) {
-      onUserAuthorizedToGmailApi()
+    if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+      try {
+        authorizationClient.getAuthorizationResultFromIntent(result.data!!)
+        continueAfterGoogleAuthorization()
+      } catch (e: ApiException) {
+        handleGoogleApiException(e)
+      }
     } else {
-      signInWithGoogleViewModel.resetAuthenticationState()
+      cachedGoogleIdTokenCredential = null
+      showContent()
     }
   }
 
@@ -108,7 +124,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     ActivityResultContracts.StartActivityForResult()
   ) { result: ActivityResult ->
     if (result.resultCode == Activity.RESULT_OK) {
-      binding?.buttonSignInWithGmail?.callOnClick()
+      signInWithGmail()
     }
   }
 
@@ -121,12 +137,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
 
-  private val cachedGoogleIdTokenCredential: GoogleIdTokenCredential?
-    get() = signInWithGoogleViewModel.googleIdTokenCredentialStateFlow.value.data
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+    credentialManager = CredentialManager.create(context)
+    authorizationClient = Identity.getAuthorizationClient(context)
+  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews()
+    initViews(view)
 
     subscribeToCheckAccountSettingsAndSearchBackups()
     subscribeToCheckPrivateKeys()
@@ -138,7 +157,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     initEnterpriseViewModels()
     initPrivateKeysViewModel()
     initProtectPrivateKeysLiveData()
-    initSignInWithGoogleViewModel()
   }
 
   override fun getTempAccount(): AccountEntity? {
@@ -175,15 +193,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     handleUnlockedKeys(accountEntity, keys)
   }
 
-  private fun initViews() {
-    binding?.buttonSignInWithGmail?.setOnClickListener {
+  private fun initViews(view: View) {
+    view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       importCandidates.clear()
-      signInWithGoogleViewModel.authenticateUser(requireActivity())
+      signInWithGmail()
     }
 
-    binding?.buttonOtherEmailProvider?.setOnClickListener {
+    view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
       cachedBaseFesUrlPath = null
       cachedClientConfiguration = null
       navController?.navigateSafe(
@@ -192,15 +210,15 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       )
     }
 
-    binding?.buttonPrivacy?.setOnClickListener {
+    view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)
     }
 
-    binding?.buttonTerms?.setOnClickListener {
+    view.findViewById<View>(R.id.buttonTerms)?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
 
-    binding?.buttonSecurity?.setOnClickListener {
+    view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
       navController?.navigateSafe(
         R.id.mainSignInFragment,
         NavGraphDirections.actionGlobalHtmlViewFromAssetsRawFragment(
@@ -210,21 +228,98 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       )
     }
 
-    binding?.buttonHelp?.setOnClickListener {
+    view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
       showFeedbackFragment()
     }
   }
 
-  private fun handleAuthentication(googleIdTokenCredential: GoogleIdTokenCredential) {
-    val account = googleIdTokenCredential.id
+  private fun signInWithGmail() {
+    cachedGoogleIdTokenCredential = null
+    FlavorSettings.getGoogleIdTokenCredential()?.let {
+      cachedGoogleIdTokenCredential = it
+      continueAfterGoogleAuthorization()
+      return
+    }
+
+    viewLifecycleOwner.lifecycleScope.launch {
+      try {
+        val response = credentialManager.getCredential(
+          context = MutableContextWrapper(requireActivity()),
+          request = GoogleApiClientHelper.generateGoogleSignInRequest()
+        )
+        val credential = response.credential
+        if (credential is CustomCredential &&
+          credential.type in setOf(
+            GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL,
+            GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL
+          )
+        ) {
+          cachedGoogleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+          authorizeGoogleAccount()
+        } else {
+          showContent()
+          showInfoSnackbar(msgText = getString(R.string.unknown_error))
+        }
+      } catch (_: GetCredentialCancellationException) {
+        showContent()
+      } catch (e: GoogleIdTokenParsingException) {
+        showContent()
+        showInfoSnackbar(msgText = e.message ?: getString(R.string.unknown_error))
+      } catch (e: GetCredentialException) {
+        showContent()
+        showInfoSnackbar(msgText = e.errorMessage?.toString() ?: e.type)
+      }
+    }
+  }
+
+  private fun authorizeGoogleAccount() {
+    val credential = cachedGoogleIdTokenCredential ?: return
+    val account = Account(credential.id, AccountEntity.ACCOUNT_TYPE_GOOGLE)
+    authorizationClient.authorize(
+      GoogleApiClientHelper.generateGoogleAuthorizationRequest(account)
+    ).addOnSuccessListener { result ->
+      if (result.hasResolution()) {
+        val pendingIntent = result.pendingIntent
+        if (pendingIntent == null) {
+          showContent()
+          showInfoSnackbar(msgText = getString(R.string.unknown_error))
+          return@addOnSuccessListener
+        }
+        forActivityResultAuthorization.launch(
+          IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+        )
+      } else {
+        continueAfterGoogleAuthorization()
+      }
+    }.addOnFailureListener { exception ->
+      showContent()
+      if (exception is ApiException) {
+        handleGoogleApiException(exception)
+      } else {
+        showInfoSnackbar(
+          msgText = exception.message ?: exception.javaClass.simpleName
+        )
+      }
+    }
+  }
+
+  private fun handleGoogleApiException(exception: ApiException) {
+    showContent()
+    showInfoSnackbar(
+      msgText = CommonStatusCodes.getStatusCodeString(exception.statusCode)
+    )
+  }
+
+  private fun continueAfterGoogleAuthorization() {
+    val credential = cachedGoogleIdTokenCredential ?: return
+    val account = credential.id
     cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
     val publicEmailDomains = EmailUtil.getPublicEmailDomains()
     val domain = EmailUtil.getDomain(account)
     if (domain in publicEmailDomains) {
-      @Suppress("KotlinConstantConditions")
       if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-        signInWithGoogleViewModel.resetAuthenticationState()
+        cachedGoogleIdTokenCredential = null
         showInfoDialog(
           dialogTitle = "",
           dialogMsg = getString(
@@ -235,72 +330,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           isCancelable = true
         )
       } else {
-        authorizeUserToGmailApi()
-      }
-    } else {
-      authorizeUserToGmailApi()
-    }
-  }
-
-  private fun authorizeUserToGmailApi() {
-    val authorizationRequest: AuthorizationRequest = AuthorizationRequest.builder()
-      .setRequestedScopes(listOf(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))).build()
-    Identity.getAuthorizationClient(requireContext())
-      .authorize(authorizationRequest)
-      .addOnSuccessListener { authorizationResult ->
-        if (authorizationResult.hasResolution()) {
-          // Access needs to be granted by the user.
-          // At this stage the grant access to Gmail API screen should be displayed
-          val pendingIntent = authorizationResult.pendingIntent
-          if (pendingIntent != null) {
-            try {
-              forActivityResultSignIn.launch(
-                IntentSenderRequest.Builder(pendingIntent.intentSender).build()
-              )
-            } catch (e: Exception) {
-              e.showDialogWithErrorDetails(this)
-            }
-          } else {
-            showInfoDialog(
-              dialogTitle = "",
-              dialogMsg = getString(
-                R.string.error_occurred_with_details_please_try_again,
-                "pendingIntent == null"
-              )
-            )
-          }
-        } else {
-          // Access already granted, continue with user action
-          onUserAuthorizedToGmailApi()
-        }
-      }.addOnFailureListener { exception ->
-        exception.showDialogWithErrorDetails(this)
-      }
-  }
-
-  private fun onUserAuthorizedToGmailApi() {
-    val account = cachedGoogleIdTokenCredential?.id?.lowercase()
-    val idToken = cachedGoogleIdTokenCredential?.idToken
-
-    if (idToken == null) {
-      IllegalStateException("idToken == null").showDialogWithErrorDetails(this)
-      return
-    }
-
-    if (account != null) {
-      val publicEmailDomains = EmailUtil.getPublicEmailDomains()
-      val domain = EmailUtil.getDomain(account)
-      if (domain in publicEmailDomains) {
         clientConfigurationViewModel.fetchClientConfiguration(
-          idToken = idToken,
+          idToken = credential.idToken,
           baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false),
           domain = domain
         )
-      } else {
-        checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
       }
     } else {
-      IllegalStateException("account == null").showDialogWithErrorDetails(this)
+      checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
     }
   }
 
@@ -525,7 +562,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {
-          signInWithGoogleViewModel.resetAuthenticationState()
+          this.cachedGoogleIdTokenCredential = null
           showContent()
         }
       }
@@ -657,7 +694,6 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             }
 
             is SSLException -> {
-              @Suppress("KotlinConstantConditions")
               if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
                 showDialogWithRetryButton(it, REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY)
               } else {
@@ -680,55 +716,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun initSignInWithGoogleViewModel() {
-    launchAndRepeatWithViewLifecycle {
-      signInWithGoogleViewModel.googleIdTokenCredentialStateFlow.collect {
-        when (it.status) {
-          Result.Status.SUCCESS -> {
-            if (it.data != null) {
-              handleAuthentication(it.data)
-            } else {
-              showInfoDialog(
-                dialogTitle = "",
-                dialogMsg = getString(
-                  R.string.error_occurred_with_details_please_try_again,
-                  "data == null"
-                )
-              )
-            }
-            signInWithGoogleViewModel.cacheAuthenticationState()
-          }
-
-          Result.Status.EXCEPTION -> {
-            when {
-              it.exception is GetCredentialCancellationException
-                  && "android.credentials.GetCredentialException.TYPE_USER_CANCELED" == it.exception.type
-                  && isConnected() -> {
-                //do nothing
-              }
-
-              it.exception is AccountAlreadyAddedException -> {
-                toast(it.exception.message)
-              }
-
-              else -> showInfoDialog(
-                dialogTitle = "",
-                dialogMsg = it.exceptionMsg
-              )
-            }
-
-            (it.exception as? Exception)?.printStackTraceIfDebugOnly()
-            signInWithGoogleViewModel.resetAuthenticationState()
-          }
-
-          else -> {}
-        }
-      }
-    }
-  }
-
   private fun continueBasedOnFlavorSettings(errorMsg: String) {
-    @Suppress("KotlinConstantConditions")
     if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
       showDialogWithRetryButton(
         errorMsg,

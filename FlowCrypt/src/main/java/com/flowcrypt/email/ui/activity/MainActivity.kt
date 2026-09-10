@@ -35,7 +35,6 @@ import androidx.core.view.get
 import androidx.core.view.size
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
-import androidx.credentials.exceptions.ClearCredentialException
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -92,7 +91,6 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.flowcrypt.email.util.exception.EmptyPassphraseException
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 /**
  * @author Denys Bondarenko
@@ -434,18 +432,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
         if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-          try {
-            CredentialManager.create(this@MainActivity).clearCredentialState(
-              ClearCredentialStateRequest()
-            )
-          } catch (e: ClearCredentialException) {
-            e.printStackTraceIfDebugOnly()
-            showInfoDialog(
-              requestKey = UUID.randomUUID().toString(),
-              dialogMsg = e.errorMessage?.toString(),
-              dialogTitle = getString(R.string.error)
-            )
-            return@launch
+          runCatching {
+            CredentialManager.create(this@MainActivity)
+              .clearCredentialState(ClearCredentialStateRequest())
           }
         }
 
