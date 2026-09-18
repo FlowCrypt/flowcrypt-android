@@ -96,7 +96,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private lateinit var credentialManager: CredentialManager
   private lateinit var authorizationClient: AuthorizationClient
-  private var cachedGoogleIdTokenCredential: GoogleIdTokenCredential? = null
+  private var cachedGoogleAccountCredential: GoogleAccountCredential? = null
   private var cachedClientConfiguration: ClientConfiguration? = null
   private var cachedBaseFesUrlPath: String? = null
 
@@ -104,6 +104,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   private val clientConfigurationViewModel: ClientConfigurationViewModel by viewModels()
   private val ekmViewModel: EkmViewModel by viewModels()
   private var useStartTlsForSmtp = false
+
+  private class GoogleAccountCredential(
+    val credential: GoogleIdTokenCredential,
+    val email: String
+  )
 
   private val forActivityResultAuthorization = registerForActivityResult(
     ActivityResultContracts.StartIntentSenderForResult()
@@ -116,7 +121,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         handleGoogleApiException(e)
       }
     } else {
-      cachedGoogleIdTokenCredential = null
+      cachedGoogleAccountCredential = null
       showContent()
     }
   }
@@ -162,9 +167,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   override fun getTempAccount(): AccountEntity? {
     val sharedTenantFesBaseUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
-    return cachedGoogleIdTokenCredential?.let {
+    return cachedGoogleAccountCredential?.let {
       AccountEntity(
-        googleIdTokenCredential = it,
+        googleIdTokenCredential = it.credential,
         clientConfiguration = cachedClientConfiguration,
         useCustomerFesUrl = cachedBaseFesUrlPath?.isNotEmpty() == true &&
             cachedBaseFesUrlPath != sharedTenantFesBaseUrlPath,
@@ -235,10 +240,11 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun signInWithGmail() {
-    cachedGoogleIdTokenCredential = null
+    cachedGoogleAccountCredential = null
     FlavorSettings.getGoogleIdTokenCredential()?.let {
-      cachedGoogleIdTokenCredential = it
-      continueAfterGoogleAuthorization()
+      if (cacheGoogleAccountCredential(it)) {
+        continueAfterGoogleAuthorization()
+      }
       return
     }
 
@@ -255,8 +261,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL
           )
         ) {
-          cachedGoogleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-          authorizeGoogleAccount()
+          val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+          if (cacheGoogleAccountCredential(googleIdTokenCredential)) {
+            authorizeGoogleAccount()
+          }
         } else {
           showContent()
           showInfoSnackbar(msgText = getString(R.string.unsupported_credentials))
@@ -276,9 +284,25 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
+  private fun cacheGoogleAccountCredential(credential: GoogleIdTokenCredential): Boolean {
+    val email = credential.email
+    if (email.isNullOrBlank()) {
+      cachedGoogleAccountCredential = null
+      showContent()
+      showInfoSnackbar(msgText = getString(R.string.unsupported_credentials))
+      return false
+    }
+
+    cachedGoogleAccountCredential = GoogleAccountCredential(
+      credential = credential,
+      email = email
+    )
+    return true
+  }
+
   private fun authorizeGoogleAccount() {
-    val credential = cachedGoogleIdTokenCredential ?: return
-    val account = Account(credential.id, AccountEntity.ACCOUNT_TYPE_GOOGLE)
+    val googleAccountCredential = cachedGoogleAccountCredential ?: return
+    val account = Account(googleAccountCredential.email, AccountEntity.ACCOUNT_TYPE_GOOGLE)
     authorizationClient.authorize(
       GoogleApiClientHelper.generateGoogleAuthorizationRequest(account)
     ).addOnSuccessListener { result ->
@@ -315,22 +339,23 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueAfterGoogleAuthorization() {
-    val credential = cachedGoogleIdTokenCredential
-    if (credential == null) {
+    val googleAccountCredential = cachedGoogleAccountCredential
+    if (googleAccountCredential == null) {
       // Activity Result restores the authorization result after process recreation, but not the
       // in-memory ID token credential required by the rest of the sign-in flow. Request a fresh
       // credential instead of persisting the sensitive token in saved instance state.
       signInWithGmail()
       return
     }
-    val account = credential.id
+    val credential = googleAccountCredential.credential
+    val account = googleAccountCredential.email
     cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
     val publicEmailDomains = EmailUtil.getPublicEmailDomains()
     val domain = EmailUtil.getDomain(account)
     if (domain in publicEmailDomains) {
       if (BuildConfig.FLAVOR == Constants.FLAVOR_NAME_ENTERPRISE) {
-        cachedGoogleIdTokenCredential = null
+        cachedGoogleAccountCredential = null
         showInfoDialog(
           dialogTitle = "",
           dialogMsg = getString(
@@ -352,9 +377,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     }
   }
 
-  private fun onSignSuccess(googleIdTokenCredential: GoogleIdTokenCredential?) {
+  private fun onSignSuccess(googleAccountCredential: GoogleAccountCredential?) {
     val existedAccount = existingAccounts.firstOrNull {
-      it.email.equals(googleIdTokenCredential?.id, ignoreCase = true)
+      it.email.equals(googleAccountCredential?.email, ignoreCase = true)
     }
 
     if (existedAccount == null) {
@@ -444,7 +469,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         if (original is MailConnectException && !useStartTlsForSmtp) {
           useStartTlsForSmtp = true
-          onSignSuccess(cachedGoogleIdTokenCredential)
+          onSignSuccess(cachedGoogleAccountCredential)
           return
         }
 
@@ -508,16 +533,16 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
       when (requestCode) {
         REQUEST_CODE_RETRY_CHECK_FES_AVAILABILITY -> if (result == TwoWayDialogFragment.RESULT_OK) {
-          val account = cachedGoogleIdTokenCredential?.id
+          val account = cachedGoogleAccountCredential?.email
             ?: return@setFragmentResultListenerForTwoWayDialog
           checkCustomerUrlFesServerViewModel.checkServerAvailability(account)
         }
 
         REQUEST_CODE_RETRY_GET_CLIENT_CONFIGURATION -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken =
-            cachedGoogleIdTokenCredential?.idToken
+            cachedGoogleAccountCredential?.credential?.idToken
               ?: return@setFragmentResultListenerForTwoWayDialog
-          val account = cachedGoogleIdTokenCredential?.id
+          val account = cachedGoogleAccountCredential?.email
             ?: return@setFragmentResultListenerForTwoWayDialog
           val domain = EmailUtil.getDomain(account)
           val baseFesUrlPath =
@@ -531,7 +556,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         REQUEST_CODE_RETRY_FETCH_PRV_KEYS_VIA_EKM -> if (result == TwoWayDialogFragment.RESULT_OK) {
           val idToken =
-            cachedGoogleIdTokenCredential?.idToken
+            cachedGoogleAccountCredential?.credential?.idToken
               ?: return@setFragmentResultListenerForTwoWayDialog
           cachedClientConfiguration?.let { ekmViewModel.fetchPrvKeys(it, idToken) }
         }
@@ -567,13 +592,13 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
             privateKeysViewModel.doAdditionalActionsAfterPrivateKeyCreation(
               accountEntity = account,
               keys = keys,
-              idToken = cachedGoogleIdTokenCredential?.idToken
+              idToken = cachedGoogleAccountCredential?.credential?.idToken
             )
           }
         }
 
         CreateOrImportPrivateKeyDuringSetupFragment.Result.USE_ANOTHER_ACCOUNT -> {
-          this.cachedGoogleIdTokenCredential = null
+          cachedGoogleAccountCredential = null
           showContent()
         }
       }
@@ -639,9 +664,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
         Result.Status.SUCCESS -> {
           if (it.data?.service in ApiClientRepository.FES.ALLOWED_SERVICES) {
-            cachedGoogleIdTokenCredential?.id?.let { account ->
+            cachedGoogleAccountCredential?.let { googleAccountCredential ->
+              val account = googleAccountCredential.email
               val domain = EmailUtil.getDomain(account)
-              val idToken = cachedGoogleIdTokenCredential?.idToken ?: return@let
+              val idToken = googleAccountCredential.credential.idToken
               val baseFesUrlPath = GeneralUtil.genBaseFesUrlPath(
                 useCustomerFesUrl = true,
                 domain = domain
@@ -739,8 +765,8 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueWithRegularFlow() {
-    val idToken = cachedGoogleIdTokenCredential?.idToken
-    val account = cachedGoogleIdTokenCredential?.id
+    val idToken = cachedGoogleAccountCredential?.credential?.idToken
+    val account = cachedGoogleAccountCredential?.email
     val baseFesUrlPath = cachedBaseFesUrlPath
 
     if (idToken != null && account != null && baseFesUrlPath != null) {
@@ -765,7 +791,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
         }
 
         Result.Status.SUCCESS -> {
-          val idToken = cachedGoogleIdTokenCredential?.idToken
+          val idToken = cachedGoogleAccountCredential?.credential?.idToken
           cachedClientConfiguration = it.data?.clientConfiguration
 
           if (idToken != null) {
@@ -823,7 +849,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           showContent()
           when (it.exception) {
             is EkmNotSupportedException -> {
-              onSignSuccess(cachedGoogleIdTokenCredential)
+              onSignSuccess(cachedGoogleAccountCredential)
             }
 
             is UnsupportedClientConfigurationException -> {

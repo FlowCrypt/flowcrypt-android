@@ -109,7 +109,7 @@ data class AccountEntity(
     useCustomerFesUrl: Boolean,
     useStartTlsForSmtp: Boolean = false,
   ) : this(
-    email = googleIdTokenCredential.id.lowercase(),
+    email = requireGoogleAccountEmail(googleIdTokenCredential).lowercase(),
     accountType = GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE,
     displayName = googleIdTokenCredential.displayName,
     givenName = googleIdTokenCredential.givenName,
@@ -117,7 +117,7 @@ data class AccountEntity(
     photoUrl = googleIdTokenCredential.profilePictureUri?.toString(),
     isEnabled = true,
     isActive = false,
-    username = googleIdTokenCredential.id,
+    username = requireGoogleAccountEmail(googleIdTokenCredential),
     password = "",
     imapServer = GmailConstants.GMAIL_IMAP_SERVER,
     imapPort = GmailConstants.GMAIL_IMAP_PORT,
@@ -353,5 +353,10 @@ data class AccountEntity(
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
     const val ACCOUNT_TYPE_UNKNOWN = "unknown"
+
+    private fun requireGoogleAccountEmail(credential: GoogleIdTokenCredential): String =
+      requireNotNull(credential.email?.takeIf { it.isNotBlank() }) {
+        "Google ID token does not contain an email"
+      }
   }
 }
