@@ -35,6 +35,7 @@ import androidx.core.view.get
 import androidx.core.view.size
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -432,9 +433,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
         if (accountEntity.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
-          runCatching {
+          try {
             CredentialManager.create(this@MainActivity)
               .clearCredentialState(ClearCredentialStateRequest())
+          } catch (e: ClearCredentialException) {
+            e.printStackTraceIfDebugOnly()
           }
         }
 
