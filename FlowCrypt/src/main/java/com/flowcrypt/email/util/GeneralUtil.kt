@@ -55,6 +55,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.apache.commons.io.IOUtils
 import org.eclipse.angus.mail.imap.IMAPFolder
+import org.jose4j.jwt.consumer.InvalidJwtException
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import retrofit2.Retrofit
 import java.io.File
@@ -67,6 +68,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * General util methods.
@@ -500,6 +502,20 @@ class GeneralUtil {
         @Suppress("UNNECESSARY_SAFE_CALL", "KotlinRedundantDiagnosticSuppress")
         FlavorSettings.getGoogleIdToken()?.let { return@withContext it }
 
+        suspend fun retryOrThrow(message: String, cause: Exception): String {
+          if (retryAttempt > maxRetryAttemptCount) {
+            throw IllegalStateException(message, cause)
+          }
+
+          delay(10.seconds)
+          return getGoogleIdTokenSilently(
+            context,
+            maxRetryAttemptCount,
+            retryAttempt + 1,
+            accountEntity
+          )
+        }
+
         val idToken = try {
           GoogleAuthUtil.getToken(
             context,
@@ -507,33 +523,32 @@ class GeneralUtil {
             GoogleApiClientHelper.ID_TOKEN_SCOPE
           )
         } catch (e: Exception) {
-          if (retryAttempt <= maxRetryAttemptCount) {
-            // Delay for 10 seconds and try again. Max attempts == maxRetryAttemptCount.
-            delay(TimeUnit.SECONDS.toMillis(10))
-            return@withContext getGoogleIdTokenSilently(
-              context,
-              maxRetryAttemptCount,
-              retryAttempt + 1,
-              accountEntity
-            )
-          } else {
-            throw IllegalStateException("Could not receive idToken", e)
-          }
+          return@withContext retryOrThrow("Could not receive idToken", e)
         }
 
-        val claims = JwtConsumerBuilder()
-          .setExpectedAudience(GoogleApiClientHelper.SERVER_CLIENT_ID)
-          .setRequireIssuedAt()
-          .setRequireExpirationTime()
-          .setRelaxVerificationKeyValidation()
-          .setSkipSignatureVerification()
-          .build()
-          .processToClaims(idToken)
+        try {
+          val claims = JwtConsumerBuilder()
+            .setExpectedAudience(GoogleApiClientHelper.SERVER_CLIENT_ID)
+            .setRequireIssuedAt()
+            .setRequireExpirationTime()
+            .setRelaxVerificationKeyValidation()
+            .setSkipSignatureVerification()
+            .build()
+            .processToClaims(idToken)
 
-        val email = claims.getClaimValueAsString("email")
+          val email = claims.getClaimValueAsString("email")
 
-        if (!accountEntity.email.equals(email, true)) {
-          throw IllegalStateException("Received tokenId for a wrong account($email)")
+          if (!accountEntity.email.equals(email, true)) {
+            throw IllegalStateException("Received tokenId for a wrong account($email)")
+          }
+        } catch (e: InvalidJwtException) {
+          // Cached token is expired or invalid — clear it from Google Play Services cache and retry
+          try {
+            GoogleAuthUtil.clearToken(context, idToken)
+          } catch (clearTokenException: Exception) {
+            e.addSuppressed(clearTokenException)
+          }
+          return@withContext retryOrThrow("Received invalid idToken", e)
         }
 
         return@withContext idToken
