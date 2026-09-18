@@ -437,7 +437,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.9")
   ksp("androidx.annotation:annotation:1.10.0")
-  ksp("androidx.room:room-compiler:2.8.4")
+  ksp("androidx.room:room-compiler:2.8.5")
   //ACRA needs the following dependency to use a custom report sender
 
   ksp("dev.zacsweers.autoservice:auto-service-ksp:1.2.0")
@@ -460,7 +460,7 @@ dependencies {
   androidTestImplementation("androidx.test:rules:1.7.0")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.4.0")
-  androidTestImplementation("androidx.room:room-testing:2.8.4")
+  androidTestImplementation("androidx.room:room-testing:2.8.5")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.11.2")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.4.0")
@@ -473,10 +473,10 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.16.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.10")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
   testImplementation("junit:junit:4.13.2")
-  testImplementation("androidx.room:room-testing:2.8.4")
-  testImplementation("io.github.classgraph:classgraph:4.8.194")
+  testImplementation("androidx.room:room-testing:2.8.5")
+  testImplementation("io.github.classgraph:classgraph:4.8.195")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -495,8 +495,8 @@ dependencies {
   implementation("androidx.lifecycle:lifecycle-process:2.11.0")
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
   implementation("androidx.lifecycle:lifecycle-service:2.11.0")
-  implementation("androidx.room:room-runtime:2.8.4")
-  implementation("androidx.room:room-ktx:2.8.4")
+  implementation("androidx.room:room-runtime:2.8.5")
+  implementation("androidx.room:room-ktx:2.8.5")
   //we disabled warnings about paging-runtime-ktx because a newer version doesn't fit our needs
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
@@ -532,7 +532,7 @@ dependencies {
   implementation("com.burhanrashid52:photoeditor:3.1.0")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
-  implementation("org.bitbucket.b_c:jose4j:0.9.6")
+  implementation("org.bitbucket.b_c:jose4j:0.9.7")
   implementation("org.jsoup:jsoup:1.23.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
