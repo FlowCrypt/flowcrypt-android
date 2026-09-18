@@ -532,7 +532,7 @@ dependencies {
   implementation("com.burhanrashid52:photoeditor:3.1.0")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
-  implementation("org.bitbucket.b_c:jose4j:0.9.6")
+  implementation("org.bitbucket.b_c:jose4j:0.9.7")
   implementation("org.jsoup:jsoup:1.23.2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
