@@ -315,7 +315,14 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   }
 
   private fun continueAfterGoogleAuthorization() {
-    val credential = cachedGoogleIdTokenCredential ?: return
+    val credential = cachedGoogleIdTokenCredential
+    if (credential == null) {
+      // Activity Result restores the authorization result after process recreation, but not the
+      // in-memory ID token credential required by the rest of the sign-in flow. Request a fresh
+      // credential instead of persisting the sensitive token in saved instance state.
+      signInWithGmail()
+      return
+    }
     val account = credential.id
     cachedBaseFesUrlPath = GeneralUtil.genBaseFesUrlPath(useCustomerFesUrl = false)
 
