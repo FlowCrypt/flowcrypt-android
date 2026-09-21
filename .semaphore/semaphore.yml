@@ -103,8 +103,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             # wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
+            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
+            - ./script/ci-stream-instrumentation-test-progress.sh &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
@@ -118,8 +118,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
+            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
+            - ./script/ci-stream-instrumentation-test-progress.sh &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-with-mailserver.sh
 
@@ -131,8 +131,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
+            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
+            - ./script/ci-stream-instrumentation-test-progress.sh &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-enterprise.sh
 
@@ -144,8 +144,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Run filtered logging for TestRunner
-            - adb logcat -v color TestRunner:V *:S > ~/logcat_log.txt &
+            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
+            - ./script/ci-stream-instrumentation-test-progress.sh &
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-flaky.sh
 
