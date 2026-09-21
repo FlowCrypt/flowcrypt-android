@@ -103,10 +103,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             # wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
-            - ./script/ci-stream-instrumentation-test-progress.sh &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
+            # Run instrumentation tests with live progress and a final summary
+            - ./script/ci-stream-instrumentation-test-progress.sh ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
@@ -118,10 +116,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
-            - ./script/ci-stream-instrumentation-test-progress.sh &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-with-mailserver.sh
+            # Run instrumentation tests with live progress and a final summary
+            - ./script/ci-stream-instrumentation-test-progress.sh ./script/ci-instrumentation-tests-with-mailserver.sh
 
         - name: 'Instrumentation tests(enterprise)'
           execution_time_limit:
@@ -131,10 +127,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
-            - ./script/ci-stream-instrumentation-test-progress.sh &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-enterprise.sh
+            # Run instrumentation tests with live progress and a final summary
+            - ./script/ci-stream-instrumentation-test-progress.sh ./script/ci-instrumentation-tests-enterprise.sh
 
         - name: 'Instrumentation tests(flaky)'
           execution_time_limit:
@@ -144,10 +138,8 @@ blocks:
             - ./script/ci-setup-and-run-emulator.sh
             #wait until ready
             - ./script/ci-wait-for-emulator.sh
-            # Stream test progress to the job log and preserve TestRunner logcat as an artifact
-            - ./script/ci-stream-instrumentation-test-progress.sh &
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-flaky.sh
+            # Run instrumentation tests with live progress and a final summary
+            - ./script/ci-stream-instrumentation-test-progress.sh ./script/ci-instrumentation-tests-flaky.sh
 
       epilogue:
         always:
