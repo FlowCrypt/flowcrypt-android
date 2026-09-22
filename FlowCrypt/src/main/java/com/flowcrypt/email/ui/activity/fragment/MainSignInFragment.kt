@@ -73,6 +73,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.UnsupportedClientConfigurationException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.identity.AuthorizationClient
+import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
@@ -115,8 +116,9 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
   ) { result: ActivityResult ->
     if (result.resultCode == Activity.RESULT_OK && result.data != null) {
       try {
-        authorizationClient.getAuthorizationResultFromIntent(result.data!!)
-        continueAfterGoogleAuthorization()
+        val authorizationResult =
+          authorizationClient.getAuthorizationResultFromIntent(result.data!!)
+        handleGoogleAuthorizationResult(authorizationResult)
       } catch (e: ApiException) {
         handleGoogleApiException(e)
       }
@@ -306,19 +308,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     authorizationClient.authorize(
       GoogleApiClientHelper.generateGoogleAuthorizationRequest(account)
     ).addOnSuccessListener { result ->
-      if (result.hasResolution()) {
-        val pendingIntent = result.pendingIntent
-        if (pendingIntent == null) {
-          showContent()
-          showInfoSnackbar(msgText = getString(R.string.unknown_error))
-          return@addOnSuccessListener
-        }
-        forActivityResultAuthorization.launch(
-          IntentSenderRequest.Builder(pendingIntent.intentSender).build()
-        )
-      } else {
-        continueAfterGoogleAuthorization()
-      }
+      handleGoogleAuthorizationResult(result)
     }.addOnFailureListener { exception ->
       showContent()
       if (exception is ApiException) {
@@ -328,6 +318,26 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
           msgText = exception.message ?: exception.javaClass.simpleName
         )
       }
+    }
+  }
+
+  private fun handleGoogleAuthorizationResult(result: AuthorizationResult) {
+    if (result.hasResolution()) {
+      val pendingIntent = result.pendingIntent
+      if (pendingIntent == null) {
+        showContent()
+        showInfoSnackbar(msgText = getString(R.string.unknown_error))
+        return
+      }
+      forActivityResultAuthorization.launch(
+        IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+      )
+    } else if (Constants.SCOPE_MAIL_GOOGLE_COM in result.grantedScopes) {
+      continueAfterGoogleAuthorization()
+    } else {
+      cachedGoogleAccountCredential = null
+      showContent()
+      showInfoSnackbar(msgText = getString(R.string.access_was_not_granted))
     }
   }
 
