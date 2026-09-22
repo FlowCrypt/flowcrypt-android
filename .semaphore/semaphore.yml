@@ -162,4 +162,4 @@ after_pipeline:
     jobs:
       - name: Publish Results
         commands:
-          - test-results gen-pipeline-report
+          - test-results gen-pipeline-report --generate-mcp-summary
