@@ -6,14 +6,17 @@
 package com.flowcrypt.email.ui.base
 
 import android.net.Uri
+import android.os.Bundle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.util.FlavorSettings
+import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import okhttp3.mockwebserver.RecordedRequest
 import org.jose4j.jwa.AlgorithmConstraints
@@ -31,11 +34,15 @@ import org.junit.After
 abstract class BaseSignTest : BaseTest() {
 
   @After
-  fun resetGoogleIdTokenCredential() {
+  fun resetGoogleSignInMocks() {
     FlavorSettings.setGoogleIdTokenCredential(null)
+    FlavorSettings.setGoogleAuthorizationResult(null)
   }
 
-  protected fun setupAndClickSignInButton(signInAccountJson: String) {
+  protected fun setupAndClickSignInButton(
+    signInAccountJson: String,
+    grantedScopes: List<String> = listOf(Constants.SCOPE_MAIL_GOOGLE_COM)
+  ) {
     val jsonObject = JSONObject(signInAccountJson)
     FlavorSettings.setGoogleIdTokenCredential(
       GoogleIdTokenCredential(
@@ -48,6 +55,10 @@ abstract class BaseSignTest : BaseTest() {
           ?.let(Uri::parse),
         phoneNumber = null
       )
+    )
+
+    FlavorSettings.setGoogleAuthorizationResult(
+      AuthorizationResult(null, null, null, grantedScopes, null, null, Bundle.EMPTY)
     )
 
     onView(withId(R.id.buttonSignInWithGmail))

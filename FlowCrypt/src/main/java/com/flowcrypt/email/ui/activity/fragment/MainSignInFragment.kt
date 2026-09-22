@@ -245,7 +245,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
     cachedGoogleAccountCredential = null
     FlavorSettings.getGoogleIdTokenCredential()?.let {
       if (cacheGoogleAccountCredential(it)) {
-        continueAfterGoogleAuthorization()
+        authorizeGoogleAccount()
       }
       return
     }
@@ -304,6 +304,10 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
 
   private fun authorizeGoogleAccount() {
     val googleAccountCredential = cachedGoogleAccountCredential ?: return
+    FlavorSettings.getGoogleAuthorizationResult()?.let {
+      handleGoogleAuthorizationResult(it)
+      return
+    }
     val account = Account(googleAccountCredential.email, AccountEntity.ACCOUNT_TYPE_GOOGLE)
     authorizationClient.authorize(
       GoogleApiClientHelper.generateGoogleAuthorizationRequest(account)
@@ -332,7 +336,7 @@ class MainSignInFragment : BaseSingInFragment<FragmentMainSignInBinding>() {
       forActivityResultAuthorization.launch(
         IntentSenderRequest.Builder(pendingIntent.intentSender).build()
       )
-    } else if (Constants.SCOPE_MAIL_GOOGLE_COM in result.grantedScopes) {
+    } else if (GoogleApiClientHelper.isGmailAccessGranted(result.grantedScopes)) {
       continueAfterGoogleAuthorization()
     } else {
       cachedGoogleAccountCredential = null

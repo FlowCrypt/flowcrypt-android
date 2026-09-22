@@ -34,5 +34,8 @@ class GoogleApiClientHelper {
         .setAccount(account)
         .setRequestedScopes(listOf(Scope(Constants.SCOPE_MAIL_GOOGLE_COM)))
         .build()
+
+    fun isGmailAccessGranted(grantedScopes: Collection<String>): Boolean =
+      Constants.SCOPE_MAIL_GOOGLE_COM in grantedScopes
   }
 }
