@@ -10,7 +10,7 @@ set -euo pipefail
 echo "==> Pulling pre-built artifacts from Semaphore workflow storage..."
 
 mkdir -p "$HOME/.gradle/caches"
-if artifact pull workflow /tmp/build-cache.tar 2>/dev/null; then
+if artifact pull workflow build-cache.tar -d /tmp/build-cache.tar 2>/dev/null; then
   echo "Extracting Gradle build cache into ~/.gradle/caches/..."
   tar -xf /tmp/build-cache.tar -C "$HOME/.gradle/caches"
   rm -f /tmp/build-cache.tar
@@ -20,7 +20,7 @@ else
 fi
 
 mkdir -p "FlowCrypt/build/outputs"
-if artifact pull workflow /tmp/apks.tar 2>/dev/null; then
+if artifact pull workflow apks.tar -d /tmp/apks.tar 2>/dev/null; then
   echo "Extracting pre-built APKs into FlowCrypt/build/outputs/..."
   tar -xf /tmp/apks.tar -C "FlowCrypt/build/outputs"
   rm -f /tmp/apks.tar

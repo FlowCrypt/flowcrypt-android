@@ -12,10 +12,9 @@ if systemctl is-active --quiet dnsmasq && [[ -f /etc/dnsmasq.d/flowcrypt.conf ]]
   exit 0
 fi
 
-if ! command -v dnsmasq >/dev/null 2>&1 || ! command -v dig >/dev/null 2>&1; then
+if ! dpkg -s dnsmasq >/dev/null 2>&1 || ! command -v dig >/dev/null 2>&1; then
   echo "Installing DNS tools..."
-  sudo apt-get update -qq
-  sudo apt-get install -y dnsmasq dnsutils
+  sudo apt-get install -y --no-install-recommends dnsmasq dnsutils
 fi
 
 echo "Configuring dnsmasq..."
