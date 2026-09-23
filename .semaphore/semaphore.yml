@@ -46,6 +46,7 @@ global_job_config:
       - ./script/ci-install-android-sdk.sh
 blocks:
   - name: 'Build'
+    dependencies: []
     execution_time_limit:
       minutes: 20
     task:
@@ -80,20 +81,18 @@ blocks:
             - cache has_key gradle-wrapper || cache store gradle-wrapper ~/.gradle/wrapper
             - cache has_key gradle-cache-$GRADLE_SUM || cache store gradle-cache-$GRADLE_SUM ~/.gradle/caches
 
-  - name: 'Testing'
+  - name: 'Code Quality & Unit Tests'
+    dependencies: []
     task:
-      prologue:
-        commands:
-          - ./script/ci-pull-build-artifacts.sh
+      env_vars:
+        - name: INSTALL_KVM_DEPS
+          value: "0"
+        - name: RUN_KVM_CHECK
+          value: "0"
       jobs:
         - name: 'Lint(structural quality)'
           execution_time_limit:
             minutes: 15
-          env_vars:
-            - name: INSTALL_KVM_DEPS
-              value: "0"
-            - name: RUN_KVM_CHECK
-              value: "0"
           commands:
             # run Lint checks
             - ./script/ci-lint-checks.sh
@@ -101,15 +100,24 @@ blocks:
         - name: 'JUnit tests'
           execution_time_limit:
             minutes: 15
-          env_vars:
-            - name: INSTALL_KVM_DEPS
-              value: "0"
-            - name: RUN_KVM_CHECK
-              value: "0"
           commands:
             # run JUnit tests
             - ./script/ci-junit-tests.sh
+      epilogue:
+        always:
+          commands:
+            - ./script/ci-publish-test-results.sh
+        on_fail:
+          commands:
+            - ./script/ci-get-and-publish-debug-info-as-artifact.sh
 
+  - name: 'Instrumentation Tests'
+    dependencies: [ "Build" ]
+    task:
+      prologue:
+        commands:
+          - ./script/ci-pull-build-artifacts.sh
+      jobs:
         - name: 'Instrumentation tests(No email server)'
           execution_time_limit:
             minutes: 60
