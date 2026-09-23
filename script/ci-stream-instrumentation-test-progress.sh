@@ -107,7 +107,7 @@ format_test_progress() {
 
         if (non_passed_tests_file != "" && \
             (final_outcome[test_name] == "FAILED" || final_outcome[test_name] == "INCOMPLETE")) {
-          print test_name >> non_passed_tests_file
+          print final_outcome[test_name] "\t" test_name >> non_passed_tests_file
         }
       }
 
@@ -176,7 +176,12 @@ print_non_passed_tests() {
   echo "[TEST] FAILED OR INCOMPLETE TESTS"
   echo "[TEST] ------------------------------------------------------------"
 
-  while IFS= read -r raw_test_name; do
+  while IFS= read -r non_passed_test; do
+    local raw_test_name="${non_passed_test#*$'\t'}"
+    if [[ "$raw_test_name" == "$non_passed_test" ]]; then
+      raw_test_name="$non_passed_test"
+    fi
+
     local test_method="${raw_test_name%%(*}"
     local qualified_class_name="${raw_test_name#*(}"
     qualified_class_name="${qualified_class_name%)}"
