@@ -10,11 +10,13 @@ set -euo pipefail
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
   results_dir="$HOME/git/flowcrypt-android/FlowCrypt/build/outputs/androidTest-results/connected/"
   if [[ -d "$results_dir" ]]; then
-    # Android reports can retain failed entries even when Gradle's final result is successful.
-    # For a passed job, publish its authoritative final outcome instead of non-final failures.
+    # Android XML can retain non-final failures after retries. Align it with the final runner events.
     job_result="${SEMAPHORE_JOB_RESULT:-}"
-    if [[ "${job_result,,}" == "passed" ]]; then
-      python3 ./script/ci-normalize-passed-instrumentation-results.py "$results_dir"
+    non_passed_tests_file="${INSTRUMENTATION_NON_PASSED_TESTS_FILE:-$HOME/instrumentation-non-passed-tests.txt}"
+    if [[ "${job_result,,}" == "passed" || -f "$non_passed_tests_file" ]]; then
+      python3 ./script/ci-normalize-passed-instrumentation-results.py \
+        "$results_dir" \
+        "$non_passed_tests_file"
     fi
     test-results publish "$results_dir" --name "Instrumentation tests" --generate-mcp-summary
   else

@@ -8,9 +8,9 @@
 set -euo pipefail
 
 format_test_progress() {
-  local failed_tests_file="${1:-}"
+  local non_passed_tests_file="${1:-}"
 
-  awk -v failed_tests_file="$failed_tests_file" '
+  awk -v non_passed_tests_file="$non_passed_tests_file" '
     function readable_test_name(raw_name, opening_parenthesis, method_name, qualified_class_name, class_name) {
       opening_parenthesis = index(raw_name, "(")
 
@@ -43,20 +43,15 @@ format_test_progress() {
         run_started_at = started_at[test_name]
       }
       outcome[test_name] = ""
+      final_outcome[test_name] = "INCOMPLETE"
       print_progress(test_name, "STARTED", -1)
       next
     }
 
     /^failed: / {
       test_name = substr($0, length("failed: ") + 1)
-      if (outcome[test_name] != "FAILED") {
-        failed_count++
-        outcome[test_name] = "FAILED"
-        if (failed_tests_file != "") {
-          print test_name >> failed_tests_file
-          close(failed_tests_file)
-        }
-      }
+      outcome[test_name] = "FAILED"
+      final_outcome[test_name] = "FAILED"
       elapsed_seconds = (test_name in started_at) ? systime() - started_at[test_name] : -1
       print_progress(test_name, "FAILED", elapsed_seconds)
       next
@@ -64,10 +59,8 @@ format_test_progress() {
 
     /^assumption failed: / {
       test_name = substr($0, length("assumption failed: ") + 1)
-      if (outcome[test_name] != "SKIPPED") {
-        skipped_count++
-        outcome[test_name] = "SKIPPED"
-      }
+      outcome[test_name] = "SKIPPED"
+      final_outcome[test_name] = "SKIPPED"
       elapsed_seconds = (test_name in started_at) ? systime() - started_at[test_name] : -1
       print_progress(test_name, "SKIPPED", elapsed_seconds)
       next
@@ -75,10 +68,8 @@ format_test_progress() {
 
     /^ignored: / {
       test_name = substr($0, length("ignored: ") + 1)
-      if (outcome[test_name] != "SKIPPED") {
-        skipped_count++
-        outcome[test_name] = "SKIPPED"
-      }
+      outcome[test_name] = "SKIPPED"
+      final_outcome[test_name] = "SKIPPED"
       print_progress(test_name, "SKIPPED", -1)
       next
     }
@@ -88,7 +79,7 @@ format_test_progress() {
 
       if (outcome[test_name] == "") {
         elapsed_seconds = (test_name in started_at) ? systime() - started_at[test_name] : -1
-        passed_count++
+        final_outcome[test_name] = "PASSED"
         print_progress(test_name, "PASSED", elapsed_seconds)
       }
 
@@ -97,11 +88,31 @@ format_test_progress() {
     }
 
     END {
-      incomplete_count = 0
       for (test_name in started_at) {
         if (outcome[test_name] == "") {
+          final_outcome[test_name] = "INCOMPLETE"
+        }
+      }
+
+      for (test_name in final_outcome) {
+        if (final_outcome[test_name] == "PASSED") {
+          passed_count++
+        } else if (final_outcome[test_name] == "FAILED") {
+          failed_count++
+        } else if (final_outcome[test_name] == "SKIPPED") {
+          skipped_count++
+        } else if (final_outcome[test_name] == "INCOMPLETE") {
           incomplete_count++
         }
+
+        if (non_passed_tests_file != "" && \
+            (final_outcome[test_name] == "FAILED" || final_outcome[test_name] == "INCOMPLETE")) {
+          print test_name >> non_passed_tests_file
+        }
+      }
+
+      if (non_passed_tests_file != "") {
+        close(non_passed_tests_file)
       }
 
       total_count = passed_count + failed_count + skipped_count + incomplete_count
@@ -152,9 +163,9 @@ github_repository_slug() {
   esac
 }
 
-print_failed_tests() {
-  local failed_tests_file="$1"
-  [[ -s "$failed_tests_file" ]] || return 0
+print_non_passed_tests() {
+  local non_passed_tests_file="$1"
+  [[ -s "$non_passed_tests_file" ]] || return 0
 
   local repository_slug
   local commit_sha
@@ -162,7 +173,7 @@ print_failed_tests() {
   commit_sha="${SEMAPHORE_GIT_SHA:-$(git rev-parse HEAD)}"
 
   echo ""
-  echo "[TEST] FAILED TESTS"
+  echo "[TEST] FAILED OR INCOMPLETE TESTS"
   echo "[TEST] ------------------------------------------------------------"
 
   while IFS= read -r raw_test_name; do
@@ -205,7 +216,7 @@ print_failed_tests() {
     else
       echo "[TEST] - ${display_name}: ${source_path}"
     fi
-  done < "$failed_tests_file"
+  done < "$non_passed_tests_file"
 
   echo "[TEST] ------------------------------------------------------------"
 }
@@ -223,7 +234,7 @@ fi
 logcat_log_file="${LOGCAT_LOG_FILE:-$HOME/logcat_log.txt}"
 stream_dir="$(mktemp -d)"
 logcat_fifo="$stream_dir/logcat"
-failed_tests_file="$stream_dir/failed-tests.txt"
+non_passed_tests_file="${INSTRUMENTATION_NON_PASSED_TESTS_FILE:-$HOME/instrumentation-non-passed-tests.txt}"
 logcat_pid=""
 formatter_pid=""
 
@@ -243,7 +254,7 @@ cleanup() {
     wait "$formatter_pid" 2>/dev/null || true
   fi
 
-  print_failed_tests "$failed_tests_file"
+  print_non_passed_tests "$non_passed_tests_file"
   rm -rf "$stream_dir"
 
   return "$test_command_result"
@@ -255,9 +266,9 @@ trap cleanup EXIT
 # Keep the original events as an artifact and print concise progress to the CI log.
 adb logcat -c
 mkfifo "$logcat_fifo"
-touch "$failed_tests_file"
+: > "$non_passed_tests_file"
 
-tee "$logcat_log_file" < "$logcat_fifo" | format_test_progress "$failed_tests_file" &
+tee "$logcat_log_file" < "$logcat_fifo" | format_test_progress "$non_passed_tests_file" &
 formatter_pid=$!
 
 adb logcat -v raw TestRunner:I '*:S' > "$logcat_fifo" &
