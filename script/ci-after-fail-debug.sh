@@ -7,7 +7,13 @@
 
 set -euo pipefail
 
+ADB_BIN="$(command -v adb)"
+ADB_COMMAND_TIMEOUT="${ADB_COMMAND_TIMEOUT:-15s}"
 SUMMARY_FAILURES=0
+
+adb() {
+  timeout "$ADB_COMMAND_TIMEOUT" "$ADB_BIN" "$@"
+}
 
 print_section() {
   local title="$1"

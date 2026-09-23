@@ -162,6 +162,7 @@ after_pipeline:
     jobs:
       - name: Publish Results
         commands:
+          - checkout
           - sudo apt-get install -y jq
           - test-results gen-pipeline-report --generate-mcp-summary
           - artifact pull workflow "test-results/${SEMAPHORE_PIPELINE_ID}.json" -d pipeline-test-results.json

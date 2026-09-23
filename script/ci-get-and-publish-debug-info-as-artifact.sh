@@ -7,6 +7,13 @@
 
 set -euo pipefail
 
+ADB_BIN="$(command -v adb)"
+ADB_COMMAND_TIMEOUT="${ADB_COMMAND_TIMEOUT:-15s}"
+
+adb() {
+  timeout "$ADB_COMMAND_TIMEOUT" "$ADB_BIN" "$@"
+}
+
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Lint.* ]]; then
   # Do nothing for 'Lint(structural quality)' job.
   exit 0
@@ -23,8 +30,11 @@ fi
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
   # store full logcat log
   echo "Collect logcat logs as logcat.txt.gz for $SEMAPHORE_JOB_NAME"
-  adb logcat -d | gzip > "$HOME/logcat.txt.gz"
-  artifact push job "$HOME/logcat.txt.gz"
+  if adb logcat -d | gzip > "$HOME/logcat.txt.gz"; then
+    artifact push job "$HOME/logcat.txt.gz"
+  else
+    echo "Could not collect logcat within $ADB_COMMAND_TIMEOUT, skipping"
+  fi
 
   echo "Store the device's screenshot for $SEMAPHORE_JOB_NAME"
   if adb shell screencap -p /sdcard/screencap.png; then
