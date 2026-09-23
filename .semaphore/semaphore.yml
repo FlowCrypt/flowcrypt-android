@@ -115,14 +115,14 @@ blocks:
             minutes: 60
           matrix:
             - env_var: EMULATOR
-              values: [ "0", "1", "2", "3" ]
+              values: [ "0", "1", "2", "3", "4", "5" ]
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
             # wait until ready
             - ./script/ci-wait-for-emulator.sh
             # Run instrumentation tests with live progress and a final summary
-            - ./script/ci-stream-instrumentation-test-progress.sh ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
+            - ./script/ci-stream-instrumentation-test-progress.sh ./script/ci-instrumentation-tests-without-mailserver.sh 6 $EMULATOR
 
         - name: 'Instrumentation tests(with email server)'
           execution_time_limit:
