@@ -92,7 +92,10 @@ check_cmdline_tools_latest_or_fail
 # KVM deps (as in your script)
 # -----------------------------
 if [[ "$INSTALL_KVM_DEPS" == "1" ]]; then
-  sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+  if ! dpkg -s qemu-kvm >/dev/null 2>&1; then
+    sudo apt-get update -qq
+    sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+  fi
 fi
 if [[ "$RUN_KVM_CHECK" == "1" ]]; then
   sudo kvm-ok

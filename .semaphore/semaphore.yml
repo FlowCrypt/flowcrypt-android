@@ -25,15 +25,12 @@ global_job_config:
       value: /home/semaphore/Android/Sdk
   prologue:
     commands:
-      - sudo apt-get update
       # use JAVA 21 by default
       - sem-version java 21
       # general settings
       - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
-      # fix DNS to ping *.localhost and *.flowcrypt.test
-      - ./script/ci-setup-DNS.sh
       # init environment variables
       - export GRADLE_SUM=$(checksum build.gradle.kts)-$(checksum FlowCrypt/build.gradle.kts)
       - export SDK_SUM=$(checksum ./script/ci-install-android-sdk.sh)
@@ -52,6 +49,11 @@ blocks:
     execution_time_limit:
       minutes: 20
     task:
+      env_vars:
+        - name: INSTALL_KVM_DEPS
+          value: "0"
+        - name: RUN_KVM_CHECK
+          value: "0"
       jobs:
         - name: 'Build Project'
           commands:
@@ -59,11 +61,14 @@ blocks:
             - cat /proc/cpuinfo
             # print Java version
             - java -version
-            # compile project
-            - ./gradlew --console=plain --no-daemon --build-cache assembleConsumerUiTests
+            # compile project and test artifacts to prime build cache
+            - ./gradlew --console=plain --no-daemon --build-cache assembleConsumerUiTests packageConsumerUiTestsAndroidTest packageEnterpriseUiTestsAndroidTest
       epilogue:
         on_pass:
           commands:
+            # push workflow artifacts for test jobs
+            - ./script/ci-push-build-artifacts.sh
+
             # store app cache
             - echo "Store the app cache"
             - cache has_key $APP_GRADLE_CACHE || cache store $APP_GRADLE_CACHE .gradle
@@ -77,10 +82,18 @@ blocks:
 
   - name: 'Testing'
     task:
+      prologue:
+        commands:
+          - ./script/ci-pull-build-artifacts.sh
       jobs:
         - name: 'Lint(structural quality)'
           execution_time_limit:
             minutes: 15
+          env_vars:
+            - name: INSTALL_KVM_DEPS
+              value: "0"
+            - name: RUN_KVM_CHECK
+              value: "0"
           commands:
             # run Lint checks
             - ./script/ci-lint-checks.sh
@@ -88,6 +101,11 @@ blocks:
         - name: 'JUnit tests'
           execution_time_limit:
             minutes: 15
+          env_vars:
+            - name: INSTALL_KVM_DEPS
+              value: "0"
+            - name: RUN_KVM_CHECK
+              value: "0"
           commands:
             # run JUnit tests
             - ./script/ci-junit-tests.sh

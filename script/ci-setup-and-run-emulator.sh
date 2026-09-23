@@ -7,6 +7,7 @@
 
 set -euo pipefail
 
+./script/ci-setup-DNS.sh
 AVD_RAM_SIZE=2048 ./script/create-avd.sh
 EMULATOR_GPU_MODE=auto \
 EMULATOR_READ_ONLY=1 \
