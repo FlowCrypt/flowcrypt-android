@@ -35,11 +35,10 @@ global_job_config:
       - export GRADLE_SUM=$(checksum build.gradle.kts)-$(checksum FlowCrypt/build.gradle.kts)
       - export SDK_SUM=$(checksum ./script/ci-install-android-sdk.sh)
       - export APP_GRADLE_CACHE=project-gradle-cache-$GRADLE_SUM # project .gradle cache, per Gradle config hash
-      - export ANDROID_SDK_CACHE=android-sdk-$SDK_SUM # Android SDK cache, per SDK installer hash
+      - if [ "${INSTALL_EMULATOR:-1}" = "0" ]; then export ANDROID_SDK_CACHE=android-sdk-slim-$SDK_SUM; cache restore $ANDROID_SDK_CACHE; else export ANDROID_SDK_CACHE=android-sdk-full-$SDK_SUM; cache restore $ANDROID_SDK_CACHE,android-sdk-d839d0895100d9722fb794bbb9677f92,android-sdk-$SDK_SUM; fi
       # restore app caches
       - cache restore $APP_GRADLE_CACHE
       # restore global caches
-      - cache restore $ANDROID_SDK_CACHE
       - cache restore gradle-wrapper
       - cache restore gradle-cache-$GRADLE_SUM
       # Install Android dependencies if needed
@@ -51,6 +50,8 @@ blocks:
       minutes: 20
     task:
       env_vars:
+        - name: INSTALL_EMULATOR
+          value: "0"
         - name: INSTALL_KVM_DEPS
           value: "0"
         - name: RUN_KVM_CHECK
@@ -85,6 +86,8 @@ blocks:
     dependencies: []
     task:
       env_vars:
+        - name: INSTALL_EMULATOR
+          value: "0"
         - name: INSTALL_KVM_DEPS
           value: "0"
         - name: RUN_KVM_CHECK
@@ -114,6 +117,9 @@ blocks:
   - name: 'Instrumentation Tests'
     dependencies: [ "Build" ]
     task:
+      env_vars:
+        - name: INSTALL_EMULATOR
+          value: "1"
       prologue:
         commands:
           - ./script/ci-pull-build-artifacts.sh
@@ -172,6 +178,9 @@ blocks:
           commands:
             # export tests result if needed
             - ./script/ci-publish-test-results.sh
+
+            # store full android sdk cache if not present
+            - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE $ANDROID_HOME || true
 
             # do additional actions if needed
             - ./script/ci-after-success-actions-for-instrumentation-tests.sh

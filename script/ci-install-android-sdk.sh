@@ -22,11 +22,17 @@ fi
 # -----------------------------
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+INSTALL_EMULATOR="${INSTALL_EMULATOR:-1}"
 INSTALL_KVM_DEPS="${INSTALL_KVM_DEPS:-1}"
 RUN_KVM_CHECK="${RUN_KVM_CHECK:-1}"
 ANDROID_PLATFORM="${ANDROID_PLATFORM:-android-36}"
 ANDROID_SYSTEM_IMAGE="${ANDROID_SYSTEM_IMAGE:-system-images;android-36;google_apis;x86_64}"
 ANDROID_BUILD_TOOLS="${ANDROID_BUILD_TOOLS:-}"
+
+if [[ "$INSTALL_EMULATOR" == "0" ]]; then
+  INSTALL_KVM_DEPS=0
+  RUN_KVM_CHECK=0
+fi
 
 # -----------------------------
 # Pin cmdline-tools archive here
@@ -105,7 +111,15 @@ fi
 # Install SDK if ~/Android doesn't exist (as in your script)
 # -----------------------------
 if [[ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]]; then
-  echo "$ANDROID_HOME already exists, skipping installation"
+  if [[ "$INSTALL_EMULATOR" != "0" ]] && [[ ! -d "$ANDROID_HOME/system-images" ]]; then
+    echo "$ANDROID_HOME exists, but emulator components are missing. Installing emulator and system images..."
+    ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "emulator" | grep -v = || true)
+    if [[ -n "$ANDROID_SYSTEM_IMAGE" ]]; then
+      (echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SYSTEM_IMAGE}" > /dev/null | grep -v = || true)
+    fi
+  else
+    echo "$ANDROID_HOME already exists, skipping installation"
+  fi
 else
   echo "$ANDROID_HOME does not exist, installing"
   mkdir -p "$ANDROID_HOME"
@@ -136,11 +150,15 @@ else
   (echo "yes" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null | grep -v = || true)
   ( sleep 5; echo "y" ) | ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platforms;${ANDROID_PLATFORM}" > /dev/null | grep -v = || true)
   ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platform-tools" | grep -v = || true)
-  ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "emulator" | grep -v = || true)
+  if [[ "$INSTALL_EMULATOR" != "0" ]]; then
+    ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "emulator" | grep -v = || true)
+    if [[ -n "$ANDROID_SYSTEM_IMAGE" ]]; then
+      (echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SYSTEM_IMAGE}" > /dev/null | grep -v = || true)
+    fi
+  fi
   if [[ -n "$ANDROID_BUILD_TOOLS" ]]; then
     ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "build-tools;${ANDROID_BUILD_TOOLS}" | grep -v = || true)
   fi
-  (echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SYSTEM_IMAGE}" > /dev/null | grep -v = || true)
 fi
 
 # Uncomment this for debug
