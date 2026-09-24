@@ -189,3 +189,5 @@ after_pipeline:
       - name: Publish Results
         commands:
           - test-results gen-pipeline-report
+          - artifact yank workflow build-cache.tar || true
+          - artifact yank workflow apks.tar || true
