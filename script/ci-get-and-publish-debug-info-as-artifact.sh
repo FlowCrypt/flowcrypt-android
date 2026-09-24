@@ -7,6 +7,13 @@
 
 set -euo pipefail
 
+ADB_BIN="$(command -v adb)"
+ADB_COMMAND_TIMEOUT="${ADB_COMMAND_TIMEOUT:-15s}"
+
+adb() {
+  timeout "$ADB_COMMAND_TIMEOUT" "$ADB_BIN" "$@"
+}
+
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Lint.* ]]; then
   # Do nothing for 'Lint(structural quality)' job.
   exit 0
@@ -22,14 +29,18 @@ fi
 
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
   if adb get-state 2>/dev/null | grep -q "device"; then
+    # store full logcat log
     echo "Collect logcat logs as logcat.txt.gz for $SEMAPHORE_JOB_NAME"
-    timeout 30s adb logcat -d | gzip > "$HOME/logcat.txt.gz" || true
-    artifact push job "$HOME/logcat.txt.gz" || true
+    if adb logcat -d | gzip > "$HOME/logcat.txt.gz"; then
+      artifact push job "$HOME/logcat.txt.gz"
+    else
+      echo "Could not collect logcat within $ADB_COMMAND_TIMEOUT, skipping"
+    fi
 
     echo "Store the device's screenshot for $SEMAPHORE_JOB_NAME"
-    if timeout 15s adb shell screencap -p /sdcard/screencap.png 2>/dev/null; then
-      if timeout 15s adb pull "/sdcard/screencap.png" 2>/dev/null; then
-        artifact push job screencap.png || true
+    if adb shell screencap -p /sdcard/screencap.png; then
+      if adb pull "/sdcard/screencap.png"; then
+        artifact push job screencap.png
       else
         echo "Could not pull screencap.png"
       fi
@@ -40,4 +51,3 @@ if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
     echo "No connected device found for $SEMAPHORE_JOB_NAME, skipping logcat and screenshot."
   fi
 fi
-

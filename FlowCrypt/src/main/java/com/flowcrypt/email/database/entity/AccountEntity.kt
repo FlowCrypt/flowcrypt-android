@@ -21,7 +21,8 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.parcelize.IgnoredOnParcel
@@ -103,22 +104,20 @@ data class AccountEntity(
     get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
 
   constructor(
-    googleSignInAccount: GoogleSignInAccount,
+    googleIdTokenCredential: GoogleIdTokenCredential,
     clientConfiguration: ClientConfiguration? = null,
     useCustomerFesUrl: Boolean,
     useStartTlsForSmtp: Boolean = false,
   ) : this(
-    email = requireNotNull(googleSignInAccount.email).lowercase(),
-    accountType = googleSignInAccount.account?.type?.lowercase() ?: EmailUtil.getDomain(
-      requireNotNull(googleSignInAccount.email)
-    ).ifEmpty { ACCOUNT_TYPE_UNKNOWN },
-    displayName = googleSignInAccount.displayName,
-    givenName = googleSignInAccount.givenName,
-    familyName = googleSignInAccount.familyName,
-    photoUrl = googleSignInAccount.photoUrl?.toString(),
+    email = requireGoogleAccountEmail(googleIdTokenCredential).lowercase(),
+    accountType = GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE,
+    displayName = googleIdTokenCredential.displayName,
+    givenName = googleIdTokenCredential.givenName,
+    familyName = googleIdTokenCredential.familyName,
+    photoUrl = googleIdTokenCredential.profilePictureUri?.toString(),
     isEnabled = true,
     isActive = false,
-    username = requireNotNull(googleSignInAccount.email),
+    username = requireGoogleAccountEmail(googleIdTokenCredential),
     password = "",
     imapServer = GmailConstants.GMAIL_IMAP_SERVER,
     imapPort = GmailConstants.GMAIL_IMAP_PORT,
@@ -354,5 +353,10 @@ data class AccountEntity(
     const val ACCOUNT_TYPE_GOOGLE = "com.google"
     const val ACCOUNT_TYPE_OUTLOOK = "outlook.com"
     const val ACCOUNT_TYPE_UNKNOWN = "unknown"
+
+    private fun requireGoogleAccountEmail(credential: GoogleIdTokenCredential): String =
+      requireNotNull(credential.email?.takeIf { it.isNotBlank() }) {
+        "Google ID token does not contain an email"
+      }
   }
 }
