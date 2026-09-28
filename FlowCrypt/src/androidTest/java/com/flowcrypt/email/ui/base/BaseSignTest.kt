@@ -5,27 +5,27 @@
 
 package com.flowcrypt.email.ui.base
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.flowcrypt.email.util.FlavorSettings
+import com.google.android.gms.auth.api.identity.AuthorizationResult
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import okhttp3.mockwebserver.RecordedRequest
 import org.jose4j.jwa.AlgorithmConstraints
 import org.jose4j.jws.AlgorithmIdentifiers
 import org.jose4j.jws.JsonWebSignature
 import org.jose4j.jwt.JwtClaims
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
+import org.json.JSONObject
+import org.junit.After
 
 
 /**
@@ -33,17 +33,33 @@ import org.jose4j.jwt.consumer.JwtConsumerBuilder
  */
 abstract class BaseSignTest : BaseTest() {
 
-  protected fun setupAndClickSignInButton(signInAccountJson: String) {
-    val intent = Intent()
-    intent.putExtra("googleSignInAccount", GoogleSignInAccount.zaa(signInAccountJson))
+  @After
+  fun resetGoogleSignInMocks() {
+    FlavorSettings.setGoogleIdTokenCredential(null)
+    FlavorSettings.setGoogleAuthorizationResult(null)
+  }
 
-    val signInIntent = GoogleSignIn.getClient(
-      getTargetContext(),
-      GoogleApiClientHelper.generateGoogleSignInOptions()
-    ).signInIntent
+  protected fun setupAndClickSignInButton(
+    signInAccountJson: String,
+    grantedScopes: List<String> = listOf(Constants.SCOPE_MAIL_GOOGLE_COM)
+  ) {
+    val jsonObject = JSONObject(signInAccountJson)
+    FlavorSettings.setGoogleIdTokenCredential(
+      GoogleIdTokenCredential(
+        id = jsonObject.getString("email"),
+        idToken = jsonObject.getString("tokenId"),
+        displayName = jsonObject.optString("displayName").ifEmpty { null },
+        familyName = jsonObject.optString("familyName").ifEmpty { null },
+        givenName = jsonObject.optString("givenName").ifEmpty { null },
+        profilePictureUri = jsonObject.optString("photoUrl").takeIf { it.isNotEmpty() }
+          ?.let(Uri::parse),
+        phoneNumber = null
+      )
+    )
 
-    intending(hasComponent(signInIntent.component))
-      .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
+    FlavorSettings.setGoogleAuthorizationResult(
+      AuthorizationResult(null, null, null, grantedScopes, null, null, Bundle.EMPTY)
+    )
 
     onView(withId(R.id.buttonSignInWithGmail))
       .check(matches(isDisplayed()))

@@ -13,6 +13,7 @@ import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
@@ -50,6 +51,8 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -57,6 +60,7 @@ import org.junit.rules.TestName
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * @author Denys Bondarenko
@@ -72,9 +76,11 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
   )
 
   private val testNameRule = TestName()
+  private val setupRequestCount = AtomicInteger()
   private val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
+        setupRequestCount.incrementAndGet()
         val gson = ApiHelper.getInstance(getTargetContext()).gson
 
         when {
@@ -156,6 +162,48 @@ class MainSignInFragmentFlowTest : BaseSignTest() {
     .around(mockWebServerRule)
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
+
+  @Test
+  fun testSignInStopsWhenGmailScopeIsMissing() {
+    checkSignInStopsWithoutGmailAccess(listOf("openid", "email", "profile"))
+  }
+
+  @Test
+  fun testSignInStopsWhenNoScopesAreGranted() {
+    checkSignInStopsWithoutGmailAccess(emptyList())
+  }
+
+  @Test
+  fun testSignInCanBeRetriedAfterGmailAccessIsDenied() {
+    checkSignInStopsWithoutGmailAccess(emptyList())
+
+    setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_GMAIL))
+
+    // The existing Gmail fixture returns this error during the backup search,
+    // proving that granting access lets setup proceed past authorization.
+    checkIsSnackBarDisplayed(EMAIL_GMAIL)
+    assertTrue(
+      "Setup should contact the server after Gmail access is granted",
+      setupRequestCount.get() > 0
+    )
+  }
+
+  private fun checkSignInStopsWithoutGmailAccess(grantedScopes: List<String>) {
+    setupAndClickSignInButton(
+      genMockGoogleSignInAccountJson(EMAIL_GMAIL),
+      grantedScopes = grantedScopes
+    )
+
+    checkIsSnackBarDisplayed(getResString(R.string.access_was_not_granted))
+    onView(withId(R.id.buttonSignInWithGmail))
+      .check(matches(isDisplayed()))
+      .check(matches(isEnabled()))
+    assertTrue(
+      "No account should be saved without Gmail access",
+      roomDatabase.accountDao().getAccounts().isEmpty()
+    )
+    assertEquals("Setup must stop before contacting FES, EKM or Gmail", 0, setupRequestCount.get())
+  }
 
   @Test
   fun testClientConfigurationCombinationNotSupportedForMustAutogenPassPhraseQuietlyExisted() {

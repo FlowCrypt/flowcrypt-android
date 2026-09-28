@@ -510,11 +510,15 @@ dependencies {
   implementation("androidx.navigation:navigation-ui-ktx:2.10.1")
   implementation("androidx.navigation:navigation-runtime-ktx:2.10.1")
   implementation("androidx.webkit:webkit:1.16.0")
+  implementation("androidx.credentials:credentials:1.6.0")
+  implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
 
-  implementation("com.google.android.gms:play-services-base:18.10.1")
-  implementation("com.google.android.gms:play-services-auth:21.6.0")
+  implementation("com.google.android.gms:play-services-base:18.11.0")
+  implementation("com.google.android.gms:play-services-auth:22.0.0")
   implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
+  implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
+
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.api-client:google-api-client-android:2.9.1")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20251201-2.0.0")
@@ -529,7 +533,7 @@ dependencies {
 
   implementation("com.github.bumptech.glide:glide:5.0.9")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
-  implementation("com.burhanrashid52:photoeditor:3.1.0")
+  implementation("com.burhanrashid52:photoeditor:3.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")

@@ -10,7 +10,7 @@ import android.net.Uri
 import com.flowcrypt.email.api.retrofit.request.model.CrashReportModel
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.gson.GsonBuilder
 import org.acra.ReportField
 import org.acra.config.CoreConfiguration
@@ -89,16 +89,15 @@ class CustomReportSender(config: CoreConfiguration) : HttpSender(config, null, n
   ) {
     //add Authorization
     val finalHeaders = (headers ?: emptyMap()).toMutableMap().apply {
-      val googleSignInClient = GoogleSignIn.getClient(
+      val activeAccount = FlowCryptRoomDatabase.getDatabase(context)
+        .accountDao()
+        .getActiveAccount()
+        ?: throw IllegalStateException("Active account is missing")
+      val idToken = GoogleAuthUtil.getToken(
         context,
-        GoogleApiClientHelper.generateGoogleSignInOptions()
+        activeAccount.account,
+        GoogleApiClientHelper.ID_TOKEN_SCOPE
       )
-      val silentSignIn = googleSignInClient.silentSignIn()
-      if (!silentSignIn.isSuccessful || silentSignIn.result.isExpired) {
-        throw IllegalStateException("Could not receive idToken")
-      }
-
-      val idToken = silentSignIn.result.idToken
       put("Authorization", "Bearer $idToken")
     }
 
