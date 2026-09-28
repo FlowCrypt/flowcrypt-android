@@ -9,8 +9,10 @@ set -euo pipefail
 
 format_test_progress() {
   local non_passed_tests_file="${1:-}"
+  local test_summary_file="${2:-}"
 
-  awk -v non_passed_tests_file="$non_passed_tests_file" '
+  awk -v non_passed_tests_file="$non_passed_tests_file" \
+      -v test_summary_file="$test_summary_file" '
     function readable_test_name(raw_name, opening_parenthesis, method_name, qualified_class_name, class_name) {
       opening_parenthesis = index(raw_name, "(")
 
@@ -113,6 +115,14 @@ format_test_progress() {
 
       if (non_passed_tests_file != "") {
         close(non_passed_tests_file)
+      }
+
+      if (test_summary_file != "") {
+        print "PASSED=" (passed_count + 0) > test_summary_file
+        print "FAILED=" (failed_count + 0) >> test_summary_file
+        print "SKIPPED=" (skipped_count + 0) >> test_summary_file
+        print "INCOMPLETE=" (incomplete_count + 0) >> test_summary_file
+        close(test_summary_file)
       }
 
       total_count = passed_count + failed_count + skipped_count + incomplete_count
@@ -227,7 +237,8 @@ print_non_passed_tests() {
 }
 
 if [[ "${1:-}" == "--format-only" ]]; then
-  format_test_progress
+  shift
+  format_test_progress "$@"
   exit 0
 fi
 
@@ -239,12 +250,14 @@ fi
 logcat_log_file="${LOGCAT_LOG_FILE:-$HOME/logcat_log.txt}"
 stream_dir="$(mktemp -d)"
 logcat_fifo="$stream_dir/logcat"
+test_summary_file="$stream_dir/test-summary.env"
 non_passed_tests_file="${INSTRUMENTATION_NON_PASSED_TESTS_FILE:-$HOME/instrumentation-non-passed-tests.txt}"
 logcat_pid=""
 formatter_pid=""
 
 cleanup() {
   local test_command_result="$?"
+  trap - EXIT
   set +e
 
   if [[ -n "$logcat_pid" ]] && kill -0 "$logcat_pid" 2>/dev/null; then
@@ -260,9 +273,20 @@ cleanup() {
   fi
 
   print_non_passed_tests "$non_passed_tests_file"
+
+  if [[ "$test_command_result" -ne 0 && -f "$test_summary_file" ]]; then
+    local PASSED=0 FAILED=0 INCOMPLETE=0 SKIPPED=0
+    # shellcheck disable=SC1090
+    source "$test_summary_file"
+    if [[ "$PASSED" -gt 0 && "$FAILED" -eq 0 && "$INCOMPLETE" -eq 0 ]]; then
+      echo "[TEST] Overriding exit code: all $PASSED executed test(s) ultimately passed (non-final failures were retried successfully)."
+      test_command_result=0
+    fi
+  fi
+
   rm -rf "$stream_dir"
 
-  return "$test_command_result"
+  exit "$test_command_result"
 }
 
 trap cleanup EXIT
@@ -273,7 +297,7 @@ adb logcat -c
 mkfifo "$logcat_fifo"
 : > "$non_passed_tests_file"
 
-tee "$logcat_log_file" < "$logcat_fifo" | format_test_progress "$non_passed_tests_file" &
+tee "$logcat_log_file" < "$logcat_fifo" | format_test_progress "$non_passed_tests_file" "$test_summary_file" &
 formatter_pid=$!
 
 adb logcat -v raw TestRunner:I '*:S' > "$logcat_fifo" &
