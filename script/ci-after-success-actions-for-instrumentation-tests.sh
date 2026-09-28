@@ -22,8 +22,11 @@ if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
   echo "Store screenshots"
   if adb shell test -d /sdcard/Pictures; then
     rm -rf Pictures
-    adb pull "/sdcard/Pictures" Pictures
-    artifact push job Pictures
+    if adb pull "/sdcard/Pictures" Pictures 2>/dev/null && [[ -d Pictures && "$(ls -A Pictures 2>/dev/null)" ]]; then
+      artifact push job Pictures || true
+    else
+      echo "No screenshots found in /sdcard/Pictures, skipping"
+    fi
   else
     echo "No /sdcard/Pictures directory found, skipping"
   fi

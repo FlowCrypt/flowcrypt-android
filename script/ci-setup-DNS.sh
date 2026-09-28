@@ -7,8 +7,15 @@
 
 set -euo pipefail
 
-echo "Installing DNS tools..."
-sudo apt install -y dnsmasq dnsutils
+if systemctl is-active --quiet dnsmasq && [[ -f /etc/dnsmasq.d/flowcrypt.conf ]]; then
+  echo "dnsmasq is already configured and running."
+  exit 0
+fi
+
+if ! dpkg -s dnsmasq >/dev/null 2>&1 || ! command -v dig >/dev/null 2>&1; then
+  echo "Installing DNS tools..."
+  sudo apt-get install -y --no-install-recommends dnsmasq dnsutils
+fi
 
 echo "Configuring dnsmasq..."
 sudo tee /etc/dnsmasq.d/flowcrypt.conf >/dev/null <<'EOF'
