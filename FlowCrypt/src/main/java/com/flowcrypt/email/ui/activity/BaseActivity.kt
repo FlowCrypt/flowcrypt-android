@@ -103,6 +103,25 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
     LogsUtil.d(tag, "onNewIntent = $intent")
   }
 
+  protected fun sanitizeIntentForNavigation(
+    intent: Intent,
+    strippedDeepLinkDestinationIds: Set<Int>,
+    removeAllNavigationDeepLinkExtras: Boolean = false
+  ) {
+    val originalExtras = intent.extras ?: return
+    val shouldStripAll = removeAllNavigationDeepLinkExtras
+    val deepLinkIds = originalExtras.getIntArray(EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS)
+    val containsBlockedInternalDestination =
+      deepLinkIds?.any { it in strippedDeepLinkDestinationIds } == true
+    if (!shouldStripAll && !containsBlockedInternalDestination) {
+      return
+    }
+    val sanitizedExtras = Bundle(originalExtras).apply {
+      NAVIGATION_DEEP_LINK_EXTRA_KEYS.forEach(::remove)
+    }
+    intent.replaceExtras(sanitizedExtras)
+  }
+
   override fun onStart() {
     super.onStart()
     LogsUtil.d(tag, "onStart")
@@ -214,5 +233,17 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
         PassPhrasesInRAMService.stop(this)
       }
     }
+  }
+
+  companion object {
+    private const val EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS =
+      "android-support-nav:controller:deepLinkIds"
+    private val NAVIGATION_DEEP_LINK_EXTRA_KEYS = setOf(
+      EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS,
+      "android-support-nav:controller:deepLinkArgs",
+      "android-support-nav:controller:deepLinkExtras",
+      "android-support-nav:controller:deepLinkHandled",
+      "android-support-nav:controller:deepLinkIntent",
+    )
   }
 }
