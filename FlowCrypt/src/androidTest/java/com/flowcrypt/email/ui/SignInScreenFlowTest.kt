@@ -8,8 +8,6 @@ package com.flowcrypt.email.ui.activity
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents.intended
-import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
@@ -25,6 +23,11 @@ import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import org.hamcrest.Matchers.allOf
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -65,7 +68,9 @@ class SignInScreenFlowTest : BaseTest() {
       .check(matches(isDisplayed()))
       .perform(click())
     //check that the Google Sign-in screen displayed
-    intended(toPackage("com.google.android.gms"))
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    assertTrue(device.wait(Until.hasObject(By.pkg("com.google.android.gms")), 5000))
+    device.pressBack()
   }
 
   @Test
