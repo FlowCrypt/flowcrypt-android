@@ -436,7 +436,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.9")
-  ksp("androidx.annotation:annotation:1.10.0")
+  ksp("androidx.annotation:annotation:1.11.0")
   ksp("androidx.room:room-compiler:2.8.5")
   //ACRA needs the following dependency to use a custom report sender
 
@@ -506,9 +506,9 @@ dependencies {
   implementation("androidx.activity:activity-ktx:1.13.0")
   implementation("androidx.fragment:fragment-ktx:1.9.1")
   implementation("androidx.work:work-runtime-ktx:2.11.2")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.10.1")
-  implementation("androidx.navigation:navigation-ui-ktx:2.10.1")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.10.1")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.10.2")
+  implementation("androidx.navigation:navigation-ui-ktx:2.10.2")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.10.2")
   implementation("androidx.webkit:webkit:1.16.0")
   implementation("androidx.credentials:credentials:1.6.0")
   implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
