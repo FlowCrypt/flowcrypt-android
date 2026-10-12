@@ -19,7 +19,10 @@ fun <T> Iterable<T>?.toPGPPublicKeyRingCollection(): PGPPublicKeyRingCollection?
   val keysStream = ByteArrayInputStream(this.joinToString(separator = "\n").toByteArray())
   return keysStream.use {
     ArmoredInputStream(it).use { armoredInputStream ->
-      PGPainless.readKeyRing().publicKeyRingCollection(armoredInputStream)
+      PGPPublicKeyRingCollection(
+        PGPainless.getInstance().readKey().parseKeys(armoredInputStream)
+          .map { it.getPGPPublicKeyRing() }
+      )
     }
   }
 }
@@ -29,7 +32,10 @@ fun <T> Iterable<T>?.toPGPSecretKeyRingCollection(): PGPSecretKeyRingCollection?
   val keysStream = ByteArrayInputStream(this.joinToString(separator = "\n").toByteArray())
   return keysStream.use {
     ArmoredInputStream(it).use { armoredInputStream ->
-      PGPainless.readKeyRing().secretKeyRingCollection(armoredInputStream)
+      PGPSecretKeyRingCollection(
+        PGPainless.getInstance().readKey().parseKeys(armoredInputStream)
+          .map { it.pgpSecretKeyRing }
+      )
     }
   }
 }

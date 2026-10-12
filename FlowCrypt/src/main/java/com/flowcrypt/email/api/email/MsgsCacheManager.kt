@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import okio.buffer
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.pgpainless.PGPainless
 import java.io.File
 import java.io.IOException
@@ -110,8 +111,10 @@ object MsgsCacheManager {
 
       PgpEncryptAndOrSign.encryptAndOrSign(
         destOutputStream = bufferedSink.outputStream(),
-        pgpPublicKeyRingCollection = PGPainless.readKeyRing()
-          .publicKeyRingCollection(accountEntity.servicePgpPrivateKey)
+        pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+          PGPainless.getInstance().readKey().parseKeys(accountEntity.servicePgpPrivateKey)
+            .map { it.getPGPPublicKeyRing() }
+        )
       ) { out ->
         out.use { outputStream ->
           action.invoke(outputStream)

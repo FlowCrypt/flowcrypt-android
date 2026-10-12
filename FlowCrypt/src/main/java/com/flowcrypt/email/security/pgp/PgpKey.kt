@@ -174,7 +174,7 @@ object PgpKey {
     for (keyRing in secretKeyRings) {
       val protector = SecretKeyRingProtector.unlockEachKeyWith(passphrase, keyRing)
       for (key in keyRing.secretKeys) {
-        UnlockSecretKey.unlockSecretKey(key, protector)
+        UnlockSecretKey.unlockSecretKey(key, protector, PGPainless.getInstance().algorithmPolicy)
       }
     }
   }

@@ -15,6 +15,7 @@ import com.flowcrypt.email.security.pgp.PgpMsg
 import com.flowcrypt.email.util.cache.DiskLruCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
@@ -34,8 +35,10 @@ suspend fun DiskLruCache.Snapshot.processing(
       val inputStream =
         context.contentResolver.openInputStream(uri) ?: throw java.lang.IllegalStateException()
 
-      val keys = PGPainless.readKeyRing()
-        .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
+      val keys = PGPSecretKeyRingCollection(
+        PGPainless.getInstance().readKey().parseKeys(accountEntity.servicePgpPrivateKey)
+          .map { it.pgpSecretKeyRing }
+      )
 
       val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
         srcInputStream = inputStream,
