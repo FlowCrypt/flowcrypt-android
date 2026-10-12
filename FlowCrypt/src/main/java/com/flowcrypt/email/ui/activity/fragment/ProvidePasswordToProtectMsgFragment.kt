@@ -87,7 +87,7 @@ class ProvidePasswordToProtectMsgFragment :
       navController?.navigateUp()
       setFragmentResult(
         args.requestKey,
-        bundleOf(KEY_PASSWORD to (binding?.eTPassphrase?.text ?: ""))
+        Bundle().apply { putString(KEY_PASSWORD, binding?.eTPassphrase?.text?.toString() ?: "") }
       )
     }
   }

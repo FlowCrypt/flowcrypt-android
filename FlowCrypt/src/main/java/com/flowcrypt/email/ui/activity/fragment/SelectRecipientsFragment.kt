@@ -59,7 +59,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(KEY_RECIPIENTS to ArrayList(listOf(recipientEntityWithPgpMarker.toRecipientEntity())))
+            Bundle().apply { putParcelableArrayList(KEY_RECIPIENTS, ArrayList(listOf(recipientEntityWithPgpMarker.toRecipientEntity()))) }
           )
         }
       })

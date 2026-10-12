@@ -11,7 +11,6 @@ import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -96,16 +95,16 @@ class DecryptAttachmentDialogFragment : BaseDialogFragment() {
               val newFileName = FilenameUtils.getBaseName(args.attachmentInfo.name)
               setFragmentResult(
                 args.requestKey,
-                bundleOf(
-                  KEY_ATTACHMENT to args.attachmentInfo.copy(
+                Bundle().apply {
+                  putParcelable(KEY_ATTACHMENT, args.attachmentInfo.copy(
                     uri = null,
                     type = newFileName.getPossibleAndroidMimeType() ?: args.attachmentInfo.type,
                     rawData = byteArray,
                     name = newFileName
-                  ),
-                  KEY_REQUEST_CODE to args.requestCode,
-                  KEY_INCOMING_BUNDLE to args.bundle
-                )
+                  ))
+                  putInt(KEY_REQUEST_CODE, args.requestCode)
+                  putBundle(KEY_INCOMING_BUNDLE, args.bundle)
+                }
               )
             }
           }

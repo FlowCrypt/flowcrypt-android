@@ -68,7 +68,7 @@ class EditScreenshotDialogFragment : BaseDialogFragment() {
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(KEY_SCREENSHOT to UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100))
+            Bundle().apply { putByteArray(KEY_SCREENSHOT, UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100)) }
           )
         }
       })

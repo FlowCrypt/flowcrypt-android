@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
 import android.os.Bundle
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -61,7 +60,7 @@ class UpdateRecipientPublicKeyDialogFragment : BaseUpdateKeyDialogFragment() {
             it.data?.let { isUpdated ->
               setFragmentResult(
                 args.requestKey,
-                bundleOf(KEY_UPDATE_RECIPIENT_PUBLIC_KEY to isUpdated)
+                Bundle().apply { putBoolean(KEY_UPDATE_RECIPIENT_PUBLIC_KEY, isUpdated) }
               )
             }
             countingIdlingResource?.decrementSafely(this@UpdateRecipientPublicKeyDialogFragment)

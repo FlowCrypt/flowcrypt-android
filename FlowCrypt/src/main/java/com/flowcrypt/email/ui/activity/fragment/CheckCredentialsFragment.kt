@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -67,7 +66,9 @@ class CheckCredentialsFragment : BaseFragment<FragmentCheckCredentialsBinding>()
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it)
+              Bundle().apply {
+                putSerializable(KEY_CHECK_ACCOUNT_SETTINGS_RESULT, it)
+              }
             )
             countingIdlingResource?.decrementSafely(this@CheckCredentialsFragment)
           }

@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.core.util.size
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -136,7 +135,7 @@ class ChoosePrivateKeyDialogFragment : BaseDialogFragment(), ListProgressBehavio
   private fun sendResult(fingerprints: List<String>) {
     setFragmentResult(
       args.requestKey,
-      bundleOf(KEY_RESULT to fingerprints.toTypedArray())
+      Bundle().apply { putSerializable(KEY_RESULT, fingerprints.toTypedArray()) }
     )
   }
 

@@ -111,7 +111,10 @@ class CreatePrivateKeyFirstFragment :
       navController?.navigateUp()
       setFragmentResult(
         args.requestKey,
-        bundleOf(KEY_CREATED_KEY to pgpKeyRingDetails, KEY_ACCOUNT to args.accountEntity)
+        Bundle().apply {
+          putParcelable(KEY_CREATED_KEY, pgpKeyRingDetails)
+          putParcelable(KEY_ACCOUNT, args.accountEntity)
+        }
       )
     }
   }

@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -98,7 +97,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(KEY_IMPORT_PUB_KEYS_RESULT to it.data)
+              Bundle().apply { putSerializable(KEY_IMPORT_PUB_KEYS_RESULT, it.data) }
             )
             countingIdlingResource?.decrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
           }

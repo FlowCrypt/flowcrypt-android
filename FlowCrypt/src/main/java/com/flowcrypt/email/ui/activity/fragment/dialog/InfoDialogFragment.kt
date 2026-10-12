@@ -50,10 +50,10 @@ class InfoDialogFragment : BaseDialogFragment() {
         args.requestKey?.let { requestKey ->
           setFragmentResult(
             requestKey,
-            bundleOf(
-              KEY_REQUEST_CODE to args.requestCode,
-              KEY_REQUEST_INCOMING_BUNDLE to args.bundle
-            )
+            Bundle().apply {
+              putInt(KEY_REQUEST_CODE, args.requestCode)
+              putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
+            }
           )
         }
       }

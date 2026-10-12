@@ -79,10 +79,10 @@ class DecryptDownloadedAttachmentsBeforeForwardingDialogFragment : BaseDialogFra
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(
-                KEY_REQUEST_KEY to args.requestKey,
-                KEY_RESULT to it,
-              )
+              Bundle().apply {
+                putString(KEY_REQUEST_KEY, args.requestKey)
+                putSerializable(KEY_RESULT, it)
+              }
             )
           }
 

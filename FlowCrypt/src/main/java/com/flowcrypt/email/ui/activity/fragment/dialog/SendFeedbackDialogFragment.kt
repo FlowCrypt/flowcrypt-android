@@ -83,7 +83,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(KEY_RESULT to true)
+              Bundle().apply { putBoolean(KEY_RESULT, true) }
             )
             countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
           }

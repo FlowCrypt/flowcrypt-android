@@ -128,7 +128,7 @@ class ImportMissingPublicKeyFragment :
             it.data?.let { recipientWithPubKeys ->
               setFragmentResult(
                 requestKey = args.requestKey,
-                result = bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
+                result = Bundle().apply { putParcelable(KEY_RECIPIENT_WITH_PUB_KEY, recipientWithPubKeys) }
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)

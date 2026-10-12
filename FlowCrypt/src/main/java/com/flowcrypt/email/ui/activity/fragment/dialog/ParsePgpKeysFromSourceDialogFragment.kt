@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.LongDef
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -118,7 +117,7 @@ class ParsePgpKeysFromSourceDialogFragment : BaseDialogFragment() {
                 navController?.navigateUp()
                 setFragmentResult(
                   args.requestKey,
-                  bundleOf(KEY_PARSED_KEYS to keys)
+                  Bundle().apply { putSerializable(KEY_PARSED_KEYS, keys?.toTypedArray()) }
                 )
               }
             }

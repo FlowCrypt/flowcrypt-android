@@ -15,7 +15,6 @@ import android.view.ViewGroup
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.core.util.size
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -194,10 +193,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   private fun sendResult(atts: MutableList<AttachmentInfo>) {
     setFragmentResult(
       args.requestKey,
-      bundleOf(
-        KEY_ATTACHMENT_INFO_LIST to atts,
-        KEY_INCOMING_BUNDLE to args.bundle
-      )
+      Bundle().apply {
+        putParcelableArrayList(KEY_ATTACHMENT_INFO_LIST, ArrayList(atts))
+        putBundle(KEY_INCOMING_BUNDLE, args.bundle)
+      }
     )
   }
 

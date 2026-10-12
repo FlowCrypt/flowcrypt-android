@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
-import androidx.core.os.bundleOf
+import android.os.Bundle
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -26,7 +26,7 @@ class UpdatePrivateKeyDialogFragment : BaseUpdateKeyDialogFragment() {
     navController?.navigateUp()
     setFragmentResult(
       args.requestKey,
-      bundleOf(KEY_NEW_PRIVATE_KEY to args.newPgpKeyRingDetails)
+      Bundle().apply { putParcelable(KEY_NEW_PRIVATE_KEY, args.newPgpKeyRingDetails) }
     )
   }
 
