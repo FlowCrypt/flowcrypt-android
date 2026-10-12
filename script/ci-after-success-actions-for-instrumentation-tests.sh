@@ -7,6 +7,13 @@
 
 set -euo pipefail
 
+ADB_BIN="$(command -v adb)"
+ADB_COMMAND_TIMEOUT="${ADB_COMMAND_TIMEOUT:-15s}"
+
+adb() {
+  timeout "$ADB_COMMAND_TIMEOUT" "$ADB_BIN" "$@"
+}
+
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
     # print debug info about connected device
     echo "Print connected devices"
