@@ -7,12 +7,18 @@
 
 set -euo pipefail
 
-if [[ "$#" -ne 1 || ! "$1" =~ ^[0-9]+$ ]]; then
-  echo "Usage: $0 <test-process-group-id>"
+if [[ "$#" -ne 1 || ( "$1" != "--check-log" && ! "$1" =~ ^[0-9]+$ ) ]]; then
+  echo "Usage: $0 <test-process-group-id|--check-log>"
   exit 2
 fi
 
+watchdog_mode="watch"
 test_process_group_id="$1"
+if [[ "$1" == "--check-log" ]]; then
+  watchdog_mode="check-log"
+  test_process_group_id=""
+fi
+
 adb_bin="${ADB_BIN:-$(command -v adb)}"
 emulator_pid_file="${EMULATOR_PID_FILE:-$HOME/emulator.pid}"
 emulator_log_file="${EMULATOR_LOG_FILE:-$HOME/emulator.log}"
@@ -24,9 +30,6 @@ poll_interval_seconds="${EMULATOR_WATCHDOG_INTERVAL_SECONDS:-15}"
 max_consecutive_failures="${EMULATOR_WATCHDOG_MAX_FAILURES:-6}"
 term_grace_seconds="${EMULATOR_WATCHDOG_TERM_GRACE_SECONDS:-10}"
 fatal_device_error_regex="device([[:space:]]+['\"]?[^[:space:]]+['\"]?[[:space:]]+is)?[[:space:]]+offline|device[[:space:]]+['\"]?[^[:space:]]+['\"]?[[:space:]]+(not found|disconnected)|no devices/emulators found|Can.t find service: (package|settings)"
-
-: > "$watchdog_log_file"
-exec > >(tee -a "$watchdog_log_file") 2>&1
 
 timestamp() {
   date -u '+%Y-%m-%d %H:%M:%S UTC'
@@ -49,10 +52,21 @@ test_process_group_is_alive() {
 }
 
 test_output_has_fatal_device_error() {
-  [[ -f "$test_command_log_file" ]] || return 1
+  [[ -r "$test_command_log_file" ]] || return 1
 
   grep -Eiq "$fatal_device_error_regex" "$test_command_log_file"
 }
+
+if [[ "$watchdog_mode" == "check-log" ]]; then
+  if test_output_has_fatal_device_error; then
+    grep -Ein "$fatal_device_error_regex" "$test_command_log_file" | tail -n 10 >&2 || true
+    exit 0
+  fi
+  exit 1
+fi
+
+: > "$watchdog_log_file"
+exec > >(tee -a "$watchdog_log_file") 2>&1
 
 device_is_healthy() {
   local device_state

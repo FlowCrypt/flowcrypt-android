@@ -208,6 +208,9 @@ print_summary() {
     }
     NR > 1 {
       samples++
+      total_cpu += $2
+      total_cpu_pressure += $7
+      if ($2 >= 90) cpu_above_90_samples++
       if ($2 > max_cpu) max_cpu = $2
       if ($3 > max_load) max_load = $3
       if ($4 > max_mem_used) max_mem_used = $4
@@ -226,11 +229,14 @@ print_summary() {
       print "======================================================================"
       printf "Samples: %d\n", samples
       printf "Logical CPUs: %d\n", logical_cpus
+      printf "Average CPU: %.1f%%\n", samples ? total_cpu / samples : 0
       printf "Peak CPU: %.1f%%\n", max_cpu
+      printf "Samples at >=90%% CPU: %d/%d (%.1f%%)\n", cpu_above_90_samples, samples, samples ? 100 * cpu_above_90_samples / samples : 0
       printf "Peak 1m load: %.2f\n", max_load
       printf "Peak used memory: %.0f MB\n", max_mem_used
       printf "Minimum available memory: %.0f MB\n", min_mem_available
       printf "Peak swap usage: %.0f MB\n", max_swap_used
+      printf "Average CPU pressure avg10: %.2f%%\n", samples ? total_cpu_pressure / samples : 0
       printf "Peak CPU pressure avg10: %.2f%%\n", max_cpu_pressure
       printf "Peak memory pressure avg10: %.2f%%\n", max_memory_pressure
       printf "Peak IO pressure avg10: %.2f%%\n", max_io_pressure

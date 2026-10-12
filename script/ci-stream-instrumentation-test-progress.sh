@@ -346,6 +346,16 @@ test_command_result=0
 wait "$test_command_pid" || test_command_result=$?
 test_command_pid=""
 
+# A short Gradle run can finish between watchdog probes. Inspect the completed
+# command log before stopping the watchdog so device-offline failures cannot be
+# reported as BUILD SUCCESSFUL with zero executed tests.
+if ./script/ci-emulator-watchdog.sh --check-log; then
+  echo "[TEST] Instrumentation command completed after a fatal emulator transport/service error."
+  printf 'Fatal emulator error found in completed instrumentation output at %s\n' \
+    "$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > "$watchdog_failure_file"
+  test_command_result=86
+fi
+
 if kill -0 "$watchdog_pid" 2>/dev/null; then
   kill "$watchdog_pid" 2>/dev/null || true
 fi
