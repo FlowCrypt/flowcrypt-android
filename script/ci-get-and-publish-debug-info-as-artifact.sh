@@ -18,7 +18,7 @@ push_file_if_present() {
   local path="$1"
   local label="$2"
 
-  if [[ -f "$path" ]]; then
+  if [[ -e "$path" ]]; then
     echo "Store $label for $SEMAPHORE_JOB_NAME"
     artifact push job "$path" || true
   else
@@ -40,6 +40,11 @@ else
 fi
 
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
+  ./script/ci-monitor-host-resources.sh stop || true
+  ./script/ci-monitor-host-resources.sh summary || true
+  push_file_if_present "${HOST_RESOURCE_METRICS_FILE:-$HOME/host-resource-metrics.csv}" "host resource metrics"
+  push_file_if_present "${HOST_RESOURCE_MONITOR_LOG_FILE:-$HOME/host-resource-monitor.log}" "host resource monitor log"
+  push_file_if_present "/tmp/system-metrics" "Semaphore system metrics"
   push_file_if_present "${EMULATOR_LOG_FILE:-$HOME/emulator.log}" "emulator log"
   push_file_if_present "${INSTRUMENTATION_COMMAND_LOG_FILE:-$HOME/instrumentation-command.log}" "instrumentation command log"
   push_file_if_present "${EMULATOR_WATCHDOG_LOG_FILE:-$HOME/emulator-watchdog.log}" "emulator watchdog log"

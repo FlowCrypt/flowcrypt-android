@@ -15,6 +15,19 @@ adb() {
 }
 
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
+  ./script/ci-monitor-host-resources.sh stop || true
+  ./script/ci-monitor-host-resources.sh summary || true
+
+  for resource_file in \
+    "${HOST_RESOURCE_METRICS_FILE:-$HOME/host-resource-metrics.csv}" \
+    "${HOST_RESOURCE_MONITOR_LOG_FILE:-$HOME/host-resource-monitor.log}" \
+    "/tmp/system-metrics"; do
+    if [[ -e "$resource_file" ]]; then
+      echo "Store host resource metrics: $resource_file"
+      artifact push job "$resource_file" || true
+    fi
+  done
+
     # print debug info about connected device
     echo "Print connected devices"
     adb devices
