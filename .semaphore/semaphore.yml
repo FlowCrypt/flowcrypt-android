@@ -9,7 +9,7 @@ execution_time_limit:
 
 fail_fast:
   stop:
-    when: "branch != 'master'" # Stopping all jobs on the first failure
+    when: "false" # Temporarily allow all shards to complete to verify the entire test suite
 
 auto_cancel:
   running:

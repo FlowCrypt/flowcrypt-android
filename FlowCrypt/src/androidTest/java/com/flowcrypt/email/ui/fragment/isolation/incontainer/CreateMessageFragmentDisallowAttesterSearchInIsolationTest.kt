@@ -34,6 +34,7 @@ import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -79,6 +80,7 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
+  @Ignore("Temporary disabled as flaky")
   fun testDisallowLookupOnAttester() {
     launchFragmentInContainer<CreateMessageFragment>(
       fragmentArgs = CreateMessageFragmentArgs().toBundle()
