@@ -252,8 +252,8 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                     setFragmentResult(
                       args.requestKey,
                       Bundle().apply {
-                        putSerializable(KEY_RESULT, unlockedKeysFingerprints.toTypedArray())
-                        putSerializable(KEY_PREDEFINED_FINGERPRINTS, args.fingerprints)
+                        putStringArray(KEY_RESULT, unlockedKeysFingerprints.toTypedArray())
+                        putStringArray(KEY_PREDEFINED_FINGERPRINTS, args.fingerprints)
                         putInt(KEY_REQUEST_CODE, args.requestCode)
                         putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
                       }
@@ -266,8 +266,8 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                   setFragmentResult(
                     args.requestKey,
                     Bundle().apply {
-                      putSerializable(KEY_RESULT, unlockedKeysFingerprints.toTypedArray())
-                      putSerializable(KEY_PREDEFINED_FINGERPRINTS, args.fingerprints)
+                      putStringArray(KEY_RESULT, unlockedKeysFingerprints.toTypedArray())
+                      putStringArray(KEY_PREDEFINED_FINGERPRINTS, args.fingerprints)
                       putInt(KEY_REQUEST_CODE, args.requestCode)
                       putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
                     }

@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -18,11 +18,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportAllPubKeysFromSourceBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
+import com.flowcrypt.email.extensions.androidx.fragment.app.navController
+import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.launchAndRepeatWithLifecycle
-import com.flowcrypt.email.extensions.androidx.fragment.app.navController
-import com.flowcrypt.email.extensions.androidx.fragment.app.toast
 import com.flowcrypt.email.jetpack.viewmodel.CachedPubKeysKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ImportPubKeysFromSourceSharedViewModel
 
@@ -97,7 +97,7 @@ class ImportAllPubKeysFromSourceDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              Bundle().apply { putSerializable(KEY_IMPORT_PUB_KEYS_RESULT, it.data) }
+              Bundle().apply { putBoolean(KEY_IMPORT_PUB_KEYS_RESULT, it.data == true) }
             )
             countingIdlingResource?.decrementSafely(this@ImportAllPubKeysFromSourceDialogFragment)
           }

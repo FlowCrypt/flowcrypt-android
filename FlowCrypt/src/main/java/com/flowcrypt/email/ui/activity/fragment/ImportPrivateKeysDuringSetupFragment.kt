@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -122,17 +122,20 @@ class ImportPrivateKeysDuringSetupFragment :
           setFragmentResult(
             args.requestKey,
             Bundle().apply {
-              putParcelableArrayList(KEY_UNLOCKED_PRIVATE_KEYS, ArrayList(keys?.map {
-                it.copy(
-                  importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
-                    importSourceType = if (activeUri != null) {
-                      KeyImportDetails.SourceType.FILE
-                    } else {
-                      KeyImportDetails.SourceType.CLIPBOARD
-                    }
-                  ),
-                )
-              } ?: emptyList()))
+              putParcelableArrayList(
+                KEY_UNLOCKED_PRIVATE_KEYS,
+                keys?.map {
+                  it.copy(
+                    importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                      importSourceType = if (activeUri != null) {
+                        KeyImportDetails.SourceType.FILE
+                      } else {
+                        KeyImportDetails.SourceType.CLIPBOARD
+                      }
+                    ),
+                  )
+                }?.let { ArrayList(it) }
+              )
             }
           )
         }

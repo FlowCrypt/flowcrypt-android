@@ -135,7 +135,7 @@ class ChoosePrivateKeyDialogFragment : BaseDialogFragment(), ListProgressBehavio
   private fun sendResult(fingerprints: List<String>) {
     setFragmentResult(
       args.requestKey,
-      Bundle().apply { putSerializable(KEY_RESULT, fingerprints.toTypedArray()) }
+      Bundle().apply { putStringArray(KEY_RESULT, fingerprints.toTypedArray()) }
     )
   }
 

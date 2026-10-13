@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -13,17 +13,16 @@ import android.view.inputmethod.EditorInfo
 import android.widget.CheckedTextView
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
-import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentProvidePasswordToProtectMsgBinding
-import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.toast
+import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.jetpack.viewmodel.WebPortalPasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.UIUtil
@@ -87,7 +86,7 @@ class ProvidePasswordToProtectMsgFragment :
       navController?.navigateUp()
       setFragmentResult(
         args.requestKey,
-        Bundle().apply { putString(KEY_PASSWORD, binding?.eTPassphrase?.text?.toString() ?: "") }
+        Bundle().apply { putCharSequence(KEY_PASSWORD, binding?.eTPassphrase?.text ?: "") }
       )
     }
   }
