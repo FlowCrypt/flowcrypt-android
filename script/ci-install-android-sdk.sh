@@ -29,15 +29,6 @@ ANDROID_PLATFORM="${ANDROID_PLATFORM:-android-36}"
 ANDROID_SYSTEM_IMAGE="${ANDROID_SYSTEM_IMAGE:-system-images;android-36;google_apis;x86_64}"
 ANDROID_BUILD_TOOLS="${ANDROID_BUILD_TOOLS:-}"
 
-# Keep the emulator reproducible. Installing the floating "emulator" SDK package
-# made cache misses silently move CI from 37.1.11 to 37.2.12. The latter is the
-# version used by the device-offline failures tracked in #2649.
-# Source: https://developer.android.com/studio/emulator_archive
-ANDROID_EMULATOR_VERSION="${ANDROID_EMULATOR_VERSION:-37.1.11}"
-ANDROID_EMULATOR_ARCHIVE="${ANDROID_EMULATOR_ARCHIVE:-emulator-linux_x64-15917651.zip}"
-ANDROID_EMULATOR_ARCHIVE_SHA256="${ANDROID_EMULATOR_ARCHIVE_SHA256:-95771e0ae431897b2a4bd2d97fa095f29a8b0624a7b216baf529f9306161c266}"
-ANDROID_EMULATOR_ARCHIVE_URL="${ANDROID_EMULATOR_ARCHIVE_URL:-https://redirector.gvt1.com/edgedl/android/repository/${ANDROID_EMULATOR_ARCHIVE}}"
-
 if [[ "$INSTALL_EMULATOR" == "0" ]]; then
   INSTALL_KVM_DEPS=0
   RUN_KVM_CHECK=0
@@ -103,80 +94,6 @@ check_cmdline_tools_latest_or_fail() {
 # Run the check early
 check_cmdline_tools_latest_or_fail
 
-installed_emulator_version() {
-  [[ -x "$ANDROID_HOME/emulator/emulator" ]] || return 0
-
-  "$ANDROID_HOME/emulator/emulator" -version 2>&1 \
-    | sed -nE 's/^Android emulator version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' \
-    | head -n 1
-}
-
-install_pinned_emulator() {
-  local current_version
-  current_version="$(installed_emulator_version)"
-
-  if [[ "$current_version" == "$ANDROID_EMULATOR_VERSION" ]]; then
-    echo "Android Emulator $ANDROID_EMULATOR_VERSION is already installed"
-    return 0
-  fi
-
-  echo "Installing pinned Android Emulator $ANDROID_EMULATOR_VERSION (current: ${current_version:-not installed})"
-
-  local install_dir
-  local archive_path
-  local previous_dir="$ANDROID_HOME/emulator.previous"
-  install_dir="$(mktemp -d "$ANDROID_HOME/.emulator-install.XXXXXX")"
-  archive_path="$install_dir/$ANDROID_EMULATOR_ARCHIVE"
-
-  curl --fail --location --retry 3 --output "$archive_path" "$ANDROID_EMULATOR_ARCHIVE_URL"
-  echo "$ANDROID_EMULATOR_ARCHIVE_SHA256  $archive_path" | sha256sum --check --status
-  unzip -q "$archive_path" -d "$install_dir"
-
-  if [[ ! -x "$install_dir/emulator/emulator" ]]; then
-    echo "ERROR: $ANDROID_EMULATOR_ARCHIVE does not contain emulator/emulator"
-    rm -rf "$install_dir"
-    exit 1
-  fi
-
-  # The manual archive does not always include package.xml. Preserve it so
-  # sdkmanager continues to recognise the package in restored SDK caches.
-  if [[ -f "$ANDROID_HOME/emulator/package.xml" && ! -f "$install_dir/emulator/package.xml" ]]; then
-    cp "$ANDROID_HOME/emulator/package.xml" "$install_dir/emulator/package.xml"
-  fi
-
-  if [[ -f "$install_dir/emulator/package.xml" ]]; then
-    local emulator_major
-    local emulator_minor
-    local emulator_micro
-    IFS='.' read -r emulator_major emulator_minor emulator_micro <<< "$ANDROID_EMULATOR_VERSION"
-    sed -i -E \
-      "s#(<localPackage path=\"emulator\"[^>]*>.*<revision>)<major>[0-9]+</major><minor>[0-9]+</minor><micro>[0-9]+</micro>(</revision>)#\\1<major>${emulator_major}</major><minor>${emulator_minor}</minor><micro>${emulator_micro}</micro>\\2#" \
-      "$install_dir/emulator/package.xml"
-  fi
-
-  rm -rf "$previous_dir"
-  if [[ -d "$ANDROID_HOME/emulator" ]]; then
-    mv "$ANDROID_HOME/emulator" "$previous_dir"
-  fi
-
-  if mv "$install_dir/emulator" "$ANDROID_HOME/emulator"; then
-    rm -rf "$previous_dir" "$install_dir"
-  else
-    rm -rf "$ANDROID_HOME/emulator"
-    [[ ! -d "$previous_dir" ]] || mv "$previous_dir" "$ANDROID_HOME/emulator"
-    rm -rf "$install_dir"
-    exit 1
-  fi
-
-  current_version="$(installed_emulator_version)"
-  if [[ "$current_version" != "$ANDROID_EMULATOR_VERSION" ]]; then
-    echo "ERROR: Expected Android Emulator $ANDROID_EMULATOR_VERSION, got ${current_version:-unknown}"
-    exit 1
-  fi
-
-  echo "Installed Android Emulator $current_version"
-}
-
 # -----------------------------
 # KVM deps (as in your script)
 # -----------------------------
@@ -196,6 +113,7 @@ fi
 if [[ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]]; then
   if [[ "$INSTALL_EMULATOR" != "0" ]] && [[ ! -d "$ANDROID_HOME/system-images" ]]; then
     echo "$ANDROID_HOME exists, but emulator components are missing. Installing emulator and system images..."
+    ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "emulator" | grep -v = || true)
     if [[ -n "$ANDROID_SYSTEM_IMAGE" ]]; then
       (echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SYSTEM_IMAGE}" > /dev/null | grep -v = || true)
     fi
@@ -233,6 +151,7 @@ else
   ( sleep 5; echo "y" ) | ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platforms;${ANDROID_PLATFORM}" > /dev/null | grep -v = || true)
   ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platform-tools" | grep -v = || true)
   if [[ "$INSTALL_EMULATOR" != "0" ]]; then
+    ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "emulator" | grep -v = || true)
     if [[ -n "$ANDROID_SYSTEM_IMAGE" ]]; then
       (echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SYSTEM_IMAGE}" > /dev/null | grep -v = || true)
     fi
@@ -240,10 +159,6 @@ else
   if [[ -n "$ANDROID_BUILD_TOOLS" ]]; then
     ("${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "build-tools;${ANDROID_BUILD_TOOLS}" | grep -v = || true)
   fi
-fi
-
-if [[ "$INSTALL_EMULATOR" != "0" ]]; then
-  install_pinned_emulator
 fi
 
 # Uncomment this for debug
