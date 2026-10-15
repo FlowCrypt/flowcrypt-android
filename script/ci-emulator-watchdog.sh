@@ -92,11 +92,11 @@ device_is_healthy() {
 
     package_service="$(service check package)"
     echo "$package_service"
-    echo "$package_service" | grep -q "found" || exit 12
+    echo "$package_service" | grep -qx "Service package: found" || exit 12
 
     settings_service="$(service check settings)"
     echo "$settings_service"
-    echo "$settings_service" | grep -q "found" || exit 13
+    echo "$settings_service" | grep -qx "Service settings: found" || exit 13
   ' 2>&1)"; then
     echo "Android guest health probe failed:"
     echo "$guest_health"
