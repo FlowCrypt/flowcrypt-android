@@ -117,11 +117,21 @@ blocks:
   - name: 'Instrumentation Tests'
     dependencies: [ "Build" ]
     task:
+      agent:
+        machine:
+          type: f1-standard-2
+          os_image: ubuntu2404
       env_vars:
         - name: INSTALL_EMULATOR
           value: "1"
+        # Keep one of the two host CPUs available for Gradle, ADB, and the
+        # Semaphore agent. Instrumentation tests may take longer, but this
+        # reduces the risk of starving the processes that keep the job alive.
+        - name: EMULATOR_CORES
+          value: "1"
       prologue:
         commands:
+          - ./script/ci-monitor-host-resources.sh start
           - ./script/ci-pull-build-artifacts.sh
       jobs:
         - name: 'Instrumentation tests(No email server)'
@@ -176,6 +186,9 @@ blocks:
       epilogue:
         always:
           commands:
+            # stop host resource monitoring before publishing its final metrics
+            - ./script/ci-monitor-host-resources.sh stop
+
             # export tests result if needed
             - ./script/ci-publish-test-results.sh
 
