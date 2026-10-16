@@ -736,17 +736,17 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     }
 
     return if (gmailMessage != null) {
+      val raw = Base64.getUrlEncoder().withoutPadding().encodeToString(
+        ByteArrayOutputStream().apply {
+          GmaiAPIMimeMessage(
+            Session.getInstance(Properties()),
+            gmailMessage
+          ).writeTo(this)
+        }.toByteArray()
+      )
       MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(
-          Base64.getEncoder().encodeToString(
-            ByteArrayOutputStream().apply {
-              GmaiAPIMimeMessage(
-                Session.getInstance(Properties()),
-                gmailMessage
-              ).writeTo(this)
-            }.toByteArray()
-          )
-        )
+        .setHeader("Content-Type", Json.MEDIA_TYPE)
+        .setBody("""{"raw":"$raw"}""")
     } else {
       MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
