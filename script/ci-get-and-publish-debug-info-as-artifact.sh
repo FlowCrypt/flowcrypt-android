@@ -7,6 +7,25 @@
 
 set -euo pipefail
 
+ADB_BIN="$(command -v adb)"
+ADB_COMMAND_TIMEOUT="${ADB_COMMAND_TIMEOUT:-15s}"
+
+adb() {
+  timeout "$ADB_COMMAND_TIMEOUT" "$ADB_BIN" "$@"
+}
+
+push_file_if_present() {
+  local path="$1"
+  local label="$2"
+
+  if [[ -e "$path" ]]; then
+    echo "Store $label for $SEMAPHORE_JOB_NAME"
+    artifact push job "$path" || true
+  else
+    echo "$label does not exist: $path"
+  fi
+}
+
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Lint.* ]]; then
   # Do nothing for 'Lint(structural quality)' job.
   exit 0
@@ -21,19 +40,36 @@ else
 fi
 
 if [[ "$SEMAPHORE_JOB_NAME" =~ ^Instrumentation.* ]]; then
-  # store full logcat log
-  echo "Collect logcat logs as logcat.txt.gz for $SEMAPHORE_JOB_NAME"
-  adb logcat -d | gzip > "$HOME/logcat.txt.gz"
-  artifact push job "$HOME/logcat.txt.gz"
+  ./script/ci-monitor-host-resources.sh stop || true
+  ./script/ci-monitor-host-resources.sh summary || true
+  push_file_if_present "${HOST_RESOURCE_METRICS_FILE:-$HOME/host-resource-metrics.csv}" "host resource metrics"
+  push_file_if_present "${HOST_RESOURCE_MONITOR_LOG_FILE:-$HOME/host-resource-monitor.log}" "host resource monitor log"
+  push_file_if_present "/tmp/system-metrics" "Semaphore system metrics"
+  push_file_if_present "${EMULATOR_LOG_FILE:-$HOME/emulator.log}" "emulator log"
+  push_file_if_present "${INSTRUMENTATION_COMMAND_LOG_FILE:-$HOME/instrumentation-command.log}" "instrumentation command log"
+  push_file_if_present "${EMULATOR_WATCHDOG_LOG_FILE:-$HOME/emulator-watchdog.log}" "emulator watchdog log"
+  push_file_if_present "${EMULATOR_WATCHDOG_FAILURE_FILE:-$HOME/emulator-watchdog.failed}" "emulator watchdog failure marker"
 
-  echo "Store the device's screenshot for $SEMAPHORE_JOB_NAME"
-  if adb shell screencap -p /sdcard/screencap.png; then
-    if adb pull "/sdcard/screencap.png"; then
-      artifact push job screencap.png
+  if adb get-state 2>/dev/null | grep -q "device"; then
+    # store full logcat log
+    echo "Collect logcat logs as logcat.txt.gz for $SEMAPHORE_JOB_NAME"
+    if adb logcat -d | gzip > "$HOME/logcat.txt.gz"; then
+      artifact push job "$HOME/logcat.txt.gz"
     else
-      echo "Could not pull screencap.png"
+      echo "Could not collect logcat within $ADB_COMMAND_TIMEOUT, skipping"
+    fi
+
+    echo "Store the device's screenshot for $SEMAPHORE_JOB_NAME"
+    if adb shell screencap -p /sdcard/screencap.png; then
+      if adb pull "/sdcard/screencap.png"; then
+        artifact push job screencap.png
+      else
+        echo "Could not pull screencap.png"
+      fi
+    else
+      echo "Could not create screencap.png"
     fi
   else
-    echo "Could not create screencap.png"
+    echo "No connected device found for $SEMAPHORE_JOB_NAME, skipping logcat and screenshot."
   fi
 fi

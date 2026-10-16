@@ -7,7 +7,13 @@
 
 set -euo pipefail
 
+ADB_BIN="$(command -v adb)"
+ADB_COMMAND_TIMEOUT="${ADB_COMMAND_TIMEOUT:-15s}"
 SUMMARY_FAILURES=0
+
+adb() {
+  timeout "$ADB_COMMAND_TIMEOUT" "$ADB_BIN" "$@"
+}
 
 print_section() {
   local title="$1"
@@ -149,6 +155,14 @@ check_ping_or_fail() {
 }
 
 ###################################################################################################
+
+if ! adb get-state 2>/dev/null | grep -q '^device$'; then
+  print_section "Device unavailable"
+  echo "The device is not online; skipping repeated device-side network checks."
+  run_debug_cmd "adb devices" adb devices -l
+  run_debug_cmd "adb server version" adb version
+  exit 0
+fi
 
 NETWORK_FAILURE=0
 
