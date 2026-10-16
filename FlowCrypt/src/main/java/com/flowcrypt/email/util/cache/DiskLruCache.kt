@@ -90,6 +90,7 @@ import java.io.IOException
  * @param valueCount the number of values per cache entry. Must be positive.
  * @param maxSize the maximum number of bytes this cache should use to store.
  */
+@OptIn(okhttp3.internal.OkHttpInternalApi::class)
 class DiskLruCache(
   fileSystem: FileSystem,
   /** Returns the directory where this cache stores its data. */
