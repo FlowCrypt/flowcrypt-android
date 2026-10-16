@@ -230,6 +230,17 @@ android {
     execution = "ANDROIDX_TEST_ORCHESTRATOR"
 
     unitTests.all {
+      it.jvmArgs(
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "--add-opens=java.base/java.security=ALL-UNNAMED",
+        "--add-opens=java.base/java.text=ALL-UNNAMED",
+        "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+        "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED"
+      )
+
       it.testLogging {
         events = setOf(
           org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
@@ -471,7 +482,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:mockwebserver:5.4.0")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
-  testImplementation("org.robolectric:robolectric:4.16.1")
+  testImplementation("org.robolectric:robolectric:4.17")
   //we need it to test Parcelable implementation
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.21")
   testImplementation("junit:junit:4.13.2")
