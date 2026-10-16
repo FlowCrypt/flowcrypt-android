@@ -257,6 +257,7 @@ class GmailApiHelper {
         .messages()
         .get(DEFAULT_USER_ID, messageId)
         .setFormat(MESSAGE_RESPONSE_FORMAT_RAW)
+        .setPrettyPrint(false)
       message.fields = "raw"
 
       return@withContext Base64InputStream(GMailRawMIMEMessageFilterInputStream(message.executeAsInputStream()))

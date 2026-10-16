@@ -736,17 +736,17 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     }
 
     return if (gmailMessage != null) {
+      val raw = Base64.getUrlEncoder().withoutPadding().encodeToString(
+        ByteArrayOutputStream().apply {
+          GmaiAPIMimeMessage(
+            Session.getInstance(Properties()),
+            gmailMessage
+          ).writeTo(this)
+        }.toByteArray()
+      )
       MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-        .setBody(
-          Base64.getEncoder().encodeToString(
-            ByteArrayOutputStream().apply {
-              GmaiAPIMimeMessage(
-                Session.getInstance(Properties()),
-                gmailMessage
-              ).writeTo(this)
-            }.toByteArray()
-          )
-        )
+        .setHeader("Content-Type", Json.MEDIA_TYPE)
+        .setBody("""{"raw":"$raw"}""")
     } else {
       MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
     }
@@ -1754,7 +1754,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
     val REGEX_DRAFT_BY_RFC822MSGID =
       ("/gmail/v1/users/me/drafts\\?fields=drafts/id,drafts/message/id\\&q=rfc822msgid:(.{16})").toRegex()
     val REGEX_USER_MESSAGES_GET_RAW =
-      ("/gmail/v1/users/me/messages/(.{16})\\?fields=raw&format=raw").toRegex()
+      ("/gmail/v1/users/me/messages/(.{16})\\?fields=raw&format=raw&prettyPrint=false").toRegex()
 
     const val ATTACHMENT_NAME_1 = "text.txt"
     const val ATTACHMENT_NAME_2 = "text1.txt"
