@@ -25,6 +25,7 @@ open class GMailRawResponseFilterInputStream(
   private var marked = false
 
   init {
+    require(prefixLength >= 0) { "prefixLength must be non-negative: $prefixLength" }
     skipFully(prefixLength)
   }
 

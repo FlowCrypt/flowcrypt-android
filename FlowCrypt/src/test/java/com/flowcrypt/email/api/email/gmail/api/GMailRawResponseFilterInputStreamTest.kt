@@ -28,7 +28,7 @@ class GMailRawResponseFilterInputStreamTest {
   @Test
   fun testMimeResponseReadOneByteAtATime() {
     val stream = GMailRawMIMEMessageFilterInputStream(
-      "{\n  \"raw\": \"YWJjZA==\"\n}\n".byteInputStream()
+      """{"raw":"YWJjZA=="}""".byteInputStream()
     )
 
     val result = buildList {
@@ -67,6 +67,13 @@ class GMailRawResponseFilterInputStreamTest {
     val stream = GMailRawAttachmentFilterInputStream(delegate)
 
     assertEquals("YWJj", stream.readBytes().decodeToString())
+  }
+
+  @Test
+  fun testNegativePrefixThrows() {
+    assertThrows(IllegalArgumentException::class.java) {
+      GMailRawResponseFilterInputStream("{}".byteInputStream(), -1)
+    }
   }
 
   @Test

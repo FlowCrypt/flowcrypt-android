@@ -13,6 +13,6 @@ import java.io.InputStream
 class GMailRawMIMEMessageFilterInputStream(inputStream: InputStream) :
   GMailRawResponseFilterInputStream(inputStream, JSON_PREFIX_LENGTH) {
   private companion object {
-    const val JSON_PREFIX_LENGTH = 12L
+    const val JSON_PREFIX_LENGTH = 8L
   }
 }
