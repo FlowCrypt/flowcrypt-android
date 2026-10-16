@@ -675,7 +675,9 @@ class ProcessMimeMessageTest {
     assertEquals(2, result.blocks.size)
     val block = result.blocks[0]
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
-    val htmlContent = TestUtil.readResourceAsString("other/plain-inline-image-html-content.txt")
+    val htmlContent = TestUtil.readResourceAsString(
+      "other/plain-inline-image-html-content.txt"
+    ).trimEnd('\r', '\n')
 
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
@@ -700,7 +702,7 @@ class ProcessMimeMessageTest {
     assertEquals(MsgBlock.Type.PLAIN_HTML, block.type)
     val htmlContent = TestUtil.readResourceAsString(
       "other/plain-google-security-alert-20210416-084836-UTC-html-content.txt"
-    )
+    ).trimEnd('\r', '\n')
 
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }

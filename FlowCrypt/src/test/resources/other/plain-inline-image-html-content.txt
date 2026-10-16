@@ -1,1 +1,1 @@
-<div><div>Below</div><div><div><br><a alt="image.png" data-fc-is-from-image="true">[image]</a></div></div><div>Above<br></div></div>
+<div><div>Below</div><div><div><a alt="image.png" data-fc-is-from-image="true">[image]</a><br></div></div><div>Above<br></div></div>
