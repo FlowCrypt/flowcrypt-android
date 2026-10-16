@@ -476,7 +476,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.5")
-  testImplementation("io.github.classgraph:classgraph:4.8.196")
+  testImplementation("io.github.classgraph:classgraph:4.8.197")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -517,7 +517,7 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:22.0.0")
   implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
+  implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
 
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.api-client:google-api-client-android:2.9.1")
