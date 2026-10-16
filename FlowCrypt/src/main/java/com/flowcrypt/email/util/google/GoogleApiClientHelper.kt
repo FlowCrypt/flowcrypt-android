@@ -26,7 +26,7 @@ class GoogleApiClientHelper {
     const val ID_TOKEN_SCOPE = "audience:server:client_id:$SERVER_CLIENT_ID"
 
     fun generateGoogleSignInRequest(): GetCredentialRequest = GetCredentialRequest(
-      listOf(GetSignInWithGoogleOption(SERVER_CLIENT_ID))
+      listOf(GetSignInWithGoogleOption.Builder(SERVER_CLIENT_ID).build())
     )
 
     fun generateGoogleAuthorizationRequest(account: Account): AuthorizationRequest =
