@@ -473,10 +473,10 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.16.1")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.21")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.5")
-  testImplementation("io.github.classgraph:classgraph:4.8.196")
+  testImplementation("io.github.classgraph:classgraph:4.8.197")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -501,7 +501,7 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.19.0")
+  implementation("androidx.core:core-ktx:1.19.1")
   implementation("androidx.core:core-splashscreen:1.2.0")
   implementation("androidx.activity:activity-ktx:1.13.0")
   implementation("androidx.fragment:fragment-ktx:1.9.1")
@@ -517,7 +517,7 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:22.0.0")
   implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
+  implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
 
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.api-client:google-api-client-android:2.9.1")
@@ -534,7 +534,7 @@ dependencies {
   implementation("com.github.bumptech.glide:glide:5.0.9")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.1.1")
-  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1")
+  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260922.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")
   implementation("org.jsoup:jsoup:1.23.2")
