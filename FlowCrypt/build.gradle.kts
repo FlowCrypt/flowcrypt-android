@@ -436,7 +436,7 @@ val uiTestsImplementation by configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.9")
-  ksp("androidx.annotation:annotation:1.10.0")
+  ksp("androidx.annotation:annotation:1.11.0")
   ksp("androidx.room:room-compiler:2.8.5")
   //ACRA needs the following dependency to use a custom report sender
 
@@ -448,7 +448,7 @@ dependencies {
   devDebugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
   //uiTests is the build type for testing.
   //noinspection FragmentGradleConfiguration
-  uiTestsImplementation("androidx.fragment:fragment-testing:1.9.0")
+  uiTestsImplementation("androidx.fragment:fragment-testing:1.9.1")
   uiTestsImplementation("androidx.test:core-ktx:1.7.0")
 
   androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
@@ -462,7 +462,7 @@ dependencies {
   androidTestImplementation("androidx.test.uiautomator:uiautomator:2.4.0")
   androidTestImplementation("androidx.room:room-testing:2.8.5")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-  androidTestImplementation("androidx.work:work-testing:2.11.2")
+  androidTestImplementation("androidx.work:work-testing:2.12.0")
   androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.4.0")
   androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.4.0")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
@@ -473,10 +473,10 @@ dependencies {
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.17")
   //we need it to test Parcelable implementation
-  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.20")
+  testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.21")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.5")
-  testImplementation("io.github.classgraph:classgraph:4.8.195")
+  testImplementation("io.github.classgraph:classgraph:4.8.197")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -501,14 +501,14 @@ dependencies {
   //noinspection GradleDependency
   implementation("androidx.paging:paging-runtime-ktx:2.1.2")
   implementation("androidx.preference:preference-ktx:1.2.1")
-  implementation("androidx.core:core-ktx:1.19.0")
+  implementation("androidx.core:core-ktx:1.19.1")
   implementation("androidx.core:core-splashscreen:1.2.0")
   implementation("androidx.activity:activity-ktx:1.13.0")
-  implementation("androidx.fragment:fragment-ktx:1.9.0")
-  implementation("androidx.work:work-runtime-ktx:2.11.2")
-  implementation("androidx.navigation:navigation-fragment-ktx:2.10.1")
-  implementation("androidx.navigation:navigation-ui-ktx:2.10.1")
-  implementation("androidx.navigation:navigation-runtime-ktx:2.10.1")
+  implementation("androidx.fragment:fragment-ktx:1.9.1")
+  implementation("androidx.work:work-runtime-ktx:2.12.0")
+  implementation("androidx.navigation:navigation-fragment-ktx:2.10.2")
+  implementation("androidx.navigation:navigation-ui-ktx:2.10.2")
+  implementation("androidx.navigation:navigation-runtime-ktx:2.10.2")
   implementation("androidx.webkit:webkit:1.16.0")
   implementation("androidx.credentials:credentials:1.6.0")
   implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
@@ -517,7 +517,7 @@ dependencies {
   implementation("com.google.android.gms:play-services-auth:22.0.0")
   implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
-  implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
+  implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
 
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.api-client:google-api-client-android:2.9.1")
@@ -534,7 +534,7 @@ dependencies {
   implementation("com.github.bumptech.glide:glide:5.0.9")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.1.1")
-  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1")
+  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260922.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")
   implementation("org.jsoup:jsoup:1.23.2")
@@ -547,7 +547,7 @@ dependencies {
   implementation("org.eclipse.angus:gimap:2.0.5")
   implementation("commons-io:commons-io:2.22.0")
   implementation("net.openid:appauth:0.11.1")
-  implementation("ch.acra:acra-http:5.13.1")
+  implementation("ch.acra:acra-http:5.14.2")
   implementation("io.github.everythingme:overscroll-decor-android:1.1.1")
 
   constraints {
