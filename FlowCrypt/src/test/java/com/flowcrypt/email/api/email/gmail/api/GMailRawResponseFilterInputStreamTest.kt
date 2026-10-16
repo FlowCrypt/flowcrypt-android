@@ -8,9 +8,11 @@ package com.flowcrypt.email.api.email.gmail.api
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.EOFException
+import java.io.IOException
 
 class GMailRawResponseFilterInputStreamTest {
   @Test
@@ -80,6 +82,45 @@ class GMailRawResponseFilterInputStreamTest {
 
     assertEquals(-1, stream.read(ByteArray(8), 0, 8))
     assertEquals(-1, stream.read())
+  }
+
+  @Test
+  fun testSkipDoesNotAdvancePastEndOfFilteredValue() {
+    val stream = GMailRawAttachmentFilterInputStream(
+      """{"data":"YWJj"}trailing content""".byteInputStream()
+    )
+
+    assertEquals(4, stream.skip(5))
+    assertEquals(-1, stream.read())
+    assertEquals(0, stream.available())
+  }
+
+  @Test
+  fun testResetRestoresEndOfStreamStateCapturedByMark() {
+    val stream = GMailRawAttachmentFilterInputStream(
+      """{"data":"YWJj"}trailing content""".byteInputStream()
+    )
+    assertTrue(stream.markSupported())
+    stream.mark(Int.MAX_VALUE)
+
+    assertEquals("YWJj", stream.readBytes().decodeToString())
+    assertEquals(-1, stream.read())
+
+    stream.reset()
+
+    assertEquals("YWJj", stream.readBytes().decodeToString())
+    assertEquals(-1, stream.read())
+  }
+
+  @Test
+  fun testResetWithoutMarkDoesNotExposeJsonPrefix() {
+    val stream = GMailRawAttachmentFilterInputStream(
+      """{"data":"YWJj"}""".byteInputStream()
+    )
+
+    assertThrows(IOException::class.java) {
+      stream.reset()
+    }
   }
 
   private fun GMailRawResponseFilterInputStream.readBytesWithChunkSize(

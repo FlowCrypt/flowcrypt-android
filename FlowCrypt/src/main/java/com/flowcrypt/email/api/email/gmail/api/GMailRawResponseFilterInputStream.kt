@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.gmail.api
 
 import java.io.EOFException
 import java.io.FilterInputStream
+import java.io.IOException
 import java.io.InputStream
 
 /**
@@ -20,6 +21,8 @@ open class GMailRawResponseFilterInputStream(
   prefixLength: Long
 ) : FilterInputStream(inputStream) {
   private var endReached = false
+  private var endReachedAtMark = false
+  private var marked = false
 
   init {
     skipFully(prefixLength)
@@ -58,6 +61,40 @@ open class GMailRawResponseFilterInputStream(
     return readCount
   }
 
+  override fun skip(n: Long): Long {
+    if (n <= 0 || endReached) return 0
+
+    val buffer = ByteArray(minOf(n, SKIP_BUFFER_SIZE.toLong()).toInt())
+    var remaining = n
+    while (remaining > 0) {
+      val readCount = read(buffer, 0, minOf(remaining, buffer.size.toLong()).toInt())
+      if (readCount <= 0) break
+      remaining -= readCount
+    }
+
+    return n - remaining
+  }
+
+  override fun available(): Int = if (endReached) 0 else super.available()
+
+  @Synchronized
+  override fun mark(readlimit: Int) {
+    if (!markSupported()) return
+
+    super.mark(readlimit)
+    endReachedAtMark = endReached
+    marked = true
+  }
+
+  @Synchronized
+  @Throws(IOException::class)
+  override fun reset() {
+    if (!marked) throw IOException("Stream has not been marked")
+
+    super.reset()
+    endReached = endReachedAtMark
+  }
+
   private fun skipFully(byteCount: Long) {
     var remaining = byteCount
     while (remaining > 0) {
@@ -82,5 +119,6 @@ open class GMailRawResponseFilterInputStream(
 
   private companion object {
     const val JSON_STRING_DELIMITER = '"'.code
+    const val SKIP_BUFFER_SIZE = 2048
   }
 }
