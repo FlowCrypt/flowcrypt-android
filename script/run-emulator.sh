@@ -10,6 +10,7 @@ set -euo pipefail
 AVD_NAME="${AVD_NAME:-ci-emulator}"
 EMULATOR_CORES="${EMULATOR_CORES:-1}"
 EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-swiftshader_indirect}"
+EMULATOR_MEMORY="${EMULATOR_MEMORY:-2048}"
 EMULATOR_WIPE_DATA="${EMULATOR_WIPE_DATA:-1}"
 EMULATOR_DNS_SERVER="${EMULATOR_DNS_SERVER:-127.0.0.1}"
 EMULATOR_LOG_FILE="${EMULATOR_LOG_FILE:-$HOME/emulator.log}"
@@ -27,6 +28,7 @@ emulator_args=(
   -no-snapshot-load
   -no-snapshot-save
   -cores "$EMULATOR_CORES"
+  -memory "$EMULATOR_MEMORY"
   -gpu "$EMULATOR_GPU_MODE"
 
   # This value is used by the emulator process on the host/container.
@@ -56,4 +58,4 @@ if ! kill -0 "$emulator_pid" 2>/dev/null; then
   exit 1
 fi
 
-echo "Started emulator PID $emulator_pid with $EMULATOR_CORES cores and DNS server $EMULATOR_DNS_SERVER"
+echo "Started emulator PID $emulator_pid with $EMULATOR_CORES cores, $EMULATOR_MEMORY MB RAM, and DNS server $EMULATOR_DNS_SERVER"
