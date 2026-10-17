@@ -15,22 +15,21 @@ NUM_EMULATORS="${1:-4}"
 TEST_FILTER="${2:-${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter}}"
 AVD_NAME="${AVD_NAME:-ci-emulator}"
 EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-auto}"
+EMULATOR_CORES="${EMULATOR_CORES:-1}"
 
 echo "=== FlowCrypt Parallel Test Runner ==="
 echo "Date: $(date)"
 echo "Project root: $PROJECT_DIR"
 echo "Emulators count: $NUM_EMULATORS"
 echo "AVD image: $AVD_NAME"
+echo "GPU mode: $EMULATOR_GPU_MODE"
 echo "Test filter: $TEST_FILTER"
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export PATH="${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${PATH}"
 
 cleanup() {
-  echo "Cleaning up emulators..."
-  adb devices | awk '/emulator-/{print $1}' | while read -r line; do
-    adb -s "$line" emu kill 2>/dev/null || true
-  done
+  "${SCRIPT_DIR}/adb_kill_all_emualtor.sh"
 }
 trap cleanup EXIT INT TERM
 
@@ -41,22 +40,18 @@ sleep 2
 
 adb start-server
 
-# 2. Launch emulators
+# 2. Launch emulators using run-emulator.sh
 echo "Step 2: Starting $NUM_EMULATORS emulator(s) from AVD '$AVD_NAME'..."
 for ((i=1; i<=NUM_EMULATORS; i++)); do
   echo "Launching emulator instance $i..."
-  "$ANDROID_HOME/emulator/emulator" \
-    -avd "$AVD_NAME" \
-    -no-window \
-    -no-boot-anim \
-    -no-audio \
-    -no-snapshot \
-    -no-snapshot-load \
-    -no-snapshot-save \
-    -gpu "$EMULATOR_GPU_MODE" \
-    -read-only \
-    -no-metrics > "/tmp/emulator_${i}.log" 2>&1 &
-  sleep 6
+  AVD_NAME="$AVD_NAME" \
+  EMULATOR_CORES="$EMULATOR_CORES" \
+  EMULATOR_GPU_MODE="$EMULATOR_GPU_MODE" \
+  EMULATOR_WIPE_DATA=0 \
+  EMULATOR_LOG_FILE="/tmp/emulator_${i}.log" \
+  EMULATOR_PID_FILE="/tmp/emulator_${i}.pid" \
+  "${SCRIPT_DIR}/run-emulator.sh"
+  sleep 4
 done
 
 # 3. Wait for emulators to appear in adb
@@ -79,50 +74,18 @@ if (( ${#devices[@]} < NUM_EMULATORS )); then
   exit 1
 fi
 
-# 4. Wait for boot and configure each emulator
-configure_emulator() {
-  local dev="$1"
-  echo "Waiting for $dev to complete boot..."
-  adb -s "$dev" wait-for-device
-
-  local booted=0
-  for attempt in {1..60}; do
-    local boot_completed
-    boot_completed=$(adb -s "$dev" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
-    if [[ "$boot_completed" == "1" ]]; then
-      echo "  $dev boot completed!"
-      booted=1
-      break
-    fi
-    sleep 2
-  done
-
-  if [[ "$booted" -ne 1 ]]; then
-    echo "ERROR: Timed out waiting for $dev to boot."
-    return 1
-  fi
-
-  echo "Configuring $dev..."
-  adb -s "$dev" root
-  sleep 2
-  adb -s "$dev" wait-for-device
-  adb -s "$dev" shell wm dismiss-keyguard
-  adb -s "$dev" shell settings put global window_animation_scale 0
-  adb -s "$dev" shell settings put global transition_animation_scale 0
-  adb -s "$dev" shell settings put global animator_duration_scale 0
-  adb -s "$dev" shell "echo 1 > /proc/sys/net/ipv4/ip_forward"
-  adb -s "$dev" shell "iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 443 -j REDIRECT --to-ports 1212"
-
-  if adb -s "$dev" shell ping -c 1 fes.flowcrypt.test >/dev/null 2>&1; then
-    echo "  $dev: DNS check OK"
-  else
-    echo "  $dev: WARNING: DNS check for fes.flowcrypt.test failed (ensure local DNS/dnsmasq is running if testing FES)"
-  fi
-}
-
-echo "Step 4: Waiting for boot and configuring emulators..."
+# 4. Wait for boot and configure each emulator in parallel using ci-wait-for-emulator.sh
+echo "Step 4: Waiting for boot and configuring emulators in parallel..."
+config_pids=()
 for dev in "${devices[@]}"; do
-  configure_emulator "$dev"
+  (
+    VALIDATE_NETWORK=0 FORWARD_PORT_1212=0 "${SCRIPT_DIR}/ci-wait-for-emulator.sh" "$dev"
+  ) &
+  config_pids+=($!)
+done
+
+for pid in "${config_pids[@]}"; do
+  wait "$pid"
 done
 
 # 5. Pre-compile test artifacts
@@ -132,7 +95,7 @@ echo "Step 5: Pre-compiling test artifacts to prime the build cache..."
 mkdir -p "$PROJECT_DIR/build/parallel_test_logs"
 rm -f "$PROJECT_DIR"/build/parallel_test_logs/*.log
 
-# 6. Run shards in parallel
+# 6. Run shards in parallel using ci-instrumentation-tests-without-mailserver.sh
 echo "Step 6: Launching $NUM_EMULATORS test shard(s) in parallel..."
 pids=()
 start_time=$(date +%s)
@@ -143,10 +106,8 @@ for i in "${!devices[@]}"; do
   echo "Launching Shard $i on $dev -> $log_file"
 
   (
-    ANDROID_SERIAL="$dev" ./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:connectedConsumerUiTestsAndroidTest \
-      -Pandroid.testInstrumentationRunnerArguments.filter="$TEST_FILTER" \
-      -Pandroid.testInstrumentationRunnerArguments.numShards="$NUM_EMULATORS" \
-      -Pandroid.testInstrumentationRunnerArguments.shardIndex="$i" > "$log_file" 2>&1
+    ANDROID_SERIAL="$dev" TEST_FILTER="$TEST_FILTER" \
+      "${SCRIPT_DIR}/ci-instrumentation-tests-without-mailserver.sh" "$NUM_EMULATORS" "$i" > "$log_file" 2>&1
   ) &
   pids+=($!)
 done

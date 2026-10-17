@@ -6,11 +6,25 @@
 
 set -euo pipefail
 
+target_device="${1:-${ANDROID_SERIAL:-}}"
+if [[ -n "$target_device" ]]; then
+  export ANDROID_SERIAL="$target_device"
+fi
+
 wait_for_boot_completed() {
   adb wait-for-device
 
-  # shellcheck disable=SC2016
-  adb shell 'while [[ "$(getprop sys.boot_completed)" != "1" ]]; do sleep 1; done;'
+  for attempt in {1..60}; do
+    local boot_completed
+    boot_completed=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+    if [[ "$boot_completed" == "1" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "ERROR: Timed out waiting for sys.boot_completed${ANDROID_SERIAL:+ on $ANDROID_SERIAL}"
+  exit 1
 }
 
 run_adb_root_or_fail() {
@@ -75,10 +89,10 @@ print_network_debug() {
   set +e
 
   echo
-  echo "======================================================================"
+  echo "========================================================================"
   echo "Network failure diagnostics: ${reason}"
   echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
-  echo "======================================================================"
+  echo "========================================================================"
 
   echo
   echo "[debug] adb devices"
@@ -171,15 +185,25 @@ adb shell "iptables -t nat -S OUTPUT"
 # https://developer.android.com/tools/adb#forwardports
 # Forwards requests on a specific host port to a different port on a device.
 # It can be helpful for debugging a mock web server.
-adb forward tcp:1212 tcp:1212
+if [[ "${FORWARD_PORT_1212:-1}" == "1" ]]; then
+  adb forward tcp:1212 tcp:1212 || true
+fi
 
 ###################################################################################################
 # Final network validation before running tests.
 ###################################################################################################
 
-check_ping_or_fail "10.0.2.2" "emulator host gateway"
-check_ping_or_fail "8.8.8.8" "internet raw IP connectivity"
-check_ping_or_fail "www.google.com" "internet DNS"
-check_ping_or_fail "fes.flowcrypt.test" "flowcrypt.test DNS/reachability"
+if [[ "${VALIDATE_NETWORK:-1}" == "1" ]]; then
+  check_ping_or_fail "10.0.2.2" "emulator host gateway"
+  check_ping_or_fail "8.8.8.8" "internet raw IP connectivity"
+  check_ping_or_fail "www.google.com" "internet DNS"
+  check_ping_or_fail "fes.flowcrypt.test" "flowcrypt.test DNS/reachability"
+else
+  if adb shell ping -c 1 fes.flowcrypt.test >/dev/null 2>&1; then
+    echo "PASS: flowcrypt.test DNS/reachability"
+  else
+    echo "WARNING: fes.flowcrypt.test is not reachable (expected if host DNS is not configured)"
+  fi
+fi
 
-echo "Emulator is ready"
+echo "Emulator is ready${ANDROID_SERIAL:+ ($ANDROID_SERIAL)}"

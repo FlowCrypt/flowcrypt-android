@@ -25,6 +25,8 @@ if (( shardIndex >= numShards )); then
   exit 1
 fi
 
+TEST_FILTER="${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter}"
+
 #print test names
 #adb shell am instrument -w \
 # -e filter com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
@@ -34,6 +36,6 @@ fi
 # com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
 
 ./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:connectedConsumerUiTestsAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.filter=com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \
+  -Pandroid.testInstrumentationRunnerArguments.filter="${TEST_FILTER}" \
   -Pandroid.testInstrumentationRunnerArguments.numShards="${numShards}" \
   -Pandroid.testInstrumentationRunnerArguments.shardIndex="${shardIndex}"
