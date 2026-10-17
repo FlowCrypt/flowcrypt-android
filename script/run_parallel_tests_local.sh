@@ -14,16 +14,20 @@ cd "$PROJECT_DIR"
 NUM_EMULATORS="${1:-4}"
 TEST_FILTER="${2:-${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter}}"
 AVD_NAME="${AVD_NAME:-ci-emulator}"
-EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-auto}"
+EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-swiftshader_indirect}"
+EMULATOR_MEMORY="${EMULATOR_MEMORY:-2048}"
 EMULATOR_CORES="${EMULATOR_CORES:-1}"
+GRADLE_JVMARGS="${GRADLE_JVMARGS:--Xmx1536m -XX:+UseParallelGC}"
 
 echo "=== FlowCrypt Parallel Test Runner ==="
 echo "Date: $(date)"
 echo "Project root: $PROJECT_DIR"
 echo "Emulators count: $NUM_EMULATORS"
 echo "AVD image: $AVD_NAME"
+echo "Emulator memory: ${EMULATOR_MEMORY} MB"
 echo "GPU mode: $EMULATOR_GPU_MODE"
 echo "Test filter: $TEST_FILTER"
+echo "Gradle JVM args per shard: $GRADLE_JVMARGS"
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export PATH="${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${PATH}"
@@ -46,6 +50,7 @@ for ((i=1; i<=NUM_EMULATORS; i++)); do
   echo "Launching emulator instance $i..."
   AVD_NAME="$AVD_NAME" \
   EMULATOR_CORES="$EMULATOR_CORES" \
+  EMULATOR_MEMORY="$EMULATOR_MEMORY" \
   EMULATOR_GPU_MODE="$EMULATOR_GPU_MODE" \
   EMULATOR_WIPE_DATA=0 \
   EMULATOR_LOG_FILE="/tmp/emulator_${i}.log" \
@@ -106,7 +111,7 @@ for i in "${!devices[@]}"; do
   echo "Launching Shard $i on $dev -> $log_file"
 
   (
-    ANDROID_SERIAL="$dev" TEST_FILTER="$TEST_FILTER" \
+    ANDROID_SERIAL="$dev" TEST_FILTER="$TEST_FILTER" GRADLE_JVMARGS="$GRADLE_JVMARGS" \
       "${SCRIPT_DIR}/ci-instrumentation-tests-without-mailserver.sh" "$NUM_EMULATORS" "$i" > "$log_file" 2>&1
   ) &
   pids+=($!)

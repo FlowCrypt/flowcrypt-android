@@ -26,6 +26,21 @@ if (( shardIndex >= numShards )); then
 fi
 
 TEST_FILTER="${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter}"
+GRADLE_JVMARGS="${GRADLE_JVMARGS:-}"
+
+gradle_args=(
+  --console=plain
+  --no-daemon
+  --build-cache
+  :FlowCrypt:connectedConsumerUiTestsAndroidTest
+  -Pandroid.testInstrumentationRunnerArguments.filter="${TEST_FILTER}"
+  -Pandroid.testInstrumentationRunnerArguments.numShards="${numShards}"
+  -Pandroid.testInstrumentationRunnerArguments.shardIndex="${shardIndex}"
+)
+
+if [[ -n "$GRADLE_JVMARGS" ]]; then
+  gradle_args+=("-Dorg.gradle.jvmargs=${GRADLE_JVMARGS}")
+fi
 
 #print test names
 #adb shell am instrument -w \
@@ -35,7 +50,4 @@ TEST_FILTER="${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailSer
 # -e log true \
 # com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner
 
-./gradlew --console=plain --no-daemon --build-cache :FlowCrypt:connectedConsumerUiTestsAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.filter="${TEST_FILTER}" \
-  -Pandroid.testInstrumentationRunnerArguments.numShards="${numShards}" \
-  -Pandroid.testInstrumentationRunnerArguments.shardIndex="${shardIndex}"
+./gradlew "${gradle_args[@]}"
