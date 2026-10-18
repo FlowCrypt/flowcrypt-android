@@ -524,7 +524,7 @@ dependencies {
   implementation("androidx.credentials:credentials:1.6.0")
   implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
 
-  implementation("com.google.android.gms:play-services-base:18.11.0")
+  implementation("com.google.android.gms:play-services-base:18.11.1")
   implementation("com.google.android.gms:play-services-auth:22.0.0")
   implementation("com.google.android.material:material:1.14.0")
   implementation("com.google.android.flexbox:flexbox:3.0.0")
