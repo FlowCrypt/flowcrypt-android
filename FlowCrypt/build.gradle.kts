@@ -563,7 +563,7 @@ dependencies {
 
   constraints {
     //due to https://github.com/FlowCrypt/flowcrypt-security/issues/199
-    implementation("commons-codec:commons-codec:1.22.1") {
+    implementation("commons-codec:commons-codec:1.23.0") {
       because("version 1.11 has VULNERABILITY DESCRIPTION CWE-200")
     }
   }
