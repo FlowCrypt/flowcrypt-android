@@ -9,12 +9,13 @@ set -euo pipefail
 
 AVD_NAME="${AVD_NAME:-ci-emulator}"
 EMULATOR_CORES="${EMULATOR_CORES:-1}"
-EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-swiftshader_indirect}"
+EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-auto}"
 EMULATOR_MEMORY="${EMULATOR_MEMORY:-2048}"
 EMULATOR_WIPE_DATA="${EMULATOR_WIPE_DATA:-1}"
 EMULATOR_DNS_SERVER="${EMULATOR_DNS_SERVER:-127.0.0.1}"
 EMULATOR_LOG_FILE="${EMULATOR_LOG_FILE:-$HOME/emulator.log}"
 EMULATOR_PID_FILE="${EMULATOR_PID_FILE:-$HOME/emulator.pid}"
+EMULATOR_PORT="${EMULATOR_PORT:-}"
 
 "$ANDROID_HOME/emulator/emulator" -accel-check
 "$ANDROID_HOME/emulator/emulator" -version
@@ -39,6 +40,10 @@ emulator_args=(
   -read-only
   -no-metrics
 )
+
+if [[ -n "$EMULATOR_PORT" ]]; then
+  emulator_args+=(-port "$EMULATOR_PORT")
+fi
 
 if [[ "$EMULATOR_WIPE_DATA" == "1" ]]; then
   emulator_args+=(-wipe-data)

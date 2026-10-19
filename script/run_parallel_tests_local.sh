@@ -14,10 +14,12 @@ cd "$PROJECT_DIR"
 NUM_EMULATORS="${1:-4}"
 TEST_FILTER="${2:-${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter}}"
 AVD_NAME="${AVD_NAME:-ci-emulator}"
-EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-swiftshader_indirect}"
+EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-auto}"
 EMULATOR_MEMORY="${EMULATOR_MEMORY:-2048}"
 EMULATOR_CORES="${EMULATOR_CORES:-1}"
-GRADLE_JVMARGS="${GRADLE_JVMARGS:--Xmx1536m -XX:+UseParallelGC}"
+GRADLE_JVMARGS="${GRADLE_JVMARGS:--Xmx1024m -XX:+UseParallelGC}"
+
+export ADB_INSTALL_TIMEOUT="${ADB_INSTALL_TIMEOUT:-10}"
 
 echo "=== FlowCrypt Parallel Test Runner ==="
 echo "Date: $(date)"
@@ -28,6 +30,7 @@ echo "Emulator memory: ${EMULATOR_MEMORY} MB"
 echo "GPU mode: $EMULATOR_GPU_MODE"
 echo "Test filter: $TEST_FILTER"
 echo "Gradle JVM args per shard: $GRADLE_JVMARGS"
+echo "ADB install timeout: ${ADB_INSTALL_TIMEOUT}m"
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export PATH="${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${PATH}"
@@ -44,11 +47,13 @@ sleep 2
 
 adb start-server
 
-# 2. Launch emulators using run-emulator.sh
+# 2. Launch emulators using run-emulator.sh with explicit ports
 echo "Step 2: Starting $NUM_EMULATORS emulator(s) from AVD '$AVD_NAME'..."
 for ((i=1; i<=NUM_EMULATORS; i++)); do
-  echo "Launching emulator instance $i..."
+  port=$((5554 + 2 * (i - 1)))
+  echo "Launching emulator instance $i on port $port..."
   AVD_NAME="$AVD_NAME" \
+  EMULATOR_PORT="$port" \
   EMULATOR_CORES="$EMULATOR_CORES" \
   EMULATOR_MEMORY="$EMULATOR_MEMORY" \
   EMULATOR_GPU_MODE="$EMULATOR_GPU_MODE" \
@@ -56,26 +61,27 @@ for ((i=1; i<=NUM_EMULATORS; i++)); do
   EMULATOR_LOG_FILE="/tmp/emulator_${i}.log" \
   EMULATOR_PID_FILE="/tmp/emulator_${i}.pid" \
   "${SCRIPT_DIR}/run-emulator.sh"
-  sleep 4
+  sleep 3
 done
 
-# 3. Wait for emulators to appear in adb
+# 3. Wait for emulators to appear in adb in 'device' state
 echo "Step 3: Waiting for $NUM_EMULATORS emulator(s) to appear in adb..."
 for attempt in {1..60}; do
-  connected_count=$(adb devices | awk '/emulator-/{print $1}' | wc -l)
+  connected_count=$(adb devices | awk '$2 == "device" && /emulator-/{print $1}' | wc -l)
   if (( connected_count >= NUM_EMULATORS )); then
-    echo "Found $connected_count connected emulator(s)."
+    echo "Found $connected_count connected and ready emulator(s)."
     break
   fi
-  echo "Connected: $connected_count / $NUM_EMULATORS (attempt $attempt/60)..."
+  echo "Connected and ready: $connected_count / $NUM_EMULATORS (attempt $attempt/60)..."
   sleep 2
 done
 
-devices=($(adb devices | awk '/emulator-/{print $1}' | sort))
+devices=($(adb devices | awk '$2 == "device" && /emulator-/{print $1}' | sort))
 echo "Devices: ${devices[*]}"
 
 if (( ${#devices[@]} < NUM_EMULATORS )); then
   echo "ERROR: Expected $NUM_EMULATORS emulators, but only ${#devices[@]} are connected."
+  adb devices
   exit 1
 fi
 
@@ -96,6 +102,17 @@ done
 # 5. Pre-compile test artifacts
 echo "Step 5: Pre-compiling test artifacts to prime the build cache..."
 ./gradlew assembleConsumerUiTests packageConsumerUiTestsAndroidTest
+
+# Verify all emulators are still healthy after build
+echo "Step 5b: Verifying emulators are online and ready before launching tests..."
+adb reconnect offline || true
+sleep 2
+online_devices=($(adb devices | awk '$2 == "device" && /emulator-/{print $1}' | sort))
+if (( ${#online_devices[@]} < NUM_EMULATORS )); then
+  echo "ERROR: Expected $NUM_EMULATORS online emulators, but found ${#online_devices[@]}: ${online_devices[*]}"
+  adb devices
+  exit 1
+fi
 
 mkdir -p "$PROJECT_DIR/build/parallel_test_logs"
 rm -f "$PROJECT_DIR"/build/parallel_test_logs/*.log
@@ -122,11 +139,25 @@ echo "Step 7: Waiting for all shards to complete..."
 overall_exit=0
 failed_shards=()
 
+fatal_device_regex="device([[:space:]]+['\"]?[^[:space:]]+['\"]?[[:space:]]+is)?[[:space:]]+offline|device[[:space:]]+['\"]?[^[:space:]]+['\"]?[[:space:]]+(not found|disconnected)|no devices/emulators found|Failed to restore window animations"
+
 for i in "${!pids[@]}"; do
   pid="${pids[$i]}"
   dev="${devices[$i]}"
   log_file="$PROJECT_DIR/build/parallel_test_logs/shard_${i}_${dev}.log"
-  if wait "$pid"; then
+  shard_failed=0
+
+  if ! wait "$pid"; then
+    shard_failed=1
+  fi
+
+  # Check for fatal device transport/offline errors that Gradle might have swallowed
+  if grep -Eiq "$fatal_device_regex" "$log_file" 2>/dev/null; then
+    echo "  Shard $i ($dev): detected fatal device disconnect/offline error in log!"
+    shard_failed=1
+  fi
+
+  if [[ $shard_failed -eq 0 ]]; then
     echo "  Shard $i ($dev) PASSED"
   else
     echo "  Shard $i ($dev) FAILED (check log: $log_file)"
