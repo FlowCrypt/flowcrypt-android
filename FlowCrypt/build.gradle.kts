@@ -229,6 +229,13 @@ android {
     animationsDisabled = true
     execution = "ANDROIDX_TEST_ORCHESTRATOR"
 
+    //all local emulators share the same AVD name, so parallel shards need separate output dirs.
+    //Otherwise every shard overwrites the same TEST-<device>.xml
+    (project.findProperty("connectedTestsOutputDir") as String?)?.let { outputDir ->
+      resultsDir = "$outputDir/results"
+      reportDir = "$outputDir/reports"
+    }
+
     unitTests.all {
       it.jvmArgs(
         "--add-opens=java.base/java.lang=ALL-UNNAMED",

@@ -42,6 +42,10 @@ if [[ -n "$GRADLE_JVMARGS" ]]; then
   gradle_args+=("-Dorg.gradle.jvmargs=${GRADLE_JVMARGS}")
 fi
 
+if [[ -n "${CONNECTED_TESTS_OUTPUT_DIR:-}" ]]; then
+  gradle_args+=("-PconnectedTestsOutputDir=${CONNECTED_TESTS_OUTPUT_DIR}")
+fi
+
 #print test names
 #adb shell am instrument -w \
 # -e filter com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter \

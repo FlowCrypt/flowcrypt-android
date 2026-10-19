@@ -11,15 +11,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$PROJECT_DIR"
 
-NUM_EMULATORS="${1:-4}"
+NUM_EMULATORS="${1:-3}"
 TEST_FILTER="${2:-${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter}}"
 AVD_NAME="${AVD_NAME:-ci-emulator}"
-EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-auto}"
+# Software rendering keeps emulators away from the host GPU.
+# '-gpu auto' on a laptop NVIDIA GPU crashed Xorg under memory pressure.
+EMULATOR_GPU_MODE="${EMULATOR_GPU_MODE:-swiftshader_indirect}"
 EMULATOR_MEMORY="${EMULATOR_MEMORY:-2048}"
 EMULATOR_CORES="${EMULATOR_CORES:-1}"
-GRADLE_JVMARGS="${GRADLE_JVMARGS:--Xmx1024m -XX:+UseParallelGC}"
-
-export ADB_INSTALL_TIMEOUT="${ADB_INSTALL_TIMEOUT:-10}"
+GRADLE_JVMARGS="${GRADLE_JVMARGS:--Xmx1536m -XX:+UseParallelGC}"
+# Observed host RSS of one swiftshader emulator is ~3.5 GB at start and can grow higher
+# during a long shard, plus a separate Gradle process per shard.
+MEMORY_PER_SHARD_MB="${MEMORY_PER_SHARD_MB:-6144}"
+SKIP_MEMORY_CHECK="${SKIP_MEMORY_CHECK:-0}"
+RESULTS_ROOT="$PROJECT_DIR/build/parallel_test_results"
 
 echo "=== FlowCrypt Parallel Test Runner ==="
 echo "Date: $(date)"
@@ -30,7 +35,7 @@ echo "Emulator memory: ${EMULATOR_MEMORY} MB"
 echo "GPU mode: $EMULATOR_GPU_MODE"
 echo "Test filter: $TEST_FILTER"
 echo "Gradle JVM args per shard: $GRADLE_JVMARGS"
-echo "ADB install timeout: ${ADB_INSTALL_TIMEOUT}m"
+echo "Memory budget per shard: ${MEMORY_PER_SHARD_MB} MB"
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export PATH="${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${PATH}"
@@ -46,6 +51,21 @@ cleanup
 sleep 2
 
 adb start-server
+
+# Refuse to start more shards than RAM can hold. The kernel OOM killer
+# otherwise kills emulators mid-run (or takes the desktop session down).
+available_mb=$(( $(awk '/^MemAvailable:/{print $2}' /proc/meminfo) / 1024 ))
+required_mb=$(( NUM_EMULATORS * MEMORY_PER_SHARD_MB ))
+echo "Available memory: ${available_mb} MB, required: ${required_mb} MB"
+if (( available_mb < required_mb )); then
+  max_shards=$(( available_mb / MEMORY_PER_SHARD_MB ))
+  echo "Not enough free memory for $NUM_EMULATORS emulator(s). This machine can handle about $max_shards now."
+  if [[ "$SKIP_MEMORY_CHECK" != "1" ]]; then
+    echo "Close other apps, use fewer emulators, or set SKIP_MEMORY_CHECK=1 to run anyway."
+    exit 1
+  fi
+  echo "SKIP_MEMORY_CHECK=1 is set, continuing anyway."
+fi
 
 # 2. Launch emulators using run-emulator.sh with explicit ports
 echo "Step 2: Starting $NUM_EMULATORS emulator(s) from AVD '$AVD_NAME'..."
@@ -116,6 +136,7 @@ fi
 
 mkdir -p "$PROJECT_DIR/build/parallel_test_logs"
 rm -f "$PROJECT_DIR"/build/parallel_test_logs/*.log
+rm -rf "$RESULTS_ROOT"
 
 # 6. Run shards in parallel using ci-instrumentation-tests-without-mailserver.sh
 echo "Step 6: Launching $NUM_EMULATORS test shard(s) in parallel..."
@@ -129,6 +150,7 @@ for i in "${!devices[@]}"; do
 
   (
     ANDROID_SERIAL="$dev" TEST_FILTER="$TEST_FILTER" GRADLE_JVMARGS="$GRADLE_JVMARGS" \
+      CONNECTED_TESTS_OUTPUT_DIR="$RESULTS_ROOT/shard_${i}" \
       "${SCRIPT_DIR}/ci-instrumentation-tests-without-mailserver.sh" "$NUM_EMULATORS" "$i" > "$log_file" 2>&1
   ) &
   pids+=($!)
@@ -138,8 +160,17 @@ done
 echo "Step 7: Waiting for all shards to complete..."
 overall_exit=0
 failed_shards=()
+total_tests=0
+total_failures=0
 
-fatal_device_regex="device([[:space:]]+['\"]?[^[:space:]]+['\"]?[[:space:]]+is)?[[:space:]]+offline|device[[:space:]]+['\"]?[^[:space:]]+['\"]?[[:space:]]+(not found|disconnected)|no devices/emulators found|Failed to restore window animations"
+# Prints "<tests> <failures + errors>" from the shard's JUnit XML, or nothing if there is no XML.
+read_shard_summary() {
+  local xml_file
+  xml_file=$(find "$1" -name 'TEST-*.xml' -print -quit 2>/dev/null)
+  [[ -n "$xml_file" ]] || return 0
+  sed -n 's/.*<testsuites tests="\([0-9]*\)" failures="\([0-9]*\)" errors="\([0-9]*\)".*/\1 \2 \3/p' "$xml_file" |
+    head -n 1 | awk '{print $1, $2 + $3}'
+}
 
 for i in "${!pids[@]}"; do
   pid="${pids[$i]}"
@@ -151,10 +182,19 @@ for i in "${!pids[@]}"; do
     shard_failed=1
   fi
 
-  # Check for fatal device transport/offline errors that Gradle might have swallowed
-  if grep -Eiq "$fatal_device_regex" "$log_file" 2>/dev/null; then
-    echo "  Shard $i ($dev): detected fatal device disconnect/offline error in log!"
+  # Gradle may exit with 0 when the device disappears before any test starts,
+  # so a shard counts as passed only if its JUnit XML shows executed tests.
+  read -r shard_tests shard_failures <<< "$(read_shard_summary "$RESULTS_ROOT/shard_${i}")" || true
+  if [[ -z "${shard_tests:-}" ]]; then
+    echo "  Shard $i ($dev): no test results found"
     shard_failed=1
+  else
+    echo "  Shard $i ($dev): $shard_tests test(s), $shard_failures failed"
+    total_tests=$((total_tests + shard_tests))
+    total_failures=$((total_failures + shard_failures))
+    if (( shard_tests == 0 || shard_failures > 0 )); then
+      shard_failed=1
+    fi
   fi
 
   if [[ $shard_failed -eq 0 ]]; then
@@ -169,6 +209,7 @@ done
 end_time=$(date +%s)
 duration=$((end_time - start_time))
 echo "All shards finished in ${duration} seconds ($((duration / 60)) min $((duration % 60)) sec)!"
+echo "Total: $total_tests test(s), $total_failures failed. Per-shard results and reports: $RESULTS_ROOT"
 
 if [[ $overall_exit -ne 0 ]]; then
   echo "------------------------------------------------------"
