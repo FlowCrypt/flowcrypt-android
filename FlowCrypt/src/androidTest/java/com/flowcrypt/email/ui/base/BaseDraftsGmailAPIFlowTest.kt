@@ -523,9 +523,7 @@ abstract class BaseDraftsGmailAPIFlowTest : BaseGmailApiTest(
     return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
       .setHeader("Content-Type", Json.MEDIA_TYPE)
       //ref com.flowcrypt.email.api.email.gmail.api.GMailRawMIMEMessageFilterInputStream
-      .setBody(
-        "{\n  \"raw\": \"$raw\"\n}\n"
-      )
+      .setBody("""{"raw":"$raw"}""")
   }
 
   private fun genFirstMessage(): Message = genMessage(
