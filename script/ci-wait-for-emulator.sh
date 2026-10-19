@@ -14,7 +14,9 @@ fi
 wait_for_boot_completed() {
   adb wait-for-device
 
-  for attempt in {1..60}; do
+  local timeout_seconds=180
+  local deadline=$((SECONDS + timeout_seconds))
+  while (( SECONDS < deadline )); do
     local boot_completed
     boot_completed=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
     if [[ "$boot_completed" == "1" ]]; then
@@ -23,7 +25,7 @@ wait_for_boot_completed() {
     sleep 1
   done
 
-  echo "ERROR: Timed out waiting for sys.boot_completed${ANDROID_SERIAL:+ on $ANDROID_SERIAL}"
+  echo "ERROR: Timed out after ${timeout_seconds}s waiting for sys.boot_completed${ANDROID_SERIAL:+ on $ANDROID_SERIAL}"
   exit 1
 }
 
