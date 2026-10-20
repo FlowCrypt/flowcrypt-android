@@ -147,9 +147,9 @@ find_test_source_line() {
   local test_method="$2"
   local match=""
 
-  match="$(rg -n -m 1 -F "fun ${test_method}(" "$source_file" || true)"
+  match="$(grep -n -m 1 -F "fun ${test_method}(" "$source_file" || true)"
   if [[ -z "$match" ]]; then
-    match="$(rg -n -m 1 -F "fun \`${test_method}\`" "$source_file" || true)"
+    match="$(grep -n -m 1 -F "fun \`${test_method}\`" "$source_file" || true)"
   fi
 
   if [[ -n "$match" ]]; then
@@ -206,8 +206,8 @@ print_non_passed_tests() {
     fi
 
     if [[ ! -f "$source_path" ]]; then
-      source_path="$(rg --files FlowCrypt/src/androidTest \
-        | rg "/${class_name}\\.(kt|java)$" \
+      source_path="$(find FlowCrypt/src/androidTest -type f \
+        | grep -E "/${class_name}\\.(kt|java)$" \
         | head -n 1 || true)"
     fi
 
@@ -248,17 +248,40 @@ if [[ "$#" -eq 0 ]]; then
 fi
 
 logcat_log_file="${LOGCAT_LOG_FILE:-$HOME/logcat_log.txt}"
+test_command_log_file="${INSTRUMENTATION_COMMAND_LOG_FILE:-$HOME/instrumentation-command.log}"
 stream_dir="$(mktemp -d)"
 logcat_fifo="$stream_dir/logcat"
 test_summary_file="$stream_dir/test-summary.env"
 non_passed_tests_file="${INSTRUMENTATION_NON_PASSED_TESTS_FILE:-$HOME/instrumentation-non-passed-tests.txt}"
 logcat_pid=""
 formatter_pid=""
+test_command_pid=""
+watchdog_pid=""
+watchdog_failure_file="${EMULATOR_WATCHDOG_FAILURE_FILE:-$HOME/emulator-watchdog.failed}"
+
+terminate_test_command() {
+  [[ -n "$test_command_pid" ]] || return 0
+  kill -0 -- "-$test_command_pid" 2>/dev/null || return 0
+
+  kill -TERM -- "-$test_command_pid" 2>/dev/null || true
+  sleep 2
+  kill -KILL -- "-$test_command_pid" 2>/dev/null || true
+}
 
 cleanup() {
   local test_command_result="$?"
   trap - EXIT
   set +e
+
+  terminate_test_command
+
+  if [[ -n "$watchdog_pid" ]] && kill -0 "$watchdog_pid" 2>/dev/null; then
+    kill "$watchdog_pid" 2>/dev/null || true
+  fi
+
+  if [[ -n "$watchdog_pid" ]]; then
+    wait "$watchdog_pid" 2>/dev/null || true
+  fi
 
   if [[ -n "$logcat_pid" ]] && kill -0 "$logcat_pid" 2>/dev/null; then
     kill "$logcat_pid" 2>/dev/null || true
@@ -274,7 +297,7 @@ cleanup() {
 
   print_non_passed_tests "$non_passed_tests_file"
 
-  if [[ "$test_command_result" -ne 0 && -f "$test_summary_file" ]]; then
+  if [[ "$test_command_result" -ne 0 && ! -f "$watchdog_failure_file" && -f "$test_summary_file" ]]; then
     local PASSED=0 FAILED=0 INCOMPLETE=0 SKIPPED=0
     # shellcheck disable=SC1090
     source "$test_summary_file"
@@ -291,6 +314,11 @@ cleanup() {
 
 trap cleanup EXIT
 
+if ! command -v setsid >/dev/null 2>&1; then
+  echo "setsid is required to stop the full instrumentation test process tree"
+  exit 1
+fi
+
 # AndroidJUnitRunner publishes per-test events with the TestRunner logcat tag.
 # Keep the original events as an artifact and print concise progress to the CI log.
 adb logcat -c
@@ -303,7 +331,40 @@ formatter_pid=$!
 adb logcat -v raw TestRunner:I '*:S' > "$logcat_fifo" &
 logcat_pid=$!
 
+rm -f "$watchdog_failure_file"
+: > "$test_command_log_file"
+
+# Give the test command its own process group. If the Android guest becomes
+# unusable, the watchdog can stop Gradle and all of its adb children together.
+setsid "$@" > >(tee -a "$test_command_log_file") 2>&1 &
+test_command_pid=$!
+
+./script/ci-emulator-watchdog.sh "$test_command_pid" &
+watchdog_pid=$!
+
 test_command_result=0
-"$@" || test_command_result=$?
+wait "$test_command_pid" || test_command_result=$?
+test_command_pid=""
+
+# A short Gradle run can finish between watchdog probes. Inspect the completed
+# command log before stopping the watchdog so device-offline failures cannot be
+# reported as BUILD SUCCESSFUL with zero executed tests.
+if ./script/ci-emulator-watchdog.sh --check-log; then
+  echo "[TEST] Instrumentation command completed after a fatal emulator transport/service error."
+  printf 'Fatal emulator error found in completed instrumentation output at %s\n' \
+    "$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > "$watchdog_failure_file"
+  test_command_result=86
+fi
+
+if kill -0 "$watchdog_pid" 2>/dev/null; then
+  kill "$watchdog_pid" 2>/dev/null || true
+fi
+wait "$watchdog_pid" 2>/dev/null || true
+watchdog_pid=""
+
+if [[ -f "$watchdog_failure_file" ]]; then
+  echo "[TEST] Emulator watchdog stopped the test run; see emulator-watchdog.log artifact."
+  test_command_result=86
+fi
 
 exit "$test_command_result"

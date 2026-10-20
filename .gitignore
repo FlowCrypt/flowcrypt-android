@@ -2,12 +2,13 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# Android Studio / IntelliJ IDEA settings (ignore all except shared team configs)
+/.idea/*
+!/.idea/runConfigurations/
+!/.idea/codeStyles/
+!/.idea/copyright/
+!/.idea/dictionaries/
+!/.idea/vcs.xml
 .DS_Store
 /build
 /captures
@@ -17,7 +18,6 @@ local.properties
 androidx.databinding*
 
 # Custom settings
-/.idea/misc.xml
 /release
 /docker-mailserver/maildata_volume/
 
