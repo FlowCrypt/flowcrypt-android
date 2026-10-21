@@ -26,6 +26,8 @@ import org.pgpainless.key.info.KeyRingInfo
 import java.io.IOException
 import java.time.Instant
 
+internal const val MAX_USER_IDS_PER_KEY = 1_000
+
 /**
  * @author Denys Bondarenko
  */
@@ -38,6 +40,7 @@ import java.time.Instant
 @Throws(IOException::class)
 @WorkerThread
 fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDetails {
+  requireAcceptableUserIdCount(publicKey.userIDs)
   if (containsHashAlgorithmWithSHA1()) {
     val sigHashAlgoPolicy =
       PGPainless.getInstance().algorithmPolicy.certificationSignatureHashAlgorithmPolicy
@@ -101,6 +104,17 @@ fun PGPKeyRing.toPgpKeyRingDetails(hideArmorMeta: Boolean = false): PgpKeyRingDe
   )
 }
 
+internal fun requireAcceptableUserIdCount(userIds: Iterator<String>) {
+  var count = 0
+  while (userIds.hasNext() && count <= MAX_USER_IDS_PER_KEY) {
+    userIds.next()
+    count++
+  }
+  if (count > MAX_USER_IDS_PER_KEY) {
+    throw PGPException("Too many user IDs")
+  }
+}
+
 @Throws(IOException::class)
 fun PGPKeyRing.armor(hideArmorMeta: Boolean = false): String =
   SecurityUtils.armor(hideArmorMeta) { this.encode(it) }
@@ -126,13 +140,11 @@ fun PGPKeyRing.containsHashAlgorithmWithSHA1(): Boolean {
           && signature.hashAlgorithm == HashAlgorithmTags.SHA1
     }
 
-  return hasSha1DirectKeySelfSignatures || publicKey.userIDs.asSequence().any { uid ->
-    publicKey.getSignaturesForID(uid)
-      .asSequence()
-      .any { signature ->
-        signature.isCertification
-            && signature.issuerKeyId == publicKey.keyID
-            && signature.hashAlgorithm == HashAlgorithmTags.SHA1
-      }
-  }
+  return hasSha1DirectKeySelfSignatures || publicKey.signatures.asSequence()
+    .map { it as PGPSignature }
+    .any { signature ->
+      signature.isCertification
+          && signature.issuerKeyId == publicKey.keyID
+          && signature.hashAlgorithm == HashAlgorithmTags.SHA1
+    }
 }
