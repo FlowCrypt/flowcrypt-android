@@ -25,6 +25,7 @@ GRADLE_JVMARGS="${GRADLE_JVMARGS:--Xmx1536m -XX:+UseParallelGC}"
 MEMORY_PER_SHARD_MB="${MEMORY_PER_SHARD_MB:-6144}"
 SKIP_MEMORY_CHECK="${SKIP_MEMORY_CHECK:-0}"
 RESULTS_ROOT="$PROJECT_DIR/build/parallel_test_results"
+LOGS_DIR="$PROJECT_DIR/build/parallel_test_logs"
 
 echo "=== FlowCrypt Parallel Test Runner ==="
 echo "Date: $(date)"
@@ -68,6 +69,7 @@ if (( available_mb < required_mb )); then
 fi
 
 # 2. Launch emulators using run-emulator.sh with explicit ports
+mkdir -p "$LOGS_DIR"
 echo "Step 2: Starting $NUM_EMULATORS emulator(s) from AVD '$AVD_NAME'..."
 for ((i=1; i<=NUM_EMULATORS; i++)); do
   port=$((5554 + 2 * (i - 1)))
@@ -78,8 +80,8 @@ for ((i=1; i<=NUM_EMULATORS; i++)); do
   EMULATOR_MEMORY="$EMULATOR_MEMORY" \
   EMULATOR_GPU_MODE="$EMULATOR_GPU_MODE" \
   EMULATOR_WIPE_DATA=0 \
-  EMULATOR_LOG_FILE="/tmp/emulator_${i}.log" \
-  EMULATOR_PID_FILE="/tmp/emulator_${i}.pid" \
+  EMULATOR_LOG_FILE="$LOGS_DIR/emulator_${i}.log" \
+  EMULATOR_PID_FILE="$LOGS_DIR/emulator_${i}.pid" \
   "${SCRIPT_DIR}/run-emulator.sh"
   sleep 3
 done
@@ -134,8 +136,7 @@ if (( ${#online_devices[@]} < NUM_EMULATORS )); then
   exit 1
 fi
 
-mkdir -p "$PROJECT_DIR/build/parallel_test_logs"
-rm -f "$PROJECT_DIR"/build/parallel_test_logs/*.log
+rm -f "$LOGS_DIR"/shard_*.log
 rm -rf "$RESULTS_ROOT"
 
 # 6. Run shards in parallel using ci-instrumentation-tests-without-mailserver.sh
@@ -145,7 +146,7 @@ start_time=$(date +%s)
 
 for i in "${!devices[@]}"; do
   dev="${devices[$i]}"
-  log_file="$PROJECT_DIR/build/parallel_test_logs/shard_${i}_${dev}.log"
+  log_file="$LOGS_DIR/shard_${i}_${dev}.log"
   echo "Launching Shard $i on $dev -> $log_file"
 
   (
@@ -175,7 +176,7 @@ read_shard_summary() {
 for i in "${!pids[@]}"; do
   pid="${pids[$i]}"
   dev="${devices[$i]}"
-  log_file="$PROJECT_DIR/build/parallel_test_logs/shard_${i}_${dev}.log"
+  log_file="$LOGS_DIR/shard_${i}_${dev}.log"
   shard_failed=0
 
   if ! wait "$pid"; then

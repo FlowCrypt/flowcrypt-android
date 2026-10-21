@@ -18,7 +18,7 @@ wait_for_boot_completed() {
   local deadline=$((SECONDS + timeout_seconds))
   while (( SECONDS < deadline )); do
     local boot_completed
-    boot_completed=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+    boot_completed=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
     if [[ "$boot_completed" == "1" ]]; then
       return 0
     fi
@@ -188,7 +188,7 @@ adb shell "iptables -t nat -S OUTPUT"
 # Forwards requests on a specific host port to a different port on a device.
 # It can be helpful for debugging a mock web server.
 if [[ "${FORWARD_PORT_1212:-1}" == "1" ]]; then
-  adb forward tcp:1212 tcp:1212 || true
+  adb forward tcp:1212 tcp:1212
 fi
 
 ###################################################################################################
