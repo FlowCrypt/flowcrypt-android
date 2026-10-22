@@ -104,6 +104,7 @@ blocks:
           execution_time_limit:
             minutes: 15
           commands:
+            - python3 -B -m unittest discover -s script/tests -v
             # run JUnit tests
             - ./script/ci-junit-tests.sh
       epilogue:
@@ -132,7 +133,7 @@ blocks:
       prologue:
         commands:
           - ./script/ci-monitor-host-resources.sh start
-          - ./script/ci-pull-build-artifacts.sh
+          - ./script/ci-prepare-instrumentation-tests.sh
       jobs:
         - name: 'Instrumentation tests(No email server)'
           execution_time_limit:
@@ -164,6 +165,9 @@ blocks:
         - name: 'Instrumentation tests(enterprise)'
           execution_time_limit:
             minutes: 60
+          env_vars:
+            - name: UI_TESTS_VARIANT
+              value: Enterprise
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -175,6 +179,9 @@ blocks:
         - name: 'Instrumentation tests(flaky)'
           execution_time_limit:
             minutes: 60
+          env_vars:
+            - name: UI_TESTS_VARIANT
+              value: Enterprise
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -216,5 +223,9 @@ after_pipeline:
           - artifact pull workflow "test-results/${SEMAPHORE_PIPELINE_ID}.json" -d pipeline-test-results.json
           - ./script/ci-generate-test-report.sh pipeline-test-results.json test-report.md
           - artifact push workflow -f -d .semaphore/REPORT.md test-report.md
-          - artifact yank workflow build-cache.tar || true
-          - artifact yank workflow apks.tar || true
+          # Keep build artifacts after a failure: partial reruns reuse the passed Build block and need them.
+          - |
+            if [ "$SEMAPHORE_PIPELINE_RESULT" = "passed" ]; then
+              artifact yank workflow build-cache.tar || true
+              artifact yank workflow apks.tar || true
+            fi

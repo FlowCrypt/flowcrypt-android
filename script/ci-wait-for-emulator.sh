@@ -45,18 +45,31 @@ run_adb_root_or_fail() {
 }
 
 wait_for_network_after_adb_root() {
-  for attempt in {1..30}; do
-    if adb shell "ping -c 1 10.0.2.2" >/dev/null 2>&1 \
-      && adb shell "ping -c 1 8.8.8.8" >/dev/null 2>&1; then
+  local timeout_seconds="${EMULATOR_NETWORK_TIMEOUT_SECONDS:-180}"
+  if [[ ! "$timeout_seconds" =~ ^[1-9][0-9]*$ ]]; then
+    echo "EMULATOR_NETWORK_TIMEOUT_SECONDS must be a positive integer"
+    exit 1
+  fi
+
+  # A loaded CI host can need several seconds just to start an ADB shell.
+  local max_probe_seconds=10
+  local deadline=$((SECONDS + timeout_seconds))
+  while (( SECONDS < deadline )); do
+    local remaining_seconds=$((deadline - SECONDS))
+    local probe_seconds=$(( remaining_seconds < max_probe_seconds ? remaining_seconds : max_probe_seconds ))
+
+    # Bound both pings and the ADB call so a stalled guest cannot hang the wait.
+    if timeout --kill-after=1s "${probe_seconds}s" adb shell \
+      "ping -c 1 10.0.2.2 && ping -c 1 8.8.8.8" >/dev/null 2>&1; then
       echo "Emulator network is ready after adb root"
       return 0
     fi
 
-    echo "Waiting for emulator network after adb root... attempt ${attempt}/30"
+    echo "Waiting for emulator network after adb root... ${remaining_seconds}s left"
     sleep 2
   done
 
-  echo "Emulator network did not become ready after adb root"
+  echo "Emulator network did not become ready after adb root within ${timeout_seconds}s"
 
   print_network_debug "network after adb root"
 
