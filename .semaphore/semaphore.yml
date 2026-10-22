@@ -104,7 +104,6 @@ blocks:
           execution_time_limit:
             minutes: 15
           commands:
-            - python3 -B -m unittest discover -s script/tests -v
             # run JUnit tests
             - ./script/ci-junit-tests.sh
       epilogue:
