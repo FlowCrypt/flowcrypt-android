@@ -68,8 +68,12 @@ blocks:
       epilogue:
         on_pass:
           commands:
-            # push workflow artifacts for test jobs
+            # share build outputs with test jobs
             - ./script/ci-push-build-artifacts.sh
+
+            # TEMP: inspect project cache quota usage, remove before merge
+            - cache usage || true
+            - cache list || true
 
             # store app cache
             - echo "Store the app cache"
@@ -222,9 +226,10 @@ after_pipeline:
           - artifact pull workflow "test-results/${SEMAPHORE_PIPELINE_ID}.json" -d pipeline-test-results.json
           - ./script/ci-generate-test-report.sh pipeline-test-results.json test-report.md
           - artifact push workflow -f -d .semaphore/REPORT.md test-report.md
-          # Keep build artifacts after a failure: partial reruns reuse the passed Build block and need them.
+          # Keep build outputs after a failure: partial reruns reuse the passed Build block and need them.
+          # Leftover keys are evicted by the Semaphore cache when the project quota is reached.
           - |
             if [ "$SEMAPHORE_PIPELINE_RESULT" = "passed" ]; then
-              artifact yank workflow build-cache.tar || true
-              artifact yank workflow apks.tar || true
+              cache delete "build-cache-${SEMAPHORE_WORKFLOW_ID}" || true
+              cache delete "apks-${SEMAPHORE_WORKFLOW_ID}" || true
             fi
