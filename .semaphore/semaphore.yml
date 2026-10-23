@@ -71,10 +71,6 @@ blocks:
             # share build outputs with test jobs
             - ./script/ci-push-build-artifacts.sh
 
-            # TEMP: inspect project cache quota usage, remove before merge
-            - cache usage || true
-            - cache list || true
-
             # store app cache
             - echo "Store the app cache"
             - cache has_key $APP_GRADLE_CACHE || cache store $APP_GRADLE_CACHE .gradle
