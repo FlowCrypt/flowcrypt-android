@@ -223,7 +223,7 @@ after_pipeline:
           - ./script/ci-generate-test-report.sh pipeline-test-results.json test-report.md
           - artifact push workflow -f -d .semaphore/REPORT.md test-report.md
           # Keep build outputs after a failure: partial reruns reuse the passed Build block and need them.
-          # Leftover keys are evicted by the Semaphore cache when the project quota is reached.
+          # Leftover keys are evicted by least recent access when the project cache quota is reached.
           - |
             if [ "$SEMAPHORE_PIPELINE_RESULT" = "passed" ]; then
               cache delete "build-cache-${SEMAPHORE_WORKFLOW_ID}" || true
