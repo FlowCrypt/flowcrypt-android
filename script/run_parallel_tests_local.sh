@@ -12,6 +12,10 @@ PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$PROJECT_DIR"
 
 NUM_EMULATORS="${1:-3}"
+if [[ ! "$NUM_EMULATORS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Emulator count must be a positive integer" >&2
+  exit 1
+fi
 TEST_FILTER="${2:-${TEST_FILTER:-com.flowcrypt.email.junit.filters.DoesNotNeedMailServerFilter}}"
 AVD_NAME="${AVD_NAME:-ci-emulator}"
 # Software rendering keeps emulators away from the host GPU.
