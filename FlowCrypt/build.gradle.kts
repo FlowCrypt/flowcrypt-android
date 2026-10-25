@@ -527,7 +527,7 @@ dependencies {
   implementation("androidx.navigation:navigation-fragment-ktx:2.10.2")
   implementation("androidx.navigation:navigation-ui-ktx:2.10.2")
   implementation("androidx.navigation:navigation-runtime-ktx:2.10.2")
-  implementation("androidx.webkit:webkit:1.16.0")
+  implementation("androidx.webkit:webkit:1.18.0")
   implementation("androidx.credentials:credentials:1.6.0")
   implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
 
