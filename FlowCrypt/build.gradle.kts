@@ -556,10 +556,10 @@ dependencies {
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")
   implementation("org.jsoup:jsoup:1.23.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.12.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
   implementation("org.pgpainless:pgpainless-core:2.0.4")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
