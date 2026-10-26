@@ -18,7 +18,7 @@ esac
 
 ./script/ci-pull-build-artifacts.sh
 
-# Materialize task outputs before starting the emulator, even when workflow artifacts
+# Materialize task outputs before starting the emulator, even when shared build outputs
 # are missing. A cold compile alongside the emulator can exhaust the CI host's RAM.
 # --no-daemon releases the build JVM before the emulator is launched. In-process Kotlin
 # compilation prevents a separate Kotlin daemon from outliving the build and holding RAM.
