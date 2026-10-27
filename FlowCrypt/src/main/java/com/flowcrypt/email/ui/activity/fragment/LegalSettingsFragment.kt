@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -22,6 +23,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.databinding.FragmentLegalBinding
 import com.flowcrypt.email.databinding.SwipeToRefrechWithWebviewBinding
+import com.flowcrypt.email.extensions.android.webkit.handleRenderProcessGone
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.extensions.android.webkit.showUrlUsingChromeCustomTabs
 import com.flowcrypt.email.extensions.androidx.viewpager2.widget.reduceDragSensitivity
@@ -140,6 +142,10 @@ class LegalSettingsFragment : BaseFragment<FragmentLegalBinding>() {
           ): Boolean {
             showUrlUsingChromeCustomTabs(context = context, uri = request.url)
             return true
+          }
+
+          override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+            return handleRenderProcessGone(view)
           }
         }
 
