@@ -210,6 +210,12 @@ def main() -> int:
         f"and enriched {enriched_failures} final failure(s) "
         f"in {normalized_files} instrumentation report(s)"
     )
+    # Keep the final assertion visible even when artifact downloads are unavailable.
+    for test_identity, status in non_passed_tests.items():
+        details = test_runner_failures.get(test_identity)
+        if status == "FAILED" and details is not None:
+            print(f"\n[TEST] Final failure: {test_identity}")
+            print(details.stacktrace)
     return 0
 
 

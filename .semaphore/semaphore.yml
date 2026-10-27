@@ -68,7 +68,7 @@ blocks:
       epilogue:
         on_pass:
           commands:
-            # push workflow artifacts for test jobs
+            # share build outputs with test jobs
             - ./script/ci-push-build-artifacts.sh
 
             # store app cache
@@ -132,7 +132,7 @@ blocks:
       prologue:
         commands:
           - ./script/ci-monitor-host-resources.sh start
-          - ./script/ci-pull-build-artifacts.sh
+          - ./script/ci-prepare-instrumentation-tests.sh
       jobs:
         - name: 'Instrumentation tests(No email server)'
           execution_time_limit:
@@ -164,6 +164,9 @@ blocks:
         - name: 'Instrumentation tests(enterprise)'
           execution_time_limit:
             minutes: 60
+          env_vars:
+            - name: UI_TESTS_VARIANT
+              value: Enterprise
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -175,6 +178,9 @@ blocks:
         - name: 'Instrumentation tests(flaky)'
           execution_time_limit:
             minutes: 60
+          env_vars:
+            - name: UI_TESTS_VARIANT
+              value: Enterprise
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -216,5 +222,10 @@ after_pipeline:
           - artifact pull workflow "test-results/${SEMAPHORE_PIPELINE_ID}.json" -d pipeline-test-results.json
           - ./script/ci-generate-test-report.sh pipeline-test-results.json test-report.md
           - artifact push workflow -f -d .semaphore/REPORT.md test-report.md
-          - artifact yank workflow build-cache.tar || true
-          - artifact yank workflow apks.tar || true
+          # Keep build outputs after a failure: partial reruns reuse the passed Build block and need them.
+          # Leftover keys are evicted by least recent access when the project cache quota is reached.
+          - |
+            if [ "$SEMAPHORE_PIPELINE_RESULT" = "passed" ]; then
+              cache delete "build-cache-${SEMAPHORE_WORKFLOW_ID}" || true
+              cache delete "apks-${SEMAPHORE_WORKFLOW_ID}" || true
+            fi
