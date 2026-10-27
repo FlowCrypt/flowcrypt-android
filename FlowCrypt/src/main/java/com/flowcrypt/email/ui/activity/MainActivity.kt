@@ -153,6 +153,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    sanitizeIntentForNavigation(
+      intent = intent,
+      allowedDeepLinkDestinationIds = ALLOWED_DEEP_LINK_DESTINATION_IDS
+    )
     installSplashScreen().apply {
       setKeepOnScreenCondition {
         launcherViewModel.isInitLoadingCompletedStateFlow.value == null
@@ -195,6 +199,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   override fun onNewIntent(intent: Intent) {
+    sanitizeIntentForNavigation(
+      intent = intent,
+      allowedDeepLinkDestinationIds = ALLOWED_DEEP_LINK_DESTINATION_IDS
+    )
+    setIntent(intent)
     super.onNewIntent(intent)
     if (!handleLogoutFromSystemSettings(intent)) {
       navController.handleDeepLink(intent)
@@ -604,6 +613,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   companion object {
+    /**
+     * Destinations that are legitimately reachable through deep links into this activity.
+     * Any other navigation deep-link ids injected by a third-party intent are stripped.
+     */
+    private val ALLOWED_DEEP_LINK_DESTINATION_IDS = setOf(
+      R.id.nav_graph,
+      R.id.userRecoverableAuthExceptionFragment,
+      R.id.securitySettingsFragment,
+      // Used by in-app notifications built with NavDeepLinkBuilder.
+      R.id.messagesListFragment,
+      R.id.messageDetailsFragment,
+      R.id.threadDetailsFragment,
+    )
+
     private const val REQUEST_CODE_FIX_MISSING_PASSPHRASE_TO_REFRESH_PRV_KEYS_FROM_EKM = 1000
 
     private val REQUEST_KEY_FIX_MISSING_PASSPHRASE = GeneralUtil.generateUniqueExtraKey(

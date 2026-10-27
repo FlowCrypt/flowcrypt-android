@@ -105,15 +105,25 @@ abstract class BaseActivity<T : ViewBinding> : AppCompatActivity() {
 
   protected fun sanitizeIntentForNavigation(
     intent: Intent,
-    strippedDeepLinkDestinationIds: Set<Int>,
+    strippedDeepLinkDestinationIds: Set<Int> = emptySet(),
+    allowedDeepLinkDestinationIds: Set<Int>? = null,
     removeAllNavigationDeepLinkExtras: Boolean = false
   ) {
     val originalExtras = intent.extras ?: return
-    val shouldStripAll = removeAllNavigationDeepLinkExtras
     val deepLinkIds = originalExtras.getIntArray(EXTRA_KEY_NAVIGATION_DEEP_LINK_IDS)
     val containsBlockedInternalDestination =
       deepLinkIds?.any { it in strippedDeepLinkDestinationIds } == true
-    if (!shouldStripAll && !containsBlockedInternalDestination) {
+    val containsDisallowedDestination = if (allowedDeepLinkDestinationIds != null
+      && deepLinkIds != null
+    ) {
+      deepLinkIds.any { it !in allowedDeepLinkDestinationIds }
+    } else {
+      false
+    }
+    if (!removeAllNavigationDeepLinkExtras
+      && !containsBlockedInternalDestination
+      && !containsDisallowedDestination
+    ) {
       return
     }
     val sanitizedExtras = Bundle(originalExtras).apply {
