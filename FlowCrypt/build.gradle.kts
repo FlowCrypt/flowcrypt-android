@@ -494,7 +494,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.21")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.5")
-  testImplementation("io.github.classgraph:classgraph:4.8.197")
+  testImplementation("io.github.classgraph:classgraph:5.0.0")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
@@ -527,7 +527,7 @@ dependencies {
   implementation("androidx.navigation:navigation-fragment-ktx:2.10.2")
   implementation("androidx.navigation:navigation-ui-ktx:2.10.2")
   implementation("androidx.navigation:navigation-runtime-ktx:2.10.2")
-  implementation("androidx.webkit:webkit:1.16.0")
+  implementation("androidx.webkit:webkit:1.18.0")
   implementation("androidx.credentials:credentials:1.6.0")
   implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
 
@@ -559,7 +559,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
   implementation("org.pgpainless:pgpainless-core:2.0.4")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")

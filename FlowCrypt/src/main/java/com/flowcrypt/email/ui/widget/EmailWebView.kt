@@ -11,11 +11,13 @@ import android.graphics.Point
 import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.core.net.toUri
+import com.flowcrypt.email.extensions.android.webkit.handleRenderProcessGone
 import com.flowcrypt.email.extensions.android.webkit.setupDayNight
 import com.flowcrypt.email.extensions.android.webkit.showUrlUsingChromeCustomTabs
 import com.flowcrypt.email.model.MessageType
@@ -130,6 +132,10 @@ class EmailWebView : WebView {
       }
 
       return true
+    }
+
+    override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+      return handleRenderProcessGone(view)
     }
 
     /**

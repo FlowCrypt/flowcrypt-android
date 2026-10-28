@@ -142,17 +142,20 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       val classLoader = Thread.currentThread().contextClassLoader
       ClassGraph()
         // Use contextClassLoader to avoid ClassCastExceptions
-        .addClassLoader(classLoader)
+        .enableClassLoaders(classLoader)
         // use the right classloader which we added above
         .ignoreParentClassLoaders()
-        .enableAllInfo()
+        .enableClassInfo()
         .rejectPackages("androidx", "android")
         .acceptPackages("com.flowcrypt.email")
         .scan()
-        .getClassesImplementing("android.os.Parcelable")
-        .filter { (it.isInterface || it.isAbstract || it.typeSignature?.typeParameters?.size ?: 0 > 0).not() }
-        .loadClasses()
-        .map { arrayOf(it.name, it) }
+        .use { scanResult ->
+          scanResult.getAllClassesImplementing("android.os.Parcelable")
+            .filter { (it.isInterface || it.isAbstract || (it.typeSignature?.typeParameters?.size ?: 0) > 0).not() }
+            // ClassGraph 5 doesn't load classes anymore, so we do it via the same classloader
+            .map { Class.forName(it.name, false, classLoader) }
+            .map { arrayOf(it.name, it) }
+        }
     }
 
     @JvmStatic
