@@ -7,26 +7,26 @@
 
 set -euo pipefail
 
-echo "==> Pulling pre-built artifacts from Semaphore workflow storage..."
+# Keys must match script/ci-push-build-artifacts.sh
+BUILD_CACHE_KEY="build-cache-${SEMAPHORE_WORKFLOW_ID}"
+APKS_CACHE_KEY="apks-${SEMAPHORE_WORKFLOW_ID}"
 
-mkdir -p "$HOME/.gradle/caches"
-if artifact pull workflow build-cache.tar -d /tmp/build-cache.tar 2>/dev/null; then
-  echo "Extracting Gradle build cache into ~/.gradle/caches/..."
-  tar -xf /tmp/build-cache.tar -C "$HOME/.gradle/caches"
-  rm -f /tmp/build-cache.tar
+echo "==> Restoring pre-built outputs from Semaphore cache..."
+
+# 'cache restore' exits with 0 on a miss, so check the key explicitly.
+if cache has_key "$BUILD_CACHE_KEY"; then
+  # Restored content is merged into the build cache directory from the global Gradle cache.
+  cache restore "$BUILD_CACHE_KEY"
   echo "Build cache restored successfully."
 else
-  echo "Notice: Workflow build-cache artifact not available; will compile incrementally."
+  echo "Notice: Workflow build cache not available; will compile incrementally."
 fi
 
-mkdir -p "FlowCrypt/build/outputs"
-if artifact pull workflow apks.tar -d /tmp/apks.tar 2>/dev/null; then
-  echo "Extracting pre-built APKs into FlowCrypt/build/outputs/..."
-  tar -xf /tmp/apks.tar -C "FlowCrypt/build/outputs"
-  rm -f /tmp/apks.tar
+if cache has_key "$APKS_CACHE_KEY"; then
+  cache restore "$APKS_CACHE_KEY"
   echo "APKs restored successfully."
 else
-  echo "Notice: Workflow APKs artifact not available; will build as needed."
+  echo "Notice: Workflow APKs not available; will build as needed."
 fi
 
-echo "==> Build artifacts preparation finished."
+echo "==> Build outputs preparation finished."

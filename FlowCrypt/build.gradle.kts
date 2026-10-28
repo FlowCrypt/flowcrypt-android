@@ -481,12 +481,12 @@ dependencies {
   androidTestImplementation("androidx.room:room-testing:2.8.5")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.12.0")
-  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.5.0")
-  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.5.0")
+  androidTestImplementation("com.squareup.okhttp3:mockwebserver:5.5.1")
+  androidTestImplementation("com.squareup.okhttp3:okhttp-tls:5.5.1")
   androidTestImplementation("com.athaydes.rawhttp:rawhttp-core:2.6.0")
   androidTestUtil("androidx.test:orchestrator:1.6.1")
 
-  testImplementation("com.squareup.okhttp3:mockwebserver:5.5.0")
+  testImplementation("com.squareup.okhttp3:mockwebserver:5.5.1")
   testImplementation("com.flextrade.jfixture:jfixture:2.7.2")
   testImplementation("com.shazam:shazamcrest:0.11")
   testImplementation("org.robolectric:robolectric:4.17")
@@ -527,7 +527,7 @@ dependencies {
   implementation("androidx.navigation:navigation-fragment-ktx:2.10.2")
   implementation("androidx.navigation:navigation-ui-ktx:2.10.2")
   implementation("androidx.navigation:navigation-runtime-ktx:2.10.2")
-  implementation("androidx.webkit:webkit:1.16.0")
+  implementation("androidx.webkit:webkit:1.18.0")
   implementation("androidx.credentials:credentials:1.6.0")
   implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
 
@@ -538,7 +538,7 @@ dependencies {
   implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
 
   implementation("com.google.code.gson:gson:2.14.0")
-  implementation("com.google.api-client:google-api-client-android:2.9.1")
+  implementation("com.google.api-client:google-api-client-android:2.9.2")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20251201-2.0.0")
   //ACRA needs the following dependency to use a custom report sender
   implementation("com.google.auto.service:auto-service-annotations:1.1.1")
@@ -547,7 +547,7 @@ dependencies {
   implementation("com.squareup.retrofit2:converter-gson:3.0.0")
   implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
   implementation("com.squareup.okio:okio:3.18.2")
-  implementation("com.squareup.okhttp3:logging-interceptor:5.5.0")
+  implementation("com.squareup.okhttp3:logging-interceptor:5.5.1")
 
   implementation("com.github.bumptech.glide:glide:5.0.9")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
@@ -559,7 +559,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
   implementation("org.pgpainless:pgpainless-core:2.0.4")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
