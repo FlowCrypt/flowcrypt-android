@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui
 
+import android.content.Intent
 import android.os.ParcelFileDescriptor
 import androidx.navigation.Navigation
 import androidx.test.espresso.Espresso.onIdle
@@ -30,6 +31,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * Third-party apps must not be able to drive navigation in [MainActivity] via explicit navigation
@@ -59,14 +61,19 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
 
   @Test
   fun testExplicitDeepLinkFromAnotherAppIsIgnored() {
-    //the shell (com.android.shell) acts as a third-party app here. The test APK can't be used
-    //for that as it runs in the app process and is seen by the system as the app itself
-    val targetContext = InstrumentationRegistry.getInstrumentation().targetContext
-    val component = "${targetContext.packageName}/${MainActivity::class.java.name}"
-    val deepLinkIds = "${R.id.nav_graph},${R.id.mainSettingsFragment}"
-    executeShellCommand("am start -W -n $component --eia $KEY_DEEP_LINK_IDS $deepLinkIds")
+    startMainActivityFromShell("--eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS")
+    assertDeepLinkIsIgnored()
+  }
 
-    assertEquals(R.id.messagesListFragment, waitForCurrentDestinationId())
+  @Test
+  fun testExplicitDeepLinkFromAnotherAppIsIgnoredAfterSpoofedReferrer() {
+    //Activity.getReferrer() prefers referrer extras of the current activity intent. The first
+    //intent leaves a spoofed referrer there, the second one is delivered via onNewIntent()
+    startMainActivityFromShell("--es ${Intent.EXTRA_REFERRER_NAME} android-app://$packageName")
+    assertDeepLinkIsIgnored()
+
+    startMainActivityFromShell("--eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS")
+    assertDeepLinkIsIgnored()
   }
 
   @Test
@@ -79,10 +86,24 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
     assertEquals(R.id.mainSettingsFragment, waitForCurrentDestinationId())
   }
 
-  private fun executeShellCommand(command: String) {
+  /**
+   * The shell (com.android.shell) acts as a third-party app here. The test APK can't be used
+   * for that as it runs in the app process and is seen by the system as the app itself.
+   */
+  private fun startMainActivityFromShell(extras: String) {
+    val component = "$packageName/${MainActivity::class.java.name}"
     InstrumentationRegistry.getInstrumentation().uiAutomation
-      .executeShellCommand(command)
+      .executeShellCommand("am start -W -n $component $extras")
       .use { ParcelFileDescriptor.AutoCloseInputStream(it).readBytes() }
+  }
+
+  private fun assertDeepLinkIsIgnored() {
+    //'am start' adds FLAG_ACTIVITY_NEW_TASK, so a handled deep link restarts the task
+    //asynchronously. Give it time to show up before checking the current destination
+    waitUntil(TimeUnit.SECONDS.toMillis(5)) {
+      getCurrentDestinationId() == R.id.mainSettingsFragment
+    }
+    assertEquals(R.id.messagesListFragment, waitForCurrentDestinationId())
   }
 
   private fun waitForCurrentDestinationId(): Int? {
@@ -114,7 +135,11 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
     return activity
   }
 
+  private val packageName: String
+    get() = InstrumentationRegistry.getInstrumentation().targetContext.packageName
+
   private companion object {
     const val KEY_DEEP_LINK_IDS = "android-support-nav:controller:deepLinkIds"
+    val DEEP_LINK_IDS = "${R.id.nav_graph},${R.id.mainSettingsFragment}"
   }
 }

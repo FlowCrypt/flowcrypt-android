@@ -195,6 +195,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   override fun onNewIntent(intent: Intent) {
+    //Navigation checks the caller via Activity.getReferrer(), which prefers referrer extras of
+    //getIntent(). Without this a spoofed referrer of a previous intent would be used
+    setIntent(intent)
     super.onNewIntent(intent)
     if (!handleLogoutFromSystemSettings(intent)) {
       navController.handleDeepLink(intent)
