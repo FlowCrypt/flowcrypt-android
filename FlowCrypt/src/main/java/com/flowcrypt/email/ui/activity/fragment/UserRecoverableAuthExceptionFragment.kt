@@ -9,7 +9,6 @@ import android.accounts.Account
 import android.accounts.AccountManager
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,11 +17,11 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -39,7 +38,10 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
+import com.google.android.gms.auth.UserRecoverableAuthException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * @author Denys Bondarenko
@@ -49,28 +51,12 @@ class UserRecoverableAuthExceptionFragment :
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentUserRecoverableAuthExceptionBinding.inflate(inflater, container, false)
 
-  private val args by navArgs<UserRecoverableAuthExceptionFragmentArgs>()
-
   private val forActivityResultSignInError = registerForActivityResult(
     ActivityResultContracts.StartActivityForResult()
   ) { result: ActivityResult ->
     when (result.resultCode) {
       Activity.RESULT_OK -> {
-        lifecycleScope.launch {
-          accountViewModel.activeAccountLiveData.value?.let { accountEntity ->
-            context?.let { context ->
-              val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-              roomDatabase.msgDao().changeMsgsStateSuspend(
-                accountEntity.email,
-                JavaEmailConstants.FOLDER_OUTBOX,
-                MessageState.AUTH_FAILURE.value,
-                MessageState.QUEUED.value
-              )
-              MessagesSenderWorker.enqueue(context)
-              navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
-            }
-          }
-        }
+        onAccessRestored()
       }
 
       Activity.RESULT_CANCELED -> {
@@ -115,19 +101,49 @@ class UserRecoverableAuthExceptionFragment :
     )
   }
 
-  private fun isValidGoogleRecoverableAuthIntent(intent: Intent?): Boolean {
-    if (intent == null) return false
-    val grantFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-        Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-        Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
-    if (intent.flags and grantFlags != 0) {
-      return false
+  /**
+   * Requests a fresh token. If the user should grant access again, Google Play services
+   * provides the recovery intent via [UserRecoverableAuthException]. We don't accept that
+   * intent from outside (deep link arguments) as it can't be trusted.
+   */
+  private fun requestGoogleAccessRecovery(accountEntity: AccountEntity) {
+    val appContext = requireContext().applicationContext
+    viewLifecycleOwner.lifecycleScope.launch {
+      showProgress(progressMsg = getString(R.string.processing))
+      val result = withContext(Dispatchers.IO) {
+        runCatching { EmailUtil.getGmailAccountToken(appContext, accountEntity) }
+      }
+      showContent()
+
+      result.onSuccess {
+        onAccessRestored()
+      }.onFailure { e ->
+        val recoverableIntent = (e as? UserRecoverableAuthException)?.intent
+        if (recoverableIntent != null) {
+          forActivityResultSignInError.launch(recoverableIntent)
+        } else {
+          showInfoDialog(dialogMsg = e.message ?: e.javaClass.simpleName)
+        }
+      }
     }
-    val componentPackage = intent.component?.packageName
-    val targetPackage = componentPackage
-      ?: intent.resolveActivity(requireContext().packageManager)?.packageName
-    return targetPackage == GOOGLE_PLAY_SERVICES_PACKAGE
+  }
+
+  private fun onAccessRestored() {
+    lifecycleScope.launch {
+      accountViewModel.activeAccountLiveData.value?.let { accountEntity ->
+        context?.let { context ->
+          val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+          roomDatabase.msgDao().changeMsgsStateSuspend(
+            accountEntity.email,
+            JavaEmailConstants.FOLDER_OUTBOX,
+            MessageState.AUTH_FAILURE.value,
+            MessageState.QUEUED.value
+          )
+          MessagesSenderWorker.enqueue(context)
+          navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
+        }
+      }
+    }
   }
 
   private fun initViews() {
@@ -135,12 +151,7 @@ class UserRecoverableAuthExceptionFragment :
       account?.let { accountEntity ->
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            val recoverableIntent = args.recoverableIntent
-            if (isValidGoogleRecoverableAuthIntent(recoverableIntent)) {
-              forActivityResultSignInError.launch(recoverableIntent)
-            } else {
-              toast(R.string.access_was_not_granted)
-            }
+            requestGoogleAccessRecovery(accountEntity)
           }
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
@@ -253,9 +264,5 @@ class UserRecoverableAuthExceptionFragment :
         }
       }
     }
-  }
-
-  companion object {
-    private const val GOOGLE_PLAY_SERVICES_PACKAGE = "com.google.android.gms"
   }
 }
