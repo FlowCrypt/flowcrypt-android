@@ -17,11 +17,11 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -38,7 +38,10 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseOAuthFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
+import com.google.android.gms.auth.UserRecoverableAuthException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * @author Denys Bondarenko
@@ -48,28 +51,12 @@ class UserRecoverableAuthExceptionFragment :
   override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
     FragmentUserRecoverableAuthExceptionBinding.inflate(inflater, container, false)
 
-  private val args by navArgs<UserRecoverableAuthExceptionFragmentArgs>()
-
   private val forActivityResultSignInError = registerForActivityResult(
     ActivityResultContracts.StartActivityForResult()
   ) { result: ActivityResult ->
     when (result.resultCode) {
       Activity.RESULT_OK -> {
-        lifecycleScope.launch {
-          accountViewModel.activeAccountLiveData.value?.let { accountEntity ->
-            context?.let { context ->
-              val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-              roomDatabase.msgDao().changeMsgsStateSuspend(
-                accountEntity.email,
-                JavaEmailConstants.FOLDER_OUTBOX,
-                MessageState.AUTH_FAILURE.value,
-                MessageState.QUEUED.value
-              )
-              MessagesSenderWorker.enqueue(context)
-              navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
-            }
-          }
-        }
+        onAccessRestored()
       }
 
       Activity.RESULT_CANCELED -> {
@@ -114,13 +101,57 @@ class UserRecoverableAuthExceptionFragment :
     )
   }
 
+  /**
+   * Requests a fresh token. If the user should grant access again, Google Play services
+   * provides the recovery intent via [UserRecoverableAuthException]. We don't accept that
+   * intent from outside (deep link arguments) as it can't be trusted.
+   */
+  private fun requestGoogleAccessRecovery(accountEntity: AccountEntity) {
+    val appContext = requireContext().applicationContext
+    viewLifecycleOwner.lifecycleScope.launch {
+      showProgress(progressMsg = getString(R.string.processing))
+      val result = withContext(Dispatchers.IO) {
+        runCatching { EmailUtil.getGmailAccountToken(appContext, accountEntity) }
+      }
+      showContent()
+
+      result.onSuccess {
+        onAccessRestored()
+      }.onFailure { e ->
+        val recoverableIntent = (e as? UserRecoverableAuthException)?.intent
+        if (recoverableIntent != null) {
+          forActivityResultSignInError.launch(recoverableIntent)
+        } else {
+          showInfoDialog(dialogMsg = e.message ?: e.javaClass.simpleName)
+        }
+      }
+    }
+  }
+
+  private fun onAccessRestored() {
+    lifecycleScope.launch {
+      accountViewModel.activeAccountLiveData.value?.let { accountEntity ->
+        context?.let { context ->
+          val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+          roomDatabase.msgDao().changeMsgsStateSuspend(
+            accountEntity.email,
+            JavaEmailConstants.FOLDER_OUTBOX,
+            MessageState.AUTH_FAILURE.value,
+            MessageState.QUEUED.value
+          )
+          MessagesSenderWorker.enqueue(context)
+          navController?.navigate(NavGraphDirections.actionGlobalToMessagesListFragment())
+        }
+      }
+    }
+  }
+
   private fun initViews() {
     binding?.buttonReconnect?.setOnClickListener {
       account?.let { accountEntity ->
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-            val recoverableIntent = args.recoverableIntent ?: return@setOnClickListener
-            forActivityResultSignInError.launch(recoverableIntent)
+            requestGoogleAccessRecovery(accountEntity)
           }
 
           AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {

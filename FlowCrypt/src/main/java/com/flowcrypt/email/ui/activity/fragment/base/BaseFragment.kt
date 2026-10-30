@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -213,10 +212,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
     return connectionLifecycleObserver.connectionLiveData.value ?: false
   }
 
-  protected fun showAuthIssueHint(
-    recoverableIntent: Intent? = null,
-    duration: Int = Snackbar.LENGTH_LONG
-  ) {
+  protected fun showAuthIssueHint(duration: Int = Snackbar.LENGTH_LONG) {
     val msgText = when (account?.accountType) {
       AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> getString(
         R.string.auth_failure_hint,
@@ -232,7 +228,7 @@ abstract class BaseFragment<T : ViewBinding> : Fragment(), UiUxSettings, IdlingC
     ) {
       context?.let { context ->
         val intent =
-          ErrorNotificationManager.getFixAuthIssueIntent(context, account, recoverableIntent)
+          ErrorNotificationManager.getFixAuthIssueIntent(context, account)
         if (intent.resolveActivity(context.packageManager) != null) {
           startActivity(intent)
         }

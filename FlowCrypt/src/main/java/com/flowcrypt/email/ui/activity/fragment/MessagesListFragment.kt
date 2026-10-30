@@ -1156,18 +1156,9 @@ class MessagesListFragment : BaseFragment<FragmentMessagesListBinding>(), ListPr
             when (result.exception) {
               is CommonConnectionException -> showConnProblemHint()
 
-              is UserRecoverableAuthException -> {
-                showAuthIssueHint(result.exception.intent)
-              }
-
-              is UserRecoverableAuthIOException -> {
-                showAuthIssueHint(result.exception.intent)
-              }
-
-              is AuthenticationFailedException -> {
-                showAuthIssueHint()
-              }
-
+              is UserRecoverableAuthException,
+              is UserRecoverableAuthIOException,
+              is AuthenticationFailedException,
               is AuthenticatorException -> {
                 showAuthIssueHint()
               }
