@@ -149,6 +149,31 @@ class FileAndDirectoryUtils {
     }
 
     /**
+     * Resolve a file name inside a directory and ensure the result stays strictly inside it.
+     *
+     * @param directory The directory that must contain the resolved file.
+     * @param fileName The untrusted file name. It must not contain path separators.
+     * @return The canonical file located inside [directory].
+     * @throws IOException If the file name is invalid or resolves outside [directory].
+     */
+    @Throws(IOException::class)
+    fun getFileInsideDir(directory: File, fileName: String): File {
+      if (fileName.indexOf(File.separatorChar) >= 0) {
+        throw IOException("File name contains a path separator: '$fileName'")
+      }
+
+      val canonicalDirectory = directory.canonicalFile
+      val file = File(canonicalDirectory, fileName).canonicalFile
+      val directoryPrefix = canonicalDirectory.path.trimEnd(File.separatorChar) + File.separator
+
+      if (file.path == canonicalDirectory.path || !file.path.startsWith(directoryPrefix)) {
+        throw IOException("Resolved file '$fileName' is outside of '$canonicalDirectory'")
+      }
+
+      return file
+    }
+
+    /**
      * Get a directory. Create a new directory if it doesn't exist
      *
      * @param directoryName The directory name.

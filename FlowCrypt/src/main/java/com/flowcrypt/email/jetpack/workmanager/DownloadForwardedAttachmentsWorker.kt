@@ -34,6 +34,7 @@ import org.apache.commons.io.FileUtils
 import org.eclipse.angus.mail.imap.IMAPFolder
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.util.UUID
 
@@ -254,9 +255,13 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
         continue
       }
 
-      val attName = attachmentEntity.name
-
-      val attFile = File(parentDirectory, attName)
+      val attFile = try {
+        FileAndDirectoryUtils.getFileInsideDir(parentDirectory, attachmentEntity.name)
+      } catch (e: IOException) {
+        LogsUtil.d(TAG, "Rejected unsafe forwarded attachment name", e)
+        msgState = MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND
+        break
+      }
       val exists = attFile.exists()
 
       var uri: Uri?
