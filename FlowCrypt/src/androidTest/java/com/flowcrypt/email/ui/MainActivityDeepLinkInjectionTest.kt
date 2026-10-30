@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.os.ParcelFileDescriptor
 import androidx.navigation.Navigation
@@ -26,6 +27,8 @@ import com.flowcrypt.email.ui.activity.MainActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -66,14 +69,17 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
   }
 
   @Test
-  fun testExplicitDeepLinkFromAnotherAppIsIgnoredAfterSpoofedReferrer() {
-    //Activity.getReferrer() prefers referrer extras of the current activity intent. The first
-    //intent leaves a spoofed referrer there, the second one is delivered via onNewIntent()
-    startMainActivityFromShell("--es ${Intent.EXTRA_REFERRER_NAME} android-app://$packageName")
-    assertDeepLinkIsIgnored()
+  fun testExplicitDeepLinkFromAnotherAppIsIgnoredAfterSpoofedReferrerName() {
+    checkExplicitDeepLinkIsIgnoredAfterSpoofedReferrer(
+      "--es ${Intent.EXTRA_REFERRER_NAME} android-app://$packageName"
+    )
+  }
 
-    startMainActivityFromShell("--eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS")
-    assertDeepLinkIsIgnored()
+  @Test
+  fun testExplicitDeepLinkFromAnotherAppIsIgnoredAfterSpoofedReferrerUri() {
+    checkExplicitDeepLinkIsIgnoredAfterSpoofedReferrer(
+      "--eu ${Intent.EXTRA_REFERRER} android-app://$packageName"
+    )
   }
 
   @Test
@@ -84,6 +90,27 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
     InstrumentationRegistry.getInstrumentation().targetContext.startActivity(intent)
 
     assertEquals(R.id.mainSettingsFragment, waitForCurrentDestinationId())
+  }
+
+  /**
+   * [Activity.getReferrer] prefers referrer extras of the current activity intent. The first
+   * intent leaves a spoofed referrer there, the second one must be delivered to the same
+   * [MainActivity] instance via [MainActivity.onNewIntent].
+   */
+  private fun checkExplicitDeepLinkIsIgnoredAfterSpoofedReferrer(spoofedReferrerExtra: String) {
+    startMainActivityFromShell(spoofedReferrerExtra)
+    assertDeepLinkIsIgnored()
+    val activity = requireNotNull(getResumedMainActivity())
+
+    startMainActivityFromShell("--eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS")
+    assertDeepLinkIsIgnored()
+
+    assertSame(activity, getResumedMainActivity())
+    var isNewIntentReceived = false
+    InstrumentationRegistry.getInstrumentation().runOnMainSync {
+      isNewIntentReceived = activity.intent.hasExtra(KEY_DEEP_LINK_IDS)
+    }
+    assertTrue(isNewIntentReceived)
   }
 
   /**
