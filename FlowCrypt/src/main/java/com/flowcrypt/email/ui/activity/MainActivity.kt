@@ -158,6 +158,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         launcherViewModel.isInitLoadingCompletedStateFlow.value == null
       }
     }
+    sanitizeExternalNavigationIntent(intent)
     super.onCreate(savedInstanceState)
     observeMovingToBackground()
 
@@ -195,6 +196,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   }
 
   override fun onNewIntent(intent: Intent) {
+    //Navigation checks the caller via Activity.getReferrer(), which prefers referrer extras of
+    //getIntent(). Without this a spoofed referrer of a previous intent would be used
+    setIntent(intent)
+    sanitizeExternalNavigationIntent(intent)
     super.onNewIntent(intent)
     if (!handleLogoutFromSystemSettings(intent)) {
       navController.handleDeepLink(intent)
@@ -221,6 +226,28 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
   override fun initViews() {
     super.initViews()
     setupDrawerLayout()
+  }
+
+  /**
+   * An external intent can combine a public URI deep link, [Intent.FLAG_ACTIVITY_NEW_TASK] and
+   * navigation extras that target an internal destination. Navigation ignores such extras at
+   * first, but after matching the URI it restarts the task with the original intent, including
+   * its extras. After that restart the app itself is the caller, so the extras become trusted.
+   * To prevent that we remove navigation extras from all intents that don't come from the app.
+   */
+  private fun sanitizeExternalNavigationIntent(intent: Intent) {
+    val hasReferrerExtra =
+      intent.hasExtra(Intent.EXTRA_REFERRER) || intent.hasExtra(Intent.EXTRA_REFERRER_NAME)
+
+    if (!hasReferrerExtra && (callingPackage ?: referrer?.authority) == packageName) {
+      return
+    }
+
+    sanitizeIntentForNavigation(
+      intent = intent,
+      strippedDeepLinkDestinationIds = emptySet(),
+      removeAllNavigationDeepLinkExtras = true
+    )
   }
 
   private fun postInitViews() {

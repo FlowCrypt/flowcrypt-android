@@ -996,10 +996,10 @@ class GmailApiHelper {
 
         return@withContext list
       } catch (e: UserRecoverableAuthIOException) {
-        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account)
         throw e
       } catch (e: UserRecoverableAuthException) {
-        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account, e.intent)
+        ErrorNotificationManager(context).notifyUserAboutAuthFailure(account)
         throw e
       }
     }
