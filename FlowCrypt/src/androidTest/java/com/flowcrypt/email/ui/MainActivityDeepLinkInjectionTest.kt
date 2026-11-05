@@ -82,6 +82,26 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
     )
   }
 
+  /**
+   * Navigation ignores untrusted deepLinkIds, matches the URI and restarts the task with the
+   * original intent ('am start' adds FLAG_ACTIVITY_NEW_TASK). The app is the caller after that
+   * restart, so deepLinkIds must be removed beforehand to not be trusted.
+   */
+  @Test
+  fun testExplicitDeepLinkFromAnotherAppIsIgnoredWhenCombinedWithUriDeepLink() {
+    startMainActivityFromShell("-d $SECURITY_SETTINGS_URI --eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS")
+    assertUriDeepLinkIsHandledInsteadOfExplicitOne()
+  }
+
+  @Test
+  fun testExplicitDeepLinkFromAnotherAppIsIgnoredWhenCombinedWithUriDeepLinkInNewIntent() {
+    startMainActivityFromShell("")
+    assertDeepLinkIsIgnored()
+
+    startMainActivityFromShell("-d $SECURITY_SETTINGS_URI --eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS")
+    assertUriDeepLinkIsHandledInsteadOfExplicitOne()
+  }
+
   @Test
   fun testExplicitDeepLinkFromAppItselfIsHandled() {
     val intent = TestGeneralUtil.genIntentForNavigationComponent(
@@ -102,13 +122,16 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
     assertDeepLinkIsIgnored()
     val activity = requireNotNull(getResumedMainActivity())
 
-    startMainActivityFromShell("--eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS")
+    startMainActivityFromShell(
+      "--eia $KEY_DEEP_LINK_IDS $DEEP_LINK_IDS --ez $KEY_NEW_INTENT_MARKER true"
+    )
     assertDeepLinkIsIgnored()
 
     assertSame(activity, getResumedMainActivity())
     var isNewIntentReceived = false
     InstrumentationRegistry.getInstrumentation().runOnMainSync {
-      isNewIntentReceived = activity.intent.hasExtra(KEY_DEEP_LINK_IDS)
+      //navigation extras are removed from external intents, so a separate marker is used here
+      isNewIntentReceived = activity.intent.getBooleanExtra(KEY_NEW_INTENT_MARKER, false)
     }
     assertTrue(isNewIntentReceived)
   }
@@ -133,8 +156,21 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
     assertEquals(R.id.messagesListFragment, waitForCurrentDestinationId())
   }
 
+  private fun assertUriDeepLinkIsHandledInsteadOfExplicitOne() {
+    //the task restart may happen twice if deepLinkIds are trusted after the first one.
+    //Give it time to show up before checking the current destination
+    waitUntil(TimeUnit.SECONDS.toMillis(5)) {
+      getCurrentDestinationId() == R.id.mainSettingsFragment
+    }
+    assertEquals(R.id.securitySettingsFragment, waitForCurrentDestinationId())
+  }
+
   private fun waitForCurrentDestinationId(): Int? {
-    val expectedDestinationIds = setOf(R.id.messagesListFragment, R.id.mainSettingsFragment)
+    val expectedDestinationIds = setOf(
+      R.id.messagesListFragment,
+      R.id.mainSettingsFragment,
+      R.id.securitySettingsFragment
+    )
     waitUntil { getCurrentDestinationId() in expectedDestinationIds }
     onIdle()
     return getCurrentDestinationId()
@@ -168,5 +204,7 @@ class MainActivityDeepLinkInjectionTest : BaseTest() {
   private companion object {
     const val KEY_DEEP_LINK_IDS = "android-support-nav:controller:deepLinkIds"
     val DEEP_LINK_IDS = "${R.id.nav_graph},${R.id.mainSettingsFragment}"
+    const val KEY_NEW_INTENT_MARKER = "newIntentMarker"
+    const val SECURITY_SETTINGS_URI = "flowcrypt://email.flowcrypt.com/settings/security"
   }
 }
