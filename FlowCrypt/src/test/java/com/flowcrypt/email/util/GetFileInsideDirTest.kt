@@ -109,27 +109,30 @@ class GetFileInsideDirTest {
   }
 
   @Test
-  fun rejectSiblingSharingDirectoryNamePrefix() {
+  fun rejectSymlinkToSiblingSharingDirectoryNamePrefix() {
     val root = temporaryFolder.newFolder("root")
     val directory = File(root, "forwarded").apply { mkdirs() }
+    val siblingFile = File(root, "forwarded-other/payload").apply {
+      parentFile?.mkdirs()
+      createNewFile()
+    }
+    createSymbolicLinkOrSkip(File(directory, "link"), siblingFile)
 
     assertThrows(IOException::class.java) {
-      FileAndDirectoryUtils.getFileInsideDir(directory, "../forwarded-other/payload")
+      FileAndDirectoryUtils.getFileInsideDir(directory, "link")
     }
   }
 
   @Test
   fun rejectSymlinkEscapingDirectory() {
     val directory = temporaryFolder.newFolder("forwarded")
-    val outsideDirectory = temporaryFolder.newFolder("outside")
-    try {
-      Files.createSymbolicLink(File(directory, "link").toPath(), outsideDirectory.toPath())
-    } catch (e: Exception) {
-      assumeNoException(e)
+    val outsideFile = File(temporaryFolder.newFolder("outside"), "flowcrypt.db-journal").apply {
+      createNewFile()
     }
+    createSymbolicLinkOrSkip(File(directory, "link"), outsideFile)
 
     assertThrows(IOException::class.java) {
-      FileAndDirectoryUtils.getFileInsideDir(directory, "link/flowcrypt.db-journal")
+      FileAndDirectoryUtils.getFileInsideDir(directory, "link")
     }
   }
 
@@ -139,6 +142,14 @@ class GetFileInsideDirTest {
 
     assertThrows(IOException::class.java) {
       FileAndDirectoryUtils.getFileInsideDir(directory, "bad\u0000name")
+    }
+  }
+
+  private fun createSymbolicLinkOrSkip(link: File, target: File) {
+    try {
+      Files.createSymbolicLink(link.toPath(), target.toPath())
+    } catch (e: Exception) {
+      assumeNoException(e)
     }
   }
 }
