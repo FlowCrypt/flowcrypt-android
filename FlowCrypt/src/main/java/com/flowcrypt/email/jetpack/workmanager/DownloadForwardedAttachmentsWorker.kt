@@ -7,6 +7,7 @@ package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
@@ -243,7 +244,8 @@ class DownloadForwardedAttachmentsWorker(context: Context, params: WorkerParamet
       }
     }
 
-  private suspend fun loadAttachments(
+  @VisibleForTesting
+  internal suspend fun loadAttachments(
     attachmentEntities: List<AttachmentEntity>,
     parentDirectory: File,
     action: suspend (attachmentEntity: AttachmentEntity) -> InputStream?
