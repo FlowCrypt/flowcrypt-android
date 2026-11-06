@@ -495,7 +495,7 @@ dependencies {
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.5")
   testImplementation("androidx.work:work-testing:2.12.0")
-  testImplementation("io.github.classgraph:classgraph:5.0.0")
+  testImplementation("io.github.classgraph:classgraph:5.0.1")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
