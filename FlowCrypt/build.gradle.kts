@@ -494,6 +494,7 @@ dependencies {
   testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.4.21")
   testImplementation("junit:junit:4.13.2")
   testImplementation("androidx.room:room-testing:2.8.5")
+  testImplementation("androidx.work:work-testing:2.12.0")
   testImplementation("io.github.classgraph:classgraph:5.0.0")
 
   implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -537,7 +538,7 @@ dependencies {
   implementation("com.google.android.flexbox:flexbox:3.0.0")
   implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
 
-  implementation("com.google.code.gson:gson:2.14.0")
+  implementation("com.google.code.gson:gson:2.15.0")
   implementation("com.google.api-client:google-api-client-android:2.9.2")
   implementation("com.google.apis:google-api-services-gmail:v1-rev20251201-2.0.0")
   //ACRA needs the following dependency to use a custom report sender

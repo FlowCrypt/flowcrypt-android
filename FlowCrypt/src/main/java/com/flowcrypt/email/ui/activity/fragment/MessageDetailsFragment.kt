@@ -1569,21 +1569,9 @@ class MessageDetailsFragment : BaseFragment<FragmentMessageDetailsBinding>(), Pr
               showStatus(getString(R.string.connection_lost))
             }
 
-            is UserRecoverableAuthException -> {
-              showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
-              showStatus(msg = it.exceptionMsg)
-            }
-
-            is UserRecoverableAuthIOException -> {
-              showAuthIssueHint(it.exception.intent, duration = Snackbar.LENGTH_INDEFINITE)
-              showStatus(msg = it.exceptionMsg)
-            }
-
-            is AuthenticationFailedException -> {
-              showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
-              showStatus(msg = it.exceptionMsg)
-            }
-
+            is UserRecoverableAuthException,
+            is UserRecoverableAuthIOException,
+            is AuthenticationFailedException,
             is AuthenticatorException -> {
               showAuthIssueHint(duration = Snackbar.LENGTH_INDEFINITE)
               showStatus(msg = it.exceptionMsg)

@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.email.protocol
 import android.accounts.AccountManager
 import android.accounts.AuthenticatorException
 import android.content.Context
-import android.content.Intent
 import androidx.annotation.WorkerThread
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
@@ -190,19 +189,10 @@ class OpenStoreHelper {
       } catch (e: Exception) {
         e.printStackTrace()
         if (isAuthException(e)) {
-          val recoverableIntent: Intent? = when (e) {
-            is UserRecoverableAuthException -> e.intent
-            is UserRecoverableAuthIOException -> e.intent
-            else -> null
-          }
-
           if (!isResetTokenNeeded) {
             connectToGimapsStore(context, accountEntity, true, store)
           } else {
-            ErrorNotificationManager(context).notifyUserAboutAuthFailure(
-              accountEntity,
-              recoverableIntent
-            )
+            ErrorNotificationManager(context).notifyUserAboutAuthFailure(accountEntity)
             throw e
           }
         } else throw e

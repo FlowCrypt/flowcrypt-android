@@ -10,7 +10,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.navigation.NavDeepLinkBuilder
@@ -69,14 +68,14 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     )
   }
 
-  fun notifyUserAboutAuthFailure(account: AccountEntity, recoverableIntent: Intent? = null) {
+  fun notifyUserAboutAuthFailure(account: AccountEntity) {
     if (!isShowingAuthErrorEnabled) return
 
     val refreshedAccount =
       FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccountById(account.id)
     if (refreshedAccount?.isActive == false) return
 
-    val intent = getFixAuthIssueIntent(context, account, recoverableIntent)
+    val intent = getFixAuthIssueIntent(context, account)
 
     val pendingIntent =
       PendingIntent.getActivity(
@@ -140,22 +139,10 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
     const val GROUP_NAME_ERRORS = BuildConfig.APPLICATION_ID + ".ERRORS"
     const val NOTIFICATIONS_GROUP_ERROR = -4
 
-    fun getFixAuthIssueIntent(
-      context: Context,
-      account: AccountEntity?,
-      recoverableIntent: Intent?
-    ): Intent {
+    fun getFixAuthIssueIntent(context: Context, account: AccountEntity?): Intent {
       return when (account?.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE, AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
-          val uri = "flowcrypt://email.flowcrypt.com/sign-in/recover_auth".toUri()
-          Intent(null, uri).apply {
-            recoverableIntent?.let {
-              val extras = Bundle().apply {
-                putParcelable("recoverableIntent", recoverableIntent)
-              }
-              putExtra("android-support-nav:controller:deepLinkExtras", extras)
-            }
-          }
+          Intent(null, "flowcrypt://email.flowcrypt.com/sign-in/recover_auth".toUri())
         }
 
         else -> Intent(null, context.getString(R.string.deep_link_server_settings).toUri())
