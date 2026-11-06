@@ -87,10 +87,14 @@ class UIUtil {
       return context.resources.getColor(colorResourcesId, context.theme)
     }
 
+    //TODO: compress the bitmap on a background thread.
+    // Suppressed to unblock the AGP 9.4.1 -> 9.5.0 update. This code worked the same way before,
+    // but the new ThreadConstraint lint check (AGP 9.5.0+) started reporting it as an error.
     /**
      * Get a screenshot of the given activity.
      * @return an array of bytes of a compressed screenshot.
      */
+    @Suppress("ThreadConstraint")
     fun getScreenShotByteArray(activity: Activity): ByteArray? {
       val view = activity.window.decorView
       val width = view.width

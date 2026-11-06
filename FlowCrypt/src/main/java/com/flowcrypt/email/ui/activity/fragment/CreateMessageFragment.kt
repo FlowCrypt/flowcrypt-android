@@ -498,6 +498,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  //TODO: move toPgpKeyRingDetails() processing to a background thread.
+  // Suppressed to unblock the AGP 9.4.1 -> 9.5.0 update. This code worked the same way before,
+  // but the new ThreadConstraint lint check (AGP 9.5.0+) started reporting it as an error.
+  @Suppress("ThreadConstraint")
   override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
     when (parent?.id) {
       R.id.spinnerFrom -> {
@@ -1110,6 +1114,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  //TODO: move toPgpKeyRingDetails() processing to a background thread.
+  // Suppressed to unblock the AGP 9.4.1 -> 9.5.0 update. This code worked the same way before,
+  // but the new ThreadConstraint lint check (AGP 9.5.0+) started reporting it as an error.
+  @Suppress("ThreadConstraint")
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.fetchUpdates()
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner) {
@@ -1157,6 +1165,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  //TODO: move toPgpKeyRingDetails() processing to a background thread.
+  // Suppressed to unblock the AGP 9.4.1 -> 9.5.0 update. This code worked the same way before,
+  // but the new ThreadConstraint lint check (AGP 9.5.0+) started reporting it as an error.
+  @Suppress("ThreadConstraint")
   private fun observePrivateKeysChanges() {
     KeysStorageImpl.getInstance(requireContext()).secretKeyRingsLiveData
       .observe(viewLifecycleOwner) {
@@ -2059,6 +2071,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }
   }
 
+  //TODO: move getPgpKeyDetailsList() processing to a background thread.
+  // Suppressed to unblock the AGP 9.4.1 -> 9.5.0 update. This code worked the same way before,
+  // but the new ThreadConstraint lint check (AGP 9.5.0+) started reporting it as an error.
+  @Suppress("ThreadConstraint")
   private fun tryToSendMessage() {
     snackBar?.dismiss()
 
