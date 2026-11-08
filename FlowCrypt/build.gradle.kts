@@ -556,7 +556,7 @@ dependencies {
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261103.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")
-  implementation("org.jsoup:jsoup:1.23.2")
+  implementation("org.jsoup:jsoup:1.24.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
