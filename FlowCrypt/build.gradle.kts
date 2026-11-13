@@ -477,7 +477,7 @@ dependencies {
   androidTestImplementation("androidx.test:runner:1.7.0")
   androidTestImplementation("androidx.test:rules:1.7.0")
   androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
-  androidTestImplementation("androidx.test.uiautomator:uiautomator:2.4.0")
+  androidTestImplementation("androidx.test.uiautomator:uiautomator:2.4.1")
   androidTestImplementation("androidx.room:room-testing:2.8.5")
   androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
   androidTestImplementation("androidx.work:work-testing:2.12.0")
@@ -553,10 +553,10 @@ dependencies {
   implementation("com.github.bumptech.glide:glide:5.0.9")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.1.1")
-  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261011.1")
+  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261103.2")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")
-  implementation("org.jsoup:jsoup:1.23.2")
+  implementation("org.jsoup:jsoup:1.24.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
