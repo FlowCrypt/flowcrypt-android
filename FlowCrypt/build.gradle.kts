@@ -21,8 +21,17 @@ plugins {
   id("com.starter.easylauncher")
   id("kotlin-parcelize")
   id("com.google.devtools.ksp")
-  id("org.ajoberstar.grgit")
 }
+
+val gitCommitId = providers.exec {
+  workingDir(rootProject.rootDir)
+  commandLine("git", "rev-parse", "HEAD")
+}.standardOutput.asText.map { it.trim().take(7) }
+
+val gitBranchName = providers.exec {
+  workingDir(rootProject.rootDir)
+  commandLine("git", "rev-parse", "--abbrev-ref", "HEAD")
+}.standardOutput.asText.map { it.trim() }
 
 val keystoreProperties = Properties()
 val propertiesFile = project.file("keystore.properties")
@@ -111,7 +120,7 @@ android {
       versionNameSuffix = "_" +
           defaultConfig.versionCode +
           "__" + SimpleDateFormat("yyyy_MM_dd").format(Date()) +
-          "__" + grgit.head().id.substring(0, 7)
+          "__" + gitCommitId.get()
       applicationIdSuffix = ".debug"
       signingConfig = signingConfigs.getByName("debug")
 
@@ -420,7 +429,7 @@ easylauncher {
 }
 
 tasks.register("checkCorrectBranch") {
-  if (!grgit.branch.current().name.equals("master")) {
+  if (gitBranchName.get() != "master") {
     throw GradleException("Please use 'master' branch to generate a release build")
   }
 }
