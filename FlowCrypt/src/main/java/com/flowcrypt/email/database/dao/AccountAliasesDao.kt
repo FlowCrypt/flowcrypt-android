@@ -39,7 +39,7 @@ interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
       }.toSet()
       val existingAliases = getAliases(
         account = accountEntity.email,
-        accountType = accountEntity.accountType ?: ""
+        accountType = accountEntity.accountType
       )
       val existingUniqueSendAsSet = existingAliases.map { entity ->
         entity.sendAsEmail?.lowercase()

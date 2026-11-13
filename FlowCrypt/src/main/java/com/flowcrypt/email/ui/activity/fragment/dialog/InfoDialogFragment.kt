@@ -83,7 +83,7 @@ class InfoDialogFragment : BaseDialogFragment() {
   override fun onResume() {
     super.onResume()
     if (!args.useWebViewToRender) {
-      val textView = dialog?.window?.decorView?.findViewById(android.R.id.message) as? TextView
+      val textView = dialog?.window?.decorView?.findViewById<TextView>(android.R.id.message)
       textView?.setTextIsSelectable(true)
     }
   }

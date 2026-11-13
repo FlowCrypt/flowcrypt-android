@@ -51,7 +51,7 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
 
         val hasAliasesSignature = roomDatabase.accountAliasesDao().getAliases(
           account = accountEntity.email,
-          accountType = accountEntity.accountType ?: ""
+          accountType = accountEntity.accountType
         ).any { it.signature?.isNotEmpty() == true }
 
         if (!hasAliasesSignature) {

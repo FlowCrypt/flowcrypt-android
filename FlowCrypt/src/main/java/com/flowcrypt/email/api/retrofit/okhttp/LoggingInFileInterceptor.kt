@@ -73,7 +73,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
     var requestStartMsg =
       "--> " + request.method + ' '.toString() + request.url + ' '.toString() + protocol
     if (!logHeaders && hasRequestBody) {
-      requestStartMsg += " (" + requestBody!!.contentLength() + "-byte body)"
+      requestStartMsg += " (" + requestBody.contentLength() + "-byte body)"
     }
     logger.log(requestStartMsg)
 
@@ -82,7 +82,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
         // Request body headers are only present when installed as a network interceptor.
         // Force
         // them to be included (when available) so there values are known.
-        if (requestBody!!.contentType() != null) {
+        if (requestBody.contentType() != null) {
           logger.log("Content-Type: " + requestBody.contentType()!!)
         }
         if (requestBody.contentLength() != (-1).toLong()) {
@@ -110,7 +110,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
         logger.log("--> END " + request.method + " (encoded body omitted)")
       } else {
         val buffer = Buffer()
-        requestBody!!.writeTo(buffer)
+        requestBody.writeTo(buffer)
 
         var charset: Charset? = UTF8
         val contentType = requestBody.contentType()
@@ -146,7 +146,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
     val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
 
     val responseBody = response.body
-    val contentLength = responseBody?.contentLength() ?: 0
+    val contentLength = responseBody.contentLength()
     val bodySize = if (contentLength != (-1).toLong()) "$contentLength-byte" else "unknown-length"
     logger.log(
       "<-- " + response.code + ' '.toString() + response.message
@@ -168,7 +168,7 @@ class LoggingInFileInterceptor constructor(context: Context, fileName: String) :
       } else if (isBodyEncoded(response.headers)) {
         logger.log("<-- END HTTP (encoded body omitted)")
       } else {
-        val source = responseBody!!.source()
+        val source = responseBody.source()
         source.request(java.lang.Long.MAX_VALUE) // Buffer the entire body.
         val buffer = source.buffer
 

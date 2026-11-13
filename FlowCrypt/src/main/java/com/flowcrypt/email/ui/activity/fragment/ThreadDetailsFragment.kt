@@ -638,9 +638,9 @@ class ThreadDetailsFragment : BaseFragment<FragmentThreadDetailsBinding>(), Prog
         val hasUnverifiedSignatures =
           message.incomingMessageInfo?.verificationResult?.hasUnverifiedSignatures == true
         val hasActiveSignatureVerification = if (hasUnverifiedSignatures) {
-          val messageFromAddresses = message.incomingMessageInfo?.getFrom()?.map {
+          val messageFromAddresses = message.incomingMessageInfo.getFrom().map {
             it.address.lowercase()
-          } ?: emptyList()
+          }
 
           val alreadyCheckedFromAddresses =
             threadDetailsViewModel.sessionFromRecipientsStateFlow.value.filter {

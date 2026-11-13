@@ -15,7 +15,7 @@ import java.io.OutputStream
  *
  * @author Denys Bondarenko
  */
-class ProgressOutputStream(val out: OutputStream) : BufferedOutputStream(out) {
+class ProgressOutputStream(out: OutputStream) : BufferedOutputStream(out) {
   override fun write(b: ByteArray) {
     if (Thread.interrupted()) {
       throw SyncTaskTerminatedException()

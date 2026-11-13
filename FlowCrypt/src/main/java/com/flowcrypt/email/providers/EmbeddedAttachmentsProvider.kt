@@ -111,8 +111,8 @@ class EmbeddedAttachmentsProvider : DocumentsProvider() {
       val maxMemory = Runtime.getRuntime().maxMemory()
       val cacheSize = max(maxMemory / 4, FileUtils.ONE_MB * 25).toInt()
       lruCache = object : LruCache<String, AttachmentInfo>(cacheSize) {
-        override fun sizeOf(key: String, attachmentInfo: AttachmentInfo): Int {
-          return attachmentInfo.rawData?.size ?: attachmentInfo.encodedSize.toInt()
+        override fun sizeOf(key: String, value: AttachmentInfo): Int {
+          return value.rawData?.size ?: value.encodedSize.toInt()
         }
       }
     }
