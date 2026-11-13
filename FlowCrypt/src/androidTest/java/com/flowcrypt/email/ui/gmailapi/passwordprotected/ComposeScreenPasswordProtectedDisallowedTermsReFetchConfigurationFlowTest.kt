@@ -40,12 +40,12 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.junit.runners.model.Statement
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 
@@ -64,20 +64,25 @@ import java.util.concurrent.TimeUnit
   subject = "",
   isNew = true
 )
-@Ignore("temporary disabled")
 class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest :
   BaseComposeScreenPasswordProtectedDisallowedTermsTest(
     ACCOUNT_ENTITY_WITH_EXISTING_OPTIONAL_PARAMETERS
   ) {
 
-  private var attemptsToUseDefaultBehavior = 2
+  /**
+   * The app fetches the client configuration a few times before the test triggers the re-fetch
+   * (activity start, setting a web portal password). The exact count depends on timing,
+   * so the updated configuration is returned only after the test explicitly asks for it.
+   */
+  @Volatile
+  private var isUpdatedClientConfigurationEnabled = false
 
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         return when {
           request.path.equals("/api/v1/client-configuration?domain=flowcrypt.test") -> {
-            if (attemptsToUseDefaultBehavior == 0) {
+            if (isUpdatedClientConfigurationEnabled) {
               MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(
@@ -91,7 +96,6 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
                   )
                 )
             } else {
-              attemptsToUseDefaultBehavior--
               handleCommonAPICalls(request)
             }
           }
@@ -104,6 +108,15 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
   @get:Rule
   var ruleChain: TestRule =
     RuleChain.outerRule(RetryRule.DEFAULT)
+      //RetryRule reuses this instance, so every attempt must start with the default configuration
+      .around(TestRule { base, _ ->
+        object : Statement() {
+          override fun evaluate() {
+            isUpdatedClientConfigurationEnabled = false
+            base.evaluate()
+          }
+        }
+      })
       .around(ClearAppSettingsRule())
       .around(GrantPermissionRuleChooser.grant(Manifest.permission.POST_NOTIFICATIONS))
       .around(mockWebServerRule)
@@ -151,12 +164,18 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
         .perform(click())
     }
 
+    isUpdatedClientConfigurationEnabled = true
+
     //go to ProvidePasswordToProtectMsgFragment and go back to trigger updating
     onView(withId(R.id.btnSetWebPortalPassword))
       .perform(click())
     Espresso.pressBack()
-    //need to wait while threads will be synced
-    Thread.sleep(2000)
+
+    //wait until RefreshClientConfigurationWorker saves the updated client configuration
+    waitUntil(TimeUnit.SECONDS.toMillis(30)) {
+      roomDatabase.accountDao().getActiveAccount()
+        ?.clientConfiguration?.disallowPasswordMessagesErrorText == UPDATED_ERROR_TEXT
+    }
 
     //check that client configuration was updated
     MATCHING_SUBJECTS.first().let { subject ->
