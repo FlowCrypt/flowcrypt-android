@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 
 object WkdClient {
   private const val DEFAULT_REQUEST_TIMEOUT = 4000L
-  internal const val MAX_RESPONSE_SIZE_IN_BYTES = 5 * 1024 * 1024
+  internal const val MAX_RESPONSE_SIZE_IN_BYTES = 1024 * 1024
 
   suspend fun lookupEmail(context: Context, email: String): PGPPublicKeyRingCollection? =
     withContext(Dispatchers.IO) {
