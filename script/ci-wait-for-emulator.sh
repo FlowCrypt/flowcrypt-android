@@ -162,6 +162,11 @@ adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
 
+# CI emulators are slow. When injecting a tap takes longer than long_press_timeout (400 ms by
+# default), Espresso logs "Overslept and turned a tap into a long press" and the view gets
+# a long click instead of a click (e.g. a toolbar menu item shows its tooltip).
+adb shell settings put secure long_press_timeout 1500
+
 ###################################################################################################
 # To test WKD we need to route all traffic for localhost:443 to localhost:1212
 # as we can't use 443 directly for a mock web server.

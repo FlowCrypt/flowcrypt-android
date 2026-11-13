@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.gmailapi.passwordprotected
 
+import android.os.SystemClock
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -19,14 +20,18 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withTextViewDrawable
 import com.flowcrypt.email.matchers.TextViewDrawableMatcher
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseComposeGmailFlow
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.Matchers.allOf
 import org.junit.Before
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -70,6 +75,53 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
 
     onView(withId(R.id.btSetPassword))
       .perform(click())
+
+    //returning to the compose screen starts a new lookup for the recipient.
+    //Sending is blocked while it is in progress
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
+  }
+
+  /**
+   * The lookup starts asynchronously, so a single check can pass before it begins.
+   * Wait until the chip keeps its final color (it is white while the lookup is in progress)
+   * during [stableForMs].
+   */
+  private fun waitUntilRecipientChipIsSettled(
+    email: String,
+    colorResId: Int,
+    stableForMs: Long = TimeUnit.SECONDS.toMillis(1),
+    timeoutMs: Long = TimeUnit.SECONDS.toMillis(30)
+  ) {
+    val chipMatcher = allOf(
+      withText(email),
+      withChipsBackgroundColor(getTargetContext(), colorResId)
+    )
+    val startTime = SystemClock.uptimeMillis()
+    var settledSince: Long? = null
+    while (true) {
+      val now = SystemClock.uptimeMillis()
+      val isSettled = runCatching {
+        onView(chipMatcher).check(matches(isDisplayed()))
+      }.isSuccess
+
+      if (isSettled) {
+        val since = settledSince ?: now.also { settledSince = it }
+        if (now - since >= stableForMs) return
+      } else {
+        settledSince = null
+      }
+
+      if (now - startTime >= timeoutMs) {
+        //fail with a clear Espresso error
+        onView(chipMatcher).check(matches(isDisplayed()))
+        return
+      }
+
+      SystemClock.sleep(100)
+    }
   }
 
   companion object {
