@@ -5,6 +5,7 @@
 
 
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.variant.ResValue
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
@@ -67,7 +68,6 @@ android {
     versionName = rootProject.extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
-    multiDexEnabled = true
   }
 
   signingConfigs {
@@ -115,25 +115,33 @@ android {
       signingConfig = signingConfigs.getByName("release")
     }
 
-    getByName("debug") {
+    // Shared by debug and uiTests. uiTests doesn't use initWith(debug) because overriding
+    // inherited resValues triggers the AGP RES_VALUE_REPLACED warning.
+    fun ApplicationBuildType.configureDebuggable(isHttpLogEnabled: Boolean) {
       isDebuggable = true
+      isCrunchPngs = false
+      applicationIdSuffix = ".debug"
+      signingConfig = signingConfigs.getByName("debug")
+
+      val httpLogLevel = if (isHttpLogEnabled) "BODY" else "NONE"
+      buildConfigField("boolean", "IS_ACRA_ENABLED", "false")
+      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", isHttpLogEnabled.toString())
+      buildConfigField("String", "HTTP_LOG_LEVEL", "\"$httpLogLevel\"")
+      resValue("string", "gradle_is_acra_enabled", "false")
+      resValue("string", "gradle_is_http_log_enabled", isHttpLogEnabled.toString())
+      resValue("string", "gradle_http_log_level", httpLogLevel)
+    }
+
+    getByName("debug") {
+      configureDebuggable(isHttpLogEnabled = true)
       versionNameSuffix = "_" +
           defaultConfig.versionCode +
           "__" + SimpleDateFormat("yyyy_MM_dd").format(Date()) +
           "__" + gitCommitId.get()
-      applicationIdSuffix = ".debug"
-      signingConfig = signingConfigs.getByName("debug")
-
-      buildConfigField("boolean", "IS_ACRA_ENABLED", "false")
-      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "true")
-      buildConfigField("String", "HTTP_LOG_LEVEL", "\"BODY\"")
-      resValue("string", "gradle_is_acra_enabled", "false")
-      resValue("string", "gradle_is_http_log_enabled", "true")
-      resValue("string", "gradle_http_log_level", "BODY")
     }
 
     create("uiTests") {
-      initWith(getByName("debug"))
+      configureDebuggable(isHttpLogEnabled = false)
       versionNameSuffix =
         "_test_" + defaultConfig.versionCode + "__" + SimpleDateFormat("yyyy_MM_dd").format(Date())
       buildConfigField("String", "ATTESTER_URL", "\"https://flowcrypt.test/attester/\"")
@@ -142,17 +150,13 @@ android {
         "SHARED_TENANT_FES_URL",
         "\"https://flowcrypt.test/shared-tenant-fes/\""
       )
-      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "false")
-      buildConfigField("String", "HTTP_LOG_LEVEL", "\"NONE\"")
-      resValue("string", "gradle_is_http_log_enabled", "false")
-      resValue("string", "gradle_http_log_level", "NONE")
     }
   }
 
   testBuildType = "uiTests"
 
   sourceSets {
-    getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    getByName("androidTest").assets.directories += "$projectDir/schemas"
   }
 
   flavorDimensions += "standard"
@@ -429,8 +433,11 @@ easylauncher {
 }
 
 tasks.register("checkCorrectBranch") {
-  if (gitBranchName.get() != "master") {
-    throw GradleException("Please use 'master' branch to generate a release build")
+  val branchName = gitBranchName
+  doLast {
+    if (branchName.get() != "master") {
+      throw GradleException("Please use 'master' branch to generate a release build")
+    }
   }
 }
 
@@ -458,8 +465,8 @@ tasks.register<Copy>("copyReleaseApks") {
   }
 }
 
-val devDebugImplementation: Configuration by configurations.creating
-val uiTestsImplementation by configurations.named("uiTestsImplementation")
+val devDebugImplementation = configurations.create("devDebugImplementation")
+val uiTestsImplementation = configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.9")
