@@ -10,5 +10,5 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.key.util.KeyRingUtils
 
 fun PGPSecretKeyRing.toPublicKeyRing(): PGPPublicKeyRing {
-  return KeyRingUtils.publicKeyRingFrom(this)
+  return KeyRingUtils.publicKeys(this)
 }

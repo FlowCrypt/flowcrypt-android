@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -77,7 +76,7 @@ class LookUpPubKeysDialogFragment : BaseDialogFragment() {
             it.data?.pubkey.let { pubKeys ->
               setFragmentResult(
                 args.requestKey,
-                bundleOf(KEY_PUB_KEYS to pubKeys)
+                Bundle().apply { putString(KEY_PUB_KEYS, pubKeys) }
               )
             }
             countingIdlingResource?.decrementSafely(this@LookUpPubKeysDialogFragment)

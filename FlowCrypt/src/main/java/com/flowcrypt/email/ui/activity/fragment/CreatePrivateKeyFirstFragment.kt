@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
@@ -111,7 +110,10 @@ class CreatePrivateKeyFirstFragment :
       navController?.navigateUp()
       setFragmentResult(
         args.requestKey,
-        bundleOf(KEY_CREATED_KEY to pgpKeyRingDetails, KEY_ACCOUNT to args.accountEntity)
+        Bundle().apply {
+          putParcelable(KEY_CREATED_KEY, pgpKeyRingDetails)
+          putParcelable(KEY_ACCOUNT, args.accountEntity)
+        }
       )
     }
   }

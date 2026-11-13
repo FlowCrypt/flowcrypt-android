@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -98,7 +97,7 @@ class CreatePrivateKeyDialogFragment : BaseDialogFragment() {
               navController?.navigateUp()
               setFragmentResult(
                 args.requestKey,
-                bundleOf(KEY_CREATED_KEY to pgpKeyRingDetails)
+                Bundle().apply { putParcelable(KEY_CREATED_KEY, pgpKeyRingDetails) }
               )
             }
             countingIdlingResource?.decrementSafely(this@CreatePrivateKeyDialogFragment)

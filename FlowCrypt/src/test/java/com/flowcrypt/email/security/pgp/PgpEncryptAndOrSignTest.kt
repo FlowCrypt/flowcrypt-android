@@ -13,11 +13,11 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.BeforeClass
 import org.junit.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.bouncycastle.extensions.certificate
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
-import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -30,8 +30,8 @@ class PgpEncryptAndOrSignTest {
 
   @Test
   fun testEncryptFile() {
-    val senderPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing)
-    val recipientPgpPublicKeyRing = KeyRingUtils.publicKeyRingFrom(recipientPGPSecretKeyRing)
+    val senderPgpPublicKeyRing = senderPGPSecretKeyRing.certificate
+    val recipientPgpPublicKeyRing = recipientPGPSecretKeyRing.certificate
 
     val sourceBytes = source.toByteArray()
     val outputStreamForEncryptedSource = ByteArrayOutputStream()
@@ -100,8 +100,8 @@ class PgpEncryptAndOrSignTest {
       destOutputStream = outputStreamForEncryptedSource,
       pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
         listOf(
-          KeyRingUtils.publicKeyRingFrom(senderPGPSecretKeyRing),
-          KeyRingUtils.publicKeyRingFrom(recipientPGPSecretKeyRing)
+          senderPGPSecretKeyRing.certificate,
+          recipientPGPSecretKeyRing.certificate
         )
       ),
       doArmor = true,
@@ -123,14 +123,6 @@ class PgpEncryptAndOrSignTest {
 
     val protector = PasswordBasedSecretKeyRingProtector(
       KeyRingProtectionSettings.secureDefaultSettings(), object : SecretKeyPassphraseProvider {
-        override fun getPassphraseFor(keyId: Long): Passphrase? {
-          return doGetPassphrase(keyId)
-        }
-
-        override fun hasPassphrase(keyId: Long): Boolean {
-          return doGetPassphrase(keyId) != null
-        }
-
         private fun doGetPassphrase(keyId: Long?): Passphrase? {
           pgpSecretKeyRing.publicKeys.forEach { publicKey ->
             if (publicKey.keyID == keyId) {
@@ -141,11 +133,11 @@ class PgpEncryptAndOrSignTest {
         }
 
         override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
-          return getPassphraseFor(keyIdentifier.keyId)
+          return doGetPassphrase(keyIdentifier.keyId)
         }
 
         override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
-          return hasPassphrase(keyIdentifier.keyId)
+          return doGetPassphrase(keyIdentifier.keyId) != null
         }
       }
     )
@@ -155,7 +147,7 @@ class PgpEncryptAndOrSignTest {
     val decryptionStream = api.processMessage()
       .onInputStream(inputStream)
       .withOptions(
-        ConsumerOptions.get()
+        ConsumerOptions.get(api)
           .addDecryptionKey(api.toKey(pgpSecretKeyRing), protector)
           .addVerificationCerts(pgpPublicKeyRingCollection.map { api.toCertificate(it) })
       )

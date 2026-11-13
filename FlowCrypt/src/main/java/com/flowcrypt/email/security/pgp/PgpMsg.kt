@@ -870,11 +870,11 @@ object PgpMsg {
         if (verifiedSignatures.isEmpty()) {
           verifiedSignatures.addAll(verifiedSignaturesList)
         } else {
-          val keyIdsOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey.keyId }
-          val keyIdsOfCurrentVerifiedSignatures = verifiedSignaturesList.map {
-            it.signingKey.keyId
+          val signingKeysOfAllVerifiedSignatures = verifiedSignatures.map { it.signingKey }
+          val signingKeysOfCurrentVerifiedSignatures = verifiedSignaturesList.map {
+            it.signingKey
           }
-          if (keyIdsOfAllVerifiedSignatures != keyIdsOfCurrentVerifiedSignatures) {
+          if (signingKeysOfAllVerifiedSignatures != signingKeysOfCurrentVerifiedSignatures) {
             hasMixedSignatures = true
             verifiedSignatures.addAll(verifiedSignaturesList)
           }

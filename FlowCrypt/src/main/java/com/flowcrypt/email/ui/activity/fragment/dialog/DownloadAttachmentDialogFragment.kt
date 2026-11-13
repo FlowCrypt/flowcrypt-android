@@ -11,7 +11,6 @@ import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -107,8 +106,8 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
             it.data?.let { byteArray ->
               setFragmentResult(
                 args.requestKey,
-                bundleOf(
-                  KEY_ATTACHMENT to args.attachmentInfo.copy(
+                Bundle().apply {
+                  putParcelable(KEY_ATTACHMENT, args.attachmentInfo.copy(
                     rawData = byteArray,
                     name = finalName,
                     type = if (args.attachmentInfo.isPossiblyEncrypted) {
@@ -121,10 +120,10 @@ class DownloadAttachmentDialogFragment : BaseDialogFragment() {
                     } else {
                       args.attachmentInfo.type
                     },
-                  ),
-                  KEY_REQUEST_CODE to args.requestCode,
-                  KEY_INCOMING_BUNDLE to args.bundle
-                )
+                  ))
+                  putInt(KEY_REQUEST_CODE, args.requestCode)
+                  putBundle(KEY_INCOMING_BUNDLE, args.bundle)
+                }
               )
             }
             countingIdlingResource?.decrementSafely(this@DownloadAttachmentDialogFragment)

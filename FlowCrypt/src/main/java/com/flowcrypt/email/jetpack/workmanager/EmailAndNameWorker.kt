@@ -34,14 +34,14 @@ class EmailAndNameWorker(context: Context, params: WorkerParameters) : BaseWorke
   private var recipientDao: RecipientDao = FlowCryptRoomDatabase.getDatabase(context).recipientDao()
 
   override suspend fun doWork(): Result {
-    val emails = inputData.getStringArray(EXTRA_KEY_EMAILS) ?: return Result.failure()
-    val names = inputData.getStringArray(EXTRA_KEY_NAMES) ?: return Result.failure()
+    val emails = inputData.getNullableStringArray(EXTRA_KEY_EMAILS) ?: return Result.failure()
+    val names = inputData.getNullableStringArray(EXTRA_KEY_NAMES) ?: return Result.failure()
 
     if (emails.size != names.size) return Result.failure()
 
     for (i in emails.indices) {
-      val email = emails[i].lowercase()
-      val name = names[i].takeIf { it.isNotEmpty() }
+      val email = emails[i]?.lowercase() ?: continue
+      val name = names[i]?.takeIf { it.isNotEmpty() }
       val recipientEntity = recipientDao.getRecipientByEmailSuspend(email)
       if (recipientEntity != null) {
         if (recipientEntity.name.isNullOrEmpty()) {

@@ -9,7 +9,6 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
@@ -39,10 +38,10 @@ class ActionsDialogFragment : BaseDialogFragment() {
         navController?.navigateUp()
         setFragmentResult(
           args.requestKey,
-          bundleOf(
-            KEY_REQUEST_RESULT to args.items[which],
-            KEY_REQUEST_INCOMING_BUNDLE to args.bundle
-          )
+          Bundle().apply {
+            putParcelable(KEY_REQUEST_RESULT, args.items[which])
+            putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
+          }
         )
       }
     }.create()

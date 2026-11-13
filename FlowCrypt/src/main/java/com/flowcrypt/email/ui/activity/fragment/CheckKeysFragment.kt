@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.IntDef
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -297,7 +296,10 @@ class CheckKeysFragment : BaseFragment<FragmentCheckKeysBinding>() {
     navController?.navigateUp()
     setFragmentResult(
       args.requestKey,
-      bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to ArrayList(unlockedKeys), KEY_STATE to checkingState)
+      Bundle().apply {
+        putParcelableArrayList(KEY_UNLOCKED_PRIVATE_KEYS, ArrayList(unlockedKeys))
+        putInt(KEY_STATE, checkingState)
+      }
     )
   }
 

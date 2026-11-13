@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -68,7 +67,7 @@ class EditScreenshotDialogFragment : BaseDialogFragment() {
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(KEY_SCREENSHOT to UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100))
+            Bundle().apply { putByteArray(KEY_SCREENSHOT, UIUtil.getCompressedByteArrayOfBitmap(saveBitmap, 100)) }
           )
         }
       })

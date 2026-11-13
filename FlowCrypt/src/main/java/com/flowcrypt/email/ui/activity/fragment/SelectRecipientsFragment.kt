@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -13,7 +13,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
-import androidx.core.os.bundleOf
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.setFragmentResult
@@ -27,10 +26,10 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.RecipientEntity
 import com.flowcrypt.email.databinding.FragmentSelectRecipientsBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.supportActionBar
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
@@ -59,7 +58,7 @@ class SelectRecipientsFragment : BaseFragment<FragmentSelectRecipientsBinding>()
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(KEY_RECIPIENTS to ArrayList(listOf(recipientEntityWithPgpMarker.toRecipientEntity())))
+            Bundle().apply { putParcelableArrayList(KEY_RECIPIENTS, ArrayList(listOf(recipientEntityWithPgpMarker.toRecipientEntity()))) }
           )
         }
       })

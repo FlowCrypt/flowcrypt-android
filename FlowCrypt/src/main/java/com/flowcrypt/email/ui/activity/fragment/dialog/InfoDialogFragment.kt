@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.webkit.WebView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -50,10 +49,10 @@ class InfoDialogFragment : BaseDialogFragment() {
         args.requestKey?.let { requestKey ->
           setFragmentResult(
             requestKey,
-            bundleOf(
-              KEY_REQUEST_CODE to args.requestCode,
-              KEY_REQUEST_INCOMING_BUNDLE to args.bundle
-            )
+            Bundle().apply {
+              putInt(KEY_REQUEST_CODE, args.requestCode)
+              putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
+            }
           )
         }
       }

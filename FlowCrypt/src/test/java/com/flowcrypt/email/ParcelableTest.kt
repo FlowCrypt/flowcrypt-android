@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email
 
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
@@ -131,7 +132,13 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
     val retainedParcelable = Parcel.obtain().run {
       unmarshall(serializedBytes, 0, serializedBytes.size)
       setDataPosition(0)
-      readParcelable<Parcelable>(this::class.java.classLoader)
+      val classLoader = this::class.java.classLoader
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        readParcelable(classLoader, Parcelable::class.java)
+      } else {
+        @Suppress("DEPRECATION")
+        readParcelable<Parcelable>(classLoader)
+      }
     }
 
     Assert.assertEquals("$name failed", objectInstance, retainedParcelable)

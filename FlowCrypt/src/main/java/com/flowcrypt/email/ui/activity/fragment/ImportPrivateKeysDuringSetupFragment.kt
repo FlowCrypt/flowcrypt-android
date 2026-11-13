@@ -1,6 +1,6 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors: DenBond7
+ * Contributors: denbond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment
@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.NavDirections
@@ -122,17 +121,22 @@ class ImportPrivateKeysDuringSetupFragment :
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(KEY_UNLOCKED_PRIVATE_KEYS to keys?.map {
-              it.copy(
-                importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
-                  importSourceType = if (activeUri != null) {
-                    KeyImportDetails.SourceType.FILE
-                  } else {
-                    KeyImportDetails.SourceType.CLIPBOARD
-                  }
-                ),
+            Bundle().apply {
+              putParcelableArrayList(
+                KEY_UNLOCKED_PRIVATE_KEYS,
+                keys?.map {
+                  it.copy(
+                    importInfo = (it.importInfo ?: PgpKeyRingDetails.ImportInfo()).copy(
+                      importSourceType = if (activeUri != null) {
+                        KeyImportDetails.SourceType.FILE
+                      } else {
+                        KeyImportDetails.SourceType.CLIPBOARD
+                      }
+                    ),
+                  )
+                }?.let { ArrayList(it) }
               )
-            })
+            }
           )
         }
       }

@@ -9,7 +9,6 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -96,10 +95,10 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
     navController?.navigateUp()
     setFragmentResult(
       args.requestKey,
-      bundleOf(
-        KEY_REQUEST_RESULT_CODE to dialogItems[which].id,
-        KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS to args.recipientWithPubKeys
-      )
+      Bundle().apply {
+        putInt(KEY_REQUEST_RESULT_CODE, dialogItems[which].id)
+        putParcelable(KEY_REQUEST_RECIPIENT_WITH_PUB_KEYS, args.recipientWithPubKeys)
+      }
     )
   }
 
