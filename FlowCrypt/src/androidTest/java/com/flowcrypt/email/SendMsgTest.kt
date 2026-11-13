@@ -499,7 +499,7 @@ class SendMsgTest {
           0,
         ).sortedArray()
 
-        val actualIds = messageMetadata.recipientKeyIds.toTypedArray().sortedArray()
+        val actualIds = messageMetadata.recipientKeyIdentifiers.map { it.keyId }.toTypedArray().sortedArray()
 
         assertArrayEquals(
           "Expected = ${expectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
@@ -508,7 +508,7 @@ class SendMsgTest {
         )
 
         assertFalse(
-          messageMetadata.recipientKeyIds.contains(
+          messageMetadata.recipientKeyIdentifiers.map { it.keyId }.contains(
             PgpKey.parseKeys(bccPgpKeyDetails.publicKey)
               .pgpKeyRingCollection
               .pgpPublicKeyRingCollection
