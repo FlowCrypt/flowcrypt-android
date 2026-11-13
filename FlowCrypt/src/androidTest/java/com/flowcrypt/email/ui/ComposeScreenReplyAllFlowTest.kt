@@ -48,7 +48,7 @@ class ComposeScreenReplyAllFlowTest : BaseTest() {
   private val account = AccountDaoManager.getDefaultAccountDao()
   private val accountAliasesEntity = AccountAliasesEntity(
     email = account.email,
-    accountType = account.accountType ?: "",
+    accountType = account.accountType,
     sendAsEmail = "alias@flowcrypt.test",
     displayName = "Alias",
     isDefault = true,

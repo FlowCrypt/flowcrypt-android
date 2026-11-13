@@ -448,7 +448,7 @@ abstract class BaseGmailApiTest(val accountEntity: AccountEntity = BASE_ACCOUNT_
                 append(it.first + ": " + it.second + "\n")
               }
               append("\n")
-              append(response.body?.string())
+              append(response.body.string())
             }
 
             responseMimeMultipart.addBodyPart(
