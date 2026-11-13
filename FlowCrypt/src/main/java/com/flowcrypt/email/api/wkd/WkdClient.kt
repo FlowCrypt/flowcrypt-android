@@ -120,7 +120,7 @@ object WkdClient {
       return@withContext UrlLookupResult(true)
     } else {
       val keys = PGPPublicKeyRingCollection(
-        PGPainless.getInstance().readKey().parseKeys(incomingBytes)
+        PGPainless.getInstance().readKey().parseKeysOrCertificates(incomingBytes)
           .map { it.getPGPPublicKeyRing() }
       )
       return@withContext UrlLookupResult(true, keys)

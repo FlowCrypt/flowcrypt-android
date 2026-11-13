@@ -20,7 +20,7 @@ fun <T> Iterable<T>?.toPGPPublicKeyRingCollection(): PGPPublicKeyRingCollection?
   return keysStream.use {
     ArmoredInputStream(it).use { armoredInputStream ->
       PGPPublicKeyRingCollection(
-        PGPainless.getInstance().readKey().parseKeys(armoredInputStream)
+        PGPainless.getInstance().readKey().parseKeysOrCertificates(armoredInputStream)
           .map { it.getPGPPublicKeyRing() }
       )
     }
