@@ -9,6 +9,7 @@ package com.flowcrypt.email.api.wkd
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.RetrofitApiServiceInterface
+import com.flowcrypt.email.extensions.java.io.readBytesWithLimit
 import com.flowcrypt.email.extensions.kotlin.isValidEmail
 import com.flowcrypt.email.util.BetterInternetAddress
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit
 
 object WkdClient {
   private const val DEFAULT_REQUEST_TIMEOUT = 4000L
+  internal const val MAX_RESPONSE_SIZE_IN_BYTES = 5 * 1024 * 1024
 
   suspend fun lookupEmail(context: Context, email: String): PGPPublicKeyRingCollection? =
     withContext(Dispatchers.IO) {
@@ -119,8 +121,10 @@ object WkdClient {
     if (!wkdResponse.isSuccessful || incomingBytes == null) {
       return@withContext UrlLookupResult(true)
     } else {
+      // parseKeysOrCertificates() reads the whole stream into memory, so limit the response size
+      val responseBytes = incomingBytes.use { it.readBytesWithLimit(MAX_RESPONSE_SIZE_IN_BYTES) }
       val keys = PGPPublicKeyRingCollection(
-        PGPainless.getInstance().readKey().parseKeysOrCertificates(incomingBytes)
+        PGPainless.getInstance().readKey().parseKeysOrCertificates(responseBytes)
           .map { it.getPGPPublicKeyRing() }
       )
       return@withContext UrlLookupResult(true, keys)
