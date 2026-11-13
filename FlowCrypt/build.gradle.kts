@@ -58,7 +58,6 @@ android {
     versionName = rootProject.extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
-    multiDexEnabled = true
   }
 
   signingConfigs {
@@ -143,7 +142,7 @@ android {
   testBuildType = "uiTests"
 
   sourceSets {
-    getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    getByName("androidTest").assets.directories.add("$projectDir/schemas")
   }
 
   flavorDimensions += "standard"
@@ -449,8 +448,8 @@ tasks.register<Copy>("copyReleaseApks") {
   }
 }
 
-val devDebugImplementation: Configuration by configurations.creating
-val uiTestsImplementation by configurations.named("uiTestsImplementation")
+val devDebugImplementation: Configuration = configurations.create("devDebugImplementation")
+val uiTestsImplementation = configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.9")
