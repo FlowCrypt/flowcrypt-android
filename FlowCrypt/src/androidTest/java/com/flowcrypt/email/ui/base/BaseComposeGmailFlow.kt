@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.base
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -184,6 +185,25 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
       addPrivateKeyToDatabaseRule.pgpKeyRingDetails.publicKey,
       String(publicKeyPart.inputStream.readBytes())
     )
+  }
+
+  /**
+   * Attach the sender's own public key. [com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment]
+   * loads keys asynchronously and closes itself when there is a single key.
+   * Until then the dialog has the window focus, so we wait until the compose screen
+   * is in focus again (its Send action can be found).
+   */
+  protected fun includeOwnPublicKey() {
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(ViewMatchers.withText(R.string.include_public_key))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    waitUntil(TimeUnit.SECONDS.toMillis(10)) {
+      runCatching {
+        onView(withId(R.id.menuActionSend)).check(matches(isDisplayed()))
+      }.isSuccess
+    }
   }
 
   protected fun extractKeyId(pgpKeyRingDetails: PgpKeyRingDetails): Long {
