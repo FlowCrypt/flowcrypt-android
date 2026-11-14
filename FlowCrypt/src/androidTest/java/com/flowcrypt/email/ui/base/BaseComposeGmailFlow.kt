@@ -61,6 +61,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.Properties
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 /**
@@ -68,7 +69,8 @@ import java.util.concurrent.TimeUnit
  */
 abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_ENTITY) :
   BaseGmailApiTest(accountEntity) {
-  protected val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
+  //it's filled by the mock web server thread and read by the test thread
+  protected val sentCache = CopyOnWriteArrayList<com.google.api.services.gmail.model.Message>()
 
   @get:Rule
   val outgoingMessageConfigurationRule = OutgoingMessageConfigurationRule()
@@ -301,7 +303,9 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
       val countOfOutgoingMessages = runBlocking {
         roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
       }
-      if (countOfOutgoingMessages == 0) {
+      //right after clicking 'Send' the message may not be added to the outbox yet,
+      //so an empty outbox alone doesn't mean the message was sent
+      if (countOfOutgoingMessages == 0 && sentCache.isNotEmpty()) {
         Thread.sleep(TimeUnit.SECONDS.toMillis(1))
         break
       } else {
@@ -319,21 +323,23 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
 
     //check that we have one message in the server cache and outbox label is not displayed
     assertEquals(1, sentCache.size)
-    onView(withId(R.id.toolbar))
-      .check(
-        matches(
-          not(
-            hasDescendant(
-              withText(
-                getQuantityString(
-                  R.plurals.outbox_msgs_count,
-                  1
-                )
-              )
+    val toolbarWithoutOutboxLabel = matches(
+      not(
+        hasDescendant(
+          withText(
+            getQuantityString(
+              R.plurals.outbox_msgs_count,
+              1
             )
           )
         )
       )
+    )
+    //the toolbar is updated a bit later than the outbox in the database
+    waitUntil(TimeUnit.SECONDS.toMillis(10)) {
+      runCatching { onView(withId(R.id.toolbar)).check(toolbarWithoutOutboxLabel) }.isSuccess
+    }
+    onView(withId(R.id.toolbar)).check(toolbarWithoutOutboxLabel)
 
     //check sent MIME message
     val rawMime = requireNotNull(sentCache.first().raw)
