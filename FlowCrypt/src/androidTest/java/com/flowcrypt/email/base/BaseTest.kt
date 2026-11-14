@@ -52,6 +52,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.shutdown
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.FlowCryptTestSettingsRule
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -403,6 +404,47 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
       SystemClock.sleep(interval)
       elapsedTime = SystemClock.uptimeMillis() - startTime
+    }
+  }
+
+  /**
+   * Wait until the recipient chip keeps its final color during [stableForMs].
+   * The chip is white while the recipient lookup is in progress, and the compose screen
+   * blocks sending during that time. The lookup can start asynchronously,
+   * so a single check can pass before it begins.
+   */
+  protected fun waitUntilRecipientChipIsSettled(
+    email: String,
+    colorResId: Int,
+    stableForMs: Long = TimeUnit.SECONDS.toMillis(1),
+    timeoutMs: Long = TimeUnit.SECONDS.toMillis(30)
+  ) {
+    val chipMatcher = allOf(
+      withText(email),
+      withChipsBackgroundColor(getTargetContext(), colorResId)
+    )
+    val startTime = SystemClock.uptimeMillis()
+    var settledSince: Long? = null
+    while (true) {
+      val now = SystemClock.uptimeMillis()
+      val isSettled = runCatching {
+        onView(chipMatcher).check(matches(isDisplayed()))
+      }.isSuccess
+
+      if (isSettled) {
+        val since = settledSince ?: now.also { settledSince = it }
+        if (now - since >= stableForMs) return
+      } else {
+        settledSince = null
+      }
+
+      if (now - startTime >= timeoutMs) {
+        //fail with a clear Espresso error
+        onView(chipMatcher).check(matches(isDisplayed()))
+        return
+      }
+
+      SystemClock.sleep(100)
     }
   }
 
