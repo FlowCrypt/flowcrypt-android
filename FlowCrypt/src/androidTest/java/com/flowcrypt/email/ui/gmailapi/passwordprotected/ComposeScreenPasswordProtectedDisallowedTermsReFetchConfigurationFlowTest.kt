@@ -36,6 +36,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
@@ -176,6 +177,14 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
       roomDatabase.accountDao().getActiveAccount()
         ?.clientConfiguration?.disallowPasswordMessagesErrorText == UPDATED_ERROR_TEXT
     }
+
+    //returning to the compose screen starts a new lookup for the recipient, and sending is
+    //blocked while it is in progress. This wait starts after the database update and lasts
+    //at least stableForMs, so the updated account also reaches the screen in the meantime
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
 
     //check that client configuration was updated
     MATCHING_SUBJECTS.first().let { subject ->
