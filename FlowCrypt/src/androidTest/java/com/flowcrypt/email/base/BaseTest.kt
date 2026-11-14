@@ -40,7 +40,6 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiT
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -104,9 +103,13 @@ abstract class BaseTest : BaseActivityTestImplementation {
   @Before
   fun dismissANRSystemDialogIfExists() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val waitButton = device.findObject(UiSelector().textContains("wait"))
-    if (waitButton.exists()) {
+    //a slow emulator can show "System UI isn't responding" for a few minutes after boot.
+    //The dialog can appear again right after we dismiss it, so we repeat it a few times
+    val deadline = SystemClock.uptimeMillis() + TimeUnit.SECONDS.toMillis(60)
+    while (SystemClock.uptimeMillis() < deadline) {
+      val waitButton = device.findObject(By.res("android", "aerr_wait")) ?: break
       waitButton.click()
+      device.wait(Until.gone(By.res("android", "aerr_wait")), TimeUnit.SECONDS.toMillis(5))
     }
 
     //close the notification bar if needed
