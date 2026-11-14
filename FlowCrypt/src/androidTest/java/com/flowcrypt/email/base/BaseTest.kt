@@ -17,6 +17,7 @@ import android.text.Html
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.StyleRes
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory
 import androidx.fragment.app.testing.FragmentScenario
@@ -33,6 +34,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -56,6 +58,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackground
 import com.flowcrypt.email.rules.FlowCryptTestSettingsRule
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
@@ -439,9 +442,24 @@ abstract class BaseTest : BaseActivityTestImplementation {
       }
 
       if (now - startTime >= timeoutMs) {
-        //fail with a clear Espresso error
-        onView(chipMatcher).check(matches(isDisplayed()))
-        return
+        var actualColor: Int? = null
+        runCatching {
+          onView(allOf(withText(email), isAssignableFrom(Chip::class.java)))
+            .check { view, _ -> actualColor = (view as Chip).chipBackgroundColor?.defaultColor }
+        }
+        val expectedColor = ContextCompat.getColor(getTargetContext(), colorResId)
+        val details = "expected color = #%08X, actual color = %s".format(
+          expectedColor,
+          actualColor?.let { "#%08X".format(it) } ?: "chip not found"
+        )
+        throw AssertionError(
+          if (actualColor == expectedColor) {
+            "The chip of $email didn't keep the expected color for $stableForMs ms " +
+                "within $timeoutMs ms ($details)"
+          } else {
+            "The chip of $email didn't get the expected color within $timeoutMs ms ($details)"
+          }
+        )
       }
 
       SystemClock.sleep(100)
