@@ -42,6 +42,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -117,8 +118,15 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeFlowTest : BaseTest() {
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
       .check(matches(hasTextColor(R.color.colorPrimaryLight)))
 
-    //we need to wait around 1 minute to check that [PassPhrasesInRAMService] works well
-    Thread.sleep(PassPhrasesInRAMService.DELAY_TIMEOUT)
+    //[PassPhrasesInRAMService] clears expired pass phrases once per DELAY_TIMEOUT, counted from
+    //the service start, and the screen is updated after that asynchronously. On a slow emulator
+    //the service can start late, so wait for the result instead of a fixed sleep
+    waitUntil(PassPhrasesInRAMService.DELAY_TIMEOUT + TimeUnit.SECONDS.toMillis(30)) {
+      runCatching {
+        onView(withId(R.id.tVPassPhraseVerification))
+          .check(matches(withText(getResString(R.string.pass_phrase_not_provided))))
+      }.isSuccess
+    }
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.pass_phrase_not_provided))))
       .check(matches(hasTextColor(R.color.red)))
