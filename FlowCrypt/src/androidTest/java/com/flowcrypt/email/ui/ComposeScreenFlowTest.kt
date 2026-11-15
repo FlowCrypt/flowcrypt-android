@@ -451,6 +451,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         requireNotNull(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
       )
     )
+    waitUntilRecipientWithoutPubKeyIsSettled()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -464,17 +465,21 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule?.launch(intent)
 
+    //typeText() can lose characters on a slow emulator when the IME session restarts
+    //("Session id mismatch" in logcat), e.g. the recipient became "...@flowcrypt.te"
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
     //move the focus to the next view
     onView(withId(R.id.editTextEmailMessage))
       .perform(
         scrollTo(), click(),
-        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard()
+        replaceText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard()
       )
+    //sending is blocked with a "please wait" toast until the recipient lookup is done
+    waitUntilRecipientWithoutPubKeyIsSettled()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -517,7 +522,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       )
     )
 
-    Thread.sleep(2000)
+    waitUntilRecipientWithoutPubKeyIsSettled()
 
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -932,6 +937,17 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         description.appendText("with item content: ")
       }
     }
+  }
+
+  /**
+   * Clicking 'Send' while the recipient lookup is in progress shows a "please wait" toast
+   * instead of the dialog for a recipient without a public key.
+   */
+  private fun waitUntilRecipientWithoutPubKeyIsSettled() {
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
   }
 
   companion object {
