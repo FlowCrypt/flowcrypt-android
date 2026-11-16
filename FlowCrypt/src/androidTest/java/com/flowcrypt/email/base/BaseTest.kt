@@ -426,8 +426,10 @@ abstract class BaseTest : BaseActivityTestImplementation {
     var settledSince: Long? = null
     var lastState = ""
     while (true) {
-      val now = SystemClock.uptimeMillis()
       val actualColor = runCatching { getChipBackgroundColor(email) }
+      //Espresso can wait for the main thread before reading the color.
+      //Take the time after reading, so that waiting doesn't count as a stable period
+      val now = SystemClock.uptimeMillis()
       lastState = actualColor.fold(
         onSuccess = { color -> "actual color = #%08X".format(color) },
         onFailure = { e -> "chip lookup failed: ${e.javaClass.simpleName}: ${e.message?.take(300)}" }
