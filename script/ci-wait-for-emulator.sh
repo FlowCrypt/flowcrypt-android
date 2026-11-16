@@ -167,6 +167,26 @@ adb shell settings put global animator_duration_scale 0
 # a long click instead of a click (e.g. a toolbar menu item shows its tooltip).
 adb shell settings put secure long_press_timeout 1500
 
+# On slow emulators the IME (Gboard) restarts its input session after focus changes, and the app
+# drops text committed to the old session ("Session id mismatch ... commitText" in logcat).
+# typeText() then loses characters, e.g. "message" -> "essage". Without an IME, Espresso key events
+# go to the view directly. Both packages must be disabled: without Gboard the system switches to
+# the Google TTS voice IME. Set DISABLE_IME=0 to keep the keyboard.
+if [[ "${DISABLE_IME:-1}" == "1" ]]; then
+  for ime_package in com.google.android.inputmethod.latin com.google.android.tts; do
+    adb shell pm disable-user --user 0 "$ime_package" || true
+  done
+
+  # The system applies the change asynchronously.
+  enabled_imes=""
+  for _ in {1..15}; do
+    enabled_imes=$(adb shell ime list -s | tr -d '\r' | tr '\n' ' ' || true)
+    [[ -z "${enabled_imes// /}" ]] && break
+    sleep 1
+  done
+  echo "Enabled input methods after disabling: [${enabled_imes}]"
+fi
+
 ###################################################################################################
 # To test WKD we need to route all traffic for localhost:443 to localhost:1212
 # as we can't use 443 directly for a mock web server.
