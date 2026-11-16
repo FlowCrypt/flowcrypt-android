@@ -31,8 +31,19 @@ EMULATOR_LOG_FILE=/tmp/ci-slow-emulator.log EMULATOR_PID_FILE=/tmp/ci-slow-emula
 taskset -c 2,3 ./script/run-emulator.sh
 ```
 
-If `*.flowcrypt.test` is resolved via `/etc/hosts` instead, start the emulator directly
-without `-dns-server`:
+Without `-dns-server`, the emulator forwards DNS queries to the servers from the host's
+`/etc/resolv.conf` (see [emulator networking](https://developer.android.com/studio/run/emulator-networking-dns)).
+So entries in the host's `/etc/hosts` reach the emulator only if that DNS server serves them.
+For example, the `systemd-resolved` stub (`nameserver 127.0.0.53`) does it by default
+(`ReadEtcHosts=yes`). Check it before starting the emulator:
+
+```bash
+grep nameserver /etc/resolv.conf     # e.g. 127.0.0.53
+resolvectl query fes.flowcrypt.test  # must return 127.0.0.1
+```
+
+If it works, start the emulator directly without `-dns-server`. Otherwise use dnsmasq and the
+script above.
 
 ```bash
 taskset -c 2,3 "$ANDROID_HOME/emulator/emulator" \
