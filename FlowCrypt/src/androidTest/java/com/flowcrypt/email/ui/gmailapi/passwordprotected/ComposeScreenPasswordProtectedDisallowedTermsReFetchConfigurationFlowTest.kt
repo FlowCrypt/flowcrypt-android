@@ -170,7 +170,9 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
     //go to ProvidePasswordToProtectMsgFragment and go back to trigger updating
     onView(withId(R.id.btnSetWebPortalPassword))
       .perform(click())
-    Espresso.pressBack()
+    leaveProvidePasswordScreen {
+      Espresso.pressBack()
+    }
 
     //wait until RefreshClientConfigurationWorker saves the updated client configuration
     waitUntil(TimeUnit.SECONDS.toMillis(30)) {
