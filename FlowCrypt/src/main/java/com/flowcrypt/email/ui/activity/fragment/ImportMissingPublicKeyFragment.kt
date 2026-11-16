@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -18,12 +17,12 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.databinding.FragmentImportMissingPublicKeyBinding
 import com.flowcrypt.email.extensions.androidx.fragment.app.countingIdlingResource
-import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.androidx.fragment.app.launchAndRepeatWithViewLifecycle
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
 import com.flowcrypt.email.extensions.androidx.fragment.app.showFindKeysInClipboardDialogFragment
 import com.flowcrypt.email.extensions.androidx.fragment.app.showParsePgpKeysFromSourceDialogFragment
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.RecipientsViewModel
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.ui.activity.fragment.base.BaseImportKeyFragment
@@ -128,7 +127,7 @@ class ImportMissingPublicKeyFragment :
             it.data?.let { recipientWithPubKeys ->
               setFragmentResult(
                 requestKey = args.requestKey,
-                result = bundleOf(KEY_RECIPIENT_WITH_PUB_KEY to recipientWithPubKeys)
+                result = Bundle().apply { putParcelable(KEY_RECIPIENT_WITH_PUB_KEY, recipientWithPubKeys) }
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportMissingPublicKeyFragment)

@@ -24,6 +24,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.apache.commons.codec.binary.ZBase32
 import org.apache.commons.codec.digest.DigestUtils
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Rule
@@ -32,6 +33,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.pgpainless.PGPainless
+import java.io.IOException
 import java.net.HttpURLConnection
 
 @SmallTest
@@ -55,6 +57,15 @@ class WkdClientTest {
               .setBody(
                 PGPainless.getInstance().generateKey().simpleEcKeyRing(EXISTING_EMAIL).armor()
               )
+          }
+
+          genLookupUrlPath(OVERSIZED_RESPONSE_EMAIL) -> {
+            val armoredKey = PGPainless.getInstance().generateKey()
+              .simpleEcKeyRing(OVERSIZED_RESPONSE_EMAIL).toCertificate().toAsciiArmoredString()
+            val body = buildString {
+              while (length <= WkdClient.MAX_RESPONSE_SIZE_IN_BYTES) append(armoredKey)
+            }
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(body)
           }
 
           genLookupUrlPath(NOT_EXISTING_EMAIL) -> {
@@ -109,10 +120,22 @@ class WkdClientTest {
     assertNull("Key found for non-existing domain", keys)
   }
 
+  @Test
+  fun oversizedResponseTest() {
+    val exception = assertThrows(IOException::class.java) {
+      runBlocking { WkdClient.lookupEmail(context, OVERSIZED_RESPONSE_EMAIL) }
+    }
+    assertTrue(
+      "Unexpected error: ${exception.message}",
+      exception.message?.contains("exceeds the limit") == true
+    )
+  }
+
   companion object {
 
     const val EXISTING_EMAIL = "existing@flowcrypt.test"
     const val NOT_EXISTING_EMAIL = "not_existing@flowcrypt.test"
+    const val OVERSIZED_RESPONSE_EMAIL = "oversized_response@flowcrypt.test"
 
     private fun genLookupUrlPath(email: String): String {
       val user = email.substringBefore("@")

@@ -233,7 +233,7 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
     }.toTypedArray().sortedArray()
 
     val actualIds =
-      messageMetadata.recipientKeyIds.toTypedArray().sortedArray()
+      messageMetadata.recipientKeyIdentifiers.map { it.keyId }.toTypedArray().sortedArray()
 
     assertArrayEquals(
       "Expected = ${finalExpectedIds.contentToString()}, actual = ${actualIds.contentToString()}",
@@ -243,7 +243,7 @@ abstract class BaseComposeGmailFlow(accountEntity: AccountEntity = BASE_ACCOUNT_
 
     if (outgoingMessageConfiguration.bcc.isNotEmpty()) {
       //https://github.com/FlowCrypt/flowcrypt-android/issues/2306
-      assertFalse(messageMetadata.recipientKeyIds.contains(extractKeyId(defaultBccPgpKeyDetails)))
+      assertFalse(messageMetadata.recipientKeyIdentifiers.map { it.keyId }.contains(extractKeyId(defaultBccPgpKeyDetails)))
     }
   }
 

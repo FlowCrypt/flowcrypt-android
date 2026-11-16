@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -103,10 +102,10 @@ class DeleteDraftDialogFragment : BaseDialogFragment(), ProgressBehaviour {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(
-                KEY_REQUEST_KEY to args.requestKey,
-                KEY_RESULT to args.uniqueId,
-              )
+              Bundle().apply {
+                putString(KEY_REQUEST_KEY, args.requestKey)
+                putLong(KEY_RESULT, args.uniqueId)
+              }
             )
           }
 
