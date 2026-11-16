@@ -124,6 +124,7 @@ Look at logcat (`adb logcat -d`) and at the view hierarchy dumps in
 | A toast instead of the expected dialog after clicking Send | The compose screen is still looking up a recipient's key (`please_wait_while_information_about_recipients_will_be_updated`). |
 | A click opens another screen | The layout moved between computing the click coordinates and the click (a button appeared or the keyboard opened). |
 | `Failed to take screenshot`, `Timed out waiting for 5000 ms` | Espresso takes a screenshot on every failed check. In a polling loop each failed check then costs ~5 s. |
+| A request returns nothing (`null`, "nothing was thrown") only on CI, and the test takes much longer there | The mock web server does heavy work (e.g. generates a PGP key) while handling the request and exceeds the client's read timeout. Some clients (e.g. `WkdClient`) return `null` on a timeout. |
 
 CI keeps `logcat.txt.gz` in the job artifacts (Semaphore → job → Artifacts). It shows the
 real exception, while the job log often shows only the teardown error.
@@ -141,6 +142,8 @@ real exception, while the job log often shows only the teardown error.
   screen is in focus again, see `BaseComposeGmailFlow.includeOwnPublicKey()`.
 - Sending: `BaseComposeGmailFlow.doAfterSendingChecks()` waits until the mock web server receives
   the message, not only until the outbox is empty.
+- Mock web server: prepare heavy responses (generated keys, large bodies) before the test sends
+  requests, not inside `Dispatcher.dispatch()`, see `WkdClientTest`.
 - `closeSoftKeyboard()` can time out on a screen where the keyboard is just appearing. Repeat the
   action and check the result instead.
 - When polling with Espresso, use your own failure handler
