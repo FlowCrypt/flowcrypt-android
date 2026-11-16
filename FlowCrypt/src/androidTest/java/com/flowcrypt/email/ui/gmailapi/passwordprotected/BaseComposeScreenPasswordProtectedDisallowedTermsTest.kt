@@ -11,7 +11,6 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -44,9 +43,11 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
 
   @Before
   fun setUp() {
+    //typing with key events can lose characters on a slow emulator while the IME reconnects
+    //("commitText on inactive InputConnection" in logcat), so the chip gets a wrong email
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton(),
         closeSoftKeyboard()
       )
