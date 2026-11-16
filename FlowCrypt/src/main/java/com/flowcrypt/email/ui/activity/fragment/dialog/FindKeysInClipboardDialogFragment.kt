@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -127,7 +126,7 @@ class FindKeysInClipboardDialogFragment : BaseDialogFragment() {
               navController?.navigateUp()
               setFragmentResult(
                 args.requestKey,
-                bundleOf(KEY_CLIPBOARD_TEXT to clipboardText)
+                Bundle().apply { putString(KEY_CLIPBOARD_TEXT, clipboardText) }
               )
             }
             countingIdlingResource?.decrementSafely(this@FindKeysInClipboardDialogFragment)

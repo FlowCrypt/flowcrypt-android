@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -111,12 +110,12 @@ class ProcessMessageDialogFragment : BaseDialogFragment(), ProgressBehaviour {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(
-                KEY_REQUEST_KEY to args.requestKey,
-                KEY_REQUEST_CODE to args.requestCode,
-                KEY_RESULT to it.data,
-                KEY_ATTACHMENT_ID to args.attachmentId,
-              )
+              Bundle().apply {
+                putString(KEY_REQUEST_KEY, args.requestKey)
+                putInt(KEY_REQUEST_CODE, args.requestCode)
+                putParcelable(KEY_RESULT, it.data)
+                putString(KEY_ATTACHMENT_ID, args.attachmentId)
+              }
             )
           }
 

@@ -58,7 +58,6 @@ android {
     versionName = rootProject.extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
-    multiDexEnabled = true
   }
 
   signingConfigs {
@@ -143,7 +142,7 @@ android {
   testBuildType = "uiTests"
 
   sourceSets {
-    getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    getByName("androidTest").assets.directories.add("$projectDir/schemas")
   }
 
   flavorDimensions += "standard"
@@ -449,8 +448,8 @@ tasks.register<Copy>("copyReleaseApks") {
   }
 }
 
-val devDebugImplementation: Configuration by configurations.creating
-val uiTestsImplementation by configurations.named("uiTestsImplementation")
+val devDebugImplementation: Configuration = configurations.create("devDebugImplementation")
+val uiTestsImplementation = configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.9")
@@ -553,14 +552,14 @@ dependencies {
   implementation("com.github.bumptech.glide:glide:5.0.9")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.1.1")
-  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261103.2")
+  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261110.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")
   implementation("org.jsoup:jsoup:1.24.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.13.0")
   implementation("org.pgpainless:pgpainless-core:2.0.4")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")

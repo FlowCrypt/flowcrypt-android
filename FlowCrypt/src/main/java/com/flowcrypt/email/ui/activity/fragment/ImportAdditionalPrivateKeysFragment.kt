@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -221,10 +220,10 @@ class ImportAdditionalPrivateKeysFragment :
             it.data?.let { pair ->
               setFragmentResult(
                 args.requestKey,
-                bundleOf(
-                  KEY_IMPORTED_PRIVATE_KEYS to ArrayList(pair.second),
-                  KEY_INCOMING_BUNDLE to args.bundle
-                )
+                Bundle().apply {
+                  putParcelableArrayList(KEY_IMPORTED_PRIVATE_KEYS, ArrayList(pair.second))
+                  putBundle(KEY_INCOMING_BUNDLE, args.bundle)
+                }
               )
             }
             countingIdlingResource?.decrementSafely(this@ImportAdditionalPrivateKeysFragment)
