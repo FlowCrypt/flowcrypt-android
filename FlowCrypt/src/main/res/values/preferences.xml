@@ -8,6 +8,8 @@
     <string name="preferences_key_manage_notifications" translatable="false">preferences_key_manage_notifications</string>
     <string name="preferences_key_security_change_pass_phrase" translatable="false">preferences_key_security_change_pass_phrase</string>
     <string name="preferences_key_attachments_disable_smart_mode_for_preview" translatable="false">preferences_key_attachments_disable_smart_mode_for_preview</string>
+    <string name="preferences_key_attachments_category" translatable="false">preferences_key_attachments_category</string>
+    <string name="preferences_key_conversation_view" translatable="false">preferences_key_conversation_view</string>
     <string name="pref_key_backups" translatable="false">pref_key_backups</string>
     <string name="pref_key_general" translatable="false">pref_key_general</string>
     <string name="pref_key_server_settings" translatable="false">pref_key_server_settings</string>
