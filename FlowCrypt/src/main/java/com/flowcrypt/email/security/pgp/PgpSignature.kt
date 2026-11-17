@@ -54,7 +54,7 @@ object PgpSignature {
         val verificationStream = api.processMessage()
           .onInputStream(srcInputStream)
           .withOptions(
-            ConsumerOptions.get()
+            ConsumerOptions.get(api)
               .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
               .setMultiPassStrategy(InMemoryMultiPassStrategy())
           )
@@ -81,7 +81,7 @@ object PgpSignature {
         val verificationStream = api.processMessage()
           .onInputStream(srcInputStream)
           .withOptions(
-            ConsumerOptions.get()
+            ConsumerOptions.get(api)
               .addVerificationOfDetachedSignatures(signatureInputStream)
               .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
               .setMultiPassStrategy(InMemoryMultiPassStrategy())

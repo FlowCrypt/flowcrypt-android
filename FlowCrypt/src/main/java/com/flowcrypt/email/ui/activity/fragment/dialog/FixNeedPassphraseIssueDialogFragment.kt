@@ -13,7 +13,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.annotation.LongDef
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
@@ -252,12 +251,12 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                     navController?.navigateUp()
                     setFragmentResult(
                       args.requestKey,
-                      bundleOf(
-                        KEY_RESULT to unlockedKeysFingerprints.toTypedArray(),
-                        KEY_PREDEFINED_FINGERPRINTS to args.fingerprints,
-                        KEY_REQUEST_CODE to args.requestCode,
-                        KEY_REQUEST_INCOMING_BUNDLE to args.bundle
-                      )
+                      Bundle().apply {
+                        putStringArray(KEY_RESULT, unlockedKeysFingerprints.toTypedArray())
+                        putStringArray(KEY_PREDEFINED_FINGERPRINTS, args.fingerprints)
+                        putInt(KEY_REQUEST_CODE, args.requestCode)
+                        putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
+                      }
                     )
                   }
                 }
@@ -266,12 +265,12 @@ class FixNeedPassphraseIssueDialogFragment : BaseDialogFragment() {
                   navController?.navigateUp()
                   setFragmentResult(
                     args.requestKey,
-                    bundleOf(
-                      KEY_RESULT to unlockedKeysFingerprints.toTypedArray(),
-                      KEY_PREDEFINED_FINGERPRINTS to args.fingerprints,
-                      KEY_REQUEST_CODE to args.requestCode,
-                      KEY_REQUEST_INCOMING_BUNDLE to args.bundle
-                    )
+                    Bundle().apply {
+                      putStringArray(KEY_RESULT, unlockedKeysFingerprints.toTypedArray())
+                      putStringArray(KEY_PREDEFINED_FINGERPRINTS, args.fingerprints)
+                      putInt(KEY_REQUEST_CODE, args.requestCode)
+                      putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
+                    }
                   )
                 }
               }

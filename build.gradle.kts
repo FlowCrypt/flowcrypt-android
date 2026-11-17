@@ -13,7 +13,5 @@ plugins {
   id("androidx.navigation.safeargs.kotlin") version "2.10.2" apply false
   id("com.starter.easylauncher") version "6.4.1" apply false
   id("org.jetbrains.kotlin.plugin.parcelize") version "2.4.21" apply false
-  // 2.3.13 removes deprecated Configuration.setVisible calls, but has a concurrency regression:
-  // https://github.com/google/ksp/issues/3286
-  id("com.google.devtools.ksp") version "2.3.12" apply false
+  id("com.google.devtools.ksp") version "2.3.13" apply false
 }

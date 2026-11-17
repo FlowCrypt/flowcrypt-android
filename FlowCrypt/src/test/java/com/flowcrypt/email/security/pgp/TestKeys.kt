@@ -16,20 +16,12 @@ import org.pgpainless.util.Passphrase
 object TestKeys {
   fun genRingProtector(keys: List<KeyWithPassPhrase>): PasswordBasedSecretKeyRingProtector {
     val passphraseProvider = object : SecretKeyPassphraseProvider {
-      override fun getPassphraseFor(keyId: Long): Passphrase? {
-        return doGetPassphrase(keyId)
-      }
-
-      override fun hasPassphrase(keyId: Long): Boolean {
-        return doGetPassphrase(keyId) != null
-      }
-
       override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
-        return getPassphraseFor(keyIdentifier.keyId)
+        return doGetPassphrase(keyIdentifier.keyId)
       }
 
       override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
-        return hasPassphrase(keyIdentifier.keyId)
+        return doGetPassphrase(keyIdentifier.keyId) != null
       }
 
       private fun doGetPassphrase(keyId: Long?): Passphrase? {

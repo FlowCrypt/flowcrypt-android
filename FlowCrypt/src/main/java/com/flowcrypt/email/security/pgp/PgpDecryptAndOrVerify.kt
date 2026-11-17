@@ -107,7 +107,7 @@ object PgpDecryptAndOrVerify {
     return api.processMessage()
       .onInputStream(srcInputStream)
       .withOptions(
-        ConsumerOptions.get()
+        ConsumerOptions.get(api)
           .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
           .apply {
             //this one deprecated but we use it and show warning for a user if needed

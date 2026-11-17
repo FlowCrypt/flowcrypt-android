@@ -17,6 +17,7 @@ import android.text.Html
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.StyleRes
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory
 import androidx.fragment.app.testing.FragmentScenario
@@ -33,6 +34,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -40,7 +42,6 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiT
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -56,6 +57,7 @@ import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.rules.FlowCryptTestSettingsRule
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
@@ -104,9 +106,13 @@ abstract class BaseTest : BaseActivityTestImplementation {
   @Before
   fun dismissANRSystemDialogIfExists() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val waitButton = device.findObject(UiSelector().textContains("wait"))
-    if (waitButton.exists()) {
+    //a slow emulator can show "System UI isn't responding" for a few minutes after boot.
+    //The dialog can appear again right after we dismiss it, so we repeat it a few times
+    val deadline = SystemClock.uptimeMillis() + TimeUnit.SECONDS.toMillis(60)
+    while (SystemClock.uptimeMillis() < deadline) {
+      val waitButton = device.findObject(By.res("android", "aerr_wait")) ?: break
       waitButton.click()
+      device.wait(Until.gone(By.res("android", "aerr_wait")), TimeUnit.SECONDS.toMillis(5))
     }
 
     //close the notification bar if needed
@@ -401,6 +407,75 @@ abstract class BaseTest : BaseActivityTestImplementation {
       SystemClock.sleep(interval)
       elapsedTime = SystemClock.uptimeMillis() - startTime
     }
+  }
+
+  /**
+   * Wait until the recipient chip keeps its final color during [stableForMs].
+   * The chip is white while the recipient lookup is in progress, and the compose screen
+   * blocks sending during that time. The lookup can start asynchronously,
+   * so a single check can pass before it begins.
+   */
+  protected fun waitUntilRecipientChipIsSettled(
+    email: String,
+    colorResId: Int,
+    stableForMs: Long = TimeUnit.SECONDS.toMillis(1),
+    timeoutMs: Long = TimeUnit.SECONDS.toMillis(30)
+  ) {
+    val expectedColor = ContextCompat.getColor(getTargetContext(), colorResId)
+    val startTime = SystemClock.uptimeMillis()
+    var settledSince: Long? = null
+    var lastState = ""
+    while (true) {
+      val actualColor = runCatching { getChipBackgroundColor(email) }
+      //Espresso can wait for the main thread before reading the color.
+      //Take the time after reading, so that waiting doesn't count as a stable period
+      val now = SystemClock.uptimeMillis()
+      lastState = actualColor.fold(
+        onSuccess = { color -> "actual color = #%08X".format(color) },
+        onFailure = { e -> "chip lookup failed: ${e.javaClass.simpleName}: ${e.message?.take(300)}" }
+      )
+
+      if (actualColor.getOrNull() == expectedColor) {
+        val since = settledSince ?: now.also { settledSince = it }
+        if (now - since >= stableForMs) return
+      } else {
+        settledSince = null
+      }
+
+      if (now - startTime >= timeoutMs) {
+        val chipsOnScreen = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+          .findObjects(By.res(getTargetContext().packageName, "chip"))
+          .map { it.text }
+        val details = "expected color = #%08X, %s, chips on the screen = %s"
+          .format(expectedColor, lastState, chipsOnScreen)
+        throw AssertionError(
+          if (settledSince != null) {
+            "The chip of $email didn't keep the expected color for $stableForMs ms " +
+                "within $timeoutMs ms ($details)"
+          } else {
+            "The chip of $email didn't get the expected color within $timeoutMs ms ($details)"
+          }
+        )
+      }
+
+      SystemClock.sleep(100)
+    }
+  }
+
+  /**
+   * Returns the background color of the displayed recipient chip with the given [email].
+   * It doesn't use the default failure handler, which takes a screenshot and dumps the view
+   * hierarchy on every failure (it takes a few seconds on a slow emulator).
+   */
+  private fun getChipBackgroundColor(email: String): Int? {
+    var color: Int? = null
+    onView(allOf(withText(email), isAssignableFrom(Chip::class.java), isDisplayed()))
+      .withFailureHandler { error, _ -> throw error }
+      .check { view, noViewFoundException ->
+        if (noViewFoundException != null) throw noViewFoundException
+        color = (view as Chip).chipBackgroundColor?.defaultColor
+      }
+    return color
   }
 
   protected fun getIdentifierByName(name: String): Int {

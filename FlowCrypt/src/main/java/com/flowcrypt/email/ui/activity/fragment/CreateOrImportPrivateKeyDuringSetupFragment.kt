@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.IntDef
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.NavDirections
@@ -94,11 +93,11 @@ class CreateOrImportPrivateKeyDuringSetupFragment :
     navController?.navigateUp()
     setFragmentResult(
       args.requestKey,
-      bundleOf(
-        KEY_STATE to result,
-        KEY_PRIVATE_KEYS to ArrayList(keys),
-        KEY_ACCOUNT to account
-      )
+      Bundle().apply {
+        putInt(KEY_STATE, result)
+        putParcelableArrayList(KEY_PRIVATE_KEYS, ArrayList(keys))
+        putParcelable(KEY_ACCOUNT, account)
+      }
     )
   }
 

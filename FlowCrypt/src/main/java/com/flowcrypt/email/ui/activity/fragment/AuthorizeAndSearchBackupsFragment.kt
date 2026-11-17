@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -94,10 +93,10 @@ class AuthorizeAndSearchBackupsFragment :
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(
-                KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it,
-                KEY_RESULT_TYPE to RESULT_TYPE_SETTINGS
-              )
+              Bundle().apply {
+                putSerializable(KEY_CHECK_ACCOUNT_SETTINGS_RESULT, it)
+                putInt(KEY_RESULT_TYPE, RESULT_TYPE_SETTINGS)
+              }
             )
             countingIdlingResource?.decrementSafely(this@AuthorizeAndSearchBackupsFragment)
           }
@@ -120,10 +119,10 @@ class AuthorizeAndSearchBackupsFragment :
           navController?.navigateUp()
           setFragmentResult(
             args.requestKey,
-            bundleOf(
-              KEY_PRIVATE_KEY_BACKUPS_RESULT to it,
-              KEY_RESULT_TYPE to RESULT_TYPE_BACKUPS
-            )
+            Bundle().apply {
+              putSerializable(KEY_PRIVATE_KEY_BACKUPS_RESULT, it)
+              putInt(KEY_RESULT_TYPE, RESULT_TYPE_BACKUPS)
+            }
           )
           countingIdlingResource?.decrementSafely(this@AuthorizeAndSearchBackupsFragment)
         }

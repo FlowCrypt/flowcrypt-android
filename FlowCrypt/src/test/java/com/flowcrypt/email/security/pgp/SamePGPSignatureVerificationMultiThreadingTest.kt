@@ -12,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
@@ -67,8 +68,10 @@ class SamePGPSignatureVerificationMultiThreadingTest {
     val secretKeyRingProtector = SecretKeyRingProtector.unlockAnyKeyWith(
       Passphrase.fromPassword(PASSPHRASE)
     )
-    val pgpPublicKeyRingCollection = PGPainless.readKeyRing().publicKeyRingCollection(
-      SENDER_PUBLIC_KEY + "\n" + RECEIVER_PUBLIC_KEY
+    val pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+      listOf(SENDER_PUBLIC_KEY, RECEIVER_PUBLIC_KEY).map {
+        PGPainless.getInstance().readKey().parseCertificate(it).pgpPublicKeyRing
+      }
     )
     val secretKeyRingCollection = PGPSecretKeyRingCollection(listOf(secretKeyRing))
 
@@ -100,9 +103,9 @@ class SamePGPSignatureVerificationMultiThreadingTest {
         "=osuI\n" +
         "-----END PGP PRIVATE KEY BLOCK-----"
 
-    val secretKeyRing = PGPainless.readKeyRing().secretKeyRing(
+    val secretKeyRing = PGPainless.getInstance().readKey().parseKey(
       SENDER_PRIVATE_KEY
-    )
+    ).pgpSecretKeyRing
 
     private const val SENDER_PUBLIC_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
         "Version: PGPainless\n" +

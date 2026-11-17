@@ -1315,8 +1315,10 @@ class EmailUtil {
       val replyToMessageEntityId = info.replyToMessageEntityId
         ?: throw IllegalArgumentException("replyToMessageEntityId is null")
 
-      val keys = PGPainless.readKeyRing()
-        .secretKeyRingCollection(accountEntity.servicePgpPrivateKey)
+      val keys = PGPSecretKeyRingCollection(
+        PGPainless.getInstance().readKey().parseKeys(accountEntity.servicePgpPrivateKey)
+          .map { it.pgpSecretKeyRing }
+      )
 
       val replyToMessageEntity =
         FlowCryptRoomDatabase.getDatabase(context).msgDao().getMsgById(replyToMessageEntityId)

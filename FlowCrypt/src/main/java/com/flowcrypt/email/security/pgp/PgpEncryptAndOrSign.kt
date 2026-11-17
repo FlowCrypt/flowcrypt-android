@@ -176,7 +176,7 @@ object PgpEncryptAndOrSign {
     generateDetachedSignatures: Boolean = false,
   ): EncryptionStream {
     val api = PGPainless.getInstance()
-    val encOpt = EncryptionOptions.get().apply {
+    val encOpt = EncryptionOptions.get(api).apply {
       passphrase?.let { addMessagePassphrase(passphrase) }
       pgpPublicKeyRingCollection?.forEach {
         addRecipient(it.toOpenPGPCertificate(api.implementation))
@@ -189,7 +189,7 @@ object PgpEncryptAndOrSign {
 
     val producerOptions: ProducerOptions =
       if (passphrase == null && pgpSecretKeyRingCollection?.any() == true) {
-        ProducerOptions.signAndEncrypt(encOpt, SigningOptions.get().apply {
+        ProducerOptions.signAndEncrypt(encOpt, SigningOptions.get(api).apply {
           pgpSecretKeyRingCollection.forEach { pgpSecretKeyRing ->
             secretKeyRingProtector?.let { protector ->
               if (generateDetachedSignatures) {

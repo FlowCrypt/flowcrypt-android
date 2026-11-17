@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector
 import org.pgpainless.util.Passphrase
@@ -211,8 +212,10 @@ class DraftViewModel(
             ?.let { fileUri ->
               (getApplication() as Context).contentResolver?.openInputStream(fileUri)
                 ?.let { inputStream ->
-                  val keys = PGPainless.readKeyRing()
-                    .secretKeyRingCollection(activeAccount.servicePgpPrivateKey)
+                  val keys = PGPSecretKeyRingCollection(
+                    PGPainless.getInstance().readKey().parseKeys(activeAccount.servicePgpPrivateKey)
+                      .map { it.pgpSecretKeyRing }
+                  )
 
                   val decryptionStream = PgpDecryptAndOrVerify.genDecryptionStream(
                     srcInputStream = inputStream,
