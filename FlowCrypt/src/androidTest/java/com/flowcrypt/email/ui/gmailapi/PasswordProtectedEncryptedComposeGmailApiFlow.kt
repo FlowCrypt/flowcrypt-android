@@ -6,13 +6,11 @@
 package com.flowcrypt.email.ui.gmailapi
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.FlakyTest
 import androidx.test.filters.LargeTest
@@ -168,10 +166,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
     }
 
     //attach a public key
-    openActionBarOverflowOrOptionsMenu(getTargetContext())
-    onView(withText(R.string.include_public_key))
-      .check(matches(isDisplayed()))
-      .perform(click())
+    includeOwnPublicKey()
 
     //add password-protected logic
     onView(withId(R.id.btnSetWebPortalPassword))
@@ -292,7 +287,7 @@ class PasswordProtectedEncryptedComposeGmailApiFlow : BaseComposeGmailFlow() {
       assertFalse(decryptionResult.isSigned)
       //check that message was not encrypted by public keys
       //ref https://github.com/pgpainless/pgpainless/issues/376
-      assertTrue(decryptionResult.messageMetadata?.recipientKeyIds?.isEmpty() == true)
+      assertTrue(decryptionResult.messageMetadata?.recipientKeyIdentifiers?.isEmpty() == true)
 
       val decryptedContent = decryptionResult.content
       assertNotNull(decryptedContent)

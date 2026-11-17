@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
@@ -55,7 +54,7 @@ class UpdateSignatureDialogFragment : BaseDialogFragment() {
     navController?.navigateUp()
     setFragmentResult(
       args.requestKey,
-      bundleOf(KEY_SIGNATURE to binding?.editTextSignature?.text?.toString())
+      Bundle().apply { putString(KEY_SIGNATURE, binding?.editTextSignature?.text?.toString()) }
     )
   }
 

@@ -66,6 +66,10 @@ We run tests on [Semaphore CI](https://semaphoreci.com/) for every commit. To ru
 1. Setup your device (virtual or physical) following the [device setup instructions](#device-setup-instructions).
 2. Run `./script/ci-instrumentation-tests-enterprise.sh` to execute enterprise tests.
 
+### ✔️ Reproduce CI failures locally
+
+CI emulators are much slower than a typical local one, so a test can pass locally and still fail on CI. See [Running instrumentation tests like on CI](docs/testing-like-ci.md) for how to set up a slow CI-like emulator, make hidden retries visible and find the cause of a flaky test.
+
 ## ⚙️ Running the app in the emulator for the first time
 
 This section describes two main steps you need to accomplish to run the app in the emulaor:

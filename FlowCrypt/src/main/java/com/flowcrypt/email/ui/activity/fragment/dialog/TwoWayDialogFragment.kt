@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.app.Dialog
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.extensions.androidx.fragment.app.navController
@@ -65,11 +64,11 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     args.requestKey?.let { requestKey ->
       setFragmentResult(
         requestKey,
-        bundleOf(
-          KEY_REQUEST_CODE to args.requestCode,
-          KEY_RESULT to result,
-          KEY_REQUEST_INCOMING_BUNDLE to args.bundle
-        )
+        Bundle().apply {
+          putInt(KEY_REQUEST_CODE, args.requestCode)
+          putInt(KEY_RESULT, result)
+          putBundle(KEY_REQUEST_INCOMING_BUNDLE, args.bundle)
+        }
       )
     }
   }

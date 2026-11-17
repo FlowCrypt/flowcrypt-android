@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
@@ -83,7 +82,7 @@ class SendFeedbackDialogFragment : BaseDialogFragment() {
             navController?.navigateUp()
             setFragmentResult(
               args.requestKey,
-              bundleOf(KEY_RESULT to true)
+              Bundle().apply { putBoolean(KEY_RESULT, true) }
             )
             countingIdlingResource?.decrementSafely(this@SendFeedbackDialogFragment)
           }

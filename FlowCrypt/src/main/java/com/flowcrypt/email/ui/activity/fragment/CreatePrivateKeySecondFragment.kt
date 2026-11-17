@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.navArgs
@@ -103,7 +102,7 @@ class CreatePrivateKeySecondFragment : BaseFragment<FragmentCreatePrivateKeySeco
       navController?.navigateUp()
       setFragmentResult(
         REQUEST_KEY_CREATE_KEY,
-        bundleOf(KEY_CREATED_KEY to pgpKeyRingDetails)
+        Bundle().apply { putParcelable(KEY_CREATED_KEY, pgpKeyRingDetails) }
       )
     }
   }

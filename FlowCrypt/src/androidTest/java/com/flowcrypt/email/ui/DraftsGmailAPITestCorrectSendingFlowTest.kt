@@ -30,6 +30,7 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.base.BaseDraftsGmailAPIFlowTest
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
@@ -50,6 +51,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 
@@ -61,7 +63,8 @@ import java.util.zip.GZIPInputStream
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useCommonIdling = false)
 class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
-  private val sentCache = mutableListOf<com.google.api.services.gmail.model.Message>()
+  //it's filled by the mock web server thread and read by the test thread
+  private val sentCache = CopyOnWriteArrayList<com.google.api.services.gmail.model.Message>()
 
   override val mockWebServerRule: FlowCryptMockWebServerRule = FlowCryptMockWebServerRule(
     TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -186,16 +189,23 @@ class DraftsGmailAPITestCorrectSendingFlowTest : BaseDraftsGmailAPIFlowTest() {
         pressImeActionButton()
       )
 
+    //sending is blocked while the recipient lookup is in progress
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    )
+
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //need to wait while a message will be sent
-    waitUntil {
+    //need to wait while a message will be sent. Right after clicking 'Send' the message may not
+    //be added to the outbox yet, so an empty outbox alone doesn't mean the message was sent
+    waitUntil(TimeUnit.SECONDS.toMillis(30)) {
       val countOfOutgoingMessages = runBlocking {
         roomDatabase.msgDao().getOutboxMsgsSuspend(addAccountToDatabaseRule.account.email).size
       }
-      countOfOutgoingMessages == 0
+      countOfOutgoingMessages == 0 && sentCache.isNotEmpty()
     }
 
     assertEquals(0, runBlocking {

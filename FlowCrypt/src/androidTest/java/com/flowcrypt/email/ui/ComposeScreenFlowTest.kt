@@ -175,6 +175,12 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         replaceText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
+    //while the lookup is in progress the screen shows the web portal password button,
+    //and the layout shifts when it is hidden. Also sending is blocked until the lookup is done
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    )
     onView(withId(R.id.editTextEmailSubject))
       .check(matches(isDisplayed()))
       .perform(scrollTo(), click(), replaceText(EMAIL_SUBJECT))
@@ -591,11 +597,18 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       EmailUtil.genAttInfoFromPubKey(secondKeyDetails, addAccountToDatabaseRule.account.email)
 
     activeActivityRule?.launch(intent)
+    waitForObjectWithText(
+      getResString(R.string.prompt_compose_security_email),
+      TimeUnit.SECONDS.toMillis(10)
+    )
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
       .check(matches(isDisplayed()))
       .perform(click())
+
+    //keys are loaded asynchronously, the list is hidden until they are ready
+    waitForObjectWithResourceName("listViewKeys", TimeUnit.SECONDS.toMillis(10))
 
     onData(withPubKeyName(att?.name))
       .inAdapterView(withId(R.id.listViewKeys))
