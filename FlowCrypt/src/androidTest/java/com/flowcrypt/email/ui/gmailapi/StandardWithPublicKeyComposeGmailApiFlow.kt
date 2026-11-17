@@ -81,10 +81,7 @@ class StandardWithPublicKeyComposeGmailApiFlow : BaseComposeGmailFlow() {
       .perform(click())
 
     //attach a public key
-    openActionBarOverflowOrOptionsMenu(getTargetContext())
-    onView(withText(R.string.include_public_key))
-      .check(matches(isDisplayed()))
-      .perform(click())
+    includeOwnPublicKey()
 
     //enqueue outgoing message
     onView(withId(R.id.menuActionSend))

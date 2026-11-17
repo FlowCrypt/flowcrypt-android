@@ -8,7 +8,6 @@ package com.flowcrypt.email
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
@@ -26,7 +25,7 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -54,18 +53,12 @@ class WkdClientTest {
 
           genLookupUrlPath(EXISTING_EMAIL) -> {
             return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBody(
-                PGPainless.getInstance().generateKey().simpleEcKeyRing(EXISTING_EMAIL).armor()
-              )
+              .setBody(EXISTING_EMAIL_RESPONSE_BODY)
           }
 
           genLookupUrlPath(OVERSIZED_RESPONSE_EMAIL) -> {
-            val armoredKey = PGPainless.getInstance().generateKey()
-              .simpleEcKeyRing(OVERSIZED_RESPONSE_EMAIL).toCertificate().toAsciiArmoredString()
-            val body = buildString {
-              while (length <= WkdClient.MAX_RESPONSE_SIZE_IN_BYTES) append(armoredKey)
-            }
-            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(body)
+            return MockResponse().setResponseCode(HttpURLConnection.HTTP_OK)
+              .setBody(OVERSIZED_RESPONSE_BODY)
           }
 
           genLookupUrlPath(NOT_EXISTING_EMAIL) -> {
@@ -91,9 +84,18 @@ class WkdClientTest {
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(mockWebServerRule)
 
+  /**
+   * [WkdClient] uses a read timeout of a few seconds and returns `null` when it expires.
+   * Generating a key while handling a request can take longer on a slow CI emulator,
+   * so the responses are prepared before the test sends any request.
+   */
+  @Before
+  fun prepareResponses() {
+    EXISTING_EMAIL_RESPONSE_BODY
+    OVERSIZED_RESPONSE_BODY
+  }
+
   @Test
-  @FlakyTest
-  @Ignore("Temporary disabled as flaky")
   fun existingEmailFlowCryptDomainTest() = runBlocking {
     val keys = WkdClient.lookupEmail(context, EXISTING_EMAIL)
     assertTrue("There are no keys in the key collection", requireNotNull(keys).keyRings.hasNext())
@@ -136,6 +138,18 @@ class WkdClientTest {
     const val EXISTING_EMAIL = "existing@flowcrypt.test"
     const val NOT_EXISTING_EMAIL = "not_existing@flowcrypt.test"
     const val OVERSIZED_RESPONSE_EMAIL = "oversized_response@flowcrypt.test"
+
+    private val EXISTING_EMAIL_RESPONSE_BODY by lazy {
+      PGPainless.getInstance().generateKey().simpleEcKeyRing(EXISTING_EMAIL).armor()
+    }
+
+    private val OVERSIZED_RESPONSE_BODY by lazy {
+      val armoredKey = PGPainless.getInstance().generateKey()
+        .simpleEcKeyRing(OVERSIZED_RESPONSE_EMAIL).toCertificate().toAsciiArmoredString()
+      buildString {
+        while (length <= WkdClient.MAX_RESPONSE_SIZE_IN_BYTES) append(armoredKey)
+      }
+    }
 
     private fun genLookupUrlPath(email: String): String {
       val user = email.substringBefore("@")
