@@ -1984,7 +1984,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 "unknown RecipientType: ${autoCompleteResults?.recipientType}"
               )
             }
-            val pattern = it.data?.pattern?.lowercase() ?: ""
+            val pattern = autoCompleteResults.pattern.lowercase()
 
             val autoCompleteList = results.map { recipientWithPubKeys ->
               AutoCompleteResultRecyclerViewAdapter.AutoCompleteItem(
@@ -2017,12 +2017,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               }
             }
 
-            val adapter = when (autoCompleteResults?.recipientType) {
+            val adapter = when (autoCompleteResults.recipientType) {
               Message.RecipientType.TO -> toAutoCompleteResultRecyclerViewAdapter
               Message.RecipientType.CC -> ccAutoCompleteResultRecyclerViewAdapter
               Message.RecipientType.BCC -> bccAutoCompleteResultRecyclerViewAdapter
               else -> throw InvalidObjectException(
-                "unknown RecipientType: ${autoCompleteResults?.recipientType}"
+                "unknown RecipientType: ${autoCompleteResults.recipientType}"
               )
             }
             adapter.submitList(finalList)

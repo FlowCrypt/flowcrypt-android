@@ -127,7 +127,7 @@ class ComposeScreenDisallowUpdateRevokedKeyFlowTest : BaseComposeScreenTest() {
     val existingRecipientAfter = roomDatabase.recipientDao()
       .getRecipientWithPubKeysByEmail(userWithRevokedKey)
     assertNotNull(existingRecipientAfter)
-    val pubKeyAfter = requireNotNull(existingRecipientBefore?.publicKeys?.first()?.publicKey)
+    val pubKeyAfter = requireNotNull(existingRecipientAfter).publicKeys.first().publicKey
     val pgpKeyDetailsAfter = PgpKey.parseKeys(pubKeyAfter)
       .pgpKeyRingCollection.pgpPublicKeyRingCollection.first().toPgpKeyRingDetails()
     assertTrue(pgpKeyDetailsAfter.isRevoked)
