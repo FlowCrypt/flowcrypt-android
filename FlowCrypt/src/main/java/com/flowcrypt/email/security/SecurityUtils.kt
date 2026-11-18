@@ -186,9 +186,14 @@ class SecurityUtils {
 
     /**
      * Filter an input file name to use only a safe part.
+     *
+     * The result is a single path component that cannot resolve to the directory itself or its parent.
      */
     fun sanitizeFileName(originalFileName: String?): String {
-      return originalFileName?.split("/")?.lastOrNull()?.replace("\\", "") ?: "unnamed"
+      val safeName = originalFileName?.split("/")?.lastOrNull()?.replace("\\", "")
+      return safeName?.takeIf {
+        it.isNotEmpty() && it != "." && it != ".." && it.none { char -> char.isISOControl() }
+      } ?: "unnamed"
     }
 
     /**

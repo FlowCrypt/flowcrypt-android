@@ -133,7 +133,7 @@ object ProcessingOutgoingMessageInfoHelper {
       val originalAttName = attachmentInfo.getSafeName()
       if (attachmentInfo.isEncryptionAllowed && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val fileName = originalAttName + "." + Constants.PGP_FILE_EXT
-        var encryptedTempFile = File(attsCacheDir, fileName)
+        var encryptedTempFile = FileAndDirectoryUtils.getFileInsideDir(attsCacheDir, fileName)
 
         if (encryptedTempFile.exists()) {
           encryptedTempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(
@@ -149,7 +149,7 @@ object ProcessingOutgoingMessageInfoHelper {
         uri = Uri.fromFile(encryptedTempFile)
         name = encryptedTempFile.name
       } else {
-        var cachedAtt = File(attsCacheDir, originalAttName)
+        var cachedAtt = FileAndDirectoryUtils.getFileInsideDir(attsCacheDir, originalAttName)
         if (cachedAtt.exists()) {
           cachedAtt =
             FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)

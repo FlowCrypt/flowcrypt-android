@@ -96,10 +96,10 @@ class RefreshPrivateKeysFromEkmViewModel(application: Application) : AccountView
         }
       }
 
-      requireNotNull(ekmPrivateResult.data?.privateKeys)
+      val privateKeys = requireNotNull(ekmPrivateResult.data?.privateKeys)
 
       val pgpKeyRingDetailsList = mutableListOf<PgpKeyRingDetails>()
-      ekmPrivateResult.data?.privateKeys?.forEach { key ->
+      privateKeys.forEach { key ->
         val parsedList = PgpKey.parsePrivateKeys(requireNotNull(key.decryptedPrivateKey))
           .map {
             it.copy(
