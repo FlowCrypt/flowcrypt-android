@@ -17,6 +17,7 @@ import android.text.Html
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.StyleRes
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory
 import androidx.fragment.app.testing.FragmentScenario
@@ -33,6 +34,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -52,10 +54,10 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.extensions.kotlin.toInputStream
 import com.flowcrypt.email.extensions.shutdown
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.rules.FlowCryptTestSettingsRule
 import com.flowcrypt.email.util.FlavorSettings
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
@@ -419,19 +421,21 @@ abstract class BaseTest : BaseActivityTestImplementation {
     stableForMs: Long = TimeUnit.SECONDS.toMillis(1),
     timeoutMs: Long = TimeUnit.SECONDS.toMillis(30)
   ) {
-    val chipMatcher = allOf(
-      withText(email),
-      withChipsBackgroundColor(getTargetContext(), colorResId)
-    )
+    val expectedColor = ContextCompat.getColor(getTargetContext(), colorResId)
     val startTime = SystemClock.uptimeMillis()
     var settledSince: Long? = null
+    var lastState = ""
     while (true) {
+      val actualColor = runCatching { getChipBackgroundColor(email) }
+      //Espresso can wait for the main thread before reading the color.
+      //Take the time after reading, so that waiting doesn't count as a stable period
       val now = SystemClock.uptimeMillis()
-      val isSettled = runCatching {
-        onView(chipMatcher).check(matches(isDisplayed()))
-      }.isSuccess
+      lastState = actualColor.fold(
+        onSuccess = { color -> "actual color = #%08X".format(color) },
+        onFailure = { e -> "chip lookup failed: ${e.javaClass.simpleName}: ${e.message?.take(300)}" }
+      )
 
-      if (isSettled) {
+      if (actualColor.getOrNull() == expectedColor) {
         val since = settledSince ?: now.also { settledSince = it }
         if (now - since >= stableForMs) return
       } else {
@@ -439,13 +443,39 @@ abstract class BaseTest : BaseActivityTestImplementation {
       }
 
       if (now - startTime >= timeoutMs) {
-        //fail with a clear Espresso error
-        onView(chipMatcher).check(matches(isDisplayed()))
-        return
+        val chipsOnScreen = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+          .findObjects(By.res(getTargetContext().packageName, "chip"))
+          .map { it.text }
+        val details = "expected color = #%08X, %s, chips on the screen = %s"
+          .format(expectedColor, lastState, chipsOnScreen)
+        throw AssertionError(
+          if (settledSince != null) {
+            "The chip of $email didn't keep the expected color for $stableForMs ms " +
+                "within $timeoutMs ms ($details)"
+          } else {
+            "The chip of $email didn't get the expected color within $timeoutMs ms ($details)"
+          }
+        )
       }
 
       SystemClock.sleep(100)
     }
+  }
+
+  /**
+   * Returns the background color of the displayed recipient chip with the given [email].
+   * It doesn't use the default failure handler, which takes a screenshot and dumps the view
+   * hierarchy on every failure (it takes a few seconds on a slow emulator).
+   */
+  private fun getChipBackgroundColor(email: String): Int? {
+    var color: Int? = null
+    onView(allOf(withText(email), isAssignableFrom(Chip::class.java), isDisplayed()))
+      .withFailureHandler { error, _ -> throw error }
+      .check { view, noViewFoundException ->
+        if (noViewFoundException != null) throw noViewFoundException
+        color = (view as Chip).chipBackgroundColor?.defaultColor
+      }
+    return color
   }
 
   protected fun getIdentifierByName(name: String): Int {

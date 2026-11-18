@@ -608,7 +608,7 @@ class ThreadDetailsViewModel(
           return@collectLatest
         } else {
           loadMessagesManuallyMutableStateFlow.update {
-            val existingValue = existingResult.data ?: Data(false, emptyList())
+            val existingValue = existingResult.data
             val updatedList = existingValue.list.toMutableList().apply {
               replaceAll { item ->
                 if (item.type == MessagesInThreadListAdapter.Type.HEADER) {

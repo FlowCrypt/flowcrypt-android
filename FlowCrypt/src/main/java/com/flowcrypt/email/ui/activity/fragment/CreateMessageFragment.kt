@@ -637,14 +637,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }?.forEach { attachmentInfo ->
       val uri = attachmentInfo.uri ?: return@forEach
       if (hasAbilityToAddAtt(attachmentInfo)) {
-        if (attachmentInfo.getSafeName().isEmpty()) {
-          val msg = "attachmentInfo.getName() is empty, uri = $uri"
-          ExceptionUtil.handleError(NullPointerException(msg))
-          return
-        }
-
         val fileName = attachmentInfo.getSafeName()
-        var draftAtt = File(draftCacheDir, fileName)
+        var draftAtt = try {
+          FileAndDirectoryUtils.getFileInsideDir(draftCacheDir, fileName)
+        } catch (e: IOException) {
+          LogsUtil.d(TAG, "Rejected unsafe attachment name", e)
+          return@forEach
+        }
 
         draftAtt = if (draftAtt.exists()) {
           FileAndDirectoryUtils.createFileWithIncreasedIndex(draftCacheDir, fileName)
@@ -1984,7 +1983,7 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
                 "unknown RecipientType: ${autoCompleteResults?.recipientType}"
               )
             }
-            val pattern = it.data?.pattern?.lowercase() ?: ""
+            val pattern = autoCompleteResults.pattern.lowercase()
 
             val autoCompleteList = results.map { recipientWithPubKeys ->
               AutoCompleteResultRecyclerViewAdapter.AutoCompleteItem(
@@ -2017,12 +2016,12 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
               }
             }
 
-            val adapter = when (autoCompleteResults?.recipientType) {
+            val adapter = when (autoCompleteResults.recipientType) {
               Message.RecipientType.TO -> toAutoCompleteResultRecyclerViewAdapter
               Message.RecipientType.CC -> ccAutoCompleteResultRecyclerViewAdapter
               Message.RecipientType.BCC -> bccAutoCompleteResultRecyclerViewAdapter
               else -> throw InvalidObjectException(
-                "unknown RecipientType: ${autoCompleteResults?.recipientType}"
+                "unknown RecipientType: ${autoCompleteResults.recipientType}"
               )
             }
             adapter.submitList(finalList)

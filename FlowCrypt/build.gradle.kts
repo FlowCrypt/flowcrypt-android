@@ -5,6 +5,7 @@
 
 
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.variant.ResValue
 import com.android.ddmlib.DdmPreferences
 import java.io.FileInputStream
@@ -21,8 +22,17 @@ plugins {
   id("com.starter.easylauncher")
   id("kotlin-parcelize")
   id("com.google.devtools.ksp")
-  id("org.ajoberstar.grgit")
 }
+
+val gitCommitId = providers.exec {
+  workingDir(rootProject.rootDir)
+  commandLine("git", "rev-parse", "HEAD")
+}.standardOutput.asText.map { it.trim().take(7) }
+
+val gitBranchName = providers.exec {
+  workingDir(rootProject.rootDir)
+  commandLine("git", "rev-parse", "--abbrev-ref", "HEAD")
+}.standardOutput.asText.map { it.trim() }
 
 val keystoreProperties = Properties()
 val propertiesFile = project.file("keystore.properties")
@@ -58,7 +68,6 @@ android {
     versionName = rootProject.extra["appVersionName"] as String
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "MIN_SDK_VERSION", "$minSdk")
-    multiDexEnabled = true
   }
 
   signingConfigs {
@@ -106,25 +115,33 @@ android {
       signingConfig = signingConfigs.getByName("release")
     }
 
-    getByName("debug") {
+    // Shared by debug and uiTests. uiTests doesn't use initWith(debug) because overriding
+    // inherited resValues triggers the AGP RES_VALUE_REPLACED warning.
+    fun ApplicationBuildType.configureDebuggable(isHttpLogEnabled: Boolean) {
       isDebuggable = true
-      versionNameSuffix = "_" +
-          defaultConfig.versionCode +
-          "__" + SimpleDateFormat("yyyy_MM_dd").format(Date()) +
-          "__" + grgit.head().id.substring(0, 7)
+      isCrunchPngs = false
       applicationIdSuffix = ".debug"
       signingConfig = signingConfigs.getByName("debug")
 
+      val httpLogLevel = if (isHttpLogEnabled) "BODY" else "NONE"
       buildConfigField("boolean", "IS_ACRA_ENABLED", "false")
-      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "true")
-      buildConfigField("String", "HTTP_LOG_LEVEL", "\"BODY\"")
+      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", isHttpLogEnabled.toString())
+      buildConfigField("String", "HTTP_LOG_LEVEL", "\"$httpLogLevel\"")
       resValue("string", "gradle_is_acra_enabled", "false")
-      resValue("string", "gradle_is_http_log_enabled", "true")
-      resValue("string", "gradle_http_log_level", "BODY")
+      resValue("string", "gradle_is_http_log_enabled", isHttpLogEnabled.toString())
+      resValue("string", "gradle_http_log_level", httpLogLevel)
+    }
+
+    getByName("debug") {
+      configureDebuggable(isHttpLogEnabled = true)
+      versionNameSuffix = "_" +
+          defaultConfig.versionCode +
+          "__" + SimpleDateFormat("yyyy_MM_dd").format(Date()) +
+          "__" + gitCommitId.get()
     }
 
     create("uiTests") {
-      initWith(getByName("debug"))
+      configureDebuggable(isHttpLogEnabled = false)
       versionNameSuffix =
         "_test_" + defaultConfig.versionCode + "__" + SimpleDateFormat("yyyy_MM_dd").format(Date())
       buildConfigField("String", "ATTESTER_URL", "\"https://flowcrypt.test/attester/\"")
@@ -133,17 +150,13 @@ android {
         "SHARED_TENANT_FES_URL",
         "\"https://flowcrypt.test/shared-tenant-fes/\""
       )
-      buildConfigField("boolean", "IS_HTTP_LOG_ENABLED", "false")
-      buildConfigField("String", "HTTP_LOG_LEVEL", "\"NONE\"")
-      resValue("string", "gradle_is_http_log_enabled", "false")
-      resValue("string", "gradle_http_log_level", "NONE")
     }
   }
 
   testBuildType = "uiTests"
 
   sourceSets {
-    getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    getByName("androidTest").assets.directories.add("$projectDir/schemas")
   }
 
   flavorDimensions += "standard"
@@ -420,8 +433,11 @@ easylauncher {
 }
 
 tasks.register("checkCorrectBranch") {
-  if (!grgit.branch.current().name.equals("master")) {
-    throw GradleException("Please use 'master' branch to generate a release build")
+  val branchName = gitBranchName
+  doLast {
+    if (branchName.get() != "master") {
+      throw GradleException("Please use 'master' branch to generate a release build")
+    }
   }
 }
 
@@ -449,8 +465,8 @@ tasks.register<Copy>("copyReleaseApks") {
   }
 }
 
-val devDebugImplementation: Configuration by configurations.creating
-val uiTestsImplementation by configurations.named("uiTestsImplementation")
+val devDebugImplementation: Configuration = configurations.create("devDebugImplementation")
+val uiTestsImplementation = configurations.named("uiTestsImplementation")
 
 dependencies {
   ksp("com.github.bumptech.glide:ksp:5.0.9")
@@ -553,14 +569,14 @@ dependencies {
   implementation("com.github.bumptech.glide:glide:5.0.9")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.1.1")
-  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261103.2")
+  implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261110.1")
   implementation("com.sandinh:zbase32-commons-codec_2.12:1.0.0")
   implementation("org.bitbucket.b_c:jose4j:0.9.7")
   implementation("org.jsoup:jsoup:1.24.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.13.0")
   implementation("org.pgpainless:pgpainless-core:2.0.4")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")

@@ -4,6 +4,7 @@
 
 package com.flowcrypt.email.util
 
+import com.flowcrypt.email.security.SecurityUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assume.assumeNoException
@@ -133,6 +134,20 @@ class GetFileInsideDirTest {
 
     assertThrows(IOException::class.java) {
       FileAndDirectoryUtils.getFileInsideDir(directory, "link")
+    }
+  }
+
+  @Test
+  fun rejectSymlinkNamedAfterSanitizedTraversalName() {
+    val directory = temporaryFolder.newFolder("forwarded")
+    val outsideFile = File(temporaryFolder.newFolder("outside"), "flowcrypt.db-journal").apply {
+      createNewFile()
+    }
+    val safeName = SecurityUtils.sanitizeFileName("../../../../databases/flowcrypt.db-journal")
+    createSymbolicLinkOrSkip(File(directory, safeName), outsideFile)
+
+    assertThrows(IOException::class.java) {
+      FileAndDirectoryUtils.getFileInsideDir(directory, safeName)
     }
   }
 

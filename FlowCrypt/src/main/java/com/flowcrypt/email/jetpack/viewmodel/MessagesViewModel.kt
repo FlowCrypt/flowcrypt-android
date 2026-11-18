@@ -398,9 +398,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
       if (isOnlyPgpModeEnabled == true) {
         foundMsgs = imapFolder.search(EmailUtil.genPgpThingsSearchTerm(accountEntity))
-        foundMsgs?.let {
-          msgsCount = foundMsgs.size
-        }
+        msgsCount = foundMsgs.size
       } else {
         msgsCount = imapFolder.messageCount
       }

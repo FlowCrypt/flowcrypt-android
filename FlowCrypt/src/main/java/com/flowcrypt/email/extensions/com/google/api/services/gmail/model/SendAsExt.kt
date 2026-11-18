@@ -7,7 +7,6 @@ package com.flowcrypt.email.extensions.com.google.api.services.gmail.model
 
 import android.accounts.Account
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.google.api.services.gmail.model.SendAs
 
 /**
@@ -16,7 +15,7 @@ import com.google.api.services.gmail.model.SendAs
 fun SendAs.toAccountAliasesEntity(account: Account): AccountAliasesEntity {
   return AccountAliasesEntity(
     email = account.name.lowercase(),
-    accountType = account.type ?: AccountEntity.ACCOUNT_TYPE_GOOGLE,
+    accountType = account.type,
     sendAsEmail = sendAsEmail?.lowercase(),
     displayName = displayName,
     replyToAddress = replyToAddress,

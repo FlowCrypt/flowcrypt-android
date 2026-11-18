@@ -162,20 +162,12 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   override fun getSecretKeyRingProtector(): SecretKeyRingProtector {
     val availablePGPSecretKeyRings = getPGPSecretKeyRings()
     val passphraseProvider = object : SecretKeyPassphraseProvider {
-      override fun getPassphraseFor(keyId: Long): Passphrase? {
-        return doGetPassphrase(keyId, true)
-      }
-
       override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
-        return getPassphraseFor(keyIdentifier.keyId)
-      }
-
-      override fun hasPassphrase(keyId: Long): Boolean {
-        return doGetPassphrase(keyId, false) != null
+        return doGetPassphrase(keyIdentifier.keyId, true)
       }
 
       override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
-        return hasPassphrase(keyIdentifier.keyId)
+        return doGetPassphrase(keyIdentifier.keyId, false) != null
       }
 
       private fun doGetPassphrase(keyId: Long, throwException: Boolean): Passphrase? {

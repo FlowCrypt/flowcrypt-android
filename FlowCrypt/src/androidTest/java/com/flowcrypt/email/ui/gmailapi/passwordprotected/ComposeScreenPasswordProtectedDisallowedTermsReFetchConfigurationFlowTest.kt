@@ -8,6 +8,9 @@ package com.flowcrypt.email.ui.gmailapi.passwordprotected
 import android.Manifest
 import android.app.Instrumentation
 import android.content.Intent
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -23,10 +26,14 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.response.api.ClientConfigurationResponse
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.junit.annotations.EnterpriseTest
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
@@ -36,10 +43,13 @@ import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
+import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.allOf
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -169,13 +179,29 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
     //go to ProvidePasswordToProtectMsgFragment and go back to trigger updating
     onView(withId(R.id.btnSetWebPortalPassword))
       .perform(click())
-    Espresso.pressBack()
+    leaveProvidePasswordScreen {
+      Espresso.pressBack()
+    }
 
     //wait until RefreshClientConfigurationWorker saves the updated client configuration
     waitUntil(TimeUnit.SECONDS.toMillis(30)) {
       roomDatabase.accountDao().getActiveAccount()
         ?.clientConfiguration?.disallowPasswordMessagesErrorText == UPDATED_ERROR_TEXT
     }
+
+    //returning to the compose screen starts a new lookup for the recipient,
+    //and sending is blocked while it is in progress
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
+
+    //the compose screen reads the client configuration from its own AccountViewModel.
+    //The updated account reaches it later than the database (Room -> LiveData -> decryption)
+    waitUntil(TimeUnit.SECONDS.toMillis(30)) {
+      getComposeScreenDisallowPasswordMessagesErrorText() == UPDATED_ERROR_TEXT
+    }
+    assertEquals(UPDATED_ERROR_TEXT, getComposeScreenDisallowPasswordMessagesErrorText())
 
     //check that client configuration was updated
     MATCHING_SUBJECTS.first().let { subject ->
@@ -197,6 +223,32 @@ class ComposeScreenPasswordProtectedDisallowedTermsReFetchConfigurationFlowTest 
         .check(matches(isDisplayed()))
         .perform(click())
     }
+  }
+
+  /**
+   * Returns [com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration.disallowPasswordMessagesErrorText]
+   * of the account that [CreateMessageFragment] uses while checking a message before sending.
+   */
+  private fun getComposeScreenDisallowPasswordMessagesErrorText(): String? {
+    var errorText: String? = null
+    InstrumentationRegistry.getInstrumentation().runOnMainSync {
+      val fragment = ActivityLifecycleMonitorRegistry.getInstance()
+        .getActivitiesInStage(Stage.RESUMED)
+        .filterIsInstance<FragmentActivity>()
+        .firstNotNullOfOrNull { findCreateMessageFragment(it.supportFragmentManager) }
+      errorText = fragment?.let {
+        ViewModelProvider(it)[AccountViewModel::class.java].activeAccountLiveData.value
+      }?.clientConfiguration?.disallowPasswordMessagesErrorText
+    }
+    return errorText
+  }
+
+  private fun findCreateMessageFragment(fragmentManager: FragmentManager): CreateMessageFragment? {
+    for (fragment in fragmentManager.fragments) {
+      if (fragment is CreateMessageFragment) return fragment
+      findCreateMessageFragment(fragment.childFragmentManager)?.let { return it }
+    }
+    return null
   }
 
   companion object {

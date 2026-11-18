@@ -11,7 +11,7 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -28,6 +28,7 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Before
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -44,9 +45,11 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
 
   @Before
   fun setUp() {
+    //typing with key events can lose characters on a slow emulator while the IME reconnects
+    //("commitText on inactive InputConnection" in logcat), so the chip gets a wrong email
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton(),
         closeSoftKeyboard()
       )
@@ -69,8 +72,9 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
     onView(withId(R.id.eTPassphrase))
       .perform(replaceText(PASSWORD))
 
-    onView(withId(R.id.btSetPassword))
-      .perform(click())
+    leaveProvidePasswordScreen {
+      onView(withId(R.id.btSetPassword)).perform(click())
+    }
 
     //returning to the compose screen starts a new lookup for the recipient.
     //Sending is blocked while it is in progress
@@ -78,6 +82,28 @@ open class BaseComposeScreenPasswordProtectedDisallowedTermsTest(
       email = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
       colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
+  }
+
+  /**
+   * Run [action] until the screen to provide a web portal password is closed.
+   * The keyboard appears on this screen and moves its views, so a click can miss the button.
+   * Also, if the keyboard is open, 'back' only closes it.
+   * [action] runs again only while the screen is still displayed.
+   */
+  protected fun leaveProvidePasswordScreen(action: () -> Unit) {
+    val isProvidePasswordScreenDisplayed = {
+      runCatching {
+        onView(withId(R.id.eTPassphrase)).check(matches(isDisplayed()))
+      }.isSuccess
+    }
+
+    waitUntil(TimeUnit.SECONDS.toMillis(30)) {
+      if (isProvidePasswordScreenDisplayed()) {
+        runCatching { action() }
+      }
+      !isProvidePasswordScreenDisplayed()
+    }
+    onView(withId(R.id.eTPassphrase)).check(doesNotExist())
   }
 
   companion object {

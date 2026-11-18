@@ -443,9 +443,6 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
             MessageState.ERROR_PASSWORD_PROTECTED ->
               state = context.getString(R.string.can_not_send_password_protected)
-
-            else -> {
-            }
           }
         }
 
