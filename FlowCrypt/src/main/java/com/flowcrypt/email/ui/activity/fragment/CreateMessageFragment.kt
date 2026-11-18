@@ -637,14 +637,13 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
     }?.forEach { attachmentInfo ->
       val uri = attachmentInfo.uri ?: return@forEach
       if (hasAbilityToAddAtt(attachmentInfo)) {
-        if (attachmentInfo.getSafeName().isEmpty()) {
-          val msg = "attachmentInfo.getName() is empty, uri = $uri"
-          ExceptionUtil.handleError(NullPointerException(msg))
-          return
-        }
-
         val fileName = attachmentInfo.getSafeName()
-        var draftAtt = File(draftCacheDir, fileName)
+        var draftAtt = try {
+          FileAndDirectoryUtils.getFileInsideDir(draftCacheDir, fileName)
+        } catch (e: IOException) {
+          LogsUtil.d(TAG, "Rejected unsafe attachment name", e)
+          return@forEach
+        }
 
         draftAtt = if (draftAtt.exists()) {
           FileAndDirectoryUtils.createFileWithIncreasedIndex(draftCacheDir, fileName)
