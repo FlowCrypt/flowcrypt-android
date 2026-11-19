@@ -108,6 +108,20 @@ run can hide failures. To see them:
   `@RunWith(RepeatableAndroidJUnit4ClassRunner::class)` plus
   `@RepeatableAndroidJUnit4ClassRunner.RepeatTest(5)`, and `RetryRule.DEFAULT` with
   `RetryRule(1)`.
+  It doesn't work for a class with a `@ClassRule` mock web server (e.g. `ComposeScreenFlowTest`):
+  the rule starts twice and every test fails with `BindException: EADDRINUSE`. Also, the tests get
+  names like `testEmptyEmailSubject_1`, so `class=Class#method` matches nothing. For such a class
+  keep `@RunWith(AndroidJUnit4::class)`, set only `RetryRule(1)` and start the test in a loop:
+
+  ```bash
+  ANDROID_SERIAL=emulator-5560 ./gradlew :FlowCrypt:installConsumerUiTests \
+    :FlowCrypt:installConsumerUiTestsAndroidTest
+  for i in {1..10}; do
+    adb -s emulator-5560 shell am instrument -w -r \
+      -e class com.flowcrypt.email.ui.ComposeScreenFlowTest#testEmptyEmailSubject \
+      com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner | grep -E '^OK|^Tests run'
+  done
+  ```
 - **Run a few times.** Some races show up once in 5–10 runs. Compare the code before and after
   the fix under the same conditions.
 
