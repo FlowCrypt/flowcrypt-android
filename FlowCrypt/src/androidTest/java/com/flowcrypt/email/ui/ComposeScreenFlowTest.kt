@@ -140,7 +140,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("flaky. Temporary disabled")
   fun testEmptyEmailSubject() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -148,20 +147,29 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       TimeUnit.SECONDS.toMillis(10)
     )
 
+    //typeText() can lose characters on a slow emulator when the IME session restarts
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
+    //sending is blocked with a "please wait" toast until the recipient lookup is done
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    )
     onView(withId(R.id.editTextEmailSubject))
-      .perform(scrollTo(), click(), typeText("subject"), clearText())
+      .perform(scrollTo(), click(), replaceText(""))
       .check(matches(withText("")))
+    Espresso.closeSoftKeyboard()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(
-      withText(getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_subject)))
-    ).check(matches(isDisplayed()))
+
+    val errorText =
+      getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_subject))
+    waitForObjectWithText(errorText, TimeUnit.SECONDS.toMillis(10))
+    onView(withText(errorText)).check(matches(isDisplayed()))
   }
 
   @Test
