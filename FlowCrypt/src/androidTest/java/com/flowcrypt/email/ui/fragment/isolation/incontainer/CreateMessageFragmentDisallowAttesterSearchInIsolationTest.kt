@@ -5,15 +5,12 @@
 
 package com.flowcrypt.email.ui.fragment.isolation.incontainer
 
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
-import androidx.test.espresso.action.ViewActions.typeText
-import androidx.test.espresso.contrib.RecyclerViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
@@ -21,7 +18,6 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.ClientConfiguration
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withChipsBackgroundColor
 import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
@@ -33,8 +29,6 @@ import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.util.AccountDaoManager
-import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -80,7 +74,6 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("Temporary disabled as flaky")
   fun testDisallowLookupOnAttester() {
     launchFragmentInContainer<CreateMessageFragment>(
       fragmentArgs = CreateMessageFragmentArgs().toBundle()
@@ -89,7 +82,8 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
     val recipient = "recipient@example.test"
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(recipient),
+        //typeText() can lose characters on a slow emulator when the IME session restarts
+        replaceText(recipient),
         pressImeActionButton(),
         closeSoftKeyboard()
       )
@@ -98,26 +92,20 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
     onView(withId(R.id.editTextEmailSubject))
       .perform(
         click(),
-        typeText("subject"),
+        replaceText("subject"),
         closeSoftKeyboard()
       )
     onView(withId(R.id.editTextEmailMessage))
       .perform(
-        typeText("message"),
+        replaceText("message"),
         closeSoftKeyboard()
       )
 
-    onView(withId(R.id.recyclerViewChipsTo))
-      .perform(
-        scrollTo<RecyclerView.ViewHolder>(
-          allOf(
-            withText(recipient),
-            withChipsBackgroundColor(
-              getTargetContext(),
-              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
-            )
-          )
-        )
-      )
+    //the chip has the 'updating' color while the lookup is in progress. A single check can run
+    //before the lookup finishes on a slow emulator
+    waitUntilRecipientChipIsSettled(
+      email = recipient,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
   }
 }
