@@ -1,7 +1,5 @@
 /*
  * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
- * Contributors:
- *   Ivan Pizhenko
  */
 
 package com.flowcrypt.email.security.pgp
