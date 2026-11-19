@@ -375,7 +375,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("Need to fix. Flaky")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
@@ -384,70 +383,44 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val email = primaryInternetAddress.address
     fillInAllFields(to = setOf(primaryInternetAddress))
 
-    onView(withId(R.id.recyclerViewChipsTo))
-      .perform(
-        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-          allOf(
-            withText(email),
-            withChipsBackgroundColor(
-              getTargetContext(),
-              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
-            )
-          )
-        )
-      )
+    //sending is blocked with a "please wait" toast until the recipient lookup is done
+    waitUntilRecipientChipIsSettled(
+      email = email,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
 
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
 
+    waitForObjectWithText(
+      getResString(R.string.import_their_public_key),
+      TimeUnit.SECONDS.toMillis(10)
+    )
     onView(withText(R.string.import_their_public_key))
       .check(matches(isDisplayed()))
       .perform(click())
-    var clipboardOk = false
 
     val clipboard =
       getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    repeat(5) { _ ->
-
+    waitUntil(TimeUnit.SECONDS.toMillis(10)) {
       addTextToClipboard("public key", pgpKeyRingDetails.publicKey)
-      Thread.sleep(1000)
-
-      val clip = clipboard.primaryClip
-      val actualText = clip
+      clipboard.primaryClip
         ?.takeIf { it.itemCount > 0 }
         ?.getItemAt(0)
         ?.coerceToText(getTargetContext())
-        ?.toString()
-
-      if (actualText == pgpKeyRingDetails.publicKey) {
-        clipboardOk = true
-        return@repeat
-      }
-    }
-
-    if (!clipboardOk) {
-      throw AssertionError("Clipboard did not contain expected public key after 5 attempts")
+        ?.toString() == pgpKeyRingDetails.publicKey
     }
 
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))
       .perform(click())
 
-    waitForObjectWithText(email, TimeUnit.SECONDS.toMillis(10))
-
-    onView(withId(R.id.recyclerViewChipsTo))
-      .perform(
-        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-          allOf(
-            withText(email),
-            withChipsBackgroundColor(
-              getTargetContext(),
-              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
-            )
-          )
-        )
-      )
+    //returning to the compose screen starts a new lookup for the recipient
+    waitUntilRecipientChipIsSettled(
+      email = email,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    )
   }
 
   @Test
