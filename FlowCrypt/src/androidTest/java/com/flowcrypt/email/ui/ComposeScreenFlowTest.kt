@@ -411,6 +411,8 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         ?.coerceToText(getTargetContext())
         ?.toString() == pgpKeyRingDetails.publicKey
     }
+    //waitUntil() doesn't fail on a timeout. Fail here instead of a misleading chip check later
+    checkClipboardText(pgpKeyRingDetails.publicKey)
 
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))
