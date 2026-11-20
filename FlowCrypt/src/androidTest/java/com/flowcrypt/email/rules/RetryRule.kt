@@ -49,6 +49,8 @@ class RetryRule(private val retryCount: Int = 0) : BaseRule() {
               Thread.sleep(1000 * (times + 1).toLong())
               caughtThrowable = it
               System.err.println(description.displayName.toString() + ": run ${times + 1} failed")
+              //without it a failure fixed by a retry is not visible in logcat
+              it.printStackTrace()
             }
         }
         System.err.println(description.displayName.toString() + ": giving up after " + attempts + " failures")

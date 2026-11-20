@@ -76,4 +76,11 @@ object CustomViewActions {
   fun waitUntilGone(text: String, timeout: Long): ViewAction {
     return WaitUntilTextGoneAction(text, timeout)
   }
+
+  /**
+   * @return a [InsertTextAtCursorViewAction] instance created with the given [text] parameter.
+   */
+  fun insertTextAtCursor(text: String): ViewAction {
+    return InsertTextAtCursorViewAction(text)
+  }
 }

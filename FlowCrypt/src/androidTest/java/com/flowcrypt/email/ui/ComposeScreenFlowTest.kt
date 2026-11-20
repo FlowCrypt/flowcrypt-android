@@ -140,7 +140,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("flaky. Temporary disabled")
   fun testEmptyEmailSubject() {
     activeActivityRule?.launch(intent)
     waitForObjectWithText(
@@ -148,20 +147,29 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       TimeUnit.SECONDS.toMillis(10)
     )
 
+    //typeText() can lose characters on a slow emulator when the IME session restarts
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
+    //sending is blocked with a "please wait" toast until the recipient lookup is done
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    )
     onView(withId(R.id.editTextEmailSubject))
-      .perform(scrollTo(), click(), typeText("subject"), clearText())
+      .perform(scrollTo(), click(), replaceText(""))
       .check(matches(withText("")))
+    Espresso.closeSoftKeyboard()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
-    onView(
-      withText(getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_subject)))
-    ).check(matches(isDisplayed()))
+
+    val errorText =
+      getResString(R.string.text_must_not_be_empty, getResString(R.string.prompt_subject))
+    waitForObjectWithText(errorText, TimeUnit.SECONDS.toMillis(10))
+    onView(withText(errorText)).check(matches(isDisplayed()))
   }
 
   @Test
@@ -367,7 +375,6 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   }
 
   @Test
-  @Ignore("Need to fix. Flaky")
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule?.launch(intent)
     intending(hasComponent(ComponentName(getTargetContext(), MainActivity::class.java)))
@@ -376,70 +383,46 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
     val email = primaryInternetAddress.address
     fillInAllFields(to = setOf(primaryInternetAddress))
 
-    onView(withId(R.id.recyclerViewChipsTo))
-      .perform(
-        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-          allOf(
-            withText(email),
-            withChipsBackgroundColor(
-              getTargetContext(),
-              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
-            )
-          )
-        )
-      )
+    //sending is blocked with a "please wait" toast until the recipient lookup is done
+    waitUntilRecipientChipIsSettled(
+      email = email,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
 
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
 
+    waitForObjectWithText(
+      getResString(R.string.import_their_public_key),
+      TimeUnit.SECONDS.toMillis(10)
+    )
     onView(withText(R.string.import_their_public_key))
       .check(matches(isDisplayed()))
       .perform(click())
-    var clipboardOk = false
 
     val clipboard =
       getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    repeat(5) { _ ->
-
+    waitUntil(TimeUnit.SECONDS.toMillis(10)) {
       addTextToClipboard("public key", pgpKeyRingDetails.publicKey)
-      Thread.sleep(1000)
-
-      val clip = clipboard.primaryClip
-      val actualText = clip
+      clipboard.primaryClip
         ?.takeIf { it.itemCount > 0 }
         ?.getItemAt(0)
         ?.coerceToText(getTargetContext())
-        ?.toString()
-
-      if (actualText == pgpKeyRingDetails.publicKey) {
-        clipboardOk = true
-        return@repeat
-      }
+        ?.toString() == pgpKeyRingDetails.publicKey
     }
-
-    if (!clipboardOk) {
-      throw AssertionError("Clipboard did not contain expected public key after 5 attempts")
-    }
+    //waitUntil() doesn't fail on a timeout. Fail here instead of a misleading chip check later
+    checkClipboardText(pgpKeyRingDetails.publicKey)
 
     onView(withId(R.id.buttonLoadFromClipboard))
       .check(matches(isDisplayed()))
       .perform(click())
 
-    waitForObjectWithText(email, TimeUnit.SECONDS.toMillis(10))
-
-    onView(withId(R.id.recyclerViewChipsTo))
-      .perform(
-        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-          allOf(
-            withText(email),
-            withChipsBackgroundColor(
-              getTargetContext(),
-              RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
-            )
-          )
-        )
-      )
+    //returning to the compose screen starts a new lookup for the recipient
+    waitUntilRecipientChipIsSettled(
+      email = email,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_HAS_USABLE_PUB_KEY
+    )
   }
 
   @Test
@@ -451,6 +434,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         requireNotNull(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.asInternetAddress())
       )
     )
+    waitUntilRecipientWithoutPubKeyIsSettled()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -464,17 +448,21 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule?.launch(intent)
 
+    //typeText() can lose characters on a slow emulator when the IME session restarts
+    //("Session id mismatch" in logcat), e.g. the recipient became "...@flowcrypt.te"
     onView(withId(R.id.editTextEmailAddress))
       .perform(
-        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
+        replaceText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER),
         pressImeActionButton()
       )
     //move the focus to the next view
     onView(withId(R.id.editTextEmailMessage))
       .perform(
         scrollTo(), click(),
-        typeText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard()
+        replaceText(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER), closeSoftKeyboard()
       )
+    //sending is blocked with a "please wait" toast until the recipient lookup is done
+    waitUntilRecipientWithoutPubKeyIsSettled()
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
       .perform(click())
@@ -517,7 +505,7 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
       )
     )
 
-    Thread.sleep(2000)
+    waitUntilRecipientWithoutPubKeyIsSettled()
 
     onView(withId(R.id.menuActionSend))
       .check(matches(isDisplayed()))
@@ -932,6 +920,17 @@ class ComposeScreenFlowTest : BaseComposeScreenTest() {
         description.appendText("with item content: ")
       }
     }
+  }
+
+  /**
+   * Clicking 'Send' while the recipient lookup is in progress shows a "please wait" toast
+   * instead of the dialog for a recipient without a public key.
+   */
+  private fun waitUntilRecipientWithoutPubKeyIsSettled() {
+    waitUntilRecipientChipIsSettled(
+      email = TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER,
+      colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
+    )
   }
 
   companion object {
