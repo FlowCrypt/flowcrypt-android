@@ -177,14 +177,30 @@ if [[ "${DISABLE_IME:-1}" == "1" ]]; then
     adb shell pm disable-user --user 0 "$ime_package" || true
   done
 
-  # The system applies the change asynchronously.
+  # The system applies the change asynchronously. Only a successful 'ime list' with an empty result
+  # means that no IME is enabled. Tests with an enabled IME lose characters, so don't run them.
   enabled_imes=""
+  are_imes_disabled=false
   for _ in {1..15}; do
-    enabled_imes=$(adb shell ime list -s | tr -d '\r' | tr '\n' ' ' || true)
-    [[ -z "${enabled_imes// /}" ]] && break
+    if enabled_imes=$(adb shell ime list -s | tr -d '\r' | tr '\n' ' '); then
+      if [[ -z "${enabled_imes// /}" ]]; then
+        are_imes_disabled=true
+        break
+      fi
+    else
+      enabled_imes="<'ime list -s' failed>"
+    fi
     sleep 1
   done
-  echo "Enabled input methods after disabling: [${enabled_imes}]"
+
+  if [[ "$are_imes_disabled" != "true" ]]; then
+    echo "ERROR: couldn't disable input methods, enabled: [${enabled_imes}]" >&2
+    echo "Default input method: $(adb shell settings get secure default_input_method || true)" >&2
+    echo "All input methods:" >&2
+    adb shell ime list -a -s >&2 || true
+    exit 1
+  fi
+  echo "All input methods are disabled"
 fi
 
 ###################################################################################################

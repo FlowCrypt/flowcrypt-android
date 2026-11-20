@@ -69,6 +69,8 @@ ANDROID_SERIAL=emulator-5560 ./script/ci-wait-for-emulator.sh
 This is the script CI runs. It waits for boot and then:
 
 - disables animations and sets `long_press_timeout` to 1500 ms;
+- disables the keyboard (IME), so `typeText()` doesn't lose characters, and fails if any IME is
+  still enabled. Set `DISABLE_IME=0` to keep it;
 - runs `adb root` and redirects `127.0.0.1:443` to the mock web server port `1212` (`iptables`);
 - forwards port `1212` and checks the network, including `fes.flowcrypt.test`.
 
