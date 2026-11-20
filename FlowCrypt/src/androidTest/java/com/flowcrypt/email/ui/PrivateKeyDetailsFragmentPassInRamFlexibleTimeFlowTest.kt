@@ -114,6 +114,8 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeFlowTest : BaseTest() {
       )
     onView(withId(R.id.btnUpdatePassphrase))
       .perform(click())
+    //the pass phrase is checked asynchronously, the screen shows the result after that
+    waitUntilPassPhraseVerificationText(R.string.stored_pass_phrase_matched)
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.stored_pass_phrase_matched))))
       .check(matches(hasTextColor(R.color.colorPrimaryLight)))
@@ -121,15 +123,27 @@ class PrivateKeyDetailsFragmentPassInRamFlexibleTimeFlowTest : BaseTest() {
     //[PassPhrasesInRAMService] clears expired pass phrases once per DELAY_TIMEOUT, counted from
     //the service start, and the screen is updated after that asynchronously. On a slow emulator
     //the service can start late, so wait for the result instead of a fixed sleep
-    waitUntil(PassPhrasesInRAMService.DELAY_TIMEOUT + TimeUnit.SECONDS.toMillis(30)) {
-      runCatching {
-        onView(withId(R.id.tVPassPhraseVerification))
-          .check(matches(withText(getResString(R.string.pass_phrase_not_provided))))
-      }.isSuccess
-    }
+    waitUntilPassPhraseVerificationText(
+      textResId = R.string.pass_phrase_not_provided,
+      timeoutMs = PassPhrasesInRAMService.DELAY_TIMEOUT + TimeUnit.SECONDS.toMillis(30)
+    )
     onView(withId(R.id.tVPassPhraseVerification))
       .check(matches(withText(getResString(R.string.pass_phrase_not_provided))))
       .check(matches(hasTextColor(R.color.red)))
+  }
+
+  private fun waitUntilPassPhraseVerificationText(
+    textResId: Int,
+    timeoutMs: Long = TimeUnit.SECONDS.toMillis(30)
+  ) {
+    waitUntil(timeoutMs) {
+      runCatching {
+        //the default failure handler takes a screenshot on every failed check
+        onView(withId(R.id.tVPassPhraseVerification))
+          .withFailureHandler { error, _ -> throw error }
+          .check(matches(withText(getResString(textResId))))
+      }.isSuccess
+    }
   }
 
   companion object {
