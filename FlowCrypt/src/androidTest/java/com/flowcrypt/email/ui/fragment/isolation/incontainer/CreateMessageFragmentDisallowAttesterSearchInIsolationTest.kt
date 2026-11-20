@@ -22,6 +22,7 @@ import com.flowcrypt.email.model.KeyImportDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.GrantPermissionRuleChooser
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -29,11 +30,17 @@ import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragment
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.util.AccountDaoManager
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.net.HttpURLConnection
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * @author Denys Bondarenko
@@ -64,6 +71,16 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
     passphraseType = KeyEntity.PassphraseType.RAM
   )
 
+  private val requestedPaths = ConcurrentLinkedQueue<String>()
+  private val mockWebServerRule = FlowCryptMockWebServerRule(
+    TestConstants.MOCK_WEB_SERVER_PORT,
+    object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        request.path?.let { requestedPaths.add(it) }
+        return MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND)
+      }
+    })
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
     .outerRule(RetryRule.DEFAULT)
@@ -71,6 +88,7 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
     .around(GrantPermissionRuleChooser.grant(android.Manifest.permission.POST_NOTIFICATIONS))
     .around(addAccountToDatabaseRule)
     .around(addPrivateKeyToDatabaseRule)
+    .around(mockWebServerRule)
     .around(ScreenshotTestRule())
 
   @Test
@@ -107,5 +125,11 @@ class CreateMessageFragmentDisallowAttesterSearchInIsolationTest : BaseTest() {
       email = recipient,
       colorResId = RecipientChipRecyclerViewAdapter.CHIP_COLOR_RES_ID_NO_PUB_KEY
     )
+
+    //the same chip is shown when a lookup is sent and fails, so check the requests as well
+    val attesterLookups = requestedPaths.filter {
+      it.startsWith("/attester/pub", ignoreCase = true)
+    }
+    assertTrue("Unexpected requests to Attester: $attesterLookups", attesterLookups.isEmpty())
   }
 }
