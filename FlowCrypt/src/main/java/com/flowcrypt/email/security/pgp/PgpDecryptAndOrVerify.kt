@@ -103,9 +103,10 @@ object PgpDecryptAndOrVerify {
     passphrase: Passphrase? = null,
     ignoreMdcErrors: Boolean = false
   ): DecryptionStream {
+    val guardedInputStream = PgpPacketBudgetGuard.guard(srcInputStream)
     val api = PGPainless.getInstance()
     return api.processMessage()
-      .onInputStream(srcInputStream)
+      .onInputStream(guardedInputStream)
       .withOptions(
         ConsumerOptions.get(api)
           .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
@@ -153,6 +154,10 @@ object PgpDecryptAndOrVerify {
 
       is PGPDataValidationException, is MissingDecryptionMethodException -> {
         DecryptionException(DecryptionErrorType.KEY_MISMATCH, e)
+      }
+
+      is PgpPacketBudgetGuard.BudgetExceededException -> {
+        DecryptionException(DecryptionErrorType.FORMAT, e)
       }
 
       is DecryptionException -> e
