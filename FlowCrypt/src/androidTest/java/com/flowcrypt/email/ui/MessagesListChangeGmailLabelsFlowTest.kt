@@ -12,6 +12,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.hasMinimumChildCount
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -24,6 +25,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
@@ -42,12 +44,14 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import okio.GzipSource
 import okio.buffer
+import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 /**
@@ -55,8 +59,10 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
+@FlowCryptTestSettings(useCommonIdling = false)
 class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
-  private var lastLabelIds = mutableListOf<String>()
+  //the mock web server changes it on its own thread
+  private val lastLabelIds = CopyOnWriteArrayList<String>()
 
   override val mockWebServerRule =
     FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
@@ -149,6 +155,12 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
       .check(matches(isDisplayed()))
       .perform(click())
 
+    //the dialog shows the list after the labels are loaded asynchronously
+    waitUntilViewMatches(
+      viewId = R.id.recyclerViewLabels,
+      matcher = allOf(isDisplayed(), hasMinimumChildCount(2))
+    )
+
     //select the second and third labels
     onView(withId(R.id.recyclerViewLabels))
       .perform(actionOnItemAtPosition<ViewHolder>(0, click()))
@@ -161,41 +173,38 @@ class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
 
     waitForObjectWithText(CUSTOM_LABELS.first().name, TimeUnit.SECONDS.toMillis(10))
 
-    //check API call results
-    assertEquals(
-      CUSTOM_LABELS.take(2).map { it.name },
-      lastLabelIds
-    )
+    /*
+     The screen can show the new labels before the API call and the database update are done.
+     Wait for both instead of checking them once.
+     */
+    val expectedApiLabelIds = CUSTOM_LABELS.take(2).map { it.name }
+    waitUntil { lastLabelIds == expectedApiLabelIds }
+    assertEquals(expectedApiLabelIds, lastLabelIds.toList())
 
     //check local changes for modified messages
-    val expectedLabelIds =
-      listOf(JavaEmailConstants.FOLDER_INBOX) + CUSTOM_LABELS.take(2).map { it.name }
-    assertEquals(
-      expectedLabelIds,
-      runBlocking {
-        FlowCryptRoomDatabase.getDatabase(getTargetContext()).msgDao().getMsgById(
-          requireNotNull(existingMessageEntities.first { it.subject == SUBJECT_EXISTING_ENCRYPTED }.id)
-        )
-      }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
-    )
-    assertEquals(
-      expectedLabelIds,
-      runBlocking {
-        FlowCryptRoomDatabase.getDatabase(getTargetContext()).msgDao().getMsgById(
-          requireNotNull(existingMessageEntities.first { it.subject == SUBJECT_EXISTING_STANDARD }.id)
-        )
-      }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
-    )
+    val expectedLabelIds = listOf(JavaEmailConstants.FOLDER_INBOX) + expectedApiLabelIds
+    val encryptedMsgId = existingMessageEntities.getId(SUBJECT_EXISTING_ENCRYPTED)
+    val standardMsgId = existingMessageEntities.getId(SUBJECT_EXISTING_STANDARD)
+    waitUntil {
+      getLabelIds(encryptedMsgId) == expectedLabelIds &&
+          getLabelIds(standardMsgId) == expectedLabelIds
+    }
+    assertEquals(expectedLabelIds, getLabelIds(encryptedMsgId))
+    assertEquals(expectedLabelIds, getLabelIds(standardMsgId))
+
     //as we didn't change the third message it should have only INBOX label
     assertEquals(
       listOf(JavaEmailConstants.FOLDER_INBOX),
-      runBlocking {
-        FlowCryptRoomDatabase.getDatabase(getTargetContext()).msgDao().getMsgById(
-          requireNotNull(existingMessageEntities.first { it.subject == SUBJECT_EXISTING_PGP_MIME }.id)
-        )
-      }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
+      getLabelIds(existingMessageEntities.getId(SUBJECT_EXISTING_PGP_MIME))
     )
   }
+
+  private fun List<MessageEntity>.getId(subject: String): Long =
+    requireNotNull(first { it.subject == subject }.id)
+
+  private fun getLabelIds(messageId: Long): List<String> = runBlocking {
+    FlowCryptRoomDatabase.getDatabase(getTargetContext()).msgDao().getMsgById(messageId)
+  }?.labelIds.orEmpty().split(MessageEntity.LABEL_IDS_SEPARATOR)
 
   companion object {
     private val CUSTOM_LABELS = listOf(
