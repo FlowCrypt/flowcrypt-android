@@ -221,7 +221,12 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
      */
     val defaultAttachmentIcon = matches(withDrawable(R.drawable.ic_attachment))
     waitUntil(TimeUnit.SECONDS.toMillis(10)) {
-      runCatching { onView(withId(R.id.imageViewAttIcon)).check(defaultAttachmentIcon) }.isSuccess
+      runCatching {
+        //the default failure handler takes a screenshot on every failed check
+        onView(withId(R.id.imageViewAttIcon))
+          .withFailureHandler { error, _ -> throw error }
+          .check(defaultAttachmentIcon)
+      }.isSuccess
     }
     onView(withId(R.id.imageViewAttIcon)).check(defaultAttachmentIcon)
   }
