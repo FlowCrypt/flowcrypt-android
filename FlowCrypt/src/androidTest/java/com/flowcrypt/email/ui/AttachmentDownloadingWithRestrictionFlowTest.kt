@@ -5,6 +5,9 @@
 
 package com.flowcrypt.email.ui
 
+import android.app.NotificationManager
+import androidx.core.app.NotificationCompat
+import androidx.core.content.getSystemService
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -12,10 +15,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -44,7 +43,7 @@ import com.google.api.services.gmail.model.MessagePartHeader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Ignore
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -82,6 +81,9 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     useCustomerFesUrl = true,
     useAPI = true
   )
+
+  private val notificationManager: NotificationManager
+    get() = requireNotNull(getTargetContext().getSystemService<NotificationManager>())
 
   override val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
@@ -165,65 +167,71 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("tests crash randomly too many times on this test. Temporary disabled")
   fun testDownloadingAttachment() {
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    val incomingMessageInfo = getMsgInfo(
+      path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
+      mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt",
+      atts = arrayOf(simpleAttInfo),
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    ) {
+      it?.copy(msgEntity = it.msgEntity.copy(accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE))
+    }
 
-    try {
-      val incomingMessageInfo = getMsgInfo(
-        path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
-        mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt",
-        atts = arrayOf(simpleAttInfo),
-        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
-      ) {
-        it?.copy(msgEntity = it.msgEntity.copy(accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE))
-      }
-
-      //close the notification bar if needed
-      if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
-        device.pressBack()
-      }
-
-      baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo) {
-        waitForObjectWithText(
-          requireNotNull(incomingMessageInfo?.text),
-          TimeUnit.SECONDS.toMillis(10)
-        )
-
-        waitForObjectWithText(
-          requireNotNull(simpleAttInfo?.name),
-          TimeUnit.SECONDS.toMillis(10)
-        )
-      }
-
-      onView(withId(R.id.imageViewAttIcon))
-        .check(matches(withDrawable(R.drawable.ic_attachment)))
-
-      onView(withId(R.id.imageButtonDownloadAtt))
-        .check(matches(isDisplayed()))
-        .perform(click())
-
-      isDialogWithTextDisplayed(decorView, getResString(R.string.downloading))
-      isDialogWithTextDisplayed(decorView, requireNotNull(simpleAttInfo?.name))
-
-      Thread.sleep(TimeUnit.SECONDS.toMillis(DELAY_FOR_DOWNLOADING_IN_SECONDS * 2))
-
-      //at this stage icon should be as by default
-      onView(withId(R.id.imageViewAttIcon))
-        .check(matches(withDrawable(R.drawable.ic_attachment)))
-
-      //open notification and check we have "End Pass Phrase Session" button
-      device.openNotification()
-      device.wait(
-        Until.hasObject(By.text(requireNotNull(simpleAttInfo.name))),
-        TimeUnit.SECONDS.toMillis(1)
+    baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo) {
+      waitForObjectWithText(
+        requireNotNull(incomingMessageInfo?.text),
+        TimeUnit.SECONDS.toMillis(10)
       )
-      device.pressBack()
-    } finally {
-      //close the notification bar if needed
-      if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
-        device.pressBack()
-      }
+
+      waitForObjectWithText(
+        requireNotNull(simpleAttInfo?.name),
+        TimeUnit.SECONDS.toMillis(10)
+      )
+    }
+
+    onView(withId(R.id.imageViewAttIcon))
+      .check(matches(withDrawable(R.drawable.ic_attachment)))
+
+    //RetryRule reruns the test in the same process, so remove a notification of a previous run
+    notificationManager.cancelAll()
+
+    onView(withId(R.id.imageButtonDownloadAtt))
+      .check(matches(isDisplayed()))
+      .perform(click())
+
+    isDialogWithTextDisplayed(decorView, getResString(R.string.downloading))
+    isDialogWithTextDisplayed(decorView, requireNotNull(simpleAttInfo?.name))
+
+    /*
+     The download takes at least DELAY_FOR_DOWNLOADING_IN_SECONDS (the mock server delay),
+     and much longer on a slow CI emulator. Wait for the result instead of a fixed sleep.
+     */
+    waitUntil(TimeUnit.SECONDS.toMillis(DELAY_FOR_DOWNLOADING_IN_SECONDS + 30)) {
+      isDownloadCompletedNotificationShown()
+    }
+    assertTrue(
+      "The 'download complete' notification is missing",
+      isDownloadCompletedNotificationShown()
+    )
+
+    /*
+     At this stage the icon should be as by default. The screen updates the attachment item
+     after the download, and ListAdapter calculates the diff on a background thread that
+     Espresso doesn't track. Until it's done, the list can contain the old and the new item views.
+     */
+    val defaultAttachmentIcon = matches(withDrawable(R.drawable.ic_attachment))
+    waitUntil(TimeUnit.SECONDS.toMillis(10)) {
+      runCatching { onView(withId(R.id.imageViewAttIcon)).check(defaultAttachmentIcon) }.isSuccess
+    }
+    onView(withId(R.id.imageViewAttIcon)).check(defaultAttachmentIcon)
+  }
+
+  private fun isDownloadCompletedNotificationShown(): Boolean {
+    val expectedText = getResString(R.string.download_complete)
+    return notificationManager.activeNotifications.any { statusBarNotification ->
+      statusBarNotification.tag == simpleAttInfo?.id &&
+          statusBarNotification.notification.extras
+            .getCharSequence(NotificationCompat.EXTRA_TEXT)?.toString() == expectedText
     }
   }
 
