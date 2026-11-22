@@ -21,6 +21,8 @@ import com.google.api.services.gmail.model.ListSendAsResponse
 import com.google.api.services.gmail.model.SendAs
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.Matcher
+import org.hamcrest.Matchers.equalTo
 import java.net.HttpURLConnection
 
 /**
@@ -64,10 +66,8 @@ abstract class BaseComposeGmailApiSignatureFlowTest :
     }
   }
 
-  protected fun doBaseChecking(){
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo())
-      .check(matches(withText("\n\n$SIGNATURE_FOR_MAIN")))
+  protected fun doBaseChecking() {
+    waitUntilMessageText(equalTo("\n\n$SIGNATURE_FOR_MAIN"))
 
     //switch to standard mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -75,9 +75,7 @@ abstract class BaseComposeGmailApiSignatureFlowTest :
       .check(matches(isDisplayed()))
       .perform(click())
 
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo())
-      .check(matches(withText("\n\n$SIGNATURE_FOR_MAIN")))
+    waitUntilMessageText(equalTo("\n\n$SIGNATURE_FOR_MAIN"))
 
     Espresso.closeSoftKeyboard()
 
@@ -88,9 +86,15 @@ abstract class BaseComposeGmailApiSignatureFlowTest :
       .check(matches(isDisplayed()))
       .perform(click())
 
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo())
-      .check(matches(withText("\n\n$SIGNATURE_FOR_ALIS")))
+    waitUntilMessageText(equalTo("\n\n$SIGNATURE_FOR_ALIS"))
+  }
+
+  /**
+   * The compose screen adds the signature asynchronously: after it loads the aliases
+   * (the 'sendAs' API call) and after the 'from' address is changed.
+   */
+  protected fun waitUntilMessageText(matcher: Matcher<String>) {
+    waitUntilViewMatches(viewId = R.id.editTextEmailMessage, matcher = withText(matcher))
   }
 
   companion object {

@@ -26,7 +26,6 @@ import com.flowcrypt.email.ui.base.BaseComposeGmailApiSignatureFlowTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -68,7 +67,6 @@ class ComposeScreenReplyWithGmailApiSignatureFlowTest :
 
   @Test
   @FlakyTest
-  @Ignore("Temporary disabled as flaky")
   fun testAddingSignatureAfterStart() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
@@ -86,9 +84,6 @@ class ComposeScreenReplyWithGmailApiSignatureFlowTest :
 
     //click on replyAll
     openReplyScreen(R.id.replyButton, SUBJECT_EXISTING_ENCRYPTED)
-
-    //need to wait while all action for reply case will be applied
-    Thread.sleep(1000)
 
     doBaseChecking()
   }
