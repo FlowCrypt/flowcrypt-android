@@ -52,7 +52,9 @@ import org.junit.runner.RunWith
 import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
@@ -84,6 +86,9 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
 
   private val notificationManager: NotificationManager
     get() = requireNotNull(getTargetContext().getSystemService<NotificationManager>())
+
+  //the mock web server waits for it on its own thread
+  private val attachmentResponseReleased = AtomicReference(CountDownLatch(1))
 
   override val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
@@ -139,9 +144,13 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
           }
 
           "/gmail/v1/users/me/messages/${simpleAttInfo?.uid?.toHex()}/attachments/$ATTACHMENT_ID?fields=data&prettyPrint=false" -> {
+            //keep the download in progress until the test checks the 'downloading' dialog
+            attachmentResponseReleased.get().await(
+              RELEASE_ATTACHMENT_RESPONSE_TIMEOUT_IN_SECONDS,
+              TimeUnit.SECONDS
+            )
             return MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBodyDelay(DELAY_FOR_DOWNLOADING_IN_SECONDS, TimeUnit.SECONDS)
               .setBody(
                 MessagePartBody().apply {
                   factory = GsonFactory.getDefaultInstance()
@@ -194,19 +203,28 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
 
     //RetryRule reruns the test in the same process, so remove a notification of a previous run
     notificationManager.cancelAll()
-
-    onView(withId(R.id.imageButtonDownloadAtt))
-      .check(matches(isDisplayed()))
-      .perform(click())
-
-    isDialogWithTextDisplayed(decorView, getResString(R.string.downloading))
-    isDialogWithTextDisplayed(decorView, requireNotNull(simpleAttInfo?.name))
+    val attachmentResponseLatch = CountDownLatch(1)
+    attachmentResponseReleased.set(attachmentResponseLatch)
 
     /*
-     The download takes at least DELAY_FOR_DOWNLOADING_IN_SECONDS (the mock server delay),
-     and much longer on a slow CI emulator. Wait for the result instead of a fixed sleep.
+     The dialog closes itself right after the download. The mock web server doesn't return
+     the attachment until the dialog is checked, so a slow test thread can't miss it.
+     Release the response in any case: otherwise a failed check leaves the request waiting,
+     and stopping the mock web server hides the original failure.
      */
-    waitUntil(TimeUnit.SECONDS.toMillis(DELAY_FOR_DOWNLOADING_IN_SECONDS + 30)) {
+    try {
+      onView(withId(R.id.imageButtonDownloadAtt))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+      isDialogWithTextDisplayed(decorView, getResString(R.string.downloading))
+      isDialogWithTextDisplayed(decorView, requireNotNull(simpleAttInfo?.name))
+    } finally {
+      attachmentResponseLatch.countDown()
+    }
+
+    //the download can take a while on a slow CI emulator. Wait for the result
+    waitUntil(TimeUnit.SECONDS.toMillis(30)) {
       isDownloadCompletedNotificationShown()
     }
     assertTrue(
@@ -236,6 +254,6 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
 
   companion object {
     val ATTACHMENT_ID = UUID.randomUUID().toString()
-    const val DELAY_FOR_DOWNLOADING_IN_SECONDS = 4L
+    private const val RELEASE_ATTACHMENT_RESPONSE_TIMEOUT_IN_SECONDS = 60L
   }
 }
