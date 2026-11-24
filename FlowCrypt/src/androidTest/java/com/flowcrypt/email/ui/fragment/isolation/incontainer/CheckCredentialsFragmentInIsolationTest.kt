@@ -24,7 +24,9 @@ import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.fragment.CheckCredentialsFragment
 import com.flowcrypt.email.ui.activity.fragment.CheckCredentialsFragmentArgs
+import jakarta.mail.AuthenticationFailedException
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -60,6 +62,12 @@ class CheckCredentialsFragmentInIsolationTest : BaseTest() {
       )
     )
     assertEquals(Result.Status.EXCEPTION, actualResult.status)
+    //a network error or a timeout gives the same status, so check the cause as well
+    val causes = generateSequence(actualResult.exception) { it.cause }.toList()
+    assertTrue(
+      "Expected AuthenticationFailedException in the causes: $causes",
+      causes.any { it is AuthenticationFailedException }
+    )
   }
 
   @Test
