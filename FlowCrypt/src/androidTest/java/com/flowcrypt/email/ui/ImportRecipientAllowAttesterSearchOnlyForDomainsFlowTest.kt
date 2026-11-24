@@ -8,7 +8,7 @@ package com.flowcrypt.email.ui
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
-import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -33,19 +33,22 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
  */
-@FlowCryptTestSettings(useIntents = true)
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class ImportRecipientAllowAttesterSearchOnlyForDomainsFlowTest : BaseTest() {
@@ -81,31 +84,40 @@ class ImportRecipientAllowAttesterSearchOnlyForDomainsFlowTest : BaseTest() {
     .around(activityScenarioRule)
     .around(ScreenshotTestRule())
 
-  @Test
-  fun testDisallowLookupOnAttester() {
-    onView(withId(R.id.eTKeyIdOrEmail))
-      .perform(
-        clearText(),
-        typeText("user@$SOME_DOMAIN"),
-        pressImeActionButton()
-      )
-
-    onView(withText(R.string.supported_public_key_not_found))
-      .check(matches((isDisplayed())))
+  @Before
+  fun clearRequestedLookups() {
+    attesterLookups.clear()
   }
 
   @Test
-  @Ignore("Need to fix. Flaky")
+  fun testDisallowLookupOnAttester() {
+    searchKey("user@$SOME_DOMAIN")
+
+    val expectedText = getResString(R.string.supported_public_key_not_found)
+    waitForObjectWithText(expectedText, TimeUnit.SECONDS.toMillis(10))
+    onView(withText(expectedText)).check(matches(isDisplayed()))
+    //the same text is shown when a lookup is sent and nothing is found
+    assertEquals(emptyList<String>(), attesterLookups.toList())
+  }
+
+  @Test
   fun testAllowAttesterSearchOnlyForDomains() {
+    searchKey(ALLOWED_USER)
+
+    val expectedText = getResString(R.string.template_message_part_public_key_owner, ALLOWED_USER)
+    waitForObjectWithText(expectedText, TimeUnit.SECONDS.toMillis(10))
+    onView(withText(expectedText)).check(matches(isDisplayed()))
+    assertEquals(listOf(ALLOWED_USER), attesterLookups.toList())
+  }
+
+  private fun searchKey(keyIdOrEmail: String) {
+    //typeText() can lose characters on a slow emulator when the IME session restarts
     onView(withId(R.id.eTKeyIdOrEmail))
       .perform(
         clearText(),
-        typeText(ALLOWED_USER),
+        replaceText(keyIdOrEmail),
         pressImeActionButton()
       )
-
-    onView(withText(getResString(R.string.template_message_part_public_key_owner, ALLOWED_USER)))
-      .check(matches(isDisplayed()))
   }
 
   companion object {
@@ -127,6 +139,9 @@ class ImportRecipientAllowAttesterSearchOnlyForDomainsFlowTest : BaseTest() {
         "=MoFp\n" +
         "-----END PGP PUBLIC KEY BLOCK-----"
 
+    //the mock web server adds them on its own thread
+    private val attesterLookups = ConcurrentLinkedQueue<String>()
+
     @get:ClassRule
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(
@@ -135,6 +150,7 @@ class ImportRecipientAllowAttesterSearchOnlyForDomainsFlowTest : BaseTest() {
         override fun dispatch(request: RecordedRequest): MockResponse {
           if (request.path?.startsWith("/attester/pub", ignoreCase = true) == true) {
             val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+            lastSegment?.let { attesterLookups.add(it.lowercase()) }
 
             when {
               ALLOWED_USER.equals(lastSegment, true) -> {
