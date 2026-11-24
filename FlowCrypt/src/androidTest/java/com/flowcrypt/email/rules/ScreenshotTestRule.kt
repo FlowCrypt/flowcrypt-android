@@ -10,15 +10,12 @@ import android.graphics.Bitmap
 import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
-import androidx.test.core.app.canTakeScreenshot
-import androidx.test.core.app.takeScreenshot
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.extensions.kotlin.getPossibleAndroidMimeType
 import org.apache.commons.io.FilenameUtils
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import java.io.BufferedOutputStream
-import java.io.IOException
 import java.util.UUID
 
 
@@ -35,7 +32,12 @@ class ScreenshotTestRule : TestWatcher() {
 
   private fun makeScreenshot(description: Description?) {
     try {
-      if (canTakeScreenshot()) {
+      //UiAutomation takes a screenshot on the system side. androidx.test takeScreenshot()
+      //force-redraws the app windows on the main thread. If a window is being destroyed
+      //(e.g. after a failure), it crashes the app process with NPE in ViewCapture.forceRedraw,
+      //hides the original failure and stops RetryRule.
+      val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+      if (screenshot != null) {
         val filename = description?.testClass?.simpleName +
             "-" +
             description?.methodName +
@@ -68,11 +70,12 @@ class ScreenshotTestRule : TestWatcher() {
         val outputStream = contentResolver.openOutputStream(imageUri)
           ?: throw IllegalStateException("ContentResolver issue")
         BufferedOutputStream(outputStream).use { out ->
-          takeScreenshot().compress(Bitmap.CompressFormat.PNG, 100, out)
+          screenshot.compress(Bitmap.CompressFormat.PNG, 100, out)
           out.flush()
         }
       }
-    } catch (e: IOException) {
+    } catch (e: Exception) {
+      //a screenshot is only a debug helper. It must not replace the original failure
       e.printStackTrace()
     }
   }

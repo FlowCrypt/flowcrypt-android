@@ -69,6 +69,8 @@ ANDROID_SERIAL=emulator-5560 ./script/ci-wait-for-emulator.sh
 This is the script CI runs. It waits for boot and then:
 
 - disables animations and sets `long_press_timeout` to 1500 ms;
+- disables the keyboard (IME), so `typeText()` doesn't lose characters, and fails if any IME is
+  still enabled. Set `DISABLE_IME=0` to keep it;
 - runs `adb root` and redirects `127.0.0.1:443` to the mock web server port `1212` (`iptables`);
 - forwards port `1212` and checks the network, including `fes.flowcrypt.test`.
 
@@ -108,6 +110,20 @@ run can hide failures. To see them:
   `@RunWith(RepeatableAndroidJUnit4ClassRunner::class)` plus
   `@RepeatableAndroidJUnit4ClassRunner.RepeatTest(5)`, and `RetryRule.DEFAULT` with
   `RetryRule(1)`.
+  It doesn't work for a class with a `@ClassRule` mock web server (e.g. `ComposeScreenFlowTest`):
+  the rule starts twice and every test fails with `BindException: EADDRINUSE`. Also, the tests get
+  names like `testEmptyEmailSubject_1`, so `class=Class#method` matches nothing. For such a class
+  keep `@RunWith(AndroidJUnit4::class)`, set only `RetryRule(1)` and start the test in a loop:
+
+  ```bash
+  ANDROID_SERIAL=emulator-5560 ./gradlew :FlowCrypt:installConsumerUiTests \
+    :FlowCrypt:installConsumerUiTestsAndroidTest
+  for i in {1..10}; do
+    adb -s emulator-5560 shell am instrument -w -r \
+      -e class com.flowcrypt.email.ui.ComposeScreenFlowTest#testEmptyEmailSubject \
+      com.flowcrypt.email.debug.test/androidx.test.runner.AndroidJUnitRunner | grep -E '^OK|^Tests run'
+  done
+  ```
 - **Run a few times.** Some races show up once in 5–10 runs. Compare the code before and after
   the fix under the same conditions.
 

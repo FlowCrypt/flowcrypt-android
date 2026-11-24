@@ -16,7 +16,6 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
-import androidx.test.espresso.action.ViewActions.typeTextIntoFocusedView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
@@ -34,6 +33,7 @@ import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.fragment.CreateMessageFragmentArgs
 import com.flowcrypt.email.util.TestGeneralUtil
+import com.flowcrypt.email.viewaction.CustomViewActions.insertTextAtCursor
 import jakarta.mail.internet.InternetAddress
 import org.hamcrest.Matchers.allOf
 import java.io.File
@@ -124,10 +124,12 @@ abstract class BaseComposeScreenTest : BaseTest() {
         closeSoftKeyboard()
       )
 
+    //typing with key events can lose the first characters on a slow emulator while the IME
+    //reconnects after the focus change (e.g. "message" -> "essage")
     onView(withId(R.id.editTextEmailMessage))
       .perform(
         scrollTo(),
-        typeTextIntoFocusedView(message),
+        insertTextAtCursor(message),
         closeSoftKeyboard()
       )
   }

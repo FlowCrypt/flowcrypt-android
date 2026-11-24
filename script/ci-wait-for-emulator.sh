@@ -167,6 +167,42 @@ adb shell settings put global animator_duration_scale 0
 # a long click instead of a click (e.g. a toolbar menu item shows its tooltip).
 adb shell settings put secure long_press_timeout 1500
 
+# On slow emulators the IME (Gboard) restarts its input session after focus changes, and the app
+# drops text committed to the old session ("Session id mismatch ... commitText" in logcat).
+# typeText() then loses characters, e.g. "message" -> "essage". Without an IME, Espresso key events
+# go to the view directly. Both packages must be disabled: without Gboard the system switches to
+# the Google TTS voice IME. Set DISABLE_IME=0 to keep the keyboard.
+if [[ "${DISABLE_IME:-1}" == "1" ]]; then
+  for ime_package in com.google.android.inputmethod.latin com.google.android.tts; do
+    adb shell pm disable-user --user 0 "$ime_package" || true
+  done
+
+  # The system applies the change asynchronously. Only a successful 'ime list' with an empty result
+  # means that no IME is enabled. Tests with an enabled IME lose characters, so don't run them.
+  enabled_imes=""
+  are_imes_disabled=false
+  for _ in {1..15}; do
+    if enabled_imes=$(adb shell ime list -s | tr -d '\r' | tr '\n' ' '); then
+      if [[ -z "${enabled_imes// /}" ]]; then
+        are_imes_disabled=true
+        break
+      fi
+    else
+      enabled_imes="<'ime list -s' failed>"
+    fi
+    sleep 1
+  done
+
+  if [[ "$are_imes_disabled" != "true" ]]; then
+    echo "ERROR: couldn't disable input methods, enabled: [${enabled_imes}]" >&2
+    echo "Default input method: $(adb shell settings get secure default_input_method || true)" >&2
+    echo "All input methods:" >&2
+    adb shell ime list -a -s >&2 || true
+    exit 1
+  fi
+  echo "All input methods are disabled"
+fi
+
 ###################################################################################################
 # To test WKD we need to route all traffic for localhost:443 to localhost:1212
 # as we can't use 443 directly for a mock web server.

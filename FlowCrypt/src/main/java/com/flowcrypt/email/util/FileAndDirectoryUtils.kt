@@ -79,7 +79,9 @@ class FileAndDirectoryUtils {
               if (childFile != null && childFile.exists()) {
                 if (childFile.isDirectory) {
                   deleteFile(childFile)
-                } else if (!childFile.delete()) {
+                } else if (!childFile.delete() && childFile.exists()) {
+                  //another component (e.g. Glide's disk cache) may remove or rename the file
+                  //between exists() and delete(). It is an error only if the file is still there.
                   throw IOException("An error occurred while delete $childFile")
                 }
               }
@@ -87,7 +89,7 @@ class FileAndDirectoryUtils {
           }
         }
 
-        if (!file.delete()) {
+        if (!file.delete() && file.exists()) {
           throw IOException("An error occurred while delete $file")
         }
       }
