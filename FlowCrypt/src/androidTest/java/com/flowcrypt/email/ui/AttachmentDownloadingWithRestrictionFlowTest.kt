@@ -219,16 +219,10 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
      after the download, and ListAdapter calculates the diff on a background thread that
      Espresso doesn't track. Until it's done, the list can contain the old and the new item views.
      */
-    val defaultAttachmentIcon = matches(withDrawable(R.drawable.ic_attachment))
-    waitUntil(TimeUnit.SECONDS.toMillis(10)) {
-      runCatching {
-        //the default failure handler takes a screenshot on every failed check
-        onView(withId(R.id.imageViewAttIcon))
-          .withFailureHandler { error, _ -> throw error }
-          .check(defaultAttachmentIcon)
-      }.isSuccess
-    }
-    onView(withId(R.id.imageViewAttIcon)).check(defaultAttachmentIcon)
+    waitUntilViewMatches(
+      viewId = R.id.imageViewAttIcon,
+      matcher = withDrawable(R.drawable.ic_attachment)
+    )
   }
 
   private fun isDownloadCompletedNotificationShown(): Boolean {
