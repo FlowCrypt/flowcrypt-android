@@ -18,6 +18,7 @@ import org.bouncycastle.bcpg.CompressionAlgorithmTags
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -44,7 +45,7 @@ class PgpDecompressionLimitTest {
     val attachment = MimeBodyPart()
     attachment.setDataHandler(
       jakarta.activation.DataHandler(
-        ByteArrayDataSource(compressLiteralData(ByteArray(DECOMPRESSED_SIZE)), "application/octet-stream")
+        ByteArrayDataSource(compressLiteralData(DECOMPRESSED_SIZE), "application/octet-stream")
       )
     )
     attachment.fileName = "message.asc"
@@ -52,20 +53,22 @@ class PgpDecompressionLimitTest {
     message.setContent(multipart)
     message.saveChanges()
 
-    val result = PgpMsg.processMimeMessage(
-      msg = message,
+    val blocks = PgpMsg.extractMsgBlocksFromPart(
+      part = message,
+      verificationPublicKeys = PGPPublicKeyRingCollection(emptyList()),
       secretKeys = PGPSecretKeyRingCollection(emptyList()),
       protector = SecretKeyRingProtector.unprotectedKeys()
     )
     assertTrue(
       "The oversized attachment was not rejected",
-      result.blocks.filterIsInstance<DecryptErrorMsgBlock>().any {
-        it.decryptErr?.details?.message?.contains("exceeds the limit") == true
+      blocks.any { block ->
+        block.error?.errorMsg?.contains("exceeds the limit") == true ||
+          (block as? DecryptErrorMsgBlock)?.decryptErr?.details?.message?.contains("exceeds the limit") == true
       }
     )
     assertTrue(
       "Rendered block grew beyond the decompression limit",
-      result.blocks.all { (it.content?.length ?: 0) < Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES }
+      blocks.all { (it.content?.length ?: 0) < Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES }
     )
   }
 
@@ -98,7 +101,7 @@ class PgpDecompressionLimitTest {
 
   @Test
   fun testDecompressionBeyondLimitIsRejected() {
-    val compressed = compressLiteralData(ByteArray(DECOMPRESSED_SIZE))
+    val compressed = compressLiteralData(DECOMPRESSED_SIZE)
     val result = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = compressed.inputStream()
     )
@@ -108,7 +111,7 @@ class PgpDecompressionLimitTest {
 
   @Test
   fun testDecompressionWithinLimitSucceeds() {
-    val compressed = compressLiteralData(ByteArray(ONE_MB))
+    val compressed = compressLiteralData(ONE_MB)
     val result = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
       srcInputStream = compressed.inputStream()
     )
@@ -116,7 +119,7 @@ class PgpDecompressionLimitTest {
     assertNotNull("Content not returned", result.content)
   }
 
-  private fun compressLiteralData(data: ByteArray): ByteArray {
+  private fun compressLiteralData(size: Int): ByteArray {
     val compressedOutput = ByteArrayOutputStream()
     val compressedGenerator = PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP)
     val compressedStream = compressedGenerator.open(compressedOutput)
@@ -125,10 +128,16 @@ class PgpDecompressionLimitTest {
       compressedStream,
       PGPLiteralData.BINARY,
       "message.txt",
-      data.size.toLong(),
+      size.toLong(),
       Date()
     )
-    literalStream.write(data)
+    val chunk = ByteArray(64 * 1024)
+    var remaining = size
+    while (remaining > 0) {
+      val count = minOf(remaining, chunk.size)
+      literalStream.write(chunk, 0, count)
+      remaining -= count
+    }
     literalStream.close()
     literalGenerator.close()
     compressedGenerator.close()

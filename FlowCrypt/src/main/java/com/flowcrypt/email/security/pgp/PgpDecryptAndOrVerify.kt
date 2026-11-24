@@ -68,10 +68,11 @@ object PgpDecryptAndOrVerify {
     secretKeys: PGPSecretKeyRingCollection? = null,
     protector: SecretKeyRingProtector? = null,
     passphrase: Passphrase? = null,
-    ignoreMdcErrors: Boolean = false
+    ignoreMdcErrors: Boolean = false,
+    maxOutputBytes: Int = Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES
   ): DecryptionResult {
     srcInputStream.use { srcStream ->
-      val destOutputStream = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)
+      val destOutputStream = LimitedOutputStream(maxOutputBytes)
       destOutputStream.use { outStream ->
         try {
           val decryptionStream = genDecryptionStream(
