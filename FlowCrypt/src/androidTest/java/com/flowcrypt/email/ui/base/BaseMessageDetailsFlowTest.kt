@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.base
 
 import android.text.format.Formatter
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
@@ -54,6 +55,7 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denys Bondarenko
@@ -297,11 +299,29 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     badgeCount: Int,
     vararg badgeTypes: PgpBadgeListAdapter.PgpBadge.Type
   ) {
-    //the badges are shown after the message is processed asynchronously
-    waitUntilViewMatches(
-      viewId = R.id.rVPgpBadges,
-      matcher = withRecyclerViewItemCount(badgeCount)
-    )
+    /*
+     The badges are shown after the message is processed asynchronously. Wait for the expected
+     types, not for the count only: while the app looks up the sender's key, the list already has
+     the final count with VERIFYING_SIGNATURE that is replaced later.
+     */
+    val expectedTypes = badgeTypes.toSet()
+    waitUntil(TimeUnit.SECONDS.toMillis(10)) {
+      runCatching {
+        //the default failure handler takes a screenshot on every failed check
+        onView(withId(R.id.rVPgpBadges))
+          .withFailureHandler { error, _ -> throw error }
+          .check { view, noViewFoundException ->
+            if (noViewFoundException != null) throw noViewFoundException
+            val adapter = (view as RecyclerView).adapter as PgpBadgeListAdapter
+            val actualTypes = adapter.currentList.map { it.type }
+            if (actualTypes.size != badgeCount || !actualTypes.containsAll(expectedTypes)) {
+              throw AssertionError("Unexpected PGP badges: $actualTypes")
+            }
+          }
+      }.isSuccess
+    }
+    onView(withId(R.id.rVPgpBadges))
+      .check(matches(withRecyclerViewItemCount(badgeCount)))
 
     for (badgeType in badgeTypes) {
       onView(withId(R.id.rVPgpBadges))
