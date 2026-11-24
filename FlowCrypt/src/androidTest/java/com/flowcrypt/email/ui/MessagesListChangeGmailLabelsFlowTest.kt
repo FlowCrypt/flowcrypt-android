@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@FlowCryptTestSettings(useCommonIdling = false)
+@FlowCryptTestSettings(useCommonIdling = false, useIntents = true)
 class MessagesListChangeGmailLabelsFlowTest : BaseGmailApiTest() {
   //the mock web server changes it on its own thread
   private val lastLabelIds = CopyOnWriteArrayList<String>()
