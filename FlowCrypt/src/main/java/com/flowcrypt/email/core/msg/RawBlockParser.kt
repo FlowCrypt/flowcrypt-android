@@ -125,7 +125,7 @@ object RawBlockParser {
             listOf(
               RawBlock(
                 RawBlockType.ATTACHMENT,
-                mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
+                mimePart.inputStream.readBytesWithLimit(Constants.MAX_ATTACHMENT_SIZE_IN_BYTES),
                 isOpenPGPMimeSigned
               )
             )
@@ -160,7 +160,7 @@ object RawBlockParser {
         listOf(
           RawBlock(
             RawBlockType.INLINE_ATTACHMENT,
-            inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
+            inputStream.readBytesWithLimit(Constants.MAX_ATTACHMENT_SIZE_IN_BYTES),
             isOpenPGPMimeSigned
           )
         )
@@ -182,13 +182,13 @@ object RawBlockParser {
         "text/html" == mimePart.baseContentType() -> listOf(
           RawBlock(
             RawBlockType.HTML_TEXT,
-            mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
+            mimePart.inputStream.readBytesWithLimit(Constants.MAX_ATTACHMENT_SIZE_IN_BYTES),
             isOpenPGPMimeSigned
           )
         )
 
         else -> detectBlocks(
-          mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES).decodeToString()
+          mimePart.inputStream.readBytesWithLimit(Constants.MAX_ATTACHMENT_SIZE_IN_BYTES).decodeToString()
         ).map {
           it.copy(isOpenPGPMimeSigned = isOpenPGPMimeSigned)
         }

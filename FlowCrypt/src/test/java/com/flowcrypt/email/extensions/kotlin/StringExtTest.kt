@@ -22,7 +22,7 @@ class StringExtTest {
 
   @Test
   fun testToEscapedHtmlThrowsWhenOutputExceedsLimit() {
-    val source = "/".repeat(Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS)
+    val source = "/".repeat(Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS / 6 + 1)
     assertThrows(IOException::class.java) { source.toEscapedHtml() }
   }
 }

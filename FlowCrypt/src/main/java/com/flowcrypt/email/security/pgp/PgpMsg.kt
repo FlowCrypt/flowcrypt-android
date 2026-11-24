@@ -323,6 +323,14 @@ object PgpMsg {
           if (GeneralUtil.isDebugBuild()) {
             e.printStackTrace()
           }
+          blocks.add(
+            GenericMsgBlock(
+              MsgBlock.Type.UNKNOWN,
+              null,
+              MsgBlockError(e.javaClass.simpleName + ": " + e.message),
+              isOpenPGPMimeSigned
+            )
+          )
         }
       }
 

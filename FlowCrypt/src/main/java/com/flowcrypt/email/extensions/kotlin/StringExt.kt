@@ -63,31 +63,30 @@ fun String.removeUtf8Bom(): String {
 }
 
 fun String.toEscapedHtml(): String {
-  val result = StringBuilder(length)
+  val expectedLength = fold(0L) { length, char ->
+    length + (htmlEscapeReplacement(char)?.length ?: 1)
+  }
+  if (expectedLength > Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS) {
+    throw IOException("The escaped HTML exceeds the limit of $Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS characters")
+  }
+
+  val result = StringBuilder(expectedLength.toInt())
   for (char in this) {
-    val replacement = when (char) {
-      '&' -> "&amp;"
-      '"' -> "&quot;"
-      '\'' -> "&#39;"
-      '<' -> "&lt;"
-      '>' -> "&gt;"
-      '/' -> "&#x2F;"
-      '\n' -> "<br>"
-      else -> null
-    }
-    if (replacement == null) {
-      if (result.length >= Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS) {
-        throw IOException("The escaped HTML exceeds the limit of $Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS characters")
-      }
-      result.append(char)
-    } else {
-      if (result.length + replacement.length > Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS) {
-        throw IOException("The escaped HTML exceeds the limit of $Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS characters")
-      }
-      result.append(replacement)
-    }
+    val replacement = htmlEscapeReplacement(char)
+    if (replacement == null) result.append(char) else result.append(replacement)
   }
   return result.toString()
+}
+
+private fun htmlEscapeReplacement(char: Char): String? = when (char) {
+  '&' -> "&amp;"
+  '"' -> "&quot;"
+  '\'' -> "&#39;"
+  '<' -> "&lt;"
+  '>' -> "&gt;"
+  '/' -> "&#x2F;"
+  '\n' -> "<br>"
+  else -> null
 }
 
 fun String.unescapeHtml(): String {

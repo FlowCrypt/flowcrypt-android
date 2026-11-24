@@ -26,7 +26,7 @@ abstract class DecryptDataViewModel(application: Application) : AccountViewModel
   ): ByteArray =
     withContext(Dispatchers.IO) {
       inputStream.use {
-        val byteArrayOutputStream = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)
+        val byteArrayOutputStream = LimitedOutputStream(Constants.MAX_ATTACHMENT_SIZE_IN_BYTES)
         val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()
         val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(pgpSecretKeyRings)
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()

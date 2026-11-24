@@ -6,7 +6,9 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.response.model.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.PlainAttMsgBlock
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeBodyPart
 import jakarta.mail.internet.MimeMessage
@@ -63,7 +65,34 @@ class PgpDecompressionLimitTest {
     )
     assertTrue(
       "Rendered block grew beyond the decompression limit",
-      result.blocks.all { (it.content?.length ?: 0) < DECOMPRESSED_SIZE }
+      result.blocks.all { (it.content?.length ?: 0) < Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES }
+    )
+  }
+
+  @Test
+  fun testTextAttachmentContentComesFromBoundedRawBlock() {
+    val message = MimeMessage(Session.getInstance(Properties()))
+    val multipart = MimeMultipart()
+    val body = MimeBodyPart()
+    body.setText("message")
+    multipart.addBodyPart(body)
+    val attachment = MimeBodyPart()
+    attachment.setDataHandler(
+      jakarta.activation.DataHandler(ByteArrayDataSource("hello".toByteArray(), "text/plain"))
+    )
+    attachment.fileName = "note.txt"
+    multipart.addBodyPart(attachment)
+    message.setContent(multipart)
+    message.saveChanges()
+
+    val result = PgpMsg.processMimeMessage(
+      msg = message,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    )
+    assertTrue(
+      "Text attachment content mismatch",
+      result.blocks.filterIsInstance<PlainAttMsgBlock>().any { it.content == "hello" }
     )
   }
 

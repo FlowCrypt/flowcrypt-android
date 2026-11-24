@@ -81,9 +81,16 @@ class Constants {
     const val MAX_PGP_MESSAGE_SIZE_IN_BYTES = 4 * 1024 * 1024
 
     /**
-     * The max length of an HTML escaped string built from untrusted content.
+     * The max size of a buffered message part or attachment. Larger parts are reported
+     * as an error block instead of being loaded into memory.
      */
-    const val MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS = 4 * 1024 * 1024
+    const val MAX_ATTACHMENT_SIZE_IN_BYTES = 25 * 1024 * 1024
+
+    /**
+     * The max length of an HTML escaped string built from untrusted content.
+     * Six times [MAX_PGP_MESSAGE_SIZE_IN_BYTES] covers the worst case expansion.
+     */
+    const val MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS = 24 * 1024 * 1024
 
     const val FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded"
     const val ATTACHMENTS_CACHE_DIR = "attachments"
