@@ -11,6 +11,7 @@ import android.util.TypedValue
 import android.webkit.MimeTypeMap
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.BetterInternetAddress
 import com.flowcrypt.email.util.UIUtil
@@ -19,6 +20,7 @@ import jakarta.mail.internet.ContentType
 import jakarta.mail.internet.InternetAddress
 import org.apache.commons.io.FilenameUtils
 import org.json.JSONObject
+import java.io.IOException
 import java.io.InputStream
 import java.net.URLDecoder
 import java.nio.charset.Charset
@@ -61,13 +63,31 @@ fun String.removeUtf8Bom(): String {
 }
 
 fun String.toEscapedHtml(): String {
-  return this.replace("&", "&amp;")
-    .replace("\"", "&quot;")
-    .replace("'", "&#39;")
-    .replace("<", "&lt;")
-    .replace(">", "&gt;")
-    .replace("/", "&#x2F;")
-    .replace("\n", "<br>")
+  val result = StringBuilder(length)
+  for (char in this) {
+    val replacement = when (char) {
+      '&' -> "&amp;"
+      '"' -> "&quot;"
+      '\'' -> "&#39;"
+      '<' -> "&lt;"
+      '>' -> "&gt;"
+      '/' -> "&#x2F;"
+      '\n' -> "<br>"
+      else -> null
+    }
+    if (replacement == null) {
+      if (result.length >= Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS) {
+        throw IOException("The escaped HTML exceeds the limit of $Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS characters")
+      }
+      result.append(char)
+    } else {
+      if (result.length + replacement.length > Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS) {
+        throw IOException("The escaped HTML exceeds the limit of $Constants.MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS characters")
+      }
+      result.append(replacement)
+    }
+  }
+  return result.toString()
 }
 
 fun String.unescapeHtml(): String {

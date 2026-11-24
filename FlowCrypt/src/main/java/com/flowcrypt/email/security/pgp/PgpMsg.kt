@@ -8,6 +8,7 @@ package com.flowcrypt.email.security.pgp
 import android.content.Context
 import android.util.Base64
 import androidx.core.util.PatternsCompat
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.model.AlternativeContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
@@ -30,6 +31,7 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.java.io.LimitedOutputStream
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeEncrypted
@@ -67,7 +69,6 @@ import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.decryption_verification.SignatureVerification
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.IdentityHashMap
@@ -285,7 +286,7 @@ object PgpMsg {
 
           val contentPart = multiPart.getBodyPart(0)
           val signaturePart = multiPart.getBodyPart(1)
-          val openPGPMIMESignedContent = ByteArrayOutputStream().apply {
+          val openPGPMIMESignedContent = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES).apply {
             contentPart.writeTo(this)
           }.toByteArray()
 

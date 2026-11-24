@@ -7,12 +7,13 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.extensions.java.io.LimitedOutputStream
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
@@ -25,7 +26,7 @@ abstract class DecryptDataViewModel(application: Application) : AccountViewModel
   ): ByteArray =
     withContext(Dispatchers.IO) {
       inputStream.use {
-        val byteArrayOutputStream = ByteArrayOutputStream()
+        val byteArrayOutputStream = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)
         val pgpSecretKeyRings = KeysStorageImpl.getInstance(context).getPGPSecretKeyRings()
         val pgpSecretKeyRingCollection = PGPSecretKeyRingCollection(pgpSecretKeyRings)
         val protector = KeysStorageImpl.getInstance(context).getSecretKeyRingProtector()

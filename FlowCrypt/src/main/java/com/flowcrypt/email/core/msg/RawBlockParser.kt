@@ -6,12 +6,13 @@
 
 package com.flowcrypt.email.core.msg
 
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser.RawBlock
 import com.flowcrypt.email.extensions.jakarta.mail.baseContentType
 import com.flowcrypt.email.extensions.jakarta.mail.getFileNameWithCarefully
 import com.flowcrypt.email.extensions.jakarta.mail.isAttachment
 import com.flowcrypt.email.extensions.jakarta.mail.isInline
-import com.flowcrypt.email.extensions.java.io.readText
+import com.flowcrypt.email.extensions.java.io.readBytesWithLimit
 import com.flowcrypt.email.extensions.kotlin.normalize
 import com.flowcrypt.email.security.pgp.PgpArmor
 import org.eclipse.angus.mail.util.BASE64DecoderStream
@@ -80,7 +81,7 @@ object RawBlockParser {
         listOf(
           RawBlock(
             RawBlockType.PGP_MSG,
-            mimePart.inputStream.readBytes(),
+            mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
             isOpenPGPMimeSigned
           )
         )
@@ -94,7 +95,7 @@ object RawBlockParser {
             listOf(
               RawBlock(
                 RawBlockType.PGP_MSG,
-                mimePart.inputStream.readBytes(),
+                mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
                 isOpenPGPMimeSigned
               )
             )
@@ -104,7 +105,7 @@ object RawBlockParser {
             listOf(
               RawBlock(
                 RawBlockType.PGP_PUBLIC_KEY,
-                mimePart.inputStream.readBytes(),
+                mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
                 isOpenPGPMimeSigned
               )
             )
@@ -114,7 +115,7 @@ object RawBlockParser {
             listOf(
               RawBlock(
                 RawBlockType.PGP_PRIVATE_KEY,
-                mimePart.inputStream.readBytes(),
+                mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
                 isOpenPGPMimeSigned
               )
             )
@@ -124,7 +125,7 @@ object RawBlockParser {
             listOf(
               RawBlock(
                 RawBlockType.ATTACHMENT,
-                mimePart.inputStream.readBytes(),
+                mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
                 isOpenPGPMimeSigned
               )
             )
@@ -159,7 +160,7 @@ object RawBlockParser {
         listOf(
           RawBlock(
             RawBlockType.INLINE_ATTACHMENT,
-            inputStream.readBytes(),
+            inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
             isOpenPGPMimeSigned
           )
         )
@@ -181,12 +182,14 @@ object RawBlockParser {
         "text/html" == mimePart.baseContentType() -> listOf(
           RawBlock(
             RawBlockType.HTML_TEXT,
-            mimePart.inputStream.readBytes(),
+            mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES),
             isOpenPGPMimeSigned
           )
         )
 
-        else -> detectBlocks(mimePart.inputStream.readText()).map {
+        else -> detectBlocks(
+          mimePart.inputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES).decodeToString()
+        ).map {
           it.copy(isOpenPGPMimeSigned = isOpenPGPMimeSigned)
         }
       }

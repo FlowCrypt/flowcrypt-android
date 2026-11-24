@@ -74,6 +74,17 @@ class Constants {
      */
     const val MAX_PUB_KEY_SIZE = 1024 * 256
 
+    /**
+     * The max size of a buffered OpenPGP message and its decrypted content.
+     * Bounds decompression of untrusted attachments during message rendering.
+     */
+    const val MAX_PGP_MESSAGE_SIZE_IN_BYTES = 4 * 1024 * 1024
+
+    /**
+     * The max length of an HTML escaped string built from untrusted content.
+     */
+    const val MAX_ESCAPED_HTML_OUTPUT_LENGTH_IN_CHARS = 4 * 1024 * 1024
+
     const val FORWARDED_ATTACHMENTS_CACHE_DIR = "forwarded"
     const val ATTACHMENTS_CACHE_DIR = "attachments"
     const val DRAFT_CACHE_DIR = "draft"
