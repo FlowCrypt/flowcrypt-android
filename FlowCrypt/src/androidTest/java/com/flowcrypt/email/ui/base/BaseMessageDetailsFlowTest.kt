@@ -297,9 +297,11 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
     badgeCount: Int,
     vararg badgeTypes: PgpBadgeListAdapter.PgpBadge.Type
   ) {
-    onView(withId(R.id.rVPgpBadges))
-      .check(matches(withRecyclerViewItemCount(badgeCount)))
-
+    //the badges are shown after the message is processed asynchronously
+    waitUntilViewMatches(
+      viewId = R.id.rVPgpBadges,
+      matcher = withRecyclerViewItemCount(badgeCount)
+    )
 
     for (badgeType in badgeTypes) {
       onView(withId(R.id.rVPgpBadges))
