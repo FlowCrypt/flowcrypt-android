@@ -69,6 +69,7 @@ ANDROID_SERIAL=emulator-5560 ./script/ci-wait-for-emulator.sh
 This is the script CI runs. It waits for boot and then:
 
 - disables animations and sets `long_press_timeout` to 1500 ms;
+- hides system crash/ANR dialogs (`hide_error_dialogs`), so they don't take the window focus;
 - disables the keyboard (IME), so `typeText()` doesn't lose characters, and fails if any IME is
   still enabled. Set `DISABLE_IME=0` to keep it;
 - runs `adb root` and redirects `127.0.0.1:443` to the mock web server port `1212` (`iptables`);
@@ -135,7 +136,8 @@ Look at logcat (`adb logcat -d`) and at the view hierarchy dumps in
 | What you see | What it means |
 |---|---|
 | `Overslept and turned a tap into a long press` | The tap took longer than `long_press_timeout`, the view got a long click (e.g. a menu item shows its tooltip). |
-| `RootViewWithoutFocusException`, `mCurrentFocus=... Application Not Responding: com.android.systemui` in `adb shell dumpsys window` | "System UI isn't responding" right after boot. `BaseTest.dismissANRSystemDialogIfExists()` taps `android:id/aerr_wait`. |
+| `RootViewWithoutFocusException`, `mCurrentFocus=... Application Not Responding: com.android.systemui` in `adb shell dumpsys window` | "System UI isn't responding" right after boot. `ci-wait-for-emulator.sh` sets `hide_error_dialogs`, so the system doesn't show such dialogs. `BaseTest.dismissANRSystemDialogIfExists()` also taps `android:id/aerr_wait`. |
+| Many unrelated tests of one shard fail with `RootViewWithoutFocusException`, logcat shows `ANR in system` and `Application Not Responding: system` windows again and again | `system_server` reported an ANR right after boot, and the system shows "Process system isn't responding" for the rest of the job. A dialog dismissed in `@Before` comes back during the test. Check that `adb shell settings get global hide_error_dialogs` returns `1`. |
 | `commitText on inactive InputConnection`, `Session id mismatch` during `typeText()` | The IME reconnects and key events are lost (`"message"` → `"essage"`). Use `replaceText()` or insert text without key events. |
 | A toast instead of the expected dialog after clicking Send | The compose screen is still looking up a recipient's key (`please_wait_while_information_about_recipients_will_be_updated`). |
 | A click opens another screen | The layout moved between computing the click coordinates and the click (a button appeared or the keyboard opened). |

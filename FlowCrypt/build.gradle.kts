@@ -469,7 +469,7 @@ val devDebugImplementation: Configuration = configurations.create("devDebugImple
 val uiTestsImplementation = configurations.named("uiTestsImplementation")
 
 dependencies {
-  ksp("com.github.bumptech.glide:ksp:5.0.9")
+  ksp("com.github.bumptech.glide:ksp:5.0.10")
   ksp("androidx.annotation:annotation:1.11.0")
   ksp("androidx.room:room-compiler:2.8.5")
   //ACRA needs the following dependency to use a custom report sender
@@ -566,7 +566,7 @@ dependencies {
   implementation("com.squareup.okio:okio:3.18.2")
   implementation("com.squareup.okhttp3:logging-interceptor:5.5.1")
 
-  implementation("com.github.bumptech.glide:glide:5.0.9")
+  implementation("com.github.bumptech.glide:glide:5.0.10")
   implementation("com.nulab-inc:zxcvbn:1.9.0")
   implementation("com.burhanrashid52:photoeditor:3.1.1")
   implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261110.1")
@@ -577,7 +577,7 @@ dependencies {
   //kotlinx-serialization-core added to fix runtime issue with dependencies conflict.
   //Maybe it will be removed in future.
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.13.0")
-  implementation("org.pgpainless:pgpainless-core:2.0.4")
+  implementation("org.pgpainless:pgpainless-core:2.0.5")
   implementation("org.eclipse.angus:angus-mail:2.0.5")
   implementation("org.eclipse.angus:gimap:2.0.5")
   implementation("commons-io:commons-io:2.22.0")

@@ -5,6 +5,9 @@
 
 package com.flowcrypt.email.ui
 
+import android.app.NotificationManager
+import androidx.core.app.NotificationCompat
+import androidx.core.content.getSystemService
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -12,10 +15,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -44,7 +43,7 @@ import com.google.api.services.gmail.model.MessagePartHeader
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Ignore
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -53,7 +52,9 @@ import org.junit.runner.RunWith
 import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
@@ -82,6 +83,12 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     useCustomerFesUrl = true,
     useAPI = true
   )
+
+  private val notificationManager: NotificationManager
+    get() = requireNotNull(getTargetContext().getSystemService<NotificationManager>())
+
+  //the mock web server waits for it on its own thread
+  private val attachmentResponseReleased = AtomicReference(CountDownLatch(1))
 
   override val addAccountToDatabaseRule = AddAccountToDatabaseRule(userWithClientConfiguration)
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule(
@@ -137,9 +144,13 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
           }
 
           "/gmail/v1/users/me/messages/${simpleAttInfo?.uid?.toHex()}/attachments/$ATTACHMENT_ID?fields=data&prettyPrint=false" -> {
+            //keep the download in progress until the test checks the 'downloading' dialog
+            attachmentResponseReleased.get().await(
+              RELEASE_ATTACHMENT_RESPONSE_TIMEOUT_IN_SECONDS,
+              TimeUnit.SECONDS
+            )
             return MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
-              .setBodyDelay(DELAY_FOR_DOWNLOADING_IN_SECONDS, TimeUnit.SECONDS)
               .setBody(
                 MessagePartBody().apply {
                   factory = GsonFactory.getDefaultInstance()
@@ -165,70 +176,84 @@ class AttachmentDownloadingWithRestrictionFlowTest : BaseMessageDetailsFlowTest(
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("tests crash randomly too many times on this test. Temporary disabled")
   fun testDownloadingAttachment() {
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    val incomingMessageInfo = getMsgInfo(
+      path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
+      mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt",
+      atts = arrayOf(simpleAttInfo),
+      accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
+    ) {
+      it?.copy(msgEntity = it.msgEntity.copy(accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE))
+    }
 
+    baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo) {
+      waitForObjectWithText(
+        requireNotNull(incomingMessageInfo?.text),
+        TimeUnit.SECONDS.toMillis(10)
+      )
+
+      waitForObjectWithText(
+        requireNotNull(simpleAttInfo?.name),
+        TimeUnit.SECONDS.toMillis(10)
+      )
+    }
+
+    onView(withId(R.id.imageViewAttIcon))
+      .check(matches(withDrawable(R.drawable.ic_attachment)))
+
+    //RetryRule reruns the test in the same process, so remove a notification of a previous run
+    notificationManager.cancelAll()
+    val attachmentResponseLatch = CountDownLatch(1)
+    attachmentResponseReleased.set(attachmentResponseLatch)
+
+    /*
+     The dialog closes itself right after the download. The mock web server doesn't return
+     the attachment until the dialog is checked, so a slow test thread can't miss it.
+     Release the response in any case: otherwise a failed check leaves the request waiting,
+     and stopping the mock web server hides the original failure.
+     */
     try {
-      val incomingMessageInfo = getMsgInfo(
-        path = "messages/info/standard_msg_info_plaintext_with_one_att.json",
-        mimeMsgPath = "messages/mime/standard_msg_info_plaintext_with_one_att.txt",
-        atts = arrayOf(simpleAttInfo),
-        accountEntity = addAccountToDatabaseRule.accountEntityWithDecryptedInfo
-      ) {
-        it?.copy(msgEntity = it.msgEntity.copy(accountType = AccountEntity.ACCOUNT_TYPE_GOOGLE))
-      }
-
-      //close the notification bar if needed
-      if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
-        device.pressBack()
-      }
-
-      baseCheckWithAtt(incomingMsgInfo = incomingMessageInfo, att = simpleAttInfo) {
-        waitForObjectWithText(
-          requireNotNull(incomingMessageInfo?.text),
-          TimeUnit.SECONDS.toMillis(10)
-        )
-
-        waitForObjectWithText(
-          requireNotNull(simpleAttInfo?.name),
-          TimeUnit.SECONDS.toMillis(10)
-        )
-      }
-
-      onView(withId(R.id.imageViewAttIcon))
-        .check(matches(withDrawable(R.drawable.ic_attachment)))
-
       onView(withId(R.id.imageButtonDownloadAtt))
         .check(matches(isDisplayed()))
         .perform(click())
 
       isDialogWithTextDisplayed(decorView, getResString(R.string.downloading))
       isDialogWithTextDisplayed(decorView, requireNotNull(simpleAttInfo?.name))
-
-      Thread.sleep(TimeUnit.SECONDS.toMillis(DELAY_FOR_DOWNLOADING_IN_SECONDS * 2))
-
-      //at this stage icon should be as by default
-      onView(withId(R.id.imageViewAttIcon))
-        .check(matches(withDrawable(R.drawable.ic_attachment)))
-
-      //open notification and check we have "End Pass Phrase Session" button
-      device.openNotification()
-      device.wait(
-        Until.hasObject(By.text(requireNotNull(simpleAttInfo.name))),
-        TimeUnit.SECONDS.toMillis(1)
-      )
-      device.pressBack()
     } finally {
-      //close the notification bar if needed
-      if (device.hasObject(By.res(NOTIFICATION_RESOURCES_NAME))) {
-        device.pressBack()
-      }
+      attachmentResponseLatch.countDown()
+    }
+
+    //the download can take a while on a slow CI emulator. Wait for the result
+    waitUntil(TimeUnit.SECONDS.toMillis(30)) {
+      isDownloadCompletedNotificationShown()
+    }
+    assertTrue(
+      "The 'download complete' notification is missing",
+      isDownloadCompletedNotificationShown()
+    )
+
+    /*
+     At this stage the icon should be as by default. The screen updates the attachment item
+     after the download, and ListAdapter calculates the diff on a background thread that
+     Espresso doesn't track. Until it's done, the list can contain the old and the new item views.
+     */
+    waitUntilViewMatches(
+      viewId = R.id.imageViewAttIcon,
+      matcher = withDrawable(R.drawable.ic_attachment)
+    )
+  }
+
+  private fun isDownloadCompletedNotificationShown(): Boolean {
+    val expectedText = getResString(R.string.download_complete)
+    return notificationManager.activeNotifications.any { statusBarNotification ->
+      statusBarNotification.tag == simpleAttInfo?.id &&
+          statusBarNotification.notification.extras
+            .getCharSequence(NotificationCompat.EXTRA_TEXT)?.toString() == expectedText
     }
   }
 
   companion object {
     val ATTACHMENT_ID = UUID.randomUUID().toString()
-    const val DELAY_FOR_DOWNLOADING_IN_SECONDS = 4L
+    private const val RELEASE_ATTACHMENT_RESPONSE_TIMEOUT_IN_SECONDS = 60L
   }
 }
