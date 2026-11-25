@@ -14,6 +14,7 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -37,8 +38,8 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.eclipse.angus.mail.imap.IMAPFolder
+import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -57,11 +58,11 @@ import java.util.concurrent.TimeUnit
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 @FlowCryptTestSettings(useIntents = true, useCommonIdling = false)
-@Ignore("temporary disabled")
 class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
   override val activityScenarioRule = activityScenarioRule<MainActivity>()
 
   private val userWithoutBackups = AccountDaoManager.getUserWithoutBackup()
+  @Volatile
   private var isSubmitPubKeyCalled = false
 
   val mockWebServerRule = FlowCryptMockWebServerRule(
@@ -109,20 +110,24 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-      waitForObjectWithText(
-        getResString(R.string.create_a_new_key).uppercase(),
-        TimeUnit.SECONDS.toMillis(5)
+      //the app checks the settings and searches for backups on the mail server first
+      waitUntilViewMatches(
+        viewId = R.id.buttonCreateNewKey,
+        matcher = isDisplayed(),
+        timeoutMs = TimeUnit.SECONDS.toMillis(30)
       )
-
       onView(withId(R.id.buttonCreateNewKey))
-        .check(matches(isDisplayed()))
         .perform(click())
 
       val passphrase = UUID.randomUUID().toString() + UUID.randomUUID().toString()
       onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))
         .perform(replaceText(passphrase))
-      Thread.sleep(TimeUnit.SECONDS.toMillis(1))
+      //the button does nothing until the passphrase strength is evaluated in the background
+      waitUntilViewMatches(
+        viewId = R.id.textViewPasswordQualityInfo,
+        matcher = withText(containsString(getResString(R.string.password_quality_subtext)))
+      )
       onView(withId(R.id.buttonSetPassPhrase))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -133,26 +138,43 @@ class SubmitPublicKeyAfterCreationNonGoogleAccountFlowTest : BaseSignTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-      //need to wait while a key is creating
-      waitForObjectWithText(JavaEmailConstants.FOLDER_INBOX, TimeUnit.SECONDS.toMillis(10))
-
+      //the app sends a backup of the key to the inbox first, then submits the public key
+      waitUntil(TimeUnit.SECONDS.toMillis(30)) { isSubmitPubKeyCalled }
       assertTrue(isSubmitPubKeyCalled)
     } finally {
-      runBlocking {
-        val imapStoreConnection = IMAPStoreConnection(getTargetContext(), userWithoutBackups)
-        imapStoreConnection.connect()
-        imapStoreConnection.store.use { store ->
-          store.getFolder("INBOX").use { folder ->
-            val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
-            val msgs =
-              imapFolder.messages.filter { it.subject == "Your FlowCrypt Backup" }.toTypedArray()
-            if (msgs.isNotEmpty()) {
-              imapFolder.setFlags(msgs, Flags(Flags.Flag.DELETED), true)
-            }
-            folder.expunge()
+      deleteBackupEmails()
+    }
+  }
+
+  /**
+   * Other tests expect that [userWithoutBackups] has no backups in the inbox. The mail server
+   * delivers the backup email asynchronously, so if the key was created, wait for the email
+   * before deleting it.
+   */
+  private fun deleteBackupEmails() {
+    runBlocking {
+      val imapStoreConnection = IMAPStoreConnection(getTargetContext(), userWithoutBackups)
+      imapStoreConnection.connect()
+      imapStoreConnection.store.use { store ->
+        store.getFolder(JavaEmailConstants.FOLDER_INBOX).use { folder ->
+          val imapFolder = (folder as IMAPFolder).apply { open(Folder.READ_WRITE) }
+          val findBackups = {
+            imapFolder.messages.filter { it.subject == BACKUP_EMAIL_SUBJECT }.toTypedArray()
           }
+          if (isSubmitPubKeyCalled) {
+            waitUntil(TimeUnit.SECONDS.toMillis(30)) { findBackups().isNotEmpty() }
+          }
+          val backups = findBackups()
+          if (backups.isNotEmpty()) {
+            imapFolder.setFlags(backups, Flags(Flags.Flag.DELETED), true)
+          }
+          folder.expunge()
         }
       }
     }
+  }
+
+  companion object {
+    private const val BACKUP_EMAIL_SUBJECT = "Your FlowCrypt Backup"
   }
 }
