@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
+import androidx.test.espresso.Root
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.idling.CountingIdlingResource
@@ -62,6 +63,7 @@ import com.google.android.material.snackbar.Snackbar
 import jakarta.mail.Session
 import jakarta.mail.internet.MimeMessage
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.Matcher
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.hasToString
@@ -407,6 +409,32 @@ abstract class BaseTest : BaseActivityTestImplementation {
       SystemClock.sleep(interval)
       elapsedTime = SystemClock.uptimeMillis() - startTime
     }
+  }
+
+  /**
+   * Wait until the view with [viewId] matches [matcher], e.g. a list that is shown after
+   * asynchronous loading. Fails with a regular Espresso error if it doesn't happen in [timeoutMs].
+   * Use [root] when the same id is used on the screen and in a dialog.
+   */
+  protected fun waitUntilViewMatches(
+    viewId: Int,
+    matcher: Matcher<View>,
+    root: Matcher<Root>? = null,
+    timeoutMs: Long = TimeUnit.SECONDS.toMillis(10)
+  ) {
+    val findView = {
+      val interaction = onView(withId(viewId))
+      if (root != null) interaction.inRoot(root) else interaction
+    }
+    waitUntil(timeoutMs) {
+      runCatching {
+        //the default failure handler takes a screenshot on every failed check
+        findView()
+          .withFailureHandler { error, _ -> throw error }
+          .check(matches(matcher))
+      }.isSuccess
+    }
+    findView().check(matches(matcher))
   }
 
   /**

@@ -32,7 +32,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.startsWith
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -73,10 +72,9 @@ class ComposeScreenForwardWithGmailApiSignatureFlowTest :
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("flaky. It looks like adding signature after start has unexpected result for forwarding case")
   fun testAddingSignatureAfterStart() {
     //need to wait while the app loads the messages list
-    Thread.sleep(2000)
+    waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))
 
     //click on a message
     onView(withId(R.id.recyclerViewMsgs))
@@ -92,12 +90,7 @@ class ComposeScreenForwardWithGmailApiSignatureFlowTest :
     //click on forward button
     openReplyScreen(R.id.forwardButton, SUBJECT_EXISTING_ENCRYPTED)
 
-    //need to wait while all action for reply case will be applied
-    Thread.sleep(1000)
-
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo())
-      .check(matches(withText(startsWith("\n\n$SIGNATURE_FOR_MAIN"))))
+    waitUntilMessageText(startsWith("\n\n$SIGNATURE_FOR_MAIN"))
 
     //switch to standard mode
     openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -107,9 +100,7 @@ class ComposeScreenForwardWithGmailApiSignatureFlowTest :
 
     closeSoftKeyboard()
 
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo())
-      .check(matches(withText(startsWith("\n\n$SIGNATURE_FOR_MAIN"))))
+    waitUntilMessageText(startsWith("\n\n$SIGNATURE_FOR_MAIN"))
 
     onView(withId(R.id.imageButtonAliases))
       .perform(scrollTo())
@@ -119,8 +110,6 @@ class ComposeScreenForwardWithGmailApiSignatureFlowTest :
       .check(matches(isDisplayed()))
       .perform(click())
 
-    onView(withId(R.id.editTextEmailMessage))
-      .perform(scrollTo())
-      .check(matches(withText(startsWith("\n\n$SIGNATURE_FOR_ALIS"))))
+    waitUntilMessageText(startsWith("\n\n$SIGNATURE_FOR_ALIS"))
   }
 }
