@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -26,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.junit.annotations.FlowCryptTestSettings
 import com.flowcrypt.email.junit.annotations.OutgoingMessageConfiguration
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddRecipientsToDatabaseRule
@@ -43,9 +45,9 @@ import jakarta.mail.internet.MimeMultipart
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -88,7 +90,7 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("Flaky. Need to fix")
+  @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_STANDARD, TimeUnit.SECONDS.toMillis(10))
@@ -116,8 +118,8 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
     val outgoingMessageConfiguration =
       requireNotNull(outgoingMessageConfigurationRule.outgoingMessageConfiguration)
 
-    //need to wait while all action for forward case will be applied
-    Thread.sleep(1000)
+    //the original attachments are added to the compose screen asynchronously
+    waitUntilViewMatches(R.id.rVAttachments, withRecyclerViewItemCount(3))
     fillData(outgoingMessageConfiguration)
 
     //enqueue outgoing message
@@ -125,7 +127,19 @@ class StandardForwardOfEncryptedPgpMimeMessageWithOriginalAttachmentsComposeGmai
       .check(matches(isDisplayed()))
       .perform(click())
 
-    //back to the message details screen
+    //wait for enqueuing an outgoing message and return back to the message details screen
+    val subjectOfForwardedMessage =
+      onView(allOf(withId(R.id.textViewSubject), withText(SUBJECT_EXISTING_PGP_MIME)))
+    waitUntil(TimeUnit.SECONDS.toMillis(30)) {
+      runCatching {
+        subjectOfForwardedMessage
+          .withFailureHandler { error, _ -> throw error }
+          .check(matches(isDisplayed()))
+      }.isSuccess
+    }
+    subjectOfForwardedMessage.check(matches(isDisplayed()))
+
+    //back to the messages list screen
     pressBack()
 
     doAfterSendingChecks { _, rawMime, mimeMessage ->
