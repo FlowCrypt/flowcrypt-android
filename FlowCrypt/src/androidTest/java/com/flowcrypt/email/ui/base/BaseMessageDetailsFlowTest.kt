@@ -26,7 +26,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.web.assertion.TagSoupDocumentParser
 import androidx.test.espresso.web.assertion.WebViewAssertions.webContent
 import androidx.test.espresso.web.matcher.DomMatchers.elementByXPath
-import androidx.test.espresso.web.sugar.Web.onWebView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -212,10 +211,9 @@ abstract class BaseMessageDetailsFlowTest : BaseTest() {
       .joinToString(separator = "\n") { it.textContent }
       .trim()
 
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
-      .check(webContent(elementByXPath("/html/body", withTextContentMatcher(`is`(content)))))
-    //.check(webContent(withBody(withTextContentMatcher(`is`(content)))))
+    checkWebViewWithJavascript(withId(R.id.emailWebView)) { webView ->
+      webView.check(webContent(elementByXPath("/html/body", withTextContentMatcher(`is`(content)))))
+    }
   }
 
   protected fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {

@@ -24,7 +24,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.web.assertion.WebViewAssertions.webContent
 import androidx.test.espresso.web.matcher.DomMatchers.elementByXPath
-import androidx.test.espresso.web.sugar.Web.onWebView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -285,9 +284,9 @@ abstract class BaseThreadDetailsGmailApiFlowTest(
   }
 
   protected fun checkWebViewText(content: String?) {
-    onWebView(allOf(withId(R.id.emailWebView), isDisplayed())).forceJavascriptEnabled()
-    onWebView(allOf(withId(R.id.emailWebView), isDisplayed()))
-      .check(webContent(elementByXPath("/html/body", withTextContentMatcher(`is`(content)))))
+    checkWebViewWithJavascript(allOf(withId(R.id.emailWebView), isDisplayed())) { webView ->
+      webView.check(webContent(elementByXPath("/html/body", withTextContentMatcher(`is`(content)))))
+    }
   }
 
   protected fun openThreadBasedOnPosition(position: Int) {
