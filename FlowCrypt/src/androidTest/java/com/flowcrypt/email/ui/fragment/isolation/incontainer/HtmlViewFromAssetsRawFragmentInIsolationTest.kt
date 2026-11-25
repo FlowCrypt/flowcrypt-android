@@ -10,7 +10,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.web.assertion.WebViewAssertions.webMatches
-import androidx.test.espresso.web.sugar.Web.onWebView
 import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
 import androidx.test.espresso.web.webdriver.DriverAtoms.getText
 import androidx.test.espresso.web.webdriver.Locator
@@ -56,9 +55,10 @@ class HtmlViewFromAssetsRawFragmentInIsolationTest : BaseTest() {
     onView(withId(R.id.webView))
       .check(matches(isDisplayed()))
 
-    onWebView(withId(R.id.webView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.webView))
-      .withElement(findElement(Locator.TAG_NAME, "h1"))
-      .check(webMatches(getText(), containsString("FlowCrypt Privacy Policy")))
+    checkWebViewWithJavascript(withId(R.id.webView)) { webView ->
+      webView
+        .withElement(findElement(Locator.TAG_NAME, "h1"))
+        .check(webMatches(getText(), containsString("FlowCrypt Privacy Policy")))
+    }
   }
 }

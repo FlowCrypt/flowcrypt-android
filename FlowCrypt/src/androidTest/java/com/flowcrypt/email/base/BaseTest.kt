@@ -39,6 +39,8 @@ import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.web.sugar.Web
+import androidx.test.espresso.web.sugar.Web.onWebView
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -391,6 +393,23 @@ abstract class BaseTest : BaseActivityTestImplementation {
         accountEntity
       )
     }
+  }
+
+  /**
+   * Enable JavaScript in the WebView that matches [webViewMatcher] and run [check] on it.
+   * The app keeps JavaScript disabled, and the new setting reaches the WebView renderer
+   * asynchronously, so on a slow emulator the first checks can fail with
+   * "Could not parse: null" or time out. Retry [check] until it passes or [timeoutMs]
+   * expires, then run it once more to fail with the real error.
+   */
+  protected fun checkWebViewWithJavascript(
+    webViewMatcher: Matcher<View>,
+    timeoutMs: Long = TimeUnit.SECONDS.toMillis(30),
+    check: (Web.WebInteraction<Void>) -> Unit
+  ) {
+    onWebView(webViewMatcher).forceJavascriptEnabled()
+    waitUntil(timeoutMs) { runCatching { check(onWebView(webViewMatcher)) }.isSuccess }
+    check(onWebView(webViewMatcher))
   }
 
   protected fun waitUntil(

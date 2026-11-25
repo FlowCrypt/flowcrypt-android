@@ -14,7 +14,6 @@ import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.FlakyTest
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -85,7 +84,6 @@ class StandardReplyComposeGmailApiFlow : BaseComposeGmailFlow() {
       .around(ScreenshotTestRule())
 
   @Test
-  @FlakyTest
   fun testSending() {
     //need to wait while the app loads the messages list
     waitForObjectWithText(SUBJECT_EXISTING_ENCRYPTED, TimeUnit.SECONDS.toMillis(10))

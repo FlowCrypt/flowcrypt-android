@@ -1008,9 +1008,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
     )
     baseCheck(msgInfo, checkWebContent = false)
 
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
-      .check(
+    checkWebViewWithJavascript(withId(R.id.emailWebView)) { webView ->
+      webView.check(
         webContent(
           elementByXPath(
             "/html/body",
@@ -1023,6 +1022,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
           )
         )
       )
+    }
 
     testPgpBadges(
       2,
@@ -1197,10 +1197,11 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
       Atoms.castOrDie(String::class.java)
     )
 
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
-      .withElement(findElement(Locator.XPATH, xpath))
-      .check(webMatches(imgSrcViaJavaScript, equalTo(imgSrc)))
+    checkWebViewWithJavascript(withId(R.id.emailWebView)) { webView ->
+      webView
+        .withElement(findElement(Locator.XPATH, xpath))
+        .check(webMatches(imgSrcViaJavaScript, equalTo(imgSrc)))
+    }
   }
 
   @Test
@@ -1221,9 +1222,8 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
 
     baseCheck(msgInfo)
 
-    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
-    onWebView(withId(R.id.emailWebView))
-      .check(
+    checkWebViewWithJavascript(withId(R.id.emailWebView)) { webView ->
+      webView.check(
         webContent(
           elementByXPath(
             "/html/body",
@@ -1231,6 +1231,7 @@ class MessageDetailsFlowTest : BaseMessageDetailsFlowTest() {
           )
         )
       )
+    }
 
     Thread.sleep(1000)
 
