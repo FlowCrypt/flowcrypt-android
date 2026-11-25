@@ -1,12 +1,12 @@
 {
   "email": "user_with_not_existed_server@flowcrypt.test",
-  "imapPort": 993,
+  "imapPort": 143,
   "imapOpt": "NONE",
-  "imapServer": "10.0.2.3",
+  "imapServer": "imap.flowcrypt.test",
   "hasCustomSignInForSmtp": false,
   "password": "qwerty1234",
-  "smtpPort": 587,
+  "smtpPort": 25,
   "smtpOpt": "NONE",
-  "smtpServer": "10.0.2.3",
+  "smtpServer": "smtp.flowcrypt.test",
   "username": "user_with_not_existed_server@flowcrypt.test"
 }
