@@ -6,6 +6,8 @@
 package com.flowcrypt.email.security.pgp
 
 import android.os.Parcelable
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.extensions.java.io.LimitedOutputStream
 import com.flowcrypt.email.extensions.org.pgpainless.decryption_verification.isSigned
 import com.flowcrypt.email.util.exception.DecryptionException
 import kotlinx.parcelize.Parcelize
@@ -66,10 +68,11 @@ object PgpDecryptAndOrVerify {
     secretKeys: PGPSecretKeyRingCollection? = null,
     protector: SecretKeyRingProtector? = null,
     passphrase: Passphrase? = null,
-    ignoreMdcErrors: Boolean = false
+    ignoreMdcErrors: Boolean = false,
+    maxOutputBytes: Int = Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES
   ): DecryptionResult {
     srcInputStream.use { srcStream ->
-      val destOutputStream = ByteArrayOutputStream()
+      val destOutputStream = LimitedOutputStream(maxOutputBytes)
       destOutputStream.use { outStream ->
         try {
           val decryptionStream = genDecryptionStream(

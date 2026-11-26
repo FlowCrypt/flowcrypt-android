@@ -6,15 +6,16 @@
 package com.flowcrypt.email.security.pgp
 
 
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.extensions.java.io.LimitedOutputStream
+import com.flowcrypt.email.extensions.java.io.readBytesWithLimit
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.decryption_verification.MessageMetadata
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
-import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
 /**
@@ -22,19 +23,19 @@ import java.io.InputStream
  */
 object PgpSignature {
   fun extractClearText(source: String?, isSilent: Boolean = true): String? {
-    return extractClearText(ByteArrayInputStream(source?.toByteArray()), isSilent)
+    return extractClearText(source?.byteInputStream() ?: ByteArrayInputStream(ByteArray(0)), isSilent)
   }
 
   @Suppress("MemberVisibilityCanBePrivate")
   fun extractClearText(srcInputStream: InputStream, isSilent: Boolean = true): String? {
     srcInputStream.use { srcStream ->
       return try {
-        val multiPassStrategy = MultiPassStrategy.keepMessageInMemory()
+        val messageOutputStream = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)
         ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(
-          srcStream,
-          multiPassStrategy.messageOutputStream
+          ByteArrayInputStream(srcStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)),
+          messageOutputStream
         )
-        String(multiPassStrategy.getBytes())
+        String(messageOutputStream.toByteArray())
       } catch (e: Exception) {
         if (isSilent) {
           e.printStackTrace()
@@ -48,15 +49,17 @@ object PgpSignature {
     srcInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection
   ): ClearTextVerificationResult {
-    ByteArrayOutputStream().use { outStream ->
+    LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES).use { outStream ->
       return try {
         val api = PGPainless.getInstance()
         val verificationStream = api.processMessage()
-          .onInputStream(srcInputStream)
+          .onInputStream(
+            ByteArrayInputStream(srcInputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES))
+          )
           .withOptions(
             ConsumerOptions.get(api)
               .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
-              .setMultiPassStrategy(InMemoryMultiPassStrategy())
+              .setMultiPassStrategy(LimitedMultiPassStrategy())
           )
 
         verificationStream.use { it.copyTo(outStream) }
@@ -75,16 +78,22 @@ object PgpSignature {
     signatureInputStream: InputStream,
     publicKeys: PGPPublicKeyRingCollection
   ): DetachedSignatureVerificationResult {
-    ByteArrayOutputStream().use { outStream ->
+    LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES).use { outStream ->
       return try {
         val api = PGPainless.getInstance()
         val verificationStream = api.processMessage()
-          .onInputStream(srcInputStream)
+          .onInputStream(
+            ByteArrayInputStream(srcInputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES))
+          )
           .withOptions(
             ConsumerOptions.get(api)
-              .addVerificationOfDetachedSignatures(signatureInputStream)
+              .addVerificationOfDetachedSignatures(
+                ByteArrayInputStream(
+                  signatureInputStream.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)
+                )
+              )
               .addVerificationCerts(publicKeys.map { api.toCertificate(it) })
-              .setMultiPassStrategy(InMemoryMultiPassStrategy())
+              .setMultiPassStrategy(LimitedMultiPassStrategy())
           )
 
         verificationStream.use { it.copyTo(outStream) }
@@ -96,6 +105,15 @@ object PgpSignature {
         DetachedSignatureVerificationResult(exception = e)
       }
     }
+  }
+
+  private class LimitedMultiPassStrategy : MultiPassStrategy {
+    private val output = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)
+
+    override val messageOutputStream: java.io.OutputStream = output
+
+    override val messageInputStream: InputStream
+      get() = ByteArrayInputStream(output.toByteArray())
   }
 
   data class ClearTextVerificationResult(

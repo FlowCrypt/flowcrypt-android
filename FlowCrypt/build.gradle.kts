@@ -432,6 +432,10 @@ easylauncher {
   }
 }
 
+tasks.withType<Test>().configureEach {
+  maxHeapSize = "1024m"
+}
+
 tasks.register("checkCorrectBranch") {
   val branchName = gitBranchName
   doLast {

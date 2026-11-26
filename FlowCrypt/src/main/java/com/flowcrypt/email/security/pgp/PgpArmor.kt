@@ -6,7 +6,10 @@
 package com.flowcrypt.email.security.pgp
 
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
+import com.flowcrypt.email.extensions.java.io.LimitedOutputStream
+import com.flowcrypt.email.extensions.java.io.readBytesWithLimit
 import com.flowcrypt.email.extensions.kotlin.countOfMatchesZeroOneOrMore
 import com.flowcrypt.email.extensions.kotlin.isWhiteSpace
 import com.flowcrypt.email.extensions.kotlin.normalize
@@ -14,6 +17,7 @@ import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.util.Strings
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -159,8 +163,10 @@ object PgpArmor {
   // https://github.com/bcgit/bc-java/blob/bc3b92f1f0e78b82e2584c5fb4b226a13e7f8b3b/pg/src/main/java/org/bouncycastle/openpgp/examples/ClearSignedFileProcessor.java
   fun readSignedClearTextMessage(input: InputStream): CleartextSignedMessage {
     try {
-      ArmoredInputStream(input).use { armoredInput ->
-        val out = ByteArrayOutputStream()
+      ArmoredInputStream(
+        ByteArrayInputStream(input.readBytesWithLimit(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES))
+      ).use { armoredInput ->
+        val out = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES)
         out.use {
           val lineOut = ByteArrayOutputStream()
           var lookAhead = readInputLine(lineOut, armoredInput)

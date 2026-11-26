@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.security.pgp
 
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.extensions.createFileWithRandomData
 import com.flowcrypt.email.extensions.kotlin.toInputStream
@@ -33,6 +34,7 @@ import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProv
 import org.pgpainless.util.Passphrase
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.nio.charset.Charset
 import java.util.UUID
 
@@ -315,6 +317,31 @@ class PgpDecryptAndOrVerifyTest {
     )
   }
 
+  @Test
+  fun testDecryptWithAttachmentSizeLimit() {
+    val encrypted = ByteArrayOutputStream()
+    PgpEncryptAndOrSign.encryptAndOrSign(
+      srcInputStream = ZeroInputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES + 1),
+      destOutputStream = encrypted,
+      pgpPublicKeyRingCollection = PGPPublicKeyRingCollection(
+        listOf(
+          senderPGPSecretKeyRing.certificate,
+          receiverPGPSecretKeyRing.certificate
+        )
+      )
+    )
+
+    val result = PgpDecryptAndOrVerify.decryptAndOrVerifyWithResult(
+      srcInputStream = ByteArrayInputStream(encrypted.toByteArray()),
+      secretKeys = PGPSecretKeyRingCollection(listOf(receiverPGPSecretKeyRing)),
+      protector = allPredefinedKeysProtector,
+      maxOutputBytes = Constants.MAX_ATTACHMENT_SIZE_IN_BYTES
+    )
+
+    assertNull("Unexpected error", result.exception)
+    assertNotNull("Content not returned", result.content)
+  }
+
   private fun testDecryptFileSuccess(shouldSrcBeArmored: Boolean) {
     val srcFile = temporaryFolder.createFileWithRandomData(fileSizeInBytes = FileUtils.ONE_MB)
     val sourceBytes = srcFile.readBytes()
@@ -342,6 +369,24 @@ class PgpDecryptAndOrVerifyTest {
 
     val decryptedBytesForSender = outputStreamWithDecryptedData.toByteArray()
     Assert.assertArrayEquals(sourceBytes, decryptedBytesForSender)
+  }
+
+  private class ZeroInputStream(private var remaining: Int) : InputStream() {
+    private val chunk = ByteArray(64 * 1024)
+
+    override fun read(): Int {
+      if (remaining == 0) return -1
+      remaining--
+      return 0
+    }
+
+    override fun read(b: ByteArray, off: Int, len: Int): Int {
+      if (remaining == 0) return -1
+      val count = minOf(remaining, len, chunk.size)
+      System.arraycopy(chunk, 0, b, off, count)
+      remaining -= count
+      return count
+    }
   }
 
   private fun processMessage(messageKey: String): PgpDecryptAndOrVerify.DecryptionResult {

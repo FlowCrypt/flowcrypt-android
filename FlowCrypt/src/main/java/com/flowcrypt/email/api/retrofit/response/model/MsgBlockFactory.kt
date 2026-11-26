@@ -91,7 +91,6 @@ object MsgBlockFactory {
     isOpenPGPMimeSigned: Boolean
   ): MsgBlock {
     try {
-      val attContent = mimePart.content
       val data = rawBlock.content
       val attMeta = AttMeta(
         name = mimePart.fileName,
@@ -100,7 +99,7 @@ object MsgBlockFactory {
         type = mimePart.contentType,
         contentId = mimePart.contentID
       )
-      val content = if (attContent is String) mimePart.content as String else null
+      val content = if (mimePart.isMimeType("text/*")) data.decodeToString() else null
       return when (type) {
         MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(
           content = null,

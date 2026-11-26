@@ -8,6 +8,7 @@ package com.flowcrypt.email.security.pgp
 import android.content.Context
 import android.util.Base64
 import androidx.core.util.PatternsCompat
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.model.AlternativeContentMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.AttMeta
@@ -30,6 +31,7 @@ import com.flowcrypt.email.api.retrofit.response.model.VerificationResult
 import com.flowcrypt.email.core.msg.MimeUtils
 import com.flowcrypt.email.core.msg.RawBlockParser
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.java.io.LimitedOutputStream
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipart
 import com.flowcrypt.email.extensions.jakarta.mail.isMultipartAlternative
 import com.flowcrypt.email.extensions.jakarta.mail.isOpenPGPMimeEncrypted
@@ -67,7 +69,6 @@ import org.owasp.html.HtmlPolicyBuilder
 import org.pgpainless.decryption_verification.SignatureVerification
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.IdentityHashMap
@@ -285,7 +286,7 @@ object PgpMsg {
 
           val contentPart = multiPart.getBodyPart(0)
           val signaturePart = multiPart.getBodyPart(1)
-          val openPGPMIMESignedContent = ByteArrayOutputStream().apply {
+          val openPGPMIMESignedContent = LimitedOutputStream(Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES).apply {
             contentPart.writeTo(this)
           }.toByteArray()
 
@@ -322,6 +323,14 @@ object PgpMsg {
           if (GeneralUtil.isDebugBuild()) {
             e.printStackTrace()
           }
+          blocks.add(
+            GenericMsgBlock(
+              MsgBlock.Type.UNKNOWN,
+              null,
+              MsgBlockError(e.javaClass.simpleName + ": " + e.message),
+              isOpenPGPMimeSigned
+            )
+          )
         }
       }
 
@@ -1095,7 +1104,8 @@ object PgpMsg {
       srcInputStream = rawBlock.content.inputStream(),
       publicKeys = verificationPublicKeys,
       secretKeys = secretKeys,
-      protector = protector
+      protector = protector,
+      maxOutputBytes = Constants.MAX_ATTACHMENT_SIZE_IN_BYTES
     )
 
     val blocks = mutableListOf<MsgBlock>()
@@ -1132,12 +1142,14 @@ object PgpMsg {
         // message that was actually fully armored (text not visible) with a mime msg inside
         // ... -> in which case the user would I think see full mime content?
         // ------------------------------------------------------------------------------------
+        val verifiedContent = decryptionResult.content?.toByteArray()
+        if (verifiedContent != null && verifiedContent.size > Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES) {
+          throw java.io.IOException("The decrypted message exceeds the limit of ${Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES} bytes")
+        }
         blocks.add(
           MsgBlockFactory.fromContent(
             type = MsgBlock.Type.VERIFIED_MSG,
-            content = decryptionResult.content?.toString(
-              StandardCharsets.UTF_8.displayName()
-            )?.toEscapedHtml(),
+            content = verifiedContent?.let { String(it, StandardCharsets.UTF_8) }?.toEscapedHtml(),
             signature = decryptionResult.signature,
             isOpenPGPMimeSigned = rawBlock.isOpenPGPMimeSigned
           )
@@ -1150,7 +1162,8 @@ object PgpMsg {
           publicKeys = verificationPublicKeys,
           secretKeys = secretKeys,
           protector = protector,
-          ignoreMdcErrors = true
+          ignoreMdcErrors = true,
+          maxOutputBytes = Constants.MAX_ATTACHMENT_SIZE_IN_BYTES
         )
         val decryptErrorMsgBlock = if (resultWithIgnoredMDCErrors.exception == null) {
           DecryptErrorMsgBlock(
@@ -1766,6 +1779,9 @@ object PgpMsg {
 
   private fun fmtDecryptedAsSanitizedHtmlBlocks(decryptedContent: ByteArray?): Collection<MsgBlock> {
     if (decryptedContent == null) return emptyList()
+    if (decryptedContent.size > Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES) {
+      throw java.io.IOException("The decrypted message exceeds the limit of ${Constants.MAX_PGP_MESSAGE_SIZE_IN_BYTES} bytes")
+    }
     val decryptedText = String(decryptedContent)
     val blocks = mutableListOf<MsgBlock>()
     val strippedContent = stripFcReplyToken(extractFcAttachments(decryptedText, blocks))
