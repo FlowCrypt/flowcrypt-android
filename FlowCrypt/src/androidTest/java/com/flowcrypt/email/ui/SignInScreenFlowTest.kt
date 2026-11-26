@@ -33,6 +33,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * A test for [MainActivity]
@@ -67,9 +68,16 @@ class SignInScreenFlowTest : BaseTest() {
     onView(withId(R.id.buttonSignInWithGmail))
       .check(matches(isDisplayed()))
       .perform(click())
-    //check that the Google Sign-in screen displayed
+    /*
+     Check that the Google Sign-in screen is displayed. On a slow emulator it can take a few
+     seconds: the Google Play services UI process can be frozen, and UiAutomator sees a new
+     window later.
+     */
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    assertTrue(device.wait(Until.hasObject(By.pkg("com.google.android.gms")), 5000))
+    assertTrue(
+      "The Google Sign-in screen isn't displayed",
+      device.wait(Until.hasObject(By.pkg("com.google.android.gms")), TimeUnit.SECONDS.toMillis(30))
+    )
     device.pressBack()
   }
 

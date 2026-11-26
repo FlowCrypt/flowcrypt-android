@@ -13,6 +13,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.hasMinimumChildCount
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -33,14 +34,16 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import okio.GzipSource
 import okio.buffer
+import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.net.HttpURLConnection
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * @author Denys Bondarenko
@@ -48,7 +51,9 @@ import java.net.HttpURLConnection
 @MediumTest
 @RunWith(AndroidJUnit4::class)
 class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
-  private var lastLabelIds = mutableListOf<String>()
+  //the mock web server changes them on its own thread
+  private val lastLabelIds = CopyOnWriteArrayList<String>()
+  private val lastBatchModifyRequest = AtomicReference<BatchModifyMessagesRequest?>()
 
   private val mockWebServerRule = FlowCryptMockWebServerRule(
     TestConstants.MOCK_WEB_SERVER_PORT,
@@ -68,15 +73,9 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
             batchModifyMessagesRequest.removeLabelIds?.let {
               lastLabelIds.removeAll(it)
             }
+            //check it in the test thread. A failed assertion here doesn't fail the test
+            lastBatchModifyRequest.set(batchModifyMessagesRequest)
 
-            assertEquals(
-              LABELS.take(3).map { it.name },
-              batchModifyMessagesRequest.removeLabelIds
-            )
-            assertEquals(
-              LABELS.filter { it.name == "Test9" }.map { it.name },
-              batchModifyMessagesRequest.addLabelIds
-            )
             return MockResponse()
               .setResponseCode(HttpURLConnection.HTTP_OK)
           }
@@ -99,19 +98,26 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
     .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("flaky. Temporary disabled")
   fun testLabelsManagement() {
     val allLabels = initLabelIds()
-    lastLabelIds = (allLabels.take(4) + allLabels.takeLast(1)).toMutableList()
+    lastLabelIds.clear()
+    lastLabelIds.addAll(allLabels.take(4) + allLabels.takeLast(1))
+    lastBatchModifyRequest.set(null)
     val details = genIncomingMessageInfo(labelsIds = lastLabelIds)?.msgEntity
     requireNotNull(details)
     launchActivity(details)
-    Thread.sleep(1000)
+    //the screen shows the message labels after loading the message
+    waitUntilViewMatches(
+      viewId = R.id.recyclerViewLabels,
+      matcher = allOf(isDisplayed(), hasMinimumChildCount(1))
+    )
 
     //open dialog by clicking on one of the labels
     onView(withId(R.id.recyclerViewLabels))
       .perform(RecyclerViewActions.actionOnItemAtPosition<ViewHolder>(0, click()))
 
+    //'back' closes the screen if the dialog isn't shown yet
+    waitUntilLabelsDialogIsLoaded()
     //close dialog
     pressBack()
 
@@ -120,6 +126,7 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
     onView(withText(R.string.change_labels))
       .check(matches(isDisplayed()))
       .perform(click())
+    waitUntilLabelsDialogIsLoaded()
 
     //deselect the first 3 labels
     onView(withId(R.id.recyclerViewLabels))
@@ -156,13 +163,29 @@ class MessageDetailsChangeGmailLabelsFlowTest : BaseGmailLabelsFlowTest() {
       .inRoot(isDialog())
       .perform(click())
 
-    Thread.sleep(3000)
-
+    waitUntil { lastBatchModifyRequest.get() != null }
+    val batchModifyRequest = requireNotNull(lastBatchModifyRequest.get()) {
+      "The app didn't send the 'batchModify' request"
+    }
+    assertEquals(LABELS.take(3).map { it.name }, batchModifyRequest.removeLabelIds)
+    assertEquals(
+      LABELS.filter { it.name == "Test9" }.map { it.name },
+      batchModifyRequest.addLabelIds
+    )
     assertEquals(
       allLabels.take(1) +
           allLabels.takeLast(1) +
           allLabels.filter { it == "Test9" },
-      lastLabelIds
+      lastLabelIds.toList()
+    )
+  }
+
+  private fun waitUntilLabelsDialogIsLoaded() {
+    //the dialog shows the list after the labels are loaded asynchronously
+    waitUntilViewMatches(
+      viewId = R.id.recyclerViewLabels,
+      matcher = allOf(isDisplayed(), hasMinimumChildCount(3)),
+      root = isDialog()
     )
   }
 }

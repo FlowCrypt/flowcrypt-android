@@ -167,6 +167,13 @@ adb shell settings put global animator_duration_scale 0
 # a long click instead of a click (e.g. a toolbar menu item shows its tooltip).
 adb shell settings put secure long_press_timeout 1500
 
+# Right after boot a slow emulator can report an ANR even for system_server. Then the system shows
+# "Process system isn't responding" again and again for the whole job. The dialog takes the window
+# focus, and every test that is running at that moment fails with RootViewWithoutFocusException.
+# Don't show crash/ANR dialogs at all. Crashes and ANRs are still logged ("FATAL EXCEPTION",
+# "ANR in"), and a test fails anyway if the app crashes or stops responding.
+adb shell settings put global hide_error_dialogs 1
+
 # On slow emulators the IME (Gboard) restarts its input session after focus changes, and the app
 # drops text committed to the old session ("Session id mismatch ... commitText" in logcat).
 # typeText() then loses characters, e.g. "message" -> "essage". Without an IME, Espresso key events
