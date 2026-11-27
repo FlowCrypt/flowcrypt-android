@@ -86,4 +86,42 @@ class AttachmentSizeValidatorTest {
 
     assertThrows(IOException::class.java) { input.readBytes() }
   }
+
+  @Test
+  fun copyInputStreamToFileReturnsBytesWritten() {
+    val destination = temporaryFolder.newFile("counted.bin")
+
+    val written = AttachmentSizeValidator.copyInputStreamToFile(
+      ByteArrayInputStream(ByteArray(777)), destination, 1024
+    )
+
+    assertEquals(777L, written)
+  }
+
+  @Test
+  fun cumulativeBudgetCapsSecondCopy() {
+    val first = temporaryFolder.newFile("first.bin")
+    val second = java.io.File(temporaryFolder.root, "second.bin")
+    var budget = 1024L
+
+    budget -= AttachmentSizeValidator.copyInputStreamToFile(
+      ByteArrayInputStream(ByteArray(1024)), first, budget
+    )
+
+    assertThrows(IOException::class.java) {
+      AttachmentSizeValidator.copyInputStreamToFile(
+        ByteArrayInputStream(ByteArray(1024)), second, budget
+      )
+    }
+    assertFalse(second.exists())
+  }
+
+  @Test
+  fun limitedInputStreamCountsSkip() {
+    val input = AttachmentSizeValidator.limitedInputStream(
+      ByteArrayInputStream(ByteArray(2048)), 1024
+    )
+
+    assertThrows(IOException::class.java) { input.skip(2048) }
+  }
 }

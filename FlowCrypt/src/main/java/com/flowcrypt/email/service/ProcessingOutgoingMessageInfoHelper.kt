@@ -113,9 +113,15 @@ object ProcessingOutgoingMessageInfoHelper {
       pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
     }
 
+    var remainingBytes = Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+
     for (attachmentInfo in outgoingMsgInfo.atts ?: emptyList()) {
       var uri: Uri?
       var name: String? = null
+      val budget = remainingBytes
+      if (budget <= 0) {
+        throw IOException("Total attachment size limit exceeded")
+      }
 
       val origFileUri = attachmentInfo.uri
       var originalFileInputStream: InputStream? = null
@@ -124,13 +130,13 @@ object ProcessingOutgoingMessageInfoHelper {
         originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
           ?.let {
             AttachmentSizeValidator.limitedInputStream(
-              it, Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+              it, budget
             )
           }
       } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
         originalFileInputStream = AttachmentSizeValidator.limitedInputStream(
           ByteArrayInputStream(attachmentInfo.rawData),
-          Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+          budget
         )
       }
 
@@ -154,6 +160,12 @@ object ProcessingOutgoingMessageInfoHelper {
           pubKeys = requireNotNull(pubKeys),
           fileName = originalAttName,
         )
+        val encryptedSize = encryptedTempFile.length()
+        if (encryptedSize > budget) {
+          encryptedTempFile.delete()
+          throw IOException("Total attachment size limit exceeded")
+        }
+        remainingBytes -= encryptedSize
         uri = Uri.fromFile(encryptedTempFile)
         name = encryptedTempFile.name
       } else {
@@ -163,8 +175,8 @@ object ProcessingOutgoingMessageInfoHelper {
             FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
         }
 
-        AttachmentSizeValidator.copyInputStreamToFile(
-          originalFileInputStream, cachedAtt, Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+        remainingBytes -= AttachmentSizeValidator.copyInputStreamToFile(
+          originalFileInputStream, cachedAtt, budget
         )
         uri = Uri.fromFile(cachedAtt)
       }

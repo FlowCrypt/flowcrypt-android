@@ -43,7 +43,7 @@ object AttachmentSizeValidator {
 
   /** Copy at most [maxBytes] bytes, removing a partial file when the limit is exceeded. */
   @Throws(IOException::class)
-  fun copyInputStreamToFile(input: InputStream, destination: File, maxBytes: Long) {
+  fun copyInputStreamToFile(input: InputStream, destination: File, maxBytes: Long): Long {
     try {
       input.use { source ->
         limitedInputStream(source, maxBytes).use { limited ->
@@ -54,6 +54,7 @@ object AttachmentSizeValidator {
       destination.delete()
       throw e
     }
+    return destination.length()
   }
 
   private fun safeAdd(first: Long, second: Long): Long? =
@@ -72,6 +73,12 @@ object AttachmentSizeValidator {
     override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
       val result = super.read(bytes, offset, length)
       if (result > 0) count(result.toLong())
+      return result
+    }
+
+    override fun skip(byteCount: Long): Long {
+      val result = super.skip(byteCount)
+      if (result > 0) count(result)
       return result
     }
 
