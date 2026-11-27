@@ -69,6 +69,66 @@ class ProcessMimeMessageTest {
   }
 
   @Test
+  fun testTamperedCleartextSignatureIsReportedAsBadSignature() {
+    val tamperedSource = TestUtil.readResourceAsString(
+      "mime/signed-plaintext-unsigned-html-alternative.eml"
+    ).replace("It's a cleartext signed message", "It's a TAMPERED cleartext signed message")
+
+    val verificationResult = PgpMsg.processMimeMessage(
+      MimeMessage(Session.getInstance(Properties()), tamperedSource.toInputStream()),
+      verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    ).verificationResult
+
+    assertTrue(verificationResult.hasSignedParts)
+    assertTrue(verificationResult.hasBadSignatures)
+    assertFalse(verificationResult.hasUnverifiedSignatures)
+  }
+
+  @Test
+  fun testTamperedCleartextSignatureWithoutKeyStaysUnverified() {
+    val tamperedSource = TestUtil.readResourceAsString(
+      "mime/signed-plaintext-unsigned-html-alternative.eml"
+    ).replace("It's a cleartext signed message", "It's a TAMPERED cleartext signed message")
+
+    val verificationResult = PgpMsg.processMimeMessage(
+      MimeMessage(Session.getInstance(Properties()), tamperedSource.toInputStream()),
+      verificationPublicKeys = PGPPublicKeyRingCollection(emptyList()),
+      secretKeys = PGPSecretKeyRingCollection(emptyList()),
+      protector = SecretKeyRingProtector.unprotectedKeys()
+    ).verificationResult
+
+    assertTrue(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.hasBadSignatures)
+    assertTrue(verificationResult.hasUnverifiedSignatures)
+  }
+
+  @Test
+  fun testValidDetachedSignatureIsNotReportedAsBad() {
+    val verificationResult = processDetachedSignedMessage(
+      TestUtil.readResourceAsString("mime/signature_verification_detached_only_signed.eml")
+    )
+
+    assertTrue(verificationResult.hasSignedParts)
+    assertFalse(verificationResult.hasBadSignatures)
+    assertFalse(verificationResult.hasUnverifiedSignatures)
+  }
+
+  @Test
+  fun testTamperedDetachedSignatureIsReportedAsBadSignature() {
+    val tamperedSource = TestUtil.readResourceAsString(
+      "mime/signature_verification_detached_only_signed.eml"
+    ).replace("NOT encrypted + signed(detached)", "NOT encrypted + signed(TAMPERED)")
+
+    val verificationResult = processDetachedSignedMessage(tamperedSource)
+
+    assertTrue(verificationResult.hasSignedParts)
+    assertTrue(verificationResult.hasBadSignatures)
+    assertFalse(verificationResult.hasUnverifiedSignatures)
+  }
+
+  @Test
   fun testPrioritizesSignedPlainTextWhenLaterAlternativeIsSigned() {
     val source = TestUtil.readResourceAsString(
       "mime/signed-plaintext-unsigned-html-alternative.eml"
@@ -706,6 +766,13 @@ class ProcessMimeMessageTest {
 
     checkRenderedBlock(block, listOf(RenderedBlock.normal(true, "PLAIN", htmlContent)))
   }
+
+  private fun processDetachedSignedMessage(source: String) = PgpMsg.processMimeMessage(
+    MimeMessage(Session.getInstance(Properties()), source.toInputStream()),
+    verificationPublicKeys = DENBOND_VERIFICATION_PUBLIC_KEYS,
+    secretKeys = PGPSecretKeyRingCollection(emptyList()),
+    protector = SecretKeyRingProtector.unprotectedKeys()
+  ).verificationResult
 
   private fun checkRenderedBlock(block: MsgBlock, expectedRenderedBlocks: List<RenderedBlock>) {
     val parts = requireNotNull(block.content?.split("</?body>".toRegex(), 3))
