@@ -996,13 +996,14 @@ object PgpMsg {
         val invalidSignatureFailures = messageMetadata.rejectedInlineSignatures +
             messageMetadata.rejectedDetachedSignatures
 
-        hasInvalidSignatures = invalidSignatureFailures.any {
-          it.validationException.underlyingException != null
-        }
-
-        keyIdsOfSigningKeys.addAll(invalidSignatureFailures.filter {
+        // Verification failures have no underlyingException; only parse errors set it.
+        // Missing keys are reported as unverified signatures instead.
+        val missingKeyFailures = invalidSignatureFailures.filter {
           it.validationException.message?.matches("Missing verification key.?".toRegex()) == true
-        }.map { it.signature.keyID })
+        }
+        hasInvalidSignatures = invalidSignatureFailures.size != missingKeyFailures.size
+
+        keyIdsOfSigningKeys.addAll(missingKeyFailures.map { it.signature.keyID })
       }
     }
 
