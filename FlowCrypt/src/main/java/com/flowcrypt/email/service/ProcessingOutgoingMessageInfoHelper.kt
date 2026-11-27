@@ -22,12 +22,12 @@ import com.flowcrypt.email.extensions.replaceWithCachedRecipients
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
+import com.flowcrypt.email.util.AttachmentSizeValidator
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.OutgoingAttachmentUriValidator
 import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
@@ -122,8 +122,16 @@ object ProcessingOutgoingMessageInfoHelper {
       if (origFileUri != null) {
         OutgoingAttachmentUriValidator.requireAllowedUri(context, origFileUri)
         originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
+          ?.let {
+            AttachmentSizeValidator.limitedInputStream(
+              it, Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+            )
+          }
       } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
-        originalFileInputStream = ByteArrayInputStream(attachmentInfo.rawData)
+        originalFileInputStream = AttachmentSizeValidator.limitedInputStream(
+          ByteArrayInputStream(attachmentInfo.rawData),
+          Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+        )
       }
 
       if (originalFileInputStream == null) {
@@ -155,7 +163,9 @@ object ProcessingOutgoingMessageInfoHelper {
             FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
         }
 
-        FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
+        AttachmentSizeValidator.copyInputStreamToFile(
+          originalFileInputStream, cachedAtt, Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+        )
         uri = Uri.fromFile(cachedAtt)
       }
 

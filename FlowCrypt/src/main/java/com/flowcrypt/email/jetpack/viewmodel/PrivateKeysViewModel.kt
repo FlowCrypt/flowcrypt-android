@@ -38,6 +38,7 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpKey
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
+import com.flowcrypt.email.util.AttachmentSizeValidator
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.coroutines.runners.ControlledRunner
 import com.flowcrypt.email.util.exception.ApiException
@@ -347,8 +348,11 @@ class PrivateKeysViewModel(application: Application) : AccountViewModel(applicat
               throw NullPointerException("Uri is null!")
             }
 
-            val source = context.contentResolver.openInputStream(keyImportModel.fileUri)
-              ?: throw java.lang.IllegalStateException(sourceNotAvailableMsg)
+            val source = AttachmentSizeValidator.limitedInputStream(
+              context.contentResolver.openInputStream(keyImportModel.fileUri)
+                ?: throw java.lang.IllegalStateException(sourceNotAvailableMsg),
+              MAX_SIZE_IN_BYTES.toLong()
+            )
             parseKeyResult = PgpKey.parseKeys(
               source = source,
               throwExceptionIfUnknownSource = false
