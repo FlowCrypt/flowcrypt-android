@@ -109,6 +109,7 @@ import com.flowcrypt.email.ui.adapter.AutoCompleteResultRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.RecipientChipRecyclerViewAdapter
 import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
+import com.flowcrypt.email.util.AttachmentSizeValidator
 import com.flowcrypt.email.util.EmailSignatureUtil
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -636,6 +637,9 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
       !ContentResolver.SCHEME_FILE.equals(it.uri?.scheme, ignoreCase = true)
     }?.forEach { attachmentInfo ->
       val uri = attachmentInfo.uri ?: return@forEach
+      val remainingBytes = AttachmentSizeValidator.remainingBudget(
+        composeMsgViewModel.attachmentsStateFlow.value.map { it.encodedSize }
+      )
       if (hasAbilityToAddAtt(attachmentInfo)) {
         val fileName = attachmentInfo.getSafeName()
         var draftAtt = try {
@@ -653,9 +657,14 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
 
         try {
           requireContext().contentResolver.openInputStream(uri)?.use { inputStream ->
-            FileUtils.copyInputStreamToFile(inputStream, draftAtt)
+            AttachmentSizeValidator.copyInputStreamToFile(inputStream, draftAtt, remainingBytes)
             composeMsgViewModel.addAttachments(
-              listOf(attachmentInfo.copy(uri = Uri.fromFile(draftAtt)))
+              listOf(
+                attachmentInfo.copy(
+                  uri = Uri.fromFile(draftAtt),
+                  encodedSize = draftAtt.length()
+                )
+              )
             )
           }
         } catch (e: IOException) {
@@ -1058,10 +1067,10 @@ class CreateMessageFragment : BaseFragment<FragmentCreateMessageBinding>(),
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    val existedAttsSize =
-      (composeMsgViewModel.attachmentsStateFlow.value.sumOf { it.encodedSize.toInt() })
-    val newAttSize = newAttInfo?.encodedSize?.toInt() ?: 0
-    return (existedAttsSize + newAttSize) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+    return AttachmentSizeValidator.canAddAttachment(
+      composeMsgViewModel.attachmentsStateFlow.value.map { it.encodedSize },
+      newAttInfo?.encodedSize
+    )
   }
 
 

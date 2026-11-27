@@ -22,16 +22,15 @@ import com.flowcrypt.email.extensions.replaceWithCachedRecipients
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
+import com.flowcrypt.email.util.AttachmentSizeValidator
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.OutgoingAttachmentUriValidator
 import jakarta.mail.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
-import java.io.InputStream
 
 /**
  * @author Denys Bondarenko
@@ -113,22 +112,30 @@ object ProcessingOutgoingMessageInfoHelper {
       pubKeys.addAll(SecurityUtils.getSenderPublicKeys(context, senderEmail))
     }
 
+    var remainingBytes = Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+
     for (attachmentInfo in outgoingMsgInfo.atts ?: emptyList()) {
       var uri: Uri?
       var name: String? = null
+      val budget = remainingBytes
+      if (budget <= 0) {
+        throw IOException("Total attachment size limit exceeded")
+      }
 
       val origFileUri = attachmentInfo.uri
-      var originalFileInputStream: InputStream? = null
-      if (origFileUri != null) {
+      val sourceStream = if (origFileUri != null) {
         OutgoingAttachmentUriValidator.requireAllowedUri(context, origFileUri)
-        originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
+        context.contentResolver.openInputStream(origFileUri)
       } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
-        originalFileInputStream = ByteArrayInputStream(attachmentInfo.rawData)
+        ByteArrayInputStream(attachmentInfo.rawData)
+      } else {
+        null
       }
 
-      if (originalFileInputStream == null) {
+      if (sourceStream == null) {
         throw IllegalStateException("The file stream is null")
       }
+      val limitedSource = AttachmentSizeValidator.limitedInputStream(sourceStream, budget)
 
       val originalAttName = attachmentInfo.getSafeName()
       if (attachmentInfo.isEncryptionAllowed && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
@@ -140,12 +147,20 @@ object ProcessingOutgoingMessageInfoHelper {
             attsCacheDir, encryptedTempFile.name
           )
         }
-        PgpEncryptAndOrSign.encryptAndOrSign(
-          srcInputStream = originalFileInputStream,
-          destOutputStream = encryptedTempFile.outputStream(),
-          pubKeys = requireNotNull(pubKeys),
-          fileName = originalAttName,
-        )
+        try {
+          encryptedTempFile.outputStream().use { output ->
+            PgpEncryptAndOrSign.encryptAndOrSign(
+              srcInputStream = limitedSource,
+              destOutputStream = output,
+              pubKeys = requireNotNull(pubKeys),
+              fileName = originalAttName,
+            )
+          }
+        } catch (e: Exception) {
+          encryptedTempFile.delete()
+          throw e
+        }
+        remainingBytes -= limitedSource.bytesRead
         uri = Uri.fromFile(encryptedTempFile)
         name = encryptedTempFile.name
       } else {
@@ -155,7 +170,8 @@ object ProcessingOutgoingMessageInfoHelper {
             FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
         }
 
-        FileUtils.copyInputStreamToFile(originalFileInputStream, cachedAtt)
+        AttachmentSizeValidator.copyInputStreamToFile(limitedSource, cachedAtt, budget)
+        remainingBytes = AttachmentSizeValidator.consumeStoredBytes(budget, cachedAtt)
         uri = Uri.fromFile(cachedAtt)
       }
 

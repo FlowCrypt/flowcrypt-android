@@ -38,6 +38,7 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.security.model.PgpKeyRingDetails
 import com.flowcrypt.email.security.pgp.PgpDecryptAndOrVerify
 import com.flowcrypt.email.security.pgp.PgpEncryptAndOrSign
+import com.flowcrypt.email.util.AttachmentSizeValidator
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.OutgoingMessagesManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -180,21 +181,26 @@ class EmailUtil {
           ), null, null, null
         )
         if (cursor != null) {
-          if (cursor.moveToFirst()) {
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (nameIndex != -1) {
-              attInfoBuilder.name = cursor.getString(nameIndex)
-            }
+          cursor.use {
+            if (it.moveToFirst()) {
+              val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+              if (nameIndex != -1) {
+                attInfoBuilder.name = SecurityUtils.sanitizeFileName(it.getString(nameIndex))
+              }
 
-            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            if (sizeIndex != -1) {
-              attInfoBuilder.encodedSize = cursor.getLong(sizeIndex)
+              val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
+              if (sizeIndex != -1) {
+                attInfoBuilder.encodedSize =
+                  AttachmentSizeValidator.normalizeReportedSize(it.getLong(sizeIndex))
+              }
             }
           }
-          cursor.close()
         } else if (ContentResolver.SCHEME_FILE.equals(uri.scheme, ignoreCase = true)) {
           attInfoBuilder.name = GeneralUtil.getFileNameFromUri(context, uri)
-          attInfoBuilder.encodedSize = GeneralUtil.getFileSizeFromUri(context, uri)
+            ?.let { SecurityUtils.sanitizeFileName(it) }
+          attInfoBuilder.encodedSize = AttachmentSizeValidator.normalizeReportedSize(
+            GeneralUtil.getFileSizeFromUri(context, uri)
+          )
         }
 
         return attInfoBuilder.build()
