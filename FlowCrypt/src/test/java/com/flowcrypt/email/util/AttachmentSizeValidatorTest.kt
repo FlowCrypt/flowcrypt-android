@@ -124,4 +124,31 @@ class AttachmentSizeValidatorTest {
 
     assertThrows(IOException::class.java) { input.skip(2048) }
   }
+
+  @Test
+  fun subLimitSkipCountsTowardLaterReads() {
+    val input = AttachmentSizeValidator.limitedInputStream(
+      ByteArrayInputStream(ByteArray(2048)), 1024
+    )
+
+    assertEquals(512L, input.skip(512))
+    assertThrows(IOException::class.java) { input.skip(600) }
+  }
+
+  @Test
+  fun consumeStoredBytesReturnsRemainingBudget() {
+    val file = temporaryFolder.newFile("stored.bin").apply { writeBytes(ByteArray(2048)) }
+
+    assertEquals(2048L, AttachmentSizeValidator.consumeStoredBytes(4096, file))
+  }
+
+  @Test
+  fun consumeStoredBytesRejectsOversizedFileAndDeletesIt() {
+    val file = temporaryFolder.newFile("oversized.bin").apply { writeBytes(ByteArray(2048)) }
+
+    assertThrows(IOException::class.java) {
+      AttachmentSizeValidator.consumeStoredBytes(1024, file)
+    }
+    assertFalse(file.exists())
+  }
 }

@@ -38,8 +38,19 @@ object AttachmentSizeValidator {
   }
 
   /** Wrap [input] so reads past [maxBytes] fail instead of growing without a bound. */
-  fun limitedInputStream(input: InputStream, maxBytes: Long): InputStream =
+  fun limitedInputStream(input: InputStream, maxBytes: Long): LimitedInputStream =
     LimitedInputStream(input, maxBytes)
+
+  /** Consume a stored attachment's real size from [budget], deleting an oversized file. */
+  @Throws(IOException::class)
+  fun consumeStoredBytes(budget: Long, file: File): Long {
+    val storedSize = file.length()
+    if (storedSize > budget) {
+      file.delete()
+      throw IOException("Attachment exceeds the allowed size limit")
+    }
+    return budget - storedSize
+  }
 
   /** Copy at most [maxBytes] bytes, removing a partial file when the limit is exceeded. */
   @Throws(IOException::class)
@@ -60,9 +71,12 @@ object AttachmentSizeValidator {
   private fun safeAdd(first: Long, second: Long): Long? =
     if (first > Long.MAX_VALUE - second) null else first + second
 
-  private class LimitedInputStream(input: InputStream, private val maxBytes: Long) :
+  class LimitedInputStream internal constructor(input: InputStream, private val maxBytes: Long) :
     FilterInputStream(input) {
-    private var bytesRead = 0L
+    val bytesRead: Long
+      get() = bytesReadValue
+
+    private var bytesReadValue = 0L
 
     override fun read(): Int {
       val result = super.read()
@@ -83,8 +97,8 @@ object AttachmentSizeValidator {
     }
 
     private fun count(count: Long) {
-      bytesRead += count
-      if (bytesRead > maxBytes) {
+      bytesReadValue += count
+      if (bytesReadValue > maxBytes) {
         throw IOException("Attachment exceeds the allowed size limit")
       }
     }

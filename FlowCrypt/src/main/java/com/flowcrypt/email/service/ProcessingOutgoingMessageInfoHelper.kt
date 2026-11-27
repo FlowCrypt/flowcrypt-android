@@ -31,7 +31,6 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
-import java.io.InputStream
 
 /**
  * @author Denys Bondarenko
@@ -124,25 +123,19 @@ object ProcessingOutgoingMessageInfoHelper {
       }
 
       val origFileUri = attachmentInfo.uri
-      var originalFileInputStream: InputStream? = null
-      if (origFileUri != null) {
+      val sourceStream = if (origFileUri != null) {
         OutgoingAttachmentUriValidator.requireAllowedUri(context, origFileUri)
-        originalFileInputStream = context.contentResolver.openInputStream(origFileUri)
-          ?.let {
-            AttachmentSizeValidator.limitedInputStream(
-              it, budget
-            )
-          }
+        context.contentResolver.openInputStream(origFileUri)
       } else if (attachmentInfo.rawData?.isNotEmpty() == true) {
-        originalFileInputStream = AttachmentSizeValidator.limitedInputStream(
-          ByteArrayInputStream(attachmentInfo.rawData),
-          budget
-        )
+        ByteArrayInputStream(attachmentInfo.rawData)
+      } else {
+        null
       }
 
-      if (originalFileInputStream == null) {
+      if (sourceStream == null) {
         throw IllegalStateException("The file stream is null")
       }
+      val limitedSource = AttachmentSizeValidator.limitedInputStream(sourceStream, budget)
 
       val originalAttName = attachmentInfo.getSafeName()
       if (attachmentInfo.isEncryptionAllowed && outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
@@ -154,18 +147,20 @@ object ProcessingOutgoingMessageInfoHelper {
             attsCacheDir, encryptedTempFile.name
           )
         }
-        PgpEncryptAndOrSign.encryptAndOrSign(
-          srcInputStream = originalFileInputStream,
-          destOutputStream = encryptedTempFile.outputStream(),
-          pubKeys = requireNotNull(pubKeys),
-          fileName = originalAttName,
-        )
-        val encryptedSize = encryptedTempFile.length()
-        if (encryptedSize > budget) {
+        try {
+          encryptedTempFile.outputStream().use { output ->
+            PgpEncryptAndOrSign.encryptAndOrSign(
+              srcInputStream = limitedSource,
+              destOutputStream = output,
+              pubKeys = requireNotNull(pubKeys),
+              fileName = originalAttName,
+            )
+          }
+        } catch (e: Exception) {
           encryptedTempFile.delete()
-          throw IOException("Total attachment size limit exceeded")
+          throw e
         }
-        remainingBytes -= encryptedSize
+        remainingBytes -= limitedSource.bytesRead
         uri = Uri.fromFile(encryptedTempFile)
         name = encryptedTempFile.name
       } else {
@@ -175,9 +170,8 @@ object ProcessingOutgoingMessageInfoHelper {
             FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
         }
 
-        remainingBytes -= AttachmentSizeValidator.copyInputStreamToFile(
-          originalFileInputStream, cachedAtt, budget
-        )
+        AttachmentSizeValidator.copyInputStreamToFile(limitedSource, cachedAtt, budget)
+        remainingBytes = AttachmentSizeValidator.consumeStoredBytes(budget, cachedAtt)
         uri = Uri.fromFile(cachedAtt)
       }
 
