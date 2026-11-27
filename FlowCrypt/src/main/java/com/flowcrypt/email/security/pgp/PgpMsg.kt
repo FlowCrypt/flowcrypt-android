@@ -176,7 +176,6 @@ object PgpMsg {
     "span" to arrayOf("color"),
     "div" to arrayOf("color"),
     "p" to arrayOf("color"),
-    "em" to arrayOf("style"), // Typescript: tests rely on this, could potentially remove
     "td" to arrayOf("width", "height"),
     "hr" to arrayOf("color", "height"),
   )
